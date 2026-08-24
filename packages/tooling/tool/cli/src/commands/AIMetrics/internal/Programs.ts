@@ -25,6 +25,7 @@ import {
   AiMetricsLabelQueueInput,
   AiMetricsMirrorBundleInput,
   AiMetricsMirrorBundleManifest,
+  AiMetricsNonNegativeInteger,
   AiMetricsOtlpEndpointSpec,
   AiMetricsOtlpExportInput,
   AiMetricsOtlpSpanSender,
@@ -32,6 +33,7 @@ import {
   AiMetricsParquetExportMode,
   AiMetricsPrivacyMode,
   AiMetricsQualityGateStatus,
+  AiMetricsRating,
   AiMetricsRetentionEnforcementPolicy,
   AiMetricsRetentionRestoreDrillInput,
   AiMetricsRetentionSelector,
@@ -127,6 +129,8 @@ import type {
 } from "@beep/repo-ai-metrics";
 
 const $I = $RepoCliId.create("commands/AIMetrics/internal/Programs");
+const decodeNonNegativeInteger = S.decodeUnknownEffect(AiMetricsNonNegativeInteger);
+const decodeRating = S.decodeUnknownEffect(AiMetricsRating);
 
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const decodeMirrorManifestJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleManifest));
@@ -618,30 +622,26 @@ const parseRetentionSelector = Effect.fn("AIMetrics.parseRetentionSelector")(fun
     // Retention is a local-first operator surface with no `--target` flag, so the
     // fallback rung is always the workstation's XDG store.
     dataRoot: yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local),
-    ...O.getSomesStruct({
-      beforeEpochMillis,
-      sinceEpochMillis,
-      untilEpochMillis,
-    }),
+    beforeEpochMillis,
+    sinceEpochMillis,
+    untilEpochMillis,
   });
 });
 
 const hasRetentionWindow = (selector: AiMetricsRetentionSelector): boolean =>
-  selector.beforeEpochMillis !== undefined ||
-  selector.sinceEpochMillis !== undefined ||
-  selector.untilEpochMillis !== undefined;
+  O.isSome(selector.beforeEpochMillis) || O.isSome(selector.sinceEpochMillis) || O.isSome(selector.untilEpochMillis);
 
-const retentionWindowUpper = (selector: AiMetricsRetentionSelector): number | undefined =>
-  selector.beforeEpochMillis ?? selector.untilEpochMillis;
+const retentionWindowUpper = (selector: AiMetricsRetentionSelector): O.Option<number> =>
+  O.orElse(selector.beforeEpochMillis, () => selector.untilEpochMillis);
 
 const hasBoundedRetentionMutationWindow = (selector: AiMetricsRetentionSelector): boolean =>
-  selector.beforeEpochMillis !== undefined ||
-  (selector.sinceEpochMillis !== undefined && selector.untilEpochMillis !== undefined);
+  O.isSome(selector.beforeEpochMillis) || (O.isSome(selector.sinceEpochMillis) && O.isSome(selector.untilEpochMillis));
 
-const hasOrderedRetentionMutationWindow = (selector: AiMetricsRetentionSelector): boolean => {
-  const upper = retentionWindowUpper(selector);
-  return selector.sinceEpochMillis === undefined || upper === undefined || selector.sinceEpochMillis < upper;
-};
+const hasOrderedRetentionMutationWindow = (selector: AiMetricsRetentionSelector): boolean =>
+  O.getOrElse(
+    O.zipWith(selector.sinceEpochMillis, retentionWindowUpper(selector), (lower, upper) => lower < upper),
+    () => true
+  );
 
 const parseChecks = (checks: string): ReadonlyArray<string> =>
   pipe(Str.split(checks, ","), A.map(Str.trim), A.filter(Str.isNonEmpty));
@@ -696,13 +696,13 @@ const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(f
   });
 
   return AiMetricsInstallInput.make({
-    dataRoot,
+    dataRoot: O.some(dataRoot),
     ...O.getSomesStruct({
       defaultTool: O.fromUndefinedOr(defaultTool),
-      hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef),
       privacyMode: O.fromUndefinedOr(privacyMode),
-      rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef),
     }),
+    hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef),
+    rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef),
     target,
   });
 });
@@ -873,7 +873,7 @@ const makeInstallComposeProgram = Effect.fn("AIMetrics.makeInstallComposeProgram
 }: MakeInstallComposeProgramOptions) {
   const spec = yield* makeAiMetricsInstallSpec(
     AiMetricsInstallInput.make({
-      dataRoot: yield* resolveDataRoot(O.none(), target),
+      dataRoot: O.some(yield* resolveDataRoot(O.none(), target)),
       defaultTool: tool,
       privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
       target,
@@ -1048,7 +1048,7 @@ const makeInstallDoctorProgram = Effect.fn("AIMetrics.makeInstallDoctorProgram")
   const result = yield* makeAiMetricsInstallDoctorResult(
     AiMetricsInstallDoctorInput.make({
       install,
-      sourceDiscovery,
+      sourceDiscovery: O.some(sourceDiscovery),
     })
   );
 
@@ -1458,8 +1458,8 @@ const forwarderRunResultWithOtlpExport = (
     configSnapshotId: result.configSnapshotId,
     duckDbPath: result.duckDbPath,
     ingestRunId: result.ingestRunId,
-    otlpExport,
-    ...O.getSomesStruct({ parquetExportDir: O.fromUndefinedOr(result.parquetExportDir) }),
+    otlpExport: O.some(otlpExport),
+    parquetExportDir: result.parquetExportDir,
     parquetExportMode: result.parquetExportMode,
     parquetTables: result.parquetTables,
     rawArchiveDir: result.rawArchiveDir,
@@ -1478,8 +1478,8 @@ const forwarderRunCommandToJson = Effect.fn("AIMetrics.forwarderRunCommandToJson
     configSnapshotId: result.configSnapshotId,
     duckDbPath: result.duckDbPath,
     ingestRunId: result.ingestRunId,
-    ...O.getSomesStruct({ otlpExport: O.fromUndefinedOr(result.otlpExport) }),
-    ...O.getSomesStruct({ parquetExportDir: O.fromUndefinedOr(result.parquetExportDir) }),
+    ...O.getSomesStruct({ otlpExport: result.otlpExport }),
+    ...O.getSomesStruct({ parquetExportDir: result.parquetExportDir }),
     parquetExportMode: result.parquetExportMode,
     parquetTables: result.parquetTables,
     rawArchiveDir: result.rawArchiveDir,
@@ -1689,19 +1689,19 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
   const resolvedRawArchiveKey = yield* resolveRawArchiveKey();
   const sinceEpochMillis = all ? undefined : yield* parseSinceEpochMillis(since);
   const forwarderInput = AiMetricsForwarderInput.make({
-    dataRoot: resolvedDataRoot,
-    ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(resolvedHashSalt) }),
-    ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(installInput.hashSaltSecretRef) }),
-    ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(installInput.rawArchiveKeySecretRef) }),
+    dataRoot: O.some(resolvedDataRoot),
+    hashSalt: O.fromUndefinedOr(resolvedHashSalt),
+    hashSaltSecretRef: installInput.hashSaltSecretRef,
+    rawArchiveKeySecretRef: installInput.rawArchiveKeySecretRef,
     homeDir: yield* resolveHomeDir(homeDir),
     includeAll: all,
-    ...(O.isSome(maxFileBytes) ? { maxFileBytes: maxFileBytes.value } : {}),
+    maxFileBytes,
     maxFiles,
-    ...(O.isSome(openClawUnit) ? { openClawUnitPath: openClawUnit.value } : {}),
+    openClawUnitPath: openClawUnit,
     parquetExportMode,
     rawArchiveKey: resolvedRawArchiveKey,
     repoRoot: yield* resolveRepoRoot(repoRoot),
-    ...O.getSomesStruct({ sinceEpochMillis: O.fromUndefinedOr(sinceEpochMillis) }),
+    sinceEpochMillis: O.fromUndefinedOr(sinceEpochMillis),
     target,
   });
   const duckDbLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath }));
@@ -1782,7 +1782,7 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
       `retention enforcement: deleted=${retentionEnforcement.value.deletedDerivedExportCount} kept=${retentionEnforcement.value.keptDerivedExportCount}`
     );
   }
-  const otlpExport = O.fromNullishOr(result.otlpExport);
+  const otlpExport = result.otlpExport;
   if (O.isSome(otlpExport)) {
     yield* Console.log(`otlp export: ${otlpExport.value.status}`);
     if (otlpExport.value.status === "exported") {
@@ -1906,10 +1906,10 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
         ...(retentionEnforce ? ["--max-snapshot-exports", `${retentionMaxSnapshotExports}`] : []),
         "--json",
       ],
-      ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
+      hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef),
       intervalMinutes,
       lockPath: "%t/beep-ai-metrics-forwarder.lock",
-      ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
+      rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef),
       statusPath: `${spec.storage.dataRoot}/forwarder/status/latest.json`,
       workingDirectory: yield* resolveRepoRoot(repoRoot),
     })
@@ -2058,16 +2058,23 @@ const makeBenchmarkRunProgram = Effect.fn("AIMetrics.makeBenchmarkRunProgram")(f
     rawArchiveKeySecretRef,
     target,
   });
-  const result = yield* recordAiMetricsBenchmarkRun(
-    AiMetricsBenchmarkRunInput.make({
-      benchmarkCaseId: caseId,
-      configSnapshotId,
-      elapsedMs,
-      passed,
-      qualityGate,
-      ...(O.isSome(note) ? { note: note.value } : {}),
-    })
-  ).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
+  const validElapsedMs = yield* decodeNonNegativeInteger(elapsedMs).pipe(
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({
+        cause,
+        message: "AI metrics elapsed milliseconds must be greater than or equal to 0.",
+      })
+    )
+  );
+  const input = AiMetricsBenchmarkRunInput.make({
+    benchmarkCaseId: caseId,
+    configSnapshotId,
+    elapsedMs: validElapsedMs,
+    note,
+    passed,
+    qualityGate,
+  });
+  const result = yield* recordAiMetricsBenchmarkRun(input).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
     yield* Console.log(yield* aiMetricsBenchmarkRunToJson(result));
@@ -2225,17 +2232,32 @@ const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function*
     rawArchiveKeySecretRef,
     target,
   });
-  const result = yield* addAiMetricsOutcomeLabel(
-    AiMetricsOutcomeLabelInput.make({
-      agentTaskId: taskId,
-      followUpFix,
-      interventionCount: interventions,
-      passed,
-      qualityGate,
-      rating,
-      ...(O.isSome(note) ? { note: note.value } : {}),
-    })
-  ).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
+  const validInterventions = yield* decodeNonNegativeInteger(interventions).pipe(
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({
+        cause,
+        message: "AI metrics intervention count must be greater than or equal to 0.",
+      })
+    )
+  );
+  const validRating = yield* decodeRating(rating).pipe(
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({
+        cause,
+        message: "AI metrics outcome labels require --rating between 1 and 5.",
+      })
+    )
+  );
+  const input = AiMetricsOutcomeLabelInput.make({
+    agentTaskId: taskId,
+    followUpFix,
+    interventionCount: validInterventions,
+    note,
+    passed,
+    qualityGate,
+    rating: validRating,
+  });
+  const result = yield* addAiMetricsOutcomeLabel(input).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
     yield* Console.log(yield* aiMetricsOutcomeLabelToJson(result));
@@ -2307,7 +2329,7 @@ const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddPro
       expectedChecks: parseChecks(checks),
       promptHash,
       title,
-      ...(O.isSome(promptRef) ? { promptRef: promptRef.value } : {}),
+      promptRef,
     })
   ).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
@@ -3030,7 +3052,7 @@ const makeRetentionRestoreDrillProgram = Effect.fn("AIMetrics.makeRetentionResto
 
   const result = yield* runAiMetricsRetentionRestoreDrill(
     AiMetricsRetentionRestoreDrillInput.make({
-      ...(O.isSome(hashSalt) ? { hashSalt: hashSalt.value } : {}),
+      hashSalt,
       maxObjects,
       rawArchiveKey: yield* resolveRawArchiveKey(),
       restoreRoot,

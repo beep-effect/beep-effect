@@ -391,10 +391,10 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           yield* Effect.gen(function* () {
             const result = yield* runAiMetricsForwarder(
               AiMetricsForwarderInput.make({
-                claudeProjectsRoot: claudeRoot,
-                codexSessionsRoot: codexRoot,
-                dataRoot,
-                hashSalt: "test-salt",
+                claudeProjectsRoot: O.some(claudeRoot),
+                codexSessionsRoot: O.some(codexRoot),
+                dataRoot: O.some(dataRoot),
+                hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
                 rawArchiveKey,
@@ -415,11 +415,11 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(yield* forwarderRunResultToJson(result)).toContain(result.ingestRunId);
             expect(result.parquetExportMode).toBe("snapshot");
             const parquetExportDir = result.parquetExportDir;
-            expect(parquetExportDir).toBeDefined();
-            if (parquetExportDir === undefined) {
+            expect(O.isSome(parquetExportDir)).toBe(true);
+            if (O.isNone(parquetExportDir)) {
               return;
             }
-            expect(yield* fs.exists(path.join(parquetExportDir, "ai_metrics_turns.parquet"))).toBe(true);
+            expect(yield* fs.exists(path.join(parquetExportDir.value, "ai_metrics_turns.parquet"))).toBe(true);
             expect(yield* fs.exists(path.join(dataRoot, "config-snapshots/latest.json"))).toBe(true);
 
             const duckdb = yield* DuckDb;
@@ -474,7 +474,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             });
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot,
+                dataRoot: O.some(dataRoot),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -580,10 +580,10 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           yield* Effect.gen(function* () {
             const result = yield* runAiMetricsForwarder(
               AiMetricsForwarderInput.make({
-                claudeProjectsRoot: claudeRoot,
-                codexSessionsRoot: codexRoot,
-                dataRoot,
-                hashSalt: "test-salt",
+                claudeProjectsRoot: O.some(claudeRoot),
+                codexSessionsRoot: O.some(codexRoot),
+                dataRoot: O.some(dataRoot),
+                hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
                 maxFiles: 1,
@@ -648,7 +648,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             });
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot,
+                dataRoot: O.some(dataRoot),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -801,8 +801,8 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             // Turns hang off their session span and share its trace, so one agent session
             // reads as one trace in Phoenix rather than as unrelated roots.
             expect(turnSpan.traceId).toBe(sessionSpan.traceId);
-            expect(turnSpan.parentSpanId).toBe(sessionSpan.spanId);
-            expect(sessionSpan.parentSpanId).toBeUndefined();
+            expect(O.getOrThrow(turnSpan.parentSpanId)).toBe(sessionSpan.spanId);
+            expect(O.isNone(sessionSpan.parentSpanId)).toBe(true);
 
             // A rejected delivery must leave the watermark open. Without the failure
             // short-circuiting the mark, these turns would be recorded as exported after
@@ -926,9 +926,9 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           yield* Effect.gen(function* () {
             const forwarder = yield* runAiMetricsForwarder(
               AiMetricsForwarderInput.make({
-                codexSessionsRoot: path.join(homeDir, ".codex/sessions"),
-                dataRoot,
-                hashSalt: "test-salt",
+                codexSessionsRoot: O.some(path.join(homeDir, ".codex/sessions")),
+                dataRoot: O.some(dataRoot),
+                hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
                 rawArchiveKey,
@@ -954,7 +954,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
                 agentTaskId: firstTask.value.agentTaskId,
                 followUpFix: false,
                 interventionCount: 1,
-                note: "OPENAI_API_KEY=secret-scorecard-fixture",
+                note: O.some("OPENAI_API_KEY=secret-scorecard-fixture"),
                 passed: true,
                 qualityGate: AiMetricsQualityGateStatus.Enum.passed,
                 rating: 5,
@@ -965,7 +965,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
                 benchmarkCaseId: "case-p4",
                 expectedChecks: ["bun run check"],
                 promptHash: "prompt-hash-only",
-                promptRef: "benchmarks/case-p4.md",
+                promptRef: O.some("benchmarks/case-p4.md"),
                 title: "P4 report proof",
               })
             );
@@ -974,7 +974,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
                 benchmarkCaseId: benchmarkCase.benchmarkCaseId,
                 configSnapshotId: forwarder.configSnapshotId,
                 elapsedMs: 1200,
-                note: "passed without raw prompt",
+                note: O.some("passed without raw prompt"),
                 passed: true,
                 qualityGate: AiMetricsQualityGateStatus.Enum.passed,
               })
@@ -992,7 +992,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             const reportMarkdown = yield* fs.readFileString(report.markdownPath);
 
             expect(queue.items).toHaveLength(1);
-            expect(label.note).toContain("[REDACTED]");
+            expect(O.getOrThrow(label.note)).toContain("[REDACTED]");
             expect(benchmarkRun.passed).toBe(true);
             expect(listedCases.cases).toHaveLength(1);
             expect(report.document.scores).toHaveLength(1);
@@ -1015,9 +1015,9 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       const spec = yield* makeAiMetricsInstallSpec(
         AiMetricsInstallInput.make({
           defaultTool: AiMetricsTool.Enum.phoenix,
-          hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
+          hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
           privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
-          rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+          rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
           target: AiMetricsDeployTarget.Enum.dankserver,
         })
       );
@@ -1039,7 +1039,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(phoenix.value.image).toBe("arizephoenix/phoenix:latest");
       expect(phoenix.value.otlp.traceUrl).toBe("https://dankserver.tailc7c348.ts.net:8447/v1/traces");
       expect(phoenix.value.publicUrl).toBe("https://dankserver.tailc7c348.ts.net:8447");
-      expect(spec.hashSaltSecretRef).toBe("op://TBK/ai-metrics/hash-salt");
+      expect(O.getOrThrow(spec.hashSaltSecretRef)).toBe("op://TBK/ai-metrics/hash-salt");
       expect(
         pipe(
           spec.plannedCommands,
@@ -1081,8 +1081,8 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
           const install = AiMetricsInstallInput.make({
-            hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
-            rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+            hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
+            rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
             target: AiMetricsDeployTarget.Enum.dankserver,
           });
 
@@ -1104,7 +1104,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           const doctor = yield* makeAiMetricsInstallDoctorResult(
             AiMetricsInstallDoctorInput.make({
               install,
-              sourceDiscovery: discovery,
+              sourceDiscovery: O.some(discovery),
             })
           );
           const apply = yield* makeAiMetricsInstallApplyDryRunResult(install);
@@ -1153,10 +1153,10 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             "--otlp",
             "--json",
           ],
-          hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
+          hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
           intervalMinutes: 15,
           lockPath: "%t/beep-ai-metrics-forwarder.lock",
-          rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+          rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
           statusPath: ".beep/ai-metrics/forwarder/status/latest.json",
           workingDirectory: "/repo/beep-effect",
         })
@@ -1230,7 +1230,9 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "adds Phoenix OTLP contracts and renders a dedicated local compose file",
     Effect.fn(function* () {
-      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ dataRoot: "/srv/data/ai-metrics" }));
+      const spec = yield* makeAiMetricsInstallSpec(
+        AiMetricsInstallInput.make({ dataRoot: O.some("/srv/data/ai-metrics") })
+      );
       const phoenix = phoenixService(spec);
       expect(O.isSome(phoenix)).toBe(true);
       if (O.isNone(phoenix)) {
@@ -1264,7 +1266,7 @@ volumes:
     Effect.fn(function* () {
       const spec = yield* makeAiMetricsInstallSpec(
         AiMetricsInstallInput.make({
-          dataRoot: "/srv/data/ai-metrics",
+          dataRoot: O.some("/srv/data/ai-metrics"),
           phoenixImage: "arizephoenix/phoenix:latest-p5b",
         })
       );
@@ -1315,7 +1317,7 @@ volumes:
             });
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot,
+                dataRoot: O.some(dataRoot),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -1438,11 +1440,11 @@ volumes:
       const error = yield* Effect.flip(
         runAiMetricsForwarder(
           AiMetricsForwarderInput.make({
-            dataRoot: "/srv/data/ai-metrics",
-            hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
+            dataRoot: O.some("/srv/data/ai-metrics"),
+            hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
             homeDir: "/tmp/home",
             rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(1))),
-            rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+            rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
             repoRoot: "/tmp/repo",
             target: AiMetricsDeployTarget.Enum.dankserver,
           })
@@ -1544,7 +1546,7 @@ volumes:
             });
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot,
+                dataRoot: O.some(dataRoot),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -1555,7 +1557,7 @@ volumes:
             );
 
             expect(privacy.sanitized.sourceRole).toBe("subagent");
-            expect(privacy.sanitized.threadSpawn).toBe(true);
+            expect(O.getOrThrow(privacy.sanitized.threadSpawn)).toBe(true);
             expect(privacy.sanitized.sessionIdHash).not.toBe("child-session");
             expect(privacy.sanitized.parentThreadIdHash).not.toBe("parent-thread");
             expect(privacy.sanitized.agentRoleHash).not.toBe("worker");
@@ -1589,13 +1591,20 @@ volumes:
 
             const duckdb = yield* DuckDb;
             const sessionRows = yield* duckdb.query(
-              "SELECT source_role AS sourceRole, thread_spawn AS threadSpawn, parent_thread_id_hash AS parentThreadIdHash FROM ai_metrics_sessions"
+              `SELECT agent_nickname_hash AS agentNicknameHash,
+                      parent_session_id_hash AS parentSessionIdHash,
+                      parent_thread_id_hash AS parentThreadIdHash,
+                      source_role AS sourceRole,
+                      thread_spawn AS threadSpawn
+                 FROM ai_metrics_sessions`
             );
             const turnRows = yield* duckdb.query("SELECT DISTINCT source_role AS sourceRole FROM ai_metrics_turns");
 
             expect(sessionRows).toEqual([
               expect.objectContaining({
-                parentThreadIdHash: privacy.sanitized.parentThreadIdHash,
+                agentNicknameHash: O.getOrNull(privacy.sanitized.agentNicknameHash),
+                parentSessionIdHash: null,
+                parentThreadIdHash: O.getOrNull(privacy.sanitized.parentThreadIdHash),
                 sourceRole: "subagent",
                 threadSpawn: true,
               }),
@@ -2004,7 +2013,7 @@ volumes:
           const projections = A.makeBy(1200, (index) =>
             AiMetricsOtlpSpanProjection.make({
               attributes: { "ai_metrics.line_number": index + 1, "openinference.span.kind": "CHAIN" },
-              parentSpanId: "aabbccddeeff0011",
+              parentSpanId: O.some("aabbccddeeff0011"),
               spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
               spanName: "ai_metrics.agent.turn",
               traceId: "0123456789abcdef0123456789abcdef",
@@ -2137,7 +2146,7 @@ volumes:
 
           // Prune only run-early.
           yield* runAiMetricsRetentionDelete(
-            AiMetricsRetentionSelector.make({ beforeEpochMillis: 50, dataRoot }),
+            AiMetricsRetentionSelector.make({ beforeEpochMillis: O.some(50), dataRoot }),
             false
           );
 
@@ -2160,7 +2169,7 @@ volumes:
           // again once its last turn goes -- an empty session row surviving forever and
           // pinning its agent task alive through the task GC.
           yield* runAiMetricsRetentionDelete(
-            AiMetricsRetentionSelector.make({ beforeEpochMillis: 200, dataRoot }),
+            AiMetricsRetentionSelector.make({ beforeEpochMillis: O.some(200), dataRoot }),
             false
           );
 
@@ -2482,7 +2491,7 @@ volumes:
 
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot: path.join(tmpDir, "metrics"),
+                dataRoot: O.some(path.join(tmpDir, "metrics")),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -2561,7 +2570,7 @@ volumes:
 
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot: path.join(tmpDir, "metrics"),
+                dataRoot: O.some(path.join(tmpDir, "metrics")),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -2591,7 +2600,7 @@ volumes:
             const turnParents = pipe(
               batch.projections,
               A.filter((projection) => projection.spanName === "ai_metrics.agent.turn"),
-              A.map((projection) => projection.parentSpanId),
+              A.map((projection) => O.getOrThrow(projection.parentSpanId)),
               A.dedupe
             );
             expect(turnParents).toEqual(sessionSpanIds);
@@ -2660,14 +2669,14 @@ volumes:
           yield* writeText(path.join(tmpDir, ".codex/config.toml"), 'model = "gpt-5.1"\n');
           const changed = yield* makeAiMetricsConfigSnapshot(
             AiMetricsConfigSnapshotInput.make({
-              previousSnapshotPath: path.join(snapshotDir, "latest.json"),
+              previousSnapshotPath: O.some(path.join(snapshotDir, "latest.json")),
               repoRoot: tmpDir,
             })
           );
           expect(changed.snapshot.configHash).not.toBe(result.snapshot.configHash);
           expect(changed.snapshot.changedPaths).toEqual([".codex/config.toml"]);
           expect(changed.diff.modifiedPaths).toEqual([".codex/config.toml"]);
-          expect(changed.snapshot.previousSnapshotId).toBe(result.snapshot.snapshotId);
+          expect(O.getOrThrow(changed.snapshot.previousSnapshotId)).toBe(result.snapshot.snapshotId);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -2699,12 +2708,12 @@ volumes:
 
           const result = yield* makeAiMetricsConfigSnapshot(
             AiMetricsConfigSnapshotInput.make({
-              previousSnapshotPath: path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
+              previousSnapshotPath: O.some(path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json")),
               repoRoot: tmpDir,
             })
           );
 
-          expect(result.snapshot.previousSnapshotId).toBe("config-legacy");
+          expect(O.getOrThrow(result.snapshot.previousSnapshotId)).toBe("config-legacy");
           expect(result.diff.modifiedPaths).toEqual(["AGENTS.md"]);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
@@ -2723,7 +2732,7 @@ volumes:
           const error = yield* Effect.flip(
             makeAiMetricsConfigSnapshot(
               AiMetricsConfigSnapshotInput.make({
-                previousSnapshotPath: path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
+                previousSnapshotPath: O.some(path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json")),
                 repoRoot: tmpDir,
               })
             )
@@ -2757,9 +2766,9 @@ volumes:
           const error = yield* Effect.flip(
             runAiMetricsForwarder(
               AiMetricsForwarderInput.make({
-                codexSessionsRoot: codexRoot,
-                dataRoot,
-                hashSalt: "test-salt",
+                codexSessionsRoot: O.some(codexRoot),
+                dataRoot: O.some(dataRoot),
+                hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
                 rawArchiveKey: Redacted.make("not-valid-base64"),
@@ -2997,9 +3006,9 @@ volumes:
             return;
           }
           expect(codex.value.files).toHaveLength(1);
-          expect(codex.value.files[0]?.agentRoleHash).toBeDefined();
+          expect(O.isSome(codex.value.files[0]?.agentRoleHash ?? O.none())).toBe(true);
           expect(codex.value.files[0]?.sourceRole).toBe("subagent");
-          expect(codex.value.files[0]?.threadSpawn).toBe(true);
+          expect(O.getOrThrow(codex.value.files[0]?.threadSpawn ?? O.none())).toBe(true);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -3063,9 +3072,9 @@ volumes:
 
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
-              codexSessionsRoot: codexRoot,
-              dataRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               rawArchiveKey,
@@ -3148,9 +3157,9 @@ volumes:
 
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
-              codexSessionsRoot: codexRoot,
-              dataRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               rawArchiveKey,
@@ -3162,13 +3171,13 @@ volumes:
           yield* writeText(path.join(dataRoot, "reports/weekly.md"), "# report\n");
 
           const selector = AiMetricsRetentionSelector.make({
-            beforeEpochMillis: 4_102_444_800_000,
+            beforeEpochMillis: O.some(4_102_444_800_000),
             dataRoot,
           });
           const inventory = yield* listAiMetricsRetentionInventory(selector);
           const drill = yield* runAiMetricsRetentionRestoreDrill(
             AiMetricsRetentionRestoreDrillInput.make({
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               maxObjects: 1,
               rawArchiveKey,
               restoreRoot,
@@ -3302,9 +3311,9 @@ volumes:
 
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
-              codexSessionsRoot: codexRoot,
-              dataRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               rawArchiveKey,
@@ -3325,13 +3334,13 @@ volumes:
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
           const selector = AiMetricsRetentionSelector.make({
-            beforeEpochMillis: 4_102_444_800_000,
+            beforeEpochMillis: O.some(4_102_444_800_000),
             dataRoot,
           });
           const invalidPathExit = yield* Effect.exit(
             runAiMetricsRetentionRestoreDrill(
               AiMetricsRetentionRestoreDrillInput.make({
-                hashSalt: "test-salt",
+                hashSalt: O.some("test-salt"),
                 maxObjects: 1,
                 rawArchiveKey,
                 restoreRoot,
@@ -3352,7 +3361,7 @@ volumes:
           const exit = yield* Effect.exit(
             runAiMetricsRetentionRestoreDrill(
               AiMetricsRetentionRestoreDrillInput.make({
-                hashSalt: "test-salt",
+                hashSalt: O.some("test-salt"),
                 maxObjects: 1,
                 rawArchiveKey,
                 restoreRoot,
@@ -3391,9 +3400,9 @@ volumes:
 
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
-              codexSessionsRoot: codexRoot,
-              dataRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               rawArchiveKey,
@@ -3432,7 +3441,7 @@ volumes:
             );
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
-          const selector = AiMetricsRetentionSelector.make({ beforeEpochMillis, dataRoot });
+          const selector = AiMetricsRetentionSelector.make({ beforeEpochMillis: O.some(beforeEpochMillis), dataRoot });
           const compactResult = yield* runAiMetricsRetentionCompact(selector, false);
           expect(compactResult.dryRun).toBe(false);
           expect(compactResult.deletedDerivedExportCount).toBe(1);
@@ -3480,8 +3489,8 @@ volumes:
 
           const labelOnlySelector = AiMetricsRetentionSelector.make({
             dataRoot,
-            sinceEpochMillis: beforeEpochMillis,
-            untilEpochMillis: beforeEpochMillis + 2,
+            sinceEpochMillis: O.some(beforeEpochMillis),
+            untilEpochMillis: O.some(beforeEpochMillis + 2),
           });
           const labelOnlyDelete = yield* runAiMetricsRetentionDelete(labelOnlySelector, false).pipe(
             provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })))

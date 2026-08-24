@@ -12,6 +12,27 @@ import * as S from "effect/Schema";
 const $I = $RepoAiMetricsId.create("models");
 
 /**
+ * Numeric count returned by aggregate DuckDB queries.
+ *
+ * **Example** (Decode a count row)
+ *
+ * ```ts
+ * import { CountRow } from "@beep/repo-ai-metrics"
+ * console.log(CountRow.make({ count: 3 }).count)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CountRow extends S.Class<CountRow>($I`CountRow`)(
+  { count: S.Finite },
+  $I.annote("CountRow", { description: "Numeric count returned by an aggregate DuckDB query." })
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(CountRow));
+  static readonly decodeNonEmptyRowsEffect = S.decodeUnknownEffect(S.NonEmptyArray(CountRow));
+}
+
+/**
  * Supported deployment targets for the AI metrics stack.
  *
  * **Example** (Log deploy target enum)
@@ -115,6 +136,41 @@ export const AiMetricsTranscriptSource = LiteralKit(["codex", "claude", "opencla
  * @since 0.0.0
  */
 export type AiMetricsTranscriptSource = typeof AiMetricsTranscriptSource.Type;
+
+/**
+ * Canonical reasons a scorecard cannot claim complete measurement coverage.
+ *
+ * **Example** (Inspect a coverage gap)
+ *
+ * ```ts
+ * import { AiMetricsCoverageGap } from "@beep/repo-ai-metrics"
+ * console.log(AiMetricsCoverageGap.Enum.no_tasks)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsCoverageGap = LiteralKit([
+  "no_tasks",
+  "no_labels",
+  "no_benchmark_runs",
+  "scorecard_completion_credit_blocked",
+  "model_call_metrics_unavailable_not_scored",
+  "tool_invocation_metrics_unavailable_not_scored",
+  "cost_metrics_unavailable_not_scored",
+]).pipe(
+  $I.annoteSchema("AiMetricsCoverageGap", {
+    description: "Canonical AI-metrics scorecard coverage-gap codes.",
+  })
+);
+
+/**
+ * Runtime type for {@link AiMetricsCoverageGap}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsCoverageGap = typeof AiMetricsCoverageGap.Type;
 
 /**
  * Event names accepted from Codex transcript records.
@@ -431,6 +487,47 @@ export const AiMetricsQualityGateStatus = LiteralKit(["passed", "failed", "not_r
 export type AiMetricsQualityGateStatus = typeof AiMetricsQualityGateStatus.Type;
 
 /**
+ * Integer rating accepted by AI metrics outcome labels.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AiMetricsRating = S.Int.check(
+  S.isBetween(
+    { minimum: 1, maximum: 5 },
+    {
+      identifier: $I`AiMetricsRatingCheck`,
+      title: "AI metrics rating",
+      description: "An integer outcome rating from one through five.",
+      message: "Expected an integer rating between 1 and 5",
+    }
+  )
+).pipe(
+  $I.annoteSchema("AiMetricsRating", {
+    description: "Integer outcome rating in the inclusive range from one through five.",
+  })
+);
+
+/**
+ * Non-negative integer used by AI metrics counts and elapsed durations.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AiMetricsNonNegativeInteger = S.Int.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`AiMetricsNonNegativeIntegerCheck`,
+    title: "AI metrics non-negative integer",
+    description: "An integer count or elapsed duration that cannot be negative.",
+    message: "Expected a non-negative integer",
+  })
+).pipe(
+  $I.annoteSchema("AiMetricsNonNegativeInteger", {
+    description: "Non-negative integer used by AI metrics counts and elapsed durations.",
+  })
+);
+
+/**
  * Install-owned OTLP endpoint contract consumed by CLI, local smoke, and IaC.
  *
  * **Example** (Create OTLP endpoint spec)
@@ -512,10 +609,10 @@ export class ConfigSnapshot extends S.Class<ConfigSnapshot>($I`ConfigSnapshot`)(
   {
     changedPaths: S.Array(S.String),
     configHash: S.String,
-    gitCommit: S.optionalKey(S.String),
+    gitCommit: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     includedPaths: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
     label: S.String,
-    previousSnapshotId: S.optionalKey(S.String),
+    previousSnapshotId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     snapshotId: S.String,
   },
   $I.annote("ConfigSnapshot", {
@@ -718,7 +815,7 @@ export class ToolInvocation extends S.Class<ToolInvocation>($I`ToolInvocation`)(
  *   labeledAtEpochMillis: 1_717_000_000_000,
  *   passed: true,
  *   qualityGate: "passed",
- *   rating: 0.9
+ *   rating: 5
  * })
  * console.log(label.rating)
  * ```
@@ -730,13 +827,13 @@ export class OutcomeLabel extends S.Class<OutcomeLabel>($I`OutcomeLabel`)(
   {
     agentTaskId: S.String,
     followUpFix: S.Boolean,
-    interventionCount: S.Finite,
+    interventionCount: AiMetricsNonNegativeInteger,
     labelId: S.String,
     labeledAtEpochMillis: S.Finite,
-    note: S.optionalKey(S.String),
+    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
-    rating: S.Finite,
+    rating: AiMetricsRating,
   },
   $I.annote("OutcomeLabel", {
     description: "Structured manual label used to calibrate deploy-safe AI metrics scorecards.",
@@ -771,7 +868,7 @@ export class BenchmarkCase extends S.Class<BenchmarkCase>($I`BenchmarkCase`)(
     benchmarkCaseId: S.String,
     expectedChecks: S.Array(S.String),
     promptHash: S.String,
-    promptRef: S.optionalKey(S.String),
+    promptRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     title: S.String,
   },
   $I.annote("BenchmarkCase", {
@@ -810,8 +907,8 @@ export class BenchmarkRun extends S.Class<BenchmarkRun>($I`BenchmarkRun`)(
     benchmarkCaseId: S.String,
     benchmarkRunId: S.String,
     configSnapshotId: S.String,
-    elapsedMs: S.Finite,
-    note: S.optionalKey(S.String),
+    elapsedMs: AiMetricsNonNegativeInteger,
+    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
     recordedAtEpochMillis: S.Finite,
@@ -859,7 +956,7 @@ export class Scorecard extends S.Class<Scorecard>($I`Scorecard`)(
     completionReady: SchemaUtils.BoolKeyDefaultFalse,
     configSnapshotId: S.String,
     costScore: S.Finite,
-    coverageGaps: S.Array(S.String),
+    coverageGaps: S.Array(AiMetricsCoverageGap),
     flowScore: S.Finite,
     labelCount: S.Finite,
     outcomeScore: S.Finite,

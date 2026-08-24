@@ -172,7 +172,7 @@ export class AiMetricsRawEventEnvelope extends S.Class<AiMetricsRawEventEnvelope
       S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
     ),
-    timestamp: S.optionalKey(S.String),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AiMetricsRawEventEnvelope", {
     description: "Safe raw-event envelope that retains only hashes, line numbers, event names, and timestamps.",
@@ -207,24 +207,24 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
 )(
   {
     acceptedEvents: S.Finite,
-    agentNicknameHash: S.optionalKey(S.String),
-    agentRoleHash: S.optionalKey(S.String),
+    agentNicknameHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    agentRoleHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     eventNames: S.Array(S.String),
-    firstTimestamp: S.optionalKey(S.String),
-    forkedFromIdHash: S.optionalKey(S.String),
-    lastTimestamp: S.optionalKey(S.String),
-    parentSessionIdHash: S.optionalKey(S.String),
-    parentThreadIdHash: S.optionalKey(S.String),
+    firstTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    forkedFromIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    lastTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    parentSessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    parentThreadIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     rawEventEnvelopes: S.Array(AiMetricsRawEventEnvelope),
     rejectedLines: S.Finite,
-    sessionIdHash: S.optionalKey(S.String),
+    sessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
     sourceRole: AiMetricsSourceRole.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
     ),
-    threadSpawn: S.optionalKey(S.Boolean),
+    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
     totalLines: S.Finite,
   },
   $I.annote("AiMetricsSanitizedTranscript", {
@@ -734,7 +734,7 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
           sourceKind,
           sourcePathHash,
           sourceRole: attribution.sourceRole,
-          ...O.getSomesStruct({ timestamp: O.fromUndefinedOr(decoded.value.timestamp) }),
+          timestamp: O.fromUndefinedOr(decoded.value.timestamp),
         })
       );
     }),
@@ -804,22 +804,22 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
 
   return AiMetricsSanitizedTranscript.make({
     acceptedEvents: summary.acceptedEvents,
-    ...O.getSomesStruct({ agentNicknameHash: O.fromUndefinedOr(attribution.agentNicknameHash) }),
-    ...O.getSomesStruct({ agentRoleHash: O.fromUndefinedOr(attribution.agentRoleHash) }),
+    agentNicknameHash: O.fromUndefinedOr(attribution.agentNicknameHash),
+    agentRoleHash: O.fromUndefinedOr(attribution.agentRoleHash),
     eventNames: eventNameList(envelopes),
-    ...O.getSomesStruct({ forkedFromIdHash: O.fromUndefinedOr(attribution.forkedFromIdHash) }),
+    forkedFromIdHash: O.fromUndefinedOr(attribution.forkedFromIdHash),
     rawEventEnvelopes: envelopes,
     rejectedLines: summary.rejectedLines,
-    ...O.getSomesStruct({ parentSessionIdHash: O.fromUndefinedOr(attribution.parentSessionIdHash) }),
-    ...O.getSomesStruct({ parentThreadIdHash: O.fromUndefinedOr(attribution.parentThreadIdHash) }),
-    ...O.getSomesStruct({ sessionIdHash: O.fromUndefinedOr(attribution.sessionIdHash) }),
+    parentSessionIdHash: O.fromUndefinedOr(attribution.parentSessionIdHash),
+    parentThreadIdHash: O.fromUndefinedOr(attribution.parentThreadIdHash),
+    sessionIdHash: O.fromUndefinedOr(attribution.sessionIdHash),
     sourceKind: summary.sourceKind,
     sourcePathHash: summary.sourcePathHash,
     sourceRole: attribution.sourceRole,
-    ...O.getSomesStruct({ threadSpawn: O.fromUndefinedOr(attribution.threadSpawn) }),
+    threadSpawn: O.fromUndefinedOr(attribution.threadSpawn),
     totalLines: summary.totalLines,
-    ...O.getSomesStruct({ firstTimestamp: summary.firstTimestamp }),
-    ...O.getSomesStruct({ lastTimestamp: summary.lastTimestamp }),
+    firstTimestamp: summary.firstTimestamp,
+    lastTimestamp: summary.lastTimestamp,
   });
 });
 

@@ -17,7 +17,6 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path, pipe, Ref } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 
 const hashSalt = "identity-registry-test-salt";
 const mainSha = "1111111111111111111111111111111111111111";
@@ -548,7 +547,7 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         expect(yield* fs.exists(`${registryPath}.tmp`)).toBe(false);
 
         const json = yield* identityRegistryToJson(registry);
-        const decoded = yield* S.decodeEffect(S.fromJsonString(AiMetricsIdentityRegistry))(json);
+        const decoded = yield* AiMetricsIdentityRegistry.decodeJsonEffect(json);
         expect(decoded.registryVersion).toBe("ai-metrics-identity-registry/v1");
         expect(A.length(decoded.roots)).toBe(1);
 

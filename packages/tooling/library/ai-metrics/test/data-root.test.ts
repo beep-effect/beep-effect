@@ -168,7 +168,7 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
 
   it.effect("derives the whole storage layout beneath an explicit data root", () =>
     Effect.gen(function* () {
-      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ dataRoot: "/tmp/x" }));
+      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ dataRoot: O.some("/tmp/x") }));
 
       expect(spec.storage.dataRoot).toBe("/tmp/x");
       expect(spec.storage.derivedDir).toBe("/tmp/x/derived");
@@ -180,7 +180,7 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
 
   it.effect("resolves the XDG store when the install input carries only a home directory", () =>
     Effect.gen(function* () {
-      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ homeDir }));
+      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ homeDir: O.some(homeDir) }));
 
       expect(spec.storage.dataRoot).toBe(xdgDefaultRoot);
       expect(spec.storage.rawArchiveDir).toBe(`${xdgDefaultRoot}/raw`);

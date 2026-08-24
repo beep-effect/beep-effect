@@ -7,14 +7,14 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
 import { ExportResultCode } from "@opentelemetry/core";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { Context, Effect, flow, Layer, pipe, Schedule } from "effect";
+import { Clock, Context, Effect, flow, Layer, pipe, Schedule } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -49,7 +49,7 @@ const $I = $RepoAiMetricsId.create("otlp");
  * @category constants
  * @since 0.0.0
  */
-export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = [
+export const AiMetricsOtlpAttributeKey = LiteralKit([
   "ai_metrics.agent_nickname_hash",
   "ai_metrics.agent_role_hash",
   "ai_metrics.config_snapshot_id",
@@ -72,7 +72,27 @@ export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = [
   "openinference.span.kind",
   "session.id",
   "tool.name",
-] as const;
+]).pipe(
+  $I.annoteSchema("AiMetricsOtlpAttributeKey", {
+    description: "Attribute keys approved for redacted AI metrics OTLP span export.",
+  })
+);
+
+/**
+ * OTLP attribute keys approved for export, preserved as the package's public readonly list.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.Options;
+
+const OpenInferenceSpanKind = LiteralKit(["AGENT", "CHAIN", "LLM", "TOOL"]);
+const OtlpTraceId = S.String.check(S.isPattern(/^[0-9a-f]{32}$/u)).pipe(
+  $I.annoteSchema("OtlpTraceId", { description: "Lowercase hexadecimal OTLP trace identifier." })
+);
+const OtlpSpanId = S.String.check(S.isPattern(/^[0-9a-f]{16}$/u)).pipe(
+  $I.annoteSchema("OtlpSpanId", { description: "Lowercase hexadecimal OTLP span identifier." })
+);
 
 /**
  * Attribute value variants allowed on redacted AI metrics OTLP spans.
@@ -194,7 +214,7 @@ export class AiMetricsOtlpExportInput extends S.Class<AiMetricsOtlpExportInput>(
  *
  * const projection = AiMetricsOtlpSpanProjection.make({
  *   attributes: {
- *     "ai_metrics.event_name": "codex.event_msg",
+ *     "ai_metrics.event_name": "event_msg",
  *     "ai_metrics.line_number": 1,
  *     "openinference.span.kind": "CHAIN"
  *   },
@@ -216,15 +236,22 @@ export class AiMetricsOtlpSpanProjection extends S.Class<AiMetricsOtlpSpanProjec
      * themselves, so one agent session arrives as one trace instead of as many
      * unrelated roots.
      */
-    parentSpanId: S.optionalKey(S.String),
-    spanId: S.String,
-    spanName: S.String,
-    traceId: S.String,
+    parentSpanId: S.OptionFromOptionalKey(OtlpSpanId).pipe(SchemaUtils.withNoneDefault),
+    spanId: OtlpSpanId,
+    spanName: S.NonEmptyString,
+    traceId: OtlpTraceId,
+    /** Turn watermark identity, absent only on synthetic session spans. */
+    turnId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AiMetricsOtlpSpanProjection", {
     description: "Redacted span identity, name, and bounded attributes derived from AI metrics DuckDB storage.",
   })
-) {}
+) {
+  static readonly turnIdsFor: (projections: ReadonlyArray<AiMetricsOtlpSpanProjection>) => ReadonlyArray<string> = flow(
+    A.map((projection) => projection.turnId),
+    A.getSomes
+  );
+}
 
 /**
  * Span projections for every derived turn still awaiting OTLP export.
@@ -240,7 +267,7 @@ export class AiMetricsOtlpSpanProjection extends S.Class<AiMetricsOtlpSpanProjec
  * const batch = AiMetricsOtlpSpanProjectionBatch.make({
  *   projections: [
  *     AiMetricsOtlpSpanProjection.make({
- *       attributes: { "ai_metrics.event_name": "codex.event_msg" },
+ *       attributes: { "ai_metrics.event_name": "event_msg" },
  *       spanId: "1122334455667788",
  *       spanName: "ai_metrics.turn",
  *       traceId: "0123456789abcdef0123456789abcdef"
@@ -261,14 +288,14 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Class<AiMetricsOtlpSpanP
 )(
   {
     projections: S.Array(AiMetricsOtlpSpanProjection),
-    sessionSpanCount: S.Finite,
+    sessionSpanCount: S.Natural,
     /**
      * Turn ids backing this batch, carried so a successful export can close the
      * watermark on exactly the rows it emitted rather than on a re-evaluated
      * predicate that may have moved underneath it.
      */
     turnIds: S.Array(S.String),
-    turnSpanCount: S.Finite,
+    turnSpanCount: S.Natural,
   },
   $I.annote("AiMetricsOtlpSpanProjectionBatch", {
     description: "Redacted OTLP span projections for every AI metrics turn still awaiting export.",
@@ -299,35 +326,37 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Class<AiMetricsOtlpSpanP
 export class AiMetricsOtlpExportResult extends S.Class<AiMetricsOtlpExportResult>($I`AiMetricsOtlpExportResult`)(
   {
     endpointTraceUrl: S.String,
-    sessionSpanCount: S.Finite,
-    spanCount: S.Finite,
+    sessionSpanCount: S.Natural,
+    spanCount: S.Natural,
     target: AiMetricsDeployTarget,
-    turnSpanCount: S.Finite,
+    turnSpanCount: S.Natural,
   },
   $I.annote("AiMetricsOtlpExportResult", {
     description: "Safe counts returned after emitting redacted AI metrics spans to the active tracer.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
+}
 
 class AiMetricsOtlpTurnExportRow extends S.Class<AiMetricsOtlpTurnExportRow>($I`AiMetricsOtlpTurnExportRow`)(
   {
-    agentNicknameHash: S.NullOr(S.String),
-    agentRoleHash: S.NullOr(S.String),
+    agentNicknameHash: S.OptionFromNullOr(S.String),
+    agentRoleHash: S.OptionFromNullOr(S.String),
     agentSessionId: S.String,
     configSnapshotId: S.String,
     eventName: S.String,
-    forkedFromIdHash: S.NullOr(S.String),
+    forkedFromIdHash: S.OptionFromNullOr(S.String),
     ingestRunId: S.String,
-    lineNumber: S.Finite,
-    parentSessionIdHash: S.NullOr(S.String),
-    parentThreadIdHash: S.NullOr(S.String),
+    lineNumber: S.Natural,
+    parentSessionIdHash: S.OptionFromNullOr(S.String),
+    parentThreadIdHash: S.OptionFromNullOr(S.String),
     rawEventHash: S.String,
-    sessionIdHash: S.NullOr(S.String),
+    sessionIdHash: S.OptionFromNullOr(S.String),
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
     sourceRole: AiMetricsSourceRole,
-    threadSpawn: S.NullOr(S.Boolean),
-    timestamp: S.NullOr(S.String),
+    threadSpawn: S.OptionFromNullOr(S.Boolean),
+    timestamp: S.OptionFromNullOr(S.String),
     turnId: S.String,
   },
   $I.annote("AiMetricsOtlpTurnExportRow", {
@@ -336,8 +365,6 @@ class AiMetricsOtlpTurnExportRow extends S.Class<AiMetricsOtlpTurnExportRow>($I`
 ) {}
 
 const decodeTurnRows = S.decodeUnknownEffect(S.Array(AiMetricsOtlpTurnExportRow));
-const encodeOtlpExportJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
-
 const exportFailure = (message: string, cause: unknown): AiMetricsOtlpExportError =>
   AiMetricsOtlpExportError.make({ cause, message });
 
@@ -357,13 +384,12 @@ const otlpDeliveryRetrySchedule = Schedule.exponential("1 second").pipe(Schedule
 
 const unknownMetadata = "unknown";
 
-const providerFor = (row: AiMetricsOtlpTurnExportRow): string => {
-  if (row.sourceKind === AiMetricsTranscriptSource.Enum.openclaw) {
-    return "openclaw";
-  }
-
-  return unknownMetadata;
-};
+const providerFor = (row: AiMetricsOtlpTurnExportRow): string =>
+  AiMetricsTranscriptSource.$match(row.sourceKind, {
+    claude: () => unknownMetadata,
+    codex: () => unknownMetadata,
+    openclaw: () => AiMetricsTranscriptSource.Enum.openclaw,
+  });
 
 const toolNameFor = (row: AiMetricsOtlpTurnExportRow): O.Option<string> =>
   pipe(row.eventName, Str.toLowerCase, Str.includes("tool")) ? O.some(row.eventName) : O.none();
@@ -371,7 +397,7 @@ const toolNameFor = (row: AiMetricsOtlpTurnExportRow): O.Option<string> =>
 const allowlistedAttributes: (
   attributes: Record<string, AiMetricsOtlpAttributeValue>
 ) => Record<string, AiMetricsOtlpAttributeValue> = flow(
-  R.filter((_value, key) => A.contains(AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST as ReadonlyArray<string>, key))
+  R.filter((_value, key) => S.is(AiMetricsOtlpAttributeKey)(key))
 );
 
 const llmEventNameFragments = [
@@ -386,11 +412,13 @@ const llmEventNameFragments = [
 
 const openInferenceSpanKindFor = (row: AiMetricsOtlpTurnExportRow): string => {
   if (O.isSome(toolNameFor(row))) {
-    return "TOOL";
+    return OpenInferenceSpanKind.Enum.TOOL;
   }
 
   const eventName = Str.toLowerCase(row.eventName);
-  return A.some(llmEventNameFragments, (fragment) => Str.includes(fragment)(eventName)) ? "LLM" : "CHAIN";
+  return A.some(llmEventNameFragments, (fragment) => Str.includes(fragment)(eventName))
+    ? OpenInferenceSpanKind.Enum.LLM
+    : OpenInferenceSpanKind.Enum.CHAIN;
 };
 
 // Selects every turn that has not yet been exported, rather than the turns belonging
@@ -486,25 +514,26 @@ const sessionProjection = (
   AiMetricsOtlpSpanProjection.make({
     attributes: allowlistedAttributes({
       ...O.getSomesStruct({
-        "ai_metrics.agent_nickname_hash": O.fromNullishOr(row.agentNicknameHash),
-        "ai_metrics.agent_role_hash": O.fromNullishOr(row.agentRoleHash),
-        "ai_metrics.forked_from_id_hash": O.fromNullishOr(row.forkedFromIdHash),
-        "ai_metrics.parent_session_id_hash": O.fromNullishOr(row.parentSessionIdHash),
-        "ai_metrics.parent_thread_id_hash": O.fromNullishOr(row.parentThreadIdHash),
-        "ai_metrics.session_id_hash": O.fromNullishOr(row.sessionIdHash),
+        "ai_metrics.agent_nickname_hash": row.agentNicknameHash,
+        "ai_metrics.agent_role_hash": row.agentRoleHash,
+        "ai_metrics.forked_from_id_hash": row.forkedFromIdHash,
+        "ai_metrics.parent_session_id_hash": row.parentSessionIdHash,
+        "ai_metrics.parent_thread_id_hash": row.parentThreadIdHash,
+        "ai_metrics.session_id_hash": row.sessionIdHash,
+        "ai_metrics.thread_spawn": row.threadSpawn,
       }),
-      ...(row.threadSpawn === null ? {} : { "ai_metrics.thread_spawn": row.threadSpawn }),
       "ai_metrics.config_snapshot_id": row.configSnapshotId,
       "ai_metrics.ingest_run_id": row.ingestRunId,
       "ai_metrics.source_kind": row.sourceKind,
       "ai_metrics.source_path_hash": row.sourcePathHash,
       "ai_metrics.source_role": row.sourceRole,
-      "openinference.span.kind": "AGENT",
+      "openinference.span.kind": OpenInferenceSpanKind.Enum.AGENT,
       "session.id": row.agentSessionId,
     }),
     spanId: identity.sessionSpanId,
     spanName: "ai_metrics.agent.session",
     traceId: identity.traceId,
+    turnId: O.none(),
   });
 
 const turnProjection = Effect.fnUntraced(function* (
@@ -517,7 +546,7 @@ const turnProjection = Effect.fnUntraced(function* (
   return AiMetricsOtlpSpanProjection.make({
     attributes: allowlistedAttributes({
       ...O.getSomesStruct({
-        "ai_metrics.timestamp": O.fromNullishOr(row.timestamp),
+        "ai_metrics.timestamp": row.timestamp,
         "ai_metrics.tool_name": toolName,
         "tool.name": toolName,
       }),
@@ -534,10 +563,11 @@ const turnProjection = Effect.fnUntraced(function* (
       "openinference.span.kind": openInferenceSpanKindFor(row),
       "session.id": row.agentSessionId,
     }),
-    parentSpanId: identity.sessionSpanId,
+    parentSpanId: O.some(identity.sessionSpanId),
     spanId,
     spanName: "ai_metrics.agent.turn",
     traceId: identity.traceId,
+    turnId: O.some(row.turnId),
   });
 });
 
@@ -664,7 +694,7 @@ export const markAiMetricsOtlpTurnsExported: (
       return;
     }
     const duckdb = yield* DuckDb;
-    const exportedAtEpochMillis = yield* Effect.clockWith((clock) => clock.currentTimeMillis);
+    const exportedAtEpochMillis = yield* Clock.currentTimeMillis;
     // DuckDB parameters are scalars, so the id list becomes numbered placeholders.
     // Chunked because a run can carry tens of thousands of turns and a single
     // statement with that many bindings is not worth risking.
@@ -747,7 +777,7 @@ const readableSpanFor =
     name: projection.spanName,
     ...O.getSomesStruct({
       parentSpanContext: pipe(
-        O.fromUndefinedOr(projection.parentSpanId),
+        projection.parentSpanId,
         O.map((parentSpanId) => ({
           spanId: parentSpanId,
           traceFlags: TraceFlags.SAMPLED,
@@ -800,7 +830,7 @@ const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
   }
 
   const resource = resourceFor(input);
-  const timestamp = hrTimeFrom(yield* Effect.clockWith((clock) => clock.currentTimeMillis));
+  const timestamp = hrTimeFrom(yield* Clock.currentTimeMillis);
   const toReadableSpan = readableSpanFor(resource, timestamp);
 
   yield* Effect.acquireUseRelease(
@@ -1000,11 +1030,6 @@ export const runAiMetricsOtlpProjectionBatchExport: {
   runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, () => Effect.void).pipe(withOtlpExportSpan(input))
 );
 
-const turnIdsFor: (projections: ReadonlyArray<AiMetricsOtlpSpanProjection>) => ReadonlyArray<string> = flow(
-  A.map((projection) => pipe(O.fromNullishOr(projection.attributes["ai_metrics.turn_id"]), O.filter(P.isString))),
-  A.getSomes
-);
-
 /**
  * Read, deliver, and mark every AI metrics turn still awaiting OTLP export.
  *
@@ -1067,7 +1092,9 @@ export const runAiMetricsOtlpExport: (
     // acknowledged chunk reaches the mark. A rejected chunk fails before its checkpoint,
     // while earlier chunks stay closed so a retry resumes instead of replaying the prefix.
     const result = yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, (projections) =>
-      markAiMetricsOtlpTurnsExported(turnIdsFor(projections)).pipe(Effect.provideService(DuckDb, duckdb))
+      markAiMetricsOtlpTurnsExported(AiMetricsOtlpSpanProjection.turnIdsFor(projections)).pipe(
+        Effect.provideService(DuckDb, duckdb)
+      )
     );
 
     return result;
@@ -1105,7 +1132,7 @@ export const otlpExportResultToJson: (
   result: AiMetricsOtlpExportResult
 ) => Effect.Effect<string, AiMetricsOtlpExportError> = Effect.fn("AiMetrics.otlpExportResultToJson")(
   function* (result) {
-    return yield* encodeOtlpExportJson(result).pipe(
+    return yield* AiMetricsOtlpExportResult.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => exportFailure("Failed to encode AI metrics OTLP export result as JSON.", cause))
     );
   }

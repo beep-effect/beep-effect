@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Stream } from "effect";
@@ -123,10 +123,11 @@ export class AiMetricsSourceDiscoveryInput extends S.Class<AiMetricsSourceDiscov
  *
  * ```ts
  * import { AiMetricsDiscoveredTranscriptFile } from "@beep/repo-ai-metrics"
+ * import * as O from "effect/Option"
  *
  * const file = AiMetricsDiscoveredTranscriptFile.make({
  *   modifiedAtMillis: 1_717_000_000_000,
- *   sessionIdHash: "session-hash",
+ *   sessionIdHash: O.some("session-hash"),
  *   sizeBytes: 4096,
  *   sourceKind: "codex",
  *   sourcePathHash: "source-hash",
@@ -142,18 +143,18 @@ export class AiMetricsDiscoveredTranscriptFile extends S.Class<AiMetricsDiscover
   $I`AiMetricsDiscoveredTranscriptFile`
 )(
   {
-    agentNicknameHash: S.optionalKey(S.String),
-    agentRoleHash: S.optionalKey(S.String),
-    forkedFromIdHash: S.optionalKey(S.String),
+    agentNicknameHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    agentRoleHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    forkedFromIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     modifiedAtMillis: S.Finite,
-    parentSessionIdHash: S.optionalKey(S.String),
-    parentThreadIdHash: S.optionalKey(S.String),
-    sessionIdHash: S.optionalKey(S.String),
+    parentSessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    parentThreadIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    sessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sizeBytes: S.Finite,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
     sourceRole: AiMetricsSourceRole,
-    threadSpawn: S.optionalKey(S.Boolean),
+    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AiMetricsDiscoveredTranscriptFile", {
     description: "Discovered local source file with private identifiers represented by salted hashes.",
@@ -400,18 +401,18 @@ const makeDiscoveredTranscriptFile = Effect.fn("AiMetrics.makeDiscoveredTranscri
   const fallbackSessionIdHash = yield* hashPrivateIdentifier(sessionIdFromPath(pathApi, sourcePath), hashSalt);
 
   return AiMetricsDiscoveredTranscriptFile.make({
-    ...O.getSomesStruct({ agentNicknameHash: O.fromUndefinedOr(attribution.agentNicknameHash) }),
-    ...O.getSomesStruct({ agentRoleHash: O.fromUndefinedOr(attribution.agentRoleHash) }),
-    ...O.getSomesStruct({ forkedFromIdHash: O.fromUndefinedOr(attribution.forkedFromIdHash) }),
+    agentNicknameHash: O.fromUndefinedOr(attribution.agentNicknameHash),
+    agentRoleHash: O.fromUndefinedOr(attribution.agentRoleHash),
+    forkedFromIdHash: O.fromUndefinedOr(attribution.forkedFromIdHash),
     modifiedAtMillis: modifiedAtMillis(info),
-    ...O.getSomesStruct({ parentSessionIdHash: O.fromUndefinedOr(attribution.parentSessionIdHash) }),
-    ...O.getSomesStruct({ parentThreadIdHash: O.fromUndefinedOr(attribution.parentThreadIdHash) }),
-    sessionIdHash: attribution.sessionIdHash ?? fallbackSessionIdHash,
+    parentSessionIdHash: O.fromUndefinedOr(attribution.parentSessionIdHash),
+    parentThreadIdHash: O.fromUndefinedOr(attribution.parentThreadIdHash),
+    sessionIdHash: O.some(attribution.sessionIdHash ?? fallbackSessionIdHash),
     sizeBytes: fileSizeBytes(info),
     sourceKind,
     sourcePathHash: yield* hashPrivateIdentifier(sourcePath, hashSalt),
     sourceRole: attribution.sourceRole,
-    ...O.getSomesStruct({ threadSpawn: O.fromUndefinedOr(attribution.threadSpawn) }),
+    threadSpawn: O.fromUndefinedOr(attribution.threadSpawn),
   });
 });
 
@@ -588,7 +589,7 @@ const discoverOpenClawSource = Effect.fn("AiMetrics.discoverOpenClawSource")(fun
 
   const file = AiMetricsDiscoveredTranscriptFile.make({
     modifiedAtMillis: modifiedAtMillis(unitInfo.value),
-    sessionIdHash: yield* hashPrivateIdentifier("openclaw-gateway.service", input.hashSalt),
+    sessionIdHash: O.some(yield* hashPrivateIdentifier("openclaw-gateway.service", input.hashSalt)),
     sizeBytes: fileSizeBytes(unitInfo.value),
     sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
     sourcePathHash: yield* hashPrivateIdentifier(unitPath, input.hashSalt),

@@ -1,6 +1,7 @@
-import { fcRuns } from "@beep/fc-runs";
 import {
   HookPulseAgentKind,
+  HookPulseDisarmSentinel,
+  HookPulseDisarmWindow,
   HookPulseEvent,
   HookPulseEvidenceTier,
   HookPulseInstrumentClass,
@@ -14,6 +15,7 @@ import {
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
 import { Unknown } from "@beep/schema/Unknown";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -257,17 +259,34 @@ const AI_RUNG_SALT = "hook-pulse-codec-ai-rung-salt";
 const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
   Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
 
-const decodeRawHookPulse = S.decodeUnknownEffect(HookPulseRawEvent);
-const encodeRawHookPulse = S.encodeUnknownEffect(HookPulseRawEvent);
-const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
-const decodeHookPulseFromLegacy = S.decodeUnknownEffect(HookPulseV1FromLegacyRecord);
-const decodeHookPulse = S.decodeUnknownEffect(HookPulseV1);
-const encodeHookPulse = S.encodeUnknownEffect(HookPulseV1);
-const encodeHookPulseToRaw = S.encodeUnknownEffect(HookPulseV1FromRawEvent);
+const decodeRawHookPulse = HookPulseRawEvent.decodeEffect;
+const encodeRawHookPulse = HookPulseRawEvent.encodeEffect;
+const decodeHookPulseFromRaw = HookPulseV1FromRawEvent.decodeUnknownEffect;
+const decodeHookPulseFromLegacy = HookPulseV1FromLegacyRecord.decodeUnknownEffect;
+const decodeHookPulse = HookPulseV1.decodeEffect;
+const encodeHookPulse = HookPulseV1.encodeEffect;
+const encodeHookPulseToRaw = HookPulseV1FromRawEvent.encodeUnknownEffect;
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
 describe("HookPulseV1", () => {
+  it("round-trips disarm artifacts through their production JSON codecs", () => {
+    fc.assert(
+      fc.property(
+        S.toArbitrary(HookPulseDisarmSentinel)(fc),
+        S.toArbitrary(HookPulseDisarmWindow)(fc),
+        (sentinel, window) => {
+          const sentinelJson = Result.getOrThrow(HookPulseDisarmSentinel.encodeJsonResult(sentinel));
+          const windowJson = Result.getOrThrow(HookPulseDisarmWindow.encodeJsonResult(window));
+
+          expect(Result.getOrThrow(HookPulseDisarmSentinel.decodeJsonResult(sentinelJson))).toEqual(sentinel);
+          expect(Result.getOrThrow(HookPulseDisarmWindow.decodeJsonResult(windowJson))).toEqual(window);
+        }
+      ),
+      fcRuns(25)
+    );
+  });
+
   it.effect("migrates legacy v1 rows without retaining raw private identifiers", () =>
     Effect.gen(function* () {
       const legacy = {
@@ -301,13 +320,10 @@ describe("HookPulseV1", () => {
   );
 
   it("round-trips schema-derived arbitrary values", () => {
-    const encode = S.encodeResult(HookPulseV1);
-    const decode = S.decodeUnknownResult(HookPulseV1);
-
     fc.assert(
       fc.property(S.toArbitrary(HookPulseV1)(fc), (value) => {
-        const encoded = Result.getOrThrow(encode(value));
-        const decoded = Result.getOrThrow(decode(encoded));
+        const encoded = Result.getOrThrow(HookPulseV1.encodeResult(value));
+        const decoded = Result.getOrThrow(HookPulseV1.decodeResult(encoded));
 
         expect(hookPulseEquivalent(decoded, value)).toBe(true);
       }),
@@ -316,8 +332,6 @@ describe("HookPulseV1", () => {
   });
 
   it("round-trips arbitrary encodable canonical values through the raw-event codec", () => {
-    const encode = S.encodeResult(HookPulseV1FromRawEvent);
-    const decode = S.decodeUnknownResult(HookPulseV1FromRawEvent);
     // The raw codec requires transcriptPath and intentionally clamps observed evidence to derived.
     const arbitrary = S.toArbitrary(HookPulseV1)(fc)
       .filter((value) => O.isSome(value.transcriptPath))
@@ -325,8 +339,8 @@ describe("HookPulseV1", () => {
 
     fc.assert(
       fc.property(arbitrary, (value) => {
-        const encoded = Result.getOrThrow(encode(value));
-        const decoded = Result.getOrThrow(decode(encoded));
+        const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
+        const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
 
         expect(hookPulseEquivalent(decoded, value)).toBe(true);
       }),
@@ -991,12 +1005,8 @@ describe("HookPulseV1", () => {
   );
 
   it("decodes an already-hashed raw event synchronously", () => {
-    // The salt read now sits *before* the 64-hex fast path. `Effect.runSync`
-    // dies on an effect that ever suspends, so this pins that the read did not
-    // push that path into async — which would break the codec's own JSDoc
-    // Examples and any `S.decodeUnknownResult`-shaped replay code, both of which
-    // go through the same synchronous adapter.
-    const decoded = Effect.runSync(withSaltEnv({}, decodeHookPulseFromRaw(alreadyHashedRawInput)));
+    // The Result adapter proves the already-hashed fast path stays synchronous.
+    const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(alreadyHashedRawInput));
 
     expect(decoded).toBeInstanceOf(HookPulseV1);
     expect(decoded.sessionId).toBe(alreadyHashedRawEventFixture.session_id);

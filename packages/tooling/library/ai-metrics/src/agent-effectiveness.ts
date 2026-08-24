@@ -29,12 +29,8 @@ import * as S from "effect/Schema";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import { AiMetricsDeployTarget } from "./models.ts";
-import type {
-  PhoenixAnnotationTargetKind as PhoenixAnnotationTargetKindType,
-  PhoenixError,
-  PhoenixShape,
-} from "@beep/phoenix";
+import { AiMetricsDeployTarget, CountRow } from "./models.ts";
+import type { PhoenixError, PhoenixShape } from "@beep/phoenix";
 
 const $I = $RepoAiMetricsId.create("agent-effectiveness");
 
@@ -180,6 +176,215 @@ export const AgentEffectivenessStatus = LiteralKit(["passed", "warning", "failed
 export type AgentEffectivenessStatus = typeof AgentEffectivenessStatus.Type;
 
 /**
+ * Optimization directions accepted by planned agent-effectiveness metrics.
+ *
+ * **Example** (Select a minimizing metric)
+ *
+ * ```ts
+ * import { AgentEffectivenessAnnotationOptimization } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AgentEffectivenessAnnotationOptimization.Enum.minimize) // minimize
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessAnnotationOptimization = LiteralKit(["maximize", "minimize"]).pipe(
+  $I.annoteSchema("AgentEffectivenessAnnotationOptimization", {
+    description: "Direction that counts as better for a planned agent-effectiveness metric.",
+  })
+);
+
+/**
+ * Decoded optimization direction carried by a planned annotation.
+ *
+ * @see {@link AgentEffectivenessAnnotationOptimization} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentEffectivenessAnnotationOptimization = typeof AgentEffectivenessAnnotationOptimization.Type;
+
+/**
+ * Local evidence targets that an annotation plan can describe.
+ *
+ * **Example** (Select an agent task target)
+ *
+ * ```ts
+ * import { AgentEffectivenessAnnotationTargetKind } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AgentEffectivenessAnnotationTargetKind.Enum["agent-task"]) // agent-task
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessAnnotationTargetKind = LiteralKit([
+  "agent-task",
+  "benchmark-run",
+  "loop",
+  "scorecard",
+  "source",
+  "worker-report",
+]).pipe(
+  $I.annoteSchema("AgentEffectivenessAnnotationTargetKind", {
+    description: "Local evidence target kinds supported by an agent-effectiveness annotation plan.",
+  })
+);
+
+/**
+ * Decoded local target kind carried by a planned annotation.
+ *
+ * @see {@link AgentEffectivenessAnnotationTargetKind} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentEffectivenessAnnotationTargetKind = typeof AgentEffectivenessAnnotationTargetKind.Type;
+
+/**
+ * Repo-owned evidence sources that can produce planned annotations.
+ *
+ * **Example** (Select AI-metrics evidence)
+ *
+ * ```ts
+ * import { AgentEffectivenessAnnotationSource } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AgentEffectivenessAnnotationSource.Enum["ai-metrics"]) // ai-metrics
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessAnnotationSource = LiteralKit([
+  "agent-effectiveness-doctor",
+  "ai-metrics",
+  "jsdoc-worker-eval",
+]).pipe(
+  $I.annoteSchema("AgentEffectivenessAnnotationSource", {
+    description: "Repo-owned evidence sources that can produce planned agent-effectiveness annotations.",
+  })
+);
+
+/**
+ * Decoded evidence source carried by a planned annotation.
+ *
+ * @see {@link AgentEffectivenessAnnotationSource} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentEffectivenessAnnotationSource = typeof AgentEffectivenessAnnotationSource.Type;
+
+/**
+ * Mutation outcomes recorded by annotation plans and Phoenix sync attempts.
+ *
+ * **Example** (Record a dry run)
+ *
+ * ```ts
+ * import { AgentEffectivenessMutationPolicy } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AgentEffectivenessMutationPolicy.Enum["dry-run-no-phoenix-mutation"])
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessMutationPolicy = LiteralKit([
+  "blocked-annotation-check-failed",
+  "blocked-dataset-check-failed",
+  "blocked-missing-confirmation-token",
+  "confirmed-phoenix-write",
+  "dry-run-annotation-check-failed",
+  "dry-run-dataset-check-failed",
+  "dry-run-no-phoenix-mutation",
+  "local-only-no-phoenix-mutation",
+]).pipe(
+  $I.annoteSchema("AgentEffectivenessMutationPolicy", {
+    description: "How an annotation plan or Phoenix sync result handled remote mutation.",
+  })
+);
+
+/**
+ * Decoded mutation outcome carried by a plan or sync result.
+ *
+ * @see {@link AgentEffectivenessMutationPolicy} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentEffectivenessMutationPolicy = typeof AgentEffectivenessMutationPolicy.Type;
+
+/**
+ * Stable codes emitted by the annotation privacy and schema check.
+ *
+ * **Example** (Identify a duplicate annotation)
+ *
+ * ```ts
+ * import { AgentEffectivenessAnnotationCheckFindingCode } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AgentEffectivenessAnnotationCheckFindingCode.Enum["duplicate-annotation-id"])
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessAnnotationCheckFindingCode = LiteralKit([
+  "duplicate-annotation-id",
+  "max-nested-depth",
+  "onepassword-ref",
+  "plan-encode-failed",
+  "private-home-path",
+  "raw-worker-draft",
+  "secret-shaped-value",
+]).pipe(
+  $I.annoteSchema("AgentEffectivenessAnnotationCheckFindingCode", {
+    description: "Closed finding codes emitted by the annotation privacy and schema check.",
+  })
+);
+
+/**
+ * Decoded code carried by an annotation-check finding.
+ *
+ * @see {@link AgentEffectivenessAnnotationCheckFindingCode} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentEffectivenessAnnotationCheckFindingCode = typeof AgentEffectivenessAnnotationCheckFindingCode.Type;
+
+/**
+ * Compatibility versions recognized for agent-effectiveness JSON artifacts.
+ *
+ * **Example** (Read the dataset artifact version)
+ *
+ * ```ts
+ * import { AgentEffectivenessArtifactSchemaVersion } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-datasets/v1"])
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessArtifactSchemaVersion = LiteralKit([
+  "agent-effectiveness-annotation-check/v1",
+  "agent-effectiveness-annotation-plan/v1",
+  "agent-effectiveness-datasets/v1",
+  "agent-effectiveness-doctor/v1",
+  "agent-effectiveness-experiments/v1",
+  "agent-effectiveness-prompts/v1",
+]).pipe(
+  $I.annoteSchema("AgentEffectivenessArtifactSchemaVersion", {
+    description: "Compatibility versions for persisted agent-effectiveness JSON artifacts.",
+  })
+);
+
+/**
+ * Decoded compatibility version carried by an agent-effectiveness artifact.
+ *
+ * @see {@link AgentEffectivenessArtifactSchemaVersion} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentEffectivenessArtifactSchemaVersion = typeof AgentEffectivenessArtifactSchemaVersion.Type;
+
+/**
  * Primitive annotation value allowed in local Phase 1 plans.
  *
  * **Details**
@@ -263,6 +468,11 @@ export class AgentEffectivenessError extends S.TaggedError<AgentEffectivenessErr
   })
 ) {}
 
+const agentEffectivenessFailure =
+  (message: string) =>
+  (cause: unknown): AgentEffectivenessError =>
+    AgentEffectivenessError.make({ cause, message });
+
 /**
  * Input for the Phase 1 agent-effectiveness doctor.
  *
@@ -292,21 +502,11 @@ export class AgentEffectivenessDoctorInput extends S.Class<AgentEffectivenessDoc
 )(
   {
     dataRoot: S.String,
-    noPhoenix: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    phoenixBaseUrl: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed(defaultPhoenixBaseUrl)),
-      S.withDecodingDefaultKey(Effect.succeed(defaultPhoenixBaseUrl))
-    ),
-    target: AiMetricsDeployTarget.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.dankserver)),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsDeployTarget.Enum.dankserver))
-    ),
+    noPhoenix: SchemaUtils.BoolKeyDefaultFalse,
+    phoenixBaseUrl: S.String.pipe(SchemaUtils.withKeyDefaults(defaultPhoenixBaseUrl)),
+    target: AiMetricsDeployTarget.pipe(SchemaUtils.withKeyDefaults(AiMetricsDeployTarget.Enum.dankserver)),
     workerEvalReportPath: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed(DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH)),
-      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH))
+      SchemaUtils.withKeyDefaults(DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH)
     ),
   },
   $I.annote("AgentEffectivenessDoctorInput", {
@@ -344,10 +544,7 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
   $I`AgentEffectivenessAnnotationPlanInput`
 )(
   {
-    annotationLimit: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(defaultAnnotationLimit)),
-      S.withDecodingDefaultKey(Effect.succeed(defaultAnnotationLimit))
-    ),
+    annotationLimit: S.Int.pipe(SchemaUtils.withKeyDefaults(defaultAnnotationLimit)),
     doctor: AgentEffectivenessDoctorInput,
   },
   $I.annote("AgentEffectivenessAnnotationPlanInput", {
@@ -383,13 +580,10 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
  * import { AgentEffectivenessPhoenixProject } from "@beep/repo-ai-metrics"
  *
  * const project = AgentEffectivenessPhoenixProject.make({
- *   hasTraces: true,
  *   name: "beep-agent-effectiveness",
- *   recordCount: 12,
  *   spanAnnotationNames: ["scorecard.total_score"],
  *   sessionAnnotationNames: [],
  *   traceAnnotationNames: ["agent.loop.status"],
- *   traceCount: 4
  * })
  *
  * console.log(project.traceAnnotationNames) // [ "agent.loop.status" ]
@@ -402,13 +596,13 @@ export class AgentEffectivenessPhoenixProject extends S.Class<AgentEffectiveness
   $I`AgentEffectivenessPhoenixProject`
 )(
   {
-    hasTraces: S.NullOr(S.Boolean),
+    hasTraces: S.OptionFromNullOr(S.Boolean).pipe(SchemaUtils.withNoneDefault),
     name: S.String,
-    recordCount: S.NullOr(S.Finite),
+    recordCount: S.OptionFromNullOr(S.Finite).pipe(SchemaUtils.withNoneDefault),
     spanAnnotationNames: S.Array(S.String),
     sessionAnnotationNames: S.Array(S.String),
     traceAnnotationNames: S.Array(S.String),
-    traceCount: S.NullOr(S.Finite),
+    traceCount: S.OptionFromNullOr(S.Finite).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AgentEffectivenessPhoenixProject", {
     description: "Sanitized Phoenix project inventory row used by the agent-effectiveness doctor.",
@@ -448,7 +642,6 @@ export class AgentEffectivenessPhoenixProject extends S.Class<AgentEffectiveness
  *   promptCount: 2,
  *   serverInsufficientStorage: false,
  *   status: "passed",
- *   version: "9.0.0"
  * })
  *
  * console.log(section.status) // passed
@@ -470,7 +663,7 @@ export class AgentEffectivenessPhoenixSection extends S.Class<AgentEffectiveness
     promptCount: S.Finite,
     serverInsufficientStorage: S.Boolean,
     status: AgentEffectivenessStatus,
-    version: S.NullOr(S.String),
+    version: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AgentEffectivenessPhoenixSection", {
     description: "Non-mutating Phoenix readiness section for the agent-effectiveness doctor.",
@@ -502,7 +695,6 @@ export class AgentEffectivenessPhoenixSection extends S.Class<AgentEffectiveness
  *
  * const coverage = AgentEffectivenessSourceCoverage.make({
  *   acceptedEvents: 48,
- *   lastTimestamp: "2026-05-20T00:00:00.000Z",
  *   rejectedLines: 2,
  *   sourceFileCount: 3,
  *   sourceKind: "codex",
@@ -520,7 +712,7 @@ export class AgentEffectivenessSourceCoverage extends S.Class<AgentEffectiveness
 )(
   {
     acceptedEvents: S.Finite,
-    lastTimestamp: S.NullOr(S.String),
+    lastTimestamp: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
     rejectedLines: S.Finite,
     sourceFileCount: S.Finite,
     sourceKind: S.String,
@@ -529,7 +721,9 @@ export class AgentEffectivenessSourceCoverage extends S.Class<AgentEffectiveness
   $I.annote("AgentEffectivenessSourceCoverage", {
     description: "Aggregate source coverage for one transcript source kind.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(AgentEffectivenessSourceCoverage));
+}
 
 /**
  * Latest forwarder summary from derived AI-metrics storage.
@@ -578,7 +772,9 @@ export class AgentEffectivenessForwarderSummary extends S.Class<AgentEffectivene
   $I.annote("AgentEffectivenessForwarderSummary", {
     description: "Latest deploy-safe forwarder run summary.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(AgentEffectivenessForwarderSummary));
+}
 
 /**
  * Latest scorecard summary from derived AI-metrics storage.
@@ -669,8 +865,6 @@ export class AgentEffectivenessScorecardSummary extends S.Class<AgentEffectivene
  *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   derivedDuckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
  *   labelCount: 0,
- *   latestForwarder: null,
- *   latestScorecard: null,
  *   message: "AI-metrics evidence has not been derived yet.",
  *   sourceCoverage: [],
  *   status: "unavailable",
@@ -691,8 +885,8 @@ export class AgentEffectivenessAiMetricsSection extends S.Class<AgentEffectivene
     dataRoot: S.String,
     derivedDuckDbPath: S.String,
     labelCount: S.Finite,
-    latestForwarder: S.NullOr(AgentEffectivenessForwarderSummary),
-    latestScorecard: S.NullOr(AgentEffectivenessScorecardSummary),
+    latestForwarder: S.OptionFromNullOr(AgentEffectivenessForwarderSummary).pipe(SchemaUtils.withNoneDefault),
+    latestScorecard: S.OptionFromNullOr(AgentEffectivenessScorecardSummary).pipe(SchemaUtils.withNoneDefault),
     message: S.String,
     sourceCoverage: S.Array(AgentEffectivenessSourceCoverage),
     status: AgentEffectivenessStatus,
@@ -727,12 +921,9 @@ export class AgentEffectivenessAiMetricsSection extends S.Class<AgentEffectivene
  * import { AgentEffectivenessJsdocWorkerSection } from "@beep/repo-ai-metrics"
  *
  * const section = AgentEffectivenessJsdocWorkerSection.make({
- *   cleanupDeleteStatus: "ok",
- *   cleanupStopStatus: "ok",
  *   completedPackets: 50,
  *   failedPackets: 0,
  *   message: "JSDoc worker-eval completed without policy violations.",
- *   otlpStatus: "exported",
  *   policyViolationCodes: [],
  *   reportPath: "goals/jsdoc-worker-eval/ops/manifest.json",
  *   selectedPackets: 50,
@@ -751,13 +942,13 @@ export class AgentEffectivenessJsdocWorkerSection extends S.Class<AgentEffective
   $I`AgentEffectivenessJsdocWorkerSection`
 )(
   {
-    cleanupDeleteStatus: S.NullOr(S.String),
-    cleanupStopStatus: S.NullOr(S.String),
+    cleanupDeleteStatus: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    cleanupStopStatus: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
     completedPackets: S.Finite,
     failedPackets: S.Finite,
     message: S.String,
-    otlpStatus: S.NullOr(S.String),
-    policyViolationCodes: S.Array(S.String),
+    otlpStatus: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    policyViolationCodes: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
     reportPath: S.String,
     selectedPackets: S.Finite,
     status: AgentEffectivenessStatus,
@@ -854,8 +1045,6 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
  *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *     derivedDuckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
  *     labelCount: 0,
- *     latestForwarder: null,
- *     latestScorecard: null,
  *     message: "AI-metrics evidence is present.",
  *     sourceCoverage: [],
  *     status: "passed",
@@ -864,12 +1053,9 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
  *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   generatedAt: "2026-05-20T00:00:00.000Z",
  *   jsdocWorkerEval: AgentEffectivenessJsdocWorkerSection.make({
- *     cleanupDeleteStatus: null,
- *     cleanupStopStatus: null,
  *     completedPackets: 1,
  *     failedPackets: 0,
  *     message: "JSDoc worker-eval completed.",
- *     otlpStatus: null,
  *     policyViolationCodes: [],
  *     reportPath: "goals/jsdoc-worker-eval/ops/manifest.json",
  *     selectedPackets: 1,
@@ -886,7 +1072,6 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
  *     promptCount: 0,
  *     serverInsufficientStorage: false,
  *     status: "passed",
- *     version: null
  *   }),
  *   schemaVersion: "agent-effectiveness-doctor/v1",
  *   summary,
@@ -909,14 +1094,20 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
     generatedAt: S.String,
     jsdocWorkerEval: AgentEffectivenessJsdocWorkerSection,
     phoenix: AgentEffectivenessPhoenixSection,
-    schemaVersion: S.String,
+    schemaVersion: S.Literals(
+      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-doctor/v1"])
+    ).pipe(
+      SchemaUtils.withConstantDefault(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-doctor/v1"])
+    ),
     summary: AgentEffectivenessDoctorSummary,
     target: AiMetricsDeployTarget,
   },
   $I.annote("AgentEffectivenessDoctorReport", {
     description: "Report-only trust gate for repo agent-effectiveness evidence.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
+}
 
 /**
  * One local-only annotation row that could be written to Phoenix later.
@@ -965,14 +1156,11 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
 )(
   {
     annotationId: S.String,
-    metadata: S.Record(S.String, S.String).pipe(
-      S.withConstructorDefault(Effect.succeed({})),
-      S.withDecodingDefaultKey(Effect.succeed({}))
-    ),
+    metadata: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults({})),
     name: S.String,
-    optimization: S.String,
-    source: S.String,
-    targetKind: S.String,
+    optimization: AgentEffectivenessAnnotationOptimization,
+    source: AgentEffectivenessAnnotationSource,
+    targetKind: AgentEffectivenessAnnotationTargetKind,
     targetRef: S.String,
     value: AgentEffectivenessAnnotationValue,
   },
@@ -1017,8 +1205,6 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
  *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *     derivedDuckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
  *     labelCount: 0,
- *     latestForwarder: null,
- *     latestScorecard: null,
  *     message: "AI-metrics evidence is present.",
  *     sourceCoverage: [],
  *     status: "passed",
@@ -1027,12 +1213,9 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
  *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   generatedAt: "2026-05-20T00:00:00.000Z",
  *   jsdocWorkerEval: AgentEffectivenessJsdocWorkerSection.make({
- *     cleanupDeleteStatus: null,
- *     cleanupStopStatus: null,
  *     completedPackets: 1,
  *     failedPackets: 0,
  *     message: "JSDoc worker-eval completed.",
- *     otlpStatus: null,
  *     policyViolationCodes: [],
  *     reportPath: "goals/jsdoc-worker-eval/ops/manifest.json",
  *     selectedPackets: 1,
@@ -1049,7 +1232,6 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
  *     promptCount: 0,
  *     serverInsufficientStorage: false,
  *     status: "passed",
- *     version: null
  *   }),
  *   schemaVersion: "agent-effectiveness-doctor/v1",
  *   summary,
@@ -1089,14 +1271,23 @@ export class AgentEffectivenessAnnotationPlan extends S.Class<AgentEffectiveness
     annotations: S.Array(AgentEffectivenessPlannedAnnotation),
     doctor: AgentEffectivenessDoctorReport,
     generatedAt: S.String,
-    mutationPolicy: S.String,
-    schemaVersion: S.String,
+    mutationPolicy: AgentEffectivenessMutationPolicy,
+    schemaVersion: S.Literals(
+      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-annotation-plan/v1"])
+    ).pipe(
+      SchemaUtils.withConstantDefault(
+        AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-plan/v1"]
+      )
+    ),
     summary: AgentEffectivenessDoctorSummary,
   },
   $I.annote("AgentEffectivenessAnnotationPlan", {
     description: "Local-only dry-run annotation plan for the agent-effectiveness loop.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationPlan));
+  static readonly encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(AgentEffectivenessAnnotationPlan));
+}
 
 /**
  * One validation finding for an annotation plan.
@@ -1137,7 +1328,7 @@ export class AgentEffectivenessAnnotationCheckFinding extends S.Class<AgentEffec
 )(
   {
     annotationId: S.String,
-    code: S.String,
+    code: AgentEffectivenessAnnotationCheckFindingCode,
     message: S.String,
   },
   $I.annote("AgentEffectivenessAnnotationCheckFinding", {
@@ -1182,13 +1373,21 @@ export class AgentEffectivenessAnnotationCheckReport extends S.Class<AgentEffect
     annotationCount: S.Finite,
     findings: S.Array(AgentEffectivenessAnnotationCheckFinding),
     generatedAt: S.String,
-    schemaVersion: S.String,
+    schemaVersion: S.Literals(
+      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-annotation-check/v1"])
+    ).pipe(
+      SchemaUtils.withConstantDefault(
+        AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-check/v1"]
+      )
+    ),
     status: AgentEffectivenessStatus,
   },
   $I.annote("AgentEffectivenessAnnotationCheckReport", {
     description: "Report-only privacy/schema check result for a local annotation plan.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
+}
 
 /**
  * Dedicated Phoenix project namespace for the agent-effectiveness loop.
@@ -1339,18 +1538,9 @@ export class AgentEffectivenessDatasetExample extends S.Class<AgentEffectiveness
   {
     id: S.String,
     input: S.Record(S.String, S.Unknown),
-    metadata: S.Record(S.String, S.Unknown).pipe(
-      S.withConstructorDefault(Effect.succeed({})),
-      S.withDecodingDefaultKey(Effect.succeed({}))
-    ),
-    output: S.Record(S.String, S.Unknown).pipe(
-      S.withConstructorDefault(Effect.succeed({})),
-      S.withDecodingDefaultKey(Effect.succeed({}))
-    ),
-    split: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed("current")),
-      S.withDecodingDefaultKey(Effect.succeed("current"))
-    ),
+    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults({})),
+    output: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults({})),
+    split: S.String.pipe(SchemaUtils.withKeyDefaults("current")),
   },
   $I.annote("AgentEffectivenessDatasetExample", {
     description: "Sanitized, aggregate-only example destined for a Phoenix dataset.",
@@ -1436,12 +1626,18 @@ export class AgentEffectivenessDatasetBundle extends S.Class<AgentEffectivenessD
     datasets: S.Array(AgentEffectivenessDatasetSpec),
     generatedAt: S.String,
     projectName: S.String,
-    schemaVersion: S.String,
+    schemaVersion: S.Literals(
+      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-datasets/v1"])
+    ).pipe(
+      SchemaUtils.withConstantDefault(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-datasets/v1"])
+    ),
   },
   $I.annote("AgentEffectivenessDatasetBundle", {
     description: "Full Phoenix dataset bundle derived from agent-effectiveness doctor evidence.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));
+}
 
 /**
  * Prompt roles used by repo-owned agent-effectiveness prompt templates.
@@ -1597,12 +1793,18 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
     generatedAt: S.String,
     projectName: S.String,
     prompts: S.Array(AgentEffectivenessPromptSpec),
-    schemaVersion: S.String,
+    schemaVersion: S.Literals(
+      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-prompts/v1"])
+    ).pipe(
+      SchemaUtils.withConstantDefault(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-prompts/v1"])
+    ),
   },
   $I.annote("AgentEffectivenessPromptBundle", {
     description: "Full repo-owned Phoenix prompt bundle for the agent-effectiveness loop.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
+}
 
 /**
  * Deterministic experiment plan entry.
@@ -1637,10 +1839,7 @@ export class AgentEffectivenessExperimentSpec extends S.Class<AgentEffectiveness
   {
     datasetName: S.String,
     description: S.String,
-    metadata: S.Record(S.String, S.Unknown).pipe(
-      S.withConstructorDefault(Effect.succeed({})),
-      S.withDecodingDefaultKey(Effect.succeed({}))
-    ),
+    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults({})),
     name: S.String,
   },
   $I.annote("AgentEffectivenessExperimentSpec", {
@@ -1682,12 +1881,20 @@ export class AgentEffectivenessExperimentBundle extends S.Class<AgentEffectivene
     experiments: S.Array(AgentEffectivenessExperimentSpec),
     generatedAt: S.String,
     projectName: S.String,
-    schemaVersion: S.String,
+    schemaVersion: S.Literals(
+      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-experiments/v1"])
+    ).pipe(
+      SchemaUtils.withConstantDefault(
+        AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-experiments/v1"]
+      )
+    ),
   },
   $I.annote("AgentEffectivenessExperimentBundle", {
     description: "Deterministic experiment bundle derived from agent-effectiveness dataset specs.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessExperimentBundle));
+}
 
 /**
  * `dryRun`/`confirmToken` options bundle for
@@ -1740,10 +1947,7 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
   {
     annotationPlan: AgentEffectivenessAnnotationPlanInput,
     confirmToken: S.String.pipe(S.optionalKey),
-    dryRun: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)),
-      S.withDecodingDefaultKey(Effect.succeed(true))
-    ),
+    dryRun: SchemaUtils.BoolKeyDefaultTrue,
   },
   $I.annote("AgentEffectivenessPhoenixSyncInput", {
     description:
@@ -1790,7 +1994,7 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
  *   datasetCount: 0,
  *   dryRun: true,
  *   experimentCount: 0,
- *   mutationPolicy: "dry-run",
+ *   mutationPolicy: "dry-run-no-phoenix-mutation",
  *   promptCount: 0,
  *   skippedAnnotationCount: 0,
  *   status: "passed",
@@ -1799,7 +2003,7 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
  *   writtenPromptVersionIds: []
  * })
  *
- * console.log(result.mutationPolicy) // dry-run
+ * console.log(result.mutationPolicy) // dry-run-no-phoenix-mutation
  * console.log(result.writtenDatasetIds.length) // 0
  * ```
  *
@@ -1814,7 +2018,7 @@ export class AgentEffectivenessPhoenixSyncResult extends S.Class<AgentEffectiven
     datasetCount: S.Finite,
     dryRun: S.Boolean,
     experimentCount: S.Finite,
-    mutationPolicy: S.String,
+    mutationPolicy: AgentEffectivenessMutationPolicy,
     promptCount: S.Finite,
     skippedAnnotationCount: S.Finite,
     status: AgentEffectivenessStatus,
@@ -1825,36 +2029,9 @@ export class AgentEffectivenessPhoenixSyncResult extends S.Class<AgentEffectiven
   $I.annote("AgentEffectivenessPhoenixSyncResult", {
     description: "Result from a guarded Phoenix sync attempt.",
   })
-) {}
-
-class SourceCoverageRow extends S.Class<SourceCoverageRow>($I`SourceCoverageRow`)(
-  {
-    acceptedEvents: S.Finite,
-    lastTimestamp: S.NullOr(S.String),
-    rejectedLines: S.Finite,
-    sourceFileCount: S.Finite,
-    sourceKind: S.String,
-    totalLines: S.Finite,
-  },
-  $I.annote("SourceCoverageRow", {
-    description: "Internal DuckDB source coverage row.",
-  })
-) {}
-
-class ForwarderSummaryRow extends S.Class<ForwarderSummaryRow>($I`ForwarderSummaryRow`)(
-  {
-    archiveObjectCount: S.Finite,
-    completedAtEpochMillis: S.Finite,
-    configSnapshotId: S.String,
-    ingestRunId: S.String,
-    sourceFileCount: S.Finite,
-    target: AiMetricsDeployTarget,
-    turnCount: S.Finite,
-  },
-  $I.annote("ForwarderSummaryRow", {
-    description: "Internal DuckDB forwarder summary row.",
-  })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
+}
 
 class ScorecardSummaryRow extends S.Class<ScorecardSummaryRow>($I`ScorecardSummaryRow`)(
   {
@@ -1872,16 +2049,9 @@ class ScorecardSummaryRow extends S.Class<ScorecardSummaryRow>($I`ScorecardSumma
   $I.annote("ScorecardSummaryRow", {
     description: "Internal DuckDB scorecard summary row.",
   })
-) {}
-
-class CountRow extends S.Class<CountRow>($I`CountRow`)(
-  {
-    count: S.Finite,
-  },
-  $I.annote("CountRow", {
-    description: "Internal DuckDB count row.",
-  })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(ScorecardSummaryRow));
+}
 
 class OutcomeLabelAnnotationRow extends S.Class<OutcomeLabelAnnotationRow>($I`OutcomeLabelAnnotationRow`)(
   {
@@ -1896,7 +2066,9 @@ class OutcomeLabelAnnotationRow extends S.Class<OutcomeLabelAnnotationRow>($I`Ou
   $I.annote("OutcomeLabelAnnotationRow", {
     description: "Internal row used to plan outcome label annotations.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(OutcomeLabelAnnotationRow));
+}
 
 class BenchmarkRunAnnotationRow extends S.Class<BenchmarkRunAnnotationRow>($I`BenchmarkRunAnnotationRow`)(
   {
@@ -1910,7 +2082,9 @@ class BenchmarkRunAnnotationRow extends S.Class<BenchmarkRunAnnotationRow>($I`Be
   $I.annote("BenchmarkRunAnnotationRow", {
     description: "Internal row used to plan benchmark annotations.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(BenchmarkRunAnnotationRow));
+}
 
 class WorkerEvalSummary extends S.Class<WorkerEvalSummary>($I`WorkerEvalSummary`)(
   {
@@ -1943,10 +2117,7 @@ const WorkerEvalPolicyViolation = S.Union([S.String, WorkerEvalPolicyViolationOb
 
 class WorkerEvalPacket extends S.Class<WorkerEvalPacket>($I`WorkerEvalPacket`)(
   {
-    policyViolationCodes: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    policyViolationCodes: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
   },
   $I.annote("WorkerEvalPacket", {
     description: "Internal minimal JSDoc worker-eval packet row.",
@@ -1955,13 +2126,9 @@ class WorkerEvalPacket extends S.Class<WorkerEvalPacket>($I`WorkerEvalPacket`)(
 
 class WorkerEvalReport extends S.Class<WorkerEvalReport>($I`WorkerEvalReport`)(
   {
-    packets: S.Array(WorkerEvalPacket).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    packets: S.Array(WorkerEvalPacket).pipe(SchemaUtils.withEmptyArrayDefaults<WorkerEvalPacket>()),
     policyViolations: S.Array(WorkerEvalPolicyViolation).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
+      SchemaUtils.withEmptyArrayDefaults<typeof WorkerEvalPolicyViolation.Type>()
     ),
     summary: WorkerEvalSummary,
   },
@@ -1998,7 +2165,9 @@ class RunpodWorkerEvalReport extends S.Class<RunpodWorkerEvalReport>($I`RunpodWo
   $I.annote("RunpodWorkerEvalReport", {
     description: "Internal minimal Runpod worker-eval wrapper report.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(RunpodWorkerEvalReport));
+}
 
 class WorkerEvalManifestEvidence extends S.Class<WorkerEvalManifestEvidence>($I`WorkerEvalManifestEvidence`)(
   {
@@ -2016,7 +2185,9 @@ class WorkerEvalManifest extends S.Class<WorkerEvalManifest>($I`WorkerEvalManife
   $I.annote("WorkerEvalManifest", {
     description: "Internal JSDoc worker-eval manifest shape used by the agent-effectiveness default.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(WorkerEvalManifest));
+}
 
 class PhoenixGraphqlProjectNode extends S.Class<PhoenixGraphqlProjectNode>($I`PhoenixGraphqlProjectNode`)(
   {
@@ -2086,7 +2257,9 @@ class PhoenixGraphqlProjectStatsResponse extends S.Class<PhoenixGraphqlProjectSt
   $I.annote("PhoenixGraphqlProjectStatsResponse", {
     description: "Internal Phoenix GraphQL per-project aggregate response.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(PhoenixGraphqlProjectStatsResponse);
+}
 
 class PhoenixGraphqlProjectEdge extends S.Class<PhoenixGraphqlProjectEdge>($I`PhoenixGraphqlProjectEdge`)(
   {
@@ -2138,27 +2311,10 @@ class PhoenixGraphqlResponse extends S.Class<PhoenixGraphqlResponse>($I`PhoenixG
   $I.annote("PhoenixGraphqlResponse", {
     description: "Internal Phoenix GraphQL inventory response.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(PhoenixGraphqlResponse);
+}
 
-const decodeSourceCoverageRows = S.decodeUnknownEffect(S.Array(SourceCoverageRow));
-const decodeForwarderSummaryRows = S.decodeUnknownEffect(S.Array(ForwarderSummaryRow));
-const decodeScorecardSummaryRows = S.decodeUnknownEffect(S.Array(ScorecardSummaryRow));
-const decodeCountRows = S.decodeUnknownEffect(S.Array(CountRow));
-const decodeOutcomeLabelAnnotationRows = S.decodeUnknownEffect(S.Array(OutcomeLabelAnnotationRow));
-const decodeBenchmarkRunAnnotationRows = S.decodeUnknownEffect(S.Array(BenchmarkRunAnnotationRow));
-const decodeWorkerEvalManifestJson = S.decodeUnknownEffect(S.fromJsonString(WorkerEvalManifest));
-const decodeRunpodWorkerEvalReportJson = S.decodeUnknownEffect(S.fromJsonString(RunpodWorkerEvalReport));
-const decodePhoenixGraphqlResponse = S.decodeUnknownEffect(PhoenixGraphqlResponse);
-const decodePhoenixGraphqlProjectStatsResponse = S.decodeUnknownEffect(PhoenixGraphqlProjectStatsResponse);
-const encodeDoctorReportJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
-const encodeAnnotationPlanJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationPlan));
-const encodeAnnotationPlanJsonSync = S.encodeUnknownSync(S.fromJsonString(AgentEffectivenessAnnotationPlan));
-const decodeUnknownJsonSync = Unknown.decodeUnknownSyncFromJsonString;
-const encodeAnnotationCheckJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
-const encodeDatasetBundleJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));
-const encodePromptBundleJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
-const encodeExperimentBundleJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessExperimentBundle));
-const encodePhoenixSyncResultJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
 const decodeCoverageGapsJson = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.String)));
 const currentIsoTimestamp = DateTime.now.pipe(Effect.map(DateTime.formatIso));
 
@@ -2219,12 +2375,8 @@ const aggregateSummary = (
   return AgentEffectivenessDoctorSummary.make({ ...folded, status });
 };
 
-// crispen: retained as `A | null` for the two NullOr wire fields (latestScorecard/latestForwarder),
-// whose S.NullOr schema and `=== null` consumers require the null boundary; fold to Option only when
-// those fields become S.OptionFromNullOr.
-const firstOrNull: <A>(values: ReadonlyArray<A>) => A | null = flow(A.head, O.getOrNull);
-
 const dataRootDuckDbPath = (dataRoot: string): string => `${dataRoot}/derived/ai-metrics.duckdb`;
+const unavailableAiMetrics = ["provider_model_token_cost"];
 const normalizePathSeparators = Str.replace(/\\/gu, "/");
 const isWorkerEvalManifestPath = flow(normalizePathSeparators, Str.endsWith("/ops/manifest.json"));
 
@@ -2274,7 +2426,10 @@ const resolveWorkerEvalReportPath = Effect.fn("AiMetrics.agentEffectiveness.reso
     return absolutePath;
   }
 
-  const manifest = yield* readJsonFile(absolutePath).pipe(Effect.flatMap(decodeWorkerEvalManifestJson), Effect.option);
+  const manifest = yield* readJsonFile(absolutePath).pipe(
+    Effect.flatMap(WorkerEvalManifest.decodeJsonEffect),
+    Effect.option
+  );
   if (O.isNone(manifest)) {
     return absolutePath;
   }
@@ -2300,8 +2455,37 @@ const buildPhoenixUnavailable = (
     promptCount: 0,
     serverInsufficientStorage: false,
     status: AgentEffectivenessStatus.Enum.unavailable,
-    version: null,
   });
+
+const buildAiMetricsUnavailable = (
+  input: AgentEffectivenessDoctorInput,
+  derivedDuckDbPath: string,
+  message: string
+): AgentEffectivenessAiMetricsSection =>
+  AgentEffectivenessAiMetricsSection.make({
+    benchmarkRunCount: 0,
+    dataRoot: input.dataRoot,
+    derivedDuckDbPath,
+    labelCount: 0,
+    message,
+    sourceCoverage: [],
+    status: AgentEffectivenessStatus.Enum.unavailable,
+    unavailableMetrics: unavailableAiMetrics,
+  });
+
+const buildJsdocWorkerUnavailable = (reportPath: string, message: string): AgentEffectivenessJsdocWorkerSection =>
+  AgentEffectivenessJsdocWorkerSection.make({
+    completedPackets: 0,
+    failedPackets: 0,
+    message,
+    reportPath,
+    selectedPackets: 0,
+    status: AgentEffectivenessStatus.Enum.unavailable,
+    timedOutPackets: 0,
+  });
+
+const isReachableHttpStatus = (status: number): boolean => status >= 200 && status < 400;
+const isOkHttpStatus = (status: number): boolean => status >= 200 && status < 300;
 
 const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(function* (
   input: AgentEffectivenessDoctorInput
@@ -2318,12 +2502,7 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     return buildPhoenixUnavailable(input, "Phoenix endpoint was not reachable.");
   }
 
-  if (
-    root.value.status < 200 ||
-    root.value.status >= 400 ||
-    projects.value.status < 200 ||
-    projects.value.status >= 400
-  ) {
+  if (!isReachableHttpStatus(root.value.status) || !isReachableHttpStatus(projects.value.status)) {
     return buildPhoenixUnavailable(input, "Phoenix endpoint returned a non-success status.");
   }
 
@@ -2339,12 +2518,12 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     .execute(pipe(request.value, HttpClientRequest.accept("application/json")))
     .pipe(Effect.option);
 
-  if (O.isNone(response) || response.value.status < 200 || response.value.status >= 300) {
+  if (O.isNone(response) || !isOkHttpStatus(response.value.status)) {
     return buildPhoenixUnavailable(input, "Phoenix GraphQL inventory query failed.");
   }
 
   const inventory = yield* HttpClientResponse.schemaBodyJson(S.Unknown)(response.value).pipe(
-    Effect.flatMap(decodePhoenixGraphqlResponse),
+    Effect.flatMap(PhoenixGraphqlResponse.decodeEffect),
     Effect.option
   );
 
@@ -2369,13 +2548,13 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
         .pipe(Effect.mapError(() => "Phoenix could not be reached for the aggregate query"))
     ),
     Effect.flatMap((statsResponse) =>
-      statsResponse.status >= 200 && statsResponse.status < 300
+      isOkHttpStatus(statsResponse.status)
         ? Effect.succeed(statsResponse)
         : Effect.fail(`Phoenix answered the aggregate query with HTTP ${statsResponse.status}`)
     ),
     Effect.flatMap((statsResponse) =>
       HttpClientResponse.schemaBodyJson(S.Unknown)(statsResponse).pipe(
-        Effect.flatMap(decodePhoenixGraphqlProjectStatsResponse),
+        Effect.flatMap(PhoenixGraphqlProjectStatsResponse.decodeEffect),
         Effect.mapError(() => "the aggregate response could not be decoded")
       )
     ),
@@ -2401,8 +2580,10 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     )
   );
 
-  const version =
-    root.value.headers["x-phoenix-server-version"] ?? projects.value.headers["x-phoenix-server-version"] ?? null;
+  const version = O.firstSomeOf([
+    O.fromUndefinedOr(root.value.headers["x-phoenix-server-version"]),
+    O.fromUndefinedOr(projects.value.headers["x-phoenix-server-version"]),
+  ]);
   const data = inventory.value.data;
   const projectsList = pipe(
     data.projects.edges,
@@ -2411,22 +2592,19 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
       return AgentEffectivenessPhoenixProject.make({
         hasTraces: pipe(
           nodeStats,
-          O.map((resolved) => resolved.hasTraces),
-          O.getOrNull
+          O.map((resolved) => resolved.hasTraces)
         ),
         name: edge.node.name,
         recordCount: pipe(
           nodeStats,
-          O.map((resolved) => resolved.recordCount),
-          O.getOrNull
+          O.map((resolved) => resolved.recordCount)
         ),
         spanAnnotationNames: edge.node.spanAnnotationNames,
         sessionAnnotationNames: edge.node.sessionAnnotationNames,
         traceAnnotationNames: edge.node.traceAnnotationsNames,
         traceCount: pipe(
           nodeStats,
-          O.map((resolved) => resolved.traceCount),
-          O.getOrNull
+          O.map((resolved) => resolved.traceCount)
         ),
       });
     })
@@ -2434,7 +2612,12 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
   const statsUnmeasuredReason = Result.getFailure(stats);
   const hasTraceBearingProject = pipe(
     projectsList,
-    A.some((project) => project.hasTraces === true)
+    A.some((project) =>
+      pipe(
+        project.hasTraces,
+        O.getOrElse(() => false)
+      )
+    )
   );
 
   return AgentEffectivenessPhoenixSection.make({
@@ -2476,7 +2659,7 @@ const queryAiMetricsSection = Effect.fn("AiMetrics.agentEffectiveness.queryAiMet
        GROUP BY source_kind
        ORDER BY source_kind`
     )
-    .pipe(Effect.flatMap(decodeSourceCoverageRows));
+    .pipe(Effect.flatMap(AgentEffectivenessSourceCoverage.decodeRowsEffect));
   const forwarderRows = yield* duckdb
     .query(
       `SELECT ingest_run_id      AS "ingestRunId",
@@ -2486,7 +2669,7 @@ const queryAiMetricsSection = Effect.fn("AiMetrics.agentEffectiveness.queryAiMet
        FROM ai_metrics_ingest_runs
        ORDER BY completed_at_epoch_ms DESC LIMIT 1`
     )
-    .pipe(Effect.flatMap(decodeForwarderSummaryRows));
+    .pipe(Effect.flatMap(AgentEffectivenessForwarderSummary.decodeRowsEffect));
   const scorecardRows = yield* duckdb
     .query(
       `SELECT scorecard_id       AS "scorecardId",
@@ -2496,64 +2679,45 @@ const queryAiMetricsSection = Effect.fn("AiMetrics.agentEffectiveness.queryAiMet
        FROM ai_metrics_scorecards
        ORDER BY window_end_epoch_ms DESC LIMIT 1`
     )
-    .pipe(Effect.flatMap(decodeScorecardSummaryRows));
+    .pipe(Effect.flatMap(ScorecardSummaryRow.decodeRowsEffect));
   const labelCountRows = yield* duckdb
     .query(`SELECT count(*) ::INTEGER AS "count"
             FROM ai_metrics_outcome_labels`)
-    .pipe(Effect.flatMap(decodeCountRows));
+    .pipe(Effect.flatMap(CountRow.decodeRowsEffect));
   const benchmarkCountRows = yield* duckdb
     .query(`SELECT count(*) ::INTEGER AS "count"
             FROM ai_metrics_benchmark_runs`)
-    .pipe(Effect.flatMap(decodeCountRows));
+    .pipe(Effect.flatMap(CountRow.decodeRowsEffect));
 
-  const latestScorecard = firstOrNull(scorecardRows);
-  const coverageGaps =
-    latestScorecard === null
-      ? []
-      : yield* decodeCoverageGapsJson(latestScorecard.coverageGapsJson).pipe(
-          Effect.orElseSucceed(() => ["invalid_coverage_gaps_json"])
-        );
-  const scorecard =
-    latestScorecard === null
-      ? null
-      : AgentEffectivenessScorecardSummary.make({
-          benchmarkRunCount: latestScorecard.benchmarkRunCount,
-          completionReady: latestScorecard.completionReady,
-          configSnapshotId: latestScorecard.configSnapshotId,
-          coverageGaps,
-          labelCount: latestScorecard.labelCount,
-          scorecardId: latestScorecard.scorecardId,
-          taskCount: latestScorecard.taskCount,
-          totalScore: latestScorecard.totalScore,
-          windowEndEpochMillis: latestScorecard.windowEndEpochMillis,
-          windowStartEpochMillis: latestScorecard.windowStartEpochMillis,
-        });
-  const sourceCoverage = pipe(
-    sourceRows,
-    A.map((row) =>
-      AgentEffectivenessSourceCoverage.make({
-        acceptedEvents: row.acceptedEvents,
-        lastTimestamp: row.lastTimestamp,
-        rejectedLines: row.rejectedLines,
-        sourceFileCount: row.sourceFileCount,
-        sourceKind: row.sourceKind,
-        totalLines: row.totalLines,
+  const latestScorecard = A.head(scorecardRows);
+  const coverageGaps = yield* pipe(
+    latestScorecard,
+    O.map((scorecard) =>
+      decodeCoverageGapsJson(scorecard.coverageGapsJson).pipe(
+        Effect.orElseSucceed(() => ["invalid_coverage_gaps_json"])
+      )
+    ),
+    O.getOrElse(() => Effect.succeed(A.empty<string>()))
+  );
+  const scorecard = pipe(
+    latestScorecard,
+    O.map((latest) =>
+      AgentEffectivenessScorecardSummary.make({
+        benchmarkRunCount: latest.benchmarkRunCount,
+        completionReady: latest.completionReady,
+        configSnapshotId: latest.configSnapshotId,
+        coverageGaps,
+        labelCount: latest.labelCount,
+        scorecardId: latest.scorecardId,
+        taskCount: latest.taskCount,
+        totalScore: latest.totalScore,
+        windowEndEpochMillis: latest.windowEndEpochMillis,
+        windowStartEpochMillis: latest.windowStartEpochMillis,
       })
     )
   );
-  const latestForwarderRow = firstOrNull(forwarderRows);
-  const latestForwarder =
-    latestForwarderRow === null
-      ? null
-      : AgentEffectivenessForwarderSummary.make({
-          archiveObjectCount: latestForwarderRow.archiveObjectCount,
-          completedAtEpochMillis: latestForwarderRow.completedAtEpochMillis,
-          configSnapshotId: latestForwarderRow.configSnapshotId,
-          ingestRunId: latestForwarderRow.ingestRunId,
-          sourceFileCount: latestForwarderRow.sourceFileCount,
-          target: latestForwarderRow.target,
-          turnCount: latestForwarderRow.turnCount,
-        });
+  const sourceCoverage = sourceRows;
+  const latestForwarder = A.head(forwarderRows);
   const labelCount = A.head(labelCountRows).pipe(
     O.map((row) => row.count),
     O.getOrElse(() => 0)
@@ -2562,17 +2726,19 @@ const queryAiMetricsSection = Effect.fn("AiMetrics.agentEffectiveness.queryAiMet
     O.map((row) => row.count),
     O.getOrElse(() => 0)
   );
-  const unavailableMetrics = ["provider_model_token_cost"];
-  const missingCore = latestForwarder === null || scorecard === null || A.isReadonlyArrayEmpty(sourceCoverage);
-  const readinessWarnings =
-    scorecard === null
-      ? ["no_scorecard"]
-      : [
-          ...(scorecard.completionReady ? [] : ["scorecard_not_completion_ready"]),
-          ...(scorecard.labelCount > 0 ? [] : ["no_labels"]),
-          ...(scorecard.benchmarkRunCount > 0 ? [] : ["no_benchmark_runs"]),
-          ...scorecard.coverageGaps,
-        ];
+  const missingCore = O.isNone(latestForwarder) || O.isNone(scorecard) || A.isReadonlyArrayEmpty(sourceCoverage);
+  const readinessWarnings = pipe(
+    scorecard,
+    O.match({
+      onNone: () => ["no_scorecard"],
+      onSome: (latest) => [
+        ...(latest.completionReady ? [] : ["scorecard_not_completion_ready"]),
+        ...(latest.labelCount > 0 ? [] : ["no_labels"]),
+        ...(latest.benchmarkRunCount > 0 ? [] : ["no_benchmark_runs"]),
+        ...latest.coverageGaps,
+      ],
+    })
+  );
 
   return AgentEffectivenessAiMetricsSection.make({
     benchmarkRunCount,
@@ -2602,7 +2768,7 @@ const queryAiMetricsSection = Effect.fn("AiMetrics.agentEffectiveness.queryAiMet
       missingCore || A.isReadonlyArrayNonEmpty(readinessWarnings)
         ? AgentEffectivenessStatus.Enum.warning
         : AgentEffectivenessStatus.Enum.passed,
-    unavailableMetrics,
+    unavailableMetrics: unavailableAiMetrics,
   });
 });
 
@@ -2615,34 +2781,16 @@ const buildAiMetricsSection = Effect.fn("AiMetrics.agentEffectiveness.buildAiMet
   const exists = yield* fs.exists(duckDbPath).pipe(Effect.orElseSucceed(() => false));
 
   if (!exists) {
-    return AgentEffectivenessAiMetricsSection.make({
-      benchmarkRunCount: 0,
-      dataRoot: input.dataRoot,
-      derivedDuckDbPath: duckDbPath,
-      labelCount: 0,
-      latestForwarder: null,
-      latestScorecard: null,
-      message: "AI-metrics DuckDB evidence was not found at the selected data root.",
-      sourceCoverage: [],
-      status: AgentEffectivenessStatus.Enum.unavailable,
-      unavailableMetrics: ["provider_model_token_cost"],
-    });
+    return buildAiMetricsUnavailable(
+      input,
+      duckDbPath,
+      "AI-metrics DuckDB evidence was not found at the selected data root."
+    );
   }
 
   return yield* queryAiMetricsSection(input, duckDbPath).pipe(
     Effect.orElseSucceed(() =>
-      AgentEffectivenessAiMetricsSection.make({
-        benchmarkRunCount: 0,
-        dataRoot: input.dataRoot,
-        derivedDuckDbPath: duckDbPath,
-        labelCount: 0,
-        latestForwarder: null,
-        latestScorecard: null,
-        message: "AI-metrics DuckDB evidence could not be queried.",
-        sourceCoverage: [],
-        status: AgentEffectivenessStatus.Enum.unavailable,
-        unavailableMetrics: ["provider_model_token_cost"],
-      })
+      buildAiMetricsUnavailable(input, duckDbPath, "AI-metrics DuckDB evidence could not be queried.")
     )
   );
 });
@@ -2655,37 +2803,16 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
   const exists = yield* fs.exists(reportPath).pipe(Effect.orElseSucceed(() => false));
 
   if (!exists) {
-    return AgentEffectivenessJsdocWorkerSection.make({
-      cleanupDeleteStatus: null,
-      cleanupStopStatus: null,
-      completedPackets: 0,
-      failedPackets: 0,
-      message: "JSDoc worker-eval report was not found.",
-      otlpStatus: null,
-      policyViolationCodes: [],
-      reportPath,
-      selectedPackets: 0,
-      status: AgentEffectivenessStatus.Enum.unavailable,
-      timedOutPackets: 0,
-    });
+    return buildJsdocWorkerUnavailable(reportPath, "JSDoc worker-eval report was not found.");
   }
 
-  const decoded = yield* readJsonFile(reportPath).pipe(Effect.flatMap(decodeRunpodWorkerEvalReportJson), Effect.option);
+  const decoded = yield* readJsonFile(reportPath).pipe(
+    Effect.flatMap(RunpodWorkerEvalReport.decodeJsonEffect),
+    Effect.option
+  );
 
   if (O.isNone(decoded)) {
-    return AgentEffectivenessJsdocWorkerSection.make({
-      cleanupDeleteStatus: null,
-      cleanupStopStatus: null,
-      completedPackets: 0,
-      failedPackets: 0,
-      message: "JSDoc worker-eval report could not be decoded.",
-      otlpStatus: null,
-      policyViolationCodes: [],
-      reportPath,
-      selectedPackets: 0,
-      status: AgentEffectivenessStatus.Enum.unavailable,
-      timedOutPackets: 0,
-    });
+    return buildJsdocWorkerUnavailable(reportPath, "JSDoc worker-eval report could not be decoded.");
   }
 
   const summary = decoded.value.workerEval.summary;
@@ -2709,8 +2836,8 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
   const hasWarnings = A.isReadonlyArrayNonEmpty(policyViolationCodes);
 
   return AgentEffectivenessJsdocWorkerSection.make({
-    cleanupDeleteStatus: decoded.value.cleanup.deleteStatus,
-    cleanupStopStatus: decoded.value.cleanup.stopStatus,
+    cleanupDeleteStatus: O.some(decoded.value.cleanup.deleteStatus),
+    cleanupStopStatus: O.some(decoded.value.cleanup.stopStatus),
     completedPackets: summary.completed,
     failedPackets: summary.failed,
     message: pipe(
@@ -2725,7 +2852,7 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
       O.firstSomeOf,
       O.getOrElse(() => "JSDoc worker-eval completed without policy violations.")
     ),
-    otlpStatus: decoded.value.otlp.status,
+    otlpStatus: O.some(decoded.value.otlp.status),
     policyViolationCodes,
     reportPath,
     selectedPackets: summary.selectedPackets,
@@ -2807,7 +2934,6 @@ export const makeAgentEffectivenessDoctorReport: (
     generatedAt,
     jsdocWorkerEval,
     phoenix,
-    schemaVersion: "agent-effectiveness-doctor/v1",
     summary,
     target: input.target,
   });
@@ -2826,9 +2952,9 @@ const annotation = ({
   readonly idSuffix?: string;
   readonly metadata?: Record<string, string>;
   readonly name: string;
-  readonly optimization: string;
-  readonly source: string;
-  readonly targetKind: string;
+  readonly optimization: AgentEffectivenessAnnotationOptimization;
+  readonly source: AgentEffectivenessAnnotationSource;
+  readonly targetKind: AgentEffectivenessAnnotationTargetKind;
   readonly targetRef: string;
   readonly value: AgentEffectivenessAnnotationValue;
 }): AgentEffectivenessPlannedAnnotation => {
@@ -2859,18 +2985,18 @@ const sourceCoverageAnnotations = (
       annotation({
         metadata: { sourceKind: coverage.sourceKind },
         name: "agent.source.file_count",
-        optimization: "maximize",
-        source: "ai-metrics",
-        targetKind: "source",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+        source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum.source,
         targetRef: coverage.sourceKind,
         value: coverage.sourceFileCount,
       }),
       annotation({
         metadata: { sourceKind: coverage.sourceKind },
         name: "agent.source.accepted_events",
-        optimization: "maximize",
-        source: "ai-metrics",
-        targetKind: "source",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+        source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum.source,
         targetRef: coverage.sourceKind,
         value: coverage.acceptedEvents,
       }),
@@ -2879,48 +3005,48 @@ const sourceCoverageAnnotations = (
 
 const scorecardAnnotations = (
   doctor: AgentEffectivenessDoctorReport
-): ReadonlyArray<AgentEffectivenessPlannedAnnotation> => {
-  const scorecard = doctor.aiMetrics.latestScorecard;
-  if (scorecard === null) {
-    return [];
-  }
-
-  return [
-    annotation({
-      metadata: { configSnapshotId: scorecard.configSnapshotId },
-      name: "scorecard.completion_ready",
-      optimization: "maximize",
-      source: "ai-metrics",
-      targetKind: "scorecard",
-      targetRef: scorecard.scorecardId,
-      value: scorecard.completionReady,
-    }),
-    annotation({
-      metadata: { configSnapshotId: scorecard.configSnapshotId },
-      name: "scorecard.total_score",
-      optimization: "maximize",
-      source: "ai-metrics",
-      targetKind: "scorecard",
-      targetRef: scorecard.scorecardId,
-      value: scorecard.totalScore,
-    }),
-    ...pipe(
-      scorecard.coverageGaps,
-      A.map((gap) =>
+): ReadonlyArray<AgentEffectivenessPlannedAnnotation> =>
+  pipe(
+    doctor.aiMetrics.latestScorecard,
+    O.match({
+      onNone: A.empty<AgentEffectivenessPlannedAnnotation>,
+      onSome: (scorecard) => [
         annotation({
-          idSuffix: gap,
-          metadata: { gap },
-          name: "scorecard.gap",
-          optimization: "minimize",
-          source: "ai-metrics",
-          targetKind: "scorecard",
+          metadata: { configSnapshotId: scorecard.configSnapshotId },
+          name: "scorecard.completion_ready",
+          optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+          source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+          targetKind: AgentEffectivenessAnnotationTargetKind.Enum.scorecard,
           targetRef: scorecard.scorecardId,
-          value: gap,
-        })
-      )
-    ),
-  ];
-};
+          value: scorecard.completionReady,
+        }),
+        annotation({
+          metadata: { configSnapshotId: scorecard.configSnapshotId },
+          name: "scorecard.total_score",
+          optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+          source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+          targetKind: AgentEffectivenessAnnotationTargetKind.Enum.scorecard,
+          targetRef: scorecard.scorecardId,
+          value: scorecard.totalScore,
+        }),
+        ...pipe(
+          scorecard.coverageGaps,
+          A.map((gap) =>
+            annotation({
+              idSuffix: gap,
+              metadata: { gap },
+              name: "scorecard.gap",
+              optimization: AgentEffectivenessAnnotationOptimization.Enum.minimize,
+              source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+              targetKind: AgentEffectivenessAnnotationTargetKind.Enum.scorecard,
+              targetRef: scorecard.scorecardId,
+              value: gap,
+            })
+          )
+        ),
+      ],
+    })
+  );
 
 const workerAnnotations = (
   doctor: AgentEffectivenessDoctorReport
@@ -2928,18 +3054,18 @@ const workerAnnotations = (
   annotation({
     metadata: { reportPathHash: "repo-relative-jsdoc-worker-eval-report" },
     name: "worker.completed_packets",
-    optimization: "maximize",
-    source: "jsdoc-worker-eval",
-    targetKind: "worker-report",
+    optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+    source: AgentEffectivenessAnnotationSource.Enum["jsdoc-worker-eval"],
+    targetKind: AgentEffectivenessAnnotationTargetKind.Enum["worker-report"],
     targetRef: "jsdoc-worker-eval-latest",
     value: doctor.jsdocWorkerEval.completedPackets,
   }),
   annotation({
     metadata: { reportPathHash: "repo-relative-jsdoc-worker-eval-report" },
     name: "worker.failed_packets",
-    optimization: "minimize",
-    source: "jsdoc-worker-eval",
-    targetKind: "worker-report",
+    optimization: AgentEffectivenessAnnotationOptimization.Enum.minimize,
+    source: AgentEffectivenessAnnotationSource.Enum["jsdoc-worker-eval"],
+    targetKind: AgentEffectivenessAnnotationTargetKind.Enum["worker-report"],
     targetRef: "jsdoc-worker-eval-latest",
     value: doctor.jsdocWorkerEval.failedPackets,
   }),
@@ -2950,9 +3076,9 @@ const workerAnnotations = (
         idSuffix: code,
         metadata: { code },
         name: "worker.policy_violation",
-        optimization: "minimize",
-        source: "jsdoc-worker-eval",
-        targetKind: "worker-report",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.minimize,
+        source: AgentEffectivenessAnnotationSource.Enum["jsdoc-worker-eval"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum["worker-report"],
         targetRef: "jsdoc-worker-eval-latest",
         value: code,
       })
@@ -2965,25 +3091,25 @@ const loopHealthAnnotations = (
 ): ReadonlyArray<AgentEffectivenessPlannedAnnotation> => [
   annotation({
     name: "agent.loop.status",
-    optimization: "maximize",
-    source: "agent-effectiveness-doctor",
-    targetKind: "loop",
+    optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+    source: AgentEffectivenessAnnotationSource.Enum["agent-effectiveness-doctor"],
+    targetKind: AgentEffectivenessAnnotationTargetKind.Enum.loop,
     targetRef: "phase1",
     value: doctor.summary.status,
   }),
   annotation({
     name: "agent.loop.warning_count",
-    optimization: "minimize",
-    source: "agent-effectiveness-doctor",
-    targetKind: "loop",
+    optimization: AgentEffectivenessAnnotationOptimization.Enum.minimize,
+    source: AgentEffectivenessAnnotationSource.Enum["agent-effectiveness-doctor"],
+    targetKind: AgentEffectivenessAnnotationTargetKind.Enum.loop,
     targetRef: "phase1",
     value: A.length(doctor.summary.warnings),
   }),
   annotation({
     name: "agent.loop.unavailable_count",
-    optimization: "minimize",
-    source: "agent-effectiveness-doctor",
-    targetKind: "loop",
+    optimization: AgentEffectivenessAnnotationOptimization.Enum.minimize,
+    source: AgentEffectivenessAnnotationSource.Enum["agent-effectiveness-doctor"],
+    targetKind: AgentEffectivenessAnnotationTargetKind.Enum.loop,
     targetRef: "phase1",
     value: A.length(doctor.summary.unavailable),
   }),
@@ -3010,7 +3136,7 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
          LIMIT $limit`,
       { limit: input.annotationLimit }
     )
-    .pipe(Effect.flatMap(decodeOutcomeLabelAnnotationRows));
+    .pipe(Effect.flatMap(OutcomeLabelAnnotationRow.decodeRowsEffect));
   const benchmarkRows = yield* duckdb
     .query(
       `SELECT benchmark_run_id   AS "benchmarkRunId",
@@ -3023,7 +3149,7 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
          LIMIT $limit`,
       { limit: input.annotationLimit }
     )
-    .pipe(Effect.flatMap(decodeBenchmarkRunAnnotationRows));
+    .pipe(Effect.flatMap(BenchmarkRunAnnotationRow.decodeRowsEffect));
   const labelAnnotations = pipe(
     labelRows,
     A.flatMap((row) => [
@@ -3031,9 +3157,9 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
         idSuffix: row.labelId,
         metadata: { labelId: row.labelId, qualityGate: row.qualityGate },
         name: "agent.outcome.passed",
-        optimization: "maximize",
-        source: "ai-metrics",
-        targetKind: "agent-task",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+        source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum["agent-task"],
         targetRef: row.agentTaskId,
         value: row.passed,
       }),
@@ -3041,9 +3167,9 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
         idSuffix: row.labelId,
         metadata: { labelId: row.labelId, qualityGate: row.qualityGate },
         name: "agent.outcome.rating",
-        optimization: "maximize",
-        source: "ai-metrics",
-        targetKind: "agent-task",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+        source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum["agent-task"],
         targetRef: row.agentTaskId,
         value: row.rating,
       }),
@@ -3051,9 +3177,9 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
         idSuffix: row.labelId,
         metadata: { labelId: row.labelId, qualityGate: row.qualityGate },
         name: "agent.interventions",
-        optimization: "minimize",
-        source: "ai-metrics",
-        targetKind: "agent-task",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.minimize,
+        source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum["agent-task"],
         targetRef: row.agentTaskId,
         value: row.interventionCount,
       }),
@@ -3061,9 +3187,9 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
         idSuffix: row.labelId,
         metadata: { labelId: row.labelId, qualityGate: row.qualityGate },
         name: "agent.follow_up_fix",
-        optimization: "minimize",
-        source: "ai-metrics",
-        targetKind: "agent-task",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.minimize,
+        source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum["agent-task"],
         targetRef: row.agentTaskId,
         value: row.followUpFix,
       }),
@@ -3078,9 +3204,9 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
           configSnapshotId: row.configSnapshotId,
         },
         name: "benchmark.passed",
-        optimization: "maximize",
-        source: "ai-metrics",
-        targetKind: "benchmark-run",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.maximize,
+        source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum["benchmark-run"],
         targetRef: row.benchmarkRunId,
         value: row.passed,
       }),
@@ -3090,9 +3216,9 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
           configSnapshotId: row.configSnapshotId,
         },
         name: "benchmark.elapsed_ms",
-        optimization: "minimize",
-        source: "ai-metrics",
-        targetKind: "benchmark-run",
+        optimization: AgentEffectivenessAnnotationOptimization.Enum.minimize,
+        source: AgentEffectivenessAnnotationSource.Enum["ai-metrics"],
+        targetKind: AgentEffectivenessAnnotationTargetKind.Enum["benchmark-run"],
         targetRef: row.benchmarkRunId,
         value: row.elapsedMs,
       }),
@@ -3171,20 +3297,12 @@ export const makeAgentEffectivenessAnnotationPlan: (
     annotations,
     doctor,
     generatedAt,
-    mutationPolicy: "local-only-no-phoenix-mutation",
-    schemaVersion: "agent-effectiveness-annotation-plan/v1",
+    mutationPolicy: AgentEffectivenessMutationPolicy.Enum["local-only-no-phoenix-mutation"],
     summary: doctor.summary,
   });
 });
 
-const datasetNameFor = Match.type<AgentEffectivenessDatasetKind>().pipe(
-  Match.when("agent-config-snapshots", () => "agent-config-snapshots-v1"),
-  Match.when("agent-loop-health", () => "agent-loop-health-v1"),
-  Match.when("agent-outcomes", () => "agent-outcomes-v1"),
-  Match.when("jsdoc-worker-model-suitability", () => "jsdoc-worker-model-suitability-v1"),
-  Match.when("source-coverage", () => "source-coverage-v1"),
-  Match.exhaustive
-);
+const datasetNameFor = (kind: AgentEffectivenessDatasetKind): string => `${kind}-v1`;
 
 const datasetExample = ({
   id,
@@ -3245,9 +3363,8 @@ const loopHealthDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffecti
     kind: "agent-loop-health",
   });
 
-const outcomesDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffectivenessDatasetSpec => {
-  const scorecard = doctor.aiMetrics.latestScorecard;
-  return datasetSpec({
+const outcomesDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffectivenessDatasetSpec =>
+  datasetSpec({
     description: "Aggregate outcome-label and scorecard readiness evidence.",
     examples: [
       datasetExample({
@@ -3256,24 +3373,25 @@ const outcomesDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffective
           benchmarkRunCount: doctor.aiMetrics.benchmarkRunCount,
           labelCount: doctor.aiMetrics.labelCount,
         },
-        output:
-          scorecard === null
-            ? { completionReady: false, scorecardPresent: false }
-            : {
-                completionReady: scorecard.completionReady,
-                scorecardId: scorecard.scorecardId,
-                scorecardPresent: true,
-                totalScore: scorecard.totalScore,
-              },
+        output: pipe(
+          doctor.aiMetrics.latestScorecard,
+          O.match({
+            onNone: () => ({ completionReady: false, scorecardPresent: false }),
+            onSome: (scorecard) => ({
+              completionReady: scorecard.completionReady,
+              scorecardId: scorecard.scorecardId,
+              scorecardPresent: true,
+              totalScore: scorecard.totalScore,
+            }),
+          })
+        ),
       }),
     ],
     kind: "agent-outcomes",
   });
-};
 
-const configSnapshotsDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffectivenessDatasetSpec => {
-  const forwarder = doctor.aiMetrics.latestForwarder;
-  return datasetSpec({
+const configSnapshotsDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffectivenessDatasetSpec =>
+  datasetSpec({
     description: "Aggregate configuration snapshot evidence for ingested agent metrics.",
     examples: [
       datasetExample({
@@ -3282,21 +3400,23 @@ const configSnapshotsDataset = (doctor: AgentEffectivenessDoctorReport): AgentEf
           dataRoot: doctor.dataRoot,
           target: doctor.target,
         },
-        output:
-          forwarder === null
-            ? { configSnapshotPresent: false }
-            : {
-                archiveObjectCount: forwarder.archiveObjectCount,
-                configSnapshotId: forwarder.configSnapshotId,
-                configSnapshotPresent: true,
-                ingestRunId: forwarder.ingestRunId,
-                turnCount: forwarder.turnCount,
-              },
+        output: pipe(
+          doctor.aiMetrics.latestForwarder,
+          O.match({
+            onNone: () => ({ configSnapshotPresent: false }),
+            onSome: (forwarder) => ({
+              archiveObjectCount: forwarder.archiveObjectCount,
+              configSnapshotId: forwarder.configSnapshotId,
+              configSnapshotPresent: true,
+              ingestRunId: forwarder.ingestRunId,
+              turnCount: forwarder.turnCount,
+            }),
+          })
+        ),
       }),
     ],
     kind: "agent-config-snapshots",
   });
-};
 
 const sourceCoverageDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffectivenessDatasetSpec =>
   datasetSpec({
@@ -3311,7 +3431,10 @@ const sourceCoverageDataset = (doctor: AgentEffectivenessDoctorReport): AgentEff
           },
           output: {
             acceptedEvents: coverage.acceptedEvents,
-            lastTimestamp: coverage.lastTimestamp,
+            lastTimestamp: pipe(
+              coverage.lastTimestamp,
+              O.match({ onNone: () => null, onSome: (timestamp) => timestamp })
+            ),
             rejectedLines: coverage.rejectedLines,
             sourceFileCount: coverage.sourceFileCount,
             totalLines: coverage.totalLines,
@@ -3402,7 +3525,6 @@ export const makeAgentEffectivenessDatasetBundle: (
     ],
     generatedAt: doctor.generatedAt,
     projectName: AGENT_EFFECTIVENESS_PHOENIX_PROJECT,
-    schemaVersion: "agent-effectiveness-datasets/v1",
   });
 
 /**
@@ -3471,7 +3593,6 @@ export const makeAgentEffectivenessPromptBundle: (generatedAt: string) => AgentE
         name: "agent-effectiveness-source-coverage-review-v1",
       }),
     ],
-    schemaVersion: "agent-effectiveness-prompts/v1",
   });
 
 /**
@@ -3531,7 +3652,6 @@ export const makeAgentEffectivenessExperimentBundle: (
     ),
     generatedAt: datasetBundle.generatedAt,
     projectName: datasetBundle.projectName,
-    schemaVersion: "agent-effectiveness-experiments/v1",
   });
 
 const toPhoenixDatasetCreateInput = (dataset: AgentEffectivenessDatasetSpec): PhoenixDatasetCreateInput =>
@@ -3569,15 +3689,13 @@ const isDatasetNotFoundError = (error: PhoenixError): boolean =>
   error.reason === "transport" &&
   pipe(O.fromUndefinedOr(error.cause), O.exists(isDatasetNotFoundCause));
 
-const findPhoenixDatasetInfo = Effect.fn("AiMetrics.findPhoenixDatasetInfo")(function* (
-  phoenix: PhoenixShape,
-  selector: PhoenixDatasetSelector
-) {
-  return yield* phoenix.getDatasetInfo(selector).pipe(
-    Effect.map(O.some),
-    Effect.catchIf(isDatasetNotFoundError, () => Effect.succeed(O.none()))
-  );
-});
+const findPhoenixDatasetInfo = Effect.fn("AiMetrics.findPhoenixDatasetInfo")(
+  (phoenix: PhoenixShape, selector: PhoenixDatasetSelector) =>
+    phoenix.getDatasetInfo(selector).pipe(
+      Effect.map(O.some),
+      Effect.catchIf(isDatasetNotFoundError, () => Effect.succeedNone)
+    )
+);
 
 const syncPhoenixDataset = Effect.fn("AiMetrics.syncPhoenixDataset")(function* (
   phoenix: PhoenixShape,
@@ -3628,10 +3746,18 @@ const toPhoenixPromptCreateInput = (prompt: AgentEffectivenessPromptSpec): Phoen
     versionDescription: `${prompt.name} checked in by @beep/repo-ai-metrics.`,
   });
 
-const isPhoenixAnnotationTargetKind = (value: string): value is PhoenixAnnotationTargetKindType =>
-  PhoenixAnnotationTargetKind.is.span(value) ||
-  PhoenixAnnotationTargetKind.is.session(value) ||
-  PhoenixAnnotationTargetKind.is.trace(value);
+const toPhoenixExperimentCreateInput = (
+  experiment: AgentEffectivenessExperimentSpec,
+  datasetId: string
+): PhoenixExperimentCreateInput =>
+  PhoenixExperimentCreateInput.make({
+    datasetId,
+    experimentDescription: experiment.description,
+    experimentMetadata: experiment.metadata,
+    experimentName: experiment.name,
+  });
+
+const isPhoenixAnnotationTargetKind = S.is(PhoenixAnnotationTargetKind);
 
 const plannedAnnotationToPhoenix = (
   annotation: AgentEffectivenessPlannedAnnotation
@@ -3673,7 +3799,7 @@ const unconfirmedSyncResult = ({
   readonly datasetBundle: AgentEffectivenessDatasetBundle;
   readonly dryRun: boolean;
   readonly experimentBundle: AgentEffectivenessExperimentBundle;
-  readonly mutationPolicy: string;
+  readonly mutationPolicy: AgentEffectivenessMutationPolicy;
   readonly phoenixAnnotations: ReadonlyArray<PhoenixAnnotationInput>;
   readonly plannedAnnotationCount: number;
   readonly promptBundle: AgentEffectivenessPromptBundle;
@@ -3767,7 +3893,9 @@ export const syncAgentEffectivenessPhoenix: (
       datasetBundle,
       dryRun: input.dryRun,
       experimentBundle,
-      mutationPolicy: input.dryRun ? "dry-run-annotation-check-failed" : "blocked-annotation-check-failed",
+      mutationPolicy: input.dryRun
+        ? AgentEffectivenessMutationPolicy.Enum["dry-run-annotation-check-failed"]
+        : AgentEffectivenessMutationPolicy.Enum["blocked-annotation-check-failed"],
       phoenixAnnotations,
       plannedAnnotationCount: A.length(plan.annotations),
       promptBundle,
@@ -3781,7 +3909,9 @@ export const syncAgentEffectivenessPhoenix: (
       datasetBundle,
       dryRun: input.dryRun,
       experimentBundle,
-      mutationPolicy: input.dryRun ? "dry-run-dataset-check-failed" : "blocked-dataset-check-failed",
+      mutationPolicy: input.dryRun
+        ? AgentEffectivenessMutationPolicy.Enum["dry-run-dataset-check-failed"]
+        : AgentEffectivenessMutationPolicy.Enum["blocked-dataset-check-failed"],
       phoenixAnnotations,
       plannedAnnotationCount: A.length(plan.annotations),
       promptBundle,
@@ -3794,7 +3924,7 @@ export const syncAgentEffectivenessPhoenix: (
       datasetBundle,
       dryRun: true,
       experimentBundle,
-      mutationPolicy: "dry-run-no-phoenix-mutation",
+      mutationPolicy: AgentEffectivenessMutationPolicy.Enum["dry-run-no-phoenix-mutation"],
       phoenixAnnotations,
       plannedAnnotationCount: A.length(plan.annotations),
       promptBundle,
@@ -3807,7 +3937,7 @@ export const syncAgentEffectivenessPhoenix: (
       datasetBundle,
       dryRun: false,
       experimentBundle,
-      mutationPolicy: "blocked-missing-confirmation-token",
+      mutationPolicy: AgentEffectivenessMutationPolicy.Enum["blocked-missing-confirmation-token"],
       phoenixAnnotations,
       plannedAnnotationCount: A.length(plan.annotations),
       promptBundle,
@@ -3820,69 +3950,31 @@ export const syncAgentEffectivenessPhoenix: (
     datasetBundle.datasets,
     (dataset) => syncPhoenixDataset(phoenix, dataset),
     { concurrency: 1 }
-  ).pipe(
-    Effect.mapError((cause) =>
-      AgentEffectivenessError.make({
-        cause,
-        message: "Failed to sync agent-effectiveness datasets to Phoenix.",
-      })
-    )
-  );
+  ).pipe(Effect.mapError(agentEffectivenessFailure("Failed to sync agent-effectiveness datasets to Phoenix.")));
   const promptResults = yield* Effect.forEach(
     promptBundle.prompts,
     (prompt) => phoenix.createPrompt(toPhoenixPromptCreateInput(prompt)),
     { concurrency: 1 }
-  ).pipe(
-    Effect.mapError((cause) =>
-      AgentEffectivenessError.make({
-        cause,
-        message: "Failed to write agent-effectiveness prompts to Phoenix.",
-      })
-    )
-  );
+  ).pipe(Effect.mapError(agentEffectivenessFailure("Failed to write agent-effectiveness prompts to Phoenix.")));
   const experimentResults = yield* Effect.forEach(
     pipe(
-      datasetBundle.datasets,
+      experimentBundle.experiments,
       A.zip(datasetResults),
-      A.map(([dataset, result]) =>
+      A.map(([experiment, result]) =>
         result.createExperiment
           ? O.some({
-              dataset,
+              experiment,
               datasetId: result.datasetId,
             })
           : O.none()
       ),
       A.getSomes
     ),
-    ({ dataset, datasetId }) =>
-      phoenix.createExperiment(
-        PhoenixExperimentCreateInput.make({
-          datasetId,
-          experimentDescription: `Deterministic readback experiment for ${dataset.name}.`,
-          experimentMetadata: {
-            datasetKind: dataset.kind,
-            projectName: datasetBundle.projectName,
-            source: "agent-effectiveness-loop",
-          },
-          experimentName: `${dataset.kind}-deterministic-v1`,
-        })
-      ),
+    ({ datasetId, experiment }) => phoenix.createExperiment(toPhoenixExperimentCreateInput(experiment, datasetId)),
     { concurrency: 1 }
-  ).pipe(
-    Effect.mapError((cause) =>
-      AgentEffectivenessError.make({
-        cause,
-        message: "Failed to create agent-effectiveness Phoenix experiments.",
-      })
-    )
-  );
+  ).pipe(Effect.mapError(agentEffectivenessFailure("Failed to create agent-effectiveness Phoenix experiments.")));
   const annotationResults = yield* Effect.forEach(phoenixAnnotations, phoenix.addAnnotation, { concurrency: 1 }).pipe(
-    Effect.mapError((cause) =>
-      AgentEffectivenessError.make({
-        cause,
-        message: "Failed to write resolved agent-effectiveness annotations to Phoenix.",
-      })
-    )
+    Effect.mapError(agentEffectivenessFailure("Failed to write resolved agent-effectiveness annotations to Phoenix."))
   );
 
   return AgentEffectivenessPhoenixSyncResult.make({
@@ -3890,7 +3982,7 @@ export const syncAgentEffectivenessPhoenix: (
     datasetCount: A.length(datasetResults),
     dryRun: false,
     experimentCount: A.length(experimentResults),
-    mutationPolicy: "confirmed-phoenix-write",
+    mutationPolicy: AgentEffectivenessMutationPolicy.Enum["confirmed-phoenix-write"],
     promptCount: A.length(promptResults),
     skippedAnnotationCount: A.length(plan.annotations) - A.length(phoenixAnnotations),
     status: AgentEffectivenessStatus.Enum.passed,
@@ -4010,7 +4102,22 @@ function checkRecordText(
 const checkPlanPayload = (
   plan: AgentEffectivenessAnnotationPlan
 ): ReadonlyArray<AgentEffectivenessAnnotationCheckFinding> =>
-  checkUnknownText("plan", decodeUnknownJsonSync(encodeAnnotationPlanJsonSync(plan)), "Plan payload");
+  Result.match(
+    pipe(
+      AgentEffectivenessAnnotationPlan.encodeJsonResult(plan),
+      Result.flatMap(Unknown.decodeUnknownResultFromJsonString)
+    ),
+    {
+      onFailure: () => [
+        AgentEffectivenessAnnotationCheckFinding.make({
+          annotationId: "plan",
+          code: AgentEffectivenessAnnotationCheckFindingCode.Enum["plan-encode-failed"],
+          message: "Plan payload could not be encoded for scanning.",
+        }),
+      ],
+      onSuccess: (payload) => checkUnknownText("plan", payload, "Plan payload"),
+    }
+  );
 
 const checkDatasetExample = (
   dataset: AgentEffectivenessDatasetSpec,
@@ -4068,23 +4175,19 @@ const checkAnnotation = (
 const duplicateAnnotationIdFindings = (
   annotations: ReadonlyArray<AgentEffectivenessPlannedAnnotation>
 ): ReadonlyArray<AgentEffectivenessAnnotationCheckFinding> => {
-  let seen = R.empty<string, true>();
   const duplicatedIds = pipe(
     annotations,
-    A.filter((annotation) => {
-      const duplicated = R.has(seen, annotation.annotationId);
-      seen = R.set(seen, annotation.annotationId, true);
-      return duplicated;
-    }),
-    A.map((annotation) => annotation.annotationId),
-    A.dedupe
+    A.groupBy((annotation) => annotation.annotationId),
+    R.filter((group) => A.length(group) > 1),
+    R.toEntries,
+    A.map(([annotationId]) => annotationId)
   );
   return pipe(
     duplicatedIds,
     A.map((annotationId) =>
       AgentEffectivenessAnnotationCheckFinding.make({
         annotationId,
-        code: "duplicate-annotation-id",
+        code: AgentEffectivenessAnnotationCheckFindingCode.Enum["duplicate-annotation-id"],
         message: "Annotation id must be unique within the local plan.",
       })
     )
@@ -4154,7 +4257,6 @@ export const makeAgentEffectivenessAnnotationCheckReport: (
     annotationCount: A.length(plan.annotations),
     findings,
     generatedAt: plan.generatedAt,
-    schemaVersion: "agent-effectiveness-annotation-check/v1",
     status: A.isReadonlyArrayNonEmpty(findings)
       ? AgentEffectivenessStatus.Enum.failed
       : AgentEffectivenessStatus.Enum.passed,
@@ -4204,13 +4306,8 @@ export const agentEffectivenessDoctorReportToJson: (
   report: AgentEffectivenessDoctorReport
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessDoctorReportToJson")(
   (report) =>
-    encodeDoctorReportJson(report).pipe(
-      Effect.mapError((cause) =>
-        AgentEffectivenessError.make({
-          cause,
-          message: "Failed to encode agent-effectiveness doctor report as JSON.",
-        })
-      )
+    AgentEffectivenessDoctorReport.encodeJsonEffect(report).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness doctor report as JSON."))
     )
 );
 
@@ -4261,13 +4358,8 @@ export const agentEffectivenessAnnotationPlanToJson: (
   plan: AgentEffectivenessAnnotationPlan
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessAnnotationPlanToJson")(
   (plan) =>
-    encodeAnnotationPlanJson(plan).pipe(
-      Effect.mapError((cause) =>
-        AgentEffectivenessError.make({
-          cause,
-          message: "Failed to encode agent-effectiveness annotation plan as JSON.",
-        })
-      )
+    AgentEffectivenessAnnotationPlan.encodeJsonEffect(plan).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness annotation plan as JSON."))
     )
 );
 
@@ -4310,13 +4402,8 @@ export const agentEffectivenessAnnotationCheckReportToJson: (
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn(
   "AiMetrics.agentEffectivenessAnnotationCheckReportToJson"
 )((report) =>
-  encodeAnnotationCheckJson(report).pipe(
-    Effect.mapError((cause) =>
-      AgentEffectivenessError.make({
-        cause,
-        message: "Failed to encode agent-effectiveness annotation-check report as JSON.",
-      })
-    )
+  AgentEffectivenessAnnotationCheckReport.encodeJsonEffect(report).pipe(
+    Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness annotation-check report as JSON."))
   )
 );
 
@@ -4357,13 +4444,8 @@ export const agentEffectivenessDatasetBundleToJson: (
   bundle: AgentEffectivenessDatasetBundle
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessDatasetBundleToJson")(
   (bundle) =>
-    encodeDatasetBundleJson(bundle).pipe(
-      Effect.mapError((cause) =>
-        AgentEffectivenessError.make({
-          cause,
-          message: "Failed to encode agent-effectiveness dataset bundle as JSON.",
-        })
-      )
+    AgentEffectivenessDatasetBundle.encodeJsonEffect(bundle).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness dataset bundle as JSON."))
     )
 );
 
@@ -4399,13 +4481,8 @@ export const agentEffectivenessPromptBundleToJson: (
   bundle: AgentEffectivenessPromptBundle
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessPromptBundleToJson")(
   (bundle) =>
-    encodePromptBundleJson(bundle).pipe(
-      Effect.mapError((cause) =>
-        AgentEffectivenessError.make({
-          cause,
-          message: "Failed to encode agent-effectiveness prompt bundle as JSON.",
-        })
-      )
+    AgentEffectivenessPromptBundle.encodeJsonEffect(bundle).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness prompt bundle as JSON."))
     )
 );
 
@@ -4448,13 +4525,8 @@ export const agentEffectivenessExperimentBundleToJson: (
   bundle: AgentEffectivenessExperimentBundle
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessExperimentBundleToJson")(
   (bundle) =>
-    encodeExperimentBundleJson(bundle).pipe(
-      Effect.mapError((cause) =>
-        AgentEffectivenessError.make({
-          cause,
-          message: "Failed to encode agent-effectiveness experiment bundle as JSON.",
-        })
-      )
+    AgentEffectivenessExperimentBundle.encodeJsonEffect(bundle).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness experiment bundle as JSON."))
     )
 );
 
@@ -4502,12 +4574,7 @@ export const agentEffectivenessPhoenixSyncResultToJson: (
   result: AgentEffectivenessPhoenixSyncResult
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessPhoenixSyncResultToJson")(
   (result) =>
-    encodePhoenixSyncResultJson(result).pipe(
-      Effect.mapError((cause) =>
-        AgentEffectivenessError.make({
-          cause,
-          message: "Failed to encode agent-effectiveness Phoenix sync result as JSON.",
-        })
-      )
+    AgentEffectivenessPhoenixSyncResult.encodeJsonEffect(result).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness Phoenix sync result as JSON."))
     )
 );

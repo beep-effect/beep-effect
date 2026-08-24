@@ -113,11 +113,11 @@ export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderErr
  *
  * ```ts
  * import { AiMetricsForwarderInput } from "@beep/repo-ai-metrics"
- * import { Redacted } from "effect"
+ * import { Option, Redacted } from "effect"
  *
  * const input = AiMetricsForwarderInput.make({
- *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
- *   hashSalt: "salt",
+ *   dataRoot: Option.some("/home/dev/.local/state/beep/ai-metrics"),
+ *   hashSalt: Option.some("salt"),
  *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("base64-32-byte-key"),
  *   repoRoot: "/repo"
@@ -133,30 +133,30 @@ export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderErr
  */
 export class AiMetricsForwarderInput extends S.Class<AiMetricsForwarderInput>($I`AiMetricsForwarderInput`)(
   {
-    claudeProjectsRoot: S.optionalKey(S.String),
-    codexSessionsRoot: S.optionalKey(S.String),
-    dataRoot: S.optionalKey(S.String),
-    hashSalt: S.optionalKey(S.String),
-    hashSaltSecretRef: S.optionalKey(S.String),
+    claudeProjectsRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    codexSessionsRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    dataRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    hashSalt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     homeDir: S.String,
     includeAll: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ),
-    maxFiles: S.Finite.pipe(
+    maxFiles: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_FILES)),
       S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_FILES))
     ),
-    maxFileBytes: S.optionalKey(S.Finite),
-    openClawUnitPath: S.optionalKey(S.String),
+    maxFileBytes: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    openClawUnitPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     parquetExportMode: AiMetricsParquetExportMode.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsParquetExportMode.Enum.snapshot)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsParquetExportMode.Enum.snapshot))
     ),
     rawArchiveKey: AiMetricsRawArchiveKey,
-    rawArchiveKeySecretRef: S.optionalKey(S.String),
+    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     repoRoot: S.String,
-    sinceEpochMillis: S.optionalKey(S.Finite),
+    sinceEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
     target: AiMetricsDeployTarget.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.local)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsDeployTarget.Enum.local))
@@ -201,10 +201,10 @@ export class AiMetricsForwarderSourceCoverage extends S.Class<AiMetricsForwarder
   $I`AiMetricsForwarderSourceCoverage`
 )(
   {
-    candidateFileCount: S.Finite,
-    includedFileCount: S.Finite,
+    candidateFileCount: S.Natural,
+    includedFileCount: S.Natural,
     limitedByMaxFiles: S.Boolean,
-    sizeExcludedFileCount: S.Finite.pipe(
+    sizeExcludedFileCount: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
       S.withDecodingDefaultKey(Effect.succeed(0))
     ),
@@ -254,11 +254,11 @@ export class AiMetricsForwarderOtlpExported extends S.Class<AiMetricsForwarderOt
   {
     endpointTraceUrl: S.String,
     ingestRunId: S.String,
-    sessionSpanCount: S.Finite,
-    spanCount: S.Finite,
-    status: S.Literal("exported"),
+    sessionSpanCount: S.Natural,
+    spanCount: S.Natural,
+    status: S.Literal("exported").pipe(SchemaUtils.withConstantDefault("exported")),
     target: AiMetricsDeployTarget,
-    turnSpanCount: S.Finite,
+    turnSpanCount: S.Natural,
   },
   $I.annote("AiMetricsForwarderOtlpExported", {
     description: "Safe counts recorded when a forwarder run also exports derived AI metrics spans through OTLP.",
@@ -308,7 +308,7 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
     endpointTraceUrl: S.String,
     ingestRunId: S.String,
     message: S.String,
-    status: S.Literal("failed"),
+    status: S.Literal("failed").pipe(SchemaUtils.withConstantDefault("failed")),
     target: AiMetricsDeployTarget,
   },
   $I.annote("AiMetricsForwarderOtlpExportFailed", {
@@ -415,12 +415,12 @@ export type AiMetricsForwarderOtlpExport = typeof AiMetricsForwarderOtlpExport.T
  */
 export class AiMetricsForwarderRunResult extends S.Class<AiMetricsForwarderRunResult>($I`AiMetricsForwarderRunResult`)(
   {
-    archiveObjectCount: S.Finite,
+    archiveObjectCount: S.Natural,
     configSnapshotId: S.String,
     duckDbPath: S.String,
     ingestRunId: S.String,
-    otlpExport: S.optionalKey(AiMetricsForwarderOtlpExport),
-    parquetExportDir: S.optionalKey(S.String),
+    otlpExport: S.OptionFromOptionalKey(AiMetricsForwarderOtlpExport).pipe(SchemaUtils.withNoneDefault),
+    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     parquetExportMode: AiMetricsParquetExportMode,
     parquetTables: S.Array(S.String),
     rawArchiveDir: S.String,
@@ -428,14 +428,16 @@ export class AiMetricsForwarderRunResult extends S.Class<AiMetricsForwarderRunRe
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultKey(Effect.succeed([]))
     ),
-    sourceFileCount: S.Finite,
+    sourceFileCount: S.Natural,
     target: AiMetricsDeployTarget,
-    turnCount: S.Finite,
+    turnCount: S.Natural,
   },
   $I.annote("AiMetricsForwarderRunResult", {
     description: "Safe counts and storage paths returned by one durable AI metrics forwarder run.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AiMetricsForwarderRunResult));
+}
 
 /**
  * Parameters for the systemd user timer that owns scheduled forwarder collection.
@@ -478,13 +480,13 @@ export class AiMetricsForwarderTimerInput extends S.Class<AiMetricsForwarderTime
 )(
   {
     command: AiMetricsForwarderTimerCommand,
-    hashSaltSecretRef: S.optionalKey(S.String),
-    intervalMinutes: S.Finite.pipe(
+    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    intervalMinutes: S.Int.check(S.isGreaterThan(0)).pipe(
       S.withConstructorDefault(Effect.succeed(30)),
       S.withDecodingDefaultKey(Effect.succeed(30))
     ),
     lockPath: S.String,
-    rawArchiveKeySecretRef: S.optionalKey(S.String),
+    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     serviceName: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("beep-ai-metrics-forwarder")),
       S.withDecodingDefaultKey(Effect.succeed("beep-ai-metrics-forwarder"))
@@ -548,10 +550,9 @@ export class AiMetricsForwarderTimerPlan extends S.Class<AiMetricsForwarderTimer
   $I.annote("AiMetricsForwarderTimerPlan", {
     description: "Systemd user timer artifacts that own P6a live collection on the workstation.",
   })
-) {}
-
-const encodeForwarderResultJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsForwarderRunResult));
-const encodeForwarderTimerPlanJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsForwarderTimerPlan));
+) {
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AiMetricsForwarderTimerPlan));
+}
 
 type ForwarderSourceFile = {
   readonly modifiedAtMillis: number;
@@ -577,10 +578,7 @@ const forwarderFailure = (message: string, cause: unknown): AiMetricsForwarderEr
 const requireForwarderHashSalt = Effect.fn("AiMetrics.forwarder.requireHashSalt")(function* (
   input: AiMetricsForwarderInput
 ) {
-  if (
-    input.target === AiMetricsDeployTarget.Enum.local ||
-    (input.hashSalt !== undefined && Str.isNonEmpty(Str.trim(input.hashSalt)))
-  ) {
+  if (AiMetricsDeployTarget.is.local(input.target) || O.exists(input.hashSalt, flow(Str.trim, Str.isNonEmpty))) {
     return;
   }
 
@@ -710,16 +708,20 @@ export const renderAiMetricsForwarderTimerPlan = (input: AiMetricsForwarderTimer
   );
   const writeEnvFileCommands = [
     `install -m 0600 /dev/null ${envFileShellPath}`,
-    ...(timerInput.hashSaltSecretRef === undefined
-      ? []
-      : [
-          `printf 'BEEP_AI_METRICS_HASH_SALT=%s\\n' "$(op read ${shellQuote(timerInput.hashSaltSecretRef)})" >> ${envFileShellPath}`,
-        ]),
-    ...(timerInput.rawArchiveKeySecretRef === undefined
-      ? []
-      : [
-          `printf 'BEEP_AI_METRICS_RAW_ARCHIVE_KEY=%s\\n' "$(op read ${shellQuote(timerInput.rawArchiveKeySecretRef)})" >> ${envFileShellPath}`,
-        ]),
+    ...pipe(
+      timerInput.hashSaltSecretRef,
+      O.map((secretRef) => [
+        `printf 'BEEP_AI_METRICS_HASH_SALT=%s\\n' "$(op read ${shellQuote(secretRef)})" >> ${envFileShellPath}`,
+      ]),
+      O.getOrElse(A.empty<string>)
+    ),
+    ...pipe(
+      timerInput.rawArchiveKeySecretRef,
+      O.map((secretRef) => [
+        `printf 'BEEP_AI_METRICS_RAW_ARCHIVE_KEY=%s\\n' "$(op read ${shellQuote(secretRef)})" >> ${envFileShellPath}`,
+      ]),
+      O.getOrElse(A.empty<string>)
+    ),
   ];
 
   return AiMetricsForwarderTimerPlan.make({
@@ -752,18 +754,20 @@ const modifiedAtMillis = (info: FileSystem.File.Info): number =>
 const isWithinModifiedTimeWindow =
   (input: AiMetricsForwarderInput) =>
   (info: FileSystem.File.Info): boolean =>
-    input.includeAll || input.sinceEpochMillis === undefined || modifiedAtMillis(info) >= input.sinceEpochMillis;
+    input.includeAll ||
+    O.isNone(input.sinceEpochMillis) ||
+    O.exists(input.sinceEpochMillis, (since) => modifiedAtMillis(info) >= since);
 
 const isWithinSizeWindow =
   (input: AiMetricsForwarderInput) =>
   (info: FileSystem.File.Info): boolean =>
-    input.maxFileBytes === undefined || fileSizeBytes(info) <= input.maxFileBytes;
+    O.isNone(input.maxFileBytes) || O.exists(input.maxFileBytes, (maximum) => fileSizeBytes(info) <= maximum);
 
 const sourcePathHashForDiagnostics = Effect.fn("AiMetrics.forwarder.sourcePathHashForDiagnostics")(function* (
   input: AiMetricsForwarderInput,
   sourceFile: ForwarderSourceFile
 ) {
-  return yield* hashPrivateIdentifier(sourceFile.sourcePath, input.hashSalt).pipe(
+  return yield* hashPrivateIdentifier(sourceFile.sourcePath, O.getOrUndefined(input.hashSalt)).pipe(
     Effect.mapError((cause) =>
       forwarderFailure("Failed to hash AI metrics source path for diagnostics.", {
         cause,
@@ -825,8 +829,9 @@ const openClawSourceFiles = Effect.fn("AiMetrics.forwarder.openClawSourceFiles")
   input: AiMetricsForwarderInput
 ) {
   const pathApi = yield* Path.Path;
-  const unitPath =
-    input.openClawUnitPath ?? pathApi.join(input.homeDir, ".config/systemd/user/openclaw-gateway.service");
+  const unitPath = O.getOrElse(input.openClawUnitPath, () =>
+    pathApi.join(input.homeDir, ".config/systemd/user/openclaw-gateway.service")
+  );
   const info = yield* statOption(unitPath);
   if (O.isNone(info) || info.value.type !== "File" || !isWithinModifiedTimeWindow(input)(info.value)) {
     return {
@@ -885,9 +890,10 @@ const discoverForwarderSourceFiles = Effect.fn("AiMetrics.forwarder.discoverSour
   const pathApi = yield* Path.Path;
   const repoRoot = pathApi.resolve(input.repoRoot);
   const homeDir = pathApi.resolve(input.homeDir);
-  const codexRoot = input.codexSessionsRoot ?? pathApi.join(homeDir, ".codex/sessions");
-  const claudeRoot =
-    input.claudeProjectsRoot ?? pathApi.join(homeDir, ".claude/projects", repoPathToClaudeProjectName(repoRoot));
+  const codexRoot = O.getOrElse(input.codexSessionsRoot, () => pathApi.join(homeDir, ".codex/sessions"));
+  const claudeRoot = O.getOrElse(input.claudeProjectsRoot, () =>
+    pathApi.join(homeDir, ".claude/projects", repoPathToClaudeProjectName(repoRoot))
+  );
   const [codexFiles, claudeFiles, openClawFiles] = yield* Effect.all(
     [
       jsonlSourceFiles(input, codexRoot, AiMetricsTranscriptSource.Enum.codex),
@@ -927,13 +933,13 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
     );
     const summary = yield* summarizeTranscriptText({
       content,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
+      ...O.getSomesStruct({ hashSalt: input.hashSalt }),
       sourceKind: sourceFile.sourceKind,
       sourcePath: sourceFile.sourcePath,
     }).pipe(Effect.mapError((cause) => forwarderFailure("Failed to summarize AI metrics source file.", cause)));
     const archiveObject = yield* writeEncryptedRawArchiveObject({
       content,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
+      ...O.getSomesStruct({ hashSalt: input.hashSalt }),
       rawArchiveDir,
       rawArchiveKey: input.rawArchiveKey,
       sourceKind: sourceFile.sourceKind,
@@ -943,7 +949,7 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
     );
     const privacy = yield* makeAiMetricsPrivacyCheckResult({
       content,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
+      ...O.getSomesStruct({ hashSalt: input.hashSalt }),
       relativePath: sourceFile.relativePath,
       sourcePath: sourceFile.sourcePath,
       summary,
@@ -989,12 +995,12 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  *   withAiMetricsDuckDb
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect, Redacted } from "effect"
+ * import { Effect, Option, Redacted } from "effect"
  *
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
  *
  * const input = AiMetricsForwarderInput.make({
- *   dataRoot,
+ *   dataRoot: Option.some(dataRoot),
  *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("base64-32-byte-key"),
  *   repoRoot: "/work/repo"
@@ -1024,9 +1030,9 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     yield* requireForwarderHashSalt(input);
     const installSpec = yield* makeAiMetricsInstallSpec(
       AiMetricsInstallInput.make({
-        ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(input.dataRoot) }),
-        ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(input.hashSaltSecretRef) }),
-        ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(input.rawArchiveKeySecretRef) }),
+        dataRoot: input.dataRoot,
+        hashSaltSecretRef: input.hashSaltSecretRef,
+        rawArchiveKeySecretRef: input.rawArchiveKeySecretRef,
         target: input.target,
       })
     ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to resolve AI metrics install storage layout.", cause)));
@@ -1034,7 +1040,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     yield* upsertAiMetricsIdentityRegistry(
       AiMetricsIdentityRegistryUpsertInput.make({
         dataRoot: installSpec.storage.dataRoot,
-        ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
+        ...O.getSomesStruct({ hashSalt: input.hashSalt }),
         homeDir: input.homeDir,
         rootPath: pathApi.resolve(input.repoRoot),
         // Every kind this run scans, so openclaw-derived rows keep source-instance
@@ -1049,7 +1055,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const configSnapshotDir = pathApi.join(installSpec.storage.dataRoot, "config-snapshots");
     const configSnapshot = yield* makeAiMetricsConfigSnapshot(
       AiMetricsConfigSnapshotInput.make({
-        previousSnapshotPath: pathApi.join(configSnapshotDir, "latest.json"),
+        previousSnapshotPath: O.some(pathApi.join(configSnapshotDir, "latest.json")),
         repoRoot: input.repoRoot,
       })
     ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to build AI metrics config snapshot.", cause)));
@@ -1058,9 +1064,10 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       outputDir: configSnapshotDir,
       result: configSnapshot,
     }).pipe(Effect.mapError((cause) => forwarderFailure("Failed to persist AI metrics config snapshot.", cause)));
-    const repoRootHash = yield* hashPrivateIdentifier(pathApi.resolve(input.repoRoot), input.hashSalt).pipe(
-      Effect.mapError((cause) => forwarderFailure("Failed to hash AI metrics repo root.", cause))
-    );
+    const repoRootHash = yield* hashPrivateIdentifier(
+      pathApi.resolve(input.repoRoot),
+      O.getOrUndefined(input.hashSalt)
+    ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to hash AI metrics repo root.", cause)));
     const sourceSelection = yield* discoverForwarderSourceFiles(input);
     const records = yield* Effect.forEach(
       sourceSelection.files,
@@ -1090,7 +1097,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       configSnapshotId: configSnapshot.snapshot.snapshotId,
       duckDbPath: derived.duckDbPath,
       ingestRunId: derived.ingestRunId,
-      ...O.getSomesStruct({ parquetExportDir: O.fromUndefinedOr(derived.parquetExportDir) }),
+      parquetExportDir: O.fromUndefinedOr(derived.parquetExportDir),
       parquetExportMode: derived.parquetExportMode,
       parquetTables: derived.parquetTables,
       rawArchiveDir: installSpec.storage.rawArchiveDir,
@@ -1156,7 +1163,7 @@ export const forwarderRunResultToJson: (
   result: AiMetricsForwarderRunResult
 ) => Effect.Effect<string, AiMetricsForwarderError> = Effect.fn("AiMetrics.forwarderRunResultToJson")(
   function* (result) {
-    return yield* encodeForwarderResultJson(result).pipe(
+    return yield* AiMetricsForwarderRunResult.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => forwarderFailure("Failed to encode AI metrics forwarder result as JSON.", cause))
     );
   }
@@ -1202,7 +1209,7 @@ export const forwarderTimerPlanToJson: (
   result: AiMetricsForwarderTimerPlan
 ) => Effect.Effect<string, AiMetricsForwarderError> = Effect.fn("AiMetrics.forwarderTimerPlanToJson")(
   function* (result) {
-    return yield* encodeForwarderTimerPlanJson(result).pipe(
+    return yield* AiMetricsForwarderTimerPlan.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => forwarderFailure("Failed to encode AI metrics forwarder timer plan as JSON.", cause))
     );
   }

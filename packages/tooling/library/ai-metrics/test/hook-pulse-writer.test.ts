@@ -1,8 +1,10 @@
-import { fileURLToPath } from "node:url";
-import { fcRuns } from "@beep/fc-runs";
+import * as NodeURL from "node:url";
 import {
   agentEvidenceRoot,
   HookPulseAgentKind,
+  HookPulseDisarmSentinel,
+  HookPulseDisarmWindow,
+  HookPulseDisarmWindowSchemaVersion,
   HookPulseEvent,
   HookPulseEvidenceTier,
   HookPulseInstrumentClass,
@@ -12,9 +14,12 @@ import {
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
   hashPrivateIdentifier,
+  hookPulseDisarmSentinelPath,
+  hookPulseDisarmWindowsPath,
   hookPulseLedgerDir,
 } from "@beep/repo-ai-metrics";
 import { Unknown } from "@beep/schema/Unknown";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Path, Stream } from "effect";
@@ -32,18 +37,11 @@ import { ChildProcess } from "effect/unstable/process";
 // producing a wrong ledger.
 // `fileURLToPath`, not `URL.pathname`: the latter is percent-encoded, so a
 // checkout path containing a space or `#` would yield an unspawnable writer path.
-const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
+const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
 // The operator half of the same instrument: the switch writes the sentinel the
 // writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
-
-// Named once because three parties spell these: the writer (which tests for the
-// sentinel before anything else), the switch (which writes both), and this file
-// (which reads both back). Neither name is exported from the TypeScript side yet,
-// so a single const here is the closest thing to one definition.
-const DISARM_SENTINEL_FILE = "hook-pulse.disarmed";
-const DISARM_WINDOWS_FILE = "hook-pulse-disarm-windows.ndjson";
 
 // A distinctive marker planted in every content-bearing raw key measured by the
 // P1 spike. Amendment 6 is only actually enforced if this never reaches disk —
@@ -85,12 +83,12 @@ const CODEC_PARITY_SALT = "hook-pulse-writer-codec-parity-salt";
 const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
   Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
 
-const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
-const decodeHookPulseRow = S.decodeUnknownEffect(S.fromJsonString(HookPulseV1));
+const decodeHookPulseFromRaw = HookPulseV1FromRawEvent.decodeUnknownEffect;
+const decodeHookPulseRow = HookPulseV1.decodeJsonEffect;
 const decodeRowKeys = S.decodeUnknownSync(S.fromJsonString(S.Record(S.String, S.Unknown)));
 const decodeRowString = S.decodeUnknownSync(S.String);
-const encodeHookPulseRow = S.encodeUnknownSync(S.fromJsonString(HookPulseV1));
-const decodeHookPulseRowSync = S.decodeUnknownSync(S.fromJsonString(HookPulseV1));
+const encodeHookPulseRow = HookPulseV1.encodeJsonSync;
+const decodeHookPulseRowSync = HookPulseV1.decodeJsonSync;
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 // Fixture payloads are raw harness shapes, not a schema this package owns, so the
 // unknown-shaped encoder is the right rung: it renders stdin without pretending the
@@ -170,7 +168,7 @@ const runWriter = Effect.fnUntraced(function* (
 
   if (O.isSome(O.fromUndefinedOr(options.disarmSentinel))) {
     yield* fs.makeDirectory(evidenceRoot, { recursive: true });
-    yield* fs.writeFileString(path.join(evidenceRoot, DISARM_SENTINEL_FILE), `${options.disarmSentinel}\n`);
+    yield* fs.writeFileString(hookPulseDisarmSentinelPath(evidenceRoot), `${options.disarmSentinel}\n`);
   }
 
   // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
@@ -926,26 +924,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
 // instrument was off", so representing a disarm window in the canonical ledger
 // would mean inventing a hook event. Keeping the window in a sibling file is
 // what lets P4 replay treat `hook-events/` as exactly one schema.
-const DISARM_WINDOW_SCHEMA_VERSION = "hook-pulse-disarm-window/v1";
-
-const HookPulseDisarmSentinel = S.Struct({
-  disarmedAt: S.String,
-  evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
-  reason: S.String,
-});
-
-const HookPulseDisarmWindow = S.Struct({
-  // `null` rather than absent, and rather than a fabricated start: an unknown
-  // window start must stay distinguishable from a measured one.
-  disarmedAt: S.NullOr(S.String),
-  evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
-  reason: S.NullOr(S.String),
-  rearmedAt: S.String,
-  schemaVersion: S.Literal(DISARM_WINDOW_SCHEMA_VERSION),
-});
-
-const decodeDisarmSentinel = S.decodeUnknownEffect(S.fromJsonString(HookPulseDisarmSentinel));
-const decodeDisarmWindow = S.decodeUnknownEffect(S.fromJsonString(HookPulseDisarmWindow));
+const decodeDisarmSentinel = HookPulseDisarmSentinel.decodeJsonEffect;
+const decodeDisarmWindow = HookPulseDisarmWindow.decodeJsonEffect;
 
 // An ISO-8601 UTC instant at second resolution, which is all `date -u
 // +%Y-%m-%dT%H:%M:%SZ` can express. Asserted on `rearmedAt` so a window closed
@@ -977,9 +957,9 @@ const makeSwitchStore = Effect.fnUntraced(function* () {
 
   return {
     evidenceRoot,
-    sentinelPath: path.join(evidenceRoot, DISARM_SENTINEL_FILE),
+    sentinelPath: hookPulseDisarmSentinelPath(evidenceRoot),
     stateHome,
-    windowsPath: path.join(evidenceRoot, DISARM_WINDOWS_FILE),
+    windowsPath: hookPulseDisarmWindowsPath(evidenceRoot),
   };
 });
 
@@ -1158,9 +1138,9 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
         const window = yield* decodeDisarmWindow(expectSingleWindow(yield* readWindowRows(store)));
 
         expectSwitchOk(armed);
-        expect(window.schemaVersion).toBe(DISARM_WINDOW_SCHEMA_VERSION);
-        expect(window.disarmedAt).toBe(SEEDED_DISARM.disarmedAt);
-        expect(window.reason).toBe(SEEDED_DISARM.reason);
+        expect(window.schemaVersion).toBe(HookPulseDisarmWindowSchemaVersion.Enum["hook-pulse-disarm-window/v1"]);
+        expect(window.disarmedAt).toEqual(O.some(SEEDED_DISARM.disarmedAt));
+        expect(window.reason).toEqual(O.some(SEEDED_DISARM.reason));
         // Self-labelled `unknown`: no hook rows exist for the window, so anything
         // computed across it is uninstrumented by construction.
         expect(window.evidenceTier).toBe(HookPulseEvidenceTier.Enum.unknown);
@@ -1207,8 +1187,8 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
             // `null`, never the rearm instant: a window whose start defaulted to
             // "now" would read as a zero-length gap, which is worse than an
             // admitted unknown because it looks like coverage.
-            expect(window.disarmedAt).toBeNull();
-            expect(window.reason).toBeNull();
+            expect(window.disarmedAt).toEqual(O.none());
+            expect(window.reason).toEqual(O.none());
             expect(window.rearmedAt).toMatch(isoSecond);
             expect(yield* readSentinel(store)).toEqual(O.none());
           })

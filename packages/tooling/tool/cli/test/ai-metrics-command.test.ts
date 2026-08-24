@@ -26,6 +26,7 @@ import {
   Layer,
   Path,
   pipe,
+  Result,
   Schedule,
 } from "effect";
 import * as O from "effect/Option";
@@ -57,7 +58,17 @@ const encodeLabelQueue = S.encodeUnknownEffect(S.fromJsonString(AiMetricsLabelQu
 const encodeMirrorBundle = S.encodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleResult));
 const encodeOtlpExportResult = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
 const encodeWeeklyReport = S.encodeUnknownEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
-const ForwarderResultArbitrary = S.toArbitrary(AiMetricsForwarderRunResult)(fc);
+const decodeForwarderResultResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsForwarderRunResult));
+const decodeLabelQueueResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsLabelQueueResult));
+const decodeMirrorBundleResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsMirrorBundleResult));
+const decodeOtlpExportResultResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsOtlpExportResult));
+const decodeWeeklyReportResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsWeeklyReportResult));
+const encodeForwarderResultResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsForwarderRunResult));
+const encodeLabelQueueResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsLabelQueueResult));
+const encodeMirrorBundleResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsMirrorBundleResult));
+const encodeOtlpExportResultResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsOtlpExportResult));
+const encodeWeeklyReportResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsWeeklyReportResult));
+const ForwarderResultArbitrary = S.toArbitrary(S.toType(AiMetricsForwarderRunResult))(fc);
 const LabelQueueArbitrary = S.toArbitrary(AiMetricsLabelQueueResult)(fc);
 const MirrorBundleArbitrary = S.toArbitrary(AiMetricsMirrorBundleResult)(fc);
 const OtlpExportResultArbitrary = S.toArbitrary(AiMetricsOtlpExportResult)(fc);
@@ -290,25 +301,27 @@ describe("ai-metrics command", () => {
         OtlpExportResultArbitrary,
         WeeklyReportArbitrary,
         (forwarderResult, labelQueue, mirrorBundle, otlpExportResult, weeklyReport) => {
-          const encodedForwarderResult = Effect.runSync(encodeForwarderResult(forwarderResult));
-          const decodedForwarderResult = Effect.runSync(decodeForwarderResult(encodedForwarderResult));
-          expect(Effect.runSync(encodeForwarderResult(decodedForwarderResult))).toBe(encodedForwarderResult);
+          const encodedForwarderResult = Result.getOrThrow(encodeForwarderResultResult(forwarderResult));
+          const decodedForwarderResult = Result.getOrThrow(decodeForwarderResultResult(encodedForwarderResult));
+          expect(Result.getOrThrow(encodeForwarderResultResult(decodedForwarderResult))).toBe(encodedForwarderResult);
 
-          const encodedLabelQueue = Effect.runSync(encodeLabelQueue(labelQueue));
-          const decodedLabelQueue = Effect.runSync(decodeLabelQueue(encodedLabelQueue));
-          expect(Effect.runSync(encodeLabelQueue(decodedLabelQueue))).toBe(encodedLabelQueue);
+          const encodedLabelQueue = Result.getOrThrow(encodeLabelQueueResult(labelQueue));
+          const decodedLabelQueue = Result.getOrThrow(decodeLabelQueueResult(encodedLabelQueue));
+          expect(Result.getOrThrow(encodeLabelQueueResult(decodedLabelQueue))).toBe(encodedLabelQueue);
 
-          const encodedMirrorBundle = Effect.runSync(encodeMirrorBundle(mirrorBundle));
-          const decodedMirrorBundle = Effect.runSync(decodeMirrorBundle(encodedMirrorBundle));
-          expect(Effect.runSync(encodeMirrorBundle(decodedMirrorBundle))).toBe(encodedMirrorBundle);
+          const encodedMirrorBundle = Result.getOrThrow(encodeMirrorBundleResult(mirrorBundle));
+          const decodedMirrorBundle = Result.getOrThrow(decodeMirrorBundleResult(encodedMirrorBundle));
+          expect(Result.getOrThrow(encodeMirrorBundleResult(decodedMirrorBundle))).toBe(encodedMirrorBundle);
 
-          const encodedOtlpExportResult = Effect.runSync(encodeOtlpExportResult(otlpExportResult));
-          const decodedOtlpExportResult = Effect.runSync(decodeOtlpExportResult(encodedOtlpExportResult));
-          expect(Effect.runSync(encodeOtlpExportResult(decodedOtlpExportResult))).toBe(encodedOtlpExportResult);
+          const encodedOtlpExportResult = Result.getOrThrow(encodeOtlpExportResultResult(otlpExportResult));
+          const decodedOtlpExportResult = Result.getOrThrow(decodeOtlpExportResultResult(encodedOtlpExportResult));
+          expect(Result.getOrThrow(encodeOtlpExportResultResult(decodedOtlpExportResult))).toBe(
+            encodedOtlpExportResult
+          );
 
-          const encodedWeeklyReport = Effect.runSync(encodeWeeklyReport(weeklyReport));
-          const decodedWeeklyReport = Effect.runSync(decodeWeeklyReport(encodedWeeklyReport));
-          expect(Effect.runSync(encodeWeeklyReport(decodedWeeklyReport))).toBe(encodedWeeklyReport);
+          const encodedWeeklyReport = Result.getOrThrow(encodeWeeklyReportResult(weeklyReport));
+          const decodedWeeklyReport = Result.getOrThrow(decodeWeeklyReportResult(encodedWeeklyReport));
+          expect(Result.getOrThrow(encodeWeeklyReportResult(decodedWeeklyReport))).toBe(encodedWeeklyReport);
         }
       ),
       fcRuns(25)
@@ -1061,7 +1074,7 @@ describe("ai-metrics command", () => {
 
               const resultJson = yield* lastLoggedLine();
               const result = yield* decodeForwarderResult(resultJson);
-              const otlpExport = O.fromNullishOr(result.otlpExport);
+              const otlpExport = result.otlpExport;
               const traceRequest = yield* waitForCapturedOtlpTraceRequest(requests);
 
               expect(O.isSome(otlpExport)).toBe(true);
@@ -1137,7 +1150,7 @@ describe("ai-metrics command", () => {
 
                 const resultJson = yield* lastLoggedLine();
                 const result = yield* decodeForwarderResult(resultJson);
-                const otlpExport = O.fromNullishOr(result.otlpExport);
+                const otlpExport = result.otlpExport;
                 const errorOutput = pipe(yield* TestConsole.errorLines, A.filter(isString), A.join("\n"));
 
                 expect(result.sourceFileCount).toBe(1);
