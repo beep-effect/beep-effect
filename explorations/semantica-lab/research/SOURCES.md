@@ -8,8 +8,10 @@
 
 ## 1. Mined source corpus
 
-Not yet mined at symbol granularity. The planned extraction pipeline (DECISIONS D5) will emit a
-schema-validated JSONL IR over `semantica/**`; its outputs register here when they exist.
+Mined at symbol granularity by the D5 extraction pipeline: `scratchpad/semantica-ir/` emits a
+schema-validated JSONL IR over `semantica/**` (6,105 records, 354 files, SHA-256-stamped; stats
+in [`ir-extraction-report.md`](./ir-extraction-report.md)). The IR output itself is gitignored;
+the extractor, schema, and report are committed.
 
 ## 2. Upstream repositories & licenses
 
@@ -26,10 +28,10 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
 ## 3. External research sources
 
 - Semantica docs: https://docs.getsemantica.ai/ (glossary: https://docs.getsemantica.ai/glossary/)
-- Notion atlas page: https://app.notion.com/p/3c669573788d800182c3e19b0cf3b58c (`@beep/semantica`,
-  workspace Todox)
-- Bake-off candidate URLs (EYE/eyereasoner, Datalog engines, vector/graph/triplet backends,
-  llms.txt endpoints) will be added by the deep-research passes; none cited yet.
+- Notion atlas page: `@beep/semantica` in the private Todox workspace (identifier withheld;
+  find it via Notion search)
+- Bake-off candidate URLs: fetch-verified in [`docs-url-census.md`](./docs-url-census.md) and
+  in each family sheet's Sources appendix (`bakeoff-*.md`).
 
 ## 4. In-repo capability references
 
@@ -58,6 +60,6 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
 - Grounding files: [`grounding-semantica-repo.md`](./grounding-semantica-repo.md),
   [`grounding-beep-labs.md`](./grounding-beep-labs.md),
   [`grounding-notion-semantica.md`](./grounding-notion-semantica.md),
-  `grounding-v3-logos.md` (in flight)
+  [`grounding-v3-logos.md`](./grounding-v3-logos.md)
 - Sibling doctrine: `goals/lab-apps-lifecycle/` (D13 names `semantica` a first-wave lab source);
   `docs/BEEPGRAPH_ARCHITECTURE.md` (trustgraph direction)

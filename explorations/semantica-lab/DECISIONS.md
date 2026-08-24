@@ -2,7 +2,46 @@
 
 <!-- Stage 2. Dated Question -> Answer -> Rationale log, rejected options included. -->
 
+## Current law (2026-08-24)
+
+The sections below are the dated log. Later entries amend earlier ones. This table is what
+holds now; when a log entry disagrees with it, the table wins.
+
+| Topic | Holds now | Supersedes |
+| --- | --- | --- |
+| Next work | Draft BRIEF (enter shape); canary C0-C2 is Goal 1; graduate fast; scaffold the lab via create-package | "awaiting reconciliation review" |
+| Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
+| Embeddings | park-pending-canary; M1 uses hosted models via the agents slice; local Snowflake/ONNX lane parked | the sheet's Snowflake+ORT pick-one |
+| Input | park-pending-canary; per-stage slate is probe order; PDF.js/MuPDF is a tie | the sheet's per-stage winners |
+| Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; runtime path is ledger-native; NET-NEW is a dated spike with kill criteria | the sheet's EYE pick-one |
+| Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict | the sheet's dual verdict |
+| Canary | staged C0 (days) then C1 then C2 (G1); code lives in the lab after graduation | B2's monolithic offline run |
+| Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are EvalReport telemetry (Tier-D) | B5/A8 2GB/250MB/600MB as gates |
+| Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the EvalReport with network off | A8's fully-offline M1 |
+| Atlas writes | only final `park`/`drop` today; `adopt`/`pick-one` values wait for a passed canary stage | D3 columns as live verdicts |
+
+**Verdict map** (which vocabulary is legal where):
+
+| Where | Allowed values | When written |
+| --- | --- | --- |
+| Family (packet) | already-have / pick-one / bundle (storage only) / park / drop | after the matching canary stage passes |
+| Family (today) | park-pending-canary | packet-only; never an atlas value |
+| Atlas row | adopt / adapt / already-have / park / drop | adopt = wrap as-is, adapt = wrap with changes; today only final park/drop |
+| Sheet | none | a sheet is slate + probe order; its "winner" is not law |
+
+**Terminology** (one meaning each; prefer sheet, probe, canary in new prose):
+
+| Term | Means |
+| --- | --- |
+| Bake-off | one family research pass (`research/bakeoff-*.md`) |
+| Sheet | that markdown file |
+| Screen | B1's status for a sheet: slate plus probe order |
+| Probe | one named measurement that can falsify a slate row |
+| Canary | the staged M1 proof, C0/C1/C2 (G1) |
+
 ## 2026-08-24 — grill-with-docs session (Fable + Benjamin)
+
+Original grilling log. Amended by the A/B/G/O sections below; read the Current law table first.
 
 ### D1. Where does pre-goal work live?
 **Answer:** This packet (`explorations/semantica-lab`), opened now.
@@ -192,6 +231,10 @@ five sheets named winners before rubric §0/§4 prerequisites existed. Full reco
 - **B5.** Budget accounting is **bundle-level**: gate 5 is judged against the sum of loaded
   winners, never per family (storage 1,145 MB + EYE ~1 GB stacks and 175 MB + 259 MB ORT both
   bust ceilings — the per-family passes were vacuous).
+- **B6.** In-repo defects surfaced by the pass are repo-issue candidates outside this packet:
+  `@beep/duckdb` has no vector surface (claimed integration score retracted), Oxigraph adapter
+  fresh-store-per-request + ignored `timeoutMs`, LangExtract relation drop, WinkBackend span
+  fabrication, shacl-engine violating-fixture hang.
 ## 2026-08-24 (reconciliation grill) — G1–G7, ratified by Benjamin in /grilling rounds
 
 - **G1 (canary staging).** The B2 canary runs staged, not monolithic: **C0** (days) parse →
@@ -254,8 +297,3 @@ five sheets named winners before rubric §0/§4 prerequisites existed. Full reco
   activates; `.claude/skills/semantica/SKILL.md` in the clone gets read during shape;
   `op`-prewarm lesson to machine memory; Notion-pilot workflow lessons to basic-memory at
   session close.
-
-- **B6.** In-repo defects surfaced by the pass are repo-issue candidates outside this packet:
-  `@beep/duckdb` has no vector surface (claimed integration score retracted), Oxigraph adapter
-  fresh-store-per-request + ignored `timeoutMs`, LangExtract relation drop, WinkBackend span
-  fabrication, shacl-engine violating-fixture hang.

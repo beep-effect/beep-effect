@@ -1,7 +1,7 @@
 # Semantica Atlas Upgrade Report — Run 2
 
 Date: 2026-08-24  
-Target: `@beep/semantica` (`3c669573-788d-8001-82c3-e19b0cf3b58c`) in Todox
+Target: `@beep/semantica` (`[notion: page @beep/semantica]`) in Todox
 
 ## Outcome
 

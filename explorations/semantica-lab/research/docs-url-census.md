@@ -58,11 +58,13 @@ Live-fetched 2026-08-24. `llms.txt` is recorded only when GET returned real Mark
 |------|------|----------|------|---------|------|
 | eyereasoner (eye-js) | https://eyereasoner.github.io/eye/ | none found | https://github.com/eyereasoner/eye-js | MIT | EYE Prolog engine also MIT (eyereasoner/eye); WASM demo https://eyereasoner.github.io/eye-js/example/ |
 | N3.js | https://rdf.js.org/N3.js/ | none found | https://github.com/rdfjs/N3.js | MIT | parser/store; LICENSE.md MIT |
-| rdf-validate-shacl | https://github.com/zazuko/rdf-validate-shacl | none found | https://github.com/zazuko/rdf-validate-shacl | MIT | `packages/shacl` package.json `"license": "MIT"`; last push 2026-04-02 |
+| rdf-validate-shacl | https://github.com/zazuko/rdf-validate-shacl | none found | https://github.com/zazuko/rdf-validate-shacl | MIT | `packages/drivers/shacl` package.json `"license": "MIT"`; last push 2026-04-02 |
 | shacl-engine | https://github.com/rdf-ext/shacl-engine | none found | https://github.com/rdf-ext/shacl-engine | MIT | last push 2026-08-09; npm 1.1.2 |
 | Dusa | https://dusa.rocks/docs | none found | https://github.com/robsimmons/dusa | GPL-3.0 | TS Datalog+ASP (finite-choice LP). Last push 2026-06-30. Best TS engine that still shows life |
 
 ## Flags
+
+*(Gates quoted below are rubric v1 as of this census; v2.0 rebuilt the license and maintenance gates — see `criteria-rubric.md`.)*
 
 Hard gates from `criteria-rubric.md`: in-process license MIT/Apache-2.0/BSD/ISC only; sidecar copyleft case-by-case; unverifiable license park; ~12 month maintenance floor.
 

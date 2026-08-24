@@ -1,7 +1,7 @@
 # Semantica Atlas Upgrade Report
 
 Date: 2026-08-24  
-Target: `@beep/semantica` (`3c669573-788d-8001-82c3-e19b0cf3b58c`) in Todox
+Target: `@beep/semantica` (`[notion: page @beep/semantica]`) in Todox
 
 ## Outcome
 
@@ -20,7 +20,7 @@ rows. No existing property, row, or body content was deleted or renamed.
 - `Maturity` is select: `solid`, `partial`, `stub`, `unknown`.
 - `Verdict` is select: `adopt`, `adapt`, `already-have`, `park`, `drop`.
 - `Beep counterpart` is rich text. `Docs URL` is URL.
-- Module Index (`collection://950326ad-44c1-409b-9483-7f2e22a2a2e8`) gained two properties:
+- Module Index (`[notion: Module Index data source]`) gained two properties:
   `Maturity` with the same four options and `Target home` as select.
 - `Target home` options: `domain`, `use-cases`, `server`, `client`, `ui`, `tables`,
   `drivers`, `foundation`, `tooling`, `drop`, `tbd`.
@@ -69,7 +69,7 @@ rows. No existing property, row, or body content was deleted or renamed.
 
 - Appended a new `## Findings` heading at the end of the page, then created and converted one
   child database to inline: `Findings — Bugs, Drift & Gaps`
-  (`collection://25337805-3c30-4051-a636-d3315ead2d82`).
+  (`[notion: Findings — Bugs, Drift & Gaps data source]`).
 - Properties: `Finding` title; `Module` and `Evidence` rich text.
 - `Class` options: `bug`, `design-flaw`, `drift`, `doc-gap`.
 - `Status` options: `open`, `fixed-local`, `reported-upstream`, `resolved`.

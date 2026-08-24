@@ -1,33 +1,33 @@
 # D17 adversarial bake-off review
 
-Overall verdict: the sheets are candidate screens, not ratifiable verdicts. Rubric §0 says nothing launches without the workload and gold artifacts, yet the live corpus has 76 PDFs rather than the contracted 443, and this packet has no F1 or `gold/v1` files (`bakeoff-input.md:3`, `workload-contract.md:8-14`). Rubric §4 also forbids final verdicts before a compatibility run. None ran. Calling the choices "provisional" does not create a sixth verdict state.
+Overall verdict: the sheets are candidate screens, not ratifiable verdicts. Rubric §0 says nothing launches without the workload and gold artifacts, yet the live corpus has 76 PDFs rather than the contracted 443, and this packet has no F1 or `gold/v1` files (`../bakeoff-input.md:3`, `../workload-contract.md:8-14`). Rubric §4 also forbids final verdicts before a compatibility run. None ran. Calling the choices "provisional" does not create a sixth verdict state.
 
 ## 1. Per-sheet review
 
 ### Storage
 
-- Weakest load-bearing claim: "M4 shows the proposed three-engine runtime fits the primary ceilings together" (`bakeoff-storage.md:94`). M4 is a synthetic 2,600-event/10,000-vector/10,000-quad proxy, not W1, and its measurements have no script, raw output, or committed receipt (`:42-50`, `:133`). The cited result cannot be independently replayed.
+- Weakest load-bearing claim: "M4 shows the proposed three-engine runtime fits the primary ceilings together" (`../bakeoff-storage.md:94`). M4 is a synthetic 2,600-event/10,000-vector/10,000-quad proxy, not W1, and its measurements have no script, raw output, or committed receipt (`:42-50`, `:133`). The cited result cannot be independently replayed.
 - Source checks: [L1] does confirm file-backed PGlite and typed connection errors; [L3] confirms a fresh in-memory Oxigraph store per request and no use of `timeoutMs`; [L6] explicitly warns that cross-store build failure leaves a partial bundle. Those three citations support the facts but undercut the claimed production shape.
 - Rubric breach: PGlite, DuckDB, and Oxigraph receive G5 `PASS` from synthetic Linux proxies even though full W1, durable disk, crash recovery, and the target matrix are unknown (`:20-24`, `:32`, `:44-50`). PGlite adjacency receives G7/G8 passes for graph/proof tables that do not yet exist. Oxigraph's 10,000-quad rebuild does not prove restart cost for W1 plus proof quads.
 - The role winners follow the midpoint table only because future adapters get near-full integration scores and recovery unknowns barely depress task scores. That smuggles incumbency and "fewer engines" back into the rubric. Overturn `bundle` to `park pending compatibility`; retain the four choices only as the first bundle to probe.
 
 ### Embeddings
 
-- Weakest claim: Snowflake gets G6/G7 `PASS` because a remote file publishes a hash and identity *can* key rebuilds (`bakeoff-embeddings.md:30`). No complete manifest is committed, no artifact is local, and no replay ran. "Can be pinned" is not pinned. The same omission makes other models `UNKNOWN`, so the gate is applied selectively.
+- Weakest claim: Snowflake gets G6/G7 `PASS` because a remote file publishes a hash and identity *can* key rebuilds (`../bakeoff-embeddings.md:30`). No complete manifest is committed, no artifact is local, and no replay ran. "Can be pinned" is not pinned. The same omission makes other models `UNKNOWN`, so the gate is applied selectively.
 - Source checks: [L-ORT] proves only that a face-detection service wraps ORT load/session failures; `bun.lock` pins ORT 1.27.0; [L-API] exposes a provider model name but no immutable revision or artifact hash. None proves tokenization, pooling, MRL truncation, normalization, or embedding replay.
-- Rubric breach: W1 has no queries/qrels, and embeddings are absent from the workload's stated ingest-to-KG loop (`workload-contract.md:50-59`). Snowflake's 34-38 task score is therefore a proxy preference. The runtime ranges overlap, all decisive ORT measurements are unknown, and the 256-dimensional choice has not run once.
+- Rubric breach: W1 has no queries/qrels, and embeddings are absent from the workload's stated ingest-to-KG loop (`../workload-contract.md:50-59`). Snowflake's 34-38 task score is therefore a proxy preference. The runtime ranges overlap, all decisive ORT measurements are unknown, and the 256-dimensional choice has not run once.
 - The verdict follows a 3.5-point proxy midpoint lead, not the contracted workload. Overturn `pick-one` to `park`; carry Snowflake/GTE and native ORT/Transformers.js into one held-constant test after a retrieval task exists.
 
 ### Input
 
-- Weakest claim: HTML and Markdown normalization are "Identity by default" while retaining HAST/mdast positions (`bakeoff-input.md:47-48`). Unist offsets address the original markup. Entity decoding, removed syntax, generated HTML nodes, and whitespace changes make visible canonical text non-identical. PDF.js has no original character stream to which extracted glyph text can losslessly map.
+- Weakest claim: HTML and Markdown normalization are "Identity by default" while retaining HAST/mdast positions (`../bakeoff-input.md:47-48`). Unist offsets address the original markup. Entity decoding, removed syntax, generated HTML nodes, and whitespace changes make visible canonical text non-identical. PDF.js has no original character stream to which extracted glyph text can losslessly map.
 - Source checks: [L1] confirms stable content ids and paged UTF-16 text but `ExtractionResult` has no span field; [L3]/[L4] confirm the beep Markdown/HTML packages are models, not parsers; [L8] confirms Wink `Tokenization` carries token offsets; [L9] is a bounded locator-to-existing-text mapper, not the proposed general parser source-map service.
 - Rubric breach: PDF.js gets G4/G8 `PASS*` for an adapter that does not exist while G5-G7 remain unknown (`:19`). Rehype and PDF.js are absent locally, no malformed fixtures or G-structure gold exist, and the sheet itself says PDF.js/MuPDF are a rubric tie (`:59-61`). The score table still prints a PDF winner and gives Unified 30-38 task points without an HTML run.
 - The roster is sensible; the verdict is premature. Overturn PDF and HTML/Markdown parser picks to `park pending the shared probe`. Keep file-processing and Wink as `already-have` bricks, not as proof that their proposed adapters pass the end-to-end span floor.
 
 ### Reasoning
 
-- Weakest claim: EYE gets G8 `PASS` for proof explanations (`bakeoff-reasoning.md:41`), while the
+- Weakest claim: EYE gets G8 `PASS` for proof explanations (`../bakeoff-reasoning.md:41`), while the
   sheet later admits proof capture, decoding to `InferenceEvent`, independent verification, and
   rule-hash binding are unbuilt (`:59`, `:78-83`). Ascent fails G8 because proof relations would be
   new adapter logic. EYE receives the opposite treatment for equivalent missing work.
@@ -44,8 +44,8 @@ Overall verdict: the sheets are candidate screens, not ratifiable verdicts. Rubr
 ### Extraction
 
 - Weakest claim: the hybrid earns 32-36 task points because one claim merge "retains conflicts and
-  spans" (`bakeoff-extraction.md:32`). `EvidenceBatch`, `ExtractionMethod`, the merge, and the
-  orchestrator do not exist in packages; `EvidenceBatch` is not even in `shared-schema.md`. G4 is
+  spans" (`../bakeoff-extraction.md:32`). `EvidenceBatch`, `ExtractionMethod`, the merge, and the
+  orchestrator do not exist in packages; `EvidenceBatch` is not even in `../shared-schema.md`. G4 is
   marked `PASS (contract)` for an unwritten implementation (`:19`, `:82`).
 - Source checks: [B1]/[B2] confirm bounded LangExtract input, typed parse/generation failures, and
   fail-closed remote policy; [B3] confirms the handoff emits `relations: []` and creates mention ids
@@ -64,8 +64,8 @@ Overall verdict: the sheets are candidate screens, not ratifiable verdicts. Rubr
    but names neither UTF-16 nor a canonical-text identity. Live `VerifiedSpan` is UTF-16. Unist
    positions address source markup, PDF.js positions address synthesized text items, and the
    proposed `EvidenceBatch` has no schema. A span can be locally valid and globally meaningless.
-2. Embeddings chooses `dim: 256` (`bakeoff-embeddings.md:69-73`); storage's only vector proof is
-   10,000x384 (`bakeoff-storage.md:45`, `:90`). There is no mixed-model rejection, dimension-keyed
+2. Embeddings chooses `dim: 256` (`../bakeoff-embeddings.md:69-73`); storage's only vector proof is
+   10,000x384 (`../bakeoff-storage.md:45`, `:90`). There is no mixed-model rejection, dimension-keyed
    table, metric/normalization contract, 256 rerun, or projection migration test.
 3. EYE reruns the whole ruleset. The ledger expects incremental truth maintenance, invalidation,
    reverse support, and append-only proof events. No owner defines the transaction that invalidates

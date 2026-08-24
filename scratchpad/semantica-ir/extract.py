@@ -8,7 +8,7 @@ import sys
 import textwrap
 
 
-DEFAULT_REPOSITORY = Path("/home/elpresidank/YeeBois/workstation-apps/semantica")
+DEFAULT_REPOSITORY = Path("~/YeeBois/workstation-apps/semantica").expanduser()
 DEFAULT_OUTPUT = Path(__file__).resolve().parent / "out" / "symbols.jsonl"
 
 LAYERS = {

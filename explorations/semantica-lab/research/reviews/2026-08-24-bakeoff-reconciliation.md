@@ -1,5 +1,7 @@
 # Bake-off adversarial reconciliation — 2026-08-24
 
+*Provenance of B1-B6. Canary staging, budgets, EYE role, and offline meaning were later amended by G1/G3/G4/G6/G7. Do not execute the budgets in "The canary" section.*
+
 Inputs: [`2026-08-24-sol-bakeoff-review.md`](./2026-08-24-sol-bakeoff-review.md) (REWORK ×5) and
 [`2026-08-24-grok-4-6-bakeoff-review.md`](./2026-08-24-grok-4-6-bakeoff-review.md) (2×
 RATIFY-WITH-EDITS, 3× REWORK). Reconciled by Fable. Outcome: **no family verdict is ratified

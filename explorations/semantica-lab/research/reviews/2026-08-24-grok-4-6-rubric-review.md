@@ -1,7 +1,7 @@
 # Adversarial rubric review (Grok 4.6, 2026-08-24)
 
-Target: `research/criteria-rubric.md` (DRAFT), against `DECISIONS.md` D1–D18, `RESEARCH.md`,
-`research/grounding-semantica-repo.md`, and the in-repo bricks they name.
+Target: `../criteria-rubric.md` (DRAFT), against `DECISIONS.md` D1–D18, `RESEARCH.md`,
+`../grounding-semantica-repo.md`, and the in-repo bricks they name.
 
 ## 1. Hard gates
 
@@ -10,7 +10,7 @@ backends grounding §5 calls solid (Neo4j/FalkorDB/AGE, Qdrant/Weaviate/Milvus, 
 Anzo). Bake-offs will still crown a "best-in-class" winner (D7) inside that ghetto. Require a
 parked-SOTA appendix so the winner cannot pretend it beat Neo4j.
 
-"In-process" is undefined. `grounding-beep-labs.md` §6: Professional Desktop runs Effect in a
+"In-process" is undefined. `../grounding-beep-labs.md` §6: Professional Desktop runs Effect in a
 compiled Bun sidecar, not the WebKit webview. Transformers.js in the webview, ONNX in Bun, and a
 Rust crate are three different in-process stories.
 
@@ -71,7 +71,7 @@ Embeddings anti-pattern is right (model identity in schema; hash as a tagged deg
 Still silent on *which* process loads the model.
 
 Input stack will explode. Notion ingest catalog is 23 ingestors including Snowflake/Databricks/
-GDrive (`grounding-notion-semantica.md`). Census vs `@beep/file-processing` with no D14 format
+GDrive (`../grounding-notion-semantica.md`). Census vs `@beep/file-processing` with no D14 format
 bound becomes a second Semantica. SOURCES.md §4 omits `@beep/tika`, `@beep/langextract`,
 `@beep/nlp`, `@beep/nlp-processing`, `@beep/pandoc-ast`, `@beep/rdf`, `@beep/provenance`.
 Extraction (`semantic_extract`, grounding: solid) is not a bake-off. That is the step that
@@ -85,7 +85,7 @@ Missing seeds: Ascent/Datafrog (Rust Datalog, native in the Tauri crate), SWI/Tr
 ## 4. Decision-set risks
 
 **D12 Tauri-first.** Milestone 1 is headless Document→KG + evals (tests/CLI/MCP). The generator
-emits a WebKit window, not Desktop's sidecar (`grounding-beep-labs.md` §3, §7.6). Labs CI does not
+emits a WebKit window, not Desktop's sidecar (`../grounding-beep-labs.md` §3, §7.6). Labs CI does not
 run Cargo. Failure: three weeks of icon, CSP, and `dev:tauri` before a single triplet exists.
 
 **D2 + D5 Notion/repo dual-write.** Packet owns decisions; Notion owns facts; the IR pipeline is

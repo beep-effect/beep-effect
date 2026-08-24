@@ -1,6 +1,6 @@
 ## 1. Stack and shape
 
-- Scope/method: local checkout `/home/elpresidank/YeeBois/workstation-apps/semantica` at `add1c006cd8c502f6f2981e251e9e9a0f774870d` (`danklocal`, clean when inspected); paths below are repo-relative. Counts are static source inventory, not a test run.
+- Scope/method: local checkout `~/YeeBois/workstation-apps/semantica` at `add1c006cd8c502f6f2981e251e9e9a0f774870d` (`danklocal`, clean when inspected); paths below are repo-relative. Counts are static source inventory, not a test run.
 - Product shape: one setuptools Python distribution plus a React/Vite/TypeScript Explorer frontend; `pyproject.toml` packages `semantica*` and `integrations*`, exposes `semantica`, `semantica-server`, `semantica-worker`, `semantica-explorer`, and `semantica-mcp`, while the separate root `mcp/` package is not included (`pyproject.toml`).
 - Layout: `semantica/` is the 27-module library and services; `explorer/` is the browser UI; `integrations/` contains Agno, CrewAI, and OpenClaw bridges; `tests/`, `docs/`, `cookbook/`, and `deploy/` are substantial supporting trees (`pyproject.toml`, `explorer/package.json`, `integrations/`).
 - Languages/scale: about 184,267 physical Python lines under `semantica/`, 3,980 under `integrations/`, 1,613 in the unpackaged root `mcp/`, 29,037 JS/TS/TSX lines in `explorer/src/`, and 101,626 Python test lines under `tests/`; this is a large codebase, not a façade.

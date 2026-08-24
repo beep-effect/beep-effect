@@ -50,12 +50,16 @@ fallback + `LlamaStore` placeholder.
   model; engine absent), `logos` **PATTERN** (serializable predicate-tree AST + operator
   semantics catalog; abandoned mid-V2-rewrite, never wired into product). All Effect v3-era;
   reference material, not copyable code.
-- **Criteria rubric** draft: [`research/criteria-rubric.md`](./research/criteria-rubric.md) —
-  DRAFT until Sol+Grok adversarial pass + Benjamin ratification (D11).
-- **Four bake-offs** (D10): NOT STARTED — blocked on rubric ratification.
-- **`scratchpad/effect-ontology`** deep read: NOT DONE (labs grounding covers its lifecycle
-  status only; per-symbol PORTING_LEDGER is a template precedent for atlas symbol work).
-- **`.claude/skills/semantica/SKILL.md`** in the workstation clone: NOT READ yet.
+- **Criteria rubric**: v2.0 RATIFIED after the Sol+Grok adversarial pass
+  ([`research/criteria-rubric.md`](./research/criteria-rubric.md); reviews and reconciliation
+  under [`research/reviews/`](./research/reviews/)).
+- **Five bake-offs** (D10+A4): LANDED as candidate screens (`research/bakeoff-*.md`), then
+  reconciled to park-pending-canary (B1) after the second adversarial pass.
+- **IR pipeline**: LANDED — `scratchpad/semantica-ir/` extracted 6,105 symbol records from 354
+  files, zero validation failures ([`research/ir-extraction-report.md`](./research/ir-extraction-report.md)).
+- **Still open:** `scratchpad/effect-ontology` deep read (its PORTING_LEDGER is a template
+  precedent for atlas symbol work); `.claude/skills/semantica/SKILL.md` in the workstation
+  clone (read during shape per O5).
 - **llms.txt census** — LANDED: [`research/docs-url-census.md`](./research/docs-url-census.md)
   (Grok, all URLs fetch-verified). llms.txt coverage far better than expected (Pinecone,
   Weaviate, Milvus, Qdrant, FalkorDB, Neo4j, Neptune, OpenAI all serve one). License flags:

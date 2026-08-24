@@ -68,9 +68,9 @@
 
 ## Source files
 
-- `/home/elpresidank/YeeBois/workstation-apps/semantica/docs/glossary.md`
-- `/home/elpresidank/YeeBois/workstation-apps/semantica/docs/modules.md`
-- `/home/elpresidank/YeeBois/workstation-apps/semantica/docs/reference/pipeline.md`
-- `/home/elpresidank/YeeBois/workstation-apps/semantica/docs/reference/deduplication.md`
-- `/home/elpresidank/YeeBois/workstation-apps/semantica/docs/reference/normalize.md`
-- `/home/elpresidank/YeeBois/workstation-apps/semantica/docs/reference/provenance.md`
+- `~/YeeBois/workstation-apps/semantica/docs/glossary.md`
+- `~/YeeBois/workstation-apps/semantica/docs/modules.md`
+- `~/YeeBois/workstation-apps/semantica/docs/reference/pipeline.md`
+- `~/YeeBois/workstation-apps/semantica/docs/reference/deduplication.md`
+- `~/YeeBois/workstation-apps/semantica/docs/reference/normalize.md`
+- `~/YeeBois/workstation-apps/semantica/docs/reference/provenance.md`

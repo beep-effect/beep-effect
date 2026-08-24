@@ -1,5 +1,7 @@
 # Reasoning bake-off: wrapped-engine baseline
 
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+
 Scope: wrapped engines only. The NET-NEW proof-ledger spike is excluded from scoring under A6.
 Scores are evidence ranges, not forecasts. `UNKNOWN` never earns points.
 
@@ -58,7 +60,7 @@ Only EYE has no known hard-gate failure. Its score is conditional because G4, G5
 | --- | --- | --- | --- | --- | --- |
 | EYE WASM | **12-34**: gold soundness **UNKNOWN 0-16**; declared N3 forward/backward reach **4-6**; limited-answer/linear-select bounds **2-4**; no incremental API **0-1**; proof output/input **6-7** [W1, W2] | **4-14**: 1.4 MB gzip supports artifact points; cold, RSS, p95, W1, and installed bytes are UNKNOWN; documented stack risk caps the range [W1, W2] | **10-16**: Promise API and RDFJS quads fit Bun, but capturing proof mode and decoding N3 proof into branded `InferenceEvent` is unbuilt [W1, L1] | **11-14**: MIT, release bundles, pinned EYE image, unit/memory/benchmark lanes; issue latency and bus factor UNKNOWN [W1, W14] | **37-78**, the bucket sum; midpoint 57.5 is used only for sensitivity. |
 
-## Verdict
+## Verdict (historical screen; superseded by B1)
 
 **pick-one, conditional: EYE WASM.** It is the wrapped baseline for R1-R4 because it alone combines
 RDFJS/Bun placement, restricted execution, N3 rule reach, and exported proof explanations. Ascent
@@ -107,11 +109,11 @@ the winner; all gold-quality ranges still include `UNKNOWN`.
 
 ## Sources appendix
 
-- **L1:** `criteria-rubric.md` sections 0-4; `workload-contract.md` lines 5-62; `shared-schema.md` lines 5-50; `adhd-reasoning.md` lines 74-132; `DECISIONS.md` A6-A8.
+- **L1:** `criteria-rubric.md` sections 0-4; `workload-contract.md` lines 5-62; `shared-schema.md` lines 5-50; `adhd-reasoning.md` lines 74-132; `../DECISIONS.md` A6-A8.
 - **Census:** `docs-url-census.md`, Reasoning table and Flags. Used for fetch-verified repo/license/release claims.
 - **L2:** `packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts:337-365,440-605,636-721,784-847`; `packages/ontology/use-cases/test/Session.test.ts:275-403`; `packages/ontology/server/test/OntoauthorMatCompetency.test.ts:55-76`.
 - **L3:** `packages/drivers/shacl/src/Shacl.validation.ts:101-173,226-311,401-453`; `packages/drivers/shacl/test/ShaclEngineValidation.test.ts:54-82`.
-- **L4:** `grounding-v3-logos.md`; `../beep-effect-logos/packages/common/rete/src/network/{audit.ts,types.ts,fire-rules/fire-rules.ts}`; its `test/rete/` and `test/lib/`.
+- **L4:** `grounding-v3-logos.md`; `~/YeeBois/projects/beep-effect-logos/packages/common/rete/src/network/{audit.ts,types.ts,fire-rules/fire-rules.ts}`; its `test/rete/` and `test/lib/`.
 - **L5:** `bun.lock:6764`; `node_modules/n3/README.md:432-473`; `node_modules/n3/src/N3Reasoner.js:16-231`; `node_modules/n3/package.json`.
 - **M1:** local 2026-08-24 measurements: `/usr/bin/time` imports; focused ontology and SHACL Bun tests; v3 Rete `bun test`; `du -sh`; N3 Horn smoke test. Raw results are summarized in the cited cells.
 - **W1:** [eye-js README/API](https://github.com/eyereasoner/eye-js) and [package manifest](https://github.com/eyereasoner/eye-js/blob/main/package.json).

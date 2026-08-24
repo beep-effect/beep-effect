@@ -1,5 +1,7 @@
 # Input stack bake-off
 
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+
 **Status:** criteria-scored research pass, 2026-08-24. The current W1 directory has 76 PDFs, not the contracted 443, and this packet has no F1 malformed fixtures or `gold/v1` G-structure labels [P2, M3]. Task-quality ranges therefore describe capability potential, not measured G-structure accuracy. `UNKNOWN` is intentional evidence, not a neutral score.
 
 ## Gate table
@@ -37,7 +39,7 @@ Only candidates without a failed gate are scored. Totals are ranges out of 100. 
 | MuPDF CLI, PDF parse runner-up | 23-34: structured text JSON potential; section accuracy and span fidelity are UNKNOWN [W5,M3] | 10-18: subprocess and binary footprint are UNKNOWN [M3] | 7-12: new supervisor, JSON adapter, distribution payload, and span builder [W5,W6] | 12-15: tagged releases and paid route; support latency UNKNOWN [W6] | 52-79 |
 | unified/remark/rehype, MD + HTML parse | 30-38: two formats, native positions, CommonMark, configurable malformed-HTML diagnostics; PDF and G/F1 accuracy absent [W2,W3,W4,M3] | 21-24: Remark probe 0.06 s/33,284 KiB; measured local core packages about 1.5 MiB; Rehype/W1 UNKNOWN [M1,M3] | 13-17: new Effect boundary and unist-to-shared adapter; keep unist positions instead of projecting early to Beep ASTs [L3,L4,W4] | 13-15: current typed ecosystem and maintained Node compatibility; issue response UNKNOWN [W2,W3] | 77-94 |
 
-## Verdict
+## Verdict (historical screen; superseded by B1)
 
 **STACK verdict (A3): per-stage `already-have` and `pick-one` decisions, not a family `bundle`.** A9 reserves the family-level `bundle` label for storage [P5].
 
@@ -87,7 +89,7 @@ Docling may beat PDF.js on untagged academic-PDF structure. That hypothesis rema
 - **[P2]** `workload-contract.md:6-16,19-29,31-63`, corpus, gold, targets, budgets, offline loop.
 - **[P3]** `shared-schema.md:3-16,29-32,42-50`, source identity, canonical spans, provenance, semantic floor.
 - **[P4]** `docs-url-census.md:47-53`, fetch-verified Docling, Unified/Remark, and PDF.js docs/repos/licenses. Census-sourced claims cite this file, not an unopened census URL.
-- **[P5]** `DECISIONS.md:47-65,142-169`, quality over incumbency, envelope, A3 stack, A7-A9.
+- **[P5]** `../DECISIONS.md:47-65,142-169`, quality over incumbency, envelope, A3 stack, A7-A9.
 
 ### Live local source
 

@@ -1,5 +1,7 @@
 # Adversarial-review reconciliation — 2026-08-24
 
+*Provenance: A1-A9 were ratified 2026-08-24. Current law: DECISIONS "Current law" table + rubric v2.0.*
+
 Inputs: [`2026-08-24-grok-4-6-rubric-review.md`](./2026-08-24-grok-4-6-rubric-review.md)
 (RATIFY-WITH-EDITS, 8 mandatory) and [`2026-08-24-sol-rubric-review.md`](./2026-08-24-sol-rubric-review.md)
 (REWORK). Reconciled by Fable. Output: rubric **v2** + DECISIONS amendments **A1–A9**

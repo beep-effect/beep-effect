@@ -61,7 +61,7 @@ neuro-symbolic ai, Rete networks, forward chaining, etc & I'm just now realizing
 opportunities here."
 
 **v3 prior art:** the old beep-effect v3 had rule-engine & Rete work, archived at
-`/home/elpresidank/YeeBois/projects/beep-effect-logos` — `packages/common/rules`,
+`~/YeeBois/projects/beep-effect-logos` — `packages/common/rules`,
 `packages/common/rete`, `packages/common/logos`. "Not sure if they add value but might be a
 good idea to have an agent explore them anyway."
 

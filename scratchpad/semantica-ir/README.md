@@ -11,7 +11,7 @@ The extractor uses only the Python standard library and supports Python 3.9 or n
 
 ```sh
 python3 scratchpad/semantica-ir/extract.py \
-  /home/elpresidank/YeeBois/workstation-apps/semantica
+  ~/YeeBois/workstation-apps/semantica
 ```
 
 The default output is `scratchpad/semantica-ir/out/symbols.jsonl`. Pass a second argument to
@@ -21,9 +21,9 @@ write elsewhere:
 python3 scratchpad/semantica-ir/extract.py /path/to/semantica /tmp/symbols.jsonl
 ```
 
-With no arguments, the script reads the local Semantica checkout used for this exploration. It
-prints a JSON summary containing the record count, validation count, parse failures, and parse
-notes. Any schema violation stops the write.
+With no arguments, the script reads `~/YeeBois/workstation-apps/semantica`. The explicit first
+argument still selects another repository. The script prints a JSON summary containing the record
+count, validation count, parse failures, and parse notes. Any schema violation stops the write.
 
 ## IR contract
 

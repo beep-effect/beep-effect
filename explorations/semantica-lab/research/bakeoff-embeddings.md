@@ -1,5 +1,7 @@
 # Embeddings bake-off
 
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+
 Status: evidence screen, 2026-08-24. Verdicts are provisional until the W1 retrieval set and the
 same-model runtime probe close the `UNKNOWN` gates. Where a `PASS` names a wrapper condition, the
 pass is conditional on that policy. `UNKNOWN` is not a soft pass.
@@ -64,7 +66,7 @@ false-precision point estimates. Only candidates with no `FAIL` are scored; thei
 | Transformers.js | **22-34**: exact model is supported and CPU WASM fallback exists; same-model Bun throughput/drift UNKNOWN [SNOW-O, TJS] | **15-22**: local-only cache controls exist; exact package/RSS/cold UNKNOWN, WebGPU experimental [TJS-N, TJS-G] | **16-19**: tokenizer/pooling pipeline reduces code; package is only in scratchpad today and typed adapter is new [L-TJS, S] | **12-14**: Apache-2.0, 87 tagged releases; issue latency UNKNOWN [TJS-R] | **65-89** (sum) |
 | Spawned llama.cpp | **20-33**: CPU embedding path exists; ONNX-vs-GGUF drift/throughput/W1 UNKNOWN [LLAMA-E, LLAMA-D] | **13-20**: Q8 GGUF 118 MB; process cold/RSS and packaged binary size UNKNOWN [SNOW-G, LLAMA-R] | **10-15**: new binary lifecycle, IPC, JSON validation, identity and typed degradation [LLAMA-E, S] | **12-14**: MIT, source builds and frequent hashed binaries; issue latency UNKNOWN [LLAMA-L, LLAMA-R] | **55-82** (sum) |
 
-## Verdict
+## Verdict (historical screen; superseded by B1)
 
 **pick-one (provisional): `Snowflake/snowflake-arctic-embed-m-v1.5` + native
 `onnxruntime-node` in the Bun sidecar.** Use the 110 MB int8 ONNX artifact, freeze the full HF
@@ -120,7 +122,7 @@ Only opened sources used above are listed.
 - [A] The embeddings-family addendum in the task prompt (candidate roster and API-envelope exception).
 - [R] `explorations/semantica-lab/research/criteria-rubric.md:25-68,87-93`; [W] `explorations/semantica-lab/research/workload-contract.md:6-17,31-59`; [S] `explorations/semantica-lab/research/shared-schema.md:25-28,42-50`; [D] `explorations/semantica-lab/DECISIONS.md:47-65,99-104,112-118,145-169`.
 - [C] `explorations/semantica-lab/research/docs-url-census.md:38-45,65-70` (fetch-verified docs/repo/license census).
-- [SEM] `/home/elpresidank/YeeBois/workstation-apps/semantica/semantica/embeddings/text_embedder.py:73-187,249-268,329-365,398-417`.
+- [SEM] `~/YeeBois/workstation-apps/semantica/semantica/embeddings/text_embedder.py:73-187,249-268,329-365,398-417`.
 - [L-ORT] `package.json:182`; `bun.lock:6872`; `packages/drivers/face-detection/src/FaceDetection.service.ts:313-365,782-807`.
 - [L-TJS] `scratchpad/package.json:54`; `bun.lock:5356`; [L-API] `packages/drivers/venice-ai/src/VeniceAI.service.ts:1143-1150,1977-1985` and `packages/drivers/venice-ai/swagger.yaml:2776-2874,9452-9562`.
 - [P] Local 2026-08-24 probes: Bun 1.4.0 `require("onnxruntime-node")` = 0.03 s, 27,284 KiB max RSS; `du` = 259 MB package, 38,413,200-byte Linux x64 native payload; no local Snowflake artifact, `fastembed`, or `llama-embedding`.

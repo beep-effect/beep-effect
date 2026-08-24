@@ -1,5 +1,7 @@
 # Extraction method-contract bake-off
 
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+
 Date: 2026-08-24. Repo evidence is from beep `9a15d33f` and semantica `add1c006` [M1].
 This sheet compares extraction methods behind one schema-first service. A candidate is a method
 contract, not a provider or model. Scores are provisional ranges because no `gold/v1`
@@ -31,7 +33,7 @@ accuracy. A hard-gate `UNKNOWN` remains binding even when a score is high.
 | Local ML NER | **19-31.** G scores UNKNOWN. The representative model reports CoNLL F1, but only LOC/ORG/PER/MISC and news-domain training, so it does not evidence works, methods, or G-relation quality [U4]. | **8-17.** ORT import measured 0.01 s/27,888-30,380 KiB, but the unpacked runtime and 431 MB model leave packaging and inference RSS UNKNOWN [M1][U5]. | **10-15.** Reuses ORT loading and `NLPBackend`; tokenizer, IOB aggregation, model identity, acquisition, and evidence mapping are net new [B5][B8][P2]. | **11-14.** ORT is active and MIT; model maintenance is narrower, and the NER adapter has no tests because it does not exist [U2][U4]. | **48-77.** Derived sum; do not activate while G4-G8 remain UNKNOWN. |
 | Hybrid evidence pipeline | **32-36.** G scores UNKNOWN. Pattern supplies an offline precision baseline; LLM supplies open-class entity/relation candidates; one claim merge retains conflicts and spans instead of overwriting them [W][S][A]. | **14-18.** Mandatory pattern cost is small; LLM runs only in its exception lane and ML is off by default, but combined W1 cost is UNKNOWN [M1][W]. | **13-15.** Reuses every incumbent brick but needs the common EvidenceBatch schema, deterministic merge, capture/replay, and two adapter repairs [B1][B3][B4]. | **11-13.** Components have live tests and permissive code; the orchestrator and eval fixtures are new [M1]. | **70-82.** Derived sum; midpoint 76 is the provisional winner. |
 
-## Verdict
+## Verdict (historical screen; superseded by B1)
 
 **Already-have.** Keep provider transport in the agents/Effect AI path, `@beep/langextract`'s
 bounded request, typed parse errors, alignment, remote-policy guard, and strict `VerifiedSpan`;

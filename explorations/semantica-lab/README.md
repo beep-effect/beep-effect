@@ -5,7 +5,8 @@
 Stage: `research`
 Status: `active`
 
-Source: [`ops/manifest.json`](./ops/manifest.json)
+Source: [`ops/manifest.json`](./ops/manifest.json). Research is complete; the next session
+enters shape by drafting `BRIEF.md`.
 
 ## Spark
 
@@ -16,20 +17,23 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-Post-D17 state (B1–B6): all five bake-offs reconciled to **candidate screens**; formal family
-verdicts are park-pending-canary. Next: Benjamin reviews the reconciliation, then the packet
-moves to **shape** — the BRIEF's first milestone is the B2 canary (corpus manifest → F1
-fixtures → minimal gold → the offline end-to-end run that freezes dimensions and ratifies or
-falsifies each family slate).
+Draft `BRIEF.md` (enter shape). Milestone 1 is the staged canary C0 → C1 → C2 (G1). Family
+sheets are candidate slates, not winners (B1). M1 models are hosted (G6). Offline means replay
+from a content-addressed cache (G7). Benjamin reviews `research/drafts/repo-issues.md` and
+`research/drafts/upstream-contributions.md` before anything is posted.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
-3. [`RESEARCH.md`](./RESEARCH.md) - grounding sweep + pending research (stage 1).
-4. [`DECISIONS.md`](./DECISIONS.md) - 18 decisions locked 2026-08-24 (pre-seeded from grilling).
-5. [`research/criteria-rubric.md`](./research/criteria-rubric.md) - DRAFT bake-off rubric.
-6. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - live opportunity/friction ledger.
+2. [`DECISIONS.md`](./DECISIONS.md) - open with the Current law table; the dated log below it
+   is history. Terminology table lives there too.
+3. [`research/criteria-rubric.md`](./research/criteria-rubric.md) - v2.0, ratified.
+4. [`research/workload-contract.md`](./research/workload-contract.md) - v1.2 budgets and corpus.
+5. [`research/shared-schema.md`](./research/shared-schema.md) - v1.1 schema contract.
+6. [`RESEARCH.md`](./RESEARCH.md) - grounding sweep and what landed (stage 1).
+7. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - opportunity/friction ledger
+   with dispositions.
+8. [`CAPTURE.md`](./CAPTURE.md) - the raw stage-0 dump; read last, never tidy it.
 
 The Notion atlas (`@beep/semantica`, workspace Todox) owns component/module *facts*; this packet
 owns *decisions and research* (D2).
@@ -47,7 +51,7 @@ owns *decisions and research* (D2).
   was retracted as an artifact of a hypothetical laptop reference — dev machine is a verified
   128GB/64GB-VRAM Threadripper); budgets re-anchored two-tier (contract v1.2); models
   hosted-first for M1 ("this is a lab after all"); offline rescoped to replay-offline/
-  hosted-live. Awaiting Benjamin's final shared-understanding confirmation → shape.
+  hosted-live. Shared understanding confirmed; opportunities grill followed.
 - 2026-08-24 (D17 reconciliation): both bake-off reviews landed (Sol REWORK ×5; Grok mixed) and
   CONVERGED: winners named before §0/§4 prerequisites existed; five composition seams (span
   canonicalization, dim 256/384/768, EYE-vs-ledger ownership, vector migration, bundle-level
@@ -55,16 +59,12 @@ owns *decisions and research* (D2).
   not 443). Reconciled to B1–B6: sheets = candidate screens, all families park-pending-canary,
   canary probe = M1 gateway; contract v1.1 + shared-schema v1.1 (CanonicalText, EvidenceBatch)
   corrected. Awaiting Benjamin's review of the reconciliation, then shape.
-- 2026-08-24 (all five bake-offs landed): reasoning = conditional pick-one EYE WASM (only
-  gate-survivor; gate 8 killed nine of ten); extraction = already-have bricks + hybrid
-  EvidenceBatch method contract (found LangExtract relation-drop + WinkBackend span-fabrication
-  in live source); input = per-stage stack verdict (Unified/Remark+Rehype; PDF.js↔MuPDF tie
-  pending shared probe; langextract offset-kernel → normalize service); embeddings =
-  snowflake-arctic-m-v1.5 int8 ONNX + native ORT in sidecar (typed DegradedEmbedding law);
-  storage = BUNDLE (PGlite append-only ledger SoR + @beep/duckdb exact vector M1 + derived
-  PGlite graph tables + @beep/oxigraph SPARQL projection; pgvector demoted to contingent
-  runner-up). Docs miner landed 7 drift findings + 78-URL inventory. D17 batch adversarial
-  pass (Sol + Grok over all five sheets + composition round) launched.
+- 2026-08-24 (all five bake-offs landed — verdicts superseded by B1, see Current law): the
+  sheets screened reasoning (EYE the only gate survivor; gate 8 killed nine of ten),
+  extraction (found LangExtract relation-drop + WinkBackend span-fabrication in live source),
+  input (per-stage slate; PDF.js/MuPDF tie), embeddings, and storage (ledger + projections
+  shape; pgvector demoted to contingent runner-up). Docs miner landed 7 drift findings +
+  78-URL inventory. D17 batch adversarial pass launched.
 - 2026-08-24 (bake-offs launched): atlas operator run 1 SUCCEEDED via `--approve-for-me` (34
   data sources upgraded, 215 rows Kind-filled, 27 maturity grades, sqlite-vec+Anzo added, 13
   auto-parks, Findings DB seeded with 12 — `research/atlas-upgrade-report.md`). Benjamin routed
@@ -83,10 +83,11 @@ owns *decisions and research* (D2).
   two-week falsifier) and `research/shared-schema.md` (10 families, 3 cross-family laws).
   Docs census landed earlier with the TS-Datalog-gap finding. Awaiting: Benjamin's review of
   the two drafts; Notion operator attempt 3 still running.
-- 2026-08-24 (latest): both adversarial reviews landed (Grok RATIFY-WITH-EDITS, Sol REWORK) —
+- 2026-08-24 (rubric adversarial pass): both adversarial reviews landed (Grok
+  RATIFY-WITH-EDITS, Sol REWORK) —
   convergent on storage de-unification, quality-axis split, envelope double-count, license/
   maintenance gate rebuilds, NET-NEW spike discipline, shared-schema + workload contract as
-  bake-off inputs. Reconciled → rubric v2 + PROPOSED amendments A1–A9 awaiting ratification.
+  bake-off inputs. Reconciled → rubric v2 + amendments A1–A9 (ratified later the same day).
   Notion operator relaunched twice (write-approval friction: `--approve-for-me`, exclusive
   with `-s`). Glossary miner done; IR builder + docs census still running.
 - 2026-08-24 (later): v3 logos grounding landed — `rete` SALVAGE (working Rete + 46-test

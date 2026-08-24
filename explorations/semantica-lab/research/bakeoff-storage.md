@@ -1,5 +1,7 @@
 # Storage bake-off
 
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+
 **Family:** storage. **Rubric:** v2.0 ratified. **Workload:** W1, 25 papers, Linux x64 primary; later packaging targets remain deferred by the contract [R1][R2]. Scores are decision evidence, not a replacement for the end-to-end compatibility round.
 
 The decision axis is D16/A1: make the append-only provenance ledger authoritative, then rebuild vector, property-graph, and RDF views from it [D1][A1]. The proof-ledger kernel is therefore a consumer of the system of record, not a second write model [A1].
@@ -82,7 +84,7 @@ Synthetic storage-scale proxies on DankStation Linux x64, Bun 1.4.0, warm packag
 | quadstore + Comunica* | 29–35 [QS: RDF/JS/named graphs/patch; filter pushdown and W1 p95 UNKNOWN] | 12–20 [QS: LevelDB persistence; bytes/RSS/rebuild UNKNOWN] | 7–12 [QS/COM: new backend and query packages] | 8–12 [QS: active semver; bus factor/issue latency UNKNOWN] | 56–79 [sum] |
 | RDF/JS + Comunica* | 24–32 [COM: SPARQL over RDF/JS; it is not storage, W1 p95 UNKNOWN] | 10–19 [COM: in-memory; bundle bytes/RSS UNKNOWN] | 8–13 [L2/COM: contract fit but new dataset lifecycle] | 11–14 [COM: association maintained; issue latency UNKNOWN] | 53–78 [sum] |
 
-## Verdict
+## Verdict (historical screen; superseded by B1)
 
 **Bundle.** Use one authoritative append-only PGlite ledger and four rebuild rules:
 

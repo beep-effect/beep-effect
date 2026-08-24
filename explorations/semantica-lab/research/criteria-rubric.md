@@ -1,19 +1,22 @@
-# Bake-off Criteria Rubric — v2 (post-adversarial; pending ratification)
+# Bake-off Criteria Rubric — v2.0 (ratified 2026-08-24)
 
 Status: **v2.0 — RATIFIED 2026-08-24** (Benjamin), rebuilt per the Sol (REWORK) and Grok
 (RATIFY-WITH-EDITS) adversarial reviews; reconciliation in
 [`reviews/2026-08-24-reconciliation.md`](./reviews/2026-08-24-reconciliation.md), amendments
-A1–A9 in DECISIONS.md. The rubric is versioned; evidence-driven corrections after ratification
-are dated DECISIONS entries, not silent edits.
+A1–A9 in [`../DECISIONS.md`](../DECISIONS.md). The rubric is versioned; corrections after
+ratification are dated DECISIONS entries, not silent edits.
+
+> The five family sheets have already run under this rubric and are **candidate screens**
+> (B1), not verdicts. This rubric still governs any later rescoring. §4 describes what already
+> happened, not a todo. Budgets and the offline definition were re-anchored after ratification:
+> read them from `workload-contract.md` v1.2 (G4/G6/G7), never from this file.
 
 ## 0. Prerequisite artifacts (bake-off INPUTS — nothing launches without them)
 
-1. **Workload contract** (`research/workload-contract.md`): the named D14 corpus subset with
-   gold labels, machine targets (Linux/macOS/Windows, x64/arm64; WebKitGTK/WKWebView/WebView2
-   minimums), resource budgets (installer size, model download, cold start, peak RSS, disk
-   growth), latency budgets, expected entailments, and the falsifiable two-week
-   Document→KG→eval loop. Offline/local-first operation is a NAMED acceptance criterion here.
-   **Mobile is out of scope** (declared, not implied).
+1. **Workload contract** (`workload-contract.md`, now v1.2): the named corpus subset with gold
+   labels, machine targets, budgets, expected entailments, and the falsifiable Document→KG→eval
+   loop. Budgets and the offline meaning live there (Tier-L/Tier-D, replay-offline per
+   G4/G7) — do not copy ceilings from this rubric. **Mobile is out of scope.**
 2. **Shared schema one-pager** (`research/shared-schema.md`): Document / Chunk (with source
    spans) / RDF Term (IRI vs literal+datatype+lang, via `@beep/rdf`) / Entity / ProvenanceEvent
    / InferenceEvent / embedding model identity. Families are scored against THIS contract; four
@@ -24,10 +27,11 @@ are dated DECISIONS entries, not silent edits.
 
 ## 1. Hard gates (non-compensatory; fail ⇒ park, with reason recorded)
 
-1. **Envelope (D9).** In-process (Bun sidecar) or bundle-and-spawn local sidecar binary.
-   Server-only / operator-managed service ⇒ park. Each family sheet carries a **parked-SOTA
-   appendix**: the winner's scores printed next to the parked state of the art, so envelope
-   parking stays honest.
+1. **Envelope (D9).** Applies to ENGINES (storage, reasoning, parsing runtimes): in-process
+   (Bun sidecar) or bundle-and-spawn local binary; a server-only or operator-managed engine
+   parks (recoverable via Layer). Hosted MODEL APIs via the agents slice are in scope for M1
+   (G6) and do not park under this gate. Each family sheet carries a **parked-SOTA appendix**
+   so envelope parking stays honest.
 2. **License matrix.** In-process deps: permissive (MIT/Apache-2.0/BSD/ISC/`PostgreSQL`
    — the last ratified 2026-08-24 for the pgvector case); file-level weak
    copyleft (MPL-2.0-class) admissible with a note. Copyleft sidecar binaries: admissible only
@@ -40,9 +44,10 @@ are dated DECISIONS entries, not silent edits.
 4. **No success-shaped degradation.** Any silent fallback that fabricates success-shaped output
    (semantica's random-vector embedding fallback is the canonical exhibit) ⇒ park unless the
    failure mode is representable as a typed degraded state.
-5. **Resource ceilings.** Must fit the workload contract's budgets on the target matrix; "runs
-   in WASM" does not prove it survives a webview's memory/threading limits (engines default to
-   the sidecar per §0.3, so score them there).
+5. **Resource fit.** Judged against the workload contract v1.2 Tier-L bar (cold start, p95) at
+   BUNDLE level (B5), with RSS/deps/model bytes measured and recorded, not park triggers.
+   "Runs in WASM" does not prove it survives a webview's memory limits; engines default to the
+   sidecar per §0.3, so measure them there.
 6. **Security posture.** Bounded parsing of hostile inputs (PDFs, archives, URLs), SSRF
    controls for ingest, no silent network calls, signed/pinned artifact acquisition.
 7. **Determinism.** Evals (D16) require replayability: pinned models/versions, stable
@@ -65,7 +70,9 @@ points, where evidence is thin. **Sensitivity check:** a winner that flips under
 weight shift is a tie → deeper probe or bundle both forward to the compatibility round.
 Verdict vocabulary (unified, A9): family-level = **already-have / pick-one / bundle / park**;
 atlas row-level `adopt|adapt` map to pick-one (adopt = wrap as-is, adapt = wrap with changes),
-`already-have`/`park`/`drop` map 1:1.
+`already-have`/`park`/`drop` map 1:1. A family verdict is written only after its canary stage
+passes; until then the formal state is **park-pending-canary** (B1), a packet-only value that
+never appears in the atlas. Full map: [`../DECISIONS.md`](../DECISIONS.md) Current law.
 
 ## 3. Family sheets
 
@@ -129,7 +136,7 @@ method contract (pattern/llm/ml) against the shared schema (spans, typed outputs
 extraction eval on the workload contract, provider access via the agents slice (already-have
 for transport; the extraction *method* and *output schema* are what score).
 
-## 4. Process
+## 4. Process (executed 2026-08-24; the compatibility round is the staged canary C0-C2 per G1)
 
 One deep-research pass per family → `research/bakeoff-<family>.md`: gate table, scored buckets
 with evidence, winner + runner-up (or bundle), park list with one-liners, parked-SOTA appendix,
