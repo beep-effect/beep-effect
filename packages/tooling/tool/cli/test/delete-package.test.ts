@@ -17,7 +17,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Cause, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -58,6 +58,10 @@ const commandLayer = Layer.mergeAll(
   TestConsole.layer,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
   TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+);
+const nonCiCommandLayer = Layer.mergeAll(
+  commandLayer,
+  ConfigProvider.layer(ConfigProvider.fromUnknown({ CI: "false" }))
 );
 const runDeletePackage = Command.runWith(deletePackageCommand, { version: "0.0.0" });
 
@@ -403,6 +407,84 @@ describe("delete-package registration geometry", () => {
           ).toBe(true);
         })
       ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("revalidates the owned tree before applying a leaf deletion", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "fixture", "private": true, "workspaces": ["packages/drivers/courtlistener"] }\n'
+          );
+          yield* fs.writeFileString(
+            "tsconfig.json",
+            '{ "compilerOptions": { "paths": { "@beep/courtlistener": ["./packages/drivers/courtlistener/src/index.ts"] } } }\n'
+          );
+          yield* fs.writeFileString(
+            "tsconfig.packages.json",
+            '{ "references": [{ "path": "packages/drivers/courtlistener" }] }\n'
+          );
+          yield* fs.writeFileString(
+            "syncpack.config.ts",
+            [
+              'import type { RcFile } from "syncpack";',
+              "",
+              "const config = {",
+              "  source: [",
+              '    "package.json",',
+              '    "packages/drivers/courtlistener/package.json",',
+              "  ],",
+              "  customTypes: {},",
+              "  versionGroups: [],",
+              "} satisfies RcFile;",
+              "",
+              "export default config;",
+              "",
+            ].join("\n")
+          );
+
+          const packageDir = path.join("packages", "drivers", "courtlistener");
+          yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(packageDir, "package.json"),
+            '{ "name": "@beep/courtlistener", "private": true }\n'
+          );
+          yield* fs.writeFileString(path.join(packageDir, "src", "index.ts"), "export const alive = true;\n");
+
+          const identityDir = path.join("packages", "foundation", "modeling", "identity", "src");
+          yield* fs.makeDirectory(identityDir, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(identityDir, "packages.ts"),
+            [
+              'const composers = $I.compose("courtlistener");',
+              "export const $CourtlistenerId = composers.$CourtlistenerId;",
+              "",
+            ].join("\n")
+          );
+
+          const exit = yield* Effect.exit(
+            runDeletePackage([
+              "courtlistener",
+              "--force",
+              "--allow-stale-packets",
+              "--skip-lockfile",
+              "--skip-baselines",
+            ])
+          );
+          expect(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined).toBe(true);
+
+          expect(yield* fs.exists(packageDir)).toBe(false);
+          expect(yield* fs.readFileString("package.json")).not.toContain("packages/drivers/courtlistener");
+          const lines = yield* TestConsole.logLines;
+          expect(
+            A.some(lines, (line) => P.isString(line) && Str.includes("removed with zero declared residue")(line))
+          ).toBe(true);
+        })
+      ).pipe(provideScopedLayer(nonCiCommandLayer))
     ));
 
   it("emits a schema-versioned inverse plan containing every destructive surface before apply", () => {

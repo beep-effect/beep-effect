@@ -515,11 +515,34 @@ const appendPreparedFileString = Effect.fnUntraced(function* (
   prepared: ContainedTarget,
   contents: string
 ): Effect.fn.Return<string, FsGuardError> {
-  const kind = yield* inspectEntryNoFollow(fs, prepared.root, prepared.target, prepared.target);
+  let kind = yield* inspectEntryNoFollow(fs, prepared.root, prepared.target, prepared.target);
+  if (O.isNone(kind)) {
+    const created = yield* fs.writeFileString(prepared.target, contents, { flag: "ax" }).pipe(
+      Effect.as(true),
+      Effect.catchTag("PlatformError", (cause) =>
+        Eq.equals(cause.reason._tag, "AlreadyExists")
+          ? Effect.succeed(false)
+          : Effect.fail(
+              fsGuardError(
+                prepared.root,
+                prepared.target,
+                prepared.target,
+                "filesystem-failure",
+                `Failed to exclusively create append target "${prepared.target}".`,
+                cause
+              )
+            )
+      )
+    );
+    if (created) {
+      return prepared.target;
+    }
+    kind = yield* inspectEntryNoFollow(fs, prepared.root, prepared.target, prepared.target);
+  }
   if (O.isSome(kind) && Eq.equals(kind.value, "SymbolicLink")) {
     return yield* failForSymlink(prepared.root, prepared.target, prepared.target);
   }
-  if (O.isSome(kind) && !Eq.equals(kind.value, "File")) {
+  if (O.isNone(kind) || !Eq.equals(kind.value, "File")) {
     return yield* fsGuardError(
       prepared.root,
       prepared.target,
@@ -527,23 +550,6 @@ const appendPreparedFileString = Effect.fnUntraced(function* (
       "target-not-file",
       `Refused filesystem append because target "${prepared.target}" is not a regular file.`
     );
-  }
-  if (O.isNone(kind)) {
-    yield* fs
-      .writeFileString(prepared.target, contents, { flag: "ax" })
-      .pipe(
-        Effect.mapError((cause) =>
-          fsGuardError(
-            prepared.root,
-            prepared.target,
-            prepared.target,
-            "filesystem-failure",
-            `Failed to exclusively create append target "${prepared.target}".`,
-            cause
-          )
-        )
-      );
-    return prepared.target;
   }
 
   return yield* Effect.scoped(
