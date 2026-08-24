@@ -20031,15 +20031,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 73.75,
-      "statements": 73.5,
-      "branches": 60.29,
-      "functions": 66.64,
+      "lines": 73.33,
+      "statements": 73.08,
+      "branches": 59.73,
+      "functions": 66.16,
       "uncovered": {
-        "lines": 8293,
-        "statements": 8718,
-        "branches": 4667,
-        "functions": 3101
+        "lines": 8361,
+        "statements": 8791,
+        "branches": 4692,
+        "functions": 3120
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
