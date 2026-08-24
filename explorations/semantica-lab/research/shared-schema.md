@@ -1,5 +1,5 @@
-# Shared Schema One-Pager — v1.1 (post-bake-off-review additions 2026-08-24; v1.0 RATIFIED
-2026-08-24) (A7)
+# Shared Schema One-Pager — v1.2 (S6 effect-ontology fold-in 2026-08-24; v1.1 post-bake-off-review
+additions; v1.0 RATIFIED 2026-08-24) (A7)
 
 The distinctions every bake-off winner must preserve. Fat-marker contract, not final code: names
 and shapes indicate the schema-first families the lab will define (Effect v4 `S.Class` / tagged
@@ -34,10 +34,14 @@ compatibility round checks composition.
 - **Statement** — subject/predicate/object as RdfTerm/Entity refs, plus qualifiers: confidence,
   temporal validity interval, ProvenanceEvent ref. Quad-projectable (named graph = provenance
   partition), reified as data.
-- **EmbeddingVector** — vector + **ModelIdentity** `{ name, revision, artifactHash, dim }`
-  (branded). A vector without model identity is unrepresentable. Degradation is a tagged
-  `DegradedEmbedding` state — the semantica random-vector fallback is made impossible by
-  construction.
+- **EmbeddingVector** — vector + **ModelIdentity** `{ provider, name, revision, artifactHash, dim,
+  taskType }` (branded; `taskType` added v1.2 because it changes the vector and therefore the
+  cache key — effect-ontology's `EmbeddingTaskType` is the borrowed shape). A vector without
+  model identity is unrepresentable. Degradation is a tagged `DegradedEmbedding` state — the
+  semantica random-vector fallback AND effect-ontology's silent voyage→nomic provider fallback
+  (which swaps ModelIdentity under callers) are both impossible by construction. Provider
+  results are cached under `sha256(ModelIdentity ⊕ chunkId)` immutably (no TTL) so replay-offline
+  reproduces EvalReports (G7).
 - **ProvenanceEvent** — append-only tagged union: `Ingested | Parsed | Chunked | Extracted |
   Asserted | Inferred | Deduplicated | ConflictResolved | Invalidated` — entity/activity/agent
   ids, input refs (with spans), timestamps, hash-chain link. PROV-O is a derived projection,
@@ -50,6 +54,31 @@ compatibility round checks composition.
   schema, dependency edges; interpreted by services. No raw callables in definitions.
 - **EvalReport** — corpus hash, gold version, per-metric results, budgets observed;
   schema-validated (qa-inventory pattern).
+
+## Anchors already alive in `@beep/*` (S6, verified by the deep read's skeptics)
+
+| Family need | Live symbol | Package |
+| --- | --- | --- |
+| span anchor decoded at boundaries | `TextAnchor` | `@beep/provenance` |
+| branded confidence | `Confidence` | `@beep/epistemic-domain` |
+| RDF object position, PROV refs/bundles/activities | `ObjectTerm`, Prov `ObjectRef`/`ProvBundle`/`Activity`/`Entity` | `@beep/rdf` |
+| SHACL outcomes | `ShaclValidationResult` family | `@beep/semantic-web` |
+| unit/non-negative numerics | `UnitInterval`, `NonNegativeInt`, `NodeIndex` | `@beep/schema` |
+
+Borrow-shape only (effect-ontology is non-importable): `ProviderMetadata` (dimension invariant),
+`toReifiedTriples` (claim → CLAIMS-vocabulary quads = the Statement projection shape), `ClaimData`
+deterministic ids, `Timeline` bitemporal values + tagged claim conflicts (ConflictWitness seed),
+`QuadDelta` (the witness type for C1 rebuild identity, NOT an InferenceEvent: it has no rule id,
+premises, or engine), `ProvenanceUri` ("named graph = provenance partition"),
+`RequestResolver.makeGrouped` batching keyed by taskType. Full table:
+[`effect-ontology-map.md`](./effect-ontology-map.md).
+
+**Hazards the schema forbids by construction (seen live in effect-ontology):** ids truncated to
+12 hex chars of a SHA-256 (brands are the full digest); `vector(768)` hardwired in DDL and codec
+(tables are dimension-keyed, B4); claim deprecate/promote as in-place `UPDATE` statements (`Invalidated` /
+`ConflictResolved` events instead); a whole-chunk `{0, length}` evidence span invented when no
+mention span exists (typed lossy declaration instead); per-chunk batches folded by lexical-min
+winner (batches keep identity; conflicts become `ConflictWitness`).
 
 ## Cross-family laws
 

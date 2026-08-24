@@ -46,6 +46,10 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
 | Embedded Postgres + ORM | `@beep/pglite`, `@beep/postgres` | reuse (storage bake-off; pgvector-on-PGlite convergence) |
 | Property graph in-memory | `effect/Graph` (Effect v4) | reuse candidate |
 | LLM providers / agent chat | agents slice (`@beep/agents-client` etc.) | already-have (LLM multiplexing auto-parked, D10) |
+| Embeddings contract | `effect/unstable/ai` `EmbeddingModel` (Effect 4.0.0-rc.111: `embed`/`embedMany`, `EmbedResponse`, `Dimensions`) + `@beep/venice-ai` `createEmbedding` operation | reuse contract; NET-NEW = one hosted Layer via `EmbeddingModel.make` + `ModelIdentity` wrapper (BRIEF rabbit hole 4, verified 2026-08-24: no Layer in-repo) |
+| Embeddings provider Layer | `@effect/ai-openai` `OpenAiEmbeddingModel.layer` (4.0.0-rc.111, root dep; verified in `.repos/effect/packages/ai/openai/src/OpenAiEmbeddingModel.ts`) wrapped by a new `@beep/openai` driver mirroring `@beep/anthropic` | reuse Layer; NET-NEW thin driver (S3-rev) |
+| effect-ontology shapes (`ProviderMetadata`, `toReifiedTriples`, `Timeline`, `QuadDelta`, `ProvenanceUri`) | `scratchpad/effect-ontology` — non-importable | borrow-shape / pattern-only per `effect-ontology-map.md` (S6) |
+| Reasoning oracle (test-time) | — (no EYE driver in `packages/drivers`; `n3`, `oxigraph`, `shacl`, `rdf-canonize` exist) | NET-NEW wiring: EYE WASM decode for C2 gold proofs (G3/G5) |
 | Local practice-KG precedent (PGlite + DuckDB + read-only MCP) | `apps/practice-kg-mcp` | pattern |
 | Tauri shell + Bun sidecar + migrations | `apps/professional-desktop` | pattern only (never imported) |
 | Lab scaffold + lifecycle | `bun run beep create-package --lab`, `standards/architecture/15-lab-apps.md` | reuse |

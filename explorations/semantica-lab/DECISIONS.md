@@ -9,13 +9,16 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Draft BRIEF (enter shape); canary C0-C2 is Goal 1; graduate fast; scaffold the lab via create-package | "awaiting reconciliation review" |
+| Next work | Fold the effect-ontology deep read (S6) into BRIEF v1.0; Benjamin confirms the brief; decompose (MAP: canary = Goal 1) | "draft BRIEF" |
+| Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is EvalReport telemetry, never a gate | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier |
+| Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
+| Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
 | Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
-| Embeddings | park-pending-canary; M1 uses hosted models via the agents slice; local Snowflake/ONNX lane parked | the sheet's Snowflake+ORT pick-one |
+| Embeddings | park-pending-canary; contract = `effect/unstable/ai` `EmbeddingModel`; M1 Layer = the shipped `@effect/ai-openai` `OpenAiEmbeddingModel.layer` composed through a new `@beep/openai` driver that mirrors `@beep/anthropic` (S3-rev); Anthropic has no embeddings API; local Snowflake/ONNX lane parked | S3 (openai-compat `/embeddings` op); G6 "via the agents slice" |
 | Input | park-pending-canary; per-stage slate is probe order; PDF.js/MuPDF is a tie | the sheet's per-stage winners |
-| Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; runtime path is ledger-native; NET-NEW is a dated spike with kill criteria | the sheet's EYE pick-one |
+| Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents compared at (conclusion, premise-set, rule) (S5); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
 | Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict | the sheet's dual verdict |
-| Canary | staged C0 (days) then C1 then C2 (G1); code lives in the lab after graduation | B2's monolithic offline run |
+| Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are EvalReport telemetry (Tier-D) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the EvalReport with network off | A8's fully-offline M1 |
 | Atlas writes | only final `park`/`drop` today; `adopt`/`pick-one` values wait for a passed canary stage | D3 columns as live verdicts |
@@ -297,3 +300,65 @@ five sheets named winners before rubric §0/§4 prerequisites existed. Full reco
   activates; `<clone>/.claude/skills/semantica/SKILL.md` gets read during shape;
   `op`-prewarm lesson to machine memory; Notion-pilot workflow lessons to basic-memory at
   session close.
+
+## 2026-08-24 (shape grill) — S1–S5, ratified by Benjamin in /grill-with-docs rounds
+
+Taught first (private lesson 0001-five-decisions in the untracked docs-internal teach workspace,
+22 fetched-and-verified primary sources), then grilled. Full rationale in the lesson and the
+reference sheet; the decisions:
+
+- **S1 (stop rule; amends contract v1.2 falsifier, BRIEF appetite).** No calendar appetite.
+  Benjamin: "What is the need for a timeline? I don't see a reason to delay anything if
+  prerequisite work & requirements are met." Kept Shape Up's circuit breaker, denominated in
+  probes: each family gets its first-probe candidate; a stage failure buys exactly one more
+  candidate; a second failure parks the family and drops the packet back to decompose.
+  Wall-clock is Tier-D telemetry in every EvalReport. (Rejected: no stop rule at all — the
+  contract's "the bundle or the shape is wrong" could never fire; two weeks as alarm-only.)
+- **S2 (gold-label separation; amends contract gold section).** Self-enhancement bias is
+  measured (Zheng et al. 2023; Panickssery, Bowman, Feng 2024). The gold-proposer's provider
+  family must differ from the extraction run's, enforced as a schema refinement on `EvalRun`;
+  the spot-checked fraction is committed as a number in `gold/v1`. Zero new code:
+  `@beep/langextract` takes an injected `LanguageModel`; anthropic/xai/venice-ai/openai-compat
+  Layers exist. (Rejected: informal spot-check; same model "fine for a lab".)
+- **S3 (embeddings; amends G6 wording).** Contract = `effect/unstable/ai` `EmbeddingModel`
+  (effect 4.0.0-rc.111; verified in `node_modules/effect/src/unstable/ai/EmbeddingModel.ts`).
+  No Layer exists in-repo. Benjamin prefers OpenAI over Venice; Anthropic has no embeddings
+  API. M1 Layer = a new `POST /embeddings` operation + `makeEmbeddingModelFromProvider` in
+  `@beep/openai-compat` (its client already defaults to `https://api.openai.com/v1`); Venice/
+  xAI become configs later. The lab owns `EmbeddingVector` + `ModelIdentity`, borrowing
+  effect-ontology's `ProviderMetadata` dimension invariant. (Rejected: Layer in `@beep/venice-ai`
+  — provider preference; Voyage as a new driver — NET-NEW client; app-local — pays twice.)
+- **S4 (lab shape; refines D12/G2/A5).** `--app-kind tauri`, one local `cargo check` at
+  scaffold time, `src-tauri` frozen through C0-C2, plus a hand-written `server/main.ts` and
+  `src/runtime/Layer.ts` on day one (Professional Desktop's split) so the headless canary has
+  a real process. (Rejected: service-kind now and re-scaffold — D12 churn; sidecar wiring in
+  M1 — unproven in Labs CI, violates A5.)
+- **S5 (C2 runtime reasoner; refines G3/G5).** ρdf closure: five predicates, six W3C rules
+  (rdfs2, 3, 5, 7, 9, 11; Muñoz, Pérez, Gutierrez 2009, sound and complete) as `RdfsRule`
+  values plus one explicit SKOS broader-transitivity rule, naive fixpoint, pure and replayable,
+  emitting `InferenceEvent`s. Oracle agreement is judged at (conclusion, premise-set, rule),
+  never proof-tree isomorphism (EYE nests `r:Extraction`/`r:Conjunction` steps we never emit).
+  G-entailment splits into `G-entailment/rdfs` (gates C2) and `G-entailment/rules` (the ~20
+  production-rule cases; gates the spike, where the v3 Rete salvage and the NET-NEW kernel are
+  ablated against EYE). Decisive facts: the v3 `rete` has no proof objects and no truth
+  maintenance (fails gate 8 as-is), is Effect 3.18 with mutable state and a React import; SKOS
+  hierarchy is not RDFS entailment. (Rejected: Rete salvage as C2 runtime — weeks of engine
+  work inside the canary; EYE as runtime too — reverses G3/G5, agreement becomes vacuous.)
+- **S6 (research loop, open).** `RESEARCH.md` listed the `scratchpad/effect-ontology` deep read
+  as still open; Benjamin re-raised it. A mapped, adversarially verified symbol → shared-schema
+  family table is in flight (`research/effect-ontology-map.md` on landing); BRIEF goes to v1.0
+  only after it folds in.
+- **S3-rev (supersedes S3's mechanism, same provider).** After `bash scripts/setup-agent-memory.sh`
+  re-linked `.repos/effect` → `<HOME>/YeeBois/dev/effect` (`Effect-TS/effect` main, 02a5146d69; effect-smol
+  is retired as the v4 reference), the checkout showed `@effect/ai-openai` 4.0.0-rc.111 already
+  ships `OpenAiEmbeddingModel.layer({ model, dimensions })` (provides `EmbeddingModel` +
+  `Dimensions` over `OpenAiClient`), and it is already a root dependency. No `/embeddings`
+  operation is written anywhere. Doctrine home (`03-driver-boundaries.md`; desktop precedent
+  composes `AnthropicLive`/`makeAnthropicLanguageModelLayer` from `@beep/anthropic`): a new
+  `@beep/openai` driver via `beep create-package`, mirroring `@beep/anthropic` (typed config with
+  `op://` key ref, `OpenAiLive = OpenAiClient.layerConfig(...)` + `FetchHttpClient`,
+  `makeOpenAiEmbeddingModelLayer`, `makeOpenAiLanguageModelLayer`); the lab composes it in
+  `src/runtime/Layer.ts`. Also supplies S2's second provider family. (Rejected: app-local
+  composition of `@effect/ai-openai` — drift from the driver boundary; keeping the openai-compat
+  op plan — duplicates shipped Effect code.)
+- **Mission confirmed** for the private, untracked docs-internal teaching workspace.

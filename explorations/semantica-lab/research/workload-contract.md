@@ -1,8 +1,10 @@
-# Workload Contract — v1.2
+# Workload Contract — v1.3
 
-v1.0 ratified 2026-08-24; v1.1 corrected the corpus count; v1.2 applied G4/G6/G7. Hard gates
-are Tier-L only. Hosted models are in scope for M1. Offline means the loop replays from a
-content-addressed cache with the network off. Changes to this file are dated DECISIONS entries.
+v1.0 ratified 2026-08-24; v1.1 corrected the corpus count; v1.2 applied G4/G6/G7; v1.3 applied
+S1/S2/S3/S5 (probe-denominated stop rule, gold-proposer separation, OpenAI embeddings Layer,
+G-entailment split). Hard gates are Tier-L only. Hosted models are in scope for M1. Offline
+means the loop replays from a content-addressed cache with the network off. Changes to this
+file are dated DECISIONS entries.
 
 ## Corpus
 
@@ -21,13 +23,21 @@ content-addressed cache with the network off. Changes to this file are dated DEC
 
 ## Gold labels (small by design; grow only when a decision hinges on it)
 
+- **Gold provenance (S2):** gold sets are LLM-proposed and Benjamin-spot-checked. The proposer's
+  provider family MUST differ from the extraction run's provider family, enforced as a schema
+  refinement on `EvalRun` (`gold.proposer.provider !== extractor.provider`); the spot-checked
+  fraction is committed as a number in `gold/v1`.
 - **G-structure:** 10 W1 papers — section structure (title, abstract, section tree, references)
-  with character spans, LLM-proposed and Benjamin-spot-checked.
+  with character spans.
 - **G-entity:** 5 W1 papers — persons, orgs, works, methods with spans.
 - **G-relation:** 3 W1 papers — typed relations among G-entity entities.
-- **G-entailment:** a fixed suite over F1 + the seeded ontology: RDFS closure cases, SKOS
-  hierarchy queries, and ~20 Datalog/production-rule cases with expected derivations AND
-  expected proofs (checkable derivation, not just conclusion).
+- **G-entailment/rdfs (gates C2, S5):** a fixed suite over F1 + the seeded ontology: ρdf closure
+  cases (rdfs2, 3, 5, 7, 9, 11) and SKOS hierarchy cases via one explicit broader-transitivity
+  rule, each with expected derivations AND expected proofs (checkable derivation, not just
+  conclusion), gold proofs produced by EYE.
+- **G-entailment/rules (gates the reasoning spike, not C2):** ~20 Datalog/production-rule cases
+  with expected derivations and proofs; the fixture against which the v3 Rete salvage and the
+  NET-NEW kernel are ablated against EYE.
 - Labels are ours (committable), versioned as `gold/v1`; every eval report cites the gold
   version and corpus hash.
 
@@ -57,12 +67,15 @@ professional-desktop knows the portability bill. Tier-D numbers never park a can
 
 ## Models (G6)
 
-Embeddings and LLM extraction run hosted via the agents slice for M1. Local-model machinery
-(ONNX runtimes, GPU lanes, model downloads) stays a parked candidate, not an M1 workstream.
+LLM extraction runs hosted through the existing `LanguageModel` driver Layers. Embeddings run
+hosted through an `effect/unstable/ai` `EmbeddingModel` Layer: `@effect/ai-openai`'s shipped
+`OpenAiEmbeddingModel.layer`, composed through a new `@beep/openai` driver that mirrors
+`@beep/anthropic` (S3-rev). Local-model machinery (ONNX runtimes, GPU
+lanes, model downloads) stays a parked candidate, not an M1 workstream.
 Every hosted result records full provider/model identity (provider, model, version, and
 response hash) in the schema.
 
-## The falsifiable loop (M1 acceptance; window-optional per A5; staged C0-C2 per G1)
+## The falsifiable loop (M1 acceptance; window-optional per A5; staged C0-C2 per G1; probe-bounded per S1)
 
 Headless, in the Bun sidecar process: ingest → parse → split → normalize → extract → KG build →
 RDFS-closure reasoning → eval over W1 + F1, emitting a schema-validated eval report (corpus
@@ -76,7 +89,10 @@ fallback. Fully-offline live inference is not an M1 criterion.
 **Determinism:** content-addressed ids, pinned model identities, stable ordering. Re-running W1
 reproduces the report stably; the IR pipeline's SHA-256 discipline is the model.
 
-**Falsifier:** if a candidate bundle cannot pass the rubric's hard gates plus the two Tier-L
-gates (cold start <5s, p95 <100ms) plus a quality floor (beat the G-structure/G-entity
-baselines set by the first passing run) inside a two-week build appetite, the bundle or the
-shape is wrong. Drop back to decompose rather than relaxing this contract silently.
+**Falsifier (S1, probe-denominated; no calendar):** each family enters a canary stage with its
+first-probe candidate. If the stage fails on that family, the family gets exactly one more
+candidate from its sheet's slate. If that fails too, the family parks and the packet drops back
+to decompose rather than relaxing this contract silently. Passing means the rubric's hard gates
+plus the two Tier-L gates (cold start <5s, p95 <100ms) plus a quality floor (beat the
+G-structure/G-entity baselines set by the first passing run). Wall-clock per stage and per run
+is recorded as Tier-D telemetry and never gates.
