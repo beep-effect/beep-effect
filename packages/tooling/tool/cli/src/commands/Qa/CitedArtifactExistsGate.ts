@@ -7,22 +7,22 @@
 
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema/LiteralKit";
+import { ISOStr } from "@beep/schema/Timestamp";
 import {
+  AlwaysGateApplicability,
   EvidencePredicateType,
   GateDeclaration,
   GateEvidenceRequirement,
   GateVerdict,
-  makeGateId,
 } from "@beep/skill-contract";
 import { A, O } from "@beep/utils";
 import { DateTime, Effect, FileSystem, HashSet, Path } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
+import { QaJudgeGateId } from "./QaJudgeGateId.ts";
 import type { GateEvaluator } from "@beep/skill-contract";
 
 const $I = $RepoCliId.create("commands/Qa/CitedArtifactExistsGate");
-const QaJudgeGateId = makeGateId(LiteralKit(["cited-artifact-exists"]));
 const citedArtifactExistsGateId = QaJudgeGateId.make("cited-artifact-exists");
 const citedArtifactExistsPredicateType = EvidencePredicateType.make(
   "https://beep-effect.dev/qa/evidence/cited-artifact-exists/v1"
@@ -140,6 +140,7 @@ export class CitedArtifactExistsDenied extends S.Class<CitedArtifactExistsDenied
  *   CitedArtifactExistsGate,
  *   CitedArtifactExistsVerdict
  * } from "@beep/repo-cli/commands/Qa/CitedArtifactExistsGate"
+ * import { ISOStr } from "@beep/schema/Timestamp"
  *
  * const verdict = CitedArtifactExistsVerdict.cases.denied.make({
  *   audit: {
@@ -149,7 +150,7 @@ export class CitedArtifactExistsDenied extends S.Class<CitedArtifactExistsDenied
  *     }),
  *     evaluator: "qa",
  *     gateId: CitedArtifactExistsGate.id,
- *     occurredAt: "2026-08-24T00:00:00.000Z",
+ *     occurredAt: ISOStr.make("2026-08-24T00:00:00.000Z"),
  *     outcome: "denied",
  *     reason: "The citation is missing."
  *   }
@@ -160,7 +161,11 @@ export class CitedArtifactExistsDenied extends S.Class<CitedArtifactExistsDenied
  * @category schemas
  * @since 0.0.0
  */
-export const CitedArtifactExistsVerdict = GateVerdict(CitedArtifactExistsAllowed, CitedArtifactExistsDenied);
+export const CitedArtifactExistsVerdict = GateVerdict(
+  "CitedArtifactExistsVerdict",
+  CitedArtifactExistsAllowed,
+  CitedArtifactExistsDenied
+);
 
 /**
  * Runtime type decoded by {@link CitedArtifactExistsVerdict}.
@@ -186,7 +191,7 @@ export type CitedArtifactExistsVerdict = typeof CitedArtifactExistsVerdict.Type;
  * @since 0.0.0
  */
 export const CitedArtifactExistsGate = GateDeclaration.make({
-  applicability: "always",
+  applicability: AlwaysGateApplicability.make({}),
   evidence: GateEvidenceRequirement.make({
     predicateType: citedArtifactExistsPredicateType,
   }),
@@ -255,7 +260,7 @@ export const evaluateCitedArtifactExists: GateEvaluator<
   });
   const presentPaths = HashSet.fromIterable(A.getSomes(present));
   const missingPaths = A.filter(input.citedPaths, (citedPath) => !HashSet.has(presentPaths, citedPath));
-  const occurredAt = DateTime.formatIso(yield* DateTime.now);
+  const occurredAt = ISOStr.make(DateTime.formatIso(yield* DateTime.now));
 
   return A.match(missingPaths, {
     onEmpty: () =>
