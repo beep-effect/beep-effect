@@ -65,6 +65,7 @@ const agentEffectivenessPhoenixBaseUrlConfig = Config.string(agentEffectivenessP
 );
 
 const noPhoenixFlag = Flag.boolean("no-phoenix").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Skip live Phoenix probes and report Phoenix as unavailable")
 );
 const targetFlag = Flag.choiceWithValue("target", [
@@ -83,6 +84,7 @@ const workerEvalReportFlag = Flag.string("worker-eval-report").pipe(
   Flag.withDescription("JSDoc worker-eval report or initiative manifest path")
 );
 const writeFlag = Flag.boolean("write").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Perform live Phoenix writes instead of the default dry-run")
 );
 const evalFixtureDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
@@ -92,6 +94,7 @@ const evalTaskManifestFlag = Flag.file("task", { mustExist: true }).pipe(
   Flag.withDescription("SkillOpt task manifest JSON path")
 );
 const evalRecordFlag = Flag.boolean("record").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Record the score as an ai-metrics BenchmarkRun row")
 );
 const confirmPhoenixWriteFlag = Flag.string("confirm-phoenix-write").pipe(

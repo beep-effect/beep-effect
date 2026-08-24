@@ -802,6 +802,7 @@ const runLimitFlag = Flag.integer("runs").pipe(
 );
 
 const tsvFlag = Flag.boolean("tsv").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the collected rows as TSV instead of the operator summary")
 );
 

@@ -15,20 +15,16 @@ interface PendingRender {
 
 const mermaidStub = vi.hoisted(() => {
   const pending = new Map<string, PendingRender>();
-  const renderStarted = new Map<string, (render: PendingRender) => void>();
   return {
     initialize: vi.fn(),
     parse: vi.fn(() => Promise.resolve(true)),
     pending,
-    renderStarted,
     render: vi.fn((id: string, source: string) => {
       const current = pending.get(source);
       if (current?.id === id) return current.promise;
       const deferred = Promise.withResolvers<{ readonly svg: string }>();
       const next = { id, promise: deferred.promise, resolve: deferred.resolve, source };
       pending.set(source, next);
-      renderStarted.get(source)?.(next);
-      renderStarted.delete(source);
       return deferred.promise;
     }),
   };
@@ -59,7 +55,6 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
   afterEach(() => {
     cleanup();
     mermaidStub.pending.clear();
-    mermaidStub.renderStarted.clear();
     vi.clearAllMocks();
   });
 
@@ -539,15 +534,14 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       });
       yield* Effect.promise(() => waitFor(() => expect(view.container.querySelector("[data-multi-diagram='first']"))));
 
-      const secondStarted = Promise.withResolvers<PendingRender>();
-      mermaidStub.renderStarted.set(second, secondStarted.resolve);
       view.rerender(
         <>
           <MermaidView renderKey="multi-first" source={first} />
           <MermaidView renderKey="multi-second" source={second} />
         </>
       );
-      const secondRender = yield* Effect.promise(() => secondStarted.promise);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(second)).toBe(true)));
+      const secondRender = getPendingRender(second);
 
       yield* Effect.sync(() => {
         act(() =>

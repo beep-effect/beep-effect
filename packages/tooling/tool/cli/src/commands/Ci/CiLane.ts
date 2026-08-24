@@ -1189,6 +1189,7 @@ export const ciLaneCommand = Command.make(
   "lane",
   {
     affected: Flag.boolean("affected").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Run the turbo-backed lane in CI's --affected pull-request shape")
     ),
     base: Flag.string("base").pipe(
@@ -1197,6 +1198,7 @@ export const ciLaneCommand = Command.make(
     ),
     head: Flag.string("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for docgen shapes")),
     summarize: Flag.boolean("summarize").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Pass --summarize to the turbo-backed lane (CI always does)")
     ),
     mode: Flag.choiceWithValue("mode", docgenModeFlagChoices).pipe(
@@ -1205,11 +1207,16 @@ export const ciLaneCommand = Command.make(
     ),
     from: Flag.string("from").pipe(Flag.withDescription("Commitlint range start (defaults to --base)"), Flag.optional),
     to: Flag.string("to").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Commitlint range end")),
-    last: Flag.boolean("last").pipe(Flag.withDescription("Lint only the last commit (commitlint --last)")),
+    last: Flag.boolean("last").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Lint only the last commit (commitlint --last)")
+    ),
     changesetStatus: Flag.boolean("changeset-status").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Also run the changeset status check (CI passes this on pull requests)")
     ),
     validateEnvelopes: Flag.boolean("validate-envelopes").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Also replay the fallow envelope validation steps locally")
     ),
     runs: Flag.string("runs").pipe(
@@ -1220,7 +1227,10 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault(DEFAULT_PROPERTY_LANE_SEED),
       Flag.withDescription("BEEP_FC_SEED for the property lane; a fixed seed makes local and CI test identical inputs")
     ),
-    list: Flag.boolean("list").pipe(Flag.withDescription("Print the machine-readable lane inventory and exit")),
+    list: Flag.boolean("list").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print the machine-readable lane inventory and exit")
+    ),
     lane: Argument.choice("lane", CI_LANE_ID_VALUES).pipe(
       Argument.withDescription("CI lane id to run"),
       Argument.optional
@@ -1547,13 +1557,17 @@ export const ciLocalCommand = Command.make(
   "local",
   {
     affected: Flag.boolean("affected").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Replay CI's pull-request --affected shape instead of full runs")
     ),
     base: Flag.string("base").pipe(
       Flag.withDefault("origin/main"),
       Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
     ),
-    fast: Flag.boolean("fast").pipe(Flag.withDescription("Skip the slow lanes: coverage, test-integration, nix")),
+    fast: Flag.boolean("fast").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Skip the slow lanes: coverage, test-integration, nix")
+    ),
     lanes: Flag.string("lanes").pipe(
       Flag.withDescription("Comma-separated lane ids to run (default: the full battery)"),
       Flag.optional

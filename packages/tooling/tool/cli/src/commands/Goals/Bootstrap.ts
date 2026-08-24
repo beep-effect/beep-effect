@@ -787,9 +787,13 @@ const todayFlag = Flag.string("today").pipe(
   Flag.withDescription("Explicit ISO date (YYYY-MM-DD) for deterministic plans; defaults to the current date")
 );
 const planFlag = Flag.boolean("plan").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Compile and print the materialization plan (the only mode this slice ships)")
 );
-const jsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Print the plan as canonical JSON"));
+const jsonFlag = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the plan as canonical JSON")
+);
 
 const parseCapabilityList = (label: string, raw: O.Option<string>) =>
   Effect.forEach(

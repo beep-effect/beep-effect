@@ -429,6 +429,7 @@ const expectedCountFlag = Flag.integer("expected-count").pipe(
   Flag.withDescription("Finding total the dashboard reported, used to fail closed on a partial export")
 );
 const refreshFlag = Flag.boolean("refresh").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Append unseen findings to an existing packet while preserving prior triage and CSF prose")
 );
 

@@ -37,7 +37,10 @@ const baseFlag = Flag.string("base").pipe(
   Flag.withDescription("Local base ref used to resolve the merge-base; the command never fetches"),
   Flag.withDefault("origin/main")
 );
-const jsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Render the semantic delta as JSON"));
+const jsonFlag = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Render the semantic delta as JSON")
+);
 const treeFlag = Flag.string("tree").pipe(
   Flag.withDescription("Commit-ish whose tracked tree is censused; the command never fetches"),
   Flag.withDefault("HEAD")
@@ -50,8 +53,12 @@ const surfaceFlag = Flag.choiceWithValue("surface", [
   Flag.withDefault(KnowledgeRefSurfaceFilter.Enum.all),
   Flag.withDescription("Narrow the detailed listing; summary counts stay whole-corpus")
 );
-const refsJsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Render the whole census as JSON"));
+const refsJsonFlag = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Render the whole census as JSON")
+);
 const refsCheckFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Fail when any live observation sits in a gated host-path class")
 );
 

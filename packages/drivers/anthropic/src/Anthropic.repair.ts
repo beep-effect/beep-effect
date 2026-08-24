@@ -227,12 +227,12 @@ export class AnthropicToolJsonResponse extends S.Class<AnthropicToolJsonResponse
   })
 ) {}
 
-const isFinishPart = <Tools extends Record<string, Tool.Any>>(
-  part: Response.StreamPart<Tools>
+const isFinishPart = <Tools extends Record<string, Tool.Any>, EncodedToolParameters extends boolean>(
+  part: Response.StreamPart<Tools, EncodedToolParameters>
 ): part is Response.FinishPart => part.type === "finish";
 
-const isToolParamsDeltaPart = <Tools extends Record<string, Tool.Any>>(
-  part: Response.StreamPart<Tools>
+const isToolParamsDeltaPart = <Tools extends Record<string, Tool.Any>, EncodedToolParameters extends boolean>(
+  part: Response.StreamPart<Tools, EncodedToolParameters>
 ): part is Response.ToolParamsDeltaPart => part.type === "tool-params-delta";
 
 /**
@@ -265,9 +265,10 @@ const isToolParamsDeltaPart = <Tools extends Record<string, Tool.Any>>(
  */
 export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWithUsage")(function* <
   Tools extends Record<string, Tool.Any>,
+  EncodedToolParameters extends boolean,
   E,
   R,
->(parts: Stream.Stream<Response.StreamPart<Tools>, E, R>) {
+>(parts: Stream.Stream<Response.StreamPart<Tools, EncodedToolParameters>, E, R>) {
   const streamParts = A.fromIterable(yield* Stream.runCollect(parts));
   const paramsJson = pipe(
     streamParts,
