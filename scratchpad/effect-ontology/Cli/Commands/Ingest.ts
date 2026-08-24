@@ -35,6 +35,9 @@ import { ConfigService } from "../../Service/Config.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { sha256SyncFull } from "../../Utils/Hash.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+import * as PlatformError from "effect/PlatformError";
+import * as Schema from "effect/Schema";
+import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
 
 // =============================================================================
 // Command Options
@@ -86,7 +89,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   output: O.Option<string>,
   batchId: O.Option<string>,
   prefix: O.Option<string>
-) {
+): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | Schema.SchemaError, ConfigService | FileSystem.FileSystem | Path.Path | StorageService> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const storage = yield* StorageService;

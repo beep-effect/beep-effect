@@ -24,6 +24,10 @@ import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+import * as S from "effect/Schema";
+import type { ParsingFailed, RdfError } from "../../Domain/Error/Rdf.ts";
+import * as PlatformError from "effect/PlatformError";
+import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
 
 // =============================================================================
 // Command Options
@@ -101,7 +105,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   manifest: O.Option<string>,
   threshold: number,
   verbose: boolean
-) {
+): Effect.fn.Return<void, KeyValueStoreError | ParsingFailed | PlatformError.PlatformError | RdfError | S.SchemaError, FileSystem.FileSystem | RdfBuilder | StorageService> {
   const storage = yield* StorageService;
   const rdf = yield* RdfBuilder;
   yield* Console.log(`Analyzing entities for batch: ${batchId}`);

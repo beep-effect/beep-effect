@@ -1,3 +1,4 @@
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Layer, Redacted } from "effect";
 import * as O from "effect/Option";
@@ -27,7 +28,7 @@ const AuthConfig = Layer.succeed(ConfigService, {
   },
 });
 
-const InterruptedAuthDependencies = Layer.merge(InterruptedTicketService, AuthConfig);
+const InterruptedAuthDependencies = Layer.mergeAll(InterruptedTicketService, AuthConfig, BunCrypto.layer);
 
 describe("AuthRouter", () => {
   it.layer(InterruptedAuthDependencies)("with an interrupted ticket service", (it) => {

@@ -20,11 +20,19 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
-import { PostgresDrizzle } from "@beep/postgres";
-import { DrizzleError } from "@beep/drizzle";
-import { and, eq, inArray, lt } from "drizzle-orm";
-import { Cache, Context, Crypto, Duration, Effect, Encoding, Layer, Option } from "effect";
+import {$ScratchpadId} from "@beep/identity";
+import {PostgresDrizzle} from "@beep/postgres";
+import {DrizzleError} from "@beep/drizzle";
+import {and, eq, inArray, lt} from "drizzle-orm";
+import {
+  Cache,
+  Context,
+  Crypto,
+  Duration,
+  Effect,
+  Encoding,
+  Layer
+} from "effect";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
@@ -32,21 +40,24 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as A from "@beep/utils/Array";
 import * as Inspectable from "effect/Inspectable";
-import type { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
-import type { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
-import type { IngestedLinkInsertRow, IngestedLinkRow } from "../Repository/schema.ts";
-import { IngestedLinks, ingestedLinks } from "../Repository/schema.ts";
-import { ContentEnrichmentAgent } from "./ContentEnrichmentAgent.ts";
-import { ImageExtractor } from "./ImageExtractor.ts";
-import { ImageFetcher } from "./ImageFetcher.ts";
-import { ImageStore } from "./ImageStore.ts";
-import { JinaReaderClient } from "./JinaReaderClient.ts";
-import { StorageService } from "./Storage.ts";
+import type {EnrichedContent} from "../Domain/Model/EnrichedContent.ts";
+import type {LinkStatus} from "../Domain/Schema/LinkIngestion.ts";
+import type {
+  IngestedLinkInsertRow,
+  IngestedLinkRow
+} from "../Repository/schema.ts";
+import {IngestedLinks, ingestedLinks} from "../Repository/schema.ts";
+import {normalizeDrizzleError} from "../Utils/Sql.ts";
+import {ContentEnrichmentAgent} from "./ContentEnrichmentAgent.ts";
+import {ImageExtractor} from "./ImageExtractor.ts";
+import {ImageFetcher} from "./ImageFetcher.ts";
+import {ImageStore} from "./ImageStore.ts";
+import {JinaReaderClient} from "./JinaReaderClient.ts";
+import {StorageService} from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LinkIngestionService");
 
-const normalizeQueryError = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
-  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+const normalizeQueryError = normalizeDrizzleError("execute");
 
 const decodeIngestedLinkRows = (rows: unknown) =>
   S.decodeUnknownEffect(IngestedLinks.select.pipe(S.Array, S.mutable))(rows).pipe(
@@ -411,7 +422,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       // 5. Optionally enrich metadata
       let enrichedContent: EnrichedContent | undefined;
       if (enrich) {
-        const enrichResult = yield* enricher.enrichFromJina(content).pipe(
+
+        enrichedContent = yield * enricher.enrichFromJina(content).pipe(
           Effect.catch((error) =>
             Effect.gen(function* () {
               yield* Effect.logWarning("Enrichment failed, continuing without metadata", {
@@ -422,7 +434,6 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
             })
           )
         );
-        enrichedContent = enrichResult;
       }
 
       // 6. Persist to database
@@ -484,7 +495,10 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       Effect.gen(function* () {
         const { concurrency = 5, continueOnError = true, ...ingestOptions } = options;
 
-        const results = yield* Effect.forEach(
+
+
+
+        return yield * Effect.forEach(
           urls,
           (url) =>
             ingestUrl(url, ingestOptions).pipe(
@@ -494,10 +508,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
                   continueOnError ? Effect.succeed(error) : Effect.fail(error)
               )
             ),
-          { concurrency }
+          {concurrency}
         );
-
-        return results;
       });
 
     // -----------------------------------------------------------------------

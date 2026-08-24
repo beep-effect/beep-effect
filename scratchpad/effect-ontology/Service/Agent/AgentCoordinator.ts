@@ -35,6 +35,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { thunk0 } from "@beep/utils/thunk";
 import type { Config } from "effect";
 import { Clock, Context, DateTime, Duration, Effect, HashMap, Inspectable, Layer, Match, Ref } from "effect";
 import * as A from "effect/Array";
@@ -211,11 +212,11 @@ export class ExecutionResult extends S.Class<ExecutionResult>($I`ExecutionResult
 ) {}
 
 interface AgentCoordinatorShape {
-  readonly register: <E>(agent: Agent<AgentTask, AgentTask, E, never>, agentType?: AgentType) => Effect.Effect<void>;
+  readonly register: <E>(agent: Agent<AgentTask, AgentTask, E>, agentType?: AgentType) => Effect.Effect<void>;
   readonly unregister: (agentId: AgentIdType) => Effect.Effect<void>;
   readonly getAgent: (
     agentId: AgentIdType
-  ) => Effect.Effect<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>, AgentNotFoundError>;
+  ) => Effect.Effect<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError>, AgentNotFoundError>;
   readonly listAgents: Effect.Effect<ReadonlyArray<AgentMetadata>>;
   readonly executeSequential: (
     task: AgentTask,
@@ -282,17 +283,17 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
 
     // Agent registry (mutable ref)
     const registryRef = yield* Ref.make<
-      HashMap.HashMap<AgentIdType, RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>>
+      HashMap.HashMap<AgentIdType, RegisteredAgent<AgentTask, AgentTask, AgentExecutionError>>
     >(HashMap.empty());
 
     /**
      * Register an agent with the coordinator
      */
     const register = Effect.fn("AgentCoordinator.register")(function* <E>(
-      agent: Agent<AgentTask, AgentTask, E, never>,
+      agent: Agent<AgentTask, AgentTask, E>,
       agentType: AgentType = agent.metadata.type
     ) {
-      const normalizedAgent: Agent<AgentTask, AgentTask, AgentExecutionError, never> = {
+      const normalizedAgent: Agent<AgentTask, AgentTask, AgentExecutionError> = {
         metadata: agent.metadata,
         validate: agent.validate,
         execute: (input) =>
@@ -309,7 +310,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             )
           ),
       };
-      const registered: RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never> = {
+      const registered: RegisteredAgent<AgentTask, AgentTask, AgentExecutionError> = {
         agent: normalizedAgent,
         registeredAt: DateTime.toEpochMillis(yield* DateTime.now),
         agentType,
@@ -404,7 +405,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
      */
     const executeAgent = Effect.fn("AgentCoordinator.executeAgent")(
       function* <I, O, E>(
-        agent: Agent<I, O, E, never>,
+        agent: Agent<I, O, E>,
         input: I,
         eventsRef: Ref.Ref<Array<AgentEvent>>,
         execution: ResolvedExecutionOptions
@@ -562,7 +563,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
       // Get all agents upfront
-      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
+      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError>> = [];
       for (const id of agentIds) {
         const agent = yield* getAgent(id).pipe(
           Effect.mapError((e) =>
@@ -689,7 +690,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
       // Get all agents upfront
-      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
+      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError>> = [];
       for (const id of agentIds) {
         const agent = yield* getAgent(id).pipe(
           Effect.mapError((e) =>
@@ -841,7 +842,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       const concurrency = O.getOrElse(O.fromUndefinedOr(options?.concurrency), () => config.runtime.concurrency);
 
       // Get all agents upfront
-      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
+      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError>> = [];
       for (const id of agentIds) {
         const agent = yield* getAgent(id).pipe(
           Effect.mapError((e) =>
@@ -1023,7 +1024,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
       // Get all agents upfront
-      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
+      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError>> = [];
       for (const id of agentIds) {
         const agent = yield* getAgent(id).pipe(
           Effect.mapError((e) =>
@@ -1213,7 +1214,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           )
         );
 
-        const validationTask = yield* S.decodeEffect(AgentTask)(validationResult.output).pipe(
+        const validationTask = yield* S.decodeEffect(S.toType(AgentTask))(validationResult.output).pipe(
           Effect.catch(
             Effect.fnUntraced(function* (cause) {
               return yield* PipelineExecutionError.make({
@@ -1267,7 +1268,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           )
         );
 
-        const correctionOutput = yield* S.decodeEffect(AgentTask)(correctionResult.output).pipe(
+        const correctionOutput = yield* S.decodeEffect(S.toType(AgentTask))(correctionResult.output).pipe(
           Effect.catch(
             Effect.fnUntraced(function* (cause) {
               return yield* PipelineExecutionError.make({
@@ -1281,10 +1282,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           )
         );
         currentGraph = O.getOrElse(correctionOutput.graph, () => currentGraph);
-        const correctionBatch = O.flatMap(
-          correctionOutput.correctionResult,
-          S.decodeUnknownOption(BatchCorrectionResult)
-        );
+        const correctionBatch = O.flatMap(correctionOutput.correctionResult, BatchCorrectionResult.decodeUnknownOption);
         violationsFixed.push(
           O.getOrElse(
             O.map(correctionBatch, (batch) => batch.correctedCount),
@@ -1296,7 +1294,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         if (O.isSome(refinementConfig.minConfidence)) {
           const correctionConfidence = O.getOrElse(
             O.map(correctionBatch, (batch) => batch.successRate),
-            () => 0
+            thunk0
           );
           if (correctionConfidence < refinementConfig.minConfidence.value) {
             status = "confidence-threshold";

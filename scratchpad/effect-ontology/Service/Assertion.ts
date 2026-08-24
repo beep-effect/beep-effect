@@ -12,11 +12,11 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
-import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import type { Quad } from "@beep/rdf";
+import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_DOUBLE, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { XSD_DOUBLE, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { Clock, Context, DateTime, Effect, HashMap, Layer, Order, Random, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -30,6 +30,7 @@ import { AssertionId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimRow } from "../Repository/schema.ts";
 import { sha256 } from "../Utils/Hash.ts";
+import { canonicalLiteral, canonicalQuad } from "../Utils/Rdf.ts";
 import { RdfBuilder } from "./Rdf.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Assertion");
@@ -38,31 +39,6 @@ const RDF_PREDICATE = makeCanonicalNamedNode(`${RDF_NAMESPACE}predicate`);
 const RDF_OBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}object`);
 const PROV_GENERATED_AT_TIME = makeCanonicalNamedNode(`${PROV_NAMESPACE}generatedAtTime`);
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
-
-const canonicalNamedNode = (value: IRI | NamedNode): NamedNode => (P.isString(value) ? makeNamedNode(value) : value);
-
-const canonicalLiteral = (input: {
-  readonly value: string;
-  readonly datatype?: O.Option<IRI | NamedNode>;
-}): Literal => {
-  const datatype = O.getOrElse(input.datatype ?? O.none(), () => XSD_STRING);
-  return makeLiteral(input.value, canonicalNamedNode(datatype).value);
-};
-
-const canonicalQuad = (input: {
-  readonly subject: IRI | Subject;
-  readonly predicate: IRI | NamedNode;
-  readonly object: IRI | ObjectTerm;
-  readonly graph: O.Option<IRI | GraphTerm>;
-}): Quad => {
-  const subject = P.isString(input.subject) ? makeNamedNode(input.subject) : input.subject;
-  const predicate = canonicalNamedNode(input.predicate);
-  const object = P.isString(input.object) ? makeNamedNode(input.object) : input.object;
-  const graph = O.map(input.graph, (value) => (P.isString(value) ? makeNamedNode(value) : value));
-  return O.isSome(graph)
-    ? makeQuad(subject, predicate, { object, graph: graph.value })
-    : makeQuad(subject, predicate, object);
-};
 
 // =============================================================================
 // Types
@@ -353,7 +329,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         rejectedAt: null,
         rejectionReason: null,
       };
-      yield* Ref.update(assertionsRef, HashMap.set(id, assertionRow));
+      yield* Ref.update(assertionsRef, (assertions) => HashMap.set(assertions, id, assertionRow));
       return assertionRow;
     });
 

@@ -13,7 +13,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
-import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
@@ -37,7 +37,7 @@ import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { CreateClaimInput } from "../Service/Claim.ts";
 import { dual2, dual3, dual4 } from "./Dual.ts";
-import { buildIri } from "./Rdf.ts";
+import { buildIri, canonicalLiteral, canonicalQuad } from "./Rdf.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Utils/ClaimFactory");
 
@@ -52,23 +52,24 @@ const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
 const EXTRACTION_ARTIFACT = makeCanonicalNamedNode(`${CLAIMS.namespace}ExtractionArtifact`);
 const SERIALIZED_EXTRACTION_ARTIFACT = makeCanonicalNamedNode(`${CLAIMS.namespace}serializedExtractionArtifact`);
 
-const canonicalNamedNode = (value: IRI | NamedNode): NamedNode => (P.isString(value) ? makeNamedNode(value) : value);
-
 const claimLiteral = (input: { readonly value: string; readonly datatype?: IRI | NamedNode }): Literal =>
-  makeLiteral(input.value, canonicalNamedNode(input.datatype ?? XSD_STRING).value);
+  canonicalLiteral({
+    value: input.value,
+    datatype: O.some(input.datatype ?? XSD_STRING),
+  });
 
 const claimQuad = (input: {
   readonly subject: IRI | Subject;
   readonly predicate: IRI | NamedNode;
   readonly object: IRI | ObjectTerm;
   readonly graph: IRI | GraphTerm | undefined;
-}): Quad => {
-  const subject = P.isString(input.subject) ? makeNamedNode(input.subject) : input.subject;
-  const predicate = canonicalNamedNode(input.predicate);
-  const object = P.isString(input.object) ? makeNamedNode(input.object) : input.object;
-  const graph = P.isString(input.graph) ? makeNamedNode(input.graph) : input.graph;
-  return P.isUndefined(graph) ? makeQuad(subject, predicate, object) : makeQuad(subject, predicate, { object, graph });
-};
+}): Quad =>
+  canonicalQuad({
+    subject: input.subject,
+    predicate: input.predicate,
+    object: input.object,
+    graph: O.fromUndefinedOr(input.graph),
+  });
 
 const groundingConfidence = (
   decision: GroundingDecision,
@@ -303,6 +304,7 @@ export class ClaimExtractionArtifact extends S.Class<ClaimExtractionArtifact>($I
 ) {}
 
 const ClaimExtractionArtifactJson = S.fromJsonString(ClaimExtractionArtifact).pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("ClaimExtractionArtifactJson", {
     description: "JSON-string wire codec for the exact durable extraction artifact embedded in RDF.",
   })
@@ -1024,7 +1026,7 @@ export const claimExtractionArtifactToQuads = dual2(
     artifact: ClaimExtractionArtifact,
     graphUri: string
   ) {
-    const payload = yield* S.encodeEffect(ClaimExtractionArtifactJson)(artifact);
+    const payload = yield* ClaimExtractionArtifactJson.encodeEffect(artifact);
     const graph = IRI.fromUnknown(graphUri);
     const artifactIri = IRI.fromUnknown(`${graphUri}:extraction-artifact`);
     return [
@@ -1088,5 +1090,5 @@ export const claimExtractionArtifactFromQuads = Effect.fn("ClaimFactory.claimExt
     O.getOrElse(() => "")
   );
 
-  return O.some(yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload));
+  return O.some(yield* ClaimExtractionArtifactJson.decodeEffect(payload));
 });

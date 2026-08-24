@@ -191,8 +191,8 @@ export const recordProviderUsage = (usage: {
         onNone: () => Effect.void,
         onSome: (telemetry) =>
           telemetry.recordUsage(
-            S.decodeUnknownOption(NonNegativeInt)(usage.inputTokens),
-            S.decodeUnknownOption(NonNegativeInt)(usage.outputTokens)
+            NonNegativeInt.decodeUnknownOption(usage.inputTokens),
+            NonNegativeInt.decodeUnknownOption(usage.outputTokens)
           ),
       })
     )

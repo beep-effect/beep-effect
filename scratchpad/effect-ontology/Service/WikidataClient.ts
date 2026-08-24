@@ -292,7 +292,9 @@ const WikidataSearchResponse = S.Struct({
   search: S.Array(WikidataSearchResult),
   success: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   "search-continue": NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-});
+}).pipe(
+  SchemaUtils.withEffectCodecStatics
+);
 
 const WikidataEntityText = S.Struct({
   value: S.String,
@@ -306,7 +308,7 @@ const WikidataEntity = S.Struct({
 
 const WikidataEntityResponse = S.Struct({
   entities: S.Record(S.String, WikidataEntity),
-});
+}).pipe(SchemaUtils.withEffectCodecStatics);
 
 type WikidataSearchResultType = typeof WikidataSearchResult.Type;
 
@@ -459,7 +461,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
       );
 
       // Parse response
-      const parsed = yield* S.decodeUnknownEffect(WikidataSearchResponse)(response).pipe(
+      const parsed = yield* WikidataSearchResponse.decodeUnknownEffect(response).pipe(
         Effect.mapError((error) =>
           WikidataApiError.make({
             message: `Failed to parse Wikidata response: ${error}`,
@@ -525,7 +527,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
         )
       );
 
-      const decoded = yield* S.decodeUnknownEffect(WikidataEntityResponse)(response).pipe(
+      const decoded = yield* WikidataEntityResponse.decodeUnknownEffect(response).pipe(
         Effect.mapError((error) =>
           WikidataApiError.make({
             message: "Failed to decode entity response",

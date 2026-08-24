@@ -431,7 +431,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           )
         );
 
-        return yield* S.decodeUnknownEffect(ImageFetchResult)({ bytes, hash, contentType, candidate }).pipe(
+        return yield* ImageFetchResult.decodeUnknownEffect({ bytes, hash, contentType, candidate }).pipe(
           Effect.mapError((cause) =>
             ImageFetchError.make({
               message: "Fetched image metadata failed validation",

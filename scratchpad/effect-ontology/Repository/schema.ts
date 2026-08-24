@@ -41,6 +41,29 @@ const nullableColumn = <Schema extends S.Top>(schema: Schema) => {
   });
 };
 
+const generatedUuidPrimaryKey = S.String.pipe(
+  pg.uuid(),
+  pg.primaryKey(),
+  pg.defaultExpr(sql<string>`gen_random_uuid()`)
+);
+const defaultOntologyId = S.String.pipe(pg.text(), pg.default("default"), pg.columnName("ontology_id"));
+const uniqueBatchId = S.String.pipe(pg.text(), pg.unique(), pg.columnName("batch_id"));
+const nullableCreatedAt = nullableColumn(S.Date).pipe(
+  pg.timestamp({ mode: "date" }),
+  pg.defaultNow(),
+  pg.columnName("created_at")
+);
+const nullableUpdatedAt = nullableColumn(S.Date).pipe(
+  pg.timestamp({ mode: "date" }),
+  pg.defaultNow(),
+  pg.columnName("updated_at")
+);
+const executionTimingFields = {
+  startedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("started_at")),
+  completedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("completed_at")),
+  errorMessage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("error_message")),
+};
+
 const EmbeddingVectorValues = S.Array(S.Finite).check(
   S.isLengthBetween(768, 768, {
     identifier: $I`EmbeddingVector768LengthCheck`,
@@ -127,7 +150,7 @@ const NullableEmbeddingVector768 = VariantField({
  */
 export class Articles extends Model<Articles>("Articles")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
     uri: S.NonEmptyString.pipe(pg.text()),
     ontologyId: S.NonEmptyString.pipe(pg.text(), pg.columnName("ontology_id")),
     sourceName: nullableColumn(S.String).pipe(pg.text(), pg.columnName("source_name")),
@@ -199,7 +222,7 @@ const ClaimsReference: { readonly tableName: "claims"; readonly entityType: "Cla
  */
 export class Corrections extends Model<Corrections>("Corrections")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
     correctionType: CorrectionType.pipe(pg.text(), pg.columnName("correction_type")),
     sourceArticleId: nullableColumn(S.String).pipe(
       pg.uuid(),
@@ -246,7 +269,7 @@ export class Corrections extends Model<Corrections>("Corrections")(
  */
 export class Claims extends Model<Claims>("Claims")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
     articleId: S.String.pipe(
       pg.uuid(),
       pg.references(ArticlesReference, { onDelete: "cascade" }),
@@ -361,7 +384,7 @@ export class CorrectionClaims extends Model<CorrectionClaims>("CorrectionClaims"
  */
 export class Conflicts extends Model<Conflicts>("Conflicts")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
     ontologyId: S.NonEmptyString.pipe(pg.text(), pg.columnName("ontology_id")),
     conflictType: ConflictKind.pipe(pg.text(), pg.columnName("conflict_type")),
     claimAId: S.String.pipe(pg.uuid(), pg.references(ClaimsReference), pg.columnName("claim_a_id")),
@@ -503,22 +526,16 @@ export const conflicts = ClaimFamilySchema.tables.conflicts;
  */
 export class BatchRuns extends Model<BatchRuns>("BatchRuns")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
-    batchId: S.String.pipe(pg.text(), pg.unique(), pg.columnName("batch_id")),
+    id: generatedUuidPrimaryKey,
+    batchId: uniqueBatchId,
     status: S.String.pipe(pg.text(), pg.default("pending")),
     documentsTotal: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("documents_total")),
     documentsProcessed: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("documents_processed")),
     claimsExtracted: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("claims_extracted")),
     conflictsDetected: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("conflicts_detected")),
-    startedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("started_at")),
-    completedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("completed_at")),
-    errorMessage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("error_message")),
+    ...executionTimingFields,
     errorDetails: nullableColumn(S.Unknown).pipe(pg.unsafeCustom("jsonb"), pg.columnName("error_details")),
-    createdAt: nullableColumn(S.Date).pipe(
-      pg.timestamp({ mode: "date" }),
-      pg.defaultNow(),
-      pg.columnName("created_at")
-    ),
+    createdAt: nullableCreatedAt,
   },
   (table) => [
     pg.Table.index("idx_batch_runs_batch_id", [table.batchId]),
@@ -555,10 +572,10 @@ export class BatchRuns extends Model<BatchRuns>("BatchRuns")(
  */
 export class CanonicalEntities extends Model<CanonicalEntities>("CanonicalEntities")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
 
     // Ontology scoping (entities are scoped per ontology)
-    ontologyId: S.String.pipe(pg.text(), pg.default("default"), pg.columnName("ontology_id")),
+    ontologyId: defaultOntologyId,
 
     // Identity
     iri: S.String.pipe(pg.text()),
@@ -585,16 +602,8 @@ export class CanonicalEntities extends Model<CanonicalEntities>("CanonicalEntiti
       pg.defaultNow(),
       pg.columnName("last_seen_at")
     ),
-    createdAt: nullableColumn(S.Date).pipe(
-      pg.timestamp({ mode: "date" }),
-      pg.defaultNow(),
-      pg.columnName("created_at")
-    ),
-    updatedAt: nullableColumn(S.Date).pipe(
-      pg.timestamp({ mode: "date" }),
-      pg.defaultNow(),
-      pg.columnName("updated_at")
-    ),
+    createdAt: nullableCreatedAt,
+    updatedAt: nullableUpdatedAt,
   },
   (table) => [
     pg.Table.uniqueIndex("canonical_entities_ontology_iri_unique", [table.ontologyId, table.iri]),
@@ -612,6 +621,7 @@ const CanonicalEntitiesReference: {
   tableName: "canonical_entities",
   entityType: "CanonicalEntities",
 };
+const canonicalEntityReferenceId = S.String.pipe(pg.uuid());
 
 /**
  * Entity Aliases
@@ -634,13 +644,12 @@ const CanonicalEntitiesReference: {
  */
 export class EntityAliases extends Model<EntityAliases>("EntityAliases")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
 
     // Ontology scoping (aliases are scoped per ontology)
-    ontologyId: S.String.pipe(pg.text(), pg.default("default"), pg.columnName("ontology_id")),
+    ontologyId: defaultOntologyId,
 
-    canonicalEntityId: S.String.pipe(
-      pg.uuid(),
+    canonicalEntityId: canonicalEntityReferenceId.pipe(
       pg.references(CanonicalEntitiesReference, { onDelete: "cascade" }),
       pg.columnName("canonical_entity_id")
     ),
@@ -663,11 +672,7 @@ export class EntityAliases extends Model<EntityAliases>("EntityAliases")(
     ),
 
     // Temporal
-    createdAt: nullableColumn(S.Date).pipe(
-      pg.timestamp({ mode: "date" }),
-      pg.defaultNow(),
-      pg.columnName("created_at")
-    ),
+    createdAt: nullableCreatedAt,
   },
   (table) => [
     pg.Table.uniqueIndex("idx_entity_aliases_ontology_mention", [table.ontologyId, table.mentionNormalized]),
@@ -697,13 +702,12 @@ export class EntityAliases extends Model<EntityAliases>("EntityAliases")(
  */
 export class EntityBlockingTokens extends Model<EntityBlockingTokens>("EntityBlockingTokens")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
 
     // Ontology scoping (tokens are scoped per ontology)
-    ontologyId: S.String.pipe(pg.text(), pg.default("default"), pg.columnName("ontology_id")),
+    ontologyId: defaultOntologyId,
 
-    canonicalEntityId: S.String.pipe(
-      pg.uuid(),
+    canonicalEntityId: canonicalEntityReferenceId.pipe(
       pg.references(CanonicalEntitiesReference, {
         name: "entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
         onDelete: "cascade",
@@ -1142,7 +1146,7 @@ const UnknownRecordJson = S.Record(S.String, S.Unknown);
  */
 export class IngestedLinks extends Model<IngestedLinks>("IngestedLinks")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
 
     // Content identification (content-addressed, unique per ontology)
     contentHash: S.String.pipe(pg.varchar(64), pg.columnName("content_hash")),
@@ -1187,16 +1191,8 @@ export class IngestedLinks extends Model<IngestedLinks>("IngestedLinks")(
     metadata: nullableColumn(UnknownRecordJson).pipe(pg.jsonb(), pg.default({})),
 
     // Lifecycle
-    createdAt: nullableColumn(S.Date).pipe(
-      pg.timestamp({ mode: "date" }),
-      pg.defaultNow(),
-      pg.columnName("created_at")
-    ),
-    updatedAt: nullableColumn(S.Date).pipe(
-      pg.timestamp({ mode: "date" }),
-      pg.defaultNow(),
-      pg.columnName("updated_at")
-    ),
+    createdAt: nullableCreatedAt,
+    updatedAt: nullableUpdatedAt,
   },
   (table) => [
     pg.Table.index("idx_ingested_links_status", [table.status]),
@@ -1235,8 +1231,8 @@ export class IngestedLinks extends Model<IngestedLinks>("IngestedLinks")(
  */
 export class LinkBatches extends Model<LinkBatches>("LinkBatches")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
-    batchId: S.String.pipe(pg.text(), pg.unique(), pg.columnName("batch_id")),
+    id: generatedUuidPrimaryKey,
+    batchId: uniqueBatchId,
 
     // Status
     status: LinkBatchLifecycleStatus.pipe(pg.text(), pg.default("pending")),
@@ -1250,16 +1246,8 @@ export class LinkBatches extends Model<LinkBatches>("LinkBatches")(
     ontologyUri: nullableColumn(S.String).pipe(pg.text(), pg.columnName("ontology_uri")),
 
     // Timing
-    createdAt: nullableColumn(S.Date).pipe(
-      pg.timestamp({ mode: "date" }),
-      pg.defaultNow(),
-      pg.columnName("created_at")
-    ),
-    startedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("started_at")),
-    completedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("completed_at")),
-
-    // Error
-    errorMessage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("error_message")),
+    createdAt: nullableCreatedAt,
+    ...executionTimingFields,
   },
   (table) => [
     pg.Table.index("idx_link_batches_status", [table.status]),
@@ -1324,11 +1312,7 @@ export class LinkBatchItems extends Model<LinkBatchItems>("LinkBatchItems")(
     articleId: nullableColumn(S.String).pipe(pg.uuid(), pg.columnName("article_id")),
 
     // Timing
-    startedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("started_at")),
-    completedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("completed_at")),
-
-    // Error
-    errorMessage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("error_message")),
+    ...executionTimingFields,
   },
   (table) => [
     pg.Table.compositePrimaryKey("link_batch_items_pkey", [table.batchId, table.linkId]),
@@ -1529,7 +1513,7 @@ const LlmPromptMessagesJson = S.Struct({ role: S.String, content: S.String }).pi
  */
 export class LlmExamples extends Model<LlmExamples>("LlmExamples")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
 
     // Scoping
     ontologyId: S.String.pipe(pg.text(), pg.columnName("ontology_id")),
@@ -1659,7 +1643,7 @@ export type LlmExampleInsertRow = typeof LlmExamples.insert.Type;
  */
 export class Embeddings extends Model<Embeddings>("Embeddings")(
   {
-    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    id: generatedUuidPrimaryKey,
     entityType: S.Literals(["class", "entity", "claim", "example"]).pipe(pg.varchar(20), pg.columnName("entity_type")),
     entityId: S.NonEmptyString.pipe(pg.text(), pg.columnName("entity_id")),
     ontologyId: S.NonEmptyString.pipe(pg.text(), pg.defaultExpr(sql<string>`'default'`), pg.columnName("ontology_id")),

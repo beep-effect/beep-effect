@@ -9,6 +9,7 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { NonNegativeInt } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { UUID } from "@beep/schema/String";
 import { aliasedTable, and, count, desc, eq, or } from "drizzle-orm";
@@ -18,6 +19,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ConflictActor, ConflictKind, ConflictsQuery, ConflictTransition } from "../Domain/Schema/Timeline.ts";
+import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { ConflictInsertRow } from "./schema.ts";
 import { Claims, Conflicts, claims, conflicts } from "./schema.ts";
 
@@ -117,11 +119,8 @@ export class EqualConflictPairError extends S.TaggedError<EqualConflictPairError
   })
 ) {}
 
-const normalizeDecodedRows = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
-  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause)));
-
-const normalizeQueryError = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
-  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
+const normalizeQueryError = normalizeDrizzleError("execute");
 
 const decodeConflictRecords = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(ConflictRecord.pipe(S.Array, S.mutable))(rows));
@@ -129,7 +128,9 @@ const decodeConflictRecords = (rows: unknown) =>
 const decodeConflictRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(Conflicts.select.pipe(S.Array, S.mutable))(rows));
 
-const decodeCountRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([CountRow]))(rows));
+const CountRows = S.Tuple([CountRow]).pipe(SchemaUtils.withEffectCodecStatics);
+
+const decodeCountRow = (rows: unknown) => normalizeDecodedRows(CountRows.decodeUnknownEffect(rows));
 
 /**
  * Canonicalize a pair of claim UUIDs for persistence.
@@ -248,6 +249,33 @@ const selectConflictCount = (
       )
     );
 
+type ConflictRepositoryError = DrizzleError;
+
+interface ConflictRepositoryShape {
+  readonly get: {
+    (ontologyId: string, id: string): Effect.Effect<O.Option<ConflictRecord>, ConflictRepositoryError>;
+    (id: string): (ontologyId: string) => Effect.Effect<O.Option<ConflictRecord>, ConflictRepositoryError>;
+  };
+  readonly list: (query: ConflictsQuery) => Effect.Effect<ReadonlyArray<ConflictRecord>, ConflictRepositoryError>;
+  readonly counts: (query: ConflictsQuery) => Effect.Effect<typeof ConflictCounts.Type, ConflictRepositoryError>;
+  readonly recordDetected: (
+    detected: Pick<ConflictInsertRow, "ontologyId" | "conflictType" | "claimAId" | "claimBId">
+  ) => Effect.Effect<O.Option<typeof Conflicts.select.Type>, ConflictRepositoryError | EqualConflictPairError>;
+  readonly transition: {
+    (
+      ontologyId: string,
+      id: string,
+      action: ConflictTransition,
+      actor: ConflictActor
+    ): Effect.Effect<O.Option<ConflictRecord>, ConflictRepositoryError>;
+    (
+      id: string,
+      action: ConflictTransition,
+      actor: ConflictActor
+    ): (ontologyId: string) => Effect.Effect<O.Option<ConflictRecord>, ConflictRepositoryError>;
+  };
+}
+
 /**
  * Repository for detected conflict persistence, queries, counts, and terminal transitions.
  *
@@ -263,121 +291,134 @@ const selectConflictCount = (
  * @category repositories
  * @since 0.0.0
  */
-export class ConflictRepository extends Context.Service<ConflictRepository>()($I`ConflictRepository`, {
-  make: Effect.gen(function* () {
-    const drizzle = yield* PostgresDrizzle;
+export class ConflictRepository extends Context.Service<ConflictRepository, ConflictRepositoryShape>()(
+  $I`ConflictRepository`,
+  {
+    make: Effect.gen(function* () {
+      const drizzle = yield* PostgresDrizzle;
 
-    const get = Effect.fn("ConflictRepository.get")(function* (ontologyId: string, id: string) {
-      const rows = yield* normalizeQueryError(
-        drizzle
-          .select({ conflict: conflicts, claimA, claimB })
-          .from(conflicts)
-          .innerJoin(claimA, eq(conflicts.claimAId, claimA.id))
-          .innerJoin(claimB, eq(conflicts.claimBId, claimB.id))
-          .where(and(eq(conflicts.ontologyId, ontologyId), eq(conflicts.id, id)))
-          .limit(1)
+      const get: ConflictRepositoryShape["get"] = dual(
+        2,
+        Effect.fn("ConflictRepository.get")(function* (ontologyId: string, id: string) {
+          const rows = yield* normalizeQueryError(
+            drizzle
+              .select({ conflict: conflicts, claimA, claimB })
+              .from(conflicts)
+              .innerJoin(claimA, eq(conflicts.claimAId, claimA.id))
+              .innerJoin(claimB, eq(conflicts.claimBId, claimB.id))
+              .where(and(eq(conflicts.ontologyId, ontologyId), eq(conflicts.id, id)))
+              .limit(1)
+          );
+          return A.head(yield* decodeConflictRecords(rows));
+        })
       );
-      return A.head(yield* decodeConflictRecords(rows));
-    });
 
-    const list = Effect.fn("ConflictRepository.list")(function* (query: ConflictsQuery) {
-      const rows = yield* normalizeQueryError(
-        selectConflictRecords(drizzle, query).limit(query.limit).offset(query.offset)
+      const list: ConflictRepositoryShape["list"] = Effect.fn("ConflictRepository.list")(function* (
+        query: ConflictsQuery
+      ) {
+        const rows = yield* normalizeQueryError(
+          selectConflictRecords(drizzle, query).limit(query.limit).offset(query.offset)
+        );
+        return yield* decodeConflictRecords(rows);
+      });
+
+      const counts: ConflictRepositoryShape["counts"] = Effect.fn("ConflictRepository.counts")(function* (
+        query: ConflictsQuery
+      ) {
+        const totalQuery = selectConflictCount(drizzle, query, query.status);
+        const pendingQuery = selectConflictCount(drizzle, query, O.some("pending"));
+        const [[total], [pending]] = yield* Effect.all(
+          [
+            normalizeQueryError(totalQuery).pipe(Effect.flatMap(decodeCountRow)),
+            normalizeQueryError(pendingQuery).pipe(Effect.flatMap(decodeCountRow)),
+          ],
+          { concurrency: "unbounded" }
+        );
+        return yield* S.decodeEffect(ConflictCounts)({ total: total.count, pending: pending.count }).pipe(
+          Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+        );
+      });
+
+      const recordDetected: ConflictRepositoryShape["recordDetected"] = Effect.fn("ConflictRepository.recordDetected")(
+        function* (detected: Pick<ConflictInsertRow, "ontologyId" | "conflictType" | "claimAId" | "claimBId">) {
+          const [claimAId, claimBId] = yield* canonicalConflictPair(detected.claimAId, detected.claimBId);
+          const rows = yield* normalizeQueryError(
+            drizzle
+              .insert(conflicts)
+              .values({ ...detected, claimAId, claimBId })
+              .onConflictDoNothing({
+                target: [conflicts.ontologyId, conflicts.claimAId, conflicts.claimBId],
+              })
+              .returning()
+          );
+          return A.head(yield* decodeConflictRows(rows));
+        }
       );
-      return yield* decodeConflictRecords(rows);
-    });
 
-    const counts = Effect.fn("ConflictRepository.counts")(function* (query: ConflictsQuery) {
-      const totalQuery = selectConflictCount(drizzle, query, query.status);
-      const pendingQuery = selectConflictCount(drizzle, query, O.some("pending"));
-      const [[total], [pending]] = yield* Effect.all(
-        [
-          normalizeQueryError(totalQuery).pipe(Effect.flatMap(decodeCountRow)),
-          normalizeQueryError(pendingQuery).pipe(Effect.flatMap(decodeCountRow)),
-        ],
-        { concurrency: "unbounded" }
+      const transition: ConflictRepositoryShape["transition"] = dual(
+        4,
+        Effect.fn("ConflictRepository.transition")(function* (
+          ontologyId: string,
+          id: string,
+          action: ConflictTransition,
+          actor: ConflictActor
+        ) {
+          const now = DateTime.toDate(yield* DateTime.now);
+          const existing = yield* get(ontologyId, id);
+          if (O.isNone(existing) || !Equal.equals(existing.value.conflict.status, "pending")) {
+            return O.none<ConflictRecord>();
+          }
+
+          const toUpdate: (transition: ConflictTransition) => ConflictUpdate = Match.type<ConflictTransition>().pipe(
+            Match.when(
+              { _tag: "ignore" },
+              ({ notes }): ConflictUpdate =>
+                ConflictUpdate.make({
+                  status: "ignored",
+                  resolutionStrategy: null,
+                  acceptedClaimId: null,
+                  resolvedBy: actor.principal,
+                  resolvedByFingerprint: O.getOrNull(actor.credentialFingerprint),
+                  resolvedAt: now,
+                  resolutionNotes: O.getOrNull(notes),
+                })
+            ),
+            Match.when(
+              { _tag: "resolve" },
+              ({ acceptedClaim, notes, strategy }): ConflictUpdate =>
+                ConflictUpdate.make({
+                  status: "resolved",
+                  resolutionStrategy: strategy,
+                  acceptedClaimId: Equal.equals(acceptedClaim, "claimA")
+                    ? existing.value.conflict.claimAId
+                    : existing.value.conflict.claimBId,
+                  resolvedBy: actor.principal,
+                  resolvedByFingerprint: O.getOrNull(actor.credentialFingerprint),
+                  resolvedAt: now,
+                  resolutionNotes: O.getOrNull(notes),
+                })
+            ),
+            Match.exhaustive
+          );
+          const update = toUpdate(action);
+
+          const updated = yield* normalizeQueryError(
+            drizzle
+              .update(conflicts)
+              .set(update)
+              .where(and(eq(conflicts.ontologyId, ontologyId), eq(conflicts.id, id), eq(conflicts.status, "pending")))
+              .returning()
+          );
+          if (A.isReadonlyArrayEmpty(yield* decodeConflictRows(updated))) {
+            return O.none<ConflictRecord>();
+          }
+          return yield* get(ontologyId, id);
+        })
       );
-      return yield* S.decodeEffect(ConflictCounts)({ total: total.count, pending: pending.count }).pipe(
-        Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
-      );
-    });
 
-    const recordDetected = Effect.fn("ConflictRepository.recordDetected")(function* (
-      detected: Pick<ConflictInsertRow, "ontologyId" | "conflictType" | "claimAId" | "claimBId">
-    ) {
-      const [claimAId, claimBId] = yield* canonicalConflictPair(detected.claimAId, detected.claimBId);
-      const rows = yield* normalizeQueryError(
-        drizzle
-          .insert(conflicts)
-          .values({ ...detected, claimAId, claimBId })
-          .onConflictDoNothing({
-            target: [conflicts.ontologyId, conflicts.claimAId, conflicts.claimBId],
-          })
-          .returning()
-      );
-      return A.head(yield* decodeConflictRows(rows));
-    });
-
-    const transition = Effect.fn("ConflictRepository.transition")(function* (
-      ontologyId: string,
-      id: string,
-      action: ConflictTransition,
-      actor: ConflictActor
-    ) {
-      const now = DateTime.toDate(yield* DateTime.now);
-      const existing = yield* get(ontologyId, id);
-      if (O.isNone(existing) || !Equal.equals(existing.value.conflict.status, "pending")) {
-        return O.none<ConflictRecord>();
-      }
-
-      const toUpdate: (transition: ConflictTransition) => ConflictUpdate = Match.type<ConflictTransition>().pipe(
-        Match.when(
-          { _tag: "ignore" },
-          ({ notes }): ConflictUpdate =>
-            ConflictUpdate.make({
-              status: "ignored",
-              resolutionStrategy: null,
-              acceptedClaimId: null,
-              resolvedBy: actor.principal,
-              resolvedByFingerprint: O.getOrNull(actor.credentialFingerprint),
-              resolvedAt: now,
-              resolutionNotes: O.getOrNull(notes),
-            })
-        ),
-        Match.when(
-          { _tag: "resolve" },
-          ({ acceptedClaim, notes, strategy }): ConflictUpdate =>
-            ConflictUpdate.make({
-              status: "resolved",
-              resolutionStrategy: strategy,
-              acceptedClaimId: Equal.equals(acceptedClaim, "claimA")
-                ? existing.value.conflict.claimAId
-                : existing.value.conflict.claimBId,
-              resolvedBy: actor.principal,
-              resolvedByFingerprint: O.getOrNull(actor.credentialFingerprint),
-              resolvedAt: now,
-              resolutionNotes: O.getOrNull(notes),
-            })
-        ),
-        Match.exhaustive
-      );
-      const update = toUpdate(action);
-
-      const updated = yield* normalizeQueryError(
-        drizzle
-          .update(conflicts)
-          .set(update)
-          .where(and(eq(conflicts.ontologyId, ontologyId), eq(conflicts.id, id), eq(conflicts.status, "pending")))
-          .returning()
-      );
-      if (A.isReadonlyArrayEmpty(yield* decodeConflictRows(updated))) {
-        return O.none<ConflictRecord>();
-      }
-      return yield* get(ontologyId, id);
-    });
-
-    return { counts, get, list, recordDetected, transition };
-  }),
-}) {
+      return { counts, get, list, recordDetected, transition };
+    }),
+  }
+) {
   static readonly Default = Layer.effect(this, this.make);
 }

@@ -269,16 +269,6 @@ const BatchStateChangedEventEntry = S.Struct({
   payload: BatchStateChangedPayload,
 });
 
-type OntologyEventEntryValue =
-  | typeof ClaimCorrectedEventEntry.Type
-  | typeof ClaimDeprecatedEventEntry.Type
-  | typeof AliasAddedEventEntry.Type
-  | typeof ClaimPromotedEventEntry.Type
-  | typeof EntityLinkedEventEntry.Type
-  | typeof ExtractionCompletedEventEntry.Type
-  | typeof ValidationFailedEventEntry.Type
-  | typeof BatchStateChangedEventEntry.Type;
-
 const OntologyEventEntryDefinition = S.Union([
   ClaimCorrectedEventEntry,
   ClaimDeprecatedEventEntry,
@@ -304,7 +294,8 @@ const OntologyEventEntryDefinition = S.Union([
  * @category events
  * @since 0.0.0
  */
-export const OntologyEventEntry: S.Codec<OntologyEventEntryValue, unknown> = OntologyEventEntryDefinition.pipe(
+export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("OntologyEventEntry", {
     description: "Schema-validated journal entry whose event tag determines its canonical payload.",
     toArbitrary: () => S.toArbitrary(OntologyEventEntryDefinition),
@@ -324,7 +315,7 @@ export const OntologyEventEntry: S.Codec<OntologyEventEntryValue, unknown> = Ont
  * @category type-level
  * @since 0.0.0
  */
-export type OntologyEventEntry = OntologyEventEntryValue;
+export type OntologyEventEntry = typeof OntologyEventEntry.Type;
 
 /**
  * EventLog definitions emitted by extraction and batch workflows.

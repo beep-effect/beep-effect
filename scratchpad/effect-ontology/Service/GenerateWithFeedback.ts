@@ -121,7 +121,7 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
   AiError.AiError | Cause.TimeoutError | S.SchemaError,
   LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"]
 > {
-  const policy = yield* S.decodeEffect(GenerateWithFeedbackPolicy)(options);
+  const policy = yield* GenerateWithFeedbackPolicy.decodeEffect(options);
   const retryPolicy = yield* RetryPolicy.decodeEffect({ ...policy.retryPolicy, serviceName: policy.serviceName });
   const llm = yield* LanguageModel.LanguageModel;
   const promptRef = yield* Ref.make(makePrompt(options.prompt, policy.enablePromptCaching));

@@ -18,6 +18,8 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+import type { PlatformError, SystemError} from "effect/PlatformError";
+import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
 
 // =============================================================================
 // Subcommands
@@ -30,7 +32,7 @@ const listPrefix = Argument.string("prefix").pipe(
   Argument.withDescription("Path prefix to list (default: root)")
 );
 
-const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>) {
+const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>): Effect.fn.Return<void, PlatformError | SystemError, StorageService> {
   const storage = yield* StorageService;
   const effectivePrefix = O.getOrElse(prefix, () => "");
   yield* Console.log(`Listing: ${effectivePrefix || "(root)"}`);
@@ -78,7 +80,7 @@ const catLinesOption = Flag.integer("lines").pipe(
   Flag.withDescription("Limit output to N lines (0 = all)")
 );
 
-const catHandler = Effect.fn("catHandler")(function* (path: string, lines: number) {
+const catHandler = Effect.fn("catHandler")(function* (path: string, lines: number): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError, StorageService> {
   const storage = yield* StorageService;
   const contentOpt = yield* storage.getOption(path);
   if (O.isNone(contentOpt)) {
@@ -98,7 +100,7 @@ const catCommand = Command.make("cat", { path: catPath, lines: catLinesOption },
 
 // --- Batches Command ---
 
-const batchesHandler = Effect.fn("batchesHandler")(function* () {
+const batchesHandler = Effect.fn("batchesHandler")(function* (): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError | SystemError, StorageService> {
   const storage = yield* StorageService;
   yield* Console.log("Batch Manifests:");
   yield* Console.log("");
@@ -135,7 +137,7 @@ const batchesCommand = Command.make("batches", {}, () => withErrorHandler(batche
 
 // --- Info Command ---
 
-const infoHandler = Effect.fn("infoHandler")(function* () {
+const infoHandler = Effect.fn("infoHandler")(function* (): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError | SystemError, StorageService> {
   const storage = yield* StorageService;
   yield* Console.log("Storage Configuration:");
   yield* Console.log("");

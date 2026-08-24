@@ -338,15 +338,11 @@ export const EventBroadcastConfig = Config.all({
   ),
 });
 
-/**
- * Create the EventBroadcastHub service (in-memory for local development)
- */
-const makeEventBroadcastHubMemory = Effect.gen(function* () {
-  // In-process PubSub per ontology for local development
+const makeLocalBroadcastState = (options: { readonly spanPrefix: string; readonly broadcastLogMessage: string }) => {
   const pubsubs = MutableHashMap.empty<string, PubSub.PubSub<BroadcastEvent>>();
   const clientCounts = MutableHashMap.empty<string, number>();
 
-  const getOrCreatePubSub = Effect.fn("EventBroadcastRouter.getOrCreatePubSub")(function* (ontologyId: string) {
+  const getOrCreatePubSub = Effect.fn(`${options.spanPrefix}.getOrCreatePubSub`)(function* (ontologyId: string) {
     return yield* O.match(MutableHashMap.get(pubsubs, ontologyId), {
       onNone: () =>
         PubSub.unbounded<BroadcastEvent>().pipe(
@@ -356,19 +352,15 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
     });
   });
 
-  const broadcast = Effect.fn("EventBroadcastRouter.cloud.broadcast")(function* (
-    ontologyId: string,
-    event: BroadcastEvent
-  ) {
-    const ps = yield* getOrCreatePubSub(ontologyId);
-    yield* PubSub.publish(ps, event);
-    yield* Effect.logDebug("Event broadcast (memory)", { ontologyId, event: event.entry.event });
+  const broadcast = Effect.fn(`${options.spanPrefix}.broadcast`)(function* (ontologyId: string, event: BroadcastEvent) {
+    const pubsub = yield* getOrCreatePubSub(ontologyId);
+    yield* PubSub.publish(pubsub, event);
+    yield* Effect.logDebug(options.broadcastLogMessage, { ontologyId, event: event.entry.event });
   });
 
-  const subscribe = Effect.fn("EventBroadcastRouter.cloud.subscribe")(function* (ontologyId: string) {
-    const ps = yield* getOrCreatePubSub(ontologyId);
-    const queue = yield* PubSub.subscribe(ps);
-    // Track client count
+  const subscribe = Effect.fn(`${options.spanPrefix}.subscribe`)(function* (ontologyId: string) {
+    const pubsub = yield* getOrCreatePubSub(ontologyId);
+    const queue = yield* PubSub.subscribe(pubsub);
     const current = O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0);
     MutableHashMap.set(clientCounts, ontologyId, current + 1);
     yield* Effect.addFinalizer(() =>
@@ -383,12 +375,28 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
   const getClientCount = (ontologyId: string) =>
     Effect.succeed(O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0));
 
+  const publishUnsafe = (ontologyId: string, event: BroadcastEvent): void => {
+    O.map(MutableHashMap.get(pubsubs, ontologyId), (pubsub) => PubSub.publishUnsafe(pubsub, event));
+  };
+
+  return { broadcast, subscribe, getClientCount, publishUnsafe };
+};
+
+/**
+ * Create the EventBroadcastHub service (in-memory for local development)
+ */
+const makeEventBroadcastHubMemory = Effect.gen(function* () {
+  const local = makeLocalBroadcastState({
+    spanPrefix: "EventBroadcastRouter.memory",
+    broadcastLogMessage: "Event broadcast (memory)",
+  });
+
   yield* Effect.logInfo("EventBroadcastHub started (memory mode)");
 
   return EventBroadcastHub.of({
-    broadcast,
-    subscribe,
-    getClientCount,
+    broadcast: local.broadcast,
+    subscribe: local.subscribe,
+    getClientCount: local.getClientCount,
   });
 });
 
@@ -402,18 +410,9 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
   // Initialize Cloud Pub/Sub client
   const pubsub = new GCloudPubSub({ projectId: config.projectId });
 
-  // In-process PubSub for distributing to WebSocket clients
-  const localPubsubs = MutableHashMap.empty<string, PubSub.PubSub<BroadcastEvent>>();
-  const clientCounts = MutableHashMap.empty<string, number>();
-
-  const getOrCreatePubSub = Effect.fn("getOrCreatePubSub")(function* (ontologyId: string) {
-    return yield* O.match(MutableHashMap.get(localPubsubs, ontologyId), {
-      onNone: () =>
-        PubSub.unbounded<BroadcastEvent>().pipe(
-          Effect.tap((pubsub) => Effect.sync(() => MutableHashMap.set(localPubsubs, ontologyId, pubsub)))
-        ),
-      onSome: Effect.succeed,
-    });
+  const local = makeLocalBroadcastState({
+    spanPrefix: "EventBroadcastRouter.cloud",
+    broadcastLogMessage: "Event broadcast (local)",
   });
 
   // One subscription per replica so every instance receives every event.
@@ -455,7 +454,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
           ontologyId,
           timestamp: NonNegativeInt.make(message.publishTime?.getTime() ?? 0),
         };
-        O.map(MutableHashMap.get(localPubsubs, ontologyId), (pubsub) => PubSub.publishUnsafe(pubsub, event));
+        local.publishUnsafe(ontologyId, event);
         message.ack();
       } else {
         message.nack();
@@ -500,37 +499,10 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
     subscriptionId: instanceSubscriptionId,
   });
 
-  const broadcast = Effect.fn("EventBroadcastRouter.memory.broadcast")(function* (
-    ontologyId: string,
-    event: BroadcastEvent
-  ) {
-    const ps = yield* getOrCreatePubSub(ontologyId);
-    yield* PubSub.publish(ps, event);
-    yield* Effect.logDebug("Event broadcast (local)", { ontologyId, event: event.entry.event });
-  });
-
-  const subscribe = Effect.fn("EventBroadcastRouter.memory.subscribe")(function* (ontologyId: string) {
-    const ps = yield* getOrCreatePubSub(ontologyId);
-    const queue = yield* PubSub.subscribe(ps);
-    // Track client count
-    const current = O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0);
-    MutableHashMap.set(clientCounts, ontologyId, current + 1);
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        const count = O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 1);
-        MutableHashMap.set(clientCounts, ontologyId, count - 1);
-      })
-    );
-    return queue;
-  });
-
-  const getClientCount = (ontologyId: string) =>
-    Effect.succeed(O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0));
-
   return EventBroadcastHub.of({
-    broadcast,
-    subscribe,
-    getClientCount,
+    broadcast: local.broadcast,
+    subscribe: local.subscribe,
+    getClientCount: local.getClientCount,
   });
 });
 

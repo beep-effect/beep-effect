@@ -15,6 +15,8 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Unknown } from "@beep/schema/Unknown";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ConfigProvider, Console, Duration, Effect, FileSystem, Layer, Path } from "effect";
+import type { Scope } from "effect/Scope";
+import { PlatformError } from "effect/PlatformError";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -31,6 +33,9 @@ import { makeCliExtractionLayer } from "../../Runtime/WorkflowLayers.ts";
 import { ExtractionWorkflow } from "../../Service/ExtractionWorkflow.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+import type { ExtractionError } from "../../Domain/Error/Extraction.ts";
+import type { RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
+
 
 const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Extract");
 
@@ -94,7 +99,7 @@ class ExtractInputError extends S.TaggedError<ExtractInputError>($I`ExtractInput
 const readInputText = Effect.fn("Extract.readInputText")(function* (
   textOpt: O.Option<string>,
   fileOpt: O.Option<string>
-) {
+): Effect.fn.Return<string, ExtractInputError | PlatformError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
 
   // Priority: --text > --file > stdin
@@ -161,7 +166,7 @@ const extractHandler = Effect.fn("extractHandler")(function* (
   noExternalVocabs: boolean,
   format: "json" | "turtle",
   concurrency: number
-) {
+): Effect.fn.Return<void, ExtractInputError | ExtractionError | PlatformError | RdfError | S.SchemaError | SerializationFailed, ExtractionWorkflow | FileSystem.FileSystem | Path.Path | RdfBuilder | Scope> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const inputText = yield* readInputText(text, file);

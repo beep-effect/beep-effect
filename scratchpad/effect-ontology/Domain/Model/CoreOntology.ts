@@ -190,6 +190,18 @@ const digestText = Effect.fn("CoreOntology.digestText")(function* (text: string)
   return yield* Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(text));
 });
 
+const withSeedDerivedIdStatics =
+  (operationName: string, prefix: string) =>
+  <Schema extends S.Top & { readonly Type: string; readonly "~type.make.in": string }>(schema: Schema) =>
+    schema.pipe(
+      SchemaUtils.withStatics(() => ({
+        fromSeed: Effect.fn(operationName)(function* (seed: string) {
+          const digest = yield* digestText(seed);
+          return schema.make(`${prefix}-${Str.takeLeft(12)(digest)}`);
+        }),
+      }))
+    );
+
 /**
  * Deterministic identifier for one mention span.
  *
@@ -386,12 +398,7 @@ export const CanonicalEntityId = S.String.check(
       description: "Stable canonical identifier for a persistent resolved entity.",
     }),
     SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromSeed: Effect.fn("CanonicalEntityId.fromSeed")(function* (seed: string) {
-        const digest = yield* digestText(seed);
-        return schema.make(`entity-${Str.takeLeft(12)(digest)}`);
-      }),
-    }))
+    withSeedDerivedIdStatics("CanonicalEntityId.fromSeed", "entity")
   );
 
 /**
@@ -510,11 +517,8 @@ export const EventId = S.String.check(
     SchemaUtils.withCodecStatics,
     SchemaUtils.withStatics((schema) => ({
       fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
-      fromSeed: Effect.fn("EventId.fromSeed")(function* (seed: string) {
-        const digest = yield* digestText(seed);
-        return schema.make(`event-${Str.takeLeft(12)(digest)}`);
-      }),
-    }))
+    })),
+    withSeedDerivedIdStatics("EventId.fromSeed", "event")
   );
 
 /**

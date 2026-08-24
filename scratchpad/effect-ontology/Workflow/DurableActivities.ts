@@ -75,6 +75,8 @@ import {
 import { ClaimPersistenceService } from "../Service/ClaimPersistence.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { CrossBatchEntityResolver, CrossBatchResolverConfig } from "../Service/CrossBatchEntityResolver.ts";
+import type { DocumentClassification } from "../Service/DocumentClassifier.ts";
+import { BatchClassificationResponse } from "../Service/DocumentClassifier.ts";
 import { EmbeddingService } from "../Service/Embedding.ts";
 import { EntityResolutionService } from "../Service/EntityResolution.ts";
 import { generateObjectWithRetry } from "../Service/LlmWithRetry.ts";
@@ -85,6 +87,7 @@ import { Reasoner, ReasoningConfig } from "../Service/Reasoner.ts";
 import { ShaclValidationReport, ShaclWorkflowService } from "../Service/Shacl.ts";
 import { GenerationMismatchError, StorageService } from "../Service/Storage.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
+import { activityRetryPolicy } from "../Utils/Activity.ts";
 import { claimExtractionArtifactFromQuads, knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
 import { extractLocalNameFromIri } from "../Utils/Iri.ts";
 import { computeQuadDelta } from "../Utils/QuadDelta.ts";
@@ -414,22 +417,6 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
     }),
   });
 });
-
-// -----------------------------------------------------------------------------
-// Retry Policy for Activities
-// -----------------------------------------------------------------------------
-
-/**
- * Default retry policy for activities
- * - Exponential backoff starting at 1 second
- * - Max 3 attempts
- * - Jitter to prevent thundering herd
- */
-const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
-  Schedule.jittered,
-  Schedule.setInputType<Cause.Cause<unknown>>(),
-  Schedule.while((meta) => Cause.hasInterrupts(meta.input))
-);
 
 // -----------------------------------------------------------------------------
 // Durable Activities
@@ -2005,13 +1992,16 @@ const BatchComparisonSchema = S.Struct({
   description: "LLM decisions for multiple entity pairs",
 });
 
+const formatEntityTypeLabels = (types: ReadonlyArray<string>): string =>
+  A.join(A.map(types, extractLocalNameFromIri), ", ");
+
 /**
  * Build prompt for single entity comparison
  * @internal
  */
 const buildComparisonPrompt = (pair: EntityPair): string => {
-  const typeLabelsA = pair.typesA.map((t) => extractLocalNameFromIri(t)).join(", ");
-  const typeLabelsB = pair.typesB.map((t) => extractLocalNameFromIri(t)).join(", ");
+  const typeLabelsA = formatEntityTypeLabels(pair.typesA);
+  const typeLabelsB = formatEntityTypeLabels(pair.typesB);
 
   return `You are an entity resolution expert. Determine if these two mentions refer to the same real-world entity.
 
@@ -2040,8 +2030,8 @@ Instructions:
 const buildBatchComparisonPrompt = (pairs: ReadonlyArray<EntityPair>): string => {
   const pairsFormatted = pairs
     .map((pair, i) => {
-      const typeLabelsA = pair.typesA.map((t) => extractLocalNameFromIri(t)).join(", ");
-      const typeLabelsB = pair.typesB.map((t) => extractLocalNameFromIri(t)).join(", ");
+      const typeLabelsA = formatEntityTypeLabels(pair.typesA);
+      const typeLabelsB = formatEntityTypeLabels(pair.typesB);
       return `${i}. Entity A: "${pair.mentionA}" (${typeLabelsA || "?"})\n   Entity B: "${pair.mentionB}" (${
         typeLabelsB || "?"
       })\n   Similarity: ${pair.similarity.toFixed(2)}`;
@@ -2241,62 +2231,6 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
 // -----------------------------------------------------------------------------
 // Document Preprocessing Activity
 // -----------------------------------------------------------------------------
-
-/**
- * LLM response schema for document classification
- *
- * Used to classify document type, extract domain tags, and estimate complexity.
- */
-const DocumentClassificationResponse = S.Struct({
-  /** Classified document type */
-  documentType: S.Literals([
-    "article",
-    "transcript",
-    "report",
-    "contract",
-    "correspondence",
-    "reference",
-    "narrative",
-    "structured",
-    "unknown",
-  ]).annotate({
-    description: "Document structure/type classification",
-  }),
-  /** Domain/topic tags extracted from content */
-  domainTags: S.Array(S.String).annotate({
-    description: "2-5 domain tags describing the document topic",
-  }),
-  /** Complexity score 0-1 */
-  complexityScore: UnitInterval.annotate({
-    description: "Document complexity (0=simple, 1=complex)",
-  }),
-  /** Entity density estimation */
-  entityDensity: S.Literals(["sparse", "moderate", "dense"]).annotate({
-    description: "Estimated entity density",
-  }),
-  /** Optional detected language */
-  language: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
-    description: "Detected language code (ISO 639-1)",
-  }),
-  /** Optional extracted title */
-  title: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
-    description: "Document title if detectable",
-  }),
-});
-
-/**
- * Batch classification response for multiple documents
- */
-const BatchClassificationResponse = S.Struct({
-  classifications: S.Array(
-    S.Struct({
-      /** Document index in the batch (0-based) */
-      index: NonNegativeInt,
-      /** Classification result */
-      classification: DocumentClassificationResponse,
-    })
-  ),
-});
 
 /**
  * Output schema for preprocessing activity
@@ -2512,7 +2446,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         failedCount = previews.length;
       } else {
         // Batch LLM classification
-        const classifications = MutableHashMap.empty<number, typeof DocumentClassificationResponse.Type>();
+        const classifications = MutableHashMap.empty<number, DocumentClassification>();
 
         // Process in batches (use configurable batch size)
         const batchSize = options.classificationBatchSize;

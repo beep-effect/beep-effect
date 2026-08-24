@@ -14,7 +14,6 @@ import { Unknown } from "@beep/schema/Unknown";
 import { Effect, Inspectable } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -242,7 +241,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
+      const decodedBatchId = BatchId.decodeOption(rawBatchId);
       if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {
@@ -314,7 +313,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
+      const decodedBatchId = BatchId.decodeOption(rawBatchId);
       if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {

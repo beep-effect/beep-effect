@@ -478,67 +478,8 @@ export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBu
  * @category layers
  * @since 0.0.0
  */
-export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProvider) => {
-  // All layers read through the custom provider installed on the final layer.
-
-  const LlmControlBundle = Layer.mergeAll(TokenBudgetServiceLive, StageTimeoutServiceLive);
-
-  const LlmExtractionBundle = Layer.mergeAll(EntityExtractor.Default, RelationExtractor.Default).pipe(
-    Layer.provideMerge(LlmControlBundle),
-    Layer.provideMerge(makeLanguageModelLayer),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  const EmbeddingInfraWithConfig = EmbeddingInfrastructure.pipe(Layer.provide(CoreDependenciesLayer));
-
-  const NlpBundle = NlpService.Default.pipe(
-    Layer.provide(EmbeddingInfraWithConfig),
-    Layer.provide(MetricsService.Default),
-    Layer.provide(CoreDependenciesLayer)
-  );
-
-  const RdfBuilderBundle = RdfBuilder.Default.pipe(Layer.provideMerge(CoreDependenciesLayer));
-
-  const StorageBundle = StorageServiceLive.pipe(
-    Layer.provideMerge(CoreDependenciesLayer),
-    Layer.provideMerge(BunServices.layer)
-  );
-
-  const OntologyRegistryBundle = OntologyRegistryService.Default.pipe(
-    Layer.provideMerge(StorageBundle),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  const OntologyServiceWithRegistry = OntologyService.Default.pipe(Layer.provideMerge(OntologyRegistryBundle));
-
-  const OntologyBundle = Layer.mergeAll(OntologyServiceWithRegistry, RdfBuilderBundle).pipe(
-    Layer.provideMerge(StorageBundle),
-    Layer.provideMerge(NlpBundle),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  const EmbeddingBundle = EmbeddingServiceLive.pipe(
-    Layer.provideMerge(EmbeddingInfrastructure),
-    Layer.provideMerge(EmbeddingCacheWithPersistence),
-    Layer.provideMerge(MetricsService.Default),
-    Layer.provideMerge(StorageBundle),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
-    Layer.provideMerge(OntologyBundle),
-    Layer.provideMerge(LlmExtractionBundle),
-    Layer.provideMerge(NlpBundle),
-    Layer.provideMerge(StorageBundle),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  return Layer.mergeAll(ExtractionWorkflowBundle, RdfBuilderBundle).pipe(
-    Layer.provideMerge(EmbeddingBundle),
-    // Set the custom config provider for the entire layer tree
-    Layer.provide(ConfigProvider.layer(configProvider))
-  );
-};
+export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProvider) =>
+  CliExtractionLayer.pipe(Layer.provide(ConfigProvider.layer(configProvider)));
 
 // =============================================================================
 // Open Bundles (ConfigService as requirement - for testing)

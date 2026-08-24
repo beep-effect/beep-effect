@@ -19,10 +19,11 @@ import { makeDrizzleLayer } from "@beep/postgres";
 import { Port } from "@beep/schema/Port";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { PgClient } from "@effect/sql-pg";
-import { Config, Effect, Layer } from "effect";
+import { Config, Effect, Layer} from "effect";
 import * as S from "effect/Schema";
 import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/unstable/cluster";
 import { databaseReady } from "./DatabaseReady.ts";
+import {flow} from "effect/Function";
 
 export { databaseReady } from "./DatabaseReady.ts";
 
@@ -52,7 +53,9 @@ export const PostgresConfig = S.Struct({
   username: S.String,
   password: S.Redacted(S.NonEmptyString),
   ssl: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-});
+}).pipe(
+  SchemaUtils.withEffectCodecStatics
+);
 /**
  * Describes the postgres config data exposed by this module.
  *
@@ -74,8 +77,8 @@ export type PostgresConfig = typeof PostgresConfig.Type;
 
 const PostgresPortConfig = Config.number("POSTGRES_PORT").pipe(
   Config.withDefault(5432),
-  Config.mapOrFail((value) =>
-    S.decodeEffect(Port)(value).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
+  Config.mapOrFail(
+    flow(Port.decodeEffect, Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );
 
@@ -115,8 +118,8 @@ export const PostgresConfigFromEnv = Config.all({
   password: Config.redacted("POSTGRES_PASSWORD"),
   ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
 }).pipe(
-  Config.mapOrFail((value) =>
-    S.decodeEffect(PostgresConfig)(value).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
+  Config.mapOrFail(
+    flow(PostgresConfig.decodeEffect, Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );
 

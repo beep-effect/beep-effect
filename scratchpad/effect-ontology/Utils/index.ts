@@ -14,5 +14,6 @@ export * from "./Provenance.ts";
 export * from "./Rdf.ts";
 export * from "./Retrieval.ts";
 export * from "./Similarity.ts";
+export * from "./Sql.ts";
 export * from "./String.ts";
 export * from "./Text.ts";

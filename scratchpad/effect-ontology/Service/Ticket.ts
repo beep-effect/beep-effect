@@ -12,7 +12,19 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Crypto, Encoding, Clock, Context, DateTime, Duration, Effect, HashSet, Layer, Number as N, Schedule } from "effect";
+import {
+  Clock,
+  Context,
+  Crypto,
+  DateTime,
+  Duration,
+  Effect,
+  Encoding,
+  HashSet,
+  Layer,
+  Number as N,
+  Schedule,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -58,11 +70,6 @@ const DEFAULT_TTL = Duration.minutes(5);
 /** Cleanup interval for expired tickets */
 const CLEANUP_INTERVAL = Duration.minutes(1);
 
-const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(function* () {
-  const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeBase64Url(yield* crypto.randomBytes(32));
-});
-
 const ticketStorageKey = (ticket: string) => `ws-tickets/${ticket}`;
 
 const ticketStorageError = (operation: typeof TicketStorageOperation.Type) => (cause: unknown) =>
@@ -74,6 +81,11 @@ const ticketStorageError = (operation: typeof TicketStorageOperation.Type) => (c
 
 const makeTicketService = Effect.gen(function* () {
   const storage = yield* StorageService;
+  const crypto = yield* Crypto.Crypto;
+
+  const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(function* () {
+    return Encoding.encodeBase64Url(yield* crypto.randomBytes(32));
+  });
 
   const TicketRecordJson = S.fromJsonString(TicketRecord);
 

@@ -594,7 +594,7 @@ export const TimelineRouter = HttpRouter.addAll([
     "/v1/timeline/conflicts/:id",
     Effect.gen(function* () {
       const params = yield* HttpRouter.params;
-      const id = yield* S.decodeUnknownEffect(UUID)(params.id);
+      const id = yield* UUID.decodeUnknownEffect(params.id);
       const query = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
       const action = yield* HttpServerRequest.schemaBodyJson(ConflictTransition);
       const actor = yield* CurrentConflictActor;

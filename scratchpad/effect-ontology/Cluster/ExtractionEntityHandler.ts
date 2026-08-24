@@ -108,14 +108,14 @@ const toExtractionError = (error: unknown): ExtractionError =>
 
 const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
   runId: string,
-  tag: string,
+  _tag: string,
   overallProgress: number,
   extra: Record<string, unknown> = {}
 ) {
   const eventNumber = yield* Random.nextInt;
   const timestamp = DateTime.formatIso(yield* DateTime.now);
   return yield* ProgressEvent.decodeUnknownEffect({
-    _tag: tag,
+    _tag,
     eventId: `evt-${eventNumber}`,
     runId,
     timestamp,

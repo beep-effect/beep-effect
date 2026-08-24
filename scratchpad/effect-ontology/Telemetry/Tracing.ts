@@ -80,14 +80,14 @@ export type TracingConfigInput = (typeof TracingConfig)["~type.make.in"];
  * console.log(makeTracingLayer)
  * ```
  *
- * @param config - Tracing configuration
+ * @param input - Tracing configuration.
  * @returns Layer that provides tracing (requires HttpClient)
  * @category layers
  * @since 0.0.0
  */
 export const makeTracingLayer = (input: TracingConfigInput) => {
   const config = TracingConfig.make(input);
-  if (config.enabled === false) {
+  if (!config.enabled) {
     return Layer.empty;
   }
 

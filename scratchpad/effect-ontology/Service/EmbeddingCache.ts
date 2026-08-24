@@ -63,6 +63,25 @@ interface CacheEntry {
   readonly lastAccessedAt: number;
 }
 
+const isCacheEntryExpired = (ttl: Duration.Duration, entry: CacheEntry, now: number): boolean =>
+  now - entry.createdAt > Duration.toMillis(ttl);
+
+const evictLeastRecentlyUsed = (
+  maxEntries: number,
+  map: HashMap.HashMap<string, CacheEntry>
+): HashMap.HashMap<string, CacheEntry> => {
+  if (HashMap.size(map) < maxEntries) return map;
+  let lruKey = O.none<string>();
+  let lruTime = Infinity;
+  for (const [key, entry] of map) {
+    if (entry.lastAccessedAt < lruTime) {
+      lruTime = entry.lastAccessedAt;
+      lruKey = O.some(key);
+    }
+  }
+  return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
+};
+
 /**
  * Cache configuration
  *
@@ -167,25 +186,8 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
         const config = EmbeddingCacheConfig.make(input);
         const cache = yield* Ref.make(HashMap.empty<string, CacheEntry>());
 
-        const isExpired = (entry: CacheEntry, now: number): boolean =>
-          now - entry.createdAt > Duration.toMillis(config.ttl);
-
-        const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
-          if (HashMap.size(map) < config.maxEntries) return map;
-
-          // Find the LRU entry
-          let lruKey = O.none<string>();
-          let lruTime = Infinity;
-
-          for (const [key, entry] of map) {
-            if (entry.lastAccessedAt < lruTime) {
-              lruTime = entry.lastAccessedAt;
-              lruKey = O.some(key);
-            }
-          }
-
-          return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
-        };
+        const isExpired = (entry: CacheEntry, now: number): boolean => isCacheEntryExpired(config.ttl, entry, now);
+        const evictLRU = (map: HashMap.HashMap<string, CacheEntry>) => evictLeastRecentlyUsed(config.maxEntries, map);
 
         return {
           get: Effect.fn("EmbeddingCache.inMemory.get")(function* (hash: string) {
@@ -380,7 +382,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
     persistentMisses: 0,
   });
 
-  const isExpired = (entry: CacheEntry, now: number): boolean => now - entry.createdAt > Duration.toMillis(config.ttl);
+  const isExpired = (entry: CacheEntry, now: number): boolean => isCacheEntryExpired(config.ttl, entry, now);
   const storageError = (cause: unknown): EmbeddingError =>
     EmbeddingError.make({
       message: "Persistent embedding cache storage operation failed.",
@@ -388,21 +390,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
       cause: O.some(cause),
     });
 
-  const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
-    if (HashMap.size(map) < config.maxEntries) return map;
-
-    let lruKey = O.none<string>();
-    let lruTime = Infinity;
-
-    for (const [key, entry] of map) {
-      if (entry.lastAccessedAt < lruTime) {
-        lruTime = entry.lastAccessedAt;
-        lruKey = O.some(key);
-      }
-    }
-
-    return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
-  };
+  const evictLRU = (map: HashMap.HashMap<string, CacheEntry>) => evictLeastRecentlyUsed(config.maxEntries, map);
 
   // Load embedding from GCS
   const loadFromStorage = Effect.fn("EmbeddingCache.loadFromStorage")(function* (
@@ -456,30 +444,34 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
     );
   });
 
+  const lookupMemory = Effect.fn("EmbeddingCache.lookupMemory")(function* (hash: string) {
+    const now = yield* Clock.currentTimeMillis;
+    const entry = HashMap.get(yield* Ref.get(memoryCache), hash);
+    if (O.isSome(entry) && isExpired(entry.value, now)) {
+      yield* Ref.update(memoryCache, HashMap.remove(hash));
+      return { entry: O.none<CacheEntry>(), now };
+    }
+    return { entry, now };
+  });
+
   return {
     get: Effect.fn("EmbeddingCache.persistent.get")(function* (hash: string) {
-      const now = yield* Clock.currentTimeMillis;
-      const map = yield* Ref.get(memoryCache);
-      const entry = HashMap.get(map, hash);
+      const { entry, now } = yield* lookupMemory(hash);
 
       // Check in-memory cache first
       if (O.isSome(entry)) {
-        if (isExpired(entry.value, now)) {
-          yield* Ref.update(memoryCache, HashMap.remove(hash));
-        } else {
-          // Memory hit - update access time
-          yield* Ref.update(memoryCache, (m) =>
-            HashMap.set(m, hash, {
-              ...entry.value,
-              lastAccessedAt: now,
-            })
-          );
-          yield* Ref.update(stats, (s) => ({
-            ...s,
-            memoryHits: s.memoryHits + 1,
-          }));
-          return O.some(entry.value.embedding);
-        }
+        // Memory hit - update access time
+        yield* Ref.update(memoryCache, (m) =>
+          HashMap.set(m, hash, {
+            ...entry.value,
+            lastAccessedAt: now,
+          })
+        );
+        yield* Ref.update(stats, (s) => ({
+          ...s,
+          memoryHits: s.memoryHits + 1,
+        }));
+        return O.some(entry.value.embedding);
       }
 
       // Memory miss - check persistent storage
@@ -531,17 +523,8 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
     }),
 
     has: Effect.fn("EmbeddingCache.persistent.has")(function* (hash: string) {
-      const now = yield* Clock.currentTimeMillis;
-      const map = yield* Ref.get(memoryCache);
-      const entry = HashMap.get(map, hash);
-
-      if (O.isSome(entry)) {
-        if (isExpired(entry.value, now)) {
-          yield* Ref.update(memoryCache, HashMap.remove(hash));
-          return false;
-        }
-        return true;
-      }
+      const { entry } = yield* lookupMemory(hash);
+      if (O.isSome(entry)) return true;
 
       // Check persistent storage
       const persisted = yield* loadFromStorage(hash);
@@ -648,21 +631,9 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
         maxEntries: config.embedding.cacheMaxEntries,
       });
 
-      const isExpired = (entry: CacheEntry, now: number): boolean =>
-        now - entry.createdAt > Duration.toMillis(cacheConfig.ttl);
-
-      const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
-        if (HashMap.size(map) < cacheConfig.maxEntries) return map;
-        let lruKey = O.none<string>();
-        let lruTime = Infinity;
-        for (const [key, entry] of map) {
-          if (entry.lastAccessedAt < lruTime) {
-            lruTime = entry.lastAccessedAt;
-            lruKey = O.some(key);
-          }
-        }
-        return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
-      };
+      const isExpired = (entry: CacheEntry, now: number): boolean => isCacheEntryExpired(cacheConfig.ttl, entry, now);
+      const evictLRU = (map: HashMap.HashMap<string, CacheEntry>) =>
+        evictLeastRecentlyUsed(cacheConfig.maxEntries, map);
 
       return {
         get: Effect.fn("EmbeddingCache.fallback.get")(function* (hash: string) {

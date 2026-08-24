@@ -5,7 +5,88 @@
  * @since 0.0.0
  */
 
+import { HashSet } from "effect";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import { dual2 } from "./Dual.ts";
+
+const BlockingTokenStopWords = HashSet.make(
+  "the",
+  "a",
+  "an",
+  "and",
+  "or",
+  "but",
+  "in",
+  "on",
+  "at",
+  "to",
+  "for",
+  "of",
+  "with",
+  "by",
+  "from",
+  "as",
+  "is",
+  "was",
+  "are",
+  "were",
+  "been",
+  "be",
+  "have",
+  "has",
+  "had",
+  "do",
+  "does",
+  "did",
+  "will",
+  "would",
+  "could",
+  "should",
+  "may",
+  "might",
+  "must",
+  "shall",
+  "can",
+  "this",
+  "that",
+  "these",
+  "those",
+  "i",
+  "you",
+  "he",
+  "she",
+  "it",
+  "we",
+  "they",
+  "inc",
+  "corp",
+  "llc",
+  "ltd",
+  "co",
+  "company"
+);
+
+/**
+ * Tokenize an entity mention for blocking-index lookup.
+ *
+ * **Example** (Build blocking tokens)
+ *
+ * ```ts
+ * import { tokenizeMentionForBlocking } from "@effect-ontology/Utils/Text"
+ *
+ * console.log(tokenizeMentionForBlocking("The Acme Research Group"))
+ * // ["acme", "research", "group"]
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const tokenizeMentionForBlocking = (mention: string): Array<string> =>
+  A.filter(
+    Str.split(/[\s\-_.,;:!?'"()[\]{}]+/)(Str.toLowerCase(mention)),
+    (token) => Str.length(token) > 2 && !HashSet.has(BlockingTokenStopWords, token)
+  );
 
 /**
  * Text Processing Utilities

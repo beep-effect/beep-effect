@@ -18,8 +18,10 @@ import * as Str from "effect/String";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
 import { RdfBuilder } from "../../Service/Rdf.ts";
-import { WikidataClient } from "../../Service/WikidataClient.ts";
+import { WikidataApiError, WikidataClient, WikidataRateLimitError } from "../../Service/WikidataClient.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+import type { ParsingFailed, RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
+import type { PlatformError } from "effect/PlatformError";
 
 // =============================================================================
 // Command Options
@@ -74,7 +76,7 @@ const linkHandler = Effect.fn("linkHandler")(function* (
   search: O.Option<string>,
   limit: number,
   dryRun: boolean
-) {
+): Effect.fn.Return<void, ParsingFailed | PlatformError | RdfError | SerializationFailed | WikidataApiError | WikidataRateLimitError, FileSystem.FileSystem | RdfBuilder | WikidataClient> {
   const wikidata = yield* WikidataClient;
   const rdf = yield* RdfBuilder;
   if (O.isSome(search)) {

@@ -18,6 +18,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { ConfigService } from "./Config.ts";
+import { cosineSimilarity } from "./EmbeddingProvider.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/NomicNlp");
 
@@ -236,24 +237,6 @@ export const NomicNlpServiceLive = Layer.effect(
       }
       return vector;
     });
-
-    const cosineSimilarity = (a: ReadonlyArray<number>, b: ReadonlyArray<number>): number => {
-      // Dimension mismatch means vectors are incomparable - return 0 (orthogonal)
-      if (a.length !== b.length) return 0;
-
-      let dotProduct = 0;
-      let normA = 0;
-      let normB = 0;
-
-      for (let i = 0; i < a.length; i++) {
-        dotProduct += a[i] * b[i];
-        normA += a[i] * a[i];
-        normB += b[i] * b[i];
-      }
-
-      if (normA === 0 || normB === 0) return 0;
-      return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-    };
 
     const embedBatch = Effect.fn("embedBatch")(function* (
       texts: ReadonlyArray<string>,

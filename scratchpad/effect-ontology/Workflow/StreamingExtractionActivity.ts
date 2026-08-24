@@ -22,7 +22,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
-import { Cause, Crypto, DateTime, Duration, Effect, Encoding, pipe, Schedule } from "effect";
+import { Crypto, DateTime, Duration, Effect, Encoding, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -41,6 +41,7 @@ import { ConfigService } from "../Service/Config.ts";
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
 import { RdfBuilder, rdfStoreAddQuad } from "../Service/Rdf.ts";
 import { StorageService } from "../Service/Storage.ts";
+import { activityRetryPolicy } from "../Utils/Activity.ts";
 import {
   ClaimExtractionArtifact,
   claimExtractionArtifactToQuads,
@@ -149,18 +150,6 @@ const requireContent = (opt: O.Option<string>, key: string) =>
 
 const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
   O.getOrElse(config.storage.bucket, () => "local-bucket");
-
-/**
- * Default retry policy for activities
- * - Exponential backoff starting at 1 second
- * - Max 3 attempts
- * - Jitter to prevent thundering herd
- */
-const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
-  Schedule.jittered,
-  Schedule.setInputType<Cause.Cause<unknown>>(),
-  Schedule.while((meta) => Cause.hasInterrupts(meta.input))
-);
 
 // -----------------------------------------------------------------------------
 // Config Builders

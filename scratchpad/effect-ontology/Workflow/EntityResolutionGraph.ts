@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 
-import type { IRI } from "@beep/rdf";
 import { NodeIndex } from "@beep/schema/Graph";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -24,7 +23,6 @@ import {
   MutableHashMap,
   MutableHashSet,
   Number as N,
-  Order,
 } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -50,6 +48,7 @@ import {
 import { EntityId } from "../Domain/Model/shared.ts";
 import { EmbeddingService } from "../Service/Embedding.ts";
 import { dual2, dual3 } from "../Utils/Dual.ts";
+import { mergeEntityFields } from "../Utils/Entity.ts";
 import { computeEntitySimilarity, detectResolutionMethod, shouldConsiderMerge } from "../Utils/Similarity.ts";
 import { simpleTokenize } from "../Utils/String.ts";
 
@@ -362,47 +361,13 @@ export const clusterEntities = dual3(
  * @internal
  */
 const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
-  const entities = cluster.entities;
-
-  // Select canonical entity (prefer longest mention - usually most complete)
-  const sorted = A.sort(
-    entities,
-    Order.mapInput(Order.flip(Order.Number), (entity: Entity) => entity.mention.length)
-  );
-  const canonical = sorted[0];
-
-  // Merge types using frequency voting
-  const typeFreq = MutableHashMap.empty<IRI, number>();
-  for (const entity of entities) {
-    for (const type of entity.types) {
-      MutableHashMap.set(typeFreq, type, O.getOrElse(MutableHashMap.get(typeFreq, type), () => 0) + 1);
-    }
-  }
-
-  // Select types appearing in at least half the entities (or all if single entity)
-  const threshold = Math.max(1, Math.ceil(entities.length / 2));
-  const mergedTypes = A.fromIterable(typeFreq)
-    .filter(([_, count]) => count >= threshold)
-    .map(([type]) => type);
-
-  const finalTypes: ResolvedEntity["types"] =
-    mergedTypes.length > 0 ? [canonical.types[0], ...mergedTypes] : canonical.types;
-
-  // Merge attributes (prefer values from longer mentions)
-  const mergedAttrs: Record<string, string | number | boolean> = {};
-  for (const entity of sorted) {
-    for (const [key, value] of R.toEntries(entity.attributes)) {
-      if (!(key in mergedAttrs)) {
-        mergedAttrs[key] = value;
-      }
-    }
-  }
+  const merged = mergeEntityFields(cluster.entities);
 
   return ResolvedEntity.make({
-    canonicalId: canonical.id,
-    mention: canonical.mention,
-    types: finalTypes,
-    attributes: mergedAttrs,
+    canonicalId: merged.canonical.id,
+    mention: merged.canonical.mention,
+    types: merged.types,
+    attributes: merged.attributes,
   });
 };
 

@@ -16,6 +16,7 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { JinaContent } from "../Domain/Model/EnrichedContent.ts";
 import { ImageCandidate } from "../Domain/Model/Image.ts";
@@ -112,20 +113,19 @@ export interface ImageExtractorService {
  * - Group 2: url
  * - Group 3: optional title (with quotes)
  */
-const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g;
+const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g;
+const decodeUrlOption = S.decodeOption(URLStr);
 
 /**
  * Normalize image URL (resolve relative URLs, clean up)
  */
 const normalizeImageUrl = (imageUrl: string, sourceUrl: string): O.Option<URLStr> => {
   if (Str.startsWith("data:")(imageUrl)) return O.none();
-  if (Str.startsWith("//")(imageUrl)) return URLStr.decodeOption(`https:${imageUrl}`);
+  if (Str.startsWith("//")(imageUrl)) return decodeUrlOption(`https:${imageUrl}`);
   if (Str.startsWith("https://")(imageUrl) || Str.startsWith("https://")(imageUrl)) {
-    return URLStr.decodeOption(imageUrl);
+    return decodeUrlOption(imageUrl);
   }
-  return O.flatMap(O.fromNullishOr(URL.parse(imageUrl, sourceUrl)), (resolved) =>
-    URLStr.decodeOption(resolved.toString())
-  );
+  return O.flatMap(O.fromNullishOr(URL.parse(imageUrl, sourceUrl)), (resolved) => decodeUrlOption(resolved.toString()));
 };
 
 /**
@@ -143,7 +143,7 @@ const parseMarkdownImages = (markdown: string, sourceUrl: string, startOrder: nu
     const [, alt, rawUrl, title] = match;
     const normalizedUrl = normalizeImageUrl(rawUrl, sourceUrl);
 
-    const referrerUrl = URLStr.decodeOption(sourceUrl);
+    const referrerUrl = decodeUrlOption(sourceUrl);
     if (O.isSome(normalizedUrl) && O.isSome(referrerUrl)) {
       candidates.push(
         ImageCandidate.make({
@@ -221,7 +221,7 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
       // 1. Add featured image as hero (if present)
       if (P.isNotUndefined(input.featuredImage)) {
         const normalizedUrl = normalizeImageUrl(input.featuredImage, input.sourceUrl);
-        const referrerUrl = URLStr.decodeOption(input.sourceUrl);
+        const referrerUrl = decodeUrlOption(input.sourceUrl);
         if (O.isSome(normalizedUrl) && O.isSome(referrerUrl)) {
           candidates.push(
             ImageCandidate.make({

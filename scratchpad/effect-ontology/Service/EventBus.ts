@@ -12,6 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Context, DateTime, Duration, Effect, Inspectable, Layer, Queue, Ref, Stream } from "effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -24,7 +25,6 @@ import * as SqlEventJournal from "effect/unstable/eventlog/SqlEventJournal";
 import * as PersistedQueue from "effect/unstable/persistence/PersistedQueue";
 import { SqlClient, SqlSchema } from "effect/unstable/sql";
 import { EventBusError } from "../Domain/Error/EventBus.ts";
-import type { OntologyEventEntry as OntologyEventEntryValue } from "../Domain/Schema/EventSchema.ts";
 import { CurationEventGroup, ExtractionEventGroup, OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
 import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 
@@ -75,7 +75,7 @@ export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata
  * @category schemas
  * @since 0.0.0
  */
-export const EventEntry: S.Codec<EventEntry, unknown> = S.toType(OntologyEventEntry);
+export const EventEntry = S.toType(OntologyEventEntry).pipe(SchemaUtils.withEffectCodecStatics);
 
 /**
  * Runtime event entry paired with its canonical EventGroup payload.
@@ -90,7 +90,7 @@ export const EventEntry: S.Codec<EventEntry, unknown> = S.toType(OntologyEventEn
  * @category type-level
  * @since 0.0.0
  */
-export type EventEntry = OntologyEventEntryValue;
+export type EventEntry = typeof EventEntry.Type;
 
 // =============================================================================
 // Service Interface
@@ -309,7 +309,7 @@ export const EventBusServiceMemory = Layer.effect(
       Effect.gen(function* () {
         const now = yield* DateTime.now;
         const sequence = yield* Ref.getAndUpdate(eventIdCounter, (value) => value + 1);
-        const entry = yield* S.decodeEffect(EventEntry)({
+        const entry = yield* EventEntry.decodeUnknownEffect({
           id: `evt_${yield* Clock.currentTimeMillis}_${sequence}`,
           event: prepared.event,
           primaryKey: prepared.primaryKey,
@@ -624,7 +624,7 @@ export const EventBusServiceSql = Layer.effect(
         Stream.mapEffect((entry) =>
           Effect.gen(function* () {
             const payload = yield* decodeEventPayload(entry.event, entry.payload);
-            return yield* S.decodeEffect(EventEntry)({
+            return yield* EventEntry.decodeUnknownEffect({
               id: entry.idString,
               event: entry.event,
               primaryKey: entry.primaryKey,

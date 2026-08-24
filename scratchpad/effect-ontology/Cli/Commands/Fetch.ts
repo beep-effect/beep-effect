@@ -13,16 +13,19 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Unknown } from "@beep/schema/Unknown";
 import { getSomesStruct } from "@beep/utils/Option";
 import { thunkEmptyStr } from "@beep/utils/thunk";
+import type { DrizzleError } from "drizzle-orm";
 import { Console, DateTime, Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Argument from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
+import type { JinaApiError, JinaParseError, JinaRateLimitError, JinaTimeoutError } from "../../Domain/Error/Jina.ts";
 import { LinkStatus } from "../../Domain/Schema/LinkIngestion.ts";
 import { ContentEnrichmentAgent } from "../../Service/ContentEnrichmentAgent.ts";
 import { JinaReaderClient } from "../../Service/JinaReaderClient.ts";
@@ -65,7 +68,7 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
   showMetadata: boolean,
   enrich: boolean,
   truncate: O.Option<number>
-) {
+): Effect.fn.Return<void, JinaApiError | JinaParseError | JinaRateLimitError | JinaTimeoutError, JinaReaderClient> {
   const jina = yield* JinaReaderClient;
   yield* Console.log(`Fetching: ${url}\n---`);
   const response = yield* jina.fetchUrl(url);
@@ -189,7 +192,7 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
   skipEnrich: boolean,
   sourceType: O.Option<string>,
   allowDuplicates: boolean
-) {
+): Effect.fn.Return<void, LinkIngestionError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
 
   yield* Console.log(`Ingesting: ${url} (ontology: ${ontologyId})`);
@@ -276,7 +279,7 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
   limit: number,
   offset: number,
   jsonOutput: boolean
-) {
+): Effect.fn.Return<void, DrizzleError | S.SchemaError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   const canonicalStatus = yield* O.match(status, {
     onNone: () => Effect.succeed(O.none()),
@@ -367,7 +370,7 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
   ontologyId: string,
   concurrency: number,
   skipEnrich: boolean
-) {
+): Effect.fn.Return<void, LinkIngestionError | PlatformError, FileSystem.FileSystem | LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(file);

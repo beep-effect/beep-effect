@@ -9,6 +9,7 @@ import { $SchemaId } from "@beep/identity";
 import { Str } from "@beep/utils";
 import { identity, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 import { Unknown } from "./Unknown.ts";
 
 const $I = $SchemaId.create("String");
@@ -104,6 +105,7 @@ export type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
  */
 export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
   S.brand("UUID"),
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("UUID", {
     description: "Universally Unique Identifier",
     documentation: "A 128-bit number used to identify information in computer systems.",

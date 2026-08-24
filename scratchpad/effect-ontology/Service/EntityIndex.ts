@@ -23,6 +23,9 @@ import { Entity } from "../Domain/Model/Entity.ts";
 import type { EmbeddingServiceMethods } from "./Embedding.ts";
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
 import type { Embedding } from "./EmbeddingCache.ts";
+import { cosineSimilarity } from "./EmbeddingProvider.ts";
+
+export { cosineSimilarity };
 
 // =============================================================================
 // Persistent EntityIndex
@@ -30,7 +33,7 @@ import type { Embedding } from "./EmbeddingCache.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/EntityIndex");
 
 import { $ScratchpadId } from "@beep/identity";
-import { dual2, dual3 } from "../Utils/Dual.ts";
+import { dual3 } from "../Utils/Dual.ts";
 import { ConfigService } from "./Config.ts";
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
@@ -203,54 +206,42 @@ export interface EntityIndexService {
  * @category services
  * @since 0.0.0
  */
-export const cosineSimilarity = dual2((a: Embedding, b: Embedding): number => {
-  if (a.length !== b.length) return 0;
-
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+const updateTypeIndex = (
+  typeIndex: HashMap.HashMap<string, HashSet.HashSet<string>>,
+  entity: Entity,
+  update: (
+    index: HashMap.HashMap<string, HashSet.HashSet<string>>,
+    typeIri: string
+  ) => HashMap.HashMap<string, HashSet.HashSet<string>>
+): HashMap.HashMap<string, HashSet.HashSet<string>> => {
+  let updated = typeIndex;
+  for (const typeIri of entity.types) {
+    updated = update(updated, typeIri);
   }
-
-  const denominator = Math.sqrt(normA) * Math.sqrt(normB);
-  return denominator === 0 ? 0 : dotProduct / denominator;
-});
+  return updated;
+};
 
 const addToTypeIndex = (
   typeIndex: HashMap.HashMap<string, HashSet.HashSet<string>>,
   entity: Entity
-): HashMap.HashMap<string, HashSet.HashSet<string>> => {
-  let updated = typeIndex;
-  for (const typeIri of entity.types) {
-    const existing = HashMap.get(updated, typeIri);
-    updated = HashMap.set(
-      updated,
-      typeIri,
-      O.isSome(existing) ? HashSet.add(existing.value, entity.id) : HashSet.make(entity.id)
-    );
-  }
-  return updated;
-};
+): HashMap.HashMap<string, HashSet.HashSet<string>> =>
+  updateTypeIndex(typeIndex, entity, (index, typeIri) => {
+    const existing = O.getOrElse(HashMap.get(index, typeIri), HashSet.empty);
+    return HashMap.set(index, typeIri, HashSet.add(existing, entity.id));
+  });
 
 const removeFromTypeIndex = (
   typeIndex: HashMap.HashMap<string, HashSet.HashSet<string>>,
   entity: Entity
-): HashMap.HashMap<string, HashSet.HashSet<string>> => {
-  let updated = typeIndex;
-  for (const typeIri of entity.types) {
-    const existing = HashMap.get(updated, typeIri);
+): HashMap.HashMap<string, HashSet.HashSet<string>> =>
+  updateTypeIndex(typeIndex, entity, (index, typeIri) => {
+    const existing = HashMap.get(index, typeIri);
     if (O.isSome(existing)) {
       const remaining = HashSet.remove(existing.value, entity.id);
-      updated =
-        HashSet.size(remaining) === 0 ? HashMap.remove(updated, typeIri) : HashMap.set(updated, typeIri, remaining);
+      return HashSet.size(remaining) === 0 ? HashMap.remove(index, typeIri) : HashMap.set(index, typeIri, remaining);
     }
-  }
-  return updated;
-};
+    return index;
+  });
 
 const makeEntityIndexMethods = (
   embedding: EmbeddingServiceMethods,

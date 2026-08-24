@@ -184,7 +184,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
 
     // Create Voyage provider if API key is configured
     const voyageApiKey = O.getOrNull(config.embedding.voyageApiKey);
-    const voyageModel = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
+    const voyageModel = yield* VoyageModel.decodeUnknownEffect(config.embedding.voyageModel).pipe(
       Effect.mapError((cause) =>
         EmbeddingError.make({
           message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,
