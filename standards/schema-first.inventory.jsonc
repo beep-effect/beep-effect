@@ -818,6 +818,116 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/ecosystem/effect-drizzle/src/core/Meta.ts",
+      "symbol": "SqlExpressionError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 18,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/core/classification.ts",
+      "symbol": "DeriveColumnError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 40,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/core/model.ts",
+      "symbol": "ModelInvariantError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 39,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/core/names.ts",
+      "symbol": "SqlNameError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 97,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/core/repository.ts",
+      "symbol": "VersionConflictError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 60,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/pg/Column.ts",
+      "symbol": "ColumnInvariantError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 70,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/pg/extras.ts",
+      "symbol": "TableExtraError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 45,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/pg/schema.ts",
+      "symbol": "SchemaAssemblyError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 83,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/sqlite/Column.ts",
+      "symbol": "ColumnInvariantError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 47,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/sqlite/extras.ts",
+      "symbol": "TableExtraError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 43,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/sqlite/schema.ts",
+      "symbol": "SchemaAssemblyError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 80,
+      "owner": "@beep/effect-drizzle",
+      "reason": "Named-import TaggedError in the effect-drizzle ecosystem port is deferred pending the non-driver burn-down; it is not compared via S.toEquivalence today, and this exception documents the detector's newly visible finding."
+    },
+    {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
       "symbol": "EdgeVersionSourceColumns",
       "kind": "exported-type-literal",

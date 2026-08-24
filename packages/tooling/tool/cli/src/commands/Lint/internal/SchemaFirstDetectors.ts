@@ -34,7 +34,8 @@ const DEFAULTS_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)|[A-Za-z_$][\w$]*Entity\.Entity|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
 const EQUIVALENCE_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError|toEquivalence|overrideToEquivalence)|[A-Za-z_$][\w$]*Entity\.Entity|SchemaUtils\.toEquivalence)\b/;
-const TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:S|Schema)\.TaggedError\b/;
+const TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:(?:S|Schema)\.)?TaggedError\b/;
+const NAMESPACED_TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:S|Schema)\.TaggedError\b/;
 const FN_CALL_SIGNAL_PATTERN = /\bFn\s*\(/;
 const NORMALIZATION_METHOD_NAMES = ["trim", "toUpperCase", "toLowerCase"] as const;
 const NORMALIZATION_CALL_SIGNAL_PATTERN = /\.(?:trim|toUpperCase|toLowerCase)\(/;
@@ -1048,8 +1049,24 @@ const equivalenceEntryFromVariableDeclaration = (
   );
 };
 
-const sourceHasTaggedErrorSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
-  TAGGED_ERROR_SIGNAL_PATTERN.test(sourceFile.getFullText());
+const sourceImportsNamedTaggedError = (sourceFile: import("ts-morph").SourceFile): boolean =>
+  A.some(
+    sourceFile.getImportDeclarations(),
+    (declaration) =>
+      declaration.getModuleSpecifierValue() === "effect/Schema" &&
+      A.some(
+        declaration.getNamedImports(),
+        (namedImport) => namedImport.getName() === "TaggedError" && namedImport.getAliasNode() === undefined
+      )
+  );
+
+const sourceHasTaggedErrorSignal = (sourceFile: import("ts-morph").SourceFile): boolean => {
+  const sourceText = sourceFile.getFullText();
+  return (
+    TAGGED_ERROR_SIGNAL_PATTERN.test(sourceText) &&
+    (NAMESPACED_TAGGED_ERROR_SIGNAL_PATTERN.test(sourceText) || sourceImportsNamedTaggedError(sourceFile))
+  );
+};
 
 const taggedErrorDeclarationCall = (declaration: ClassDeclaration): O.Option<import("ts-morph").CallExpression> => {
   const outerCall = declaration.getExtends()?.getExpression();
@@ -1063,12 +1080,18 @@ const taggedErrorDeclarationCall = (declaration: ClassDeclaration): O.Option<imp
   }
 
   const factory = factoryCall.getExpression();
-  if (!Node.isPropertyAccessExpression(factory) || factory.getName() !== "TaggedError") {
-    return O.none();
+  if (Node.isPropertyAccessExpression(factory)) {
+    const namespace = factory.getExpression().getText();
+    return factory.getName() === "TaggedError" && (namespace === "S" || namespace === "Schema")
+      ? O.some(outerCall)
+      : O.none();
   }
 
-  const namespace = factory.getExpression().getText();
-  return namespace === "S" || namespace === "Schema" ? O.some(outerCall) : O.none();
+  return Node.isIdentifier(factory) &&
+    factory.getText() === "TaggedError" &&
+    sourceImportsNamedTaggedError(declaration.getSourceFile())
+    ? O.some(outerCall)
+    : O.none();
 };
 
 const isToEquivalenceAnnotationProperty = (node: Node): boolean =>

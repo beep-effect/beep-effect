@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
 import { Effect, HashMap, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -133,11 +133,8 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     if (O.isSome(arbitraryTestsEntry)) {
       A.appendInPlace(entries, arbitraryTestsEntry.value);
     }
-    if (isSchemaFirstExcludedFile(filePath)) {
-      continue;
-    }
 
-    if (SchemaFirstDetectors.sourceHasTaggedErrorSignal(sourceFile)) {
+    if (!isExcludedTypeScriptSourcePath(filePath) && SchemaFirstDetectors.sourceHasTaggedErrorSignal(sourceFile)) {
       for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
         const entry = SchemaFirstDetectors.taggedErrorEquivalenceEntryFromClassDeclaration(
           declaration,
@@ -148,6 +145,10 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
           A.appendInPlace(entries, entry.value);
         }
       }
+    }
+
+    if (isSchemaFirstExcludedFile(filePath)) {
+      continue;
     }
 
     for (const declaration of sourceFile.getInterfaces()) {
@@ -315,8 +316,7 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
 
 const mergeInventory = (
   liveDocument: SchemaFirstInventoryDocument,
-  existingDocument: O.Option<SchemaFirstInventoryDocument>,
-  write: boolean
+  existingDocument: O.Option<SchemaFirstInventoryDocument>
 ): SchemaFirstInventoryDocument => {
   const existingByKey = pipe(
     existingDocument,
@@ -331,14 +331,8 @@ const mergeInventory = (
     O.getOrElse(HashMap.empty<string, SchemaFirstInventoryEntry>)
   );
 
-  const mergedEntries = pipe(
-    liveDocument.entries,
-    A.map((entry) => O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry)),
-    A.map((entry) =>
-      write && entry.ruleId === "SFV4-tagged-error-equivalence"
-        ? SchemaFirstInventoryEntry.make({ ...entry, status: "exception" })
-        : entry
-    )
+  const mergedEntries = A.map(liveDocument.entries, (entry) =>
+    O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry)
   );
 
   return SchemaFirstInventoryDocument.make({
@@ -469,7 +463,7 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
   const liveDocument = yield* scanSchemaFirstInventory();
   const literalKitConstAssertionViolations = yield* collectLiteralKitConstAssertionViolations();
   const existingDocument = yield* readSchemaFirstInventoryDocument();
-  const mergedDocument = mergeInventory(liveDocument, existingDocument, options.write);
+  const mergedDocument = mergeInventory(liveDocument, existingDocument);
   const policyDocument = yield* readCrispeningPolicyDocument();
   const findings = collectSchemaFirstLintFindings(liveDocument, existingDocument, mergedDocument, policyDocument);
   const summary = SchemaFirstRender.makeSchemaFirstLintSummary({

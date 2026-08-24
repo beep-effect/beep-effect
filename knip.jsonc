@@ -92,7 +92,8 @@
     ".codex/**",
     // Claude Code worktree-isolated sessions materialize checkouts under
     // .claude/worktrees/ the same way; a live one floods knip with its exports.
-    ".claude/**",
+    // Scoped to worktrees only so tracked skill resources stay analyzable.
+    ".claude/worktrees/**",
     "goals/**",
     // explorations/ is the fuzzy front end of the goals/ pipeline (capture -> graduate, see
     // explorations/CLAUDE.md); prototype code there (e.g. identity-as-iri/assets/ontology-prototype)
