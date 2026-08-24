@@ -3159,12 +3159,14 @@
         "allow": [
           "@beep/identity",
           "@beep/schema",
-          "@beep/skill-contract"
+          "@beep/skill-contract",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/schema",
-          "@beep/skill-contract"
+          "@beep/skill-contract",
+          "@beep/test-utils"
         ]
       },
       {
