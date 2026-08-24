@@ -36,9 +36,9 @@ console.log(config.norm)
 
 | Consumer | Surface used | Notes |
 | --- | --- | --- |
-| `@beep/nlp-processing` | `Core`, `Graph`, `Handoff` | Provider-neutral processing contracts and services built on these models. |
-| `@beep/wink` | `Core` | wink-nlp driver using shared document, token, vectorization, and similarity models. |
-| `@beep/nlp-mcp` | `Core`, `Handoff` | MCP driver exposing processing tools plus shared handoff models. |
+| `@beep/langextract` | `Core`, `Handoff` | Emits the `AnnotatedDocument` handoff envelope (chunks, mentions, entities) from grounded extractions. |
+| `@beep/nlp-processing` | `Core`, `Graph` | Provider-neutral processing contracts and services built on these models. |
+| `@beep/wink` | `Core`, `Graph` | wink-nlp driver using shared document, token, vectorization, and similarity models. |
 
 ## Development
 
