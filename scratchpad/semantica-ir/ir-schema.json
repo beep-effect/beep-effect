@@ -20,6 +20,7 @@
     "lineno",
     "end_lineno",
     "is_public",
+    "is_async",
     "registry_names"
   ],
   "properties": {
@@ -45,6 +46,7 @@
     "lineno": { "type": "integer", "minimum": 1 },
     "end_lineno": { "type": "integer", "minimum": 1 },
     "is_public": { "type": "boolean" },
+    "is_async": { "type": "boolean" },
     "registry_names": { "$ref": "#/$defs/stringArray" }
   },
   "$defs": {

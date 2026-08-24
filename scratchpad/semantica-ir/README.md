@@ -23,7 +23,10 @@ python3 scratchpad/semantica-ir/extract.py /path/to/semantica /tmp/symbols.jsonl
 
 With no arguments, the script reads `~/YeeBois/workstation-apps/semantica`. The explicit first
 argument still selects another repository. The script prints a JSON summary containing the record
-count, validation count, parse failures, and parse notes. Any schema violation stops the write.
+count, validation count, and parse notes. Any parse failure (unreadable, undecodable, or
+unparsable source) or schema violation stops the write and exits nonzero, so a published IR is
+always a complete inventory. Function and method records carry `is_async`, async signatures are
+prefixed `async `, and `registry_names` includes registrations made in decorator lists.
 
 ## IR contract
 

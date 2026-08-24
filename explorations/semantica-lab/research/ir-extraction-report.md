@@ -9,6 +9,10 @@ Source: read-only `danklocal` at `add1c006cd8c502f6f2981e251e9e9a0f774870d`.
 - Public symbols with docstrings: 3,271 / 3,933 (83.2%).
 - Symbols with parsed sections: 2,287 / 6,105 (37.5%); 48.3% of 4,735 docstring-bearing symbols.
 - Output SHA-256: `0d7fe014c3588327aac12a9e4219468fa425ad6b381f38103c0b5012834f353e`.
+- Review-fix rerun (2026-08-24, PR #790): the extractor now fails closed on any parse failure,
+  records `is_async` (104 async symbols), prefixes async signatures, and scans decorator lists
+  for registry names. Same 6,105 records, 0 violations; new output SHA-256
+  `6469e6a6320acb747a17da5b0fe7e6ad9125af293416ae93f41055de19840de3`.
 - Kinds: 493 class, 496 constant, 176 dataclass, 994 function, 3,838 method,
   4 protocol, 104 Pydantic model.
 

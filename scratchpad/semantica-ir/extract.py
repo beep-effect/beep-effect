@@ -303,6 +303,7 @@ class SymbolVisitor(ast.NodeVisitor):
             "lineno": node.lineno,
             "end_lineno": node.end_lineno or node.lineno,
             "is_public": is_public(qualname),
+            "is_async": False,
             "registry_names": [],
         }
 
@@ -317,7 +318,7 @@ class SymbolVisitor(ast.NodeVisitor):
                 "decorators": [render(item) for item in node.decorator_list],
                 "docstring": parse_docstring(node),
                 "raises": raised_names(node.body),
-                "registry_names": registry_names(node.body),
+                "registry_names": registry_names([*node.decorator_list, *node.body]),
             }
         )
         self.records.append(record)
@@ -335,7 +336,9 @@ class SymbolVisitor(ast.NodeVisitor):
     def visit_function(self, node):
         qualname = self.qualname(node.name)
         kind = "method" if self.parents and self.parents[-1][0] == "class" else "function"
-        record = self.base_record(node, qualname, kind, function_signature(node))
+        is_async = isinstance(node, ast.AsyncFunctionDef)
+        signature = ("async " if is_async else "") + function_signature(node)
+        record = self.base_record(node, qualname, kind, signature)
         record.update(
             {
                 "decorators": [render(item) for item in node.decorator_list],
@@ -343,7 +346,8 @@ class SymbolVisitor(ast.NodeVisitor):
                 "returns": render(node.returns),
                 "raises": raised_names(node.body),
                 "docstring": parse_docstring(node),
-                "registry_names": registry_names(node.body),
+                "is_async": is_async,
+                "registry_names": registry_names([*node.decorator_list, *node.body]),
             }
         )
         self.records.append(record)
@@ -444,6 +448,8 @@ def validate(record, schema):
             violations.append("end_lineno must not precede lineno")
     if not isinstance(record.get("is_public"), bool):
         violations.append("is_public must be a boolean")
+    if not isinstance(record.get("is_async"), bool):
+        violations.append("is_async must be a boolean")
     return violations
 
 
@@ -509,6 +515,13 @@ def main():
     schema_path = Path(__file__).resolve().parent / "ir-schema.json"
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
     records, failures, notes = extract(repository)
+    if failures:
+        for failure in failures:
+            print(f"parse failure {failure['file']}: {failure['reason']}")
+        raise ValueError(
+            f"refusing to write IR after {len(failures)} parse failure(s); "
+            "the symbol inventory would be silently incomplete"
+        )
     violation_count = 0
     for record in records:
         violations = validate(record, schema)
