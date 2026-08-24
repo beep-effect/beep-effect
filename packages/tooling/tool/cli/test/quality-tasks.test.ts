@@ -1443,6 +1443,10 @@ describe("quality task adapter", () => {
         NODE_OPTIONS: "--no-experimental-webstorage",
         TERM_PROGRAM: undefined,
         TERM_PROGRAM_VERSION: undefined,
+        TURBO_API: undefined,
+        TURBO_CACHE: "local:rw",
+        TURBO_TEAM: undefined,
+        TURBO_TOKEN: undefined,
         VITEST_COVERAGE_RATCHET: "1",
       },
     });
@@ -1466,10 +1470,37 @@ describe("quality task adapter", () => {
         NODE_OPTIONS: "--no-experimental-webstorage",
         TERM_PROGRAM: undefined,
         TERM_PROGRAM_VERSION: undefined,
+        TURBO_API: undefined,
+        TURBO_CACHE: "local:rw",
+        TURBO_TEAM: undefined,
+        TURBO_TOKEN: undefined,
         VITEST_COVERAGE_RATCHET: "1",
       },
     });
     expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
+  });
+
+  it("reduces coverage children to the pull-request Turbo posture whatever the host carries", () => {
+    const steps = withEnvVar("TURBO_API", "https://cache.example.test", () =>
+      withEnvVar("TURBO_TOKEN", "op://fixture-vault/turbo/token", () =>
+        withEnvVar("TURBO_TEAM", "team_fixture", () =>
+          withEnvVar("TURBO_CACHE", "local:rw,remote:r", () =>
+            rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+          )
+        )
+      )
+    );
+    const env = steps[0]?.env ?? {};
+
+    // Present-and-undefined is the spawn-time "unset" signal, so the keys must
+    // exist rather than merely be absent from a toMatchObject expectation.
+    expect(env).toHaveProperty("TURBO_API");
+    expect(env).toHaveProperty("TURBO_TOKEN");
+    expect(env).toHaveProperty("TURBO_TEAM");
+    expect(env.TURBO_API).toBeUndefined();
+    expect(env.TURBO_TOKEN).toBeUndefined();
+    expect(env.TURBO_TEAM).toBeUndefined();
+    expect(env.TURBO_CACHE).toBe("local:rw");
   });
 
   it("preserves existing Node options when disabling experimental Web Storage for coverage", () => {
@@ -1524,6 +1555,10 @@ describe("quality task adapter", () => {
         NODE_OPTIONS: "--no-experimental-webstorage",
         TERM_PROGRAM: undefined,
         TERM_PROGRAM_VERSION: undefined,
+        TURBO_API: undefined,
+        TURBO_CACHE: "local:rw",
+        TURBO_TEAM: undefined,
+        TURBO_TOKEN: undefined,
         VITEST_COVERAGE_RATCHET: "1",
         VITEST_COVERAGE_REPORT_ONLY: "1",
       },

@@ -52,7 +52,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [runner-trust-boundary](./runner-trust-boundary/README.md) | Runner Trust Boundary | 0/8 | 2026-08-24 | Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-… |
 | [secure-document-delivery](./secure-document-delivery/README.md) | Secure Document Delivery | 0/4 | 2026-07-14 | Deliver an incubated secure-document-delivery capability and authenticated desktop route, proven by one authorized fixt… |
 | [semantic-foundation](./semantic-foundation/README.md) | Semantic Foundation | 1/6 | 2026-07-14 | — |
-| [ship-velocity](./ship-velocity/README.md) | Ship Velocity | 2/6 | 2026-08-17 | Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guaran… |
+| [ship-velocity](./ship-velocity/README.md) | Ship Velocity | 2/6 | 2026-08-24 | Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guaran… |
 | [skill-contract-kernel](./skill-contract-kernel/README.md) | Skill Contract Kernel | 1/5 | 2026-08-24 | Ship @beep/skill-contract (schemas-only contract kernel: SkillContract, fail-closed gates, evidence ladder, in-toto-ali… |
 | [spar-document-annotation-wire](./spar-document-annotation-wire/README.md) | SPAR Document Annotation Wire | 0/5 | 2026-08-13 | Generate pinned SPAR terms and ship typed OA/PROV document annotations plus the Md-to-DOCO section fold. |
 | [thread-virtualization](./thread-virtualization/README.md) | Thread Virtualization | 0/5 | 2026-08-13 | Deliver exact-height virtualization for the editor-stack thread renderer by consuming the @beep/pretext root surface pl… |

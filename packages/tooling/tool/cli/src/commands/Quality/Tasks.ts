@@ -47,6 +47,7 @@ import {
   turboCacheEnvironmentNeedsSecretSession,
   turboCachePlanArgs,
   turboCachePlanNeedsSecretSession,
+  turboCachePullRequestPosture,
 } from "../../internal/cli/TurboCache.ts";
 import {
   CapturedStep,
@@ -832,8 +833,14 @@ const coverageFastCheckSeed = (): string =>
     O.getOrElse(() => DEFAULT_COVERAGE_FAST_CHECK_SEED)
   );
 
-// Coverage is a hosted ratchet. Pin its CI identity and remove desktop terminal
-// metadata so local baseline generation exercises the same branches as GitHub.
+// Coverage is a hosted ratchet. Pin its CI identity, remove desktop terminal
+// metadata, and reduce the Turbo remote-cache quad to the pull-request posture
+// so local baseline generation, PR jobs, and main pushes all exercise the same
+// branches: a workstation's 1Password-backed TURBO_TOKEN and a main push's
+// literal token each reach arms of internal/cli/EnvConfig.ts that a PR job's
+// blank quad never does (ship-velocity B9). Step env wins over
+// turboEnvOverrides at spawn time, and the prebuild step never receives this
+// record, so main pushes keep their remote-cache reads for the build graph.
 const coverageEnvironment = (): Record<string, string | undefined> => ({
   BEEP_FC_SEED: coverageFastCheckSeed(),
   CI: "true",
@@ -841,6 +848,7 @@ const coverageEnvironment = (): Record<string, string | undefined> => ({
   NODE_OPTIONS: coverageNodeOptions(),
   TERM_PROGRAM: undefined,
   TERM_PROGRAM_VERSION: undefined,
+  ...turboCachePullRequestPosture,
   VITEST_COVERAGE_RATCHET: "1",
 });
 

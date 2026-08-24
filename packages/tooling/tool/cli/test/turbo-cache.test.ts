@@ -6,18 +6,22 @@ import {
   RemoteReadTurboCache,
   resolveTurboCachePlan,
   TurboCacheEnvironment,
+  TurboCacheEnvName,
   TurboCacheMode,
   TurboCachePlan,
   TurboCacheSecretEnvName,
   turboCacheEnvironmentNeedsSecretSession,
   turboCachePlanArgs,
   turboCachePlanNeedsSecretSession,
+  turboCachePullRequestPosture,
   turboCacheValueSourceFor,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { TurboCacheEnvName, TurboCacheValueSource } from "@beep/repo-cli/test/SharedInternals";
+import * as Str from "effect/String";
+import type { TurboCacheValueSource } from "@beep/repo-cli/test/SharedInternals";
 
 const REMOTE_READ_MODE = TurboCacheMode.Enum.LocalWriteRemoteRead;
 const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum.LocalOnly}`;
@@ -183,5 +187,18 @@ describe("run-time local-only degradation", () => {
 
     expect(localOnlyTurboCacheArgs(localArgs)).toEqual(localArgs);
     expect(localOnlyTurboCacheArgs(forcedArgs)).toEqual(forcedArgs);
+  });
+});
+
+describe("turboCachePullRequestPosture", () => {
+  it("names every Turbo cache env name, scrubs the credentials, and pins local-only", () => {
+    expect(A.sort(R.keys(turboCachePullRequestPosture), Str.Order)).toEqual(
+      A.sort(TurboCacheEnvName.Options, Str.Order)
+    );
+    A.forEach(TurboCacheSecretEnvName.Options, (name) => {
+      expect(turboCachePullRequestPosture).toHaveProperty(name);
+      expect(turboCachePullRequestPosture[name]).toBeUndefined();
+    });
+    expect(turboCachePullRequestPosture.TURBO_CACHE).toBe(TurboCacheMode.Enum.LocalOnly);
   });
 });
