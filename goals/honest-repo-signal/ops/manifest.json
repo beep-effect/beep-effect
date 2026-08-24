@@ -3,14 +3,14 @@
   "initiative": {
     "id": "honest-repo-signal",
     "title": "Honest Repo Signal",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-08-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/honest-repo-signal",
-  "lifecycle": "active",
-  "statusNote": "P0 inventory and grill locks are in this packet. Empty-driver deletion excludes @beep/protobuf (owned by another clone).",
+  "lifecycle": "completed-retained",
+  "statusNote": "Closed. P1-P3 shipped as PR #680 (merged 2026-08-13); P4 reflection and status flip landed 2026-08-24. @beep/protobuf was excluded (owned by another clone).",
   "mission": "One-night honesty pass: delete VERSION-only driver packages, keep their owning goals as follow-ups, stop coverage and history from lying, and ship the cheap public-repo and agent-kernel files.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -73,12 +73,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
