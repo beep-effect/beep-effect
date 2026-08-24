@@ -42,8 +42,8 @@ export class CurrentConflictActor extends Context.Service<CurrentConflictActor, 
   $I`CurrentConflictActor`
 ) {}
 
-const SystemConflictActor = ConflictActor.make({
-  principal: "system",
+const AnonymousConflictActor = ConflictActor.make({
+  principal: "anonymous",
   credentialFingerprint: O.none(),
 });
 
@@ -97,7 +97,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 
   // Skip auth if not required
   if (!config.api.requireAuth) {
-    return HttpMiddleware.make((app) => app.pipe(Effect.provideService(CurrentConflictActor, SystemConflictActor)));
+    return HttpMiddleware.make((app) => app.pipe(Effect.provideService(CurrentConflictActor, AnonymousConflictActor)));
   }
 
   // Parse API keys
@@ -118,7 +118,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 
       // Skip auth for public paths
       if (isPublicPath(path)) {
-        return yield* app.pipe(Effect.provideService(CurrentConflictActor, SystemConflictActor));
+        return yield* app.pipe(Effect.provideService(CurrentConflictActor, AnonymousConflictActor));
       }
 
       // Get API key from header

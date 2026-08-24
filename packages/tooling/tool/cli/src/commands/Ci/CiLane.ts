@@ -20,7 +20,7 @@ import { Console, Duration, Effect, FileSystem, Match, Path, pipe } from "effect
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
+import { turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LABS_TURBO_EXCLUDE_FILTER, LABS_TURBO_SELECT_FILTER } from "../../internal/cli/Labs/index.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
@@ -591,9 +591,10 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
     validateEnvelopes: S.Boolean,
     runs: S.optionalKey(S.String),
     seed: S.optionalKey(S.String),
+    filter: S.optionalKey(S.String),
   },
   $I.annote("CiLaneRunOptions", {
-    description: "Shape options for running one CI lane body.",
+    description: "Shape and optional Turbo scope for running one CI lane body.",
   })
 ) {}
 
@@ -607,6 +608,10 @@ const CI_LANE_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   ...(options.affected ? ["--affected"] : A.empty<string>()),
   ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+  ...O.match(O.fromUndefinedOr(options.filter), {
+    onNone: A.empty<string>,
+    onSome: (filter) => [`--filter=${filter}`],
+  }),
 ];
 
 // Default BEEP_FC_NUM_RUNS floor for the property lane. A blank or
@@ -1021,13 +1026,13 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   // quality runner applies: no interactive TUI (it can leave a killed run's
   // terminal in mouse-capture mode) and no unresolved `op://` token/team
   // references leaking through as literal values on a workstation.
-  const envOverrides = yield* turboEnvOverrides(step.command, step.args);
+  const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
   return yield* runToExit({
     command: step.command,
     args: step.args,
     cwd: step.cwd,
     env: { ...envOverrides, ...(step.env ?? {}) },
-    extendEnv: true,
+    extendEnv: turboEnvExtendsAmbient(step.command, step.args),
     stdio: "inherit",
   }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
 });
@@ -1228,6 +1233,10 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault(DEFAULT_PROPERTY_LANE_SEED),
       Flag.withDescription("BEEP_FC_SEED for the property lane; a fixed seed makes local and CI test identical inputs")
     ),
+    filter: Flag.string("filter").pipe(
+      Flag.withDescription("Pass one package filter to the Turbo invocation inside the selected lane"),
+      Flag.optional
+    ),
     list: Flag.boolean("list").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Print the machine-readable lane inventory and exit")
@@ -1241,6 +1250,7 @@ export const ciLaneCommand = Command.make(
     affected,
     base,
     changesetStatus,
+    filter,
     from,
     head,
     lane,
@@ -1259,7 +1269,7 @@ export const ciLaneCommand = Command.make(
       head,
       summarize,
       mode,
-      ...O.getSomesStruct({ from }),
+      ...O.getSomesStruct({ filter, from }),
       to,
       last,
       changesetStatus,

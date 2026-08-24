@@ -156,4 +156,47 @@ describe("appendYeetInboxRow", () => {
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
+
+  it.live("rejects a symlinked failures file without appending to its destination", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideRoot = `${root}/outside`;
+        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
+        yield* fs.makeDirectory(outsideRoot);
+        const outsideFailures = `${outsideRoot}/failures.ndjson`;
+        const sentinel = "outside target must stay unchanged\n";
+        yield* fs.writeFileString(outsideFailures, sentinel);
+        const paths = yield* yeetInboxPaths(repoRoot);
+        yield* fs.symlink(outsideFailures, paths.failuresPath);
+
+        const failure = yield* appendYeetInboxRow(repoRoot, row(capsule())).pipe(Effect.flip);
+
+        expect(failure._tag).toBe("YeetCommandError");
+        expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("rejects a symlinked inbox parent without appending through it", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideInbox = `${root}/outside-inbox`;
+        yield* fs.makeDirectory(`${repoRoot}/.beep`, { recursive: true });
+        yield* fs.makeDirectory(outsideInbox);
+        const outsideFailures = `${outsideInbox}/failures.ndjson`;
+        const sentinel = "outside parent must stay unchanged\n";
+        yield* fs.writeFileString(outsideFailures, sentinel);
+        yield* fs.symlink(outsideInbox, `${repoRoot}/.beep/inbox`);
+
+        const failure = yield* appendYeetInboxRow(repoRoot, row(capsule())).pipe(Effect.flip);
+
+        expect(failure._tag).toBe("YeetCommandError");
+        expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
 });

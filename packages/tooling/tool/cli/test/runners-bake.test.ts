@@ -19,6 +19,7 @@ import {
   runBakeCommandForTesting,
   writeBakeReportForTesting,
 } from "@beep/repo-cli/commands/Runners";
+import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
@@ -669,24 +670,32 @@ describe("runner bake planning and argv", () => {
     );
     expect(script).toContain("sha256sum --check --strict -");
     expect(script.indexOf("sha256sum --check --strict -")).toBeLessThan(
-      script.indexOf("install -o ec2-user -g ec2-user -m 0755")
+      script.indexOf("install -o root -g root -m 0755")
     );
     expect(script).not.toContain("bun.sh/install");
-    // The release zip ships only the bun binary; the bake must create the
-    // bunx symlink itself and prove it executes, or CI lanes spawning
-    // `bunx turbo` die with ENOENT on the baked image (main run 31968744160).
-    expect(script).toContain("ln -sfn bun /home/ec2-user/.bun/bin/bunx");
-    expect(script).toContain("/home/ec2-user/.bun/bin/bunx --version");
-    expect(script.indexOf("ln -sfn bun /home/ec2-user/.bun/bin/bunx")).toBeLessThan(
+    expect(script).toContain("/tmp/bun-linux-x64/bun-linux-x64/bun /usr/local/bin/bun");
+    expect(script).not.toContain("/tmp/bun-linux-x64/bun-linux-x64/bun /home/ec2-user/.bun/bin/bun");
+    // The release zip ships only the bun binary. Both entrypoints must stay
+    // root-owned and execute before the bake trusts them to warm dependencies.
+    expect(script).toContain("ln -sfn bun /usr/local/bin/bunx");
+    expect(script).toContain("chown -h root:root /usr/local/bin/bunx");
+    expect(script).toContain("/usr/local/bin/bunx --version");
+    expect(script.indexOf("ln -sfn bun /usr/local/bin/bunx")).toBeLessThan(
       script.indexOf("git clone --filter=blob:none")
     );
-    expect(script).toContain("bun install --cwd /tmp/beep-effect --frozen-lockfile");
+    expect(script).toContain("/usr/local/bin/bun install --cwd /tmp/beep-effect --frozen-lockfile");
     expect(script).toContain("git -C /tmp/beep-effect checkout --detach 0123456789abcdef0123456789abcdef01234567");
     expect(script).toContain(`= "${digest}"`);
     expect(script).toContain(`'1.3.14' > /etc/beep-ci/bun-version`);
     expect(script).toContain(`'${bunArchiveDigest}' > /etc/beep-ci/bun-archive.sha256`);
-    expect(script).toContain("touch /etc/beep-ci/baked-runner");
-    expect(script).toContain("rm -rf /tmp/beep-effect /root/.cache /home/ec2-user/.cache");
+    expect(script).toContain('bun_binary_sha256="$(sha256sum /usr/local/bin/bun');
+    expect(script).toContain('"${bun_binary_sha256}" > /etc/beep-ci/bun-binary.sha256');
+    expect(script).toContain("tar -C /home/ec2-user/.bun/install -czf /opt/beep-ci/bun-install-cache.tgz cache");
+    expect(script).toContain("chown root:root /opt/beep-ci/bun-install-cache.tgz");
+    expect(script).toContain("chmod 0444 /opt/beep-ci/bun-install-cache.tgz");
+    expect(script).toContain('"${bun_install_cache_sha256}" > /etc/beep-ci/bun-install-cache.sha256');
+    expect(script).toContain("install -o root -g root -m 0444 /dev/null /etc/beep-ci/baked-runner");
+    expect(script).toContain("/home/ec2-user/.bun/bin /home/ec2-user/.bun/install/cache");
     // AL2023's cloud-init lacks the newer --machine-id flag; the reset is
     // explicit so first boot regenerates a fresh machine identity.
     expect(script).toContain("cloud-init clean --logs\n");
@@ -698,4 +707,30 @@ describe("runner bake planning and argv", () => {
     expect(script).not.toContain("AWS_SECRET_ACCESS_KEY");
     expect(script).not.toContain("AWS_SESSION_TOKEN");
   });
+
+  it.effect(
+    "authenticates baked Bun and restores only the sealed dependency cache",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const action = yield* fs.readFileString(path.join(repoRoot, ".github/actions/setup-monorepo-ci/action.yml"));
+
+      expect(action).toContain('rm -rf -- "${HOME:?}/.bun/install/cache"');
+      expect(action).toContain("sha256sum /usr/local/bin/bun");
+      expect(action).toContain("sha256sum /opt/beep-ci/bun-install-cache.tgz");
+      expect(action).toContain('[ "$bun_owner_mode" = "0:0:755" ]');
+      expect(action).toContain('[ "$cache_owner_mode" = "0:0:444" ]');
+      expect(action).toContain('[ "$bunx_target" = "bun" ]');
+      expect(action).toContain('echo "/usr/local/bin" >> "$GITHUB_PATH"');
+      expect(action).not.toContain('echo "$HOME/.bun/bin" >> "$GITHUB_PATH"');
+
+      const binaryDigestCheck = action.indexOf('[ "$baked_binary" = "$installed_binary" ]');
+      const cacheDigestCheck = action.indexOf('[ "$baked_cache" = "$installed_cache" ]');
+      const cacheRestore = action.indexOf("tar -xzf /opt/beep-ci/bun-install-cache.tgz");
+      expect(binaryDigestCheck).toBeGreaterThan(-1);
+      expect(cacheDigestCheck).toBeGreaterThan(binaryDigestCheck);
+      expect(cacheRestore).toBeGreaterThan(cacheDigestCheck);
+    }, provideScopedLayer(PlatformLayer))
+  );
 });

@@ -106,10 +106,10 @@ const FORMAT_CHARACTER_PATTERN = /\p{Cf}/gu;
 // Segments consume any non-delimiter character (mirroring WINDOWS_ABSOLUTE_PATH_PATTERN's negated
 // class) so a path with non-ASCII, emoji, or punctuation segments is redacted whole instead of
 // leaking its tail — a redactor must over-swallow, never under-swallow. Colon stays a delimiter so
-// the trailing `:line(:col)` suffix keeps matching; the lookbehind admits a path only at start,
-// after whitespace, or after quote/bracket/assignment openers, which blocks URL tails (`https://x`)
-// and word-adjacent slashes without enumerating every script's word characters.
-const POSIX_ABSOLUTE_PATH_PATTERN = /(?<![^\s"'`([{=,])\/[^\s/"'`:]+(?:\/[^\s/"'`:]+)*(?::\d+(?::\d+)?)?/gu;
+// the trailing `:line(:col)` suffix keeps matching. The lookbehind blocks only Unicode word and
+// slash adjacency, preserving URLs and path-like word suffixes while admitting punctuation as a
+// diagnostic delimiter.
+const POSIX_ABSOLUTE_PATH_PATTERN = /(?<![\p{L}\p{M}\p{N}\p{Pc}/])\/[^\s/"'`:]+(?:\/[^\s/"'`:]+)*(?::\d+(?::\d+)?)?/gu;
 const WINDOWS_ABSOLUTE_PATH_PATTERN = /[A-Za-z]:\\(?:[^\\\s"'`]+\\)*[^\\\s"'`]+(?::\d+(?::\d+)?)?/gu;
 const textEncoder = new TextEncoder();
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);

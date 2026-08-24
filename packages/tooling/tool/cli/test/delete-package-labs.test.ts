@@ -25,7 +25,7 @@ import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
-import { withTempWorkingDirectory } from "./support/CommandTest.ts";
+import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 import type { DeletePackageRefusal } from "@beep/repo-cli/test/DeletePackage";
 
 const provideNode = <A2, E, R>(effect: Effect.Effect<A2, E, R>) =>
@@ -238,11 +238,11 @@ describe("delete-package labs data-phase policy", () => {
     ).not.toContain("data-non-local");
   });
 
-  it("hard-refuses --drop-data when the declared schema is not derived from the lab slug", () => {
-    expect(refusalKinds(dataPolicy({ dropData: true, dataResourceDeclared: true }))).toContain("data-ownership");
-    expect(
-      refusalKinds(dataPolicy({ dropData: true, dataResourceDeclared: true, dataOwnershipProven: true }))
-    ).not.toContain("data-ownership");
+  it("hard-refuses a declared schema not derived from the lab slug even without --drop-data", () => {
+    expect(refusalKinds(dataPolicy({ dataResourceDeclared: true }))).toContain("data-ownership");
+    expect(refusalKinds(dataPolicy({ dataResourceDeclared: true, dataOwnershipProven: true }))).not.toContain(
+      "data-ownership"
+    );
   });
 
   it("treats --drop-data without a declared resource as a no-op, not a refusal", () => {
@@ -284,6 +284,27 @@ describe("delete-package labs doctor semantics", () => {
               true
             );
             expect(DeletePackagePolicyEvaluation.doctorIsClean(labTarget, observations)).toBe(true);
+          })
+        )
+      )
+    ));
+
+  it("renders an unowned manifest resource as non-actionable residue", () =>
+    Effect.runPromise(
+      provideNode(
+        withTempDirectory((repoRoot) =>
+          Effect.gen(function* () {
+            const staleTarget = RegistrationTarget.make({
+              ...labTarget,
+              lab: O.some(labFacts(O.some("lab_other"))),
+            });
+            const observations = yield* inspectTargetAtRoot(repoRoot, staleTarget);
+            const dataResource = O.getOrThrow(
+              A.findFirst(observations, (item) => Str.equivalence(item.surfaceId, "lab-postgres-schema"))
+            );
+            expect(dataResource.status).toBe("residue");
+            expect(A.some(dataResource.evidence, Str.includes("no database command emitted"))).toBe(true);
+            expect(A.some(dataResource.evidence, Str.includes("DROP SCHEMA"))).toBe(false);
           })
         )
       )
@@ -429,6 +450,36 @@ describe("delete-package labs manifest resolution", () => {
             A.some(lines, (line) => P.isString(line) && Str.includes("[require-consent] lab-postgres-schema")(line))
           ).toBe(true);
           expect(yield* warnedAboutManifest).toBe(false);
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("refuses an unowned manifest resource without printing a database command", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* seedLabWorkspace();
+          yield* fs.writeFileString(
+            path.join("apps", "labs", "probe", "lab.manifest.json"),
+            [
+              "{",
+              '  "schemaVersion": "lab-manifest/v1",',
+              '  "purpose": "Probe lab",',
+              '  "created": "2026-08-16",',
+              '  "disposition": "active",',
+              '  "postgresSchema": "lab_other"',
+              "}",
+              "",
+            ].join("\n")
+          );
+
+          const exit = yield* Effect.exit(runDeletePackage(["probe", "--dry-run"]));
+          expectReportedExit(exit);
+          const output = A.appendAll(yield* TestConsole.logLines, yield* TestConsole.errorLines);
+          expect(A.some(output, (line) => P.isString(line) && Str.includes("data-ownership")(line))).toBe(true);
+          expect(A.some(output, (line) => P.isString(line) && Str.includes("DROP SCHEMA")(line))).toBe(false);
         })
       ).pipe(provideScopedLayer(commandLayer))
     ));

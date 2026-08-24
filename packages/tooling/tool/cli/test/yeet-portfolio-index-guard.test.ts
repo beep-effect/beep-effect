@@ -119,6 +119,21 @@ const withPortfolioRepo = <Result, Error, Requirements>(
     })
   );
 
+const withPortfolioRepoAndOutside = <Result, Error, Requirements>(
+  use: (repo: TempPortfolioRepo, outsideRoot: string) => Effect.Effect<Result, Error, Requirements>
+) =>
+  withTempDirectory((tempRoot) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = path.join(tempRoot, "repo");
+      const outsideRoot = path.join(tempRoot, "outside");
+      yield* fs.makeDirectory(repoRoot);
+      yield* fs.makeDirectory(outsideRoot);
+      return yield* use(yield* initPortfolioRepo(repoRoot, ["alpha-packet", "beta-packet"]), outsideRoot);
+    })
+  );
+
 describe("yeet publish derived goals index", () => {
   it("treats a checkout without a goals portfolio as out of scope", () => {
     expect(
@@ -217,6 +232,55 @@ describe("yeet publish derived goals index", () => {
           expect(disposition).toBe("regenerated");
           expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
           expect(yield* runGitStatus(tmpDir)).toBe(`M  ${PORTFOLIO_INDEX_PATH}`);
+        })
+      )
+    ));
+
+  it("rejects a symlinked index file without writing or staging its destination", () =>
+    Effect.runPromise(
+      withPortfolioRepoAndOutside(({ indexPath, tempContext, tmpDir }, outsideRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const outsideIndex = path.join(outsideRoot, "INDEX.md");
+          const sentinel = "outside target must stay unchanged\n";
+          yield* fs.writeFileString(outsideIndex, sentinel);
+          yield* fs.symlink(outsideIndex, indexPath);
+
+          const failure = yield* enforcePortfolioIndexPublishIntent(
+            tempContext,
+            YeetStagedPublishIntent.make({ paths: ["goals/alpha-packet/ops/manifest.json"] })
+          ).pipe(Effect.flip);
+
+          expect(failure._tag).toBe("YeetCommandError");
+          expect(yield* fs.readFileString(outsideIndex)).toBe(sentinel);
+          expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
+        })
+      )
+    ));
+
+  it("rejects a symlinked index parent without writing or staging through it", () =>
+    Effect.runPromise(
+      withPortfolioRepoAndOutside(({ tempContext, tmpDir }, outsideRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const goalsPath = path.join(tmpDir, "goals");
+          const outsideGoals = path.join(outsideRoot, "goals");
+          yield* fs.rename(goalsPath, outsideGoals);
+          yield* fs.symlink(outsideGoals, goalsPath);
+          const outsideIndex = path.join(outsideGoals, "INDEX.md");
+          const sentinel = "outside parent must stay unchanged\n";
+          yield* fs.writeFileString(outsideIndex, sentinel);
+
+          const failure = yield* enforcePortfolioIndexPublishIntent(
+            tempContext,
+            YeetStagedPublishIntent.make({ paths: ["goals/alpha-packet/ops/manifest.json"] })
+          ).pipe(Effect.flip);
+
+          expect(failure._tag).toBe("YeetCommandError");
+          expect(yield* fs.readFileString(outsideIndex)).toBe(sentinel);
+          expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
         })
       )
     ));

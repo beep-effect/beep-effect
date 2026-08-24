@@ -114,6 +114,34 @@ describe("delete-package registration geometry", () => {
       )
     ));
 
+  it("rejects tampered and mismatched deletion notes that reuse the canonical basename", () =>
+    Effect.runPromise(
+      provideNode(
+        withTempDirectory((repoRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const deletionNote = path.join(repoRoot, ".changeset", "delete-courtlistener.md");
+            yield* fs.makeDirectory(path.join(repoRoot, ".changeset"), { recursive: true });
+
+            for (const content of [
+              "---\n{}\n---\n\nNo release: remove `@beep/courtlistener` from the workspace. Tampered.\n",
+              "---\n{}\n---\n\nNo release: remove `@beep/other` from the workspace.\n",
+              '---\n"@beep/courtlistener": patch\n---\n\nNo release: remove `@beep/courtlistener` from the workspace.\n',
+            ]) {
+              yield* fs.writeFileString(deletionNote, content);
+              const observations = yield* inspectTargetAtRoot(repoRoot, target);
+              const pendingChangesets = O.getOrThrow(
+                A.findFirst(observations, (item) => item.surfaceId === "pending-changesets")
+              );
+              expect(pendingChangesets.status).toBe("residue");
+              expect(pendingChangesets.evidence).toContain(".changeset/delete-courtlistener.md");
+            }
+          })
+        )
+      )
+    ));
+
   it("delete-package --check prints every synthetic residue class and exits nonzero", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
@@ -182,6 +210,41 @@ describe("delete-package registration geometry", () => {
 
           const report = yield* dependentsOfAtRoot(repoRoot, target);
           expect(A.some(report.hits, (hit) => hit.kind === "import-prod" && hit.owner === "@beep/consumer")).toBe(true);
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("classifies a nested resolved workspace as a hard path dependent of its ancestor", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repoRoot = yield* fs.realPath(".");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "fixture", "private": true, "workspaces": ["packages/container", "packages/container/child"] }\n'
+          );
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.makeDirectory(path.join("packages", "container", "child"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join("packages", "container", "package.json"),
+            '{ "name": "@beep/container", "private": true }\n'
+          );
+          yield* fs.writeFileString(
+            path.join("packages", "container", "child", "package.json"),
+            '{ "name": "@beep/container-child", "private": true }\n'
+          );
+          const ancestor = RegistrationTarget.make({
+            packageName: "@beep/container",
+            packagePath: PosixPath.make("packages/container"),
+            private: true,
+          });
+
+          const report = yield* dependentsOfAtRoot(repoRoot, ancestor);
+          expect(A.map(report.hits, (hit) => `${hit.kind}|${hit.owner}|${hit.file}`)).toContain(
+            "file-path|@beep/container-child|packages/container/child/package.json"
+          );
         })
       ).pipe(provideScopedLayer(commandLayer))
     ));
@@ -282,6 +345,62 @@ describe("delete-package registration geometry", () => {
           expectReportedExit(exit);
           const errors = yield* TestConsole.errorLines;
           expect(A.some(errors, (line) => P.isString(line) && Str.includes("promotion-record")(line))).toBe(true);
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("refuses a repository-root workspace target before planning recursive removal", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "@beep/root-target", "private": true, "workspaces": ["root-link"] }\n'
+          );
+          yield* fs.symlink(".", "root-link");
+
+          const exit = yield* Effect.exit(runDeletePackage(["root-target", "--dry-run"]));
+          expectReportedExit(exit);
+          const errors = yield* TestConsole.errorLines;
+          expect(A.some(errors, (line) => P.isString(line) && Str.includes("repository root")(line))).toBe(true);
+          const lines = yield* TestConsole.logLines;
+          expect(A.some(lines, (line) => P.isString(line) && Str.includes("Inverse plan")(line))).toBe(false);
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("refuses a workspace target that contains another resolved workspace", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "fixture", "private": true, "workspaces": ["packages/container", "packages/container/child"] }\n'
+          );
+          yield* fs.makeDirectory(path.join("packages", "container", "child"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join("packages", "container", "package.json"),
+            '{ "name": "@beep/container", "private": true }\n'
+          );
+          yield* fs.writeFileString(
+            path.join("packages", "container", "child", "package.json"),
+            '{ "name": "@beep/container-child", "private": true }\n'
+          );
+
+          const exit = yield* Effect.exit(runDeletePackage(["container", "--dry-run"]));
+          expectReportedExit(exit);
+          const errors = yield* TestConsole.errorLines;
+          expect(
+            A.some(
+              errors,
+              (line) => P.isString(line) && Str.includes("contains registered workspace packages/container/child")(line)
+            )
+          ).toBe(true);
         })
       ).pipe(provideScopedLayer(commandLayer))
     ));

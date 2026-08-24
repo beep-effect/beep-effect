@@ -305,6 +305,54 @@ describe("supersedeYeetDispatchState", () => {
       })
     ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
   );
+
+  it.live("rejects a symlinked dispatch file without replacing its destination", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideRoot = `${root}/outside`;
+        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
+        yield* fs.makeDirectory(outsideRoot);
+        const outsideDispatch = `${outsideRoot}/dispatch.json`;
+        const sentinel = "outside target must stay unchanged\n";
+        yield* fs.writeFileString(outsideDispatch, sentinel);
+        yield* fs.symlink(outsideDispatch, yield* yeetDispatchStatePath(repoRoot));
+
+        yield* supersedeYeetDispatchState(repoRoot, "bbb222", 751, LATER);
+
+        expect(yield* fs.readFileString(outsideDispatch)).toBe(sentinel);
+        const errors = A.map(yield* TestConsole.errorLines, String);
+        expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
+          true
+        );
+      })
+    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+  );
+
+  it.live("rejects a symlinked dispatch parent without writing through it", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideInbox = `${root}/outside-inbox`;
+        yield* fs.makeDirectory(`${repoRoot}/.beep`, { recursive: true });
+        yield* fs.makeDirectory(outsideInbox);
+        const outsideDispatch = `${outsideInbox}/dispatch.json`;
+        const sentinel = "outside parent must stay unchanged\n";
+        yield* fs.writeFileString(outsideDispatch, sentinel);
+        yield* fs.symlink(outsideInbox, `${repoRoot}/.beep/inbox`);
+
+        yield* supersedeYeetDispatchState(repoRoot, "bbb222", 751, LATER);
+
+        expect(yield* fs.readFileString(outsideDispatch)).toBe(sentinel);
+        const errors = A.map(yield* TestConsole.errorLines, String);
+        expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
+          true
+        );
+      })
+    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+  );
 });
 
 describe("dispatchYeetCheckFailure", () => {

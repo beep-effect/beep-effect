@@ -117,6 +117,14 @@ const OntologyScopeQuery = S.Struct({ ontologyId: S.NonEmptyString }).annotate({
   description: "Required ontology scope for repository-backed HTTP lookups.",
 });
 
+const unauthenticatedConflictResponse = HttpServerResponse.json(
+  {
+    error: "UNAUTHORIZED",
+    message: "Conflict endpoints require an authenticated API key.",
+  },
+  { status: 401 }
+);
+
 const createManifest = Effect.fn("HttpServer.createManifest")(function* (request: BatchRequest) {
   const storage = yield* StorageService;
   const now = yield* DateTime.now;
@@ -576,6 +584,11 @@ export const TimelineRouter = HttpRouter.addAll([
     "GET",
     "/v1/timeline/conflicts",
     Effect.gen(function* () {
+      const actor = yield* CurrentConflictActor;
+      if (O.isNone(actor.credentialFingerprint)) {
+        return yield* unauthenticatedConflictResponse;
+      }
+
       const query = yield* HttpServerRequest.schemaSearchParams(ConflictsQuery);
       const conflictRepo = yield* ConflictRepository;
       const records = yield* conflictRepo.list(query);
@@ -593,11 +606,15 @@ export const TimelineRouter = HttpRouter.addAll([
     "PATCH",
     "/v1/timeline/conflicts/:id",
     Effect.gen(function* () {
+      const actor = yield* CurrentConflictActor;
+      if (O.isNone(actor.credentialFingerprint)) {
+        return yield* unauthenticatedConflictResponse;
+      }
+
       const params = yield* HttpRouter.params;
       const id = yield* S.decodeUnknownEffect(UUID)(params.id);
       const query = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
       const action = yield* HttpServerRequest.schemaBodyJson(ConflictTransition);
-      const actor = yield* CurrentConflictActor;
       const conflictRepo = yield* ConflictRepository;
       const transitioned = yield* conflictRepo.transition(query.ontologyId, id, action, actor);
 

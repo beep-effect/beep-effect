@@ -20,6 +20,54 @@ log() { printf 'setup-agent-memory: %s\n' "$*"; }
 warn() { printf 'setup-agent-memory: WARN: %s\n' "$*" >&2; }
 die() { printf 'setup-agent-memory: ERROR: %s\n' "$*" >&2; exit 1; }
 
+# Resolve an absolute path even when its final components do not exist. The
+# existing prefix is resolved physically; the missing suffix is normalized
+# without relying on GNU realpath extensions.
+resolve_existing_parent_path() (
+  target_path="$1"
+  unresolved_suffix=""
+
+  case "${target_path}" in
+    /*) ;;
+    *) target_path="${PWD}/${target_path}" ;;
+  esac
+
+  while [ ! -d "${target_path}" ]; do
+    path_component="${target_path##*/}"
+    unresolved_suffix="/${path_component}${unresolved_suffix}"
+    parent_path="${target_path%/*}"
+    [ "${parent_path}" != "${target_path}" ] || return 1
+    [ -n "${parent_path}" ] || parent_path="/"
+    target_path="${parent_path}"
+  done
+
+  resolved_path="$(cd -P "${target_path}" && pwd -P)" || return 1
+  IFS=/
+  set -f
+  set -- ${unresolved_suffix}
+
+  for path_component do
+    case "${path_component}" in
+      ""|.) ;;
+      ..)
+        if [ "${resolved_path}" != "/" ]; then
+          resolved_path="${resolved_path%/*}"
+          [ -n "${resolved_path}" ] || resolved_path="/"
+        fi
+        ;;
+      *)
+        if [ "${resolved_path}" = "/" ]; then
+          resolved_path="/${path_component}"
+        else
+          resolved_path="${resolved_path}/${path_component}"
+        fi
+        ;;
+    esac
+  done
+
+  printf '%s\n' "${resolved_path}"
+)
+
 command -v uvx >/dev/null 2>&1 || die "uvx not on PATH (install uv: https://docs.astral.sh/uv/)"
 command -v codegraph >/dev/null 2>&1 || die "codegraph not on PATH (install: npm i -g codegraph@1.5.0 or equivalent)"
 
@@ -72,7 +120,7 @@ EFFECT_REF="${BEEP_EFFECT_CHECKOUT:-${HOME}/YeeBois/dev/effect}"
 # Canonicalize the path: a relative override would be resolved against $PWD by
 # git clone but against .repos/ by the symlink, silently naming two different
 # locations.
-EFFECT_REF="$(realpath -m -- "${EFFECT_REF}")" || die "cannot resolve BEEP_EFFECT_CHECKOUT '${BEEP_EFFECT_CHECKOUT:-}' to an absolute path"
+EFFECT_REF="$(resolve_existing_parent_path "${EFFECT_REF}")" || die "cannot resolve BEEP_EFFECT_CHECKOUT '${BEEP_EFFECT_CHECKOUT:-}' to an absolute path"
 EFFECT_LINK="${REPO_ROOT}/.repos/effect"
 # -e not -d: a linked git worktree's .git entry is a file, and that is a valid checkout.
 if [[ ! -e "${EFFECT_REF}/.git" ]]; then

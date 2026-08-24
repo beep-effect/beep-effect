@@ -45,6 +45,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import {
   appendYeetInboxRow,
@@ -54,7 +55,6 @@ import {
   yeetInboxPaths,
   yeetInboxRowId,
 } from "./Inbox.ts";
-import { writeTextFile } from "./IssueArtifacts.ts";
 import type { YeetWatchCheck, YeetWatchSnapshot } from "./WatchStream.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Remediation");
@@ -476,7 +476,7 @@ const writeRemediationWave = Effect.fn("Yeet.writeRemediationWave")(function* (
 ) {
   const statePath = yield* yeetDispatchStatePath(repoRoot);
   const json = yield* YeetRemediationWaveJson.encode(wave);
-  yield* writeTextFile(statePath, `${json}\n`);
+  yield* writeContainedFileString(repoRoot, statePath, `${json}\n`);
 });
 
 // Persisting is best effort by the same argument as the comment cursor: the
