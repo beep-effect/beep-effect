@@ -1,0 +1,49 @@
+{
+  "annotations": [
+    {
+      "level": "warning",
+      "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830, actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For mor"
+    },
+    {
+      "level": "failure",
+      "message": "File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/schema/src/index.ts' is not a module."
+    },
+    {
+      "level": "failure",
+      "message": "File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/schema/src/index.ts' is not a module."
+    },
+    {
+      "level": "failure",
+      "message": "File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/schema/src/index.ts' is not a module."
+    },
+    {
+      "level": "failure",
+      "message": "File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/schema/src/index.ts' is not a module."
+    },
+    {
+      "level": "failure",
+      "message": "Argument of type '\u003cI, F, A, Pr, Ret\u003e(self: Matcher\u003cI, F, never, A, Pr, Ret\u003e) =\u003e [Pr] extends [never] ? (u: I) =\u003e Unify\u003cA\u003e : Unify\u003cA\u003e' is not assignable to parameter of type '(_: Matcher\u003cany, Without\u003c\"Error\" | \"Info\" | \"Warn\"\u003e, any, Effect\u003cvoid, never, never\u003e, any, any\u003e) =\u003e Effect\u003cvoid, never, never\u003e"
+    },
+    {
+      "level": "failure",
+      "message": "File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/schema/src/index.ts' is not a module."
+    },
+    {
+      "level": "failure",
+      "message": "File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/schema/src/index.ts' is not a module."
+    },
+    {
+      "level": "failure",
+      "message": "File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/schema/src/index.ts' is not a module."
+    },
+    {
+      "level": "failure",
+      "message": "Parameter 'input' implicitly has an 'any' type."
+    },
+    {
+      "level": "failure",
+      "message": "File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/schema/src/index.ts' is not a module."
+    }
+  ],
+  "job_id": 95227646233
+}

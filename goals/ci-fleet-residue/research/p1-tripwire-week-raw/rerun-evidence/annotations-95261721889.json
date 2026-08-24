@@ -1,0 +1,18 @@
+{
+  "annotations": [
+    {
+      "level": "warning",
+      "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830, actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For mor"
+    },
+    { "level": "failure", "message": "Process completed with exit code 1." },
+    {
+      "level": "failure",
+      "message": "command (/home/runner/work/beep-effect/beep-effect/packages/drivers/doc-text) /home/runner/.bun/bin/bun run test:property exited (1)"
+    },
+    {
+      "level": "failure",
+      "message": "Error: Property failed after 146 tests\n{ seed: 20260708, path: \"145\", endOnFailure: true }\nCounterexample: [new Error(\"\")]\nShrunk 0 time(s)\n\nHint: Enable verbose mode in order to have the list of all failing values encountered during the run\n ❯ buildError ../../../node_modules/fast-check/lib/fast-ch"
+    }
+  ],
+  "job_id": 95261721889
+}
