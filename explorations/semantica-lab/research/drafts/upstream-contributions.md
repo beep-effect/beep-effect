@@ -2,6 +2,22 @@
 
 Nothing in this document has been posted or pushed.
 
+## Dedupe status against the upstream tracker (2026-08-24 sweep, skeptic-verified)
+
+Source: [`../upstream-tracker-mining.md`](../upstream-tracker-mining.md) and its
+[review](../reviews/2026-08-24-tracker-mining-review.md). Verdicts and recommendations; Benjamin
+decides.
+
+| Draft | Verdict | Recommendation |
+| --- | --- | --- |
+| DELETE removes implicit graph-backed registry entries | PARTIAL (#518 specifies the DELETE route; the surviving-entries defect is unreported) | post as-is, cite #518 |
+| persist registry + session graph across restarts | PARTIAL (#376 checkpoint persistence, #967/#1134 MCP `SEMANTICA_KG_PATH` never saves; Explorer path unreported) | post as-is, reference #376 and #1134 |
+| key registry entries by source URL when no IRI | NOT-FOUND | post as-is |
+| Doc issue 1: FAQ lists two latest versions | NOT-FOUND (#918 last bumped the FAQ answer to v0.6.5) | post as-is |
+| Doc issue 2: modules page advertises runnable evals | PARTIAL (#228 placeholder; #1090 open replacement) | comment on #1090 instead of a standalone issue |
+| Doc issue 3: three pages absent from docs.json | PARTIAL (#658 had wired the changelog tab; #899 adds storage-backends only) | rewrite as two never-wired pages + one navigation regression |
+| New issue: OntologyValidator reports HermiT/Pellet consistency without running a reasoner | NOT-FOUND (unique D6 finding; #228 only lists it as an evals wishlist item) | post as-is; draft in [`upstream-issue-hermit-pellet.md`](./upstream-issue-hermit-pellet.md) (Codex-drafted 2026-08-24, seven file:line citations, spot-checked) |
+
 ## Local branch summary
 
 - Branch: `upstream/explorer-registry-fixes`
@@ -28,7 +44,7 @@ Persist Explorer ontology state and fix registry deletion and URL keys
 
 #### Summary
 
-This change fixes three related Ontology Hub state problems:
+This change fixes three related Ontology Hub state problems. Related tracker items (2026-08-24 sweep): #518 specified the registry (URI + source URL, remove action, `DELETE /api/ontology/{ontology_uri:path}`) that these fixes complete; #376 asked for graph checkpoint persistence; #967 and #1134 report `SEMANTICA_KG_PATH` never saving on the MCP surface. None of them reports the three defects below.
 
 - Use the source URL as the registry key when a loaded ontology has no declared IRI, instead of allowing empty-string keys to overwrite one another.
 - Persist the ontology registry to `SEMANTICA_REGISTRY_PATH`, restore it during app startup, and add `POST /api/session/save` to save the current graph to `SEMANTICA_KG_PATH` together with the registry sidecar.
@@ -114,3 +130,14 @@ The corresponding documentation routes are therefore never published through the
 - <https://docs.getsemantica.ai/changelog>
 
 Expected: add the three pages to appropriate navigation groups, or remove or redirect files that are not intended for publication.
+
+## Comment draft for upstream PR #1090 (replaces standalone doc issue 2)
+
+> While #1090 is open: `docs/modules.md` currently presents `semantica.evals` as a runnable API
+> (`from semantica.evals import ...` with a metrics table), but `semantica/evals/` on `main` is
+> still the placeholder that #228 recorded ("Coming Soon"). Until this PR lands, could the
+> modules page either point at this PR as the pending implementation or mark the section as
+> planned? Readers following the modules page today hit an import that does nothing. Happy to
+> send a one-line docs patch if that is easier than folding it in here.
+
+Status: draft-and-hold; post only after Benjamin's review (DECISIONS T-block, 2026-08-24).
