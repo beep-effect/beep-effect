@@ -1,8 +1,8 @@
 # Runner Trust Boundary: sources and provenance
 
-This goal was authored directly from operator-ratified decisions. There is no
-source exploration. P0 must turn the source set below into a dated fact record
-before proposing remediation.
+This goal was authored directly from operator-ratified decisions. P0 turned the
+source set below into `P0-FACTS.md`, `P0-THREAT-MODEL.md`,
+`P0-MECHANISM.md`, and the ratified `P0-GRILL.md` record.
 
 ## Operator authority
 
@@ -14,8 +14,25 @@ The 2026-08-24 charter ratifies these constraints:
   instance-role credentials, a sealed digest-verified AMI, and one ephemeral VM
   per job.
 - Admission gating is defense in depth.
-- P0 ends at an operator grill gate. P1 is the fresh deployment proof for the
-  two held Codex IDs.
+- P0 was ratified on 2026-08-24. P1 is the standalone fresh deployment proof
+  for the two held Codex IDs, followed by P2 Workload identity boundary and P3
+  Admission defense in depth.
+
+## P1 deployment evidence
+
+The tracked, sanitized chronology is
+[`P1-EVIDENCE.md`](./P1-EVIDENCE.md). GitHub run pages below are the hosted
+provenance for its accepted and retained-superseded results.
+
+| Run | Role in the evidence chain | Status |
+| --- | --- | --- |
+| [Red-team run 32763957629](https://github.com/beep-effect/beep-effect/actions/runs/32763957629) | Final run on the serving bake #3 image: Gates A–E, `AMI_PIN`, scoped deregistration, and EC2 teardown | Accepted P1 proof |
+| [Lane probe 32763957329](https://github.com/beep-effect/beep-effect/actions/runs/32763957329) | Final positive baked fast path after key, digest, owner, mode, and symlink checks | Accepted P1 proof |
+| [Red-team run 32760440289](https://github.com/beep-effect/beep-effect/actions/runs/32760440289) | Gates passed; wrapper failed because it double-counted shell source and waited fleet-wide | Retained, superseded |
+| [Red-team run 32761051746](https://github.com/beep-effect/beep-effect/actions/runs/32761051746) | Patched-wrapper PASS on bake #1 before `main` changed its lockfile | Retained, superseded |
+| [Lane probe 32761137404](https://github.com/beep-effect/beep-effect/actions/runs/32761137404) | Bake #1 image rejected after `main` changed the lockfile key | Retained negative-path evidence |
+| [Red-team run 32763386226](https://github.com/beep-effect/beep-effect/actions/runs/32763386226) | `AMI_PIN` rejected a pre-flip bake #1 worker after deploy #2 | Retained negative-path evidence |
+| [Lane probe 32763385680](https://github.com/beep-effect/beep-effect/actions/runs/32763385680) | Setup rejected the stale key on a pre-flip bake #1 worker | Retained negative-path evidence |
 
 ## Source packets
 
@@ -34,7 +51,7 @@ goal.
 | Source | Location | Use |
 | --- | --- | --- |
 | Active fleet owner | `goals/ci-fleet-endgame/{README,SPEC,PLAN}.md` | Keeps performance and architecture ownership; current packet owns security only |
-| Red-team wrapper | `goals/ci-fleet-endgame/ops/redteam-verify.sh` | P1 command, exact gate accounting, deregistration, and EC2 teardown contract |
+| Red-team wrapper | `goals/ci-fleet-endgame/ops/redteam-verify.sh` | `P1` command, exact gate accounting, deregistration, and EC2 teardown contract |
 | Live Gate E precedent | `goals/ci-fleet-residue/research/p2-acceptance-evidence.md` | 2026-08-14 run `31779611279`, all gates and teardown; precedent only |
 | Baked AMI precedent | `goals/ci-fleet-residue/research/p0-activation-evidence.md` | Bake report, Pulumi pin, fast-path probe, and rollback motion |
 | Residue closeout | `goals/ci-fleet-residue/{README,ops/manifest.json}` | Confirms residue stays completed-retained |
@@ -58,16 +75,16 @@ prove the current organization or deployed AWS state.
 No upstream code is authorized by this ledger. Official platform documentation
 is reference-only.
 
-## P0 evidence to add
+## P0 evidence
 
-P0 must add a dated, sanitized history record containing:
+The dated, sanitized record is split by purpose:
 
-1. GitHub runner-group inventory and relevant policy fields.
-2. Current runner membership and registration-group behavior.
-3. AWS controller, launch-template, AMI pin, instance-profile, metadata,
-   bootstrap/JIT, and teardown facts.
-4. The threat model and rejected alternatives.
-5. The operator grill receipt and ratified P1 to P4 mechanism.
+1. `P0-FACTS.md` records GitHub, launch-template, AMI-pin, role, boundary,
+   policy, runner, bake-freshness, and fleet-state facts.
+2. `P0-THREAT-MODEL.md` records the actor and failure-path analysis.
+3. `P0-MECHANISM.md` records the ratified mechanism and external proof plan.
+4. `P0-GRILL.md` records the four forks, options, pushback, rationale, packet
+   changes, and assumptions that still need live proof.
 
 Do not record tokens, raw API payloads, account numbers, instance IDs, email
 addresses, machine IDs, absolute home paths, or any 1Password value.
