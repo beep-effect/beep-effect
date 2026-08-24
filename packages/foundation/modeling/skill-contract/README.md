@@ -1,8 +1,9 @@
 # @beep/skill-contract
 
-Schema models for typed agent-work contracts. The first slice defines gate
-declarations, audited verdict values, and unsigned evidence receipts aligned
-with the in-toto Statement subject and predicate split.
+Schema models for typed agent-work contracts. The kernel defines the
+`SkillContract` aggregate, audited fail-closed gates, a cumulative four-rung
+evidence ladder, bounded-recovery receipt shapes, SLSA-VSA-shaped gate summaries,
+and evaluator-only opaque completion proof.
 
 ## Current consumers
 
@@ -26,12 +27,18 @@ bun add @beep/skill-contract
 
 ```ts
 import { LiteralKit } from "@beep/schema/LiteralKit"
-import { GateDeclaration, GateEvidenceRequirement, EvidencePredicateType, makeGateId } from "@beep/skill-contract"
+import {
+  AlwaysGateApplicability,
+  GateDeclaration,
+  GateEvidenceRequirement,
+  EvidencePredicateType,
+  makeGateId
+} from "@beep/skill-contract"
 
 const QaGateId = makeGateId(LiteralKit(["cited-artifact-exists"]))
 
 const gate = GateDeclaration.make({
-  applicability: "always",
+  applicability: AlwaysGateApplicability.make({}),
   evidence: GateEvidenceRequirement.make({
     predicateType: EvidencePredicateType.make("https://example.test/evidence/cited-artifact-exists/v1")
   }),

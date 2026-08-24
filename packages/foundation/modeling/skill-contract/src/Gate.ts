@@ -7,16 +7,19 @@
 
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { ISOStr } from "@beep/schema/Timestamp";
+import { HashSet, Tuple } from "effect";
+import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { SchemaReference } from "./SchemaReference.ts";
 import type { LiteralKit as LiteralKitSchema } from "@beep/schema/LiteralKit";
 import type { Effect } from "effect";
 
 const $I = $SkillContractId.create("Gate");
-const GateVerdictTag = LiteralKit(["allowed", "denied"]);
 
 type GateIdLiterals = readonly [string, ...ReadonlyArray<string>];
-type GateVerdictTag = typeof GateVerdictTag.Type;
 
 /**
  * Branded wire identifier shared by every gate declaration and audit record.
@@ -54,7 +57,8 @@ export type GateId = typeof GateId.Type;
  * **Details**
  *
  * The kernel owns the wire brand, while each consumer owns its finite gate-id
- * vocabulary and the helpers derived from that vocabulary.
+ * vocabulary and the helpers derived from that vocabulary. Each invocation is
+ * annotated with an identity derived from the complete literal domain.
  *
  * **Example** (Define consumer gate identifiers)
  *
@@ -75,7 +79,7 @@ export const makeGateId = <const Ids extends GateIdLiterals>(ids: LiteralKitSche
   ids.pipe(
     S.check(S.isNonEmpty()),
     S.brand("GateId"),
-    $I.annoteSchema("ConsumerGateId", {
+    $I.annoteSchema(`ConsumerGateId(${A.join(ids.Options, "|")})`, {
       description: "Consumer-owned finite gate identifier domain carrying the kernel GateId brand.",
     })
   );
@@ -109,27 +113,116 @@ export const GateSeverity = LiteralKit(["blocking", "advisory"]).pipe(
 export type GateSeverity = typeof GateSeverity.Type;
 
 /**
- * Applicability mode persisted by a gate declaration.
+ * Closed applicability variants persisted by gate declarations.
  *
- * **Gotchas**
- *
- * `conditional` reserves the wire value for the widening slice. This package
- * does not define or execute a condition expression language yet.
- *
- * **Example** (Declare an unconditional gate)
+ * **Example** (Inspect applicability kinds)
  *
  * ```ts
- * import { GateApplicability } from "@beep/skill-contract"
+ * import { GateApplicabilityKind } from "@beep/skill-contract"
  *
- * console.log(GateApplicability.make("always")) // "always"
+ * console.log(GateApplicabilityKind.Options) // ["always", "conditional"]
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const GateApplicability = LiteralKit(["always", "conditional"]).pipe(
+export const GateApplicabilityKind = LiteralKit(["always", "conditional"]).pipe(
+  $I.annoteSchema("GateApplicabilityKind", {
+    description: "Closed gate applicability variants.",
+  })
+);
+
+/**
+ * Runtime type decoded by {@link GateApplicabilityKind}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GateApplicabilityKind = typeof GateApplicabilityKind.Type;
+
+/**
+ * Applicability value for a gate that always runs.
+ *
+ * **Example** (Construct unconditional applicability)
+ *
+ * ```ts
+ * import { AlwaysGateApplicability } from "@beep/skill-contract"
+ *
+ * console.log(AlwaysGateApplicability.make({}).kind) // "always"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AlwaysGateApplicability extends S.Class<AlwaysGateApplicability>($I`AlwaysGateApplicability`)(
+  { kind: S.tag("always") },
+  $I.annote("AlwaysGateApplicability", {
+    description: "Applicability value for a gate that always runs.",
+  })
+) {
+  static readonly thunkThis = () => this;
+}
+
+/**
+ * Applicability value bound to a versioned condition schema reference.
+ *
+ * **Details**
+ *
+ * The reference names a runtime-bound decoder or evaluator contract. It does
+ * not persist a function or define an expression language.
+ *
+ * **Example** (Construct conditional applicability)
+ *
+ * ```ts
+ * import { ConditionalGateApplicability, SchemaReference, SchemaReferenceId } from "@beep/skill-contract"
+ *
+ * const applicability = ConditionalGateApplicability.make({
+ *   condition: SchemaReference.make({ schemaId: SchemaReferenceId.make("qa.condition/v1") })
+ * })
+ * console.log(applicability.kind) // "conditional"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ConditionalGateApplicability extends S.Class<ConditionalGateApplicability>(
+  $I`ConditionalGateApplicability`
+)(
+  {
+    condition: SchemaReference,
+    kind: S.tag("conditional"),
+  },
+  $I.annote("ConditionalGateApplicability", {
+    description: "Conditional gate applicability bound to a persisted schema reference.",
+  })
+) {
+  static readonly thunkThis = () => this;
+}
+
+/**
+ * Persisted applicability of a gate declaration.
+ *
+ * **Example** (Match an unconditional applicability value)
+ *
+ * ```ts
+ * import { AlwaysGateApplicability, GateApplicability } from "@beep/skill-contract"
+ *
+ * const value = AlwaysGateApplicability.make({})
+ * console.log(GateApplicability.match(value, {
+ *   always: () => true,
+ *   conditional: () => false
+ * })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GateApplicability = GateApplicabilityKind.mapMembers(
+  Tuple.evolve([AlwaysGateApplicability.thunkThis, ConditionalGateApplicability.thunkThis])
+).pipe(
+  S.toTaggedUnion("kind"),
   $I.annoteSchema("GateApplicability", {
-    description: "Whether a gate always applies or uses a condition model reserved for a later slice.",
+    description: "Gate applicability as an unconditional value or a versioned condition reference.",
   })
 );
 
@@ -206,6 +299,7 @@ export class GateEvidenceRequirement extends S.Class<GateEvidenceRequirement>($I
  *
  * ```ts
  * import {
+ *   AlwaysGateApplicability,
  *   EvidencePredicateType,
  *   GateDeclaration,
  *   GateEvidenceRequirement,
@@ -213,7 +307,7 @@ export class GateEvidenceRequirement extends S.Class<GateEvidenceRequirement>($I
  * } from "@beep/skill-contract"
  *
  * const gate = GateDeclaration.make({
- *   applicability: "always",
+ *   applicability: AlwaysGateApplicability.make({}),
  *   evidence: GateEvidenceRequirement.make({
  *     predicateType: EvidencePredicateType.make("https://beep.dev/evidence/artifact-exists/v1")
  *   }),
@@ -230,7 +324,7 @@ export class GateEvidenceRequirement extends S.Class<GateEvidenceRequirement>($I
 export class GateDeclaration extends S.Class<GateDeclaration>($I`GateDeclaration`)(
   {
     applicability: GateApplicability.annotateKey({
-      description: "Whether this declaration always applies or reserves conditional applicability.",
+      description: "Whether this declaration always applies or names a condition schema.",
     }),
     evidence: GateEvidenceRequirement,
     id: GateId.annotateKey({
@@ -244,11 +338,79 @@ export class GateDeclaration extends S.Class<GateDeclaration>($I`GateDeclaration
     }),
   },
   $I.annote("GateDeclaration", {
-    description: "Persistable declaration of a gate's identity, policy, and typed evidence requirement.",
+    description: "Persistable declaration of a gate's identity, policy, applicability, and typed evidence requirement.",
   })
 ) {}
 
-const gateAuditRecordImpl = <const Outcome extends GateVerdictTag, Detail extends S.Top>(
+const GateRegistryFields = S.Struct({ declarations: S.Array(GateDeclaration) });
+const UniqueGateIdsCheck = S.makeFilter(
+  (registry: typeof GateRegistryFields.Type) => {
+    const ids = A.map(registry.declarations, (declaration) => declaration.id);
+    return Eq.equals(HashSet.size(HashSet.fromIterable(ids)), A.length(ids))
+      ? undefined
+      : {
+          path: ["declarations"],
+          issue: "Gate registry declarations must use unique gate ids.",
+        };
+  },
+  {
+    identifier: $I`UniqueGateIdsCheck`,
+    title: "Unique gate ids",
+    description: "A gate registry preserves declaration order while rejecting duplicate gate ids.",
+  }
+);
+
+/**
+ * Ordered gate declarations whose identifiers are unique at decode.
+ *
+ * **Example** (Construct a gate registry)
+ *
+ * ```ts
+ * import { GateRegistry } from "@beep/skill-contract"
+ *
+ * console.log(GateRegistry.make({ declarations: [] }).declarations.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateRegistry extends S.Class<GateRegistry>($I`GateRegistry`)(
+  GateRegistryFields.check(UniqueGateIdsCheck),
+  $I.annote("GateRegistry", {
+    description: "Ordered gate declarations with unique ids enforced at schema decode.",
+  })
+) {}
+
+/**
+ * Closed outcome vocabulary shared by gate verdicts and summary rows.
+ *
+ * **Example** (Inspect gate outcomes)
+ *
+ * ```ts
+ * import { GateOutcome } from "@beep/skill-contract"
+ *
+ * console.log(GateOutcome.Options) // ["allowed", "denied"]
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GateOutcome = LiteralKit(["allowed", "denied"]).pipe(
+  $I.annoteSchema("GateOutcome", {
+    description: "Allowed and denied gate outcomes.",
+  })
+);
+
+/**
+ * Runtime type decoded by {@link GateOutcome}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GateOutcome = typeof GateOutcome.Type;
+
+const gateAuditRecordImpl = <const Identifier extends string, const Outcome extends GateOutcome, Detail extends S.Top>(
+  identifier: Identifier,
   outcome: Outcome,
   detail: Detail
 ) =>
@@ -256,20 +418,26 @@ const gateAuditRecordImpl = <const Outcome extends GateVerdictTag, Detail extend
     detail,
     evaluator: S.NonEmptyString,
     gateId: GateId,
-    occurredAt: S.NonEmptyString,
+    occurredAt: ISOStr,
     outcome: S.Literal(outcome),
     reason: S.NonEmptyString,
   }).pipe(
-    $I.annoteSchema(outcome === "allowed" ? "GateAuditRecordAllowed" : "GateAuditRecordDenied", {
-      description:
-        outcome === "allowed"
-          ? "Audit record carried by an allowed gate verdict."
-          : "Audit record carried by a denied gate verdict.",
-    })
+    $I.annoteSchema(
+      GateOutcome.$match(outcome, {
+        allowed: () => `${identifier}AllowedAudit`,
+        denied: () => `${identifier}DeniedAudit`,
+      }),
+      {
+        description: GateOutcome.$match(outcome, {
+          allowed: () => "Audit record carried by an allowed gate verdict.",
+          denied: () => "Audit record carried by a denied gate verdict.",
+        }),
+      }
+    )
   );
 
 /**
- * Builds an audit-record schema whose outcome and detail stay coherent.
+ * Builds a distinctly identified audit-record schema with coherent outcome and detail.
  *
  * **Example** (Build a denied audit schema)
  *
@@ -277,10 +445,15 @@ const gateAuditRecordImpl = <const Outcome extends GateVerdictTag, Detail extend
  * import { GateAuditRecord } from "@beep/skill-contract"
  * import * as S from "effect/Schema"
  *
- * const DeniedAudit = GateAuditRecord("denied", S.Struct({ missing: S.Array(S.String) }))
+ * const DeniedAudit = GateAuditRecord(
+ *   "ArtifactExists",
+ *   "denied",
+ *   S.Struct({ missing: S.Array(S.String) })
+ * )
  * console.log(S.is(DeniedAudit))
  * ```
  *
+ * @param identifier - Distinct identity stem for this parameterized schema instance.
  * @param outcome - Verdict literal pinned into the audit record.
  * @param detail - Consumer-owned schema for evaluator observations.
  * @returns Schema for one coherent audited outcome.
@@ -288,32 +461,37 @@ const gateAuditRecordImpl = <const Outcome extends GateVerdictTag, Detail extend
  * @since 0.0.0
  */
 export const GateAuditRecord: {
-  <Detail extends S.Top>(
-    detail: Detail
-  ): <const Outcome extends GateVerdictTag>(
-    outcome: Outcome
-  ) => ReturnType<typeof gateAuditRecordImpl<Outcome, Detail>>;
-  <const Outcome extends GateVerdictTag, Detail extends S.Top>(
+  <const Outcome extends GateOutcome, Detail extends S.Top>(
     outcome: Outcome,
     detail: Detail
-  ): ReturnType<typeof gateAuditRecordImpl<Outcome, Detail>>;
-} = dual(2, gateAuditRecordImpl);
+  ): <const Identifier extends string>(
+    identifier: Identifier
+  ) => ReturnType<typeof gateAuditRecordImpl<Identifier, Outcome, Detail>>;
+  <const Identifier extends string, const Outcome extends GateOutcome, Detail extends S.Top>(
+    identifier: Identifier,
+    outcome: Outcome,
+    detail: Detail
+  ): ReturnType<typeof gateAuditRecordImpl<Identifier, Outcome, Detail>>;
+} = dual(3, gateAuditRecordImpl);
 
-const gateVerdictImpl = <AllowedDetail extends S.Top, DeniedDetail extends S.Top>(
+const gateVerdictImpl = <const Identifier extends string, AllowedDetail extends S.Top, DeniedDetail extends S.Top>(
+  identifier: Identifier,
   allowedDetail: AllowedDetail,
   deniedDetail: DeniedDetail
-) =>
-  GateVerdictTag.toTaggedUnion("verdict")({
-    allowed: { audit: GateAuditRecord("allowed", allowedDetail) },
-    denied: { audit: GateAuditRecord("denied", deniedDetail) },
+) => {
+  const schemaIdentifier: string = identifier;
+  return GateOutcome.toTaggedUnion("verdict")({
+    allowed: { audit: GateAuditRecord(identifier, "allowed", allowedDetail) },
+    denied: { audit: GateAuditRecord(identifier, "denied", deniedDetail) },
   }).pipe(
-    $I.annoteSchema("GateVerdict", {
+    $I.annoteSchema(schemaIdentifier, {
       description: "Fail-closed allowed or denied verdict; both cases carry a coherent audit record.",
     })
   );
+};
 
 /**
- * Builds an audited `allowed | denied` verdict schema with consumer-owned details.
+ * Builds a distinctly identified audited `allowed | denied` verdict schema.
  *
  * **Details**
  *
@@ -324,15 +502,17 @@ const gateVerdictImpl = <AllowedDetail extends S.Top, DeniedDetail extends S.Top
  *
  * ```ts
  * import { GateId, GateVerdict } from "@beep/skill-contract"
+ * import { ISOStr } from "@beep/schema/Timestamp"
  * import * as S from "effect/Schema"
  *
- * const Verdict = GateVerdict(S.Struct({ checked: S.Array(S.String) }), S.Struct({ missing: S.Array(S.String) }))
+ * const Detail = S.Struct({ paths: S.Array(S.String) })
+ * const Verdict = GateVerdict("ArtifactExistsVerdict", Detail, Detail)
  * const verdict = Verdict.cases.allowed.make({
  *   audit: {
- *     detail: { checked: ["report.md"] },
+ *     detail: { paths: ["report.md"] },
  *     evaluator: "example",
  *     gateId: GateId.make("artifact-exists"),
- *     occurredAt: "2026-08-24T00:00:00.000Z",
+ *     occurredAt: ISOStr.make("2026-08-24T00:00:00.000Z"),
  *     outcome: "allowed",
  *     reason: "Every artifact exists."
  *   }
@@ -340,6 +520,7 @@ const gateVerdictImpl = <AllowedDetail extends S.Top, DeniedDetail extends S.Top
  * console.log(verdict.verdict) // "allowed"
  * ```
  *
+ * @param identifier - Distinct identity for this parameterized verdict schema.
  * @param allowedDetail - Schema for observations attached to an allowed verdict.
  * @param deniedDetail - Schema for observations attached to a denied verdict.
  * @returns Tagged verdict schema with coherent audit records in both cases.
@@ -347,16 +528,18 @@ const gateVerdictImpl = <AllowedDetail extends S.Top, DeniedDetail extends S.Top
  * @since 0.0.0
  */
 export const GateVerdict: {
-  <DeniedDetail extends S.Top>(
-    deniedDetail: DeniedDetail
-  ): <AllowedDetail extends S.Top>(
-    allowedDetail: AllowedDetail
-  ) => ReturnType<typeof gateVerdictImpl<AllowedDetail, DeniedDetail>>;
   <AllowedDetail extends S.Top, DeniedDetail extends S.Top>(
     allowedDetail: AllowedDetail,
     deniedDetail: DeniedDetail
-  ): ReturnType<typeof gateVerdictImpl<AllowedDetail, DeniedDetail>>;
-} = dual(2, gateVerdictImpl);
+  ): <const Identifier extends string>(
+    identifier: Identifier
+  ) => ReturnType<typeof gateVerdictImpl<Identifier, AllowedDetail, DeniedDetail>>;
+  <const Identifier extends string, AllowedDetail extends S.Top, DeniedDetail extends S.Top>(
+    identifier: Identifier,
+    allowedDetail: AllowedDetail,
+    deniedDetail: DeniedDetail
+  ): ReturnType<typeof gateVerdictImpl<Identifier, AllowedDetail, DeniedDetail>>;
+} = dual(3, gateVerdictImpl);
 
 /**
  * Total evaluator contract for a typed gate.

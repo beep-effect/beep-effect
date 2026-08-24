@@ -6,6 +6,13 @@
  */
 
 /**
+ * Four-rung cumulative evidence ladder and monotonic transition helpers.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./EvidenceLadder.ts";
+/**
  * Unsigned in-toto Statement-aligned evidence receipts: digest-bound subjects,
  * versioned predicate types, typed predicates.
  *
@@ -21,3 +28,31 @@ export * from "./EvidenceReceipt.ts";
  * @since 0.0.0
  */
 export * from "./Gate.ts";
+/**
+ * Bounded-recovery policy, budget, attempt, and terminal failure schemas.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Recovery.ts";
+/**
+ * Persisted references to runtime-bound input, output, and condition schemas.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./SchemaReference.ts";
+/**
+ * Evaluator-only opaque completion proof and terminal skill states.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./SkillCompletion.ts";
+/**
+ * Aggregate root for a versioned typed skill promise.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export * from "./SkillContract.ts";
