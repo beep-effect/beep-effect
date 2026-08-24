@@ -2,36 +2,69 @@
 
 Date: 2026-08-24
 
-This ledger is the live-interaction remainder for `editor-capability-atlas/v1`. The regenerated judge pass leaves 10 entries unverified: six pinned Playground defects and four proposed waivers that await user approval. The other 152 exercised entries are `verified-live`.
+This ledger is the live-interaction remainder for
+`editor-capability-atlas/v1`. The regenerated judge pass leaves 10 entries
+unverified: six pinned Playground defects and four capabilities unavailable in
+the pinned Playground. The other 152 exercised entries are `verified-live`.
 
-P0 is not complete.
+P0's entry gate is closed (152 exercised + 10 approved waivers). The
+activation-path gate is open (13 user-visible paths: 12 on `verified-live`
+entries plus `interchange.canonical-json/importer` on a `verified-source`
+entry), so P0 remains `in-progress` until those paths are exercised or waived.
 
 ## Remaining unverified entries
 
 | Atlas ID | Reason |
 | --- | --- |
-| `comments.threads` | genuine defect: At 480 px, pasting a marked thread range reopens the fixed Comments panel after the scenario hid it. The close control is hidden, the panel intercepts Export, and click plus export verification fail. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/comments.threads/observations.ndjson:29-30`. |
-| `document.comments-panel` | genuine defect: The Comments panel remains a fixed 300 px overlay while its only toggle is hidden at widths up to 600 px. The regenerated scenario hides it before narrowing, so the responsive gap remains open. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.comments-panel/02-after.png`. |
-| `document.speech-to-text` | proposed waiver awaiting user approval: The pinned Web Speech integration requires a real speech service, microphone permission flow, and audible utterance. The manual SKIP wrote no evidence directory. |
-| `extension.floating-toolbar` | genuine defect: The directly focused toolbar control works, but no editor-to-toolbar keyboard route exists. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.floating-toolbar/02-after.png`. |
-| `interchange.pandoc-docx` | proposed waiver awaiting user approval: The pinned Playground has no Pandoc or DOCX importer, exporter, command, or adapter. The manual SKIP wrote no evidence directory. |
-| `interchange.pdf` | proposed waiver awaiting user approval: The pinned Playground has no PDF importer, exporter, command, or adapter. The manual SKIP wrote no evidence directory. |
-| `network.remote-embed-resolution` | proposed waiver awaiting user approval: The pinned Playground has no inert-reference resolver, provider authorization boundary, or consent UI. The manual SKIP wrote no evidence directory. |
-| `node.mark` | genuine defect: At 480 px, pasting a marked range reopens the fixed Comments panel. The close control is hidden, the panel intercepts Export, and click plus export verification fail. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.mark/observations.ndjson:31-32`. |
-| `transformer.table` | genuine defect: The regenerated shortcut path still creates a malformed nested table. The importer path is flat, but the exercised shortcut defect remains. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.table/01-activation-path-1.png`. |
-| `transformer.tweet` | genuine defect: The Enter-triggered transformer loses selection, raises three real page errors, and unmounts before either expected view appears. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.tweet/observations.ndjson`. |
+| `comments.threads` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: At 480 px, pasting a marked thread range reopens the fixed Comments panel after the scenario hid it. The close control is hidden, the panel intercepts Export, and click plus export verification fail. Pinned `packages/lexical-playground/src/plugins/CommentPlugin/index.tsx:822-845` reopens the panel for active marks; `packages/lexical-playground/src/plugins/CommentPlugin/index.css:167-171,181-192` hides the toggle at widths up to 600 px and fixes the 300 px overlay. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/comments.threads/observations.ndjson:29-30`. |
+| `document.comments-panel` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: The Comments panel remains a fixed 300 px overlay while its only toggle is hidden at widths up to 600 px. Pinned `packages/lexical-playground/src/plugins/CommentPlugin/index.tsx:822-845` reopens the panel for active marks; `packages/lexical-playground/src/plugins/CommentPlugin/index.css:167-171,181-192` hides the toggle and fixes the overlay. The regenerated scenario hides it before narrowing, so the responsive gap remains open. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.comments-panel/02-after.png`. |
+| `document.speech-to-text` | waived (SPEC Exception Ledger, user-approved 2026-08-24): unavailable upstream: The pinned Web Speech integration requires a real speech service, microphone permission flow, and audible utterance. The manual SKIP wrote no evidence directory. |
+| `extension.floating-toolbar` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: The directly focused toolbar control works, but no editor-to-toolbar keyboard route exists. The pinned `TabIndentationExtension` consumes Tab; only the main toolbar registers the Alt+F10 focus-manager path. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.floating-toolbar/02-after.png`. |
+| `interchange.pandoc-docx` | waived (SPEC Exception Ledger, user-approved 2026-08-24): unavailable upstream: The pinned Playground has no Pandoc or DOCX importer, exporter, command, or adapter. The manual SKIP wrote no evidence directory. |
+| `interchange.pdf` | waived (SPEC Exception Ledger, user-approved 2026-08-24): unavailable upstream: The pinned Playground has no PDF importer, exporter, command, or adapter. The manual SKIP wrote no evidence directory. |
+| `network.remote-embed-resolution` | waived (SPEC Exception Ledger, user-approved 2026-08-24): unavailable upstream: The pinned Playground has no inert-reference resolver, provider authorization boundary, or consent UI. Provider fetching is a `drivers/*` concern, consent and authorization are product-slice policy, and `@beep/editor` only projects. The manual SKIP wrote no evidence directory. |
+| `node.mark` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: At 480 px, pasting a marked range reopens the fixed Comments panel. The close control is hidden, the panel intercepts Export, and click plus export verification fail. Pinned `packages/lexical-playground/src/plugins/CommentPlugin/index.tsx:822-845` reopens the panel for active marks; `packages/lexical-playground/src/plugins/CommentPlugin/index.css:167-171,181-192` hides the toggle and fixes the overlay. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.mark/observations.ndjson:31-32`. |
+| `transformer.table` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: The regenerated shortcut path still creates a malformed nested table while the importer path is flat. The pinned transformer path is `packages/lexical-playground/src/plugins/MarkdownTransformers/index.ts:203-330`. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.table/01-activation-path-1.png`. |
+| `transformer.tweet` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: The Enter-triggered transformer replaces the selected TextNode without moving selection, reports `updateEditor: selection has been lost` followed by `Point.getNode: node not found`, and unmounts the app because the Playground has no error boundary. Pinned paths: `packages/lexical-playground/src/plugins/MarkdownTransformers/index.ts:184-200` and `packages/lexical-markdown/src/MarkdownShortcuts.ts:75-92`. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.tweet/observations.ndjson`. |
 
-## Proposed waivers (awaiting user approval)
+## Activation-path gate
 
-These drafts do not close P0 unless the user approves the matching Exception Ledger rows in `SPEC.md`.
+The live audit records 45 activation paths with `evidenceStatus: unverified`.
+The gate is open on 13 user-visible paths: the 12 below from `verified-live`
+entries, plus `interchange.canonical-json/importer`, whose capability is
+`verified-source` (no Playground importer exists for `@beep/md` canonical JSON;
+P0.5 must either exercise a product-host importer or add an entry waiver):
 
-| Exception | Scope | Owner | Rationale | Removal condition |
-| --- | --- | --- | --- | --- |
-| proposed, awaiting user approval | `document.speech-to-text` | `@beep/editor` | The pinned plugin only registers when `SpeechRecognition` or `webkitSpeechRecognition` exists, then calls the browser speech service and consumes its `result` events. Fake Chromium media can cover permission plumbing, but it cannot honestly prove service-backed transcription, an audible utterance, transcription quality, or the real permission UX. Evidence: pinned `packages/lexical-playground/src/plugins/SpeechToTextPlugin/index.ts:45-69,111-125`; `packages/lexical-playground/src/plugins/ActionsPlugin/index.tsx:286-304`; `goals/lexical-playground-capability-atlas/ops/exercise/batches.json:67-70`. | Follow-up goal: `configurable-full-document-editor`. Remove the waiver when that goal records an approved real-microphone lifecycle for the product-owned speech boundary, including permission, transcription, correction/undo, serialization, keyboard access, and narrow-layout evidence. |
-| proposed, awaiting user approval | `interchange.pandoc-docx` | `@beep/pandoc-ast` boundary | The pinned Playground source contains no Pandoc or DOCX importer, exporter, command, or adapter. Its action cluster exposes `.lexical` import/export and Markdown/HTML source conversion only, so a browser script would mislabel another format as DOCX proof. Evidence: no case-insensitive `pandoc` or `docx` match under pinned `packages/lexical-playground/src`; `packages/lexical-playground/src/plugins/ActionsPlugin/index.tsx:305-381`; pinned `packages/lexical-file/src/fileImportExport.ts:72-125`; `goals/lexical-playground-capability-atlas/ops/exercise/batches.json:164-167`. | Follow-up goal: `pandoc-docx-driver`. Remove the waiver when that goal delivers and records the executable DOCX import/export lifecycle at the driver boundary, including declared losses and round-trip fixtures. |
-| proposed, awaiting user approval | `interchange.pdf` | document PDF adapter | The pinned Playground source contains no PDF importer, exporter, command, or adapter. The available document actions stop at `.lexical` import/export and Markdown/HTML source conversion, so there is no PDF lifecycle to invoke or serialize. Evidence: no case-insensitive `pdf` match under pinned `packages/lexical-playground/src`; `packages/lexical-playground/src/plugins/ActionsPlugin/index.tsx:305-381`; pinned `packages/lexical-file/src/fileImportExport.ts:72-125`; `goals/lexical-playground-capability-atlas/ops/exercise/batches.json:169-172`. | Follow-up goal: `document-pdf-export`. Remove the waiver when that goal delivers an authoritative PDF renderer/export adapter and records deterministic export, pagination, accessibility, and loss evidence. |
-| proposed, awaiting user approval | `network.remote-embed-resolution` | owning product slice provider with `@beep/editor` projection | The pinned Playground has no inert-reference resolver, provider authorization boundary, or consent UI. Its embed nodes load providers directly: the P0 sweep recorded `platform.twitter.com` and `syndication.twitter.com` requests for `node.tweet`, `www.youtube-nocookie.com/embed/...` for `node.youtube`, and `www.figma.com/embed...` for `node.figma`. That behavior cannot prove the atlas contract, which requires an authorized product-host resolver. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.tweet/observations.ndjson:9-17,23-27`; `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.youtube/observations.ndjson:8-11,18-21`; `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.figma/observations.ndjson:8-11,18-21`; `goals/lexical-playground-capability-atlas/ops/exercise/batches.json:210-213`. | Follow-up goal: `configurable-full-document-editor`. Remove the waiver when that goal ratifies and records an inert-on-open, user-authorized provider-resolution lifecycle in the owning product host, including consent, rejected/cancelled resolution, egress capture, keyboard access, and narrow-layout evidence. |
+| Atlas ID | Surface |
+| --- | --- |
+| `node.image` | `paste-drop` |
+| `node.image` | `importer` |
+| `setting.tree-view` | `settings-panel` |
+| `format.bold` | `markdown-shortcut` |
+| `format.italic` | `markdown-shortcut` |
+| `format.strikethrough` | `markdown-shortcut` |
+| `format.inline-code` | `markdown-shortcut` |
+| `format.semantic-highlight` | `markdown-shortcut` |
+| `extension.history` | `toolbar` |
+| `authoring.autocomplete` | `selection` |
+| `table.column-reorder` | `context-menu` |
+| `document.read-only` | `read-only` |
+
+The remaining 32 paths do not open the live gate. Twenty-two are
+`programmatic`, so source evidence or the P1 resolver tests prove them. Ten
+are covered at entry level by capabilities with approved waivers. A
+`verified-source` capability does not shield its user-visible paths: the gate
+counts them until they are exercised or waived.
+
+## Approved waivers
+
+The approved owners, rationales, and removal conditions are recorded once in
+the [`SPEC.md` Exception Ledger](../SPEC.md#exception-ledger).
 
 ## Completion rule
 
-The verifier's exit code proves schema validity, stable-ID reconciliation, dependency/path integrity, and the pinned inventory counts. It does not close this live-evidence gate. P0 may move from `active` to `complete` only when this file has no remaining unverified rows or every remaining row has a user-approved, goal-owned waiver recorded in the Exception Ledger.
+The verifier's exit code proves schema validity, stable-ID reconciliation,
+dependency/path integrity, and the pinned inventory counts. With P0
+`in-progress`, it reports an open gate without conflating incomplete evidence
+with an invalid atlas. A `complete` manifest fails verification until both the
+entry gate and activation-path gate are closed.

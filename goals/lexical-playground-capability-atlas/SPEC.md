@@ -121,9 +121,14 @@ exercised through its applicable create/edit/select/undo/redo/copy/paste/
 serialize/delete lifecycle and backed by screenshot or recorded interaction
 evidence. An unverified state cannot satisfy P0 or P2. A genuinely unavailable
 or unsafe behavior requires a user-approved Exception Ledger waiver naming the
-exact atlas IDs, rationale, and owning follow-up goal. Source-only/development
-diagnostics may use pinned source evidence when no end-user interaction exists,
-but their non-production classification remains explicit.
+exact atlas IDs, rationale, and owning follow-up goal or a gated exploration MAP
+candidate named in `explorations/full-document-editor/MAP.md`.
+`programmatic` activation paths are not user-visible; they satisfy the atlas
+through `verified-source` evidence or the P1 resolver tests, and the
+live-evidence gate counts only user-visible surfaces.
+Source-only/development diagnostics may use pinned source evidence when no
+end-user interaction exists, but their non-production classification remains
+explicit.
 
 The atlas must reconcile at least the 38 root-registered node classes, the
 effective rich-text node set, all top-level extensions/plugins, settings,
@@ -191,7 +196,9 @@ checks, not substitutes for stable entry identity.
 - [ ] The 17 seed screenshots remain versioned/captioned, and Goal A adds
       screenshot or recorded interaction evidence for every production-eligible
       user-visible capability and activation path. Every current unverified
-      item is exercised or has a user-approved, goal-owned waiver.
+      item is exercised or has a user-approved waiver owned by a follow-up goal
+      or a gated exploration MAP candidate named in
+      `explorations/full-document-editor/MAP.md`.
 - [ ] The compatibility matrix makes unsupported and lossy projections
       explicit and names the later goal that owns each missing semantic.
 - [ ] `@beep/editor` exports schema-backed capability/profile descriptors and a
@@ -225,7 +232,7 @@ checks, not substitutes for stable entry identity.
 | Manifest JSON | `jq . goals/lexical-playground-capability-atlas/ops/manifest.json` | Passes |
 | Packet references | `rg -n "lexical-playground-capability-atlas|GOAL.md|agentLaunchers|packetAnchorDocument" goals/lexical-playground-capability-atlas` | All required surfaces present |
 | Whitespace | `git diff --check -- goals/lexical-playground-capability-atlas explorations/full-document-editor` | Passes |
-| Atlas artifact | `bun run goals/lexical-playground-capability-atlas/ops/verify-capability-atlas.ts` | `editor-capability-atlas/v1` decodes; files resolve; zero unexplained or unexercised entries without approved waiver |
+| Atlas artifact | `bun run goals/lexical-playground-capability-atlas/ops/verify-capability-atlas.ts` | `editor-capability-atlas/v1` decodes and files resolve; the entry gate requires every unverified capability to have an approved waiver, and the activation-path gate requires every user-visible unverified path to belong to a waived capability |
 | Editor package check | `bun run --cwd packages/foundation/ui-system/editor check` | Green |
 | Focused behavior | package/app unit and Storybook tests recorded during P1/P2 | Green |
 | Browser QA | `bun run beep qa` evidence inventory under packet history | Zero required findings |
@@ -245,7 +252,8 @@ checks, not substitutes for stable entry identity.
 - Existing chat/editor consumer behavior cannot be preserved by a compatibility
   default within named scope.
 - A production-eligible user-visible behavior remains unexercised and lacks a
-  user-approved waiver with an owning follow-up goal.
+  user-approved waiver with an owning follow-up goal or a gated exploration MAP
+  candidate named in `explorations/full-document-editor/MAP.md`.
 - Verification requires credentials, cost, destructive side effects, or policy
   approval not named in this spec.
 - The same blocker repeats after reasonable investigation.
@@ -261,4 +269,13 @@ the remaining decisions forward as classification constraints.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| user-approved 2026-08-24 — unavailable upstream | `interchange.pandoc-docx` | `pandoc-docx-driver` | The pinned Playground has no Pandoc or DOCX surface; D25 keeps modeling in `@beep/pandoc-ast`. | The gated MAP candidate records executable DOCX import/export at the driver boundary, including declared losses and round-trip fixtures. |
+| user-approved 2026-08-24 — unavailable upstream | `interchange.pdf` | `document-pdf-export` | The pinned Playground has no PDF surface; D26 gates authoritative export behind a later adapter. | The gated MAP candidate records deterministic export, pagination, accessibility, and loss evidence. |
+| user-approved 2026-08-24 — unavailable upstream | `document.speech-to-text` | `configurable-full-document-editor` | Real speech-service and microphone proof is unavailable in the pinned automated exercise. | Goal B records a real-microphone lifecycle covering permission, transcription, correction/undo, serialization, keyboard access, and narrow layout. |
+| user-approved 2026-08-24 — unavailable upstream | `network.remote-embed-resolution` | `configurable-full-document-editor` | The pinned Playground has no authorized inert-reference resolver or consent UI. Provider fetching belongs in `drivers/*`; consent and authorization belong to the product slice; `@beep/editor` only projects. | Goal B records an inert-on-open, user-authorized provider lifecycle covering consent, rejected or cancelled resolution, egress, keyboard access, and narrow layout. |
+| user-approved 2026-08-24 — pinned upstream defect | `comments.threads` | `document-annotation-substrate` | The annotation candidate owns the pinned narrow-layout Comments defect under D11. | The candidate goal proves a reachable close control and Export with the comments panel open at 480 px. |
+| user-approved 2026-08-24 — pinned upstream defect | `node.mark` | `document-annotation-substrate` | The annotation candidate owns the pinned marked-range interaction defect; the Lexical mark remains the editor projection under D11. | The candidate goal proves that marked-range paste does not trap the user. |
+| user-approved 2026-08-24 — pinned upstream defect | `document.comments-panel` | `document-annotation-substrate` | The annotation candidate owns the pinned fixed-overlay and hidden-toggle defect under D11. | The candidate goal proves that the comments panel is not a fixed overlay at narrow widths. |
+| user-approved 2026-08-24 — pinned upstream defect | `extension.floating-toolbar` | `configurable-full-document-editor` | Goal B must generalize the missing keyboard route under D13. | Goal B records a keyboard route from the editor into the floating toolbar. |
+| user-approved 2026-08-24 — pinned upstream defect | `transformer.table` | `configurable-full-document-editor` | Goal B must generalize the malformed typed-shortcut result under D13. | Goal B records a flat table from the typed shortcut, or the upstream fix lands and the pinned baseline is re-ratified. |
+| user-approved 2026-08-24 — pinned upstream defect | `transformer.tweet` | `configurable-full-document-editor` | Goal B must generalize the selection-loss crash under D13. | Goal B records a Tweet transformer that keeps selection and does not crash, or the upstream fix lands and the pinned baseline is re-ratified. |

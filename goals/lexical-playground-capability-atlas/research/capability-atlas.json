@@ -1006,6 +1006,15 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.heading/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/02-block-type-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png",
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Heading appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -1197,6 +1206,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.list/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/02-block-type-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Lists appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -1387,6 +1404,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.list-item/03-narrow-redone-and-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "List item appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -1522,6 +1546,15 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.quote/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/02-block-type-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png",
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Block quote appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -1683,6 +1716,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.code/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/02-block-type-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Code block appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -1844,6 +1885,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.table/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Table appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -2256,6 +2305,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.hashtag/03-narrow-keyboard-copy-paste-redone.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Hashtag appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -2643,6 +2699,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.link/03-narrow-redone-and-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Authored link appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -2927,6 +2990,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.poll/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Poll question and options appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -3066,6 +3137,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.sticky/03-narrow-redone-and-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png"
+            ],
+            "detail": "Sticky note appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -3201,6 +3279,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Image appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -3489,6 +3575,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.emoji/03-narrow-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Emoji token appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -3628,6 +3721,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.excalidraw/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Excalidraw drawing appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -3768,6 +3869,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.equation/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Equation appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -4047,6 +4156,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.horizontal-rule/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Horizontal rule appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -4192,6 +4309,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.tweet/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "X/Tweet reference appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -4342,6 +4467,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.youtube/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "YouTube reference appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -4487,6 +4620,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.figma/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Figma reference appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -4775,6 +4916,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.collapsible-container/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Collapsible container appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -5182,6 +5331,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.page-break/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Page break appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -5321,6 +5478,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.layout-container/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Column layout appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -5728,6 +5893,14 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.date-time/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/09-insert-node-menu.png",
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Date and time appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -5867,6 +6040,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.card/03-narrow-redone-and-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Card appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -6120,6 +6300,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.review/03-narrow-redone-and-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Review block appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -6254,6 +6441,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.pull-quote/03-narrow-redone-and-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Pull quote appeared in the captured live surface, but its complete lifecycle was not exercised."
           }
         ]
       },
@@ -6903,6 +7097,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.paragraph/04-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Paragraph appeared in the live debug tree or baseline document."
           }
         ]
       },
@@ -7063,6 +7264,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.text/03-narrow-redone-and-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Text appeared in the live debug tree or baseline document."
           }
         ]
       },
@@ -7604,6 +7812,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.fit-nested-tables/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Fit nested tables was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -7738,6 +7953,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.link-attributes/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Safe link attributes was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -7872,6 +8094,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.nested-tables/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Nested tables was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -8006,6 +8235,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.autocomplete/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Autocomplete was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -8140,6 +8376,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.char-limit-utf16/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "UTF-16 character limit was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -8274,6 +8517,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.char-limit-utf8/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "UTF-8 character limit was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -8408,6 +8658,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.code-highlighted/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Code highlighting was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -8542,6 +8799,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.code-shiki/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Shiki highlighter was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -8815,6 +9079,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.max-length/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Maximum length was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -8949,6 +9220,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.rich-text/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Rich-text mode was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -9088,6 +9366,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.shadow-dom/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Shadow DOM was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -9222,6 +9507,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.visible-non-printing/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Visible non-printing characters was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -9490,6 +9782,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.measure-typing-perf/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Typing performance logger was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -9624,6 +9923,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.block-selection/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Block selection was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -9758,6 +10064,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.retain-selection/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Retained selection display was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -9892,6 +10205,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.bracket-special-text/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Bracket special-text transform was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -10160,6 +10480,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.preserve-markdown-newlines/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Preserve Markdown newlines was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -10294,6 +10621,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.lexical-context-menu/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Lexical context menu was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -10428,6 +10762,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.nested-editor-tree-view/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Nested editor debug view was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -10565,6 +10906,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.table-of-contents/03-reset.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/12-settings-feature-gates.png"
+            ],
+            "detail": "Table of contents diagnostic was exposed in the audited live settings panel when host-visible; behavior was not toggled."
           }
         ]
       },
@@ -11363,6 +11711,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.undo/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Undo was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -11519,6 +11874,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.redo/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Redo was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -11674,6 +12036,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Bold was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -11844,6 +12213,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Italic was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -12014,6 +12390,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.underline/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Underline was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -12174,6 +12557,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/06-additional-text-styles.png"
+            ],
+            "detail": "Strikethrough was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -12339,6 +12729,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Inline code was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -12504,6 +12901,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.subscript/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/06-additional-text-styles.png"
+            ],
+            "detail": "Subscript was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -12664,6 +13068,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.superscript/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/06-additional-text-styles.png"
+            ],
+            "detail": "Superscript was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -12824,6 +13235,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.lowercase/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/06-additional-text-styles.png"
+            ],
+            "detail": "Lowercase was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -12984,6 +13402,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.uppercase/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/06-additional-text-styles.png"
+            ],
+            "detail": "Uppercase was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -13144,6 +13569,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.capitalize/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/06-additional-text-styles.png"
+            ],
+            "detail": "Capitalize was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -13304,6 +13736,15 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.semantic-highlight/03-narrow-keyboard-copy-paste-redone.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/06-additional-text-styles.png",
+              "explorations/full-document-editor/assets/14-applied-text-highlight.png",
+              "explorations/full-document-editor/assets/15-highlight-result.png"
+            ],
+            "detail": "Semantic highlight was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -13444,6 +13885,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.clear/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/06-additional-text-styles.png"
+            ],
+            "detail": "Clear formatting was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -13599,6 +14047,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/style.font-family/03-narrow-keyboard-copy-paste-redone.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/03-font-family-menu.png"
+            ],
+            "detail": "Font family was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -13733,6 +14188,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/style.font-size/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Font size was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -13903,6 +14365,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/style.text-color/03-narrow-keyboard-copy-paste-redone.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/04-text-color-picker.png"
+            ],
+            "detail": "Text color was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -14037,6 +14506,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/style.background-color/03-narrow-keyboard-copy-paste-redone.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/05-background-highlight-color-picker.png"
+            ],
+            "detail": "Background color was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -14171,6 +14647,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.align-left/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/10-alignment-menu.png"
+            ],
+            "detail": "Align left was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -14326,6 +14809,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.align-center/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/10-alignment-menu.png"
+            ],
+            "detail": "Align center was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -14481,6 +14971,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.align-right/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/10-alignment-menu.png"
+            ],
+            "detail": "Align right was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -14636,6 +15133,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.align-justify/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/10-alignment-menu.png"
+            ],
+            "detail": "Justify was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -14790,6 +15294,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.align-start/02-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/10-alignment-menu.png"
+            ],
+            "detail": "Align start was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -14923,6 +15434,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.align-end/02-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/10-alignment-menu.png"
+            ],
+            "detail": "Align end was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -15057,6 +15575,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.indent/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/10-alignment-menu.png"
+            ],
+            "detail": "Indent was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -15213,6 +15738,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.outdent/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/10-alignment-menu.png"
+            ],
+            "detail": "Outdent was observed; only semantic Highlight was partially exercised and no complete lifecycle proof exists."
           }
         ]
       },
@@ -15509,6 +16041,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.toolbar/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Main toolbar appeared in the live audit; complete interaction proof remains open."
           }
         ]
       },
@@ -15634,7 +16173,15 @@
             "detail": "Pinned top-level registration for FloatingTextFormatToolbarPlugin."
           }
         ],
-        "live": []
+        "live": [
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/13-text-selection-floating-toolbar.png"
+            ],
+            "detail": "Floating selection toolbar appeared in the live audit; complete interaction proof remains open."
+          }
+        ]
       },
       "evidenceStatus": "unverified",
       "category": "extension",
@@ -15645,7 +16192,7 @@
       },
       "ownership": {
         "ownerPackage": "@beep/editor",
-        "targetGoal": "lexical-playground-capability-atlas"
+        "targetGoal": "configurable-full-document-editor"
       },
       "registrations": {
         "nodes": [],
@@ -15767,6 +16314,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.slash-picker/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/16-slash-command-menu.png"
+            ],
+            "detail": "Slash/component picker appeared in the live audit; complete interaction proof remains open."
           }
         ]
       },
@@ -16436,6 +16990,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.shortcut-help/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/11-keyboard-shortcuts-dialog.png"
+            ],
+            "detail": "Generated shortcut help appeared in the live audit; complete interaction proof remains open."
           }
         ]
       },
@@ -16988,6 +17549,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.insert/03-narrow-keyboard-copy-paste-serialized.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -17128,6 +17696,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.rows-columns/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -17267,6 +17842,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.headers/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -17402,6 +17984,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.merge/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -17541,6 +18130,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.cell-background/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -17676,6 +18272,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.vertical-align/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -17811,6 +18414,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.row-striping/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -17946,6 +18556,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.freeze/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -18081,6 +18698,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.resize-scroll/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -18220,6 +18844,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.sort/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -18355,6 +18986,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.column-reorder/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -18495,6 +19133,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.nested/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "The initial DOM exposed table contextual controls, but inserted-table behavior was not exercised."
           }
         ]
       },
@@ -18630,6 +19275,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/page.mode/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/07-page-setup-dialog.png"
+            ],
+            "detail": "Page mode appeared in Page Setup, but fixed-page behavior was not exercised."
           }
         ]
       },
@@ -18765,6 +19417,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/page.size/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/07-page-setup-dialog.png"
+            ],
+            "detail": "Page size appeared in Page Setup, but fixed-page behavior was not exercised."
           }
         ]
       },
@@ -18900,6 +19559,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/page.orientation/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/08-page-orientation.png"
+            ],
+            "detail": "Page orientation appeared in Page Setup, but fixed-page behavior was not exercised."
           }
         ]
       },
@@ -19035,6 +19701,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/page.margins/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/08a-page-setup-closed-after-margins-probe.png"
+            ],
+            "detail": "The failed margins probe records the gap only; the source audit supplies the preset inventory."
           }
         ]
       },
@@ -19170,6 +19843,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/page.pagination/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/07-page-setup-dialog.png"
+            ],
+            "detail": "Automatic pagination appeared in Page Setup, but fixed-page behavior was not exercised."
           }
         ]
       },
@@ -22017,6 +22697,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.import-lexical-json/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Import raw Lexical JSON was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -22152,6 +22839,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.export-lexical-json/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Export raw Lexical JSON was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -22287,6 +22981,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.share-url/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Compressed state share URL was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -22422,6 +23123,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.clear/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Clear document was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -22557,6 +23265,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Read-only lock was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -22697,6 +23412,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.markdown-source/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Markdown source mode was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -22832,6 +23554,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.html-source/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "HTML source mode was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -22967,6 +23696,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.export-dom/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Terse DOM export was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -23102,6 +23838,13 @@
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.time-travel/04-surface-roundtrip.png"
             ],
             "detail": "Passed."
+          },
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Time travel was observed in the live actions cluster but not exercised."
           }
         ]
       },
@@ -23227,7 +23970,15 @@
             "detail": "Pinned source conversion or document action for Comments panel."
           }
         ],
-        "live": []
+        "live": [
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Comments panel was observed in the live actions cluster but not exercised."
+          }
+        ]
       },
       "evidenceStatus": "unverified",
       "category": "document-action",
@@ -23350,7 +24101,15 @@
             "detail": "Pinned source conversion or document action for Speech to text."
           }
         ],
-        "live": []
+        "live": [
+          {
+            "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+            "screenshots": [
+              "explorations/full-document-editor/assets/01-overview-full.png"
+            ],
+            "detail": "Speech to text was observed in the live actions cluster but not exercised."
+          }
+        ]
       },
       "evidenceStatus": "unverified",
       "category": "document-action",
@@ -23453,7 +24212,7 @@
         "behavior": "Request browser speech permission only after an explicit user action; expose unsupported/denied states without uploading document content through Beep."
       },
       "proofGaps": [
-        "Awaiting an approved real-microphone waiver or live proof."
+        "The pinned exercise cannot prove a real speech service, microphone permission, or an audible utterance."
       ]
     },
     {
@@ -24026,7 +24785,7 @@
         "decisionRefs": ["D1", "D3", "D15", "D25", "D26"]
       },
       "ownership": {
-        "ownerPackage": "@beep/pandoc-ast",
+        "ownerPackage": "NET-NEW Pandoc driver (drivers family); modeling stays in @beep/pandoc-ast",
         "targetGoal": "pandoc-docx-driver"
       },
       "registrations": {
@@ -24124,7 +24883,7 @@
         "behavior": "Opening or rendering a document performs no network request for this capability."
       },
       "proofGaps": [
-        "Awaiting an approved waiver or a product-owned Pandoc/DOCX adapter."
+        "The pinned Playground has no Pandoc or DOCX importer, exporter, command, or adapter."
       ]
     },
     {
@@ -24154,7 +24913,7 @@
         "decisionRefs": ["D1", "D3", "D15", "D25", "D26"]
       },
       "ownership": {
-        "ownerPackage": "document PDF adapter",
+        "ownerPackage": "NET-NEW deterministic PDF export adapter (drivers family)",
         "targetGoal": "document-pdf-export"
       },
       "registrations": {
@@ -24252,7 +25011,7 @@
         "behavior": "Opening or rendering a document performs no network request for this capability."
       },
       "proofGaps": [
-        "Awaiting an approved waiver or a product-owned PDF adapter."
+        "The pinned Playground has no PDF importer, exporter, command, or adapter."
       ]
     },
     {
@@ -24778,7 +25537,7 @@
         "decisionRefs": ["D3", "D14", "D15", "D17"]
       },
       "ownership": {
-        "ownerPackage": "owning product slice provider with @beep/editor projection",
+        "ownerPackage": "owning product slice (authorization/consent policy) + NET-NEW provider driver (drivers family); @beep/editor projection",
         "targetGoal": "configurable-full-document-editor"
       },
       "registrations": {
@@ -24871,7 +25630,7 @@
         "behavior": "Keep references inert on open. Fetch only after an explicit user action through an authorized provider that enforces product policy."
       },
       "proofGaps": [
-        "Awaiting an approved waiver or an authorized resolver lifecycle."
+        "The pinned Playground has no inert-reference resolver, provider authorization boundary, or consent UI."
       ]
     },
     {
