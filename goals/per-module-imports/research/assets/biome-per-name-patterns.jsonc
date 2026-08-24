@@ -28,7 +28,10 @@
               {
                 "group": ["effect"],
                 "importNamePattern": "Scope",
-                "message": "Use a type import from `effect/Scope`."
+                // packet-editorial 2026-08-24: Scope is a namespace re-export; the
+                // original sandbox message ("Use a type import") reflected the
+                // type-only specifier in the test fixture and was wrong as guidance.
+                "message": "Use `import * as Scope from \"effect/Scope\"` (`import type * as` when the usage is type-only)."
               },
               {
                 "group": ["@beep/utils"],

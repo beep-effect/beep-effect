@@ -6,7 +6,7 @@ Every in-scope import of the `effect` package barrel and the live `@beep`
 foundation barrels is rewritten to per-module form and the convention is
 enforced by the incumbent toolchain:
 
-```ts
+```text
 import { Effect, pipe } from "effect";      // before
 import * as Effect from "effect/Effect";    // after
 import { pipe } from "effect/Function";     // after
@@ -88,7 +88,10 @@ migration is gated on a measured pilot.
 
 - **The existing `laws effect-imports` law actively enforces the opposite
   convention** (rewrites per-module → barrel) and runs in Lint Policy and Yeet
-  repair. It must be inverted before the pilot writes a single import.
+  repair. It must be inverted before the pilot writes a single import — as a
+  family-scoped interim mode (promoted-family list, initially empty) so the
+  repo-wide Yeet repair `--write` cannot mass-migrate ahead of the P2 gate and
+  `--check` stays green on unmigrated families until their batch lands.
 - Enforcement config is held identical between pilot before/after states; the
   Biome warn rule lands once, frozen, only after the gate passes.
 - Batch ordering (research-settled): pilot → warn rule frozen once → the
@@ -101,7 +104,10 @@ migration is gated on a measured pilot.
   agents are never instructed to reintroduce violations.
 - Codemod invariants (`research/import-census.md` §5): AST-based; separate
   code/JSDoc/Markdown modes; merge with existing destination imports; carry
-  type-only syntax; manual-review queue for dynamic imports, root-surface
+  type-only syntax; default barrel imports map to their named leaves
+  (`@beep/chalk` defaults → `@beep/chalk/Chalk`, `@beep/colors` defaults →
+  `@beep/colors/Colors`) or join the manual-review queue; manual-review queue
+  for dynamic imports, root-surface
   tests, stale doc APIs, deliberate lint fixtures, and missing leaves; fix
   generators before generated files; lockfile stability per batch; idempotence
   proven.

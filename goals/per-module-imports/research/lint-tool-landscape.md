@@ -4,7 +4,7 @@
 
 **Incumbent stack:** Biome 2.5.6 (+ GritQL plugins) and scoped ESLint lanes. New permanent tools only on decisive advantage.
 
-**Target import shape (this is the hard constraint):** namespace-import per module, e.g. `import * as Effect from "effect/Effect"` — **not** named-import flattening (`import { pipe } from "effect/Function"`). Most barrel-elimination tools optimize the latter.
+**Target import shape (this is the hard constraint):** namespace-import per module for module re-exports, e.g. `import * as Effect from "effect/Effect"`. Flat exports — the `effect/Function` combinators (`pipe`, `flow`, `identity`, `cast`) and similar — stay **named** imports from their owning module, per SPEC Decision #2. The trap this lane screens for is tools that flatten *every* binding to named-from-source (e.g. `import { runPromiseExit } from "effect/Effect"`); most barrel-elimination tools do exactly that. <!-- packet-editorial 2026-08-24: original lane text framed the target as namespace-only; corrected to match SPEC Decision #2 (review thread PRRT_kwDOPbO_N86bl35U). -->
 
 **Researched:** 2026-08-23. Web-research lane only; no repo exploration.
 
@@ -323,7 +323,7 @@ Every purpose-built tool found emits **named imports from the resolved source fi
 | **unicorn `no-barrel-files`** / Biome `noBarrelFile` / oxc `no-barrel-file` | Ban *authoring* re-export-only files. | Opposite job. |
 | **Rolldown `experimental.lazyBarrel` / `@rolldown/plugin-transform-imports`** | Bundler-time rewrite (`import { Home } from '@mui/icons-material'` → default from esm path). Does not change source. | No. |
 
-**Hard constraint, restated:** a tool that emits `import { pipe } from "effect/Function"` is the LSP `follow` mode, **not** the target. A tool that emits `import { Effect } from "effect/Effect"` is named-from-subpath, **not** the target. The target is `import * as Effect from "effect/Effect"`. Only `@effect/eslint-plugin` (partial fixer) and the Effect-smol oxlint diagnostic even *name* that form.
+**Hard constraint, restated:** a tool that emits named-from-submodule for *every* binding (the LSP `follow` mode applied wholesale) is **not** the target — `import { pipe } from "effect/Function"` is correct only for the flat `effect/Function` combinators, per SPEC Decision #2. A tool that emits `import { Effect } from "effect/Effect"` is named-from-subpath, **not** the target. The target for module re-exports is `import * as Effect from "effect/Effect"`. Only `@effect/eslint-plugin` (partial fixer) and the Effect-smol oxlint diagnostic even *name* that form. <!-- packet-editorial 2026-08-24: clarified to match SPEC Decision #2 (review thread PRRT_kwDOPbO_N86bl35U). -->
 
 ---
 

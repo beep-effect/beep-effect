@@ -1,3 +1,15 @@
+/**
+ * Captured research artifact (P0, 2026-08-23): the 125-line prototype executed
+ * by the tooling-evaluation lane (`research/tooling-autofix-eval.md`) to prove
+ * the core ts-morph mechanics — namespace/named split, alias and type-only
+ * preservation, idempotence. It is prior art for the P1 migration command,
+ * NOT the command itself. Known deliberate omissions (P1 must handle them):
+ * default barrel imports (census: `@beep/chalk`/`@beep/colors` defaults map to
+ * their `Chalk`/`Colors` leaves), namespace barrel imports,
+ * destination-import merging, comment transfer, collision analysis, and
+ * structured dry-run reporting — the hard-fail below is the experiment's
+ * bailout, not the production behavior.
+ */
 import { Project, QuoteKind, StructureKind } from "ts-morph";
 import type { ImportDeclarationStructure, OptionalKind } from "ts-morph";
 

@@ -22,8 +22,15 @@ Status: `active` — P0 complete; next action is P1.
   the `effect` root and live foundation roots; map bindings through the census
   table; emit named `pipe`/`flow`/`identity`/`cast` from `effect/Function`;
   cover type-only imports; drop the test/ecosystem exclusions; replace the
-  reverse-conversion fixtures. Yeet repair keeps calling `--write` — semantics
-  flip in place. Prototype prior art: `research/assets/ts-morph-prototype.ts`.
+  reverse-conversion fixtures. P1 lands an **interim mode, not a global flip**:
+  the reverse conversion is deleted everywhere, but both `--check` enforcement
+  and Yeet-repair `--write` rewrites are scoped to a promoted-family list that
+  starts empty (the pilot joins at P2; batches join during P3). Outside
+  promoted families the law is a no-op, so `/yeet` stays green on the ~5k
+  unmigrated root imports and no repo-wide repair run can mass-migrate ahead
+  of the P2 gate. Families promote in the same PR as their Biome error
+  override; the unscoped check returns only at the final P3 error flip.
+  Prototype prior art: `research/assets/ts-morph-prototype.ts`.
 - Leaf exports (both workspace + `publishConfig` maps, then tsconfig-sync):
   `@beep/schema/SafeRemoteHost` and `@beep/schema/FileDiff`; `@beep/observability`'s 8
   routed modules + `VERSION` leaf; `@beep/dock` 17 modules; `@beep/dock-react`
