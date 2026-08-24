@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -32,12 +32,17 @@ public-repo and agent-kernel files.
 
 ## Current Phase
 
-P2 verified. Tree change is in this checkout. P3 Yeet / P4 Close are not
-part of this execution.
+Closed. All five phases complete.
 
 ## Latest Evidence
 
-2026-08-13: three VERSION-only drivers deleted; identity `compose()` slugs
-match `bun run topo-sort` (minus `@beep/root`); unused better-auth catalog
+2026-08-24: P4 closeout — reflection
+[`history/reflections/2026-08-24-claude.md`](./history/reflections/2026-08-24-claude.md)
+written, lifecycle flipped to `completed-retained`.
+
+2026-08-13: P1–P3 merged as
+[PR #680](https://github.com/beep-effect/beep-effect/pull/680) — three
+VERSION-only drivers deleted; identity `compose()` slugs match
+`bun run topo-sort` (minus `@beep/root`); unused better-auth catalog
 removed; public files and AGENTS.md Touch table landed. Identity
 `shape-stable` tests: 10/10 pass.

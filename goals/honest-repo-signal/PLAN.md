@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `P2 verified; P3/P4 not in this execution`
+Status: `complete — P1-P3 shipped in PR #680 (2026-08-13); P4 closed 2026-08-24`
 
 ## Phases
 
@@ -11,8 +11,8 @@ Status: `P2 verified; P3/P4 not in this execution`
 | P0 Lock inventory and follow-ups | complete | Confirm stub list, owning goals, and one-night cut list. | `SPEC.md` + `research/FOLLOW-UPS.md` match the live tree; protobuf excluded. |
 | P1 One-night honesty pass | complete | Delete three stubs, ship public files, README subtree note, AGENTS.md table, patch delivery README. | SPEC acceptance boxes checked. |
 | P2 Verify | complete | Run packet + repo-sanity-adjacent checks. | Verification matrix green or blockers recorded. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet. | `mergeStateStatus` is `CLEAN`; zero unresolved threads. |
-| P4 Close | pending | Reflection + status flip in the same PR as final work. | `completed-retained`; reflection lint passes. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet. | Shipped as PR #680, merged 2026-08-13. |
+| P4 Close | complete | Reflection + status flip in the same PR as final work. | `completed-retained` flipped and reflection landed 2026-08-24. |
 
 ## P0 notes (2026-08-13)
 
