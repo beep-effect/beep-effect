@@ -8,8 +8,9 @@ colocated in the existing Goals CLI, self-hosted in advisory mode first.
 
 ## Next action
 
-P1 schema-first: the `PacketEvent` family and fold, then the store/writer
-service contracts, then implementation. See `PLAN.md`.
+Close train (grilled 2026-08-24): land P3 rung 4 (pre-close hardening), then
+P5 close — `/reflect` closeout plus the `completed-retained` flip through
+the guarded writer in one PR. See `PLAN.md` "Current blockers".
 
 ## Launcher
 
