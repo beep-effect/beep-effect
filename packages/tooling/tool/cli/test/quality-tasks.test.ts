@@ -29,6 +29,7 @@ import {
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageBaselineWriterChangedFiles,
   coverageBaselineWriteSummary,
   coverageDispositionGapsForTesting,
   coverageFullStepsForTesting,
@@ -96,7 +97,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit, FileSystem, Inspectable, Layer, Order, Path, pipe } from "effect";
+import { Cause, ConfigProvider, Effect, Exit, FileSystem, Inspectable, Layer, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -193,17 +194,17 @@ const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const originalCwd = process.cwd();
+      const originalCwd = process.cwd;
       const repositoryPath = yield* fs.makeTempDirectory();
 
       yield* Effect.sync(() => {
-        process.chdir(repositoryPath);
+        process.cwd = () => repositoryPath;
       });
       yield* fs.makeDirectory(path.join(repositoryPath, ".git"), { recursive: true });
       yield* Effect.addFinalizer(() =>
         Effect.gen(function* () {
           yield* Effect.sync(() => {
-            process.chdir(originalCwd);
+            process.cwd = originalCwd;
           });
           yield* fs.remove(repositoryPath, { force: true, recursive: true }).pipe(Effect.orDie);
         })
@@ -1538,13 +1539,27 @@ describe("quality task adapter", () => {
   });
 
   it.effect(
-    "rejects replace-all without baseline writing",
+    "rejects replace-all without baseline writing or with scoped baseline writing",
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(validateCoverageTaskArgsForTesting("/repo", ["--replace-all"]));
 
       assert.isTrue(Exit.isFailure(exit));
       if (Exit.isFailure(exit)) {
         assert.include(Cause.pretty(exit.cause), "--replace-all requires --write-baseline");
+      }
+
+      for (const scopeArg of ["--filter=@beep/repo-cli", "--since=origin/main", "--affected"]) {
+        const scopedExit = yield* Effect.exit(
+          validateCoverageTaskArgsForTesting("/repo", ["--write-baseline", "--replace-all", scopeArg])
+        );
+
+        assert.isTrue(Exit.isFailure(scopedExit));
+        if (Exit.isFailure(scopedExit)) {
+          assert.include(
+            Cause.pretty(scopedExit.cause),
+            "--replace-all only applies to an unscoped --write-baseline run"
+          );
+        }
       }
     }, provideScopedLayer(PlatformLayer))
   );
@@ -2054,7 +2069,12 @@ describe("quality task adapter", () => {
           yield* runGit(repoRoot, ["add", "--all"]);
           yield* runGit(repoRoot, ["commit", "-m", "test: seed unchanged coverage fixture"]);
 
-          yield* withEnvVarEffect("TURBO_SCM_BASE", undefined, writeCoverageRegressionBaseline(repoRoot, false));
+          yield* writeCoverageRegressionBaseline(repoRoot, false).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "origin/main" })
+            )
+          );
           const heldBaseline = yield* decodeCoverageRegressionBaselineJsoncForTesting(
             yield* fs.readFileString(baselinePath)
           );
@@ -2064,12 +2084,20 @@ describe("quality task adapter", () => {
           expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
             "replaced 0 changed package(s), added 0, held 1 unchanged package(s) at committed rows, pruned 0 (base: dirty worktree only)"
           );
+          expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+            "[coverage-ratchet] TURBO_SCM_BASE origin/main does not resolve here; falling back to origin/main merge-base or dirty-worktree files only"
+          );
 
           yield* runGit(repoRoot, ["add", "--all"]);
           yield* runGit(repoRoot, ["commit", "-m", "test: commit held baseline"]);
           yield* fs.writeFileString(sourcePath, "export const value = 2;\n");
 
-          yield* withEnvVarEffect("TURBO_SCM_BASE", undefined, writeCoverageRegressionBaseline(repoRoot, false));
+          yield* writeCoverageRegressionBaseline(repoRoot, false).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "origin/main" })
+            )
+          );
           const replacedBaseline = yield* decodeCoverageRegressionBaselineJsoncForTesting(
             yield* fs.readFileString(baselinePath)
           );
@@ -2095,6 +2123,16 @@ describe("quality task adapter", () => {
     expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], true).missingActuals).toEqual(
       []
     );
+  });
+
+  it("excludes the coverage baseline artifact only from writer change-set planning", () => {
+    expect(
+      coverageBaselineWriterChangedFiles([
+        "packages/example/src/Index.ts",
+        "standards/coverage.regression-baseline.jsonc",
+        "vitest.config.ts",
+      ])
+    ).toEqual(["packages/example/src/Index.ts", "vitest.config.ts"]);
   });
 
   it("keeps rendered coverage diagnostics free of terminal control characters", () => {
@@ -3419,7 +3457,7 @@ describe("quality task adapter", () => {
             })
           );
 
-          process.chdir(packageDir);
+          process.cwd = () => packageDir;
           yield* runQualityTask(getInvocation(["lint"]));
 
           const lines = yield* TestConsole.logLines;

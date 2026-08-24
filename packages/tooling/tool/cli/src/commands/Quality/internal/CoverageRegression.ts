@@ -1234,6 +1234,36 @@ const coverageBaselineGitAdapter: GitCommandErrorAdapter<QualityTaskConfiguratio
   onTruncated: O.none(),
 };
 
+/**
+ * Remove the generated baseline artifact from the writer's changed-file input.
+ *
+ * **Details**
+ *
+ * The baseline remains a global input for ordinary affected coverage planning.
+ * Only regeneration planning ignores it, so rerunning the writer does not make
+ * its own prior output authorize package-row adoption or a full-reason notice.
+ *
+ * **Example** (Ignore the writer's own output)
+ *
+ * ```ts
+ * import { coverageBaselineWriterChangedFiles } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(
+ *   coverageBaselineWriterChangedFiles([
+ *     "standards/coverage.regression-baseline.jsonc",
+ *     "packages/example/src/Index.ts"
+ *   ])
+ * ) // ["packages/example/src/Index.ts"]
+ * ```
+ *
+ * @param changedFiles - Repository-relative changed paths collected for regeneration planning.
+ * @returns Changed paths excluding the coverage baseline artifact.
+ * @category filtering
+ * @since 0.0.0
+ */
+export const coverageBaselineWriterChangedFiles: (changedFiles: ReadonlyArray<string>) => ReadonlyArray<string> =
+  A.filter((filePath) => !Str.equivalence(filePath, coverageRegressionBaselinePath));
+
 const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
   "CoverageRegression.coverageBaselineChangeSetFromChangedFiles"
 )(function* (
@@ -1241,8 +1271,9 @@ const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
   changedFiles: ReadonlyArray<string>,
   baseDescription: string
 ): Effect.fn.Return<CoverageBaselineChangeSet, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
+  const writerChangedFiles = coverageBaselineWriterChangedFiles(changedFiles);
   const owners = yield* workspaceCoverageScopeOwners(repoRoot);
-  const scope = planCoverageAffectedScope(owners, changedFiles);
+  const scope = planCoverageAffectedScope(owners, writerChangedFiles);
   const fullReasons = Match.value(scope).pipe(
     Match.discriminatorsExhaustive("_tag")({
       full: ({ reasons }) => reasons,
@@ -1253,7 +1284,7 @@ const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
 
   return CoverageBaselineChangeSet.make({
     baseDescription,
-    packageNames: changedCoverageOwners(owners, changedFiles),
+    packageNames: changedCoverageOwners(owners, writerChangedFiles),
     fullReasons,
   });
 });
@@ -1292,10 +1323,19 @@ const collectCoverageBaselineChangeSet = Effect.fn("CoverageRegression.collectCo
 > {
   const configuredBase = yield* configStringOption("TURBO_SCM_BASE");
   if (O.isSome(configuredBase)) {
-    return yield* coverageBaselineChangeSetFromBase(
-      repoRoot,
-      configuredBase.value,
-      `TURBO_SCM_BASE ${configuredBase.value}`
+    const configuredCommit = yield* Effect.option(
+      resolveGitCommit(repoRoot, configuredBase.value, coverageBaselineGitAdapter)
+    );
+    if (O.isSome(configuredCommit)) {
+      return yield* coverageBaselineChangeSetFromBase(
+        repoRoot,
+        configuredBase.value,
+        `TURBO_SCM_BASE ${configuredBase.value}`
+      );
+    }
+
+    yield* Console.log(
+      `[coverage-ratchet] TURBO_SCM_BASE ${configuredBase.value} does not resolve here; falling back to origin/main merge-base or dirty-worktree files only`
     );
   }
 
@@ -1579,6 +1619,16 @@ export const coverageBaselineWriteSummary: {
  * adoption set. Within a changed package the whole measured row is adopted, so
  * environment-dependent file rows there may still need manual pinning to the
  * hosted figure.
+ *
+ * **Example** (Build an unscoped write effect)
+ *
+ * ```ts
+ * import { writeCoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * const write = writeCoverageRegressionBaseline("/repo", false)
+ * console.log(Effect.isEffect(write)) // true
+ * ```
  *
  * @param repoRoot - Repository root.
  * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
