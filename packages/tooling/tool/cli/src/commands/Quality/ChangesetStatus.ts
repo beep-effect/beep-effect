@@ -3,13 +3,10 @@
  *
  * **Details**
  *
- * Lab apps under `apps/labs/**` are changeset-ceremony exempt: a lab-only
- * change set succeeds without consulting changesets, a change set with zero
- * lab paths runs stock `changeset status --since` for byte-parity, and a
- * mixed lab+product change set reimplements the stock requirement in-process
- * (every changed, versioned, non-ignored product workspace must be named by a
- * pending changeset) because the stock CLI cannot exclude lab packages
- * (P2-D12, mixed-PR policy Option B).
+ * Lab apps under `apps/labs/**` are changeset-ceremony exempt. Every other
+ * change set is enforced in-process: each changed, versioned, non-ignored
+ * product workspace must be named by a changeset added in the merge-base
+ * range. The wrapper never delegates to the stock changesets CLI.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -27,7 +24,7 @@ import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
-import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
+import { runCaptured } from "../../internal/process/index.ts";
 import { changesetPackageReferencesFromText, collectWorkspacePackageJsonFiles } from "./ChangesetGraph.ts";
 import { ChangesetStatusError } from "./Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -48,7 +45,6 @@ const nulSeparator = "\u0000";
 const changesetDirName = ".changeset";
 const changesetConfigPath = ".changeset/config.json";
 const changesetReadmeFilename = "README.md";
-const stockChangesetStatusLabel = "changeset-status:stock";
 
 /**
  * Repo-relative path prefixes that neither block nor grant the lab-only
@@ -141,8 +137,7 @@ export class ChangesetStatusPartition extends S.Class<ChangesetStatusPartition>(
 ) {}
 
 /**
- * Closed verdict domain of the path-aware changeset status wrapper
- * (P2-D12, mixed-PR policy Option B).
+ * Closed verdict domain of the path-aware changeset status wrapper.
  *
  * **Example** (Use a verdict literal)
  *
@@ -156,10 +151,9 @@ export class ChangesetStatusPartition extends S.Class<ChangesetStatusPartition>(
  * @category schemas
  * @since 0.0.0
  */
-export const ChangesetStatusVerdict = LiteralKit(["lab-exempt", "stock-parity", "mixed-reimplemented"]).pipe(
+export const ChangesetStatusVerdict = LiteralKit(["lab-exempt", "enforced"]).pipe(
   $I.annoteSchema("ChangesetStatusVerdict", {
-    description:
-      "Path-aware changeset status verdict: lab-only exemption, stock parity, or the reimplemented mixed check.",
+    description: "Path-aware changeset status verdict: lab-only exemption or in-process product enforcement.",
   })
 );
 
@@ -172,7 +166,7 @@ export const ChangesetStatusVerdict = LiteralKit(["lab-exempt", "stock-parity", 
 export type ChangesetStatusVerdict = typeof ChangesetStatusVerdict.Type;
 
 /**
- * One changed product workspace considered by the reimplemented mixed check.
+ * One changed product workspace considered by the in-process changeset check.
  *
  * **Example** (Make a workspace package)
  *
@@ -200,7 +194,7 @@ export class ChangesetStatusWorkspacePackage extends S.Class<ChangesetStatusWork
     version: S.OptionFromOptionalKey(S.String),
   },
   $I.annote("ChangesetStatusWorkspacePackage", {
-    description: "A changed product workspace considered by the reimplemented mixed changeset check.",
+    description: "A changed product workspace considered by the in-process changeset check.",
   })
 ) {}
 
@@ -309,9 +303,8 @@ export const partitionChangedFilesForStatus: {
  *
  * **Details**
  *
- * Zero lab paths (including an empty diff) is `stock-parity`; a lab-only
- * change set (neutral paths do not block) is `lab-exempt`; lab paths plus any
- * product workspace or blocking path is `mixed-reimplemented`.
+ * A lab-only change set (neutral paths do not block) is `lab-exempt`; every
+ * other partition is `enforced` in-process.
  *
  * **Example** (Judge an empty diff)
  *
@@ -327,84 +320,11 @@ export const partitionChangedFilesForStatus: {
  * @since 0.0.0
  */
 export const changesetStatusVerdict = (partition: ChangesetStatusPartition): ChangesetStatusVerdict =>
-  A.isReadonlyArrayEmpty(partition.labPaths)
-    ? "stock-parity"
-    : A.isReadonlyArrayEmpty(partition.productWorkspaceDirs) && A.isReadonlyArrayEmpty(partition.blockingPaths)
-      ? "lab-exempt"
-      : "mixed-reimplemented";
-
-const stockChangesetStatusStep = (repoRoot: string, sinceArgs: ReadonlyArray<string>): QualityTaskStep =>
-  QualityTaskStep.make({
-    label: stockChangesetStatusLabel,
-    command: "bunx",
-    args: ["changeset", "status", ...sinceArgs],
-    cwd: repoRoot,
-  });
-
-/**
- * Plan the stock passthrough invocation used when `--since` is absent.
- *
- * **Details**
- *
- * Passthrough mode preserves interactive stock semantics: one
- * `bunx changeset status` step with no `--since` and no partition (P2-D12).
- *
- * **Example** (Plan the passthrough step)
- *
- * ```ts
- * import { changesetStatusPassthroughSteps } from "@beep/repo-cli/commands/Quality/ChangesetStatus"
- *
- * console.log(changesetStatusPassthroughSteps("/repo")[0]?.args)
- * ```
- *
- * @param repoRoot - Repository root used as the subprocess working directory.
- * @returns The single stock passthrough step.
- * @category utilities
- * @since 0.0.0
- */
-export const changesetStatusPassthroughSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
-  A.of(stockChangesetStatusStep(repoRoot, A.empty()));
-
-const planStepsImpl = (
-  repoRoot: string,
-  verdict: ChangesetStatusVerdict,
-  since: string
-): ReadonlyArray<QualityTaskStep> =>
-  ChangesetStatusVerdict.$match(verdict, {
-    "lab-exempt": A.empty<QualityTaskStep>,
-    "mixed-reimplemented": A.empty<QualityTaskStep>,
-    "stock-parity": () => A.of(stockChangesetStatusStep(repoRoot, A.of(`--since=${since}`))),
-  });
-
-/**
- * Plan the subprocess steps for a `--since` run: the spawn seam for tests.
- *
- * **Details**
- *
- * `stock-parity` plans exactly one stock `changeset status --since` step;
- * `lab-exempt` and `mixed-reimplemented` plan none — the exemption succeeds
- * in-process and the mixed check is reimplemented rather than spawned
- * (P2-D12, Option B).
- *
- * **Example** (Plan a stock-parity run)
- *
- * ```ts
- * import { changesetStatusPlanSteps } from "@beep/repo-cli/commands/Quality/ChangesetStatus"
- *
- * console.log(changesetStatusPlanSteps("/repo", "stock-parity", "origin/main")[0]?.args)
- * ```
- *
- * @param repoRoot - Repository root used as the subprocess working directory.
- * @param verdict - Wrapper verdict for the change set.
- * @param since - Base ref forwarded to stock `changeset status`.
- * @returns Planned subprocess steps for the verdict.
- * @category utilities
- * @since 0.0.0
- */
-export const changesetStatusPlanSteps: {
-  (verdict: ChangesetStatusVerdict, since: string): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
-  (repoRoot: string, verdict: ChangesetStatusVerdict, since: string): ReadonlyArray<QualityTaskStep>;
-} = dual(3, planStepsImpl);
+  !A.isReadonlyArrayEmpty(partition.labPaths) &&
+  A.isReadonlyArrayEmpty(partition.productWorkspaceDirs) &&
+  A.isReadonlyArrayEmpty(partition.blockingPaths)
+    ? "lab-exempt"
+    : "enforced";
 
 const uncoveredImpl = (
   workspaces: ReadonlyArray<ChangesetStatusWorkspacePackage>,
@@ -422,14 +342,15 @@ const uncoveredImpl = (
   );
 
 /**
- * Find changed product workspaces not named by any pending changeset.
+ * Find changed product workspaces not named by an in-range changeset.
  *
  * **Details**
  *
- * The reimplemented stock requirement (P2-D12, Option B): every changed
+ * The in-process requirement: every changed
  * non-lab workspace that declares a version and is not in the
- * `.changeset/config.json` ignore list must be named by at least one pending
- * changeset. Versionless and ignored workspaces never require coverage.
+ * `.changeset/config.json` ignore list must be named by at least one changeset
+ * added in the since-range. Versionless and ignored workspaces never require
+ * coverage.
  *
  * **Example** (Find uncovered workspaces)
  *
@@ -447,7 +368,7 @@ const uncoveredImpl = (
  *
  * @param workspaces - Changed product workspaces with their manifest facts.
  * @param ignoredPackageNames - Package names ignored by changesets config.
- * @param references - Package references parsed from pending changesets.
+ * @param references - Package references parsed from changesets added in the since-range.
  * @returns Sorted package names missing changeset coverage.
  * @category utilities
  * @since 0.0.0
@@ -502,34 +423,40 @@ const readChangesetIgnoredPackageNames = Effect.fn("ChangesetStatus.readChangese
   return config.ignore ?? A.empty<string>();
 });
 
-const collectPendingChangesetReferences = Effect.fn("ChangesetStatus.collectPendingChangesetReferences")(function* (
-  repoRoot: string
+const collectAddedChangesetReferences = Effect.fn("ChangesetStatus.collectAddedChangesetReferences")(function* (
+  repoRoot: string,
+  since: string
 ): Effect.fn.Return<
   ReadonlyArray<ChangesetGraphPackageReference>,
   ChangesetStatusError,
-  FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const changesetDir = path.join(repoRoot, changesetDirName);
-  const exists = yield* fs.exists(changesetDir).pipe(Effect.orElseSucceed(thunkFalse));
-  if (!exists) {
-    return A.empty<ChangesetGraphPackageReference>();
+  const args = ["diff", "--name-only", "-z", "--diff-filter=A", `${since}...HEAD`, "--", changesetDirName] as const;
+  const result = yield* runCaptured({
+    command: "git",
+    args,
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(ChangesetStatusError.mapError(`Failed to run git ${A.join(args, " ")}.`));
+  if (result.exitCode !== 0) {
+    return yield* ChangesetStatusError.make({
+      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`,
+    });
   }
-  const entries = yield* fs
-    .readDirectory(changesetDir)
-    .pipe(ChangesetStatusError.mapError(`Failed to list ${changesetDirName}.`));
   const changesetFiles = pipe(
-    entries,
-    A.filter((entry) => Str.endsWith(".md")(entry) && !Str.equivalence(entry, changesetReadmeFilename)),
+    toNulSeparatedPaths(result.output),
+    A.filter(
+      (file) => Str.endsWith(".md")(file) && !Str.equivalence(file, `${changesetDirName}/${changesetReadmeFilename}`)
+    ),
     A.sort(Order.String)
   );
   const references = yield* Effect.forEach(
     changesetFiles,
-    Effect.fn(function* (entry) {
-      const file = `${changesetDirName}/${entry}`;
+    Effect.fn(function* (file) {
       const content = yield* fs
-        .readFileString(path.join(changesetDir, entry))
+        .readFileString(path.join(repoRoot, file))
         .pipe(ChangesetStatusError.mapError(`Failed to read changeset file ${file}.`, file));
       return yield* changesetPackageReferencesFromText(file, content).pipe(
         ChangesetStatusError.mapError(`Failed to parse changeset file ${file}.`, file)
@@ -576,49 +503,32 @@ const collectChangedWorkspacePackages = Effect.fn("ChangesetStatus.collectChange
   );
 });
 
-const runPlannedStep = Effect.fn("ChangesetStatus.runPlannedStep")(function* (
-  step: QualityTaskStep
-): Effect.fn.Return<void, ChangesetStatusError | CliReportedExit, ChildProcessSpawner.ChildProcessSpawner> {
-  const exitCode = yield* runToExit({
-    command: step.command,
-    args: step.args,
-    cwd: step.cwd,
-    stdio: "inherit",
-  }).pipe(ChangesetStatusError.mapError(`Failed to spawn ${formatCommandLine(step.command, step.args)}.`));
-  if (exitCode !== 0) {
-    return yield* failWithReportedExit(`${step.label} failed with exit code ${exitCode}.`, exitCode);
-  }
-});
-
-const runPlannedSteps = Effect.fn("ChangesetStatus.runPlannedSteps")(function* (
-  steps: ReadonlyArray<QualityTaskStep>
-): Effect.fn.Return<void, ChangesetStatusError | CliReportedExit, ChildProcessSpawner.ChildProcessSpawner> {
-  for (const step of steps) {
-    yield* runPlannedStep(step);
-  }
-});
-
-const runMixedReimplementedCheck = Effect.fn("ChangesetStatus.runMixedReimplementedCheck")(function* (
+const runEnforcedCheck = Effect.fn("ChangesetStatus.runEnforcedCheck")(function* (
   repoRoot: string,
+  since: string,
   partition: ChangesetStatusPartition
-): Effect.fn.Return<void, ChangesetStatusError | CliReportedExit, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  ChangesetStatusError | CliReportedExit,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const workspaces = yield* collectChangedWorkspacePackages(repoRoot, partition.productWorkspaceDirs);
   const ignoredPackageNames = yield* readChangesetIgnoredPackageNames(repoRoot);
-  const references = yield* collectPendingChangesetReferences(repoRoot);
+  const references = yield* collectAddedChangesetReferences(repoRoot, since);
   const uncovered = uncoveredWorkspacePackageNames(workspaces, ignoredPackageNames, references);
 
   if (A.isReadonlyArrayEmpty(uncovered)) {
     return yield* Console.log(
-      "[changeset-status] mixed change set: every changed product workspace is named by a pending changeset."
+      "[changeset-status] every changed product workspace is named by a changeset added in the since-range."
     );
   }
 
-  yield* Console.error("[changeset-status] changed product workspaces missing a pending changeset:");
+  yield* Console.error("[changeset-status] changed product workspaces missing an in-range changeset:");
   for (const packageName of uncovered) {
     yield* Console.error(`- ${packageName}`);
   }
   return yield* failWithReportedExit(
-    "Changeset status validation failed: changed product workspaces lack pending changesets.",
+    "Changeset status validation failed: changed product workspaces lack in-range changesets.",
     1
   );
 });
@@ -628,13 +538,10 @@ const runMixedReimplementedCheck = Effect.fn("ChangesetStatus.runMixedReimplemen
  *
  * **Details**
  *
- * Without `--since` this is a stock passthrough: it spawns stock
- * `bunx changeset status` unchanged and propagates its exit. With `--since`
- * it partitions the
- * merge-base diff and applies the P2-D12 verdicts: `lab-exempt` succeeds
- * without spawning, `stock-parity` spawns stock `changeset status --since`,
- * and `mixed-reimplemented` verifies changeset coverage in-process, failing
- * through the reported-exit sentinel when product workspaces are uncovered.
+ * The base defaults to `origin/main` when `--since` is absent. The wrapper
+ * partitions the merge-base diff, exempts lab-only changes, and otherwise
+ * verifies in-process that each changed product workspace is named by a
+ * changeset added in the same since-range. It never spawns the stock CLI.
  *
  * **Example** (Run the wrapper)
  *
@@ -647,7 +554,7 @@ const runMixedReimplementedCheck = Effect.fn("ChangesetStatus.runMixedReimplemen
  * ```
  *
  * @param repoRoot - Repository root used for git and subprocess execution.
- * @param since - Optional base ref; absent selects stock passthrough mode.
+ * @param since - Optional base ref; absent defaults to `origin/main`.
  * @returns Effect completing when the change set passes changeset policy.
  * @category use-cases
  * @since 0.0.0
@@ -660,11 +567,8 @@ export const runChangesetStatus = Effect.fn("ChangesetStatus.runChangesetStatus"
   ChangesetStatusError | CliReportedExit,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  if (O.isNone(since)) {
-    return yield* runPlannedSteps(changesetStatusPassthroughSteps(repoRoot));
-  }
-
-  const changedFiles = yield* collectChangedFilesSince(repoRoot, since.value);
+  const base = O.getOrElse(since, () => "origin/main");
+  const changedFiles = yield* collectChangedFilesSince(repoRoot, base);
   const workspacePackageJsonFiles = yield* collectWorkspacePackageJsonFiles(repoRoot).pipe(
     ChangesetStatusError.mapError("Failed to collect workspace package manifests.")
   );
@@ -678,8 +582,7 @@ export const runChangesetStatus = Effect.fn("ChangesetStatus.runChangesetStatus"
 
   return yield* ChangesetStatusVerdict.$match(verdict, {
     "lab-exempt": () => Console.log("[changeset-status] changeset ceremony exempt: lab-only change set"),
-    "stock-parity": () => runPlannedSteps(changesetStatusPlanSteps(repoRoot, verdict, since.value)),
-    "mixed-reimplemented": () => runMixedReimplementedCheck(repoRoot, partition),
+    enforced: () => runEnforcedCheck(repoRoot, base, partition),
   });
 });
 
@@ -688,9 +591,8 @@ export const runChangesetStatus = Effect.fn("ChangesetStatus.runChangesetStatus"
  *
  * **Details**
  *
- * Built here and registered by `Quality.command.ts`. `--since` is optional
- * with no default: absent selects stock passthrough mode, present selects the
- * path-aware partition (P2-D12).
+ * Built here and registered by `Quality.command.ts`. `--since` is optional;
+ * absent defaults the path-aware partition to `origin/main`.
  *
  * **Example** (Inspect the command)
  *
@@ -707,9 +609,7 @@ export const changesetStatusCommand = Command.make(
   "changeset-status",
   {
     since: Flag.string("since").pipe(
-      Flag.withDescription(
-        "Base ref for the merge-base changed-file partition; omit to run stock `changeset status` unchanged"
-      ),
+      Flag.withDescription("Base ref for the merge-base changed-file partition (defaults to origin/main)"),
       Flag.optional
     ),
   },
@@ -721,6 +621,6 @@ export const changesetStatusCommand = Command.make(
     )
 ).pipe(
   Command.withDescription(
-    "Path-aware changeset status: lab-only changes are ceremony-exempt, product changes keep stock changesets semantics"
+    "Path-aware changeset status: lab-only changes are ceremony-exempt, product changes require in-range changesets"
   )
 );

@@ -13,8 +13,6 @@ export {
   ChangesetStatusVerdict,
   ChangesetStatusWorkspacePackage,
   changesetStatusCommand,
-  changesetStatusPassthroughSteps,
-  changesetStatusPlanSteps,
   changesetStatusVerdict,
   LAB_EXEMPT_COMPANION_PATHS,
   partitionChangedFilesForStatus,

@@ -363,7 +363,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: ["--changeset-status"],
-    notes: "CI passes --changeset-status on pull_request events.",
+    notes: "Always validates the changeset graph; CI also passes --changeset-status on pull requests.",
   }),
   CiLaneDescriptor.make({
     id: "check",
@@ -984,6 +984,7 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       "repo-sanity": () => [
+        bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
         bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
         ...(options.changesetStatus
           ? [
