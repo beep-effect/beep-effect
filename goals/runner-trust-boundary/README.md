@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `active`; P1 complete 2026-08-24, P2 next
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -62,33 +62,38 @@ Use this command for execution-capable sessions:
 5. [`research/P0-GRILL.md`](./research/P0-GRILL.md) - ratified design,
    sequence, rollback, and live assumptions.
 6. [`research/P0-FACTS.md`](./research/P0-FACTS.md) - sanitized live inventory.
-7. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
+7. [`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md) - fresh bake,
+   deployment, red-team, fast-path, teardown, and closure-ready proof.
+8. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 friction
+   receipts and prevention notes.
+9. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
    ledger.
-8. The three source packets named in the transfer table.
-9. The fleet packet evidence named above.
+10. The three source packets named in the transfer table.
+11. The fleet packet evidence named above.
 
 ## Current Phase
 
-`P1 08-24 CSF-003/CSF-009 deployment proof` is in progress. P0 was ratified on
-2026-08-24 in [`research/P0-GRILL.md`](./research/P0-GRILL.md). Run `P1` now as a
-standalone hardened-image baseline before P2 Workload identity boundary, then
-apply P3 Admission defense in depth.
+`P1 08-24 CSF-003/CSF-009 deployment proof` completed on 2026-08-24 with
+closure-ready evidence retained in
+[`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md). P2 Workload identity
+boundary is next, followed by P3 Admission defense in depth.
 
 ## Latest Evidence
 
-On 2026-08-24, live reads verified launch-template version 8, SSM AMI-pin
-version 5, the profile's role and policy intersection, an idle EC2 fleet with
-30 terminated instances, and zero current repository runners. The bake check
-is stale for Bun, lockfile, and archive inputs. The operator ratified the `P1`
-baseline, `P2` pre-job IMDS disable, `P3` reusable-workflow admission, and
-stop-and-drain rollback posture.
+On 2026-08-24, bake #3 produced a sealed Bun `1.4.0` image keyed to `main`'s
+`f81ab29f…` lockfile digest. SSM AMI-pin version 7 serves that image. Final
+red-team run `32763957629` passed Gates A through E, `AMI_PIN`, scoped
+deregistration, and EC2 termination. Lane probe `32763957329` admitted the
+baked fast path only after the digest, owner, mode, and symlink checks passed.
+The two held findings are closure-ready and remain open until the P5 merge
+gate.
 
 ## Notes
 
 - Changing the ratified mechanism, moving heavy pull-request lanes to hosted
   runners, or making admission the primary boundary requires a new operator
   decision.
-- `P1` must produce new deployment evidence. Repository tests and the 2026-08-14
-  live run are precedent, not substitutes.
+- `P1` evidence is retained in `research/P1-EVIDENCE.md`. Every later lockfile
+  change on `main` re-stales the image until a new bake is deployed.
 - Never store raw finding bodies, credentials, email addresses, machine IDs, or
   developer-local absolute paths in this public packet.

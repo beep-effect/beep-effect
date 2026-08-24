@@ -3,15 +3,15 @@
 ## Status
 
 Status: `active`. P0 was ratified on 2026-08-24 in
-[`research/P0-GRILL.md`](./research/P0-GRILL.md). `P1` is in progress as a
-standalone baseline before the workload-identity rewrite.
+[`research/P0-GRILL.md`](./research/P0-GRILL.md). `P1` completed on 2026-08-24
+with closure-ready evidence retained. P2 Workload identity boundary is next.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Posture validation and grill gate | ratified 2026-08-24 | Validate the posture against live GitHub, AWS, AMI, identity, lifecycle, and lane-placement facts; ratify mechanism, sequencing, rollback, and proof. | The sanitized facts, threat model, mechanism, and operator grill record exist. |
-| P1 08-24 CSF-003/CSF-009 deployment proof | in progress | Bake and deploy a fresh sealed image before the bootstrap rewrite, prove the setup fast path, run all five red-team gates, and prove teardown. | Every `SPEC.md` deployment-proof requirement passes; closure-ready evidence exists for the two held exact IDs. |
+| P1 08-24 CSF-003/CSF-009 deployment proof | complete 2026-08-24 (closure-ready evidence retained) | Bake and deploy a fresh sealed image before the bootstrap rewrite, prove the setup fast path, run all five red-team gates, and prove teardown. | Every `SPEC.md` deployment-proof requirement passes; closure-ready evidence exists for the two held exact IDs. |
 | P2 Workload identity boundary | pending | Keep the boundary-capped role for root-owned bootstrap, then disable IMDS fail-closed before runner startup. | No ordinary or privileged probe can obtain usable application role credentials; bootstrap, registration, and teardown still work. |
 | P3 Admission defense in depth | pending | Move the five heavy lanes to a default-branch reusable workflow and admit them through the selected organization runner group. | Group policy, workflow refs, membership, and fail-closed registration match the ratified design. |
 | P4 Boundary verification | pending | Run the complete deployed threat matrix and prepare exact-ID reconciliation. | Admission, identity, AMI, lifecycle, red-team, and teardown evidence satisfy `SPEC.md`; all six packet-owned open IDs are closure-ready. |
@@ -34,18 +34,42 @@ standalone baseline before the workload-identity rewrite.
 
 ## P1 08-24 CSF-003/CSF-009 deployment proof checklist
 
-1. Run a fresh `bun run beep runners bake` with the approved production inputs.
-   Retain a sanitized report and the bake-complete marker.
-2. Apply the report's exact `pulumiPinCommand`, deploy, and prove the controller
-   uses the reported AMI.
-3. Run `goals/ci-fleet-endgame/ops/redteam-verify.sh <deployed-ref>` with AWS
-   credentials available. Require exactly one PASS for A, B, C, D, and
-   `E_RUNNER_IMDS_HOOK`; no FAIL; runner deregistration; EC2 teardown; and final
-   `REDTEAM: PASS` without the AWS-skipped qualifier.
-4. Retain the setup-action log. `Baked fast path: true` is acceptable only after
-   explicit Bun-binary and sealed-cache ownership, mode, and digest checks.
-5. Record closure-ready evidence for the two held exact Codex IDs. Leave them
-   open until the `P5` merge gate passes.
+1. [x] Bake a fresh image with approved production inputs and retain the
+   sanitized report and bake-complete marker. See
+   [`P1-EVIDENCE.md` § Bake #1](./research/P1-EVIDENCE.md#bake-1--deploy-1)
+   and [§ Bake #3](./research/P1-EVIDENCE.md#merge-bake-guard-bake-3--deploy-2).
+2. [x] Apply the report's exact `pulumiPinCommand`, deploy with refresh, and
+   prove the serving pin. See
+   [`P1-EVIDENCE.md` § Bake #3 → deploy #2](./research/P1-EVIDENCE.md#merge-bake-guard-bake-3--deploy-2).
+3. [x] Require exactly one PASS for A, B, C, D, and
+   `E_RUNNER_IMDS_HOOK`, plus the expected AMI, scoped deregistration, EC2
+   teardown, and plain `REDTEAM: PASS`. See
+   [`P1-EVIDENCE.md` § Red-team run 4](./research/P1-EVIDENCE.md#red-team-run-4-pass).
+4. [x] Admit `Baked fast path: true` only after the Bun binary and sealed cache
+   pass key, ownership, mode, digest, and symlink checks. See
+   [`P1-EVIDENCE.md` § Lane probe #3](./research/P1-EVIDENCE.md#lane-probe-3-positive-path).
+5. [x] Retain closure-ready evidence for the two held exact Codex IDs while
+   leaving both open until the `P5` merge gate. See
+   [`P1-EVIDENCE.md` § Closure-ready mapping](./research/P1-EVIDENCE.md#closure-ready-mapping).
+
+### P1 operator recipe
+
+- Acquire the `beep-ci-runner-launcher` identity through the secret manager and
+  confirm it before launch. Do not use the operator's default admin identity.
+- Resolve the production subnet from `describe-subnets` and the worker
+  security group from the serving launch template. Do not copy resource ids
+  from old logs.
+- Bake only a revision reachable from a repository remote. To avoid an early
+  feature-branch push, bake `origin/main` from a detached worktree when its
+  lockfile matches the branch.
+- Apply the bake report's exact pin, then run `pulumi up --refresh --yes`.
+- Run the red-team wrapper with `REDTEAM_EXPECTED_AMI` set to the reported
+  image and require plain `REDTEAM: PASS`.
+- Drain every pre-flip instance before the acceptance pair, then dispatch a
+  lane probe on `main` and require `Baked fast path: true`.
+
+P2 Workload identity boundary is next. Every `bun.lock` change on `main`
+re-stales the serving image until a matching re-bake is deployed.
 
 ## P2 Workload identity boundary checklist
 

@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/runner-trust-boundary",
   "lifecycle": "active",
-  "statusNote": "P0 ratified 2026-08-24 in research/P0-GRILL.md. The P1 08-24 CSF-003/CSF-009 deployment proof is in progress before P2 Workload identity boundary and P3 Admission defense in depth.",
+  "statusNote": "P0 was ratified and P1 deployment proof completed on 2026-08-24. The two held findings are closure-ready and remain open; P2 Workload identity boundary is next.",
   "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -33,6 +33,8 @@
     "goals/runner-trust-boundary/research/P0-FACTS.md",
     "goals/runner-trust-boundary/research/P0-MECHANISM.md",
     "goals/runner-trust-boundary/research/P0-THREAT-MODEL.md",
+    "goals/runner-trust-boundary/research/P1-EVIDENCE.md",
+    "goals/runner-trust-boundary/research/OPPORTUNITIES.md",
     "goals/runner-trust-boundary/research/SOURCES.md",
     "goals/codex-security-findings-2026-08-10/ops/triage.json",
     "goals/codex-security-findings-2026-08-13/ops/triage.json",
@@ -45,6 +47,8 @@
     "research/P0-FACTS.md",
     "research/P0-MECHANISM.md",
     "research/P0-THREAT-MODEL.md",
+    "research/P1-EVIDENCE.md",
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [
@@ -67,7 +71,7 @@
     {
       "id": "P1",
       "name": "08-24 CSF-003/CSF-009 deployment proof",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",

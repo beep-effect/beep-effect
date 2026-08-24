@@ -25,16 +25,12 @@ Execution:
 
 1. P0 Posture validation and grill gate: ratified 2026-08-24. Treat
    `research/P0-GRILL.md` as the decision record.
-2. P1 08-24 CSF-003/CSF-009 deployment proof: in progress. Run a fresh
-   `bun run beep runners bake`, apply the report's exact
-   `pulumiPinCommand`, deploy, and run
-   `goals/ci-fleet-endgame/ops/redteam-verify.sh <deployed-ref>`. Require
-   exactly one PASS for Gates A, B, C, D, and `E_RUNNER_IMDS_HOOK`, plus runner
-   deregistration, EC2 teardown, and a setup-action log that admits the baked
-   fast path only after Bun-binary and sealed-cache ownership, mode, and digest
-   checks. Retain closure-ready evidence for Codex IDs
+2. P1 08-24 CSF-003/CSF-009 deployment proof: complete 2026-08-24. Treat
+   `research/P1-EVIDENCE.md` as the fresh bake, deployed pin, red-team,
+   fast-path, teardown, and closure-ready record. Codex IDs
    `9459410104b881919cd820b97c673b67` and
-   `d1f026deb21881919d853e63780734fe`; leave them open until P6.
+   `d1f026deb21881919d853e63780734fe` remain open until the P5 merge gate;
+   P6 owns dashboard closure.
 3. P2 Workload identity boundary: add the self-only metadata-disable allow and
    boundary Deny for every value other than `disabled`; dry-run both edges.
    Keep JIT in root-only tmpfs, scrub residue, and start only after the helper

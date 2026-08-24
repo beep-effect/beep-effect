@@ -61,8 +61,8 @@ invent closure reasons for the three IDs absent from the six-open inventory.
 | `2026-08-13` CSF-005 | `ca9a4a0353e481919011a7d8380f5068` | CI runner IMDS firewall rollback exposes AWS role creds | historical workload identity | Closed; absent from the exact six-open inventory |
 | `2026-08-13` CSF-006 | `e841bb5393c08191a74ff574c0108bd8` | PR code can steal EC2 runner IAM credentials | historical admission and identity | Closed; absent from the exact six-open inventory |
 | `2026-08-13` CSF-008; `2026-08-24` CSF-006 | `33cd94a12d788191afbec1edc25c433f` | Red-team gate misses sudo IMDS credential path | workload identity | Open; transferred |
-| `2026-08-24` CSF-003 | `9459410104b881919cd820b97c673b67` | Baked runner trusts mutable Bun binary | `P1` deployment proof | Open; held until `P1` proof |
-| `2026-08-24` CSF-009 | `d1f026deb21881919d853e63780734fe` | IMDS hook can silently remain unarmed | `P1` deployment proof | Open; held until `P1` proof |
+| `2026-08-24` CSF-003 | `9459410104b881919cd820b97c673b67` | Baked runner trusts mutable Bun binary | `P1` deployment proof | Open; held — closure-ready |
+| `2026-08-24` CSF-009 | `d1f026deb21881919d853e63780734fe` | IMDS hook can silently remain unarmed | `P1` deployment proof | Open; held — closure-ready |
 
 The exact open allowlist for this packet is the six IDs marked Open above.
 `P1` owns the two held identities. `P2` through `P4` own the remaining four.
@@ -132,24 +132,28 @@ mechanism, rollback, and approved proof sequence. Its status is
 
 ### P1 08-24 CSF-003/CSF-009 deployment proof
 
-Status: `in progress`. `P1` must perform all steps against a fresh deployed
-image:
+Status: `complete 2026-08-24 (closure-ready evidence retained)`. P1 satisfied
+all requirements against the fresh serving image:
 
-1. Run `bun run beep runners bake` with the approved production inputs and
-   retain the sanitized report with its bake-complete marker.
-2. Apply that report's exact `pulumiPinCommand`, deploy the controller change,
-   and prove the deployed AMI pin matches the report.
-3. Run `goals/ci-fleet-endgame/ops/redteam-verify.sh <deployed-ref>` with
-   GitHub and AWS authority available. Require exactly one PASS for each of
-   Gates A, B, C, D, and `E_RUNNER_IMDS_HOOK`, no gate FAIL lines, runner
-   deregistration, EC2 state `shutting-down`, `terminated`, or `not-found`, and
-   a final plain `REDTEAM: PASS`. The AWS-skipped result is not acceptance.
-4. Retain the setup-action log proving `Baked fast path: true` only after the
-   Bun binary and sealed cache pass ownership, mode, and digest checks.
-5. Retain closure-ready evidence for Codex IDs
-   `9459410104b881919cd820b97c673b67` and
-   `d1f026deb21881919d853e63780734fe` after steps 1 to 4 pass. Leave both IDs
-   open until the `P5` remediation PR merge gate passes; `P6` owns dashboard
+1. [x] The launcher-identity bake produced a sanitized, complete report. The
+   serving bake #3 report records Bun `1.4.0`, the `f81ab29f…` lockfile key, and
+   the `2d03fb5f…` archive digest. See
+   [`P1-EVIDENCE.md` § Bake #3](./research/P1-EVIDENCE.md#merge-bake-guard-bake-3--deploy-2).
+2. [x] The report's exact pin was applied with
+   `pulumi up --refresh --yes`; SSM
+   `/beep-ci/controller/runner-ami-id` version 7 serves that image. See
+   [`P1-EVIDENCE.md` § Bake #3 → deploy #2](./research/P1-EVIDENCE.md#merge-bake-guard-bake-3--deploy-2).
+3. [x] Red-team run `32763957629` produced exactly one PASS for Gates A, B, C,
+   D, and `E_RUNNER_IMDS_HOOK`, plus `AMI_PIN: PASS`, scoped deregistration,
+   EC2 teardown, and plain `REDTEAM: PASS`. See
+   [`P1-EVIDENCE.md` § Red-team run 4](./research/P1-EVIDENCE.md#red-team-run-4-pass).
+4. [x] Lane probe `32763957329` reported `Baked fast path: true` only after the
+   checkout keys, Bun binary, sealed cache, owners, modes, digests, and symlink
+   matched. See
+   [`P1-EVIDENCE.md` § Lane probe #3](./research/P1-EVIDENCE.md#lane-probe-3-positive-path).
+5. [x] The two held Codex IDs have individual closure-ready mappings in
+   [`P1-EVIDENCE.md`](./research/P1-EVIDENCE.md#closure-ready-mapping). Both
+   remain open until the `P5` remediation PR merge gate; `P6` owns dashboard
    closure.
 
 ### P2 Workload identity boundary
@@ -224,8 +228,9 @@ manifest, and index state together.
 
 - [x] P0 records current GitHub and AWS facts and the retained 2026-08-24
       operator grill ratifying design, sequence, rollback, and proof.
-- [ ] `P1` satisfies every deployment-proof requirement and records closure-ready
-      evidence for the two held exact IDs.
+- [x] `P1` satisfies every deployment-proof requirement and records
+      closure-ready evidence for the two held exact IDs in
+      `research/P1-EVIDENCE.md`.
 - [ ] Heavy PR lanes remain on EC2, with their placement rationale retained.
 - [ ] Every job uses a fresh VM from a sealed digest-verified AMI.
 - [ ] No ordinary, sudo, root, privileged-container, or host-network path can

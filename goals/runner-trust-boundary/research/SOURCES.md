@@ -18,6 +18,22 @@ The 2026-08-24 charter ratifies these constraints:
   for the two held Codex IDs, followed by P2 Workload identity boundary and P3
   Admission defense in depth.
 
+## P1 deployment evidence
+
+The tracked, sanitized chronology is
+[`P1-EVIDENCE.md`](./P1-EVIDENCE.md). GitHub run pages below are the hosted
+provenance for its accepted and retained-superseded results.
+
+| Run | Role in the evidence chain | Status |
+| --- | --- | --- |
+| [Red-team run 32763957629](https://github.com/beep-effect/beep-effect/actions/runs/32763957629) | Final run on the serving bake #3 image: Gates A–E, `AMI_PIN`, scoped deregistration, and EC2 teardown | Accepted P1 proof |
+| [Lane probe 32763957329](https://github.com/beep-effect/beep-effect/actions/runs/32763957329) | Final positive baked fast path after key, digest, owner, mode, and symlink checks | Accepted P1 proof |
+| [Red-team run 32760440289](https://github.com/beep-effect/beep-effect/actions/runs/32760440289) | Gates passed; wrapper failed because it double-counted shell source and waited fleet-wide | Retained, superseded |
+| [Red-team run 32761051746](https://github.com/beep-effect/beep-effect/actions/runs/32761051746) | Patched-wrapper PASS on bake #1 before `main` changed its lockfile | Retained, superseded |
+| [Lane probe 32761137404](https://github.com/beep-effect/beep-effect/actions/runs/32761137404) | Bake #1 image rejected after `main` changed the lockfile key | Retained negative-path evidence |
+| [Red-team run 32763386226](https://github.com/beep-effect/beep-effect/actions/runs/32763386226) | `AMI_PIN` rejected a pre-flip bake #1 worker after deploy #2 | Retained negative-path evidence |
+| [Lane probe 32763385680](https://github.com/beep-effect/beep-effect/actions/runs/32763385680) | Setup rejected the stale key on a pre-flip bake #1 worker | Retained negative-path evidence |
+
 ## Source packets
 
 | Source | Location | Use |
