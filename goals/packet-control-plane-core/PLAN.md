@@ -106,8 +106,10 @@ and injected unknown keys become detectable; (2) `readEventFile` compares
 event `packet`/`root` against the locator — new `packet-mismatch` chain
 issue, so a copied `ops/events/` directory can no longer inherit a foreign
 history silently; (3) `explore --check` gains an advisory
-`packet-status-drift` finding comparing stream-derived status with manifest
-`initiative.status` — the missing advisory-mode observability; (4) the
+`packet-status-drift` finding comparing stream-derived status with the
+root-specific manifest status field (`initiative.status` for goals,
+`exploration.status` for explorations — the check scans both roots) — the
+missing advisory-mode observability; (4) the
 queued idempotent-skip: `set-status` to the current derived status becomes a
 no-op outcome instead of appending a self-transition; (5) writer request
 schemas reuse `PacketEventActor`/`PacketEventTimestamp` so invalid actor or

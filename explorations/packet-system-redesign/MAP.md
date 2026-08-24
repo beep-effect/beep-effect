@@ -55,10 +55,12 @@ machinery and bounds stream opt-in.
   `type` postdates its vocabulary preserves it as an opaque chain link —
   digest verified, seq/parent linkage honored, body excluded from
   derivations — surfaces an advisory `unknown-event-type` finding, and
-  refuses writes past an opaque tip with an honest "stream requires a newer
-  CLI" error, never a fake integrity issue. The digest rule lands in the
-  goal's pre-close hardening rung; opaque handling lands with the first
-  vocabulary growth (candidate 2).
+  refuses writes whenever any opaque event occurs in the current linear
+  prefix (opaque ancestry, not just an opaque tip: a recognized event atop
+  an unknown one still leaves derived state incomplete) with an honest
+  "stream requires a newer CLI" error, never a fake integrity issue. The
+  digest rule lands in the goal's pre-close hardening rung; opaque handling
+  lands with the first vocabulary growth (candidate 2).
 - **Amendment E — dual-stage genesis + no-backfill law.** `packet-created`
   gains optional `furthestStage`/`furthestOrdinal` (pair-checked, with the
   furthest ordinal floored at the resume ordinal) so a stream adopted after
@@ -72,8 +74,11 @@ machinery and bounds stream opt-in.
 - **Amendment F — tip-only committed trace.** The committed `ops/trace.json`
   re-scopes from the full verbatim timeline (projector v2) to a
   constant-size derived snapshot: source tip, revision, status,
-  furthest/resume stages, risk-tier override, fork count. The timeline stays
-  derivable on demand from the event files. This keeps the PR-diff review
+  furthest/resume stages, risk-tier override, and the fork verdicts as
+  identifiers (parent digest/seq plus child digests — preserving the SPEC's
+  "visible fork, two children of one parent" acceptance; only the verbatim
+  event timeline is dropped). The timeline stays derivable on demand from
+  the event files. This keeps the PR-diff review
   signal, staleness detection, and the fork-loud merge conflict on parallel
   transitions while removing event byte-duplication and whole-file rewrite
   churn at fleet scale. Lands as the next projector bump, before the fleet
