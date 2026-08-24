@@ -37,9 +37,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research. Normalize the live and source audits into the versioned capability
-atlas, reconcile every visible/source feature, and ratify the minimal descriptor
-schema before implementation.
+P0 Research is in progress. The authored capability atlas, Effect v4 schemas,
+exact verifier, and P0 evidence-gap ledger landed on 2026-08-24. Source and
+inventory reconciliation passes, but 162 entries remain `unverified` and need
+live lifecycle evidence or user-approved waivers before P0 can complete.
+
+- [`research/capability-atlas.json`](./research/capability-atlas.json) is the
+  normative `editor-capability-atlas/v1` artifact.
+- [`ops/CapabilityAtlas.schemas.ts`](./ops/CapabilityAtlas.schemas.ts) defines
+  its schema-first wire contract.
+- [`ops/verify-capability-atlas.ts`](./ops/verify-capability-atlas.ts) checks
+  schema validity, stable IDs, dependencies, evidence paths, and pinned
+  inventories.
+- [`research/p0-evidence-gaps.md`](./research/p0-evidence-gaps.md) is the exact
+  browser-exercise remainder. P0 is not complete while it has unwaived rows.
 
 ## Latest Evidence
 
