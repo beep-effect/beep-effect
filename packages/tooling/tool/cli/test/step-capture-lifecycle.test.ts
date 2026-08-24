@@ -1,5 +1,9 @@
 import { CaptureCommandTimedOutError, runCaptured } from "@beep/repo-cli/test/Process";
+import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
+import { PosInt } from "@beep/schema/Int";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Deferred, Effect, Exit, Fiber, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
@@ -86,6 +90,38 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
 });
 
 describe("StepExec capture pipe lifecycle", () => {
+  it.effect(
+    "maps a bounded quality-step timeout to exit code 124",
+    Effect.fnUntraced(function* () {
+      const { spawner } = yield* makeNeverExitSpawner();
+      const fiber = yield* Effect.forkChild(
+        collectStepOutput(
+          QualityTaskStep.make({
+            label: "fake-step",
+            command: "fake-step",
+            args: ["--flag"],
+            cwd: process.cwd(),
+            captureTimeoutMillis: PosInt.make(60_000),
+          })
+        ).pipe(
+          provideScopedLayer(
+            Layer.mergeAll(
+              NodeFileSystem.layer,
+              NodePath.layer,
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)
+            )
+          )
+        )
+      );
+
+      yield* TestClock.adjust("1 minute");
+
+      const result = yield* Fiber.join(fiber);
+      expect(result.exitCode).toBe(124);
+      expect(result.output).toContain("fake-step --flag");
+    })
+  );
+
   it.effect(
     "reaps the child's group when a straggler holds the pipe open after exit, keeping captured text",
     Effect.fnUntraced(function* () {
