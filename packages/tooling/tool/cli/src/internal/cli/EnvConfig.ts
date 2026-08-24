@@ -19,7 +19,7 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { Config, ConfigProvider, Effect, pipe } from "effect";
+import { Config, ConfigProvider, Effect, flow, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
@@ -28,6 +28,7 @@ import * as Str from "effect/String";
 import { runToExit } from "../process/StepExec.ts";
 import {
   TurboCacheEnvironment,
+  TurboCacheEnvName,
   TurboCacheMode,
   TurboCacheSecretEnvName,
   turboCacheValueSourceFor,
@@ -426,12 +427,56 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   };
 });
 
-const turboCacheValueSource = (name: string): O.Option<TurboCacheValueSource> =>
-  pipe(
-    configStringOptionSync(name),
-    O.map(Str.trim),
-    O.filter(Str.isNonEmpty),
-    O.map((value) => turboCacheValueSourceFor(isUnresolvedSecretReference(value)))
+const configuredValue = (value: string | undefined): O.Option<string> =>
+  pipe(O.fromUndefinedOr(value), O.map(Str.trim), O.filter(Str.isNonEmpty));
+
+const turboCacheValueSource = (value: string | undefined): O.Option<TurboCacheValueSource> =>
+  pipe(configuredValue(value), O.map(flow(isUnresolvedSecretReference, turboCacheValueSourceFor)));
+
+/**
+ * Classify a Turbo remote-read configuration from an explicit environment
+ * record.
+ *
+ * **Details**
+ *
+ * A pure function of its argument, so every classification arm is reachable
+ * from a unit test regardless of what the host process carries. Credential
+ * *values* never leave this function: `TURBO_API`, `TURBO_TOKEN`, and
+ * `TURBO_TEAM` are reduced to whether they are literal or still an unresolved
+ * `op://` reference, blank and missing names are absent, and only the
+ * non-secret `TURBO_CACHE` posture is carried through verbatim.
+ *
+ * **Example** (Classify a workstation posture)
+ *
+ * ```ts
+ * import { readTurboCacheEnvironment } from "@beep/repo-cli/internal/cli/EnvConfig"
+ *
+ * const environment = readTurboCacheEnvironment({
+ *   TURBO_API: "https://cache.example.test",
+ *   TURBO_TOKEN: "op://vault/turbo/token",
+ *   TURBO_TEAM: "",
+ *   TURBO_CACHE: "local:rw,remote:r",
+ * })
+ * console.log(environment.api)
+ * console.log(environment.token)
+ * console.log(environment.team)
+ * ```
+ *
+ * @param environment - Environment record to classify; values may be undefined.
+ * @returns The remote-read configuration the record carries.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const readTurboCacheEnvironment = (
+  environment: Readonly<Record<string, string | undefined>>
+): TurboCacheEnvironment =>
+  TurboCacheEnvironment.make(
+    O.getSomesStruct({
+      api: turboCacheValueSource(environment.TURBO_API),
+      token: turboCacheValueSource(environment.TURBO_TOKEN),
+      team: turboCacheValueSource(environment.TURBO_TEAM),
+      cache: configuredValue(environment.TURBO_CACHE),
+    })
   );
 
 /**
@@ -440,10 +485,9 @@ const turboCacheValueSource = (name: string): O.Option<TurboCacheValueSource> =>
  *
  * **Details**
  *
- * Evaluated at call time, like every other reader here. Credential *values*
- * never leave this function: `TURBO_API`, `TURBO_TOKEN`, and `TURBO_TEAM` are
- * reduced to whether they are literal or still an unresolved `op://` reference,
- * and only the non-secret `TURBO_CACHE` posture is carried through verbatim.
+ * Evaluated at call time, like every other reader here: the four
+ * {@link TurboCacheEnvName} values are read through the ambient provider and
+ * handed to {@link readTurboCacheEnvironment}, which owns the classification.
  *
  * **Example** (Read the ambient cache configuration)
  *
@@ -458,13 +502,8 @@ const turboCacheValueSource = (name: string): O.Option<TurboCacheValueSource> =>
  * @since 0.0.0
  */
 export const readTurboCacheEnvironmentSync = (): TurboCacheEnvironment =>
-  TurboCacheEnvironment.make(
-    O.getSomesStruct({
-      api: turboCacheValueSource("TURBO_API"),
-      token: turboCacheValueSource("TURBO_TOKEN"),
-      team: turboCacheValueSource("TURBO_TEAM"),
-      cache: pipe(configStringOptionSync("TURBO_CACHE"), O.map(Str.trim), O.filter(Str.isNonEmpty)),
-    })
+  readTurboCacheEnvironment(
+    R.fromIterableWith(TurboCacheEnvName.Options, (name) => [name, O.getOrUndefined(configStringOptionSync(name))])
   );
 
 /**

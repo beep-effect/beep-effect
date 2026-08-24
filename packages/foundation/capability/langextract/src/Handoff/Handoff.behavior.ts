@@ -21,18 +21,27 @@ type AlignedGroundedExtraction =
 
 const alignedExtraction = GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_fuzzy"]);
 
-const makeEntity =
-  (documentId: DocumentId, provenance: Contract.Provenance) =>
-  (extraction: AlignedGroundedExtraction, index: number): Contract.Entity => {
+const makeAnnotation =
+  (documentId: DocumentId, chunkId: Contract.ChunkId, provenance: Contract.Provenance) =>
+  (extraction: AlignedGroundedExtraction, index: number): readonly [Contract.Mention, Contract.Entity] => {
     const mentionId = Contract.MentionId.make(`${documentId}:mention:${index}`);
-    return Contract.Entity.make({
-      canonicalName: extraction.text,
-      id: Contract.EntityId.make(`${documentId}:entity:${index}`),
-      mentions: A.of(mentionId),
-      provenance,
-      type: extraction.label,
-      ...O.getSomesStruct({ confidence: extraction.confidence }),
-    });
+    return [
+      Contract.Mention.make({
+        chunkId,
+        id: mentionId,
+        provenance,
+        span: extraction.span,
+        text: extraction.matchedText,
+      }),
+      Contract.Entity.make({
+        canonicalName: extraction.text,
+        id: Contract.EntityId.make(`${documentId}:entity:${index}`),
+        mentions: A.of(mentionId),
+        provenance,
+        type: extraction.label,
+        ...O.getSomesStruct({ confidence: extraction.confidence }),
+      }),
+    ];
   };
 
 /**
@@ -65,6 +74,7 @@ export const toAnnotatedDocument = (input: AnnotatedDocumentInput): Contract.Ann
   });
   const chunkId = Contract.ChunkId.make(`${input.documentId}:chunk:0`);
   const aligned = A.filter(input.extractions, alignedExtraction);
+  const [mentions, entities] = A.unzip(A.map(aligned, makeAnnotation(input.documentId, chunkId, provenance)));
 
   const chunks = A.of(
     Contract.TextChunk.make({
@@ -78,9 +88,10 @@ export const toAnnotatedDocument = (input: AnnotatedDocumentInput): Contract.Ann
 
   return Contract.AnnotatedDocument.make({
     chunks,
-    entities: A.map(aligned, makeEntity(input.documentId, provenance)),
+    entities,
+    mentions,
     provenance,
     relations: A.empty(),
-    version: "nlp-ir/1.0",
+    version: "nlp-ir/1.1",
   });
 };

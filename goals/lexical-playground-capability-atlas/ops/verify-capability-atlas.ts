@@ -1,11 +1,19 @@
+import { GoalManifest } from "@beep/repo-cli/commands/Goals/Goals.schemas";
+import { goalManifestPhases } from "@beep/repo-cli/commands/Goals/Inventory";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CompatibilityFormat, EditorCapabilityAtlas } from "./CapabilityAtlas.schemas.ts";
 
 const atlasPath = Bun.fileURLToPath(new URL("../research/capability-atlas.json", import.meta.url));
 const evidenceGapsPath = Bun.fileURLToPath(new URL("../research/p0-evidence-gaps.md", import.meta.url));
+const manifestPath = Bun.fileURLToPath(new URL("./manifest.json", import.meta.url));
+const specPath = Bun.fileURLToPath(new URL("../SPEC.md", import.meta.url));
 const repoRoot = Bun.fileURLToPath(new URL("../../../", import.meta.url));
+const mapPath = Bun.fileURLToPath(new URL("../../../explorations/full-document-editor/MAP.md", import.meta.url));
 const exerciseScreenshotPrefix = "goals/lexical-playground-capability-atlas/history/";
+const exerciseAuditPath = "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md";
 const expectedCommit = "a933222c489e7025d87b9217c2489d309fc8a3cf";
 const expectedVersion = "0.49.0";
 
@@ -354,6 +362,20 @@ if (atlas === undefined) {
   process.exit(1);
 }
 
+let p0Status: string | undefined;
+try {
+  const rawManifest = await Bun.file(manifestPath).text();
+  const manifest = await Effect.runPromise(S.decodeUnknownEffect(S.fromJsonString(GoalManifest))(rawManifest));
+  const p0Phase = A.findFirst(goalManifestPhases(manifest), (phase) => phase.id === "P0");
+  if (O.isNone(p0Phase)) {
+    fail("ops/manifest.json does not declare phase P0");
+  } else {
+    p0Status = p0Phase.value.status;
+  }
+} catch (error) {
+  fail(`ops/manifest.json decode failed: ${String(error)}`);
+}
+
 if (atlas.upstream.packageVersion !== expectedVersion || atlas.upstream.commit !== expectedCommit) {
   fail(`upstream baseline must be Lexical ${expectedVersion} at ${expectedCommit}`);
 }
@@ -651,17 +673,122 @@ if (counts.settings !== 29 || counts.screenshots !== 17 || counts.observedKeybin
 }
 
 const evidenceGaps = await Bun.file(evidenceGapsPath).text();
-const recordedGapIds = [...evidenceGaps.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
-compareExactInventory(
-  "P0 evidence-gap ledger",
-  recordedGapIds,
-  atlas.capabilities.filter((item) => item.evidenceStatus === "unverified").map((item) => item.id)
-);
+const remainingUnverifiedHeading = "## Remaining unverified entries";
+const remainingUnverifiedStart = evidenceGaps.indexOf(remainingUnverifiedHeading);
+let remainingUnverifiedSection = "";
+if (remainingUnverifiedStart === -1) {
+  fail("P0 evidence-gap ledger is missing the Remaining unverified entries section");
+} else {
+  const afterRemainingUnverifiedHeading = evidenceGaps
+    .slice(remainingUnverifiedStart + remainingUnverifiedHeading.length)
+    .trimStart();
+  const nextSectionStart = afterRemainingUnverifiedHeading.search(/^## /m);
+  remainingUnverifiedSection =
+    nextSectionStart === -1
+      ? afterRemainingUnverifiedHeading
+      : afterRemainingUnverifiedHeading.slice(0, nextSectionStart);
+}
+const recordedGapIds = [...remainingUnverifiedSection.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
+const unverifiedIds = atlas.capabilities.filter((item) => item.evidenceStatus === "unverified").map((item) => item.id);
+compareExactInventory("P0 evidence-gap ledger", recordedGapIds, unverifiedIds);
 if (/\b(?:TODO|TBD|FIXME|PLACEHOLDER)\b/i.test(evidenceGaps)) {
   fail("P0 evidence-gap ledger contains placeholder text");
 }
-if (!evidenceGaps.includes("P0 is not complete.")) {
-  fail("P0 evidence-gap ledger must state that P0 is not complete");
+if (!evidenceGaps.includes("P0's entry gate is closed")) {
+  fail("P0 evidence-gap ledger must state that the entry gate is closed");
+}
+if (!/The\s+activation-path gate is open/.test(evidenceGaps)) {
+  fail("P0 evidence-gap ledger must state that the activation-path gate is open");
+}
+
+const spec = await Bun.file(specPath).text();
+const map = await Bun.file(mapPath).text();
+const mapCandidateOwners = new Set([...map.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1] ?? ""));
+const goalOwners = new Set<string>();
+for await (const path of new Bun.Glob("goals/*/").scan({ cwd: repoRoot, onlyFiles: false })) {
+  const match = path.match(/^goals\/([^/]+)$/);
+  if (match?.[1] !== undefined) {
+    goalOwners.add(match[1]);
+  }
+}
+const exceptionLedgerHeading = "## Exception Ledger";
+const exceptionLedgerStart = spec.indexOf(exceptionLedgerHeading);
+let exceptionLedgerSection = "";
+if (exceptionLedgerStart === -1) {
+  fail("SPEC is missing the Exception Ledger");
+} else {
+  const afterExceptionLedgerHeading = spec.slice(exceptionLedgerStart + exceptionLedgerHeading.length).trimStart();
+  const nextSectionStart = afterExceptionLedgerHeading.search(/^## /m);
+  exceptionLedgerSection =
+    nextSectionStart === -1 ? afterExceptionLedgerHeading : afterExceptionLedgerHeading.slice(0, nextSectionStart);
+}
+
+const approvedWaiverIds = new Set<string>();
+const resolvedWaiverOwners: Array<readonly [scope: string, owner: string, kind: "goal" | "map-candidate"]> = [];
+const exceptionLedgerRows = exceptionLedgerSection
+  .split("\n")
+  .filter((line) => line.startsWith("| ") && !line.startsWith("| Exception ") && !line.startsWith("| --- "));
+for (const row of exceptionLedgerRows) {
+  const match = row.match(/^\| ([^|]+) \| `([^`]+)` \| `([^`]+)` \| ([^|]+) \| ([^|]+) \|$/);
+  if (match === null) {
+    fail(`malformed Exception Ledger row: ${row}`);
+    continue;
+  }
+  const exception = match[1] ?? "";
+  const scope = match[2] ?? "";
+  const owner = match[3] ?? "";
+  if (!exception.startsWith("user-approved")) {
+    fail(`Exception Ledger row for ${scope} is not user-approved`);
+  }
+  if (approvedWaiverIds.has(scope)) {
+    fail(`Exception Ledger contains duplicate atlas ID ${scope}`);
+  }
+  approvedWaiverIds.add(scope);
+  const capability = capabilityById.get(scope);
+  if (capability === undefined) {
+    fail(`Exception Ledger names unknown atlas ID ${scope}`);
+  } else if (capability.evidenceStatus !== "unverified") {
+    fail(`Exception Ledger waives ${scope}, but its evidenceStatus is ${capability.evidenceStatus}`);
+  }
+  if (goalOwners.has(owner)) {
+    resolvedWaiverOwners.push([scope, owner, "goal"]);
+  } else if (mapCandidateOwners.has(owner)) {
+    resolvedWaiverOwners.push([scope, owner, "map-candidate"]);
+  } else {
+    fail(
+      `Exception Ledger row has unresolved owner ${owner}: ${row}; expected either an existing goals/<slug>/ directory or a MAP candidate row whose first cell is \`<slug>\``
+    );
+  }
+}
+const missingWaiverIds = unverifiedIds.filter((id) => !approvedWaiverIds.has(id));
+const unverifiedProgrammaticPathCount = atlas.capabilities.reduce(
+  (count, capability) =>
+    count +
+    capability.activationPaths.filter((path) => path.evidenceStatus === "unverified" && path.surface === "programmatic")
+      .length,
+  0
+);
+const missingActivationPathWaivers = atlas.capabilities.flatMap((capability) =>
+  capability.activationPaths
+    .filter(
+      (path) =>
+        path.evidenceStatus === "unverified" && path.surface !== "programmatic" && !approvedWaiverIds.has(capability.id)
+    )
+    .map((path) => `${capability.id}/${path.surface}`)
+);
+
+// The entry gate is unconditional: every unverified capability must carry a
+// user-approved Exception Ledger waiver regardless of the manifest phase, so a
+// regressed entry or a deleted ledger row can never pass verification. The
+// activation-path gate may stay open while P0 is in progress, but a manifest
+// that declares P0 complete with open paths is a contradiction and fails.
+if (missingWaiverIds.length > 0) {
+  fail(`P0 entry gate is OPEN: ${missingWaiverIds.join(", ")}`);
+}
+if (p0Status === "complete" && missingActivationPathWaivers.length > 0) {
+  fail(
+    `P0 activation-path gate is OPEN while ops/manifest.json declares P0 complete: ${missingActivationPathWaivers.join(", ")}`
+  );
 }
 
 const summarize = (select: (capability: EditorCapabilityAtlas["capabilities"][number]) => string) => {
@@ -697,9 +824,27 @@ writeLine(
     .map(([key, value]) => `${key}=${value}`)
     .join(", ")}`
 );
-const unverifiedCount = atlas.capabilities.filter((item) => item.evidenceStatus === "unverified").length;
-writeLine(
-  unverifiedCount === 0
-    ? "P0 evidence gate: complete"
-    : `P0 evidence gate: OPEN (${unverifiedCount} entries still require live exercise or user-approved waivers)`
-);
+for (const [scope, owner, kind] of resolvedWaiverOwners) {
+  writeLine(`waiver owner: ${scope} -> ${owner} (${kind})`);
+}
+const verifiedLiveByExerciseCount = atlas.capabilities.filter(
+  (item) =>
+    item.evidenceStatus === "verified-live" &&
+    item.upstreamEvidence.live.some((evidence) => evidence.auditPath === exerciseAuditPath)
+).length;
+if (missingWaiverIds.length === 0 && missingActivationPathWaivers.length === 0) {
+  writeLine(
+    `P0 evidence gate: complete (${verifiedLiveByExerciseCount} verified-live by exercise; ${unverifiedIds.length} unverified entries carry user-approved Exception Ledger waivers; ${unverifiedProgrammaticPathCount} programmatic paths are not user-visible and are proven by verified-source evidence or P1 resolver tests)`
+  );
+} else {
+  writeLine(
+    missingWaiverIds.length === 0
+      ? `P0 entry gate: complete (${verifiedLiveByExerciseCount} verified-live by exercise; ${unverifiedIds.length} unverified entries carry user-approved Exception Ledger waivers)`
+      : `P0 entry gate: OPEN (${missingWaiverIds.length} unverified entries lack user-approved Exception Ledger waivers: ${missingWaiverIds.join(", ")})`
+  );
+  writeLine(
+    missingActivationPathWaivers.length === 0
+      ? `P0 activation-path gate: complete (all user-visible unverified paths belong to waived entries; ${unverifiedProgrammaticPathCount} programmatic paths are not user-visible and are proven by verified-source evidence or P1 resolver tests)`
+      : `P0 activation-path gate: OPEN (${missingActivationPathWaivers.length} user-visible unverified paths lack an entry waiver: ${missingActivationPathWaivers.join(", ")}; ${unverifiedProgrammaticPathCount} programmatic paths are not user-visible and are proven by verified-source evidence or P1 resolver tests)`
+  );
+}

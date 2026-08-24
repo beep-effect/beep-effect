@@ -74,6 +74,9 @@ Higher sources outrank lower sources when they conflict.
   schemas, codecs, normalization, and projections for those semantics.
 - `packages/foundation/ui-system/editor` (`@beep/editor`) - capability-backed
   authoring mechanics, commands, registrations, read-only behavior, and tests.
+- Product-owned speech-boundary proof for `document.speech-to-text`, including
+  permission, transcription, correction/undo, serialization, keyboard,
+  real-microphone, and narrow-layout lifecycles.
 - `packages/foundation/ui-system/ui` (`@beep/ui`) - existing reusable UI
   primitives; extend only when a batch proves shared ownership.
 - `apps/storybook` - isolated profile, interaction, and compatibility proof.
@@ -96,6 +99,32 @@ named ownership boundaries requires a user-ratified SPEC change.
 - A batch may not disappear because it is difficult. Every D13-eligible atlas
   entry must map to an implemented batch or a user-approved Exception Ledger
   entry with an owning successor.
+
+### Inherited P0 waivers
+
+Goal A's [Exception Ledger](../lexical-playground-capability-atlas/SPEC.md#exception-ledger)
+records the approved waivers. Goal B must retain each obligation until the
+named proof removes it:
+
+`comments.threads`, `node.mark`, and `document.comments-panel` are inherited by `document-annotation-substrate` per the Non-Goals route above, not by Goal B.
+
+- `extension.floating-toolbar`: record a keyboard route from the editor into
+  the floating toolbar.
+- `transformer.table`: record a flat table from the typed shortcut, or re-ratify
+  the pinned baseline after the upstream fix lands.
+- `transformer.tweet`: record a Tweet transformer that keeps selection and does
+  not crash, or re-ratify the pinned baseline after the upstream fix lands.
+- `document.speech-to-text`: record a real-microphone lifecycle covering
+  permission, transcription, correction/undo, serialization, keyboard access,
+  and narrow layout behind the product-owned speech boundary.
+- `network.remote-embed-resolution`: record an inert-on-open, user-authorized
+  provider lifecycle covering consent, rejected or cancelled resolution,
+  egress, keyboard access, and narrow layout.
+- `interchange.pandoc-docx`: retain the D25 gate until `pandoc-docx-driver`
+  records executable DOCX import/export at the driver boundary, including
+  declared losses and round-trip fixtures.
+- `interchange.pdf`: retain the D26 gate until `document-pdf-export` records
+  deterministic export, pagination, accessibility, and loss evidence.
 
 ### Capability consistency
 
@@ -171,6 +200,9 @@ named ownership boundaries requires a user-ratified SPEC change.
       projections for each implemented semantic.
 - [ ] Remote media/embed behavior is network-inert on open until an authorized
       resolver acts, and private payloads never enter URLs.
+- [ ] `document.speech-to-text` passes a real-microphone lifecycle covering
+      permission, transcription, correction/undo, serialization, keyboard
+      access, and narrow layout behind the product-owned speech boundary.
 - [ ] Product identity, persistence, collaboration, redlining, executable
       DOCX, authoritative PDF, Portal workflow, product lifecycles, and plugin
       execution remain outside the implementation.

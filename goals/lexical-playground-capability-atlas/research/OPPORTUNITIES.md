@@ -88,3 +88,18 @@ within about 50 ms because Lexical still holds a document-wide selection.
 rows in the first harness version; a shared run lock that refuses parallel
 entry processes; and never treating a successful keypress row as proof that
 the intended editor-state change occurred.
+
+## 2026-08-24 — Waiver drafts named follow-up goals that do not exist
+
+**What was happening:** assigning owners to the P0 waivers for
+`interchange.pandoc-docx` and `interchange.pdf`.
+
+**Evidence:** the drafts named `pandoc-docx-driver` and
+`document-pdf-export` as owning follow-up goals. They are gated candidates in
+`explorations/full-document-editor/MAP.md:12-13`, not packets under `goals/`.
+The Pandoc draft also assigned executable conversion to `@beep/pandoc-ast`,
+contrary to D25.
+
+**What would have prevented it:** a verifier or goals-doctor check that requires
+each Exception Ledger owner to resolve to either `goals/<slug>` or a named
+`explorations/full-document-editor/MAP.md` row.
