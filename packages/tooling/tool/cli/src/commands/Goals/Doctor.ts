@@ -821,6 +821,7 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
 });
 
 const writeBaselineFlag = Flag.boolean("write-baseline").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Capture the current blocking findings as the committed baseline (may only shrink)")
 );
 

@@ -37,6 +37,7 @@ const manifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
   Flag.optional
 );
 const overwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite existing frame outputs and manifest")
 );
 

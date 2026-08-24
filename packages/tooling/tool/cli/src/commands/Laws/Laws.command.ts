@@ -208,8 +208,11 @@ const logTerseEffectFileGroup = Effect.fn("Laws.logTerseEffectFileGroup")(functi
 const lawsEffectImportsCommand = Command.make(
   "effect-imports",
   {
-    write: Flag.boolean("write").pipe(Flag.withDescription("Persist import rewrites to disk")),
-    check: Flag.boolean("check").pipe(Flag.withDescription("Fail when any rewrite is required")),
+    write: Flag.boolean("write").pipe(Flag.withDefault(false), Flag.withDescription("Persist import rewrites to disk")),
+    check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when any rewrite is required")
+    ),
     exclude: Flag.string("exclude").pipe(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
@@ -262,14 +265,21 @@ const lawsEffectImportsCommand = Command.make(
 const lawsTerseEffectCommand = Command.make(
   "terse-effect",
   {
-    write: Flag.boolean("write").pipe(Flag.withDescription("Persist terse Effect rewrites to disk")),
-    check: Flag.boolean("check").pipe(Flag.withDescription("Fail when terse Effect rewrites are required")),
+    write: Flag.boolean("write").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Persist terse Effect rewrites to disk")
+    ),
+    check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when terse Effect rewrites are required")
+    ),
     exclude: Flag.string("exclude").pipe(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
     ),
     include: includeFlag,
     advisory: Flag.boolean("advisory").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Report terse-effect candidates as advisory and always exit successfully")
     ),
   },
@@ -343,7 +353,10 @@ const lawsTerseEffectCommand = Command.make(
 const lawsEffectFnCommand = Command.make(
   "effect-fn",
   {
-    check: Flag.boolean("check").pipe(Flag.withDescription("Fail when reusable functions directly return Effect.gen")),
+    check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when reusable functions directly return Effect.gen")
+    ),
     exclude: Flag.string("exclude").pipe(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
@@ -393,6 +406,7 @@ const lawsFrozenGrantSetCommand = Command.make(
   "frozen-grant-set",
   {
     check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Fail when FrozenGrantSet.make is called outside its defining module")
     ),
     exclude: Flag.string("exclude").pipe(
@@ -443,7 +457,10 @@ const lawsFrozenGrantSetCommand = Command.make(
 const lawsNativeRuntimeCommand = Command.make(
   "native-runtime",
   {
-    check: Flag.boolean("check").pipe(Flag.withDescription("Fail when hotspot-scope native-runtime violations remain")),
+    check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when hotspot-scope native-runtime violations remain")
+    ),
     exclude: Flag.string("exclude").pipe(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")

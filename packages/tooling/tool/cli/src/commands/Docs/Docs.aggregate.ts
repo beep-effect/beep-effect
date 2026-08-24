@@ -26,6 +26,7 @@ const filterFlag = Flag.string("filter").pipe(
   Flag.optional
 );
 const cleanFlag = Flag.boolean("clean").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Remove the generated docs directory (docs/generated) before aggregating")
 );
 

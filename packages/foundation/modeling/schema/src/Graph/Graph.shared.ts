@@ -220,7 +220,7 @@ export const sortRawEdgeEntries = <Edge>(
 
 /** @internal */
 /**
- * Converts an Effect `Graph.Edge` instance into its raw encoded shape.
+ * Converts an Effect `Graph.Edge` value into its raw encoded shape.
  *
  * **Example** (Encoding one edge)
  *
@@ -228,7 +228,7 @@ export const sortRawEdgeEntries = <Edge>(
  * import { Graph } from "effect"
  * import { toRawEdgeEncoded } from "../../src/Graph/Graph.shared.ts"
  *
- * const edge = new Graph.Edge({ source: 0, target: 1, data: "knows" })
+ * const edge: Graph.Edge<string> = { source: 0, target: 1, data: "knows" }
  * const raw = toRawEdgeEncoded(edge)
  * console.log(raw.data)
  * ```

@@ -230,29 +230,32 @@ const writeWithinCanonicalRootAtomically: (
       path.dirname(checkedTarget)
     );
 
-    return yield* Effect.acquireUseRelease(
+    const writeExit = yield* Effect.acquireUseRelease(
       fs.makeTempDirectory({
         directory: checkedTargetDirectory,
         prefix: `.${path.basename(checkedTarget)}.tmp-`,
       }),
-      Effect.fnUntraced(function* (temporaryDirectory) {
-        const checkedTemporaryDirectory = yield* resolveCandidateWithinCanonicalRoot(
-          fs,
-          path,
-          checkedTargetDirectory,
-          temporaryDirectory
-        );
-        const temporaryPath = path.join(checkedTemporaryDirectory, "payload");
+      (temporaryDirectory) =>
+        Effect.exit(
+          Effect.gen(function* () {
+            const checkedTemporaryDirectory = yield* resolveCandidateWithinCanonicalRoot(
+              fs,
+              path,
+              checkedTargetDirectory,
+              temporaryDirectory
+            );
+            const temporaryPath = path.join(checkedTemporaryDirectory, "payload");
 
-        yield* fs.writeFile(temporaryPath, bytes, { flag: "wx", mode: 0o600 });
+            yield* fs.writeFile(temporaryPath, bytes, { flag: "wx", mode: 0o600 });
 
-        const finalTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, candidate);
-        yield* fs.rename(temporaryPath, finalTarget);
-        return finalTarget;
-      }),
+            const finalTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, candidate);
+            yield* fs.rename(temporaryPath, finalTarget);
+            return finalTarget;
+          })
+        ),
       (temporaryDirectory, exit) => {
         const cleanup = fs.remove(temporaryDirectory, { force: true, recursive: true });
-        return Exit.isSuccess(exit)
+        return Exit.isSuccess(exit) && Exit.isSuccess(exit.value)
           ? cleanup.pipe(
               Effect.catch(() =>
                 Effect.logWarning(
@@ -263,6 +266,7 @@ const writeWithinCanonicalRootAtomically: (
           : cleanup;
       }
     );
+    return yield* writeExit;
   }
 );
 

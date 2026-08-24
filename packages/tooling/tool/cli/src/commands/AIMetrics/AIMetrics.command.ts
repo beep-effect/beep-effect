@@ -138,6 +138,7 @@ const beforeFlag = Flag.string("before").pipe(
 );
 
 const allFlag = Flag.boolean("all").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Scan all matching source files instead of the default 7 days")
 );
 
@@ -177,6 +178,7 @@ const timerParquetExportModeFlag = Flag.choiceWithValue("parquet-mode", [
   Flag.withDescription("Parquet export mode embedded in the rendered forwarder timer command")
 );
 const retentionEnforceFlag = Flag.boolean("retention-enforce").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Remove old per-run Parquet snapshots after a successful forwarder run")
 );
 const maxSnapshotExportsFlag = Flag.integer("max-snapshot-exports").pipe(
@@ -193,6 +195,7 @@ const forwarderRunMaxSnapshotExportsFlag = Flag.integer("max-snapshot-exports").
 // already-installed systemd timer units (and any timer-rendered command) that still pass
 // --retention-enforce continue to parse instead of failing with an unrecognized-flag error.
 const forwarderRunRetentionEnforceCompatFlag = Flag.boolean("retention-enforce").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Deprecated no-op: forwarder run always prunes old per-run Parquet snapshots; kept for backward compatibility"
   )
@@ -235,9 +238,13 @@ const openClawUnitFlag = Flag.string("openclaw-unit").pipe(
   Flag.optional
 );
 
-const otlpFlag = Flag.boolean("otlp").pipe(Flag.withDescription("Enable explicit OTLP trace export for this command"));
+const otlpFlag = Flag.boolean("otlp").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Enable explicit OTLP trace export for this command")
+);
 
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Preview install apply steps without changing local or remote state")
 );
 

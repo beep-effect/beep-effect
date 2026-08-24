@@ -144,6 +144,7 @@ const reasonFlag = Flag.string("reason").pipe(
   Flag.withDefault("")
 );
 const previewFlag = Flag.boolean("preview").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the guarded override plan (fold, events to append, derived state) without writing")
 );
 

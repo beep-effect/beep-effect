@@ -39,7 +39,8 @@ import { Flag } from "effect/unstable/cli";
  * @category flags
  * @since 0.0.0
  */
-export const jsonFlagWith = (description: string) => Flag.boolean("json").pipe(Flag.withDescription(description));
+export const jsonFlagWith = (description: string) =>
+  Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription(description));
 
 /**
  * Standard `--json` flag used by commands that support machine-readable output.
@@ -205,7 +206,7 @@ export const outputFlag = (description = "Write output to a specific file path")
  * @since 0.0.0
  */
 export const verboseFlag = (description = "Print additional diagnostic output") =>
-  Flag.boolean("verbose").pipe(Flag.withDescription(description));
+  Flag.boolean("verbose").pipe(Flag.withDefault(false), Flag.withDescription(description));
 
 /**
  * `--dry-run` flag previewing changes without writing.
@@ -236,7 +237,7 @@ export const verboseFlag = (description = "Print additional diagnostic output") 
  * @since 0.0.0
  */
 export const dryRunFlag = (description = "Preview changes without writing files") =>
-  Flag.boolean("dry-run").pipe(Flag.withDescription(description));
+  Flag.boolean("dry-run").pipe(Flag.withDefault(false), Flag.withDescription(description));
 
 /**
  * `--force` flag permitting destructive overwrites.
@@ -268,7 +269,7 @@ export const dryRunFlag = (description = "Preview changes without writing files"
  * @since 0.0.0
  */
 export const forceFlag = (description = "Overwrite existing output") =>
-  Flag.boolean("force").pipe(Flag.withDescription(description));
+  Flag.boolean("force").pipe(Flag.withDefault(false), Flag.withDescription(description));
 
 /**
  * Split a comma-separated flag value, trimming entries and dropping empties.

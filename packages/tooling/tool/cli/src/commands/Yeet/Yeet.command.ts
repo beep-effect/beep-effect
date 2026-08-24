@@ -46,14 +46,17 @@ const headFlag = Flag.string("head").pipe(
   Flag.withDefault("HEAD")
 );
 
-const jsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Render plan output as JSON"));
+const jsonFlag = Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Render plan output as JSON"));
 
 const packetDirFlag = Flag.string("packet-dir").pipe(
   Flag.withDescription("Ignored directory for yeet run context, logs, and packets"),
   Flag.withDefault(DEFAULT_YEET_PACKET_DIR)
 );
 
-const planFlag = Flag.boolean("plan").pipe(Flag.withDescription("Print the yeet plan without running commands"));
+const planFlag = Flag.boolean("plan").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the yeet plan without running commands")
+);
 
 const messageFlag = Flag.string("message").pipe(
   Flag.withDescription("Conventional commit message required before publish"),
@@ -61,28 +64,34 @@ const messageFlag = Flag.string("message").pipe(
 );
 
 const fastFlag = Flag.boolean("fast").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Skip local full pre-push proof only when paired with --monitor on a PR branch")
 );
 
 const startPrEarlyFlag = Flag.boolean("start-pr-early").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Push with hooks skipped before full local proof, then run proof and monitor hosted checks")
 );
 
 const monitorFlag = Flag.boolean("monitor").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Monitor hosted PR checks after publish instead of stopping at push")
 );
 
 const untilMergedFlag = Flag.boolean("until-merged").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Keep monitoring across pushes until the PR merges or closes, rerunning known-flake jobs once per job per head SHA and sweeping the clone on merge"
   )
 );
 
 const summaryFlag = Flag.boolean("summary").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print a compact operator summary after monitor or closeout reads")
 );
 
 const remoteFlag = Flag.boolean("remote").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Include live GitHub PR and check data in yeet status")
 );
 
@@ -95,42 +104,53 @@ const tierFlag = Flag.choiceWithValue("tier", [
 );
 
 const mergedFlag = Flag.boolean("merged").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Prove the merge preview of HEAD with the base ref — the tree hosted CI runs — instead of the branch tree"
   )
 );
 
 const collectAllFlag = Flag.boolean("collect-all").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Run every local preflight wave after failures instead of stopping before later waves")
 );
 
-const amendFlag = Flag.boolean("amend").pipe(Flag.withDescription("Amend the current local commit during publish"));
+const amendFlag = Flag.boolean("amend").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Amend the current local commit during publish")
+);
 
 const stagedOnlyFlag = Flag.boolean("staged-only").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Publish exactly the staged index: stash unstaged/untracked residue after commit, prove the clean tree, restore after push"
   )
 );
 
 const allowStaleBaseFlag = Flag.boolean("allow-stale-base").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Proceed with publish even when branch files overlap commits landed on the base since merge-base"
   )
 );
 
 const prFlag = Flag.boolean("pr").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Create a ready (non-draft) pull request after the push succeeds, unless one is already open")
 );
 
 const noEditFlag = Flag.boolean("no-edit").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Reuse the current commit message with --amend during publish")
 );
 
 const reuseVerifiedFlag = Flag.boolean("reuse-verified").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Skip publish proof only when durable Yeet full-proof state exactly matches")
 );
 
 const pushOnlyFlag = Flag.boolean("push-only").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Push an already-verified clean commit without committing or rerunning local proof")
 );
 
@@ -172,6 +192,7 @@ const resolveThreadsFlag = Flag.string("resolve-threads").pipe(
 );
 
 const retriggerGreptileFlag = Flag.boolean("retrigger-greptile").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Post the explicit Greptile retrigger comment after reading current PR state")
 );
 
@@ -186,6 +207,7 @@ const fallowEmitFlag = Flag.string("emit").pipe(
 );
 
 const fallowAdvisoryFlag = Flag.boolean("advisory").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Keep every Fallow-derived Yeet issue nonblocking")
 );
 
@@ -200,6 +222,7 @@ const fallowAssertFlag = Flag.string("assert").pipe(
 );
 
 const fromStdinFlag = Flag.boolean("from-stdin").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Read a Yeet plan JSON document from stdin")
 );
 
@@ -223,7 +246,10 @@ const expectArgsFlag = Flag.string("expect-args").pipe(
   Flag.withDefault("")
 );
 
-const inboxUnackedFlag = Flag.boolean("unacked").pipe(Flag.withDescription("Show only rows without an ack receipt"));
+const inboxUnackedFlag = Flag.boolean("unacked").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Show only rows without an ack receipt")
+);
 
 const inboxSeverityFlagChoices: ReadonlyArray<readonly ["all" | YeetInboxSeverity, "all" | YeetInboxSeverity]> = [
   ["all", "all"],
@@ -241,6 +267,7 @@ const inboxFixShaFlag = Flag.string("fix-sha").pipe(
 );
 
 const inboxWontfixFlag = Flag.boolean("wontfix").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Acknowledge the row as deliberately not fixed; requires --reason")
 );
 
@@ -255,6 +282,7 @@ const inboxThreadUrlFlag = Flag.string("thread-url").pipe(
 );
 
 const inboxRowStdinFlag = Flag.boolean("from-stdin").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Read one inbox row JSON document from stdin")
 );
 
@@ -300,6 +328,7 @@ const publishFlags = {
 } as const;
 
 const watchFlag = Flag.boolean("watch").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Stream one NDJSON row per PR state transition until the PR settles, instead of the blocking check watch"
   )

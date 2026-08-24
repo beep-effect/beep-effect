@@ -854,6 +854,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     ),
     send: Effect.fn($I`AcpServer_Protocol_send`)((_clientId, response) => offerOutgoing(response).pipe(Effect.orDie)),
     supportsAck: true,
+    supportsNotifications: true,
     supportsSpanPropagation: true,
     supportsTransferables: false,
   });

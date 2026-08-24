@@ -192,7 +192,10 @@ const labsListHandler = Effect.fn("Labs.list")(function* (options: { readonly js
 export const labsListCommand = Command.make(
   "list",
   {
-    json: Flag.boolean("json").pipe(Flag.withDescription("Emit schema-encoded JSON rows instead of text lines")),
+    json: Flag.boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Emit schema-encoded JSON rows instead of text lines")
+    ),
   },
   labsListHandler
 ).pipe(Command.withDescription("List lab apps under apps/labs with their manifest state"));

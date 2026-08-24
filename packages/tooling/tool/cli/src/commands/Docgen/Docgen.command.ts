@@ -106,17 +106,32 @@ const includeFlag = Flag.string("include").pipe(
   Flag.withDescription("Comma-separated package-relative or srcDir-relative file globs to include"),
   Flag.optional
 );
-const planFlag = Flag.boolean("plan").pipe(Flag.withDescription("Print the local docgen plan without executing it"));
-const fullFlag = Flag.boolean("full").pipe(Flag.withDescription("Run the canonical full docgen proof"));
+const planFlag = Flag.boolean("plan").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the local docgen plan without executing it")
+);
+const fullFlag = Flag.boolean("full").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Run the canonical full docgen proof")
+);
 const allowFullFlag = Flag.boolean("allow-full").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Execute the canonical full docgen proof automatically when the bounded plan requires it")
 );
-const allFlag = Flag.boolean("all").pipe(Flag.withDescription("Run against every configured docgen package"));
-const checkFlag = Flag.boolean("check").pipe(Flag.withDescription("Fail when the command reports failure findings"));
+const allFlag = Flag.boolean("all").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Run against every configured docgen package")
+);
+const checkFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Fail when the command reports failure findings")
+);
 const reuseProofManifestFlag = Flag.boolean("reuse-proof-manifest").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Skip docgen metadata analysis for packages with current package-local proof manifests")
 );
 const changedFilesFlag = Flag.boolean("changed-files").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Run against packages touched by working-tree TypeScript changes only")
 );
 const qualityScoreFlag = Flag.choiceWithValue("score", [
@@ -166,12 +181,15 @@ const qualityWorkerEvalReasoningEffortFlag = Flag.choiceWithValue("reasoning-eff
   Flag.optional
 );
 const confirmRunpodEvalFlag = Flag.boolean("confirm-runpod-eval").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Acknowledge that quality-worker-eval-runpod creates a billable remote GPU pod")
 );
 const keepRunpodPodFlag = Flag.boolean("keep-pod").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Debug mode: leave the Runpod pod running instead of deleting it after the eval")
 );
 const allow24GbFallbackFlag = Flag.boolean("allow-24gb-fallback").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Allow explicitly verified 24 GiB GPU fallbacks when preferred 48 GiB GPUs are unavailable")
 );
 const runpodGpuTypeIdsFlag = Flag.string("gpu-type").pipe(
@@ -185,9 +203,11 @@ const runpodTemplateIdFlag = Flag.string("template-id").pipe(
   Flag.optional
 );
 const skipRunpodTemplateSearchFlag = Flag.boolean("skip-template-search").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Use the repo fallback image instead of searching public Runpod templates")
 );
 const allowPublicRunpodTemplateSearchFlag = Flag.boolean("allow-public-template-search").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Opt into searching public Runpod templates instead of using the repo fallback image")
 );
 const runpodReadinessTimeoutMsFlag = Flag.integer("readiness-timeout-ms").pipe(
@@ -195,6 +215,7 @@ const runpodReadinessTimeoutMsFlag = Flag.integer("readiness-timeout-ms").pipe(
   Flag.withDescription("Milliseconds to wait for remote Ollama readiness after pod creation")
 );
 const qualityWorkerRunpodEvalOtlpFlag = Flag.boolean("otlp").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Emit sanitized summary and hashed packet spans to the configured Phoenix OTLP endpoint")
 );
 const qualityWorkerRunpodEvalOtlpBaseUrlFlag = Flag.string("otlp-base-url").pipe(
@@ -206,16 +227,28 @@ const qualityWorkerRunpodEvalOtlpProjectFlag = Flag.string("otlp-project").pipe(
   Flag.withDescription("Phoenix project name carried as openinference.project.name")
 );
 const verboseFlag = Flag.boolean("verbose").pipe(
+  Flag.withDefault(false),
   Flag.withAlias("v"),
   Flag.withDescription("Include extra package detail")
 );
-const cleanFlag = Flag.boolean("clean").pipe(Flag.withDescription("Remove docs/generated before aggregating"));
-const forceFlag = Flag.boolean("force").pipe(Flag.withDescription("Overwrite an existing docgen.json file"));
-const dryRunFlag = Flag.boolean("dry-run").pipe(Flag.withDescription("Preview output without writing files"));
+const cleanFlag = Flag.boolean("clean").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Remove docs/generated before aggregating")
+);
+const forceFlag = Flag.boolean("force").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Overwrite an existing docgen.json file")
+);
+const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Preview output without writing files")
+);
 const fixModeFlag = Flag.boolean("fix-mode").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Render the markdown analysis as a checklist rather than a findings report")
 );
 const validateExamplesFlag = Flag.boolean("validate-examples").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Compatibility flag; the repo-local docgen implementation always validates extracted examples")
 );
 const parallelFlag = Flag.integer("parallel").pipe(

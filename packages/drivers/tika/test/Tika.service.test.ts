@@ -115,7 +115,10 @@ describe("@beep/tika", () => {
 
           expectRoundTrip(TikaErrorReason, errorReason);
           expectRoundTrip(TikaErrorOptions, errorOptions);
-          expectRoundTrip(TikaError, error);
+          const encodedError = encode(TikaError, error);
+          const decodedError = decode(TikaError, encodedError);
+          expect(decodedError).toBeInstanceOf(TikaError);
+          expect(encode(TikaError, decodedError)).toEqual(encodedError);
         }
       ),
       fcRuns(25)
