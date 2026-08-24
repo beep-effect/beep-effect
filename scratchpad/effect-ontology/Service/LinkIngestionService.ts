@@ -25,11 +25,10 @@
  * @module Service/LinkIngestionService
  */
 
-import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { Cache, Context, Duration, Effect, Layer, Option } from "effect";
+import { Cache, Context, Crypto, Duration, Effect, Encoding, Layer, Option } from "effect";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
@@ -135,11 +134,6 @@ export interface IngestedLinkFilter {
 // =============================================================================
 
 /**
- * Compute SHA-256 hash of content
- */
-const computeContentHash = (content: string): string => createHash("sha256").update(content).digest("hex");
-
-/**
  * Build storage path for document
  */
 const buildStoragePath = (contentHash: string): string => `documents/${contentHash}/content.md`;
@@ -164,6 +158,24 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     const imageExtractor = yield* ImageExtractor;
     const imageFetcher = yield* ImageFetcher;
     const imageStore = yield* ImageStore;
+    const crypto = yield* Crypto.Crypto;
+
+    const computeContentHash = Effect.fn("LinkIngestionService.computeContentHash")(function* (
+      content: string,
+      url: string
+    ): Effect.fn.Return<string, LinkIngestionError> {
+      const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(content)).pipe(
+        Effect.mapError((cause) =>
+          LinkIngestionError.make({
+            message: "Failed to hash fetched content",
+            url,
+            phase: "store",
+            cause,
+          })
+        )
+      );
+      return Encoding.encodeHex(digest);
+    });
 
     // Raw DB lookup for content hash within an ontology (used by cache)
     // Uses composite key: "ontologyId:hash" for cache lookup
@@ -223,7 +235,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       const { content } = jinaResponse;
 
       // 2. Compute content hash
-      const contentHash = computeContentHash(content.content);
+      const contentHash = yield* computeContentHash(content.content, url);
 
       // 3. Check for duplicate (scoped by ontology)
       if (skipDuplicates) {

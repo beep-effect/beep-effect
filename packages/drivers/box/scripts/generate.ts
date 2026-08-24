@@ -54,11 +54,11 @@ class GeneratedField extends S.Class<GeneratedField>($I`GeneratedField`)(
 // `Option` would add wrapping noise here without enforcing any extra invariant.
 class GeneratedDeclaration extends S.Class<GeneratedDeclaration>($I`GeneratedDeclaration`)(
   {
-    baseName: S.optional(S.String),
-    fields: GeneratedField.pipe(S.Array, S.optional),
+    baseName: S.optionalKey(S.String),
+    fields: GeneratedField.pipe(S.Array, S.optionalKey),
     kind: DeclarationKind,
     name: S.String,
-    schemaExpression: S.optional(S.String),
+    schemaExpression: S.optionalKey(S.String),
   },
   $I.annote("GeneratedDeclaration", {
     description: "A schema, model, or type declaration extracted from the Box SDK type surface.",
@@ -625,7 +625,7 @@ const declarationFromStatement = (statement: ts.Statement, state: GenerationStat
     );
 
     return O.some({
-      baseName,
+      ...(baseName === undefined ? {} : { baseName }),
       fields: collectFields(statement.members, state),
       kind: "class",
       name,

@@ -9,7 +9,6 @@
  * @module Service/Ontology
  */
 
-import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import type { GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
 import { IRI, makeBlankNode, makeNamedNode } from "@beep/rdf";
@@ -30,7 +29,7 @@ import {
   SKOS_RELATED,
   SKOS_SCOPE_NOTE as SKOS_SCOPENOTE,
 } from "@beep/rdf/Vocab/Skos";
-import { Chunk, Context, Duration, Effect, HashMap, Layer, Option, Ref } from "effect";
+import { Chunk, Context, Crypto, Duration, Effect, Encoding, HashMap, Layer, Option, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as HashSet from "effect/HashSet";
@@ -518,6 +517,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const storage = yield* StorageService;
     const rdf = yield* RdfBuilder;
     const nlp = yield* NlpService;
+    const crypto = yield* Crypto.Crypto;
     // Registry is optional - only available when ONTOLOGY.REGISTRY_PATH is configured
     const registryOpt = yield* Effect.serviceOption(OntologyRegistryService);
 
@@ -796,7 +796,18 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           );
         const namespace = yield* decodeIdentity(Namespace, "namespace");
         const name = yield* decodeIdentity(OntologyName, "name");
-        const hash = ContentHash.make(createHash("sha256").update(ontologyIri).digest("hex"));
+        const hash = ContentHash.make(
+          Encoding.encodeHex(
+            yield* crypto.digest("SHA-256", new TextEncoder().encode(ontologyIri)).pipe(
+              Effect.mapError((cause) =>
+                OntologyError.make({
+                  message: `Failed to hash ontology IRI: ${ontologyIri}`,
+                  cause: O.some(cause),
+                })
+              )
+            )
+          )
+        );
         return OntologyVersion.fromParts(namespace, name, hash);
       }),
       searchClassesHybridFromUri: Effect.fn("OntologyService.searchClassesHybridFromUri")(function* (

@@ -61,7 +61,7 @@ const OLLAMA_INSTALL_SCRIPT_SHA256 = "25f64b810b947145095956533e1bdf56eacea2673c
 
 class OllamaTagsModel extends S.Class<OllamaTagsModel>($I`OllamaTagsModel`)(
   {
-    model: S.optional(S.String),
+    model: S.optionalKey(S.String),
     name: S.String,
   },
   $I.annote("OllamaTagsModel", {
@@ -275,23 +275,23 @@ export class RunDocgenQualityWorkerRunpodEvalOptions extends S.Class<RunDocgenQu
   $I`RunDocgenQualityWorkerRunpodEvalOptions`
 )(
   {
-    allow24GbFallback: S.optional(S.Boolean),
+    allow24GbFallback: S.optionalKey(S.Boolean),
     confirmRunpodEval: S.Boolean,
-    gpuTypeIds: S.Array(S.String).pipe(S.optional),
-    keepPod: S.optional(S.Boolean),
+    gpuTypeIds: S.Array(S.String).pipe(S.optionalKey),
+    keepPod: S.optionalKey(S.Boolean),
     model: S.String,
-    otlpBaseUrl: S.optional(S.String),
-    otlpEnabled: S.optional(S.Boolean),
-    otlpProject: S.optional(S.String),
-    packetLimit: S.optional(S.Finite),
+    otlpBaseUrl: S.optionalKey(S.String),
+    otlpEnabled: S.optionalKey(S.Boolean),
+    otlpProject: S.optionalKey(S.String),
+    packetLimit: S.optionalKey(S.Finite),
     provider: DocgenQualityWorkerEvalProvider,
-    readinessTimeoutMs: S.optional(S.Finite),
+    readinessTimeoutMs: S.optionalKey(S.Finite),
     report: DocgenQualityReport,
     scope: DocgenQualityWorkerEvalScope,
     sourceQualityReport: S.String,
-    allowPublicTemplateSearch: S.optional(S.Boolean),
-    skipTemplateSearch: S.optional(S.Boolean),
-    templateId: S.optional(S.String),
+    allowPublicTemplateSearch: S.optionalKey(S.Boolean),
+    skipTemplateSearch: S.optionalKey(S.Boolean),
+    templateId: S.optionalKey(S.String),
   },
   $I.annote("RunDocgenQualityWorkerRunpodEvalOptions", {
     description: "Options used to create an ephemeral Runpod pod and execute a read-only worker eval.",

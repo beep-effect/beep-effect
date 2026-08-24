@@ -34,7 +34,7 @@ import { verifyDocgenProofManifest, writeDocgenProofManifest } from "@beep/repo-
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { Pod, Runpod, Template } from "@beep/runpod";
 import { fcRuns } from "@beep/test-utils";
-import { A, O } from "@beep/utils";
+import { A, currentHostPlatform, O } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -301,7 +301,7 @@ export const ProofFixture = 1;
             Process.of({
               argv: Effect.succeed([]),
               cwd: Effect.succeed(packageDir),
-              platform: Effect.succeed(process.platform),
+              platform: Effect.succeed(currentHostPlatform),
             })
           );
           const packageConfigurationLayer = Configuration.layer({
@@ -3488,7 +3488,7 @@ export const ProofFixture = 1;
             Process.of({
               argv: Effect.succeed([]),
               cwd: Effect.succeed(packageDir),
-              platform: Effect.succeed(process.platform),
+              platform: Effect.succeed(currentHostPlatform),
             })
           );
           const packageConfigurationLayer = Configuration.layer({

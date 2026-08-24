@@ -5,12 +5,11 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
-import { DateTime, Effect, FileSystem, Order, Path } from "effect";
+import { Crypto, DateTime, Effect, Encoding, FileSystem, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
@@ -317,13 +316,29 @@ const DOCGEN_PROOF_INPUT_GLOBS = [
 const DOCGEN_PROOF_OUTPUT_GLOBS = ["docs/**/*"] as const;
 const DOCGEN_PROOF_GLOB_IGNORES = ["**/.beep/**", "**/.turbo/**", "**/node_modules/**"] as const;
 
-const sha256Text = (value: string): string => createHash("sha256").update(value).digest("hex");
+const sha256Text = Effect.fn("DocgenProofManifest.sha256Text")(function* (
+  value: string
+): Effect.fn.Return<string, Domain.DocgenError, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(value)).pipe(
+    Effect.mapError((cause) =>
+      Domain.DocgenError.make({
+        message: `[ProofManifest.sha256Text] Failed to hash content\n${String(cause)}`,
+      })
+    )
+  );
+  return Encoding.encodeHex(digest);
+});
 
-const sha256Hex = (value: string): Sha256Hex => Sha256Hex.make(sha256Text(value));
+const sha256Hex = Effect.fn("DocgenProofManifest.sha256Hex")(function* (value: string) {
+  return Sha256Hex.make(yield* sha256Text(value));
+});
 
 const jsonText = (value: unknown): string => encodeUnknownJson(value);
 
-const sha256Json = (value: unknown): Sha256Hex => sha256Hex(jsonText(value));
+const sha256Json = Effect.fn("DocgenProofManifest.sha256Json")(function* (value: unknown) {
+  return yield* sha256Hex(jsonText(value));
+});
 
 const byFilePathAscending: Order.Order<DocgenProofManifestFile> = Order.mapInput(
   Order.String,
@@ -352,7 +367,7 @@ const readFileDigest = Effect.fn("DocgenProofManifest.readFileDigest")(function*
 
   return DocgenProofManifestFile.make({
     path: Str.replace(/\\/g, "/")(path.relative(packagePath, filePath)),
-    sha256: sha256Hex(content),
+    sha256: yield* sha256Hex(content),
     bytes: NonNegativeInt.make(content.length),
   });
 });
@@ -382,23 +397,23 @@ const collectFileDigests = Effect.fn("DocgenProofManifest.collectFileDigests")(f
   return sortedFileDigests(digests);
 });
 
-const fingerprintForFiles = (options: {
+const fingerprintForFiles = Effect.fn("DocgenProofManifest.fingerprintForFiles")(function* (options: {
   readonly inputs: ReadonlyArray<DocgenProofManifestFile>;
   readonly outputs: ReadonlyArray<DocgenProofManifestFile>;
-}): DocgenProofManifestFingerprint => {
-  const inputSha256 = sha256Json(options.inputs);
-  const outputSha256 = sha256Json(options.outputs);
+}) {
+  const inputSha256 = yield* sha256Json(options.inputs);
+  const outputSha256 = yield* sha256Json(options.outputs);
   const toolVersion = InternalVersion.moduleVersion;
 
   return DocgenProofManifestFingerprint.make({
-    sha256: sha256Json({ inputSha256, outputSha256, toolVersion }),
+    sha256: yield* sha256Json({ inputSha256, outputSha256, toolVersion }),
     inputSha256,
     outputSha256,
     inputFileCount: NonNegativeInt.make(options.inputs.length),
     outputFileCount: NonNegativeInt.make(options.outputs.length),
     toolVersion,
   });
-};
+});
 
 const computeDocgenProofPayload = Effect.fn("DocgenProofManifest.computeDocgenProofPayload")(function* (
   packagePath: string
@@ -409,7 +424,7 @@ const computeDocgenProofPayload = Effect.fn("DocgenProofManifest.computeDocgenPr
   return {
     inputs,
     outputs,
-    fingerprint: fingerprintForFiles({ inputs, outputs }),
+    fingerprint: yield* fingerprintForFiles({ inputs, outputs }),
   } as const;
 });
 
@@ -458,7 +473,7 @@ export const writeDocgenProofManifest = Effect.fn("DocgenProofManifest.writeDocg
   function* (): Effect.fn.Return<
     DocgenProofManifest,
     Domain.DocgenError,
-    Configuration.Configuration | Domain.Process | FileSystem.FileSystem | Path.Path | FsUtils
+    Configuration.Configuration | Crypto.Crypto | Domain.Process | FileSystem.FileSystem | Path.Path | FsUtils
   > {
     const config = yield* Configuration.Configuration;
     const process = yield* Domain.Process;
@@ -530,7 +545,11 @@ export const writeDocgenProofManifest = Effect.fn("DocgenProofManifest.writeDocg
 export const verifyDocgenProofManifest = Effect.fn("DocgenProofManifest.verifyDocgenProofManifest")(function* (
   packagePath: string,
   packageName: string
-): Effect.fn.Return<DocgenProofManifestVerification, Domain.DocgenError, FileSystem.FileSystem | Path.Path | FsUtils> {
+): Effect.fn.Return<
+  DocgenProofManifestVerification,
+  Domain.DocgenError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | FsUtils
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const manifestPath = manifestPathForPackage(packagePath, path);

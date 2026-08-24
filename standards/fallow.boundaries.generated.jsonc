@@ -2918,6 +2918,7 @@
         "allow": [
           "@beep/chalk",
           "@beep/identity",
+          "@beep/md",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
@@ -2926,6 +2927,7 @@
         "allowTypeOnly": [
           "@beep/chalk",
           "@beep/identity",
+          "@beep/md",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",

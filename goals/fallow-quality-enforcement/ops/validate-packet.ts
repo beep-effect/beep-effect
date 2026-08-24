@@ -3,7 +3,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Console, Effect, FileSystem, Inspectable, Layer, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, Inspectable, Layer, Path, pipe, Runtime } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -12,6 +12,17 @@ import { parse, printParseErrorCode } from "jsonc-parser";
 import type { ParseError } from "jsonc-parser";
 
 const $I = $RepoCliId.create("goals/fallow-quality-enforcement/ops/validate-packet");
+
+class PacketValidationFailed extends S.TaggedError<PacketValidationFailed>($I`PacketValidationFailed`)(
+  "PacketValidationFailed",
+  {},
+  $I.annote("PacketValidationFailed", {
+    description: "Packet validation failed after its diagnostics were reported.",
+  })
+) {
+  override readonly [Runtime.errorExitCode] = 1;
+  override readonly [Runtime.errorReported] = false;
+}
 
 const validatorVersion = "fallow-quality-enforcement-validator/v1";
 const effectSchemaAuthority = "goals/fallow-quality-enforcement/ops/validate-packet.ts";
@@ -2885,9 +2896,7 @@ const program = Effect.gen(function* () {
   for (const diagnostic of diagnostics) {
     yield* Console.error(`- ${diagnostic}`);
   }
-  yield* Effect.sync(() => {
-    process.exitCode = 1;
-  });
+  return yield* PacketValidationFailed.make({});
 });
 
 NodeRuntime.runMain(program.pipe(Effect.provide(Layer.mergeAll(NodeServices.layer))));

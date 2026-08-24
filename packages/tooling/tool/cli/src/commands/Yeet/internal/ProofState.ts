@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
+import { Console, Crypto, DateTime, Effect, Encoding, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { commandTextForStep } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
@@ -29,6 +29,8 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofState");
+const textEncoder = new TextEncoder();
+const fingerprintSeparator = new Uint8Array([0]);
 
 class YeetLaneProofState extends S.Class<YeetLaneProofState>($I`YeetLaneProofState`)(
   {
@@ -230,18 +232,19 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const status = yield* runGitOutput(context.repoRoot, ["status", "--short"]);
   const unstagedDiff = yield* collectGitDiffBytes(context, ["HEAD"], "worktree");
   const stagedDiff = yield* collectGitDiffBytes(context, ["--cached"], "index");
-  return createHash("sha256")
-    .update(status)
-    .update("\0")
-    .update(unstagedDiff)
-    .update("\0")
-    .update(stagedDiff)
-    .digest("hex");
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest(
+      "SHA-256",
+      concatBytes([textEncoder.encode(status), fingerprintSeparator, unstagedDiff, fingerprintSeparator, stagedDiff])
+    )
+    .pipe(YeetCommandError.mapError("Failed to hash Yeet worktree fingerprint."));
+  return Encoding.encodeHex(digest);
 });
 
 /**
@@ -277,19 +280,31 @@ const proofCommandForSteps: (steps: ReadonlyArray<RepoPlanStep>) => string = flo
   A.join(" && ")
 );
 
-const hashText = (text: string): string => createHash("sha256").update(text).digest("hex");
+const hashText = Effect.fn("Yeet.hashText")(function* (
+  value: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest("SHA-256", textEncoder.encode(value))
+    .pipe(YeetCommandError.mapError("Failed to hash Yeet proof command."));
+  return Encoding.encodeHex(digest);
+});
 
-const laneProofStateForStep = (step: RepoPlanStep, diffFingerprint: string, verifiedAt: string): YeetLaneProofState => {
+const laneProofStateForStep = Effect.fn("Yeet.laneProofStateForStep")(function* (
+  step: RepoPlanStep,
+  diffFingerprint: string,
+  verifiedAt: string
+) {
   const commandText = commandTextForStep(step);
   return YeetLaneProofState.make({
-    commandHash: hashText(commandText),
+    commandHash: yield* hashText(commandText),
     commandText,
     diffFingerprint,
     label: step.label,
     stepId: step.id,
     verifiedAt,
   });
-};
+});
 
 /**
  * Proof-lock state schema exposed for lock-disposition tests.
@@ -557,12 +572,17 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const artifactDir = yield* artifactDirForContext(context);
   const statePath = yield* runStatePathForContext(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
   const verifiedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const laneProofs = yield* Effect.forEach(
+    proofSteps,
+    (step) => laneProofStateForStep(step, diffFingerprint, verifiedAt),
+    { concurrency: "unbounded" }
+  );
   const state = YeetRunState.make({
     schemaVersion: "yeet-run-state/v1",
     artifactDir,
@@ -571,7 +591,7 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
     commitSha: yield* currentCommitSha(context),
     diffFingerprint,
     head: context.head,
-    laneProofs: A.map(proofSteps, (step) => laneProofStateForStep(step, diffFingerprint, verifiedAt)),
+    laneProofs,
     proofCommand: proofCommandForSteps(proofSteps),
     proofTier: tier,
     runId: runIdForContext(context),
@@ -739,7 +759,7 @@ export const assertReusableVerifiedState = Effect.fn("Yeet.assertReusableVerifie
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const state = yield* loadVerifiedState(context);
   const expectedCommitSha = yield* currentCommitSha(context);

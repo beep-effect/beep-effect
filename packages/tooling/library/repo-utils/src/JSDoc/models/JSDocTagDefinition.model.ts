@@ -103,7 +103,7 @@ export class JSDocTagDefinition extends S.Class<JSDocTagDefinition>($I`JSDocTagD
       description: "Tags that are semantically related",
     }),
     /** Whether this tag is deprecated in favor of another approach */
-    isDeprecated: S.optional(S.Boolean)
+    isDeprecated: S.optionalKey(S.Boolean)
       .pipe(
         S.decodeTo(S.toType(S.Boolean), {
           decode: SchemaGetter.withDefault(Effect.sync(defaultIsDeprecated)),

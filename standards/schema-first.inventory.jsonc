@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-17",
+  "generatedOn": "2026-08-24",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -41,7 +41,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 49,
+      "line": 50,
       "owner": "@beep/professional-desktop",
       "reason": "End-to-end authority acceptance suite: the codecs are exercised through a live MCP server against a real PGlite ledger, so the file's value is behavioral, not codec round-tripping. Schema-derived property coverage for these schemas already exists — ExecutionAuthority.test.ts 'derives round-tripping arbitraries for execution authority schemas', and ontology-mcp-http.test.ts runs assertSchemaRoundTrip over the MCP request codecs."
     },

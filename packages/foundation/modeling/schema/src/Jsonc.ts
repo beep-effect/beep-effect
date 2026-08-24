@@ -11,6 +11,7 @@ import { Effect, flow, pipe, SchemaIssue, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 import { isNonNegative } from "./Number.ts";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Jsonc");
 
@@ -98,6 +99,7 @@ export const JsoncTextToUnknown = S.String.pipe(
       encode: encodeUnsupported,
     })
   ),
+  SchemaUtils.withExitCodecStatics,
   $I.annoteSchema("JsoncTextToUnknown", {
     description: "Schema transformation that parses JSONC text into unknown values.",
   })

@@ -222,8 +222,10 @@ const greptileGateState = (options: PrCloseoutOptions, greptile: GreptileSummary
     detail: options.retriggerGreptile
       ? "Greptile retrigger comment was posted explicitly."
       : `Greptile score=${greptile.score ?? "unknown"} issues=${greptile.issueCount ?? "unknown"}.`,
-    count: greptile.issueCount,
-    url: greptile.url,
+    ...O.getSomesStruct({
+      count: O.fromUndefinedOr(greptile.issueCount),
+      url: O.fromUndefinedOr(greptile.url),
+    }),
   });
 };
 

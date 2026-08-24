@@ -481,10 +481,10 @@ export class DocgenQualityWorkerEvalRunnerInput extends S.Class<DocgenQualityWor
   $I`DocgenQualityWorkerEvalRunnerInput`
 )(
   {
-    baseUrl: S.optional(S.String),
+    baseUrl: S.optionalKey(S.String),
     model: S.String,
     provider: DocgenQualityWorkerEvalProvider,
-    reasoningEffort: S.optional(DocgenQualityWorkerEvalReasoningEffort),
+    reasoningEffort: S.optionalKey(DocgenQualityWorkerEvalReasoningEffort),
     prompt: S.String,
     workingDirectory: S.String,
   },
@@ -558,17 +558,17 @@ export class AnalyzeDocgenQualityWorkerEvalOptions extends S.Class<AnalyzeDocgen
   $I`AnalyzeDocgenQualityWorkerEvalOptions`
 )(
   {
-    baseUrl: S.optional(S.String),
-    codexSdkVersion: S.optional(S.String),
+    baseUrl: S.optionalKey(S.String),
+    codexSdkVersion: S.optionalKey(S.String),
     model: S.String,
-    packetLimit: S.optional(S.Finite),
+    packetLimit: S.optionalKey(S.Finite),
     provider: DocgenQualityWorkerEvalProvider,
-    reasoningEffort: S.optional(DocgenQualityWorkerEvalReasoningEffort),
+    reasoningEffort: S.optionalKey(DocgenQualityWorkerEvalReasoningEffort),
     report: DocgenQualityReport,
-    runner: S.optional(S.Any),
+    runner: S.optionalKey(S.Any),
     scope: DocgenQualityWorkerEvalScope,
     sourceQualityReport: S.String,
-    timeout: S.optional(S.Any),
+    timeout: S.optionalKey(S.Any),
   },
   $I.annote("AnalyzeDocgenQualityWorkerEvalOptions", {
     description: "Options for one worker eval run.",

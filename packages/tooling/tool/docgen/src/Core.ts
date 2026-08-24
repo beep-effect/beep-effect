@@ -9,10 +9,12 @@
 
 import chalk from "@beep/chalk";
 import { $RepoDocgenId } from "@beep/identity/packages";
+import { Md, renderMarkdownBlock } from "@beep/md";
 import { encodeTSConfigPrettyEffect, FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import markdownToc from "@effect/markdown-toc";
 import { Effect, FileSystem, flow, HashSet, Order, Path, pipe, Stream } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as ChildProcess from "effect/unstable/process/ChildProcess";
 import * as Checker from "./Checker.ts";
@@ -44,11 +46,11 @@ class FencedCodeBlock extends S.Class<FencedCodeBlock>($I`FencedCodeBlock`)(
   })
 ) {}
 
-const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
+const normalizeSlashes = Str.replace(/\\/g, "/");
 
 const isDocgenSourceFile = (filePath: string): boolean =>
-  A.some(SOURCE_FILE_EXTENSIONS, (extension) => Str.endsWith(extension)(filePath)) &&
-  !A.some(DECLARATION_FILE_EXTENSIONS, (extension) => Str.endsWith(extension)(filePath));
+  A.some(SOURCE_FILE_EXTENSIONS, (extension) => Str.endsWith(filePath, extension)) &&
+  !A.some(DECLARATION_FILE_EXTENSIONS, (extension) => Str.endsWith(filePath, extension));
 
 const sourceGlobForExtension = (srcDir: string, extension: SourceFileExtension, path: Path.Path): string =>
   path.normalize(path.join(srcDir, "**", `*${extension}`));
@@ -63,14 +65,17 @@ const includePatternToGlob = (srcDir: string, includePattern: string, path: Path
 };
 
 const resolveSourceGlobs = (config: Configuration.ConfigurationShape, path: Path.Path): ReadonlyArray<string> =>
-  config.include.length === 0
+  A.isReadonlyArrayEmpty(config.include)
     ? A.map(SOURCE_FILE_EXTENSIONS, (extension) => sourceGlobForExtension(config.srcDir, extension, path))
     : A.map(config.include, (includePattern) => includePatternToGlob(config.srcDir, includePattern, path));
 
 const globFiles = (pattern: string, exclude: ReadonlyArray<string> = []) =>
   Effect.gen(function* () {
     const fsUtils = yield* FsUtils;
-    return yield* fsUtils.globFiles(pattern, exclude.length === 0 ? undefined : { ignore: A.fromIterable(exclude) });
+    return yield* fsUtils.globFiles(
+      pattern,
+      A.isReadonlyArrayEmpty(exclude) ? undefined : { ignore: A.fromIterable(exclude) }
+    );
   }).pipe(
     Effect.mapError(() =>
       Domain.DocgenError.make({
@@ -92,7 +97,9 @@ const readSourceFiles = Effect.gen(function* () {
   return yield* Effect.forEach(
     paths,
     (filePath) =>
-      fs.readFileString(filePath).pipe(
+      pipe(
+        filePath,
+        fs.readFileString,
         Effect.map((content) => Domain.File.new(filePath, content, { isOverwritable: false })),
         Effect.mapError((cause) =>
           Domain.DocgenError.make({
@@ -187,14 +194,14 @@ const sanitizeExampleName = (name: string): string => {
   return sanitized.length > 0 ? sanitized : "example";
 };
 
-const extractPrefixedNestedNamespaces = (
-  doc: Domain.Namespace,
-  prefix: string
-): ReadonlyArray<readonly [string, Domain.Namespace]> => {
+const extractPrefixedNestedNamespaces: {
+  (doc: Domain.Namespace, prefix: string): ReadonlyArray<readonly [string, Domain.Namespace]>;
+  (prefix: string): (doc: Domain.Namespace) => ReadonlyArray<readonly [string, Domain.Namespace]>;
+} = dual(2, (doc: Domain.Namespace, prefix: string): ReadonlyArray<readonly [string, Domain.Namespace]> => {
   const newPrefix = Str.isEmpty(prefix) ? doc.name : `${prefix}-${doc.name}`;
   const namespaces = A.flatMap(doc.namespaces, (namespace) => extractPrefixedNestedNamespaces(namespace, newPrefix));
   return A.prepend(namespaces, [prefix, doc] as const);
-};
+});
 
 /**
  * Fence metadata token that removes an example from generated type-check files.
@@ -681,14 +688,18 @@ const getModuleMarkdownFiles = (modules: ReadonlyArray<Domain.Module>) =>
       const moduleContent = yield* Printer.printModule(module);
       const toc = markdownToc(moduleContent, { bullets: "-" }).content;
       const frontMatter = Printer.printFrontMatter(module, index + 1);
+      // Byte-compatibility with the historical hand-built block: single "\n"
+      // joins, not the "\n\n" a rendered Document would use.
       const content = pipe(
         `${frontMatter}\n\n${moduleContent}`,
         Str.replace(
           "<!-- toc -->",
-          `---
-## Exports Grouped by Category
-${toc}
----`
+          A.join("\n")([
+            renderMarkdownBlock(Md.hr),
+            renderMarkdownBlock(Md.h2`Exports Grouped by Category`),
+            toc,
+            renderMarkdownBlock(Md.hr),
+          ])
         )
       );
       const prettified = yield* Printer.prettify(content);
@@ -777,7 +788,7 @@ export const program = Effect.gen(function* () {
       Effect.gen(function* () {
         yield* Effect.logInfo("Checking modules...");
         const errors = yield* Checker.checkModules(modules);
-        if (errors.length > 0) {
+        if (A.isReadonlyArrayNonEmpty(errors)) {
           return yield* Domain.DocgenError.make({
             message: `The following errors occurred while checking the modules:\n\n${A.join("\n\n")(errors)}`,
           });
@@ -793,7 +804,7 @@ export const program = Effect.gen(function* () {
     ],
     { concurrency: "unbounded", discard: true }
   );
-  if (config.include.length === 0) {
+  if (A.isReadonlyArrayEmpty(config.include)) {
     yield* writeDocgenProofManifest();
   } else {
     yield* Effect.logInfo(chalk.gray("Skipping proof manifest for focused include run"));

@@ -67,6 +67,7 @@
     "@babel/code-frame": "catalog:",
     "@beep/chalk": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/md": "workspace:^",
     "@beep/repo-utils": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",

@@ -396,36 +396,35 @@ class PackageJsonSchema extends S.Class<PackageJsonSchema>($I`PackageJsonSchema`
   name: S.String,
 }) {}
 
-const readJsoncFile = <Schema extends S.ConstraintDecoder<unknown, never>>(
+const readJsoncFile = Effect.fn("readJsonCFile")(function* <Schema extends S.ConstraintDecoder<unknown>>(
   filePath: string,
   schema: Schema
-): Effect.Effect<S.Schema.Type<Schema>, Domain.DocgenError, FileSystem.FileSystem> =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const content = yield* fs.readFileString(filePath).pipe(
-      Effect.mapError((cause) =>
-        Domain.DocgenError.make({
-          message: `[Configuration.readJsoncFile] Failed to read '${filePath}'\n${String(cause)}`,
-        })
-      )
-    );
+): Effect.fn.Return<Schema["Type"], Domain.DocgenError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const content = yield* fs.readFileString(filePath).pipe(
+    Effect.mapError((cause) =>
+      Domain.DocgenError.make({
+        message: `[Configuration.readJsoncFile] Failed to read '${filePath}'\n${String(cause)}`,
+      })
+    )
+  );
 
-    const parsed = yield* Effect.try({
-      catch: (cause) =>
-        Domain.DocgenError.make({
-          message: `[Configuration.readJsoncFile] Failed to parse '${filePath}'\n${String(cause)}`,
-        }),
-      try: () => jsonc.parse(content),
-    });
+  const parsed = yield* Effect.try({
+    catch: (cause) =>
+      Domain.DocgenError.make({
+        message: `[Configuration.readJsoncFile] Failed to parse '${filePath}'\n${String(cause)}`,
+      }),
+    try: () => jsonc.parse(content),
+  });
 
-    return yield* S.decodeUnknownEffect(schema)(parsed).pipe(
-      Effect.mapError((cause) =>
-        Domain.DocgenError.make({
-          message: `[Configuration.readJsoncFile] Failed to decode '${filePath}'\n${String(cause)}`,
-        })
-      )
-    );
-  }) as Effect.Effect<S.Schema.Type<Schema>, Domain.DocgenError, FileSystem.FileSystem>;
+  return yield* S.decodeUnknownEffect(schema)(parsed).pipe(
+    Effect.mapError((cause) =>
+      Domain.DocgenError.make({
+        message: `[Configuration.readJsoncFile] Failed to decode '${filePath}'\n${String(cause)}`,
+      })
+    )
+  );
+});
 
 const readPackageJson = (filePath: string) => readJsoncFile(filePath, PackageJsonSchema);
 

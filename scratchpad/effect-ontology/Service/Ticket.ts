@@ -8,9 +8,8 @@
  * @module Service/Ticket
  */
 
-import { randomBytes } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Duration, Effect, HashSet, Layer, Option, Schedule } from "effect";
+import { Clock, Context, Crypto, Duration, Effect, Encoding, HashSet, Layer, Option, Schedule } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -26,7 +25,10 @@ const DEFAULT_TTL_MS = 5 * 60 * 1000;
 /** Cleanup interval for expired tickets */
 const CLEANUP_INTERVAL_MS = 60 * 1000;
 
-const generateSecureToken = Effect.sync(() => randomBytes(32).toString("base64url"));
+const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(function* () {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeBase64Url(yield* crypto.randomBytes(32));
+});
 
 const ticketStorageKey = (ticket: string) => `ws-tickets/${ticket}`;
 
@@ -85,7 +87,7 @@ const makeTicketService = Effect.gen(function* () {
     apiKey: string,
     ttlMs: number = DEFAULT_TTL_MS
   ) {
-    const ticket = yield* generateSecureToken;
+    const ticket = yield* generateSecureToken();
     const now = yield* Clock.currentTimeMillis;
     const expiresAt = now + ttlMs;
     const record = TicketRecord.fromUnknown({ ticket, ontologyId, apiKey, createdAt: now, expiresAt });

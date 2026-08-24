@@ -93,17 +93,17 @@ const ruleConfig = (rule: OxlintRule) => ({
 export const OxlintReport = S.Struct({
   diagnostics: S.Array(
     S.Struct({
-      code: S.String.pipe(S.optional),
+      code: S.String.pipe(S.optionalKey),
       labels: S.Array(
         S.Struct({
-          span: S.Struct({ line: ReportLine.pipe(S.optional) }).pipe(S.optional),
+          span: S.Struct({ line: ReportLine.pipe(S.optionalKey) }).pipe(S.optionalKey),
         })
-      ).pipe(S.optional),
+      ).pipe(S.optionalKey),
     })
-  ).pipe(S.optional),
+  ).pipe(S.optionalKey),
 });
 
-const emptyReport: typeof OxlintReport.Type = { diagnostics: undefined };
+const emptyReport: typeof OxlintReport.Type = {};
 
 /** Decode oxlint's stdout, tolerating non-JSON noise by returning an empty report. */
 const parseReport = jsonReportParser(OxlintReport, emptyReport);

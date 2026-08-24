@@ -27,7 +27,7 @@
  * @since 0.0.0
  */
 import { TSMorphService, TSMorphServiceLive } from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Console, Effect, Layer } from "effect";
 import { Node, SyntaxKind } from "ts-morph";
 import type { TSMorphServiceError } from "@beep/repo-utils";
@@ -291,7 +291,7 @@ export const runStaticApiColocationCodemod = (
 if (import.meta.main) {
   const filePaths = process.argv.slice(2);
   const MainLayer = TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
-  Effect.runPromise(
+  NodeRuntime.runMain(
     runStaticApiColocationCodemod(filePaths).pipe(
       Effect.flatMap((results) =>
         Effect.forEach(
@@ -302,10 +302,7 @@ if (import.meta.main) {
           }
         )
       ),
-      Effect.tapCause((cause) => Console.error(cause)),
       Effect.provide(MainLayer)
     )
-  ).catch(() => {
-    process.exit(1);
-  });
+  );
 }

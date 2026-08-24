@@ -7,7 +7,7 @@
 
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { PosInt } from "@beep/schema";
-import { A, Str } from "@beep/utils";
+import { A, HostProcessPlatform, Str } from "@beep/utils";
 import { Context, Effect, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -1168,7 +1168,7 @@ type ProcessShape = {
 
 const defaultProcess: ProcessShape = {
   cwd: Effect.sync(() => process.cwd()),
-  platform: Effect.sync(() => process.platform),
+  platform: HostProcessPlatform,
   argv: Effect.sync(() => process.argv),
 };
 
