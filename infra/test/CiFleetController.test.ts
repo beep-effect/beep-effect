@@ -18,6 +18,7 @@ const validConfigValues = {
 };
 
 const decodeConfigValues = S.decodeUnknownResult(CiFleetControllerPulumiConfigValues);
+const decodePolicyDocument = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 const isString = S.is(S.String);
 
 const assertSubstringBefore = (text: string, before: string, after: string): void => {
@@ -227,8 +228,10 @@ describe("@beep/infra CiFleetController", () => {
         http_tokens: "required",
         instance_metadata_tags: "enabled",
       });
-      expect(capturedPolicy.value).toBe(
-        JSON.stringify({
+      const decodedPolicy = decodePolicyDocument(capturedPolicy.value);
+      assert.isTrue(Result.isSuccess(decodedPolicy));
+      if (Result.isSuccess(decodedPolicy)) {
+        expect(decodedPolicy.success).toEqual({
           Version: "2012-10-17",
           Statement: [
             {
@@ -244,8 +247,8 @@ describe("@beep/infra CiFleetController", () => {
               },
             },
           ],
-        })
-      );
+        });
+      }
       // The toolbelt install must stay marker-gated and fail open: the baked
       // image stamps /etc/beep-ci/baked-runner, an unbaked boot installs.
       assert.isTrue(Str.includes("if [ -f /etc/beep-ci/baked-runner ]; then")(postInstall));
