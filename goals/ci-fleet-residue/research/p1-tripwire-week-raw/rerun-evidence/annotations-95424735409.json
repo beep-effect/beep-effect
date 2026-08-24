@@ -1,0 +1,23 @@
+{
+  "annotations": [
+    {
+      "level": "failure",
+      "message": "Failed to download archive 'https://codeload.github.com/taiki-e/install-action/tar.gz/91ddec75689c4c78665b598d188dc821c5a43e5c' after 3 attempts."
+    },
+    {
+      "level": "failure",
+      "message": "Response status code does not indicate success: 429 (Too Many Requests)."
+    },
+    { "level": "warning", "message": "Back off 20.108 seconds before retry." },
+    {
+      "level": "warning",
+      "message": "Failed to download action 'https://codeload.github.com/taiki-e/install-action/tar.gz/91ddec75689c4c78665b598d188dc821c5a43e5c'. Error: Response status code does not indicate success: 429 (Too Many Requests). 4C00:114A60:F4F342:F5888D:6A832A04"
+    },
+    { "level": "warning", "message": "Back off 21.964 seconds before retry." },
+    {
+      "level": "warning",
+      "message": "Failed to download action 'https://codeload.github.com/taiki-e/install-action/tar.gz/91ddec75689c4c78665b598d188dc821c5a43e5c'. Error: Response status code does not indicate success: 429 (Too Many Requests). 4C00:114A60:ED250A:EDB73F:6A8329E3"
+    }
+  ],
+  "job_id": 95424735409
+}

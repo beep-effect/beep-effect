@@ -1,0 +1,18 @@
+{
+  "jobs": [
+    {
+      "completed_at": "2026-08-17T14:30:07Z",
+      "conclusion": "failure",
+      "failed_steps": [
+        { "conclusion": "failure", "name": "Setup monorepo CI" }
+      ],
+      "id": 95415229097,
+      "labels": ["ubuntu-24.04"],
+      "name": "Build And Test",
+      "runner_name": "GitHub Actions 1000009656",
+      "started_at": "2026-08-17T14:28:13Z",
+      "status": "completed"
+    }
+  ],
+  "run_id": 32039140806
+}

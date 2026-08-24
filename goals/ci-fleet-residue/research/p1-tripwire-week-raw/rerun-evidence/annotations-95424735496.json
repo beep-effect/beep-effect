@@ -1,0 +1,23 @@
+{
+  "annotations": [
+    {
+      "level": "failure",
+      "message": "Failed to download archive 'https://codeload.github.com/actions/checkout/tar.gz/11d5960a326750d5838078e36cf38b85af677262' after 3 attempts."
+    },
+    {
+      "level": "failure",
+      "message": "Response status code does not indicate success: 429 (Too Many Requests)."
+    },
+    { "level": "warning", "message": "Back off 15.457 seconds before retry." },
+    {
+      "level": "warning",
+      "message": "Failed to download action 'https://codeload.github.com/actions/checkout/tar.gz/11d5960a326750d5838078e36cf38b85af677262'. Error: Response status code does not indicate success: 429 (Too Many Requests). 9956:2EA897:E46C28:E4DD03:6A832A40"
+    },
+    { "level": "warning", "message": "Back off 27.366 seconds before retry." },
+    {
+      "level": "warning",
+      "message": "Failed to download action 'https://codeload.github.com/actions/checkout/tar.gz/11d5960a326750d5838078e36cf38b85af677262'. Error: Response status code does not indicate success: 429 (Too Many Requests). D66A:2D3C8F:F736F:F984D:6A832A18"
+    }
+  ],
+  "job_id": 95424735496
+}
