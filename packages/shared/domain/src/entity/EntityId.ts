@@ -438,11 +438,15 @@ type EntityIdSchema<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, n
  * **Details**
  *
  * The factory pipes each branded id schema through
- * `SchemaUtils.withSyncCodecStatics` and `SchemaUtils.withEffectCodecStatics`
- * before attaching the entity metadata statics, so both codec groups are
- * uniform across the entity-id fleet. The codec groups' dual `equivalence` is
- * omitted here because the factory deliberately attaches its own plain
- * two-argument entity-id equivalence last.
+ * `SchemaUtils.withCodecStatics` (the canonical trio: `is`, `fromUnknown`,
+ * `decodeOption`) and `SchemaUtils.withEffectCodecStatics` (`decodeEffect`,
+ * `decodeUnknownEffect`, `encodeEffect`, `encodeUnknownEffect`, their
+ * `FromJsonString` variants, plus the shared `is` and `asserts`) before
+ * attaching the entity metadata statics, so both groups are uniform across the
+ * entity-id fleet. The sync group (`decodeSync`, `encodeSync`, ...) is not
+ * attached. The Effect group's dual `equivalence` is omitted here because the
+ * factory deliberately attaches its own plain two-argument entity-id
+ * equivalence last.
  *
  * **Example** (Guard through factory-attached codec statics)
  *
@@ -461,7 +465,7 @@ type EntityIdSchema<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, n
  * @since 0.0.0
  */
 export type EntityIdCodecStatics<TBrand extends string> = Omit<
-  SchemaUtils.SyncCodecStatics<EntityIdSchema<TBrand>> & SchemaUtils.EffectCodecStatics<EntityIdSchema<TBrand>>,
+  SchemaUtils.CodecStatics<EntityIdSchema<TBrand>> & SchemaUtils.EffectCodecStatics<EntityIdSchema<TBrand>>,
   "equivalence"
 >;
 
@@ -469,6 +473,13 @@ const decodeOptionsResult = S.decodeUnknownResult(Options);
 
 /**
  * Any entity id schema produced by {@link factory}.
+ *
+ * **Gotchas**
+ *
+ * `Any` intentionally omits {@link EntityIdCodecStatics}: widening it would
+ * break `extends EntityId.Any` consumers through `Brand` invariance. Narrowing
+ * a factory id to `Any` keeps the entity metadata statics but drops the codec
+ * groups, so keep the concrete id type when you need them.
  *
  * **Example** (Any factory entity id)
  *
@@ -596,10 +607,13 @@ const buildDefinition = <
  *
  * **Details**
  *
- * Every produced id schema carries the entity metadata statics plus the sync
- * and Effect codec groups (see {@link EntityIdCodecStatics}). The codec groups
- * are attached before the entity metadata statics so the factory's plain
- * entity-id `equivalence` stays the canonical equivalence static.
+ * Every produced id schema carries the entity metadata statics plus the
+ * canonical codec trio (`is`, `fromUnknown`, `decodeOption`) and the Effect
+ * codec group (see {@link EntityIdCodecStatics}); the sync group is not
+ * attached. The codec groups are attached before the entity metadata statics
+ * so the factory's plain entity-id `equivalence` stays the canonical
+ * equivalence static, including on schemas produced by a later
+ * `.annotate(...)` call.
  *
  * **Example** (Build slice-scoped id maker)
  *
@@ -641,17 +655,14 @@ export const factory: Factory = dual(
       );
       const typedSchema = schema as S.Codec<EntityIdValueFor<ResolvedBrand<Slice, Name, Overrides>>, number>;
 
-      return attachEntityIdStatics(
-        typedSchema.pipe(SchemaUtils.withSyncCodecStatics, SchemaUtils.withEffectCodecStatics),
-        {
-          brand: definition.brand,
-          definition,
-          entityType: definition.entityType,
-          equivalence: S.toEquivalence(typedSchema),
-          resource: definition.resource,
-          slice,
-          tableName: definition.tableName,
-        }
-      );
+      return attachEntityIdStatics(typedSchema.pipe(SchemaUtils.withCodecStatics, SchemaUtils.withEffectCodecStatics), {
+        brand: definition.brand,
+        definition,
+        entityType: definition.entityType,
+        equivalence: S.toEquivalence(typedSchema),
+        resource: definition.resource,
+        slice,
+        tableName: definition.tableName,
+      });
     }
 );

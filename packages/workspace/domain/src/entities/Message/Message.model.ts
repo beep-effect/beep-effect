@@ -56,4 +56,5 @@ export class Message extends MessageEntity.Entity<Message>(MessageEntity.tableNa
   ]
 ) {
   static readonly decodeUnknownSync = S.decodeUnknownSync(Message);
+  static readonly encodeSync = S.encodeSync(Message);
 }

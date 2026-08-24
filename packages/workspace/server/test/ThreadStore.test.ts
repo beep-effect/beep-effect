@@ -103,6 +103,43 @@ describe("ThreadStore in-memory", () => {
   );
 
   it.effect(
+    "isolates threads and turns by workspace and thread id",
+    Effect.fnUntraced(function* () {
+      const store = yield* makeTestThreadStore;
+      const workspaceA = yield* decodeWorkspaceId(2);
+      const workspaceB = yield* decodeWorkspaceId(3);
+
+      const threadA = yield* store.createThread({ title: "Thread A", workspaceId: workspaceA });
+      const threadB = yield* store.createThread({ title: "Thread B", workspaceId: workspaceB });
+
+      yield* store.appendTurn({ threadId: threadA.id, parentTurnId: O.none(), role: "user", content: docOf("A1") });
+      yield* store.appendTurn({
+        threadId: threadA.id,
+        parentTurnId: O.none(),
+        role: "assistant",
+        content: docOf("A2"),
+      });
+      const appendedB = yield* store.appendTurn({
+        threadId: threadB.id,
+        parentTurnId: O.none(),
+        role: "user",
+        content: docOf("B1"),
+      });
+
+      const threadsA = yield* store.listThreads(workspaceA);
+      const threadsB = yield* store.listThreads(workspaceB);
+      expect(A.map(threadsA, (thread) => thread.id)).toEqual([threadA.id]);
+      expect(A.map(threadsB, (thread) => thread.id)).toEqual([threadB.id]);
+      expect(appendedB.turn.turnIndex).toBe(0);
+
+      const timelineA = yield* store.timeline(threadA.id);
+      const timelineB = yield* store.timeline(threadB.id);
+      expect(timelineA.turns).toHaveLength(2);
+      expect(timelineB.turns).toHaveLength(1);
+    })
+  );
+
+  it.effect(
     "atomically persists concurrent threads and turns while public-id generation yields",
     Effect.fnUntraced(function* () {
       const concurrency = 8;

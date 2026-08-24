@@ -7,7 +7,6 @@
  */
 
 import { Message } from "@beep/workspace-domain/entities/Message";
-import * as S from "effect/Schema";
 import type { Table } from "./Message.table.ts";
 
 /**
@@ -48,9 +47,6 @@ export type MessageRow = typeof Table.$inferSelect;
  */
 export type MessageInsert = typeof Table.$inferInsert;
 
-const encodeMessage = S.encodeSync(Message);
-const decodeMessageRow = S.decodeUnknownSync(Message);
-
 /**
  * Convert a Message entity into its persistence insert row.
  *
@@ -66,10 +62,9 @@ const decodeMessageRow = S.decodeUnknownSync(Message);
  * ```ts
  * import { Message } from "@beep/workspace-domain/entities/Message"
  * import { toMessageInsert } from "@beep/workspace-tables/entities/Message"
- * import * as S from "effect/Schema"
  *
  * const principal = { component: "Runtime", kind: "System" }
- * const message = S.decodeUnknownSync(Message)({
+ * const message = Message.decodeUnknownSync({
  *   content: {
  *     _tag: "document",
  *     children: [{ _tag: "p", children: [{ _tag: "text", value: "Hello thread" }] }]
@@ -98,7 +93,7 @@ const decodeMessageRow = S.decodeUnknownSync(Message);
  * @since 0.0.0
  */
 export const toMessageInsert = (message: Message): MessageInsert => {
-  const encoded = encodeMessage(message);
+  const encoded = Message.encodeSync(message);
 
   return {
     content: encoded.content,
@@ -154,4 +149,4 @@ export const toMessageInsert = (message: Message): MessageInsert => {
  * @category tables
  * @since 0.0.0
  */
-export const fromMessageRow = (row: MessageRow): Message => decodeMessageRow(row);
+export const fromMessageRow = (row: MessageRow): Message => Message.decodeUnknownSync(row);

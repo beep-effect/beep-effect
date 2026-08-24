@@ -18,6 +18,7 @@ import { getTableConfig } from "drizzle-orm/pg-core";
 import { Crypto, Effect, Exit, Layer } from "effect";
 import { cast } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { makeEffect } from "effect/SchemaParser";
@@ -53,6 +54,13 @@ const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect
   const exit = yield* Effect.exit(effect);
   assert.strictEqual(Exit.isFailure(exit), true);
 });
+// `annotate` returns the bare codec type, so statics that survive it are probed by name.
+const hasFunctionStatic = (schema: object, key: string): boolean =>
+  P.hasProperty(schema, key) && P.isFunction(Reflect.get(schema, key));
+const invokeStatic = (schema: object, key: string, ...args: ReadonlyArray<unknown>): O.Option<unknown> => {
+  const candidate: unknown = Reflect.get(schema, key);
+  return O.map(O.liftPredicate(candidate, P.isFunction), (fn) => fn.call(schema, ...args));
+};
 
 const systemPrincipal = {
   component: "Runtime",
@@ -96,6 +104,34 @@ describe("EntityId", () => {
       expect(DocumentId.equivalence(cast(1), cast(1))).toBe(true);
       expect(DocumentId.equivalence(cast(1), cast(2))).toBe(false);
       expect(yield* decodeEffect(DocumentId)(1)).toBe(1);
+
+      expect(DocumentId.is(1)).toBe(true);
+      expect(DocumentId.is(0)).toBe(false);
+      expect(DocumentId.fromUnknown(1)).toBe(1);
+      expect(O.isSome(DocumentId.decodeOption(1))).toBe(true);
+      expect(O.isNone(DocumentId.decodeOption(0))).toBe(true);
+      const decoded = yield* DocumentId.decodeUnknownEffect(1);
+      expect(decoded).toBe(1);
+      expect(yield* DocumentId.encodeEffect(decoded)).toBe(1);
+      expect(DocumentId.equivalence(decoded, decoded)).toBe(true);
+      expect(DocumentId.equivalence(decoded, cast(2))).toBe(false);
+      // The canonical static is the schema's own (per-AST memoized) equivalence, not the
+      // codec groups' `dual(2, ...)` wrapper: the wrapper curries below its arity, while the
+      // plain form always answers with a boolean.
+      expect(DocumentId.equivalence).toBe(S.toEquivalence(DocumentId));
+      expect(P.isFunction(O.getOrThrow(invokeStatic(DocumentId, "equivalence")))).toBe(false);
+
+      const Annotated = DocumentId.annotate({ description: "proof" });
+      expect(Annotated).not.toBe(DocumentId);
+      expect(hasFunctionStatic(Annotated, "is")).toBe(true);
+      expect(hasFunctionStatic(Annotated, "fromUnknown")).toBe(true);
+      expect(hasFunctionStatic(Annotated, "decodeUnknownEffect")).toBe(true);
+      expect(O.getOrThrow(invokeStatic(Annotated, "fromUnknown", 1))).toBe(1);
+      expect(O.getOrThrow(invokeStatic(Annotated, "equivalence", decoded, decoded))).toBe(true);
+      expect(O.getOrThrow(invokeStatic(Annotated, "equivalence", decoded, 2))).toBe(false);
+      expect(P.isFunction(O.getOrThrow(invokeStatic(Annotated, "equivalence")))).toBe(false);
+      const annotatedEquivalence: unknown = Reflect.get(Annotated, "equivalence");
+      expect(annotatedEquivalence).toBe(DocumentId.equivalence);
     })
   );
 

@@ -29,9 +29,9 @@ import type { MessageInsert } from "@beep/workspace-tables/entities/Message";
 import type * as Crypto from "effect/Crypto";
 import type { MessageEntityInput, ThreadEntityInput, TurnEntityInput } from "./ThreadStore.repo.internal.ts";
 
-const THREAD_TABLE_NAME = "workspace_thread" as const;
-const TURN_TABLE_NAME = "workspace_turn" as const;
-const MESSAGE_TABLE_NAME = "workspace_message" as const;
+const THREAD_TABLE_NAME = WorkspaceIdentity.ThreadId.tableName;
+const TURN_TABLE_NAME = WorkspaceIdentity.TurnId.tableName;
+const MESSAGE_TABLE_NAME = WorkspaceIdentity.MessageId.tableName;
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
 
@@ -81,7 +81,7 @@ const makeThreadEntity = (
   timestamps: EntityTimestamps
 ): Thread =>
   Thread.decodeUnknownSync({
-    ...baseEntityRecord("WorkspaceThread", input.id, publicId, timestamps),
+    ...baseEntityRecord(WorkspaceIdentity.ThreadId.entityType, input.id, publicId, timestamps),
     title: input.title,
     workspaceId: input.workspaceId,
   });
@@ -92,7 +92,7 @@ const makeTurnEntity = (
   timestamps: EntityTimestamps
 ): Turn =>
   Turn.decodeUnknownSync({
-    ...baseEntityRecord("WorkspaceTurn", input.id, publicId, timestamps),
+    ...baseEntityRecord(WorkspaceIdentity.TurnId.entityType, input.id, publicId, timestamps),
     items: [{ itemType: "message", messageId: input.messageId }],
     parentTurnId: input.parentTurnId,
     threadId: input.threadId,
@@ -105,7 +105,7 @@ const makeMessageEntity = (
   timestamps: EntityTimestamps
 ): Message =>
   Message.decodeUnknownSync({
-    ...baseEntityRecord("WorkspaceMessage", input.id, publicId, timestamps),
+    ...baseEntityRecord(WorkspaceIdentity.MessageId.entityType, input.id, publicId, timestamps),
     content: Document.encodeSync(input.content),
     role: input.role,
     threadId: input.threadId,
