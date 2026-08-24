@@ -176,7 +176,7 @@
     "mermaid": "^11.17.0",
     "micromark": "^4.0.2",
     "micromark-extension-gfm": "^3.0.0",
-    "n3": "^2.2.5",
+    "n3": "^2.2.9",
     "next": "16.4.0-canary.2",
     "next-themes": "^0.4.6",
     "onnxruntime-node": "^1.27.0",
