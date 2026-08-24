@@ -1,6 +1,6 @@
 # Extraction method-contract bake-off
 
-*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: `../DECISIONS.md` "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
 
 Date: 2026-08-24. Repo evidence is from beep `9a15d33f` and semantica `add1c006` [M1].
 This sheet compares extraction methods behind one schema-first service. A candidate is a method

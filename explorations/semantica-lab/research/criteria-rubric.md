@@ -17,7 +17,7 @@ ratification are dated DECISIONS entries, not silent edits.
    labels, machine targets, budgets, expected entailments, and the falsifiable Document→KG→eval
    loop. Budgets and the offline meaning live there (Tier-L/Tier-D, replay-offline per
    G4/G7) — do not copy ceilings from this rubric. **Mobile is out of scope.**
-2. **Shared schema one-pager** (`research/shared-schema.md`): Document / Chunk (with source
+2. **Shared schema one-pager** (`shared-schema.md`): Document / Chunk (with source
    spans) / RDF Term (IRI vs literal+datatype+lang, via `@beep/rdf`) / Entity / ProvenanceEvent
    / InferenceEvent / embedding model identity. Families are scored against THIS contract; four
    locally-optimal winners that cannot compose are a failed bake-off.
@@ -141,7 +141,7 @@ for transport; the extraction *method* and *output schema* are what score).
 One deep-research pass per family → `research/bakeoff-<family>.md`: gate table, scored buckets
 with evidence, winner + runner-up (or bundle), park list with one-liners, parked-SOTA appendix,
 SOURCES §3 appendix. Every bake-off output gets the Sol+Grok adversarial pass (D17);
-disagreements are logged in the sheet. After family screens: an **end-to-end compatibility
-round** — the winning bundle must run the workload contract's Document→KG→eval loop together
-before verdicts finalize. Verdicts land as dated DECISIONS entries and sync to the Notion
-atlas Verdict columns via the unified vocabulary (A9).
+disagreements are logged in the sheet. After the family screens, the compatibility round is
+the staged canary C0-C2 (G1), not a fourth bake-off sheet. Family verdicts stay
+park-pending-canary until a canary stage passes; they then land as dated DECISIONS entries.
+Atlas `adopt`/`pick-one` waits; only final `park`/`drop` syncs today (B1).

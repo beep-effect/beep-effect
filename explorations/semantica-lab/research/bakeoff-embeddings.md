@@ -1,6 +1,6 @@
 # Embeddings bake-off
 
-*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: `../DECISIONS.md` "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
 
 Status: evidence screen, 2026-08-24. Verdicts are provisional until the W1 retrieval set and the
 same-model runtime probe close the `UNKNOWN` gates. Where a `PASS` names a wrapper condition, the

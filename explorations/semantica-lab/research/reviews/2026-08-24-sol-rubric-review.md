@@ -1,5 +1,7 @@
 # Adversarial review of the bake-off rubric
 
+*Line citations refer to the rubric v1 draft as reviewed (see `criteria-rubric-v1-as-reviewed.md` in this directory) and to packet files relative to the packet root (`../../` from here).*
+
 ## 1. Hard gates
 
 The envelope gate contradicts the embeddings sheet. A remote API is a server dependency, yet `../criteria-rubric.md:42-43` calls API-backed embeddings "envelope-legal" while lines 9-10 park server-only technology. Define the product invariant instead: for example, the core pipeline must work without an operator-managed service, while optional remote Layers may improve it. Otherwise two reviewers can reach opposite gate results without either misreading the rubric.

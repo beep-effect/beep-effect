@@ -33,7 +33,8 @@ content-addressed cache with the network off. Changes to this file are dated DEC
 
 ## Machine targets
 
-- **Primary: DankStation** (verified: Threadripper 9970X, 128GB ECC RAM, 2× R9700 = 64GB VRAM).
+- **Primary: the reference development machine** (verified: Threadripper 9970X, 128GB ECC RAM,
+  2× R9700 = 64GB VRAM).
   There is no laptop gate machine.
 - Lab CI: Linux x64 (Labs lane; no Cargo — Rust checks stay local per A5).
 - Packaging matrix (macOS/Windows, arm64) deferred to a later milestone. **Mobile: no-go.**
@@ -48,8 +49,8 @@ professional-desktop knows the portability bill. Tier-D numbers never park a can
 | --- | --- | --- |
 | Sidecar cold start to ready | < 5 s | recorded |
 | Eval/interactive query p95 | < 100 ms | recorded |
-| W1 end-to-end wall clock | < 10 min | recorded |
-| Disk growth per W1 run (excl. models) | < 1 GB | recorded |
+| W1 end-to-end wall clock | alarm at 10 min (not a park) | recorded |
+| Disk growth per W1 run (excl. models) | alarm at 1 GB (not a park) | recorded |
 | Peak bundle RSS | alarm at 16 GB (not a park) | < 2 GB watchpoint |
 | Model/artifact bytes | measured | < 600 MB watchpoint |
 | Lab dependency footprint | measured | < 250 MB watchpoint |
@@ -75,7 +76,7 @@ fallback. Fully-offline live inference is not an M1 criterion.
 **Determinism:** content-addressed ids, pinned model identities, stable ordering. Re-running W1
 reproduces the report stably; the IR pipeline's SHA-256 discipline is the model.
 
-**Falsifier:** if a candidate bundle cannot pass the hard gates plus the Tier-L bar plus a
-quality floor (beat the G-structure/G-entity baselines set by the first passing run) inside a
-two-week build appetite, the bundle or the shape is wrong. Drop back to decompose rather than
-relaxing this contract silently.
+**Falsifier:** if a candidate bundle cannot pass the rubric's hard gates plus the two Tier-L
+gates (cold start <5s, p95 <100ms) plus a quality floor (beat the G-structure/G-entity
+baselines set by the first passing run) inside a two-week build appetite, the bundle or the
+shape is wrong. Drop back to decompose rather than relaxing this contract silently.

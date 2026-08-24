@@ -33,7 +33,7 @@ Slice anatomy references: `packages/architecture-lab/*` (canonical 7-role), `pac
 
 ### Notion atlas forensics ([`research/grounding-notion-semantica.md`](./research/grounding-notion-semantica.md))
 
-Page `3c669573-788d-8001-82c3-e19b0cf3b58c`, built 2026-08-24 07:15–09:03Z: 33 uniform
+The `@beep/semantica` page (private Todox workspace), built 2026-08-24 07:15–09:03Z: 33 uniform
 `name/description/link` catalog databases (213 rows, titles only), fully populated 27-row Module
 Index, six mermaid chains, one content-bearing row (`FileIngestor` — hand-authored Effect Schema
 translation of `FileObject`; the prototype for the Model-kind template). No decision columns yet.
@@ -41,7 +41,7 @@ Known deltas vs upstream already: missing `sqlite-vec`, `Anzo`; `Grok`-vs-`Groq`
 databases for `integrations/`, root `mcp/`, CLI, `cookbook/`, `deploy/`; embeddings omits hash
 fallback + `LlamaStore` placeholder.
 
-### In-flight / pending
+### Landed / remaining (2026-08-24)
 
 - **v3 prior art** — LANDED: [`research/grounding-v3-logos.md`](./research/grounding-v3-logos.md).
   Verdicts: `rete` **SALVAGE** (a real restricted Rete — alpha/join/memory topology, EAV facts,
@@ -64,7 +64,7 @@ fallback + `LlamaStore` placeholder.
   (Grok, all URLs fetch-verified). llms.txt coverage far better than expected (Pinecone,
   Weaviate, Milvus, Qdrant, FalkorDB, Neo4j, Neptune, OpenAI all serve one). License flags:
   FalkorDB SSPL-1.0, Neo4j GPL-3.0, Blazegraph GPL-2.0 + archived-since-2020; pgvector is SPDX
-  `PostgreSQL` (BSD-family — needs an explicit rubric-list call at ratification). **Headline:
+  `PostgreSQL` (BSD-family; ratified onto the rubric permissive list 2026-08-24). **Headline:
   no TS/WASM Datalog engine clears both hard gates** (Dusa GPL-3.0; CozoDB MPL-2.0 but stalled
   2024-12; datalog-ts MIT but stalled 2024-12; DataScript alive but EPL-1.0/ClojureScript) —
   the reasoning family's ecosystem gap is real, not assumed.

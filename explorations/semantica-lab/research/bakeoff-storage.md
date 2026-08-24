@@ -1,6 +1,6 @@
 # Storage bake-off
 
-*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: `../DECISIONS.md` "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
 
 **Family:** storage. **Rubric:** v2.0 ratified. **Workload:** W1, 25 papers, Linux x64 primary; later packaging targets remain deferred by the contract [R1][R2]. Scores are decision evidence, not a replacement for the end-to-end compatibility round.
 
@@ -41,7 +41,8 @@ Incumbent checks, from live source:
 
 Scores use task quality 40 / operational fit 25 / integration+migration 20 / sustainability 15 [R1]. `*` means at least one hard gate is still UNKNOWN; it cannot enter the compatibility bundle until resolved. Totals are interval sums. No unmeasured property is assigned a point estimate.
 
-Synthetic storage-scale proxies on DankStation Linux x64, Bun 1.4.0, warm package cache. They allocate across 25 paper ids but do not use the real W1 corpus:
+Synthetic storage-scale proxies on the reference development machine, Linux x64, Bun 1.4.0,
+warm package cache. They allocate across 25 paper ids but do not use the real W1 corpus:
 
 - **M1 PGlite ledger proxy:** file API on `/tmp` tmpfs; 2,600 hash-linked events. Engine init 3.730 s, 100 single writes p95 0.79 ms, 200 indexed reads p95 2.31 ms, reopen+count 116 ms, 0 broken links, 1,004 MB RSS, 40 MB data directory. Reopen was tested; power-loss recovery is UNKNOWN.
 - **M2 DuckDB exact-vector proxy:** in-memory 10,000×384 float arrays. Init 8.9 ms, rebuild 114 ms, 60 exact top-10 queries p95 7.27 ms, 100 writes p95 7.06 ms, delete-100 0.38 ms, 495 MB standalone RSS.

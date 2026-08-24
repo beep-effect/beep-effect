@@ -1,12 +1,3 @@
-# Bake-off Criteria Rubric — v1 (as reviewed; superseded by v2.0)
-
-*Provenance reconstruction. The adversarial rubric reviews cite line numbers from this v1
-draft, which was overwritten in place by v2 before the packet was first committed.
-Reconstructed 2026-08-24 from the session transcript's original write. One caveat: a
-same-day line edit added the v3-logos salvage verdicts to the reasoning family sheet while
-the reviews were running, so a reviewer may have read that line in either state. Everything
-else below is the text as drafted. Current law: `../criteria-rubric.md` v2.0.*
-
 # Bake-off Criteria Rubric — DRAFT (pending adversarial review + ratification)
 
 Status: **DRAFT** (D11: ratify after Grok 4.6 xhigh + GPT-5.6 Sol xhigh adversarial pass and
@@ -74,3 +65,13 @@ Each bake-off = one deep-research pass (Opus-class dynamic workflow or Codex fan
 producing `research/bakeoff-<family>.md`: scored table, winner + runner-up, park list with
 one-liners, and a `SOURCES.md` section 3 appendix. Verdicts land in DECISIONS with a dated
 entry and sync to the Notion atlas `Verdict` columns (D2/D3).
+
+---
+
+*Provenance note (appended so the body above keeps its original line numbers). This is a
+reconstruction of the rubric v1 draft that the adversarial rubric reviews cite by line; v1 was
+overwritten in place by v2 before the packet's first commit. Reconstructed 2026-08-24 from the
+session transcript's original write. One caveat: a same-day line edit added the v3-logos
+salvage verdicts to the reasoning family sheet while the reviews ran, so a reviewer may have
+read that one line in either state. Current law: [`../criteria-rubric.md`](../criteria-rubric.md)
+v2.0.*

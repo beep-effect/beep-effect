@@ -1,6 +1,6 @@
 # Input stack bake-off
 
-*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: `../DECISIONS.md` "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
 
 **Status:** criteria-scored research pass, 2026-08-24. The current W1 directory has 76 PDFs, not the contracted 443, and this packet has no F1 malformed fixtures or `gold/v1` G-structure labels [P2, M3]. Task-quality ranges therefore describe capability potential, not measured G-structure accuracy. `UNKNOWN` is intentional evidence, not a neutral score.
 

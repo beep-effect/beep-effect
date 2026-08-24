@@ -18,7 +18,7 @@ the extractor, schema, and report are committed.
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
 | `semantica-agi/semantica` (local: `~/YeeBois/workstation-apps/semantica` @ `add1c006`, branch `danklocal`) | MIT (Hawksight AI, verified in `LICENSE`) | port-with-attribution (ideas ported schema-first, not vendored code) | concepts: provenance events, storage capability families, ContextGraph, ontology lifecycle, typed inference explanations, pipeline DAG contract |
-| `beep-effect-logos` (local: `~/YeeBois/projects/beep-effect-logos`, archived v3 beep-effect) | own code (Benjamin's) | free reuse / salvage | `rete` SALVAGE (network topology + behavioral test oracle), `rules` PATTERN (operator taxonomy), `logos` PATTERN (rule-AST + validator semantics) — per `grounding-v3-logos.md` §5 |
+| `beep-effect-logos` (local: `~/YeeBois/projects/beep-effect-logos`, archived v3 beep-effect) | Apache-2.0 (verified in its LICENSE) | salvage with Apache-2.0 attribution/NOTICE for copied code and tests; re-derived patterns need none | `rete` SALVAGE (network topology + behavioral test oracle), `rules` PATTERN (operator taxonomy), `logos` PATTERN (rule-AST + validator semantics) — per `grounding-v3-logos.md` §5 |
 | `scratchpad/effect-ontology` (in-repo quarantined experiment) | in-repo; upstream was MIT per its ledger | reference + pattern; explicitly non-importable, promotion unauthorized | PORTING_LEDGER per-symbol method as template precedent; Effect v4 ontology idioms |
 
 Benjamin's `danklocal` branch carries 3 unique local fixes not upstream (explorer ontology
@@ -51,7 +51,7 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
 | Lab scaffold + lifecycle | `bun run beep create-package --lab`, `standards/architecture/15-lab-apps.md` | reuse |
 | Retrieval/projection lab (charter counterpart) | `apps/labs/trustgraph-workbench` | boundary per D13 |
 | Extraction pipeline IR + Notion sync (D5) | — | NET-NEW (proto-lab code) |
-| Reasoning substrate (Effect-native, schema-first) | — | NET-NEW pending bake-off + v3 salvage verdict |
+| Reasoning substrate (Effect-native, schema-first) | — | NET-NEW dated spike (A6); v3 `rete` SALVAGE, `rules`/`logos` PATTERN; family park-pending-canary (B1) |
 
 ## 5. Cross-links & provenance
 

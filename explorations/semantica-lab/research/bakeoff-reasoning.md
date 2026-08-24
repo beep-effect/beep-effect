@@ -1,6 +1,6 @@
 # Reasoning bake-off: wrapped-engine baseline
 
-*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: DECISIONS.md "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
+*Candidate screen (B1): this file is slate + probe order, not a family verdict. Current law: `../DECISIONS.md` "Current law" table. The canary is C0-C2 (G1), not the winner line below.*
 
 Scope: wrapped engines only. The NET-NEW proof-ledger spike is excluded from scoring under A6.
 Scores are evidence ranges, not forecasts. `UNKNOWN` never earns points.

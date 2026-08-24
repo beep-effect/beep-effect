@@ -6,8 +6,8 @@ Nothing in this document has been posted or pushed.
 
 - Branch: `upstream/explorer-registry-fixes`
 - Base: `origin/main` at `6c2ccfd3afae2c12ba903c61c08a3c3b1970af45`
-- Review checkout: `/home/elpresidank/YeeBois/workstation-apps/semantica/.draft-worktrees/upstream-explorer-registry-fixes`
-- Note: the primary clone's `.git` directory was read-only in the agent sandbox, so the branch is in a local lightweight review clone that shares its object store. No remote was contacted.
+- Review checkout: `~/YeeBois/workstation-apps/semantica/.draft-worktrees/upstream-explorer-registry-fixes`
+- Note: the branch lives in a local review clone; no remote was contacted.
 - `c87ba6e5` `fix(explorer): make ontology DELETE remove implicit graph-backed registry entries`
 - `27a0fd98` `feat(explorer): persist ontology registry and session graph across restarts`
 - `18737666` `fix(explorer): key registry entries by source URL when the ontology declares no IRI`

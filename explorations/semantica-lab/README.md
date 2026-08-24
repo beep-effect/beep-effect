@@ -40,6 +40,12 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-08-24 (quality loop + publish): three-lane adversarial review (integrity, clarity,
+  hygiene; Sol + Grok mix) over the packet; round 1 found 8 blockers (Notion-id and home-path
+  redaction, Current-law table, four-clocks sync, workload-contract rewrite, superseded-verdict
+  banners, template residue, citation paths); round 2 verified fixes and found small residuals
+  (Apache-2.0 correction for v3 logos, v1-rubric snapshot line stability, two invented Tier-L
+  gates reverted to alarms); round 3 self-check clean. Published via yeet.
 - 2026-08-24 (opportunities grill, O1–O5): every OPPORTUNITIES entry dispositioned (absorbed /
   actioned / gated / recorded — see the ledger's Dispositions section). Launched draft-only
   jobs: repo-issue drafts (4 verified defects), upstream draft-and-hold (danklocal cherry-pick

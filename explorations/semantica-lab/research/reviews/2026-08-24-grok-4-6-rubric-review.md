@@ -1,5 +1,7 @@
 # Adversarial rubric review (Grok 4.6, 2026-08-24)
 
+*Line citations refer to the rubric v1 draft as reviewed (see `criteria-rubric-v1-as-reviewed.md` in this directory) and to packet files relative to the packet root (`../../` from here).*
+
 Target: `../criteria-rubric.md` (DRAFT), against `DECISIONS.md` D1–D18, `RESEARCH.md`,
 `../grounding-semantica-repo.md`, and the in-repo bricks they name.
 

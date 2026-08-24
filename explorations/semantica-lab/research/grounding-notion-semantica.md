@@ -9,7 +9,7 @@
 | Project name | `title` | `@beep/semantica` |
 | Status | `status`; to-do: Parking Lot (red), Not started (default), Paused (orange), Parked (brown), Reference (gray); in-progress: In progress (blue), Active (yellow); complete: Done (green), Completed-retained (green), Graduated (purple), Superseded (gray); current/future groups empty | **Parking Lot** |
 | AI summary | `text` | “Create a new Tauri app @beep/semantica with a modular vertical-slice architecture (drivers, foundation, domain, tables, use-cases, server, client, UI) mirroring Semantica’s 27 modules across six layers—input, core processing, storage, QA, context & memory, and output—providing pipelines for ingestion, parsing, normalization, semantic extraction, KG building, reasoning, storage, provenance, and orchestration, plus utilities for LLM providers, MCP server, seeding, evaluation, core utilities, and more.” |
-| Assignee | `person`; description “Who’s responsible for the project?” | Benjamin Oppold (`[notion: project owner]`) |
+| Assignee | `person`; description “Who’s responsible for the project?” | the project owner |
 | Start date | `date`, format `MM/DD/YYYY`; SQL expansions `date:Start date:start/end/is_datetime` | empty (`is_datetime` serialized as 0 in page fetch) |
 | End date | `date`, format `MM/DD/YYYY`; SQL expansions `date:End date:start/end/is_datetime` | empty (`is_datetime` serialized as 0 in page fetch) |
 | Start value | `number` | empty |
