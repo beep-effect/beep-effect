@@ -3,14 +3,14 @@
   "initiative": {
     "id": "ci-fleet-residue",
     "title": "CI Fleet Residue",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-08-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ci-fleet-residue",
-  "lifecycle": "active",
-  "statusNote": "Split from ci-fleet-endgame on 2026-08-13. P3 shipped 2026-08-13 (#686). P2 hook deployed 2026-08-14 and validated live (Gate E + red-team, run 31779611279). P0 activated 2026-08-16 (#718 + #725, pin ami-07fb13d84a42d3584, baked fast path probed live). P1 revert deployed 2026-08-16 after a calm window-close measurement; interruption tripwire monitored through 2026-08-23, then P4 close.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Split from ci-fleet-endgame on 2026-08-13; closed 2026-08-24. P3 shipped 2026-08-13 (#686). P2 hook deployed 2026-08-14 and validated live (Gate E + red-team, run 31779611279). P0 activated 2026-08-16 (#718 + #725, pin ami-07fb13d84a42d3584, baked fast path probed live). P1 revert deployed 2026-08-16 (#730); tripwire week through 2026-08-23 closed calm with zero interruption-attributed re-runs (research/p1-tripwire-week-evidence.md). Spot posture stands; the >2/week tripwire remains the ongoing operational rule.",
   "mission": "Retire the fleet endgame's deferred residue - baked AMI, spot posture, IMDS job-hook isolation with red-team re-run, and the yeet closeout writer bug - each as its own scoped PR.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -54,7 +54,7 @@
     {
       "id": "P1",
       "name": "Spot posture revert",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
@@ -69,7 +69,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
