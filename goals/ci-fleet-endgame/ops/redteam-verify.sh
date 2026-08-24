@@ -8,6 +8,8 @@ set -euo pipefail
 # defaults to REDTEAM_EXPECTED_AMI, and when both are absent it is resolved from
 # the serving SSM pin (/beep-ci/controller/runner-ami-id) so the AMI_PIN gate is
 # always evaluated whenever AWS is reachable; an unreadable pin fails the gate.
+# AWS credentials are required for a PASS: without them AMI_PIN fails, so the
+# only remaining PASS shape is the fully asserted one.
 # When the run log exposes an instance id, teardown waits only for
 # beep-ci-<instance-id>; otherwise it falls back to all controller runners
 # observed during the run.
@@ -192,7 +194,10 @@ fi
 if (( ami_pin_unresolved == 1 )); then
   :
 elif (( aws_available == 0 )); then
-  echo "AMI pin assertion skipped (AWS credentials unavailable)"
+  # Deployment proof needs AWS: without it the worker's image is never compared
+  # with the pin, and a qualified PASS is too easy to accept by mistake.
+  echo "GATE AMI_PIN: FAIL (AWS credentials unavailable; the worker image cannot be compared with the pin)"
+  gate_failed=1
 elif [[ -z "${instance_id}" ]]; then
   echo "GATE AMI_PIN: FAIL (worker instance id was not recovered)"
   gate_failed=1
