@@ -7,11 +7,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Order, pipe } from "effect";
+import { Effect, MutableHashMap, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
+import { QualityTaskConfigurationError } from "../Quality.errors.ts";
+import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
+import type { FileSystem } from "effect";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScope");
 
@@ -260,6 +264,57 @@ export class CoverageScopeOwner extends S.Class<CoverageScopeOwner>($I`CoverageS
     description: "Workspace path and coverage capability used by pull-request scope planning.",
   })
 ) {}
+
+const workspacePackageHasCoverage = (scripts: Readonly<Record<string, string>> | undefined): boolean =>
+  pipe(scripts ?? {}, R.get("coverage"), O.isSome);
+
+/**
+ * Discover the workspace owners consumed by affected coverage planning.
+ *
+ * **Details**
+ *
+ * Both affected coverage execution and unscoped baseline writes use this
+ * function, so package ownership and coverage-script detection cannot drift
+ * between the two planners.
+ *
+ * **Example** (Build the shared owner effect)
+ *
+ * ```ts
+ * import { workspaceCoverageScopeOwners } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(workspaceCoverageScopeOwners(process.cwd()))) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root containing the workspace manifest.
+ * @returns Sorted workspace owners and their coverage capability.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const workspaceCoverageScopeOwners = Effect.fn("CoverageScope.workspaceCoverageScopeOwners")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  ReadonlyArray<CoverageScopeOwner>,
+  QualityTaskConfigurationError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const path = yield* Path.Path;
+  const packageMap = yield* discoverWorkspacePackages(repoRoot, path).pipe(
+    QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage scope planning.")
+  );
+
+  return pipe(
+    A.fromIterable(MutableHashMap.values(packageMap)),
+    A.map((info) =>
+      CoverageScopeOwner.make({
+        hasCoverage: workspacePackageHasCoverage(info.packageJson.scripts),
+        packageName: info.name,
+        packagePath: info.path,
+      })
+    ),
+    A.sort(Order.mapInput(Order.String, (owner: CoverageScopeOwner) => owner.packageName))
+  );
+});
 
 class CoverageFullScope extends S.TaggedClass<CoverageFullScope>($I`CoverageFullScope`)(
   "full",
@@ -552,3 +607,30 @@ export const planCoverageAffectedScope: {
     ? CoverageSelectedScope.make({ packageNames })
     : CoverageNoopScope.make();
 });
+
+/**
+ * Derive affected coverage scope from changed files using live workspace ownership.
+ *
+ * **Example** (Build the shared affected-scope effect)
+ *
+ * ```ts
+ * import { planWorkspaceCoverageAffectedScope } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(planWorkspaceCoverageAffectedScope(process.cwd(), []))) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root containing the workspace manifest.
+ * @param changedFiles - Repository-relative committed and dirty paths.
+ * @returns Full, selected, or no-op coverage scope using the shared owner inventory.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const planWorkspaceCoverageAffectedScope = Effect.fn("CoverageScope.planWorkspaceCoverageAffectedScope")(
+  function* (
+    repoRoot: string,
+    changedFiles: ReadonlyArray<string>
+  ): Effect.fn.Return<CoverageAffectedScope, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
+    return planCoverageAffectedScope(yield* workspaceCoverageScopeOwners(repoRoot), changedFiles);
+  }
+);
