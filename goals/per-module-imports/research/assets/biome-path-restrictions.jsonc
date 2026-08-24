@@ -1,0 +1,21 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "style": {
+        "noRestrictedImports": {
+          "level": "warn",
+          "options": {
+            "paths": {
+              "effect": "Import each binding from its effect/<Module> path.",
+              "@beep/utils": "Import each binding from its @beep/utils/<Module> path."
+            }
+          }
+        }
+      }
+    }
+  }
+}

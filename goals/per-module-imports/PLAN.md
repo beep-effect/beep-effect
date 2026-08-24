@@ -1,0 +1,80 @@
+# Per-Module Imports Plan
+
+## Status
+
+Status: `active` — P0 complete; next action is P1.
+
+## Phases
+
+| Phase | Status | Goal | Exit criteria |
+| --- | --- | --- | --- |
+| P0 Research | complete | Ground the migration: enforcement census, import census + mapping table, tooling evaluation, pilot/measurement design, community evidence. | Six cited reports under `research/` (2026-08-23 fan-out: 4 codex `gpt-5.6-sol` xhigh lanes + 2 grok CLI lanes). |
+| P1 Vehicle & unblocks | pending | Invert `laws effect-imports` into the per-module law + ts-morph migration command (mapping table as data; code/JSDoc/Markdown modes; manual-review queue); land pilot-blocking foundation leaf exports; fix generator templates; extend the JSDoc example-import detector. | New law green on its own fixtures; dry-run over the pilot reports zero unmapped/ambiguous; new leaves resolve under NodeNext build, Bundler check, and docgen. Shipped via `/yeet`. |
+| P2 Pilot gate | pending | Operator approves the pilot slice (research proposes `apps/professional-desktop`); run the full before/after measurement protocol; apply win/no-win/stop rules. | Verdict + raw stats recorded in the packet; operator sign-off to continue (or a recorded stop). |
+| P3 Batches & ratchet | pending | Introduce and freeze the Biome `noRestrictedImports` warn rule; migrate the foundation kernel as one batch, then vertical families, then tools/tests/apps (composition roots last); migrate the JSDoc/Markdown corpus; flip written laws/skills with enforcement; final single root-error flip. | Zero forbidden specifiers in scope; law-flip checklist (`research/enforcement-census.md` §B) complete; every batch PR mergeable via `/yeet`. |
+| P4 Close | pending | Closeout reflection, packet state flip, and off-repo follow-ups (operator's global rules file update happens in-session when the convention lands, per the grilled decision). | Reflection passes `bun run beep lint reflection-artifacts`; manifest/README/INDEX updated in the final PR. |
+
+## Working notes per phase
+
+### P1 Vehicle & unblocks
+
+- Invert `packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts`: ban
+  the `effect` root and live foundation roots; map bindings through the census
+  table; emit named `pipe`/`flow`/`identity`/`cast` from `effect/Function`;
+  cover type-only imports; drop the test/ecosystem exclusions; replace the
+  reverse-conversion fixtures. Yeet repair keeps calling `--write` — semantics
+  flip in place. Prototype prior art: `research/assets/ts-morph-prototype.ts`.
+- Leaf exports (both workspace + `publishConfig` maps, then tsconfig-sync):
+  `@beep/schema/SafeRemoteHost` and `@beep/schema/FileDiff`; `@beep/observability`'s 8
+  routed modules + `VERSION` leaf; `@beep/dock` 17 modules; `@beep/dock-react`
+  2 modules; `@beep/html` `Html` + `VERSION`; `@beep/ui` `VERSION`; remaining
+  `VERSION` extractions per `research/import-census.md` §2.
+- Generators: `CreatePackage/templates/app-service-*.hbs`,
+  `Architecture/internal/PackageShell.ts`, `IdentityExportBlock.ts`.
+- Extend `JSDocDocumentationInventory` example-import detection to banned
+  roots (quote-style independent), with ratchet/test coverage.
+
+### P2 Pilot gate
+
+- Enforcement config identical between states; no warn rule yet.
+- Follow `research/pilot-and-measurement.md` "Paste-ready measurement gate"
+  literally (7-run medians/MAD/IQR; 5-run build bytes; raw logs under
+  `.beep/research/per-module-imports/measurements/`). Copy the verdict and
+  stats JSON into `history/` when the gate closes.
+- Attribute any newly surfaced tsgo diagnostics (direct imports expose Effect
+  diagnostics the barrel hid — proven in `research/tooling-autofix-eval.md`).
+
+### P3 Batches & ratchet
+
+- Warn rule: one exact-path entry per barrel with a short message linking the
+  mapping doc; per-family `error` overrides with positive includes
+  (`research/assets/biome-severity-ratchet.jsonc` shape). Never tune the
+  global rule between batches.
+- Record `turbo run check --filter=... --dry-run=json` task counts per batch
+  before its PR; a foundation-shaped count (~230) is a full-wave CI budget.
+- Doc corpus: codemod fence modes + docgen after each batch; stale doc APIs
+  (`TestClock` root, `TaggedErrorClass`, `VERSION` examples) go to manual
+  review, never invented subpaths.
+
+## P4 Closeout Checklist
+
+1. Write a closeout reflection via `/reflect` to
+   `history/reflections/<YYYY-MM-DD>-<agent>.md` (frontmatter must validate).
+2. Run `bun run beep lint reflection-artifacts`.
+3. Update `README.md`, `ops/manifest.json` phase statuses +
+   `initiative.status`, and regenerate `goals/INDEX.md` in the same PR.
+
+## Execution Notes
+
+- Preserve unrelated worktree changes; never `git add -A`.
+- Keep `SPEC.md` normative; update it only when the contract changes.
+- Friction receipts go to the active ledger at the moment they happen.
+
+## Verification Commands
+
+```sh
+test "$(wc -m < goals/per-module-imports/GOAL.md)" -le 4000
+jq . goals/per-module-imports/ops/manifest.json
+rg -n "per-module-imports|GOAL.md|agentLaunchers|packetAnchorDocument" goals/per-module-imports
+git diff --check -- goals/per-module-imports
+```

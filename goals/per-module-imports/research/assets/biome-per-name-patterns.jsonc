@@ -1,0 +1,54 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "style": {
+        "noRestrictedImports": {
+          "level": "warn",
+          "options": {
+            "patterns": [
+              {
+                "group": ["effect"],
+                "importNamePattern": "Effect",
+                "message": "Use `import * as Effect from \"effect/Effect\"`."
+              },
+              {
+                "group": ["effect"],
+                "importNamePattern": "Schema",
+                "message": "Use `import * as S from \"effect/Schema\"`."
+              },
+              {
+                "group": ["effect"],
+                "importNamePattern": "(pipe|flow|identity)",
+                "message": "Use a named import from `effect/Function`."
+              },
+              {
+                "group": ["effect"],
+                "importNamePattern": "Scope",
+                "message": "Use a type import from `effect/Scope`."
+              },
+              {
+                "group": ["@beep/utils"],
+                "importNamePattern": "P",
+                "message": "Use `import * as P from \"@beep/utils/Predicate\"`."
+              },
+              {
+                "group": ["@beep/utils"],
+                "importNamePattern": "A",
+                "message": "Use `import * as A from \"@beep/utils/Array\"`."
+              },
+              {
+                "group": ["@beep/utils"],
+                "importNamePattern": "StringTypes",
+                "message": "Use a type import from `@beep/utils/StringTypes`."
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
