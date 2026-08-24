@@ -57,6 +57,14 @@ export const OxigraphSparqlErrorReason = LiteralKit([
  */
 export type OxigraphSparqlErrorReason = typeof OxigraphSparqlErrorReason.Type;
 
+const OxigraphSparqlErrorFields = {
+  reason: OxigraphSparqlErrorReason,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameOxigraphSparqlErrorFields = S.toEquivalence(S.TaggedStruct("OxigraphSparqlError", OxigraphSparqlErrorFields));
+const sameOxigraphSparqlError = (self: OxigraphSparqlError, that: OxigraphSparqlError): boolean =>
+  sameOxigraphSparqlErrorFields(self, that);
+
 /**
  * Typed Oxigraph SPARQL driver error.
  *
@@ -78,11 +86,12 @@ export type OxigraphSparqlErrorReason = typeof OxigraphSparqlErrorReason.Type;
  */
 export class OxigraphSparqlError extends S.TaggedError<OxigraphSparqlError>($I`OxigraphSparqlError`)(
   "OxigraphSparqlError",
-  {
-    reason: OxigraphSparqlErrorReason,
-    message: S.String,
-  },
-  $I.annote("OxigraphSparqlError", {
+  OxigraphSparqlErrorFields,
+  $I.annoteClass<
+    S.declare<OxigraphSparqlError>,
+    readonly [S.TaggedStruct<"OxigraphSparqlError", typeof OxigraphSparqlErrorFields>]
+  >("OxigraphSparqlError", {
     description: "Typed Oxigraph SPARQL driver error.",
+    toEquivalence: () => sameOxigraphSparqlError,
   })
 ) {}

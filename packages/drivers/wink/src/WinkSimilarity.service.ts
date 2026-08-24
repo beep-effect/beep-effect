@@ -84,6 +84,20 @@ const loadSimilarityRuntime = (): SimilarityRuntime => SimilarityRuntime.make(re
 // effect-native-migration: WONTFIX (wink-nlp FFI requires native Set)
 const toNativeTermSet = (terms: ReadonlyArray<string>): Set<string> => new Set(terms);
 
+const SimilarityErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+  operation: S.String,
+} satisfies S.Struct.Fields;
+const SimilarityErrorEquivalenceFields = {
+  message: SimilarityErrorFields.message,
+  operation: SimilarityErrorFields.operation,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameSimilarityErrorFields = S.toEquivalence(S.TaggedStruct("SimilarityError", SimilarityErrorEquivalenceFields));
+const sameSimilarityError = (self: SimilarityError, that: SimilarityError): boolean =>
+  sameSimilarityErrorFields(self, that);
+
 /**
  * Typed failure for wink-backed vector, set, or bag-of-words similarity.
  *
@@ -101,13 +115,13 @@ const toNativeTermSet = (terms: ReadonlyArray<string>): Set<string> => new Set(t
  */
 export class SimilarityError extends S.TaggedError<SimilarityError>($I`SimilarityError`)(
   "SimilarityError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-    operation: S.String,
-  },
-  $I.annote("SimilarityError", {
+  SimilarityErrorFields,
+  $I.annoteClass<
+    S.declare<SimilarityError>,
+    readonly [S.TaggedStruct<"SimilarityError", typeof SimilarityErrorFields>]
+  >("SimilarityError", {
     description: "Failure raised while computing wink-backed similarity scores.",
+    toEquivalence: () => sameSimilarityError,
   })
 ) {
   /**

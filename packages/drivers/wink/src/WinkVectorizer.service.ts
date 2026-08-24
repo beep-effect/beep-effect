@@ -141,6 +141,20 @@ const observeVectorizer = (operation: string) =>
     name: `vectorizer.${operation}`,
   });
 
+const VectorizerErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+  message: S.String,
+  operation: S.String,
+} satisfies S.Struct.Fields;
+const VectorizerErrorEquivalenceFields = {
+  message: VectorizerErrorFields.message,
+  operation: VectorizerErrorFields.operation,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameVectorizerErrorFields = S.toEquivalence(S.TaggedStruct("VectorizerError", VectorizerErrorEquivalenceFields));
+const sameVectorizerError = (self: VectorizerError, that: VectorizerError): boolean =>
+  sameVectorizerErrorFields(self, that);
+
 /**
  * Typed failure for learning documents or querying wink BM25 vector data.
  *
@@ -158,13 +172,13 @@ const observeVectorizer = (operation: string) =>
  */
 export class VectorizerError extends S.TaggedError<VectorizerError>($I`VectorizerError`)(
   "VectorizerError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
-    message: S.String,
-    operation: S.String,
-  },
-  $I.annote("VectorizerError", {
+  VectorizerErrorFields,
+  $I.annoteClass<
+    S.declare<VectorizerError>,
+    readonly [S.TaggedStruct<"VectorizerError", typeof VectorizerErrorFields>]
+  >("VectorizerError", {
     description: "Failure raised while learning or querying wink BM25 vectors.",
+    toEquivalence: () => sameVectorizerError,
   })
 ) {
   /**

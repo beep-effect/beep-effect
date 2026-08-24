@@ -21,6 +21,8 @@
       "!**/.beep",
       "!.agents",
       "!.repos",
+      "!.codex",
+      "!.claude/worktrees",
       "!specs",
       "!**/.tsup",
       "!**/.turbo",

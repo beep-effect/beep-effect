@@ -95,6 +95,8 @@ storybook-static/
 .claude/ralph-loop.local.md
 .claude/.hook-state.json
 .claude/scheduled_tasks.lock
+# Worktree-isolated agent sessions materialize transient checkouts here
+.claude/worktrees/
 
 # Local code-index cache only (MCP + Codex config are beep-sync managed/committed)
 .code-index/

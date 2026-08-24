@@ -842,6 +842,188 @@ describe("schema-first lint command", { concurrent: false }, () => {
   );
 
   it(
+    "reports S.TaggedError declarations without declared equivalence",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "export class WorkerError extends S.TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: S.String },",
+              '  { description: "Worker execution failed." }',
+              ") {}",
+              "",
+            ]);
+
+            const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+            const logLines = yield* TestConsole.logLines;
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
+            expect(errorLines).toContain("[schema-first] untracked live findings:");
+            expect(errorLines).toContain(
+              '- packages/example/src/Example.ts :: WorkerError [schema-policy-advisory] S.TaggedError declaration "WorkerError" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.'
+            );
+            const structuredIssueLine =
+              '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-tagged-error-equivalence",' +
+              '"severity":"warning","file":"packages/example/src/Example.ts","line":2,' +
+              '"symbol":"WorkerError",' +
+              '"message":"S.TaggedError declaration \\"WorkerError\\" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.",' +
+              '"remediation":"Add a declaration-level fields-only toEquivalence annotation using the packages/drivers/tika/src/Tika.errors.ts pattern; exclude opaque S.Defect fields from the comparator."}';
+            expect(errorLines).toContain(structuredIssueLine);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "reports named effect/Schema TaggedError imports without declared equivalence",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstFileFixture("packages/ecosystem/effect-drizzle/src/Example.ts", [
+              'import { String as StringSchema, TaggedError } from "effect/Schema";',
+              "export class WorkerError extends TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: StringSchema },",
+              '  { description: "Worker execution failed." }',
+              ") {}",
+              "",
+            ]);
+
+            const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+            const logLines = yield* TestConsole.logLines;
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
+            expect(errorLines).toContain(
+              '- packages/ecosystem/effect-drizzle/src/Example.ts :: WorkerError [schema-policy-advisory] S.TaggedError declaration "WorkerError" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.'
+            );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "ignores unrelated local TaggedError factories",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              "const TaggedError = <Self>() => (_tag: string, _fields: unknown) => class {};",
+              'class LocalError extends TaggedError<LocalError>()("LocalError", {}) {}',
+              "void LocalError;",
+              "",
+            ]);
+
+            yield* runSchemaFirstAndExpectNoErrors();
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "accepts direct and annoteClass tagged-error equivalence annotations",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "const sameWorkerError = (_self: WorkerError, _that: WorkerError): boolean => true;",
+              "export class WorkerError extends S.TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: S.String },",
+              '  { description: "Worker execution failed.", toEquivalence: () => sameWorkerError }',
+              ") {}",
+              "const sameTaskError = (_self: TaskError, _that: TaskError): boolean => true;",
+              "const taskErrorAnnotations = { toEquivalence: () => sameTaskError };",
+              "class TaskError extends S.TaggedError<TaskError>()(",
+              '  "TaskError",',
+              "  { taskId: S.String },",
+              '  $I.annoteClass("TaskError", taskErrorAnnotations)',
+              ") {}",
+              "void TaskError;",
+              "",
+            ]);
+
+            yield* runSchemaFirstAndExpectNoErrors();
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "preserves existing tagged-error exceptions without excepting new write findings",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "export class ExistingError extends S.TaggedError<ExistingError>()(",
+              '  "ExistingError",',
+              "  { workerId: S.String },",
+              '  { description: "Existing documented failure." }',
+              ") {}",
+              "export class WorkerError extends S.TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: S.String },",
+              '  { description: "Worker execution failed." }',
+              ") {}",
+              "",
+            ]);
+
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.makeDirectory("standards");
+            yield* fs.writeFileString(
+              "standards/schema-first.inventory.jsonc",
+              `${encodeJson({
+                version: 1,
+                generatedOn: "2026-06-08",
+                scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"],
+                entries: [
+                  {
+                    file: "packages/example/src/Example.ts",
+                    symbol: "ExistingError",
+                    kind: "schema-policy-advisory",
+                    status: "exception",
+                    ruleId: "SFV4-tagged-error-equivalence",
+                    line: 2,
+                    owner: "@beep/example",
+                    reason: "Existing documented exception.",
+                  },
+                ],
+              })}\n`
+            );
+
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            expectReportedExit(exit);
+
+            const inventory = yield* fs.readFileString("standards/schema-first.inventory.jsonc");
+            expect(inventory).toContain(
+              '"symbol": "ExistingError",\n      "kind": "schema-policy-advisory",\n      "status": "exception"'
+            );
+            expect(inventory).toContain(
+              '"symbol": "WorkerError",\n      "kind": "schema-policy-advisory",\n      "status": "advisory"'
+            );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
     "reports untracked SFV4 boundary-codec JSON.parse advisories",
     () =>
       Effect.runPromise(

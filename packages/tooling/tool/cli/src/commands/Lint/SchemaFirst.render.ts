@@ -23,7 +23,21 @@ import type {
 
 const renderPolicyFindingLine = renderSchemaFirstPolicyFindingLine;
 
-type SchemaFirstLintFindings = {
+/**
+ * Classified schema-first lint findings shared by the scan and render stages.
+ *
+ * **Details**
+ *
+ * The scan stage classifies inventory entries into per-rule advisory buckets
+ * plus the missing/stale/candidate sets, and the render stage consumes the
+ * same shape to emit operator lines and summary counters. Keeping the single
+ * definition here (the upstream module of the two) avoids drift between the
+ * classification and its rendering.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SchemaFirstLintFindings = {
   readonly missingEntries: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly staleEntries: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly enforcedCandidates: ReadonlyArray<SchemaFirstInventoryEntry>;
@@ -31,6 +45,7 @@ type SchemaFirstLintFindings = {
   readonly defaultsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly staticApiAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly equivalenceAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
+  readonly taggedErrorEquivalenceAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly precisionAuditAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly arbitraryTestsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly numericDomainAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
@@ -92,6 +107,7 @@ const makeSchemaFirstLintSummary = (input: {
     defaultsAdvisories: input.findings.defaultsAdvisories.length,
     staticApiAdvisories: input.findings.staticApiAdvisories.length,
     equivalenceAdvisories: input.findings.equivalenceAdvisories.length,
+    taggedErrorEquivalenceAdvisories: input.findings.taggedErrorEquivalenceAdvisories.length,
     precisionAuditAdvisories: input.findings.precisionAuditAdvisories.length,
     arbitraryTestsAdvisories: input.findings.arbitraryTestsAdvisories.length,
     numericDomainAdvisories: input.findings.numericDomainAdvisories.length,
@@ -114,6 +130,9 @@ const logSchemaFirstSummary = Effect.fn("logSchemaFirstSummary")(function* (summ
   yield* Console.log(`[schema-first] sfv4_defaults_advisories=${summary.defaultsAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_static_api_advisories=${summary.staticApiAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_equivalence_advisories=${summary.equivalenceAdvisories}`);
+  yield* Console.log(
+    `[schema-first] sfv4_tagged_error_equivalence_advisories=${summary.taggedErrorEquivalenceAdvisories}`
+  );
   yield* Console.log(`[schema-first] sfv4_precision_audit_advisories=${summary.precisionAuditAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_arbitrary_tests_advisories=${summary.arbitraryTestsAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_numeric_domain_advisories=${summary.numericDomainAdvisories}`);

@@ -56,6 +56,14 @@ export const ShaclEngineErrorReason = LiteralKit([
  */
 export type ShaclEngineErrorReason = typeof ShaclEngineErrorReason.Type;
 
+const ShaclEngineErrorFields = {
+  reason: ShaclEngineErrorReason,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameShaclEngineErrorFields = S.toEquivalence(S.TaggedStruct("ShaclEngineError", ShaclEngineErrorFields));
+const sameShaclEngineError = (self: ShaclEngineError, that: ShaclEngineError): boolean =>
+  sameShaclEngineErrorFields(self, that);
+
 /**
  * Typed shacl-engine driver error.
  *
@@ -77,11 +85,12 @@ export type ShaclEngineErrorReason = typeof ShaclEngineErrorReason.Type;
  */
 export class ShaclEngineError extends S.TaggedError<ShaclEngineError>($I`ShaclEngineError`)(
   "ShaclEngineError",
-  {
-    reason: ShaclEngineErrorReason,
-    message: S.String,
-  },
-  $I.annote("ShaclEngineError", {
+  ShaclEngineErrorFields,
+  $I.annoteClass<
+    S.declare<ShaclEngineError>,
+    readonly [S.TaggedStruct<"ShaclEngineError", typeof ShaclEngineErrorFields>]
+  >("ShaclEngineError", {
     description: "Typed shacl-engine driver error.",
+    toEquivalence: () => sameShaclEngineError,
   })
 ) {}

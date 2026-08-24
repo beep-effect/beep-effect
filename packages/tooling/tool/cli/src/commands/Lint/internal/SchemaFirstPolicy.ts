@@ -29,6 +29,8 @@ const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
     "Move option/request fallback values into schema fields with S.withConstructorDefault, S.withDecodingDefault*, or SchemaUtils.withKeyDefaults; inventory the exception only when the fallback intentionally differs from schema construction semantics.",
   "SFV4-equivalence":
     "Derive comparison from S.toEquivalence(schema) or SchemaUtils.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.",
+  "SFV4-tagged-error-equivalence":
+    "Add a declaration-level fields-only toEquivalence annotation using the packages/drivers/tika/src/Tika.errors.ts pattern; exclude opaque S.Defect fields from the comparator.",
   "SFV4-precision-audit":
     "Replace broad email S.String fields with @beep/schema Email or a local precise email schema; inventory only external protocol fields that intentionally allow non-email strings.",
   "SFV4-arbitrary-tests":
