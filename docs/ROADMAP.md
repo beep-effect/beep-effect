@@ -154,6 +154,20 @@ completed-retained (2026-08-17 re-eval). The freed slot goes to:
   operator), scaffolded 2026-08-17 from the ratified packet-system-redesign MAP
   with proofs pre-specified. Self-hosts in advisory mode per D9.
 
+### Labs — slot-free canaries (2026-08-24)
+
+A goal packet whose code home is a lab (`apps/labs/*`, ceremony-exempt per
+[`standards/architecture/15-lab-apps.md`](../standards/architecture/15-lab-apps.md))
+and that ships no product scope does not consume a lane slot; it is listed here
+so the map stays true.
+
+- [`semantica-canary`](../goals/semantica-canary/README.md) — the staged
+  Semantica-port canary C0→C1→C2 (headless, F1 + W1, replay-identical
+  `EvalReport`s), graduated from
+  [`explorations/semantica-lab`](../explorations/semantica-lab/README.md);
+  [`openai-driver`](../goals/openai-driver/README.md) rides as its enabling
+  driver (C1 embeddings).
+
 ### Maintenance rule (always allowed, any packet, any lane state)
 
 Red CI, security findings, real bugs, dependency security updates. Standards
@@ -246,7 +260,13 @@ everything else remains in git history.
 through align → shape → decompose at any time (design work is cheap and
 never blocks lanes), but scaffolding a new `goals/` packet requires a free
 lane slot — NEXT/LATER entries name candidates for freed slots; they do not
-bypass the slot requirement. The gold-intake cohort's
+bypass the slot requirement. **Lab-canary exception (2026-08-24):** a packet whose
+code home is a lab and that ships no product scope graduates slot-free into the
+Labs list above, with its enabling driver packets riding along. **Drift note
+(2026-08-24):** `ci-step-watchdog` (#773), `skill-contract-kernel` (#779),
+`configurable-full-document-editor` (#781) and
+`oppold-corpus-salvage-restoration` (#782) graduated without lane entries;
+reconcile them at the next re-eval rather than pretending the rule held. The gold-intake cohort's
 pre-drafted DECISIONS files are the shaping queue;
 [`explorations/ATLAS.md`](../explorations/ATLAS.md) stays the status board.
 
