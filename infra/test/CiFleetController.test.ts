@@ -240,8 +240,10 @@ describe("@beep/infra CiFleetController", () => {
               Action: "ec2:ModifyInstanceMetadataOptions",
               Resource: "arn:aws:ec2:*:*:instance/*",
               Condition: {
+                ArnEquals: {
+                  "ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/${ec2:InstanceID}",
+                },
                 StringEquals: {
-                  "aws:ARN": "${ec2:SourceInstanceARN}",
                   "ec2:MetadataHttpEndpoint": "disabled",
                 },
               },
@@ -280,7 +282,7 @@ describe("@beep/infra CiFleetController", () => {
       assertSubstringBefore(
         postInstall,
         "aws ec2 modify-instance-metadata-options",
-        "IPv4 and IPv6 IMDS probes both failed; runner may start"
+        "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; runner may start"
       );
       assertSubstringBefore(
         postInstall,
@@ -290,9 +292,9 @@ describe("@beep/infra CiFleetController", () => {
       assertSubstringBefore(postInstall, "sudo /opt/beep/imds-disable.sh", 'if ./run.module.sh "$@"; then');
       assert.isTrue(
         Str.includes(
-          'logger -t beep-runner-shim "module runner exited with status $runner_status; powering off"\n' +
+          'beep_log beep-runner-shim "module runner exited with status $runner_status; powering off"\n' +
             "if ! sudo /opt/beep/self-poweroff.sh; then\n" +
-            '  logger -t beep-runner-shim "poweroff failed after runner exit"'
+            '  beep_log beep-runner-shim "poweroff failed after runner exit"'
         )(postInstall)
       );
       assert.isTrue(
@@ -311,6 +313,25 @@ describe("@beep/infra CiFleetController", () => {
       expect(postInstall).not.toMatch(/(?<!\$)\$\{/u);
       expect(postInstall).not.toMatch(/(?<!%)%\{/u);
       const rendered = pipe(postInstall, Str.replaceAll("$${", "${"), Str.replaceAll("%%{", "%{"));
+      const beepLogFunction =
+        'beep_log() { logger -t "$1" -- "$2"; printf \'%s %s: %s\\n\' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }';
+      assert.isTrue(Str.includes(`(\n  set -eu\n  ${beepLogFunction}`)(rendered));
+      assert.isTrue(
+        Str.includes(`#!/usr/bin/env bash\nset -eu\n\n${beepLogFunction}\nbeep_exit_reason="helper exited`)(rendered)
+      );
+      assert.isTrue(
+        Str.includes(
+          `#!/usr/bin/env bash\nset -eu\n${beepLogFunction}\nbeep_log beep-self-poweroff "powering off ephemeral runner"`
+        )(rendered)
+      );
+      assert.isTrue(
+        Str.includes(`#!/usr/bin/env bash\nset -eu\n\n${beepLogFunction}\n\nif ! sudo /opt/beep/imds-disable.sh; then`)(
+          rendered
+        )
+      );
+      expect(rendered).not.toMatch(
+        /logger -t (?:beep-imds-disable|beep-imds-edges|beep-runner-shim|beep-self-poweroff)/u
+      );
       assert.isTrue(
         Str.includes('iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "${runner_uid}" -j DROP')(rendered)
       );
@@ -328,29 +349,103 @@ describe("@beep/infra CiFleetController", () => {
       assert.isTrue(Str.includes('self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"')(rendered));
       assert.isTrue(Str.includes('self_reenable_code="$(imds_edge_dry_run "$instance_id" enabled)"')(rendered));
       assert.isTrue(Str.includes('other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"')(rendered));
-      assert.isTrue(Str.includes('logger -t beep-imds-edges "IMDS_EDGE self_disable: PASS"')(rendered));
-      assert.isTrue(Str.includes('logger -t beep-imds-edges "IMDS_EDGE self_reenable: PASS"')(rendered));
-      assert.isTrue(Str.includes('logger -t beep-imds-edges "IMDS_EDGE other_disable: PASS"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-edges "IMDS_EDGE self_disable: PASS"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-edges "IMDS_EDGE self_reenable: PASS"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-edges "IMDS_EDGE other_disable: PASS"')(rendered));
       assert.isTrue(
         Str.includes(
           'case "$self_disable_code" in\n' +
-            '  DryRunOperation) logger -t beep-imds-edges "IMDS_EDGE self_disable: PASS" ;;\n' +
-            '  *) logger -t beep-imds-edges "IMDS_EDGE self_disable: FAIL ($self_disable_code)"; exit 1 ;;\n' +
+            '  DryRunOperation) beep_log beep-imds-edges "IMDS_EDGE self_disable: PASS" ;;\n' +
+            '  *) beep_exit_reason="IMDS_EDGE self_disable failed ($self_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_disable: FAIL ($self_disable_code)"; exit 1 ;;\n' +
+            "esac"
+        )(rendered)
+      );
+      assert.isTrue(
+        Str.includes(
+          'case "$self_reenable_code" in\n' +
+            '  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_reenable: PASS" ;;\n' +
+            '  *) beep_exit_reason="IMDS_EDGE self_reenable failed ($self_reenable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)"; exit 1 ;;\n' +
+            "esac"
+        )(rendered)
+      );
+      assert.isTrue(
+        Str.includes(
+          'case "$other_disable_code" in\n' +
+            '  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE other_disable: PASS" ;;\n' +
+            "  InvalidInstanceID.NotFound|InvalidInstanceID.Malformed)\n" +
+            '    beep_log beep-imds-edges "IMDS_EDGE other_disable: INCONCLUSIVE ($other_disable_code)" ;;\n' +
+            '  *) beep_exit_reason="IMDS_EDGE other_disable failed ($other_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE other_disable: FAIL ($other_disable_code)"; exit 1 ;;\n' +
             "esac"
         )(rendered)
       );
       assertSubstringBefore(
         rendered,
         'self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"',
-        'logger -t beep-imds-disable "disabling IMDS on $instance_id in $region"'
+        'beep_log beep-imds-disable "disabling IMDS on $instance_id in $region"'
+      );
+      assertSubstringBefore(
+        rendered,
+        'other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"',
+        'beep_log beep-imds-disable "disabling IMDS on $instance_id in $region"'
+      );
+      assert.isTrue(Str.includes("modify_exit_code=$?")(rendered));
+      assert.isTrue(
+        Str.includes(
+          "modify_error_code=\"$(grep -oE '\\([A-Za-z0-9._-]+\\)' \"$edge_error_file\" | head -n 1 | tr -d '()' || true)\""
+        )(rendered)
+      );
+      assert.isTrue(
+        Str.includes(
+          "beep_log beep-imds-disable \\\n" +
+            '    "disable request failed ($modify_error_code, exit=$modify_exit_code); failing closed"\n' +
+            "  exit 1"
+        )(rendered)
+      );
+      assert.isTrue(Str.includes('beep_log beep-imds-disable "command -v aws: $aws_path"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-disable "aws --version: $aws_version_line"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-disable "command -v jq: $jq_path"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-disable "id -u: $(id -u)"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-disable "IMDSv2 bootstrap token obtained"')(rendered));
+      assert.isTrue(
+        Str.includes(
+          'beep_log beep-imds-disable "instance id + region resolved: instance_id=$instance_id region=$region"'
+        )(rendered)
+      );
+      assert.isTrue(Str.includes('beep_log beep-imds-edges "AWS CLI stderr: $aws_error_line"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-disable "AWS CLI stderr: $aws_error_line"')(rendered));
+      assert.isTrue(
+        Str.includes('beep_log beep-imds-disable "final exit: status=$exit_code reason=$beep_exit_reason"')(rendered)
       );
       assert.isTrue(Str.includes("http://169.254.169.254/latest/api/token")(rendered));
       assert.isTrue(Str.includes("'http://[fd00:ec2::254]/latest/api/token'")(rendered));
       assert.isTrue(Str.includes("deadline=$(( $(date +%s) + 90 ))")(rendered));
+      assert.isTrue(Str.includes("required_denial_streak=5")(rendered));
+      assert.isTrue(Str.includes("denial_streak=0")(rendered));
       assert.isTrue(Str.includes('if [ "$ipv4_reachable" = false ] && [ "$ipv6_reachable" = false ]; then')(rendered));
+      assert.isTrue(Str.includes("denial_streak=$(( denial_streak + 1 ))\n  else\n    denial_streak=0")(rendered));
+      assert.isTrue(
+        Str.includes('"IMDS reachability: ipv4=$ipv4_reachable ipv6=$ipv6_reachable streak=$denial_streak"')(rendered)
+      );
+      assert.isTrue(Str.includes('if [ "$denial_streak" -ge "$required_denial_streak" ]; then')(rendered));
+      assertSubstringBefore(
+        rendered,
+        'if [ "$(date +%s)" -ge "$deadline" ]; then',
+        'if [ "$denial_streak" -ge "$required_denial_streak" ]; then'
+      );
       assert.isTrue(Str.includes("if ! sudo /opt/beep/imds-disable.sh; then")(rendered));
+      assertSubstringBefore(
+        rendered,
+        'beep_log beep-runner-shim "HOLDING 240s for console capture"\n  sleep 240',
+        "sudo /opt/beep/self-poweroff.sh"
+      );
+      assertSubstringBefore(rendered, "sleep 240", 'if ./run.module.sh "$@"; then');
       assert.isTrue(Str.includes('if ./run.module.sh "$@"; then')(rendered));
       assert.isTrue(Str.includes('exit "$runner_status"')(rendered));
+      assert.isTrue(
+        Str.includes(
+          'beep_log beep-runner-shim "visudo failed for IMDS boundary sudoers (exit=$visudo_status); aborting post-install"'
+        )(rendered)
+      );
       assert.isTrue(
         Str.includes('logger -t beep-imds-hook "runner directory not found; per-job IMDS hook NOT armed"\n    exit 1')(
           rendered

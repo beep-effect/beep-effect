@@ -19,6 +19,8 @@ readonly workflow="fleet-shadow-check.yml"
 readonly poll_seconds=20
 readonly max_run_polls=60
 readonly teardown_limit=300
+readonly describe_attempt_limit=6
+readonly describe_retry_seconds=5
 readonly required_gates=(
   A_APP_SECRET_SSM
   B_S3
@@ -79,6 +81,35 @@ record_controller_runners() {
     fi
   done < <(gh api --paginate "repos/${repo}/actions/runners?per_page=100" \
     --jq '.runners[] | select(.name | startswith("beep-ci-")) | .name')
+}
+
+describe_instance_field() {
+  local target_instance_id="$1"
+  local query="$2"
+  local error_file="$3"
+  local result_file="${error_file}.result"
+  local attempt
+
+  # Do not filter by instance state. Shutting-down and terminated records retain
+  # the ImageId and MetadataOptions fields needed by the external gates.
+  for (( attempt = 1; attempt <= describe_attempt_limit; attempt++ )); do
+    : > "${error_file}"
+    : > "${result_file}"
+    if aws ec2 describe-instances --region us-east-1 \
+      --instance-ids "${target_instance_id}" \
+      --query "${query}" --output text \
+      >"${result_file}" 2>"${error_file}"; then
+      cat -- "${result_file}"
+      return 0
+    fi
+    if ! grep -q 'InvalidInstanceID.NotFound' "${error_file}"; then
+      return 2
+    fi
+    if (( attempt < describe_attempt_limit )); then
+      sleep "${describe_retry_seconds}"
+    fi
+  done
+  return 1
 }
 
 gh run list --workflow="${workflow}" --branch="${branch}" --limit 100 \
@@ -209,27 +240,28 @@ elif [[ -z "${instance_id}" ]]; then
   gate_failed=1
 else
   ami_error="${work_dir}/ec2-image-id.error"
-  if actual_ami="$(aws ec2 describe-instances --region us-east-1 \
-    --instance-ids "${instance_id}" \
-    --query 'Reservations[0].Instances[0].ImageId' --output text 2>"${ami_error}")"; then
+  if actual_ami="$(describe_instance_field "${instance_id}" \
+    'Reservations[0].Instances[0].ImageId' "${ami_error}")"; then
     if [[ "${actual_ami}" == "${expected_ami}" ]]; then
       echo "GATE AMI_PIN: PASS (${actual_ami})"
     else
       echo "GATE AMI_PIN: FAIL (expected ${expected_ami}, got ${actual_ami})"
       gate_failed=1
     fi
-  elif grep -q 'InvalidInstanceID.NotFound' "${ami_error}"; then
-    echo "GATE AMI_PIN: FAIL (instance already terminated before ImageId could be read)"
-    gate_failed=1
   else
-    echo "GATE AMI_PIN: FAIL (describe-instances failed before ImageId could be read)"
-    sed -n '1,8p' "${ami_error}"
+    ami_describe_rc=$?
+    if (( ami_describe_rc == 1 )); then
+      echo "GATE AMI_PIN: FAIL (instance already terminated before ImageId could be read)"
+    else
+      echo "GATE AMI_PIN: FAIL (describe-instances failed before ImageId could be read)"
+      sed -n '1,8p' "${ami_error}"
+    fi
     gate_failed=1
   fi
 fi
 
-# Read metadata state once while the worker record still exists. The guest
-# poweroff path may terminate it before teardown polling begins.
+# Read metadata state while the worker record still exists. The guest poweroff
+# path can race this read, so retry transient not-found responses before teardown.
 if (( aws_available == 0 )); then
   echo "GATE METADATA_DISABLED: FAIL (AWS credentials unavailable; metadata state cannot be read)"
   gate_failed=1
@@ -238,10 +270,8 @@ elif [[ -z "${instance_id}" ]]; then
   gate_failed=1
 else
   metadata_error="${work_dir}/ec2-metadata-options.error"
-  if metadata_options="$(aws ec2 describe-instances --region us-east-1 \
-    --instance-ids "${instance_id}" \
-    --query 'Reservations[0].Instances[0].MetadataOptions.[HttpEndpoint,State]' \
-    --output text 2>"${metadata_error}")"; then
+  if metadata_options="$(describe_instance_field "${instance_id}" \
+    'Reservations[0].Instances[0].MetadataOptions.[HttpEndpoint,State]' "${metadata_error}")"; then
     metadata_endpoint="${metadata_options%%[[:space:]]*}"
     metadata_state="${metadata_options##*[[:space:]]}"
     if [[ "${metadata_endpoint}" == disabled && "${metadata_state}" == applied ]]; then
@@ -250,12 +280,14 @@ else
       echo "GATE METADATA_DISABLED: FAIL (expected disabled applied, got ${metadata_endpoint} ${metadata_state})"
       gate_failed=1
     fi
-  elif grep -q 'InvalidInstanceID.NotFound' "${metadata_error}"; then
-    echo "GATE METADATA_DISABLED: FAIL (instance already terminated before metadata state could be read)"
-    gate_failed=1
   else
-    echo "GATE METADATA_DISABLED: FAIL (describe-instances failed before metadata state could be read)"
-    sed -n '1,8p' "${metadata_error}"
+    metadata_describe_rc=$?
+    if (( metadata_describe_rc == 1 )); then
+      echo "GATE METADATA_DISABLED: FAIL (instance already terminated before metadata state could be read)"
+    else
+      echo "GATE METADATA_DISABLED: FAIL (describe-instances failed before metadata state could be read)"
+      sed -n '1,8p' "${metadata_error}"
+    fi
     gate_failed=1
   fi
 fi

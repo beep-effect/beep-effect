@@ -12,7 +12,8 @@ P2 implements the ratified P0 fork without changing the module's bootstrap
 contract. The permissions-boundary-capped instance role remains available only
 while the pinned module reads instance facts and consumes its SSM configuration.
 The runner cannot start until a root helper disables the metadata endpoint on
-its own instance and both host endpoint probes fail.
+its own instance and both host endpoint probes fail for five consecutive
+one-second checks.
 
 The module still launches with `runner_metadata_options.http_endpoint` set to
 `enabled`. Bootstrap requires it. The one-way change occurs inside the existing
@@ -51,7 +52,7 @@ module user-data (root)
   |     +-- sudo /opt/beep/imds-disable.sh
   |     |     +-- read local instance id and region through IMDSv2
   |     |     +-- ModifyInstanceMetadataOptions(HttpEndpoint=disabled)
-  |     |     `-- poll IPv4 and IPv6 token PUTs for failure, max 90s
+  |     |     `-- require 5 consecutive IPv4+IPv6 token PUT failures, max 90s
   |     +-- helper exits, so its AWS CLI credential cache dies
   |     +-- on failure: self-poweroff, exit non-zero, never start runner
   |     `-- on success: ./run.module.sh "$@"
@@ -79,21 +80,29 @@ captures the original runner's status, calls the poweroff helper on every normal
 runner-exit path, and returns the captured status if shutdown returns before the
 guest stops.
 
-The failure path is closed. If metadata disable, the AWS call, either local
-probe, or the 90-second deadline fails, the shim logs the failure, requests
-poweroff, exits non-zero, and never invokes `run.module.sh`.
+The failure path is closed. If a required IAM edge dry-run fails, the metadata
+disable call fails, either endpoint succeeds often enough to prevent five
+consecutive dual-endpoint denials, or the 90-second deadline expires, the shim
+logs the failure, requests poweroff, exits non-zero, and never invokes
+`run.module.sh`. Only the documented `other_disable: INCONCLUSIVE` result
+remains admissible.
 
 `/opt/beep/imds-disable.sh` does only these credentialed operations:
 
 1. Obtain an IMDSv2 token.
 2. Read the local instance id and region from IMDS.
-3. Call `ec2:ModifyInstanceMetadataOptions` with
+3. Run the three live IAM edge dry-runs. Any `FAIL` result aborts before the
+   real disable and before runner admission. The other-instance
+   `InvalidInstanceID.*` result may remain `INCONCLUSIVE`.
+4. Call `ec2:ModifyInstanceMetadataOptions` with
    `--http-endpoint disabled` on that instance.
-4. Poll token PUTs to `169.254.169.254` and `fd00:ec2::254` until both fail.
+5. Poll token PUTs to `169.254.169.254` and `fd00:ec2::254` until both fail for
+   five consecutive one-second checks. Any successful endpoint resets the
+   streak.
 
 It does not call `ec2:DescribeInstances`. A successful API response may still
-mean the metadata-options change is pending, so only local probe failure lets
-the runner start. The external verifier separately requires AWS to report
+mean the metadata-options change is pending, so only sustained local denial
+lets the runner start. The external verifier separately requires AWS to report
 `HttpEndpoint=disabled` and `State=applied` before teardown.
 
 `/opt/beep/self-poweroff.sh` logs one line and executes `shutdown -P now`.
@@ -121,19 +130,32 @@ statement:
   "Action": "ec2:ModifyInstanceMetadataOptions",
   "Resource": "arn:aws:ec2:*:*:instance/*",
   "Condition": {
+    "ArnEquals": {
+      "ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/${ec2:InstanceID}"
+    },
     "StringEquals": {
-      "aws:ARN": "${ec2:SourceInstanceARN}",
       "ec2:MetadataHttpEndpoint": "disabled"
     }
   }
 }
 ```
 
-This mirrors the module's deployed self-termination condition. `aws:ARN` is
-the requested instance ARN and `${ec2:SourceInstanceARN}` is the instance that
-originated the role-credential request. The second condition admits only the
-disable value. The policy grants no describe, token, role-assumption, or
-general metadata-options authority.
+`ec2:SourceInstanceARN` is the instance that originated the role-credential
+request; `${ec2:InstanceID}` is the target instance. The two match only when an
+instance modifies itself. The second condition admits only the disable value.
+The policy grants no describe, token, role-assumption, or general
+metadata-options authority.
+
+The first rollout (2026-08-24, launch-template v10/v11) used the module's own
+self-termination shape, `"StringEquals": {"aws:ARN": "${ec2:SourceInstanceARN}"}`.
+The canary reported `IMDS_EDGE self_disable: FAIL (UnauthorizedOperation)` on
+every boot, and IAM Access Analyzer classifies `aws:ARN` as an unsupported
+condition key, so that statement can never match. The same defect sits in the
+module's self-terminate inline policy: the fleet's post-job termination has been
+coming from the scale-down path, not from the guest. A bare
+`${ec2:SourceInstanceARN}` in `Resource` is rejected by IAM as malformed
+(`must be in ARN format or "*"`). Access Analyzer reports no findings for the
+`ArnEquals` form above.
 
 ## Permissions-boundary Deny
 
@@ -226,27 +248,32 @@ metadata-options request without the endpoint key.
 
 The workflow keeps Gates A through E and adds F through J and L only when
 `inputs.redteam` is true. K is informational under the same input. The wrapper
-requires exactly one PASS for A through J plus L, reads `METADATA_DISABLED`
-once before teardown, then proves deregistration and terminal EC2 state.
+requires exactly one PASS for A through J plus L, then proves
+`METADATA_DISABLED`, deregistration, and terminal EC2 state. The container
+probe image preflight pulls the digest-pinned reference before Gates D, G, and
+H. Each container writes `PROBE_RAN` before curl and `IMDS_REACHABLE` only after
+a successful token PUT. A gate accepts denial only when captured stdout has the
+first marker and lacks the second, so a Docker launch failure cannot masquerade
+as IMDS denial.
 
 | Proof | SPEC properties | Finding mapping | Required result |
 | --- | --- | --- | --- |
 | Three boundary IAM simulations | 2, 3 | both workload-identity IDs | With an unrestricted stand-in identity policy, `disabled` is allowed while `enabled` and a missing endpoint key are explicit Denies. The simulator does not prove self-scoping. |
-| Pulumi preview and controller tests | 2, 3 | both workload-identity IDs | One managed policy ARN reaches the module; launch IMDS stays enabled; rendered helper and shim pass shell syntax. |
+| Pulumi preview and controller tests | 2, 3 | both workload-identity IDs | One managed policy ARN reaches the module; launch IMDS stays enabled; every failed required IAM edge aborts; admission requires five consecutive dual-endpoint denials; rendered helper and shim pass shell syntax. |
 | Gate A `A_APP_SECRET_SSM` | 2, 3 | `c799c2269d748191997ff176ce4bfd48` | Job cannot read the GitHub App key or webhook secret. |
 | Gate B `B_S3` | 2 | `c799c2269d748191997ff176ce4bfd48` | Job cannot list buckets or write the distribution bucket. |
 | Gate C `C_TAILNET_LAN` | 2 | supporting isolation, neither exact ID alone | Job cannot reach the sampled tailnet or LAN targets. |
-| Gate D `D_CONTAINER_IMDS` | 2, 3 | `c799c2269d748191997ff176ce4bfd48` | Ordinary bridged container token PUT fails. |
+| Gate D `D_CONTAINER_IMDS` | 2, 3 | `c799c2269d748191997ff176ce4bfd48` | The digest-pinned ordinary bridged container launches, runs curl, and its token PUT fails. |
 | Gate E `E_RUNNER_IMDS_HOOK` | 2, 3 | `33cd94a12d788191afbec1edc25c433f` | Existing runner-user token PUT still fails. |
 | Gate F `F_ROOT_IMDS` | 2, 3 | both workload-identity IDs | Root IPv4 and IPv6 token PUTs fail. This closes the sudo path missed by CSF-006. |
-| Gate G `G_HOSTNET_CONTAINER_IMDS` | 2, 3 | both workload-identity IDs | Host-network container IPv4 and IPv6 token PUTs fail. |
-| Gate H `H_PRIVILEGED_CONTAINER_IMDS` | 2, 3 | both workload-identity IDs | Privileged host-network container IPv4 and IPv6 token PUTs fail. |
+| Gate G `G_HOSTNET_CONTAINER_IMDS` | 2, 3 | both workload-identity IDs | The digest-pinned host-network container launches and runs curl; IPv4 and IPv6 token PUTs fail. |
+| Gate H `H_PRIVILEGED_CONTAINER_IMDS` | 2, 3 | both workload-identity IDs | The digest-pinned privileged host-network container launches and runs curl; IPv4 and IPv6 token PUTs fail. |
 | Gate I `I_ROOT_STS` | 2, 3 | both workload-identity IDs | Root STS identity fails with the normal and clean environments after CLI presence is proved. |
 | Gate J `J_HOOK_STILL_ARMED` | 2 | `33cd94a12d788191afbec1edc25c433f` | `.env`, hook executable, and IPv4/available-IPv6 owner DROP all remain armed. |
 | Informational K `JIT_RESIDUE` | 3 | both IDs, not closure proof | Emit only `visible` or `absent`; P4 replay remains required. |
-| Gate L `L_IAM_EDGES` | 2, 3 | both workload-identity IDs | Before the real disable, own `disabled` dry-run is authorized, own `enabled` is denied by the boundary, and another instance is denied when EC2 checks authorization before existence. `InvalidInstanceID.*` is retained as explicitly inconclusive. |
-| External `METADATA_DISABLED` | 2, 3 | both workload-identity IDs | AWS reports `disabled applied` before teardown; pending, missing, and not-found fail. |
-| `AMI_PIN` and lane fast-path probe | 1, 4 | P1 held image finding, not the two P2 IDs | Worker matches the serving AMI and the sealed digest/owner/mode checks pass. |
+| Gate L `L_IAM_EDGES` | 2, 3 | both workload-identity IDs | Before the real disable, own `disabled` dry-run is authorized, own `enabled` is denied by the boundary, and another instance is denied when EC2 checks authorization before existence. Any edge `FAIL` aborts before disable and admission; `InvalidInstanceID.*` remains explicitly inconclusive only for the other-instance edge. |
+| External `METADATA_DISABLED` | 2, 3 | both workload-identity IDs | AWS reports `disabled applied` from a record in any lifecycle state. The verifier retries `InvalidInstanceID.NotFound` up to six times at five-second intervals before failing. |
+| `AMI_PIN` and lane fast-path probe | 1, 4 | P1 held image finding, not the two P2 IDs | Worker matches the serving AMI from a record in any lifecycle state, using the same six-attempt describe retry, and the sealed digest/owner/mode checks pass. |
 | Scoped deregistration and EC2 teardown | 5 | supporting evidence for both P2 IDs | One registration maps to one VM, deregisters, powers off, and reaches terminal EC2 state. |
 | Heavy-lane routing check | 1 | admission IDs remain P3-owned | Heavy pull-request lanes still use the EC2 label. |
 | P3 organization runner-group proof | 6 | admission IDs, not the P2 IDs | Selected repository and default-branch workflow controls pass without fallback. |

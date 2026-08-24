@@ -25,6 +25,15 @@ jobs:
           free -g
           echo "shadow probe OK"
 
+      # curlimages/curl 8.16.0 manifest-list digest: sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6
+      # linux/amd64 image digest: sha256:5a91ea0c9c3ee27b4abe657b68cf6bf0676afa13b236b3bda34283cb3924d4f6
+      - name: Preflight - pull digest-pinned curl probe image
+        if: ${{ inputs.redteam }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull 'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6'
+
       - name: Gate E - require armed runner IMDS hook
         if: ${{ inputs.redteam }}
         id: gate_e_runner_imds_hook
@@ -89,16 +98,36 @@ jobs:
         run: |
           set -u
           failed=0
+          probe_number=0
           for endpoint in \
             'http://169.254.169.254/latest/api/token' \
             'http://[fd00:ec2::254]/latest/api/token'; do
-            if docker run --rm --network host curlimages/curl:8.16.0 \
-              --noproxy '*' --silent --show-error --fail --globoff \
-              --connect-timeout 2 --max-time 3 \
-              --request PUT \
-              --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
-              --output /dev/null \
-              "${endpoint}"; then
+            probe_number=$(( probe_number + 1 ))
+            probe_output="${RUNNER_TEMP}/gate-g-probe-${probe_number}.stdout"
+            docker_exit=0
+            if docker run --rm --network host --entrypoint sh \
+              'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \
+              -c '
+                set -u
+                echo PROBE_RAN
+                if curl --noproxy "*" --silent --show-error --fail --globoff \
+                  --connect-timeout 2 --max-time 3 \
+                  --request PUT \
+                  --header "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+                  --output /dev/null \
+                  "$1"; then
+                  echo IMDS_REACHABLE
+                fi
+              ' sh "${endpoint}" >"${probe_output}"; then
+              :
+            else
+              docker_exit=$?
+            fi
+            cat -- "${probe_output}"
+            if ! grep -Fxq PROBE_RAN "${probe_output}"; then
+              echo "PROBE FAILED TO RUN: host-network container did not run curl for ${endpoint} (docker exit ${docker_exit})"
+              failed=1
+            elif grep -Fxq IMDS_REACHABLE "${probe_output}"; then
               echo "FORBIDDEN SUCCESS: host-network container reached ${endpoint}"
               failed=1
             else
@@ -115,16 +144,36 @@ jobs:
         run: |
           set -u
           failed=0
+          probe_number=0
           for endpoint in \
             'http://169.254.169.254/latest/api/token' \
             'http://[fd00:ec2::254]/latest/api/token'; do
-            if docker run --rm --privileged --network host curlimages/curl:8.16.0 \
-              --noproxy '*' --silent --show-error --fail --globoff \
-              --connect-timeout 2 --max-time 3 \
-              --request PUT \
-              --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
-              --output /dev/null \
-              "${endpoint}"; then
+            probe_number=$(( probe_number + 1 ))
+            probe_output="${RUNNER_TEMP}/gate-h-probe-${probe_number}.stdout"
+            docker_exit=0
+            if docker run --rm --privileged --network host --entrypoint sh \
+              'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \
+              -c '
+                set -u
+                echo PROBE_RAN
+                if curl --noproxy "*" --silent --show-error --fail --globoff \
+                  --connect-timeout 2 --max-time 3 \
+                  --request PUT \
+                  --header "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+                  --output /dev/null \
+                  "$1"; then
+                  echo IMDS_REACHABLE
+                fi
+              ' sh "${endpoint}" >"${probe_output}"; then
+              :
+            else
+              docker_exit=$?
+            fi
+            cat -- "${probe_output}"
+            if ! grep -Fxq PROBE_RAN "${probe_output}"; then
+              echo "PROBE FAILED TO RUN: privileged host-network container did not run curl for ${endpoint} (docker exit ${docker_exit})"
+              failed=1
+            elif grep -Fxq IMDS_REACHABLE "${probe_output}"; then
               echo "FORBIDDEN SUCCESS: privileged host-network container reached ${endpoint}"
               failed=1
             else
@@ -367,19 +416,36 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run --rm --entrypoint sh curlimages/curl:8.16.0 -c '
-            set -eu
-            command -v curl >/dev/null
+          probe_output="${RUNNER_TEMP}/gate-d-container-imds.stdout"
+          docker_exit=0
+          if docker run --rm --entrypoint sh \
+            'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \
+            -c '
+            set -u
+            echo PROBE_RAN
             if curl --noproxy "*" --silent --show-error --fail \
               --connect-timeout 2 --max-time 3 \
               --request PUT \
               --header "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+              --output /dev/null \
               http://169.254.169.254/latest/api/token; then
-              echo "FORBIDDEN SUCCESS: container reached IMDSv2"
-              exit 1
+              echo IMDS_REACHABLE
             fi
-            echo "DENIED AS EXPECTED: container could not reach IMDSv2"
-          '
+          ' >"${probe_output}"; then
+            :
+          else
+            docker_exit=$?
+          fi
+          cat -- "${probe_output}"
+          if ! grep -Fxq PROBE_RAN "${probe_output}"; then
+            echo "PROBE FAILED TO RUN: bridged container did not run curl (docker exit ${docker_exit})"
+            exit 1
+          fi
+          if grep -Fxq IMDS_REACHABLE "${probe_output}"; then
+            echo "FORBIDDEN SUCCESS: container reached IMDSv2"
+            exit 1
+          fi
+          echo "DENIED AS EXPECTED: container could not reach IMDSv2"
 
       - name: Summarize red-team gates
         if: ${{ always() && inputs.redteam }}

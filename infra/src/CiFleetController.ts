@@ -128,32 +128,86 @@ BEEP_IMDS_DROP
 // the module inlines it into the surrounding user-data shell.
 const imdsWorkloadBoundaryPostInstall = `(
   set -eu
+  beep_log() { logger -t "$1" -- "$2"; printf '%s %s: %s\\n' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }
   install -d -o root -g root -m 0755 /opt/beep
 
   cat > /opt/beep/imds-disable.sh <<'BEEP_IMDS_DISABLE'
 #!/usr/bin/env bash
 set -eu
 
-logger -t beep-imds-disable "requesting IMDSv2 bootstrap token"
+beep_log() { logger -t "$1" -- "$2"; printf '%s %s: %s\\n' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }
+beep_exit_reason="helper exited before completion"
+edge_error_file=
+aws_version_file=
+beep_on_exit() {
+  exit_code=$?
+  beep_log beep-imds-disable "final exit: status=$exit_code reason=$beep_exit_reason"
+  if [ -n "$edge_error_file" ]; then
+    rm -f -- "$edge_error_file"
+  fi
+  if [ -n "$aws_version_file" ]; then
+    rm -f -- "$aws_version_file"
+  fi
+}
+trap beep_on_exit EXIT
+
+if aws_path="$(command -v aws)"; then
+  beep_log beep-imds-disable "command -v aws: $aws_path"
+else
+  beep_exit_reason="aws command missing"
+  beep_log beep-imds-disable "command -v aws: MISSING"
+  exit 1
+fi
+edge_error_file="$(mktemp /tmp/beep-imds-edges.XXXXXX)"
+aws_version_file="$(mktemp /tmp/beep-aws-version.XXXXXX)"
+: > "$edge_error_file"
+if aws --version >"$aws_version_file" 2>"$edge_error_file"; then
+  aws_version_line="$(head -n 1 "$aws_version_file" || true)"
+  if [ -z "$aws_version_line" ]; then
+    aws_version_line="$(head -n 1 "$edge_error_file" || true)"
+  fi
+  beep_log beep-imds-disable "aws --version: $aws_version_line"
+else
+  aws_version_exit_code=$?
+  aws_error_line="$(head -n 1 "$edge_error_file" || true)"
+  beep_log beep-imds-disable "AWS CLI stderr first line: $aws_error_line"
+  beep_exit_reason="aws --version failed (exit=$aws_version_exit_code)"
+  beep_log beep-imds-disable "$beep_exit_reason"
+  exit 1
+fi
+if jq_path="$(command -v jq)"; then
+  beep_log beep-imds-disable "command -v jq: $jq_path"
+else
+  beep_exit_reason="jq command missing"
+  beep_log beep-imds-disable "command -v jq: MISSING"
+  exit 1
+fi
+beep_log beep-imds-disable "id -u: $(id -u)"
+
+beep_exit_reason="IMDSv2 bootstrap token request failed"
+beep_log beep-imds-disable "requesting IMDSv2 bootstrap token"
 imds_token="$(curl --noproxy '*' --silent --show-error --fail \\
   --connect-timeout 2 --max-time 5 \\
   --request PUT \\
   --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\
   http://169.254.169.254/latest/api/token)"
+beep_log beep-imds-disable "IMDSv2 bootstrap token obtained"
+beep_exit_reason="instance id resolution failed"
 instance_id="$(curl --noproxy '*' --silent --show-error --fail \\
   --connect-timeout 2 --max-time 5 \\
   --header "X-aws-ec2-metadata-token: $imds_token" \\
   http://169.254.169.254/latest/meta-data/instance-id)"
+beep_exit_reason="region resolution failed"
 region="$(curl --noproxy '*' --silent --show-error --fail \\
   --connect-timeout 2 --max-time 5 \\
   --header "X-aws-ec2-metadata-token: $imds_token" \\
   http://169.254.169.254/latest/dynamic/instance-identity/document | jq -er '.region')"
 unset imds_token
+beep_log beep-imds-disable "instance id + region resolved: instance_id=$instance_id region=$region"
+beep_exit_reason="IMDS edge validation aborted"
 
-edge_error_file="$(mktemp /tmp/beep-imds-edges.XXXXXX)"
-trap 'rm -f -- "$edge_error_file"' EXIT
 imds_edge_dry_run() {
-  local error_code
+  local aws_error_line error_code
   : > "$edge_error_file"
   if aws ec2 modify-instance-metadata-options \\
     --dry-run \\
@@ -164,39 +218,62 @@ imds_edge_dry_run() {
     printf '%s\\n' NoError
     return
   fi
+  # The CLI prints a blank line before the error; log the whole stderr on one
+  # line so the encoded authorization message (decodable off-box with
+  # sts decode-authorization-message) reaches the console.
+  aws_error_line="$(tr '\\n' ' ' < "$edge_error_file" | sed 's/  */ /g' || true)"
+  beep_log beep-imds-edges "AWS CLI stderr: $aws_error_line"
   error_code="$(grep -oE '\\([A-Za-z0-9._-]+\\)' "$edge_error_file" | head -n 1 | tr -d '()' || true)"
   printf '%s\\n' "\${error_code:-UnknownError}"
 }
 
 self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"
 case "$self_disable_code" in
-  DryRunOperation) logger -t beep-imds-edges "IMDS_EDGE self_disable: PASS" ;;
-  *) logger -t beep-imds-edges "IMDS_EDGE self_disable: FAIL ($self_disable_code)"; exit 1 ;;
+  DryRunOperation) beep_log beep-imds-edges "IMDS_EDGE self_disable: PASS" ;;
+  *) beep_exit_reason="IMDS_EDGE self_disable failed ($self_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_disable: FAIL ($self_disable_code)"; exit 1 ;;
 esac
 
 self_reenable_code="$(imds_edge_dry_run "$instance_id" enabled)"
 case "$self_reenable_code" in
-  UnauthorizedOperation) logger -t beep-imds-edges "IMDS_EDGE self_reenable: PASS" ;;
-  *) logger -t beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)" ;;
+  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_reenable: PASS" ;;
+  *) beep_exit_reason="IMDS_EDGE self_reenable failed ($self_reenable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)"; exit 1 ;;
 esac
 
 other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"
 case "$other_disable_code" in
-  UnauthorizedOperation) logger -t beep-imds-edges "IMDS_EDGE other_disable: PASS" ;;
+  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE other_disable: PASS" ;;
   InvalidInstanceID.NotFound|InvalidInstanceID.Malformed)
-    logger -t beep-imds-edges "IMDS_EDGE other_disable: INCONCLUSIVE ($other_disable_code)" ;;
-  *) logger -t beep-imds-edges "IMDS_EDGE other_disable: FAIL ($other_disable_code)" ;;
+    beep_log beep-imds-edges "IMDS_EDGE other_disable: INCONCLUSIVE ($other_disable_code)" ;;
+  *) beep_exit_reason="IMDS_EDGE other_disable failed ($other_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE other_disable: FAIL ($other_disable_code)"; exit 1 ;;
 esac
 
-logger -t beep-imds-disable "disabling IMDS on $instance_id in $region"
-aws ec2 modify-instance-metadata-options \\
+beep_exit_reason="modify call aborted"
+beep_log beep-imds-disable "disabling IMDS on $instance_id in $region"
+: > "$edge_error_file"
+if aws ec2 modify-instance-metadata-options \\
   --instance-id "$instance_id" \\
   --http-endpoint disabled \\
   --region "$region" \\
-  >/dev/null
-logger -t beep-imds-disable "disable request accepted; waiting for both host endpoints to fail"
+  >/dev/null 2>"$edge_error_file"; then
+  beep_log beep-imds-disable "disable request accepted; waiting for sustained host endpoint denial"
+  beep_exit_reason="IMDS reachability wait aborted"
+else
+  modify_exit_code=$?
+  aws_error_line="$(tr '\\n' ' ' < "$edge_error_file" | sed 's/  */ /g' || true)"
+  beep_log beep-imds-disable "AWS CLI stderr: $aws_error_line"
+  modify_error_code="$(grep -oE '\\([A-Za-z0-9._-]+\\)' "$edge_error_file" | head -n 1 | tr -d '()' || true)"
+  if [ -z "$modify_error_code" ]; then
+    modify_error_code=UnknownError
+  fi
+  beep_exit_reason="modify call failed ($modify_error_code, exit=$modify_exit_code)"
+  beep_log beep-imds-disable \\
+    "disable request failed ($modify_error_code, exit=$modify_exit_code); failing closed"
+  exit 1
+fi
 
 deadline=$(( $(date +%s) + 90 ))
+required_denial_streak=5
+denial_streak=0
 while :; do
   ipv4_reachable=false
   ipv6_reachable=false
@@ -218,13 +295,23 @@ while :; do
   fi
 
   if [ "$ipv4_reachable" = false ] && [ "$ipv6_reachable" = false ]; then
-    logger -t beep-imds-disable "IPv4 and IPv6 IMDS probes both failed; runner may start"
-    exit 0
+    denial_streak=$(( denial_streak + 1 ))
+  else
+    denial_streak=0
   fi
+  beep_log beep-imds-disable \\
+    "IMDS reachability: ipv4=$ipv4_reachable ipv6=$ipv6_reachable streak=$denial_streak"
   if [ "$(date +%s)" -ge "$deadline" ]; then
-    logger -t beep-imds-disable \\
-      "IMDS remained reachable at deadline (ipv4=$ipv4_reachable ipv6=$ipv6_reachable); failing closed"
+    beep_exit_reason="IMDS denial was not sustained before deadline"
+    beep_log beep-imds-disable \\
+      "IMDS denial was not sustained at deadline (ipv4=$ipv4_reachable ipv6=$ipv6_reachable streak=$denial_streak); failing closed"
     exit 1
+  fi
+  if [ "$denial_streak" -ge "$required_denial_streak" ]; then
+    beep_exit_reason="IMDS was unreachable for $denial_streak consecutive checks"
+    beep_log beep-imds-disable \\
+      "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; runner may start"
+    exit 0
   fi
   sleep 1
 done
@@ -233,7 +320,8 @@ BEEP_IMDS_DISABLE
   cat > /opt/beep/self-poweroff.sh <<'BEEP_SELF_POWEROFF'
 #!/usr/bin/env bash
 set -eu
-logger -t beep-self-poweroff "powering off ephemeral runner"
+beep_log() { logger -t "$1" -- "$2"; printf '%s %s: %s\\n' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }
+beep_log beep-self-poweroff "powering off ephemeral runner"
 exec shutdown -P now
 BEEP_SELF_POWEROFF
 
@@ -245,14 +333,20 @@ BEEP_SELF_POWEROFF
     > /etc/sudoers.d/beep-imds-boundary
   chown root:root /etc/sudoers.d/beep-imds-boundary
   chmod 0440 /etc/sudoers.d/beep-imds-boundary
-  visudo -cf /etc/sudoers.d/beep-imds-boundary
+  if visudo -cf /etc/sudoers.d/beep-imds-boundary; then
+    beep_log beep-runner-shim "validated fail-closed IMDS boundary sudoers"
+  else
+    visudo_status=$?
+    beep_log beep-runner-shim "visudo failed for IMDS boundary sudoers (exit=$visudo_status); aborting post-install"
+    exit "$visudo_status"
+  fi
 
   if [ ! -f /opt/actions-runner/run.sh ]; then
-    logger -t beep-runner-shim "module run.sh missing; refusing to register runner"
+    beep_log beep-runner-shim "module run.sh missing; refusing to register runner"
     exit 1
   fi
   if [ -e /opt/actions-runner/run.module.sh ]; then
-    logger -t beep-runner-shim "run.module.sh already exists; refusing ambiguous runner entrypoint"
+    beep_log beep-runner-shim "run.module.sh already exists; refusing ambiguous runner entrypoint"
     exit 1
   fi
   mv /opt/actions-runner/run.sh /opt/actions-runner/run.module.sh
@@ -260,30 +354,34 @@ BEEP_SELF_POWEROFF
 #!/usr/bin/env bash
 set -eu
 
+beep_log() { logger -t "$1" -- "$2"; printf '%s %s: %s\\n' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }
+
 if ! sudo /opt/beep/imds-disable.sh; then
-  logger -t beep-runner-shim "IMDS disable failed; runner will not start"
+  beep_log beep-runner-shim "IMDS disable failed; runner will not start"
+  beep_log beep-runner-shim "HOLDING 240s for console capture"
+  sleep 240
   if ! sudo /opt/beep/self-poweroff.sh; then
-    logger -t beep-runner-shim "poweroff failed after IMDS disable failure"
+    beep_log beep-runner-shim "poweroff failed after IMDS disable failure"
   fi
   exit 1
 fi
 
-logger -t beep-runner-shim "IMDS disabled and unreachable; starting module runner"
+beep_log beep-runner-shim "IMDS disabled and unreachable; starting module runner"
 if ./run.module.sh "$@"; then
   runner_status=0
 else
   runner_status=$?
 fi
-logger -t beep-runner-shim "module runner exited with status $runner_status; powering off"
+beep_log beep-runner-shim "module runner exited with status $runner_status; powering off"
 if ! sudo /opt/beep/self-poweroff.sh; then
-  logger -t beep-runner-shim "poweroff failed after runner exit"
+  beep_log beep-runner-shim "poweroff failed after runner exit"
   exit 1
 fi
 exit "$runner_status"
 BEEP_RUNNER_SHIM
   chown root:root /opt/actions-runner/run.sh
   chmod 0755 /opt/actions-runner/run.sh /opt/actions-runner/run.module.sh
-  logger -t beep-runner-shim "installed fail-closed IMDS boundary runner shim"
+  beep_log beep-runner-shim "installed fail-closed IMDS boundary runner shim"
 )
 `;
 
@@ -303,6 +401,14 @@ const runnerPostInstall = escapeHclTemplateSequences(
   runnerToolbeltPostInstall + imdsJobHookPostInstall + imdsWorkloadBoundaryPostInstall
 );
 
+// Self-only and disable-only: the caller's own instance ARN
+// (`ec2:SourceInstanceARN`, present for instance-profile credentials) must name
+// the target instance (`ec2:InstanceID`), and the requested endpoint state must
+// be `disabled`. The module's `"aws:ARN": "${ec2:SourceInstanceARN}"` shape is
+// NOT used: IAM Access Analyzer reports `aws:ARN` as an unsupported condition
+// key, and the 2026-08-24 canary confirmed that shape is refused with
+// `UnauthorizedOperation` on the self dry-run. A bare `${ec2:SourceInstanceARN}`
+// in `Resource` is rejected as malformed by IAM.
 const runnerImdsDisablePolicyDocument = JSON.stringify({
   Version: "2012-10-17",
   Statement: [
@@ -312,8 +418,10 @@ const runnerImdsDisablePolicyDocument = JSON.stringify({
       Action: "ec2:ModifyInstanceMetadataOptions",
       Resource: "arn:aws:ec2:*:*:instance/*",
       Condition: {
+        ArnEquals: {
+          "ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/${ec2:InstanceID}",
+        },
         StringEquals: {
-          "aws:ARN": "${ec2:SourceInstanceARN}",
           "ec2:MetadataHttpEndpoint": "disabled",
         },
       },
