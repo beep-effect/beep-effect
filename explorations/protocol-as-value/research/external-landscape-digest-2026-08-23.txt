@@ -1,0 +1,624 @@
+==============================================================================================================
+TRACK: Multiparty session types and choreographic programming, state of the art 2024-2026
+
+CLAIM: The canonical MPST result is Honda, Yoshida, Carbone 'Multiparty Asynchronous Session Types': a global type describing all participants' interactions is projected to per-participant local types, and processes typed against those projections are communication-safe and deadlock-free. Best canonical citation is the journal version: JACM 63(1), 2016, doi 10.1145/2827695 (conference original: POPL 2008, doi 10.1145/1328438.1328472).
+SRC: Multiparty Asynchronous Session Types — https://dl.acm.org/doi/10.1145/2827695 (JACM 2016); full text at https://www.doc.ic.ac.uk/~yoshida/multiparty/multiparty.pdf
+REL: This is exactly the exploration's 'topology as a value one level above agent schemas, each agent's local type a projection of the global type' — the theorem already exists; the exploration's contribution would be the digest-named value form, not the projection theory.
+
+CLAIM: Classical syntactic MPST projection is incomplete (rejects safe protocols); Li, Stutz, Wies, Zufferey give a sound AND complete automata-based projection ('Complete Multiparty Session Type Projection with Automata', CAV 2023).
+SRC: Complete Multiparty Session Type Projection with Automata — https://arxiv.org/pdf/2305.17079
+REL: If beep models projection as a fold over a global-type value, the choice of projection operator is a real design axis: the standard one is conservative, and the complete one requires automata, not a structural recursion.
+
+CLAIM: Scribble is the original MPST protocol-description language (started by Kohei Honda in 2006 from his W3C WS-CDL work; TGC 2014 paper): global protocol in, validation and per-role projection out. Its GitHub org's repos are described as stale since roughly 2020; it survives mainly as the input syntax other toolchains extend.
+SRC: Scribble (MPSTs) | PLS Lab — https://www.pls-lab.org/en/Scribble_(MPSTs) ; The Scribble Protocol Language — https://dl.acm.org/doi/10.1007/978-3-319-05119-2_3
+LIC: unknown/stale => reference only
+REL: Scribble is the closest existing artifact to 'protocol as a first-class document', but its identity story is a file name, not a canonical byte form with a digest — supporting the exploration's gap claim.
+
+CLAIM: nuscr (νScr) is the maintained OCaml successor toolchain for Scribble-style protocols: define global protocols, project to local types, emit CFSMs and OCaml code; explicitly designed for extensibility; released under GPLv3.
+SRC: nuscr — https://github.com/nuscr/nuscr ; tool page http://mrg.doc.ic.ac.uk/tools/nuscr/
+LIC: GPL-3.0 => clean-room only (study behavior/design, do not port code)
+REL: The most current reference implementation of global-type -> projection -> codegen; its pipeline is the shape beep would reimplement Effect-natively, but its code cannot be ported into a permissively-licensed repo.
+
+CLAIM: effpi (Scalas et al., PLDI 2019 'Verifying message-passing programs with dependent behavioural types') embeds behavioural types in Dotty/Scala 3 with type-level model checking for safety and liveness, including channel passing; self-described experimental; MIT licensed.
+SRC: Effpi — https://alcestes.github.io/effpi/ ; https://github.com/alcestes/effpi ; PLDI 2019 paper https://dl.acm.org/doi/10.1145/3314221.3322484
+LIC: MIT => port-with-attribution
+REL: Demonstrates protocols encoded as types checked by the host compiler — the static end of the spectrum; beep's Effect/TypeScript setting cannot do type-level model checking, pushing it toward the value-level/digest approach.
+
+CLAIM: Teatrino (Barwell, Hou, Yoshida, Zhou, 'Designing Asynchronous Multiparty Protocols with Crash-Stop Failures', ECOOP 2023) extends Scribble+Effpi codegen with crash-stop semantics: crash-handling branches with no new global-type syntax, preserving deadlock-freedom, protocol conformance, and liveness under crashes.
+SRC: Designing Asynchronous Multiparty Protocols with Crash-Stop Failures — https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2023.1 ; extended version https://arxiv.org/pdf/2311.11851
+REL: State of the art for failure handling in MPST: crash-stop only (no byzantine, no partition healing) and only reached tooling in 2023 — a live limitation the exploration must budget for in any multi-agent async design.
+
+CLAIM: Ozone (Plyukhin, Peressotti, Montesi, ECOOP 2024, LIPIcs 313:31) gives a choreographic programming model in which processes execute fully out-of-order (adapting to message arrival) while guaranteeing absence of communication-integrity violations and deadlocks.
+SRC: Ozone: Fully Out-of-Order Choreographies — https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2024.31 ; https://arxiv.org/abs/2401.17403
+REL: 2024 SOTA on relaxing the fixed deterministic execution order of choreographies — directly relevant to async agent swarms where message delay is the norm.
+
+CLAIM: Choral (Giallorenzo, Montesi, Peressotti, 'Choral: Object-Oriented Choreographic Programming', TOPLAS 2024) is the most mature choreographic language: choreographies as Java-compatible objects, compiled per-role to pure Java libraries; the compiler is LGPL-2.1 (VSCode extension MIT).
+SRC: Choral: Object-oriented Choreographic Programming — https://dl.acm.org/doi/10.1145/3632398 ; https://github.com/choral-lang
+LIC: LGPL-2.1 => use-as-dependency ok, porting code requires clean-room; ideas freely portable
+REL: Proves choreographies can be modular, typed, first-class program values in a mainstream OO language — the nearest existing realization of 'protocol as a value', minus any content-addressed identity.
+
+CLAIM: HasChor (Shen, Kuper et al., ICFP 2023) implements choreographic programming as a Haskell library (freer-monad based) with higher-order choreographies and location polymorphism; BSD-3-Clause on GitHub/Hackage.
+SRC: HasChor — https://github.com/gshen42/HasChor ; paper https://dl.acm.org/doi/10.1145/3607849
+LIC: BSD-3-Clause => port-with-attribution
+REL: The library-level (no compiler) embedding is the pattern most portable to Effect: endpoint projection done at runtime by interpreting one choreography value per role — a direct blueprint for an Effect-native port.
+
+CLAIM: ChoRus (Kashiwa, Shen, Zare, Kuper, CP@PLDI 2024) is library-level choreographic programming in Rust, MIT licensed, published on crates.io; projection is done by dynamically injecting per-node operator implementations.
+SRC: ChoRus — https://github.com/lsd-ucsc/ChoRus ; paper https://users.soe.ucsc.edu/~lkuper/papers/chorus-cp24.pdf
+LIC: MIT => port-with-attribution
+REL: Second data point that library-level CP works in a mainstream typed language without macros-only tricks; its 'transport' abstraction maps cleanly onto an Effect service boundary.
+
+CLAIM: Klor (Lovro Sdunic, NLnet-funded, Heart of Clojure 2024) is a choreographic DSL embedded in Clojure with compile-time projection via macros; licensed 'EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0'.
+SRC: Klor — https://github.com/lovrosdu/klor ; NLnet project page https://nlnet.nl/project/ChoreographicProgramming/
+LIC: EPL-2.0 OR GPL-2.0+ w/ Classpath exception => weak-copyleft dual; prefer clean-room for code, ideas portable
+REL: Shows a Lisp/macro route to projection in a dynamic language — closer to a runtime-value treatment of choreographies than compiler-based systems, which is beep's regime.
+
+CLAIM: TypeScript-adjacent options exist but are thin: (1) STScript/RouST (Miu, Ferreira, Yoshida, Zhou, CC 2021) generates TypeScript APIs from Scribble protocols for WebSocket web apps (Node.js server, React browser) using a routed MPST theory; (2) ChoreoTS (shumbo/choreography-ts) is a small (~9 stars, no visible license) library-level CP monorepo in TypeScript with Express and Socket.IO transports, used as an evaluation vehicle in the PLDI 2025 census-polymorphism paper.
+SRC: Communication-Safe Web Programming in TypeScript with Routed Multiparty Session Types — https://dl.acm.org/doi/10.1145/3446804.3446854 ; choreography-ts — https://github.com/shumbo/choreography-ts
+LIC: ChoreoTS: no license found => reference only; STScript: research artifact, license unverified => reference only
+REL: Nothing in the TypeScript ecosystem is production-grade or Effect-native, and neither treats the protocol as a digest-named runtime value — the implementation lane for beep is open.
+
+CLAIM: The 2024-2025 frontier is participant-set polymorphism: MultiChor (arXiv 2406.13716) and 'Efficient, Portable, Census-Polymorphic Choreographic Programming' (PLDI 2025, doi 10.1145/3729296) formalize conclaves and multiply-located values so one choreography abstracts over the number and identity of participants, with implementations demonstrated in Haskell, Rust, and TypeScript.
+SRC: Efficient, Portable, Census-Polymorphic Choreographic Programming — https://arxiv.org/abs/2412.02107 ; MultiChor — https://arxiv.org/abs/2406.13716
+REL: Directly addresses the dynamic-agent-population problem a multi-agent system has: the global protocol value must be polymorphic over who shows up, or every roster change mints a new protocol digest.
+
+CLAIM: Rust has two static-leaning MPST libraries: MultiCrusty ('Stay Safe under Panic: Affine Rust Programming with Multiparty Session Types', arXiv 2204.13464) using affine types for failure/cancellation, and Rumpsteak ('Deadlock-free asynchronous message reordering in Rust with multiparty session types', arXiv 2112.12693) for async message reordering.
+SRC: https://arxiv.org/pdf/2204.13464 ; https://arxiv.org/pdf/2112.12693
+REL: Shows MPST embedded in an industrial language via affine typing and codegen from global types — the maturity bar the exploration should benchmark against, and evidence that failure = cancellation/affinity is the tractable industrial fragment.
+
+CLAIM: Asynchronous session subtyping is undecidable (Bravetti, Carbone, Zavattaro, 'Undecidability of Asynchronous Session Subtyping', 2017): decidable only under syntactic restrictions or channel bounds; only sound-but-incomplete algorithms exist.
+SRC: Undecidability of Asynchronous Session Subtyping — https://arxiv.org/pdf/1611.05026 ; A Sound Algorithm for Asynchronous Session Subtyping — http://mrg.doc.ic.ac.uk/publications/a-sound-algorithm-for-asynchronous-session-subtyping/main.pdf
+REL: Hard ceiling on protocol evolution: 'is protocol v2 a safe refinement of v1 under async buffering' is not decidable in general, so a digest-named protocol registry cannot promise a complete compatibility check — it must pick a conservative, decidable fragment.
+
+CLAIM: Dynamic topologies were addressed early — Deniélou & Yoshida, 'Dynamic Multirole Session Types' (POPL 2011, pp. 435-446) types protocols where an arbitrary number of participants dynamically join and leave a role — but this line did not make it into mainstream MPST toolchains.
+SRC: Dynamic Multirole Session Types — https://dl.acm.org/doi/abs/10.1145/1925844.1926435 ; PDF https://www.doc.ic.ac.uk/~yoshida/paper/main.pdf
+REL: The theory for agents joining/leaving mid-session exists but is unimplemented at scale — a known limit the exploration inherits, and a reason to prefer census-polymorphic formulations.
+
+CLAIM: Protocol update-at-runtime has dedicated theory: 'Dynamically Updatable Multiparty Session Protocols' (Castro-Perez et al., ECOOP 2023) and 'Dynamic Software Update for Message Passing Programs' (Anderson & Rathke, APLAS 2012) identify restricted runtime points where a session-typed protocol can be swapped while preserving safety/liveness.
+SRC: Dynamically Updatable Multiparty Session Protocols — https://dcastrop.github.io/files/2023-ecoop-dynamically.pdf ; Dynamic Software Update for Message Passing Programs — https://link.springer.com/chapter/10.1007/978-3-642-35182-2_15
+REL: Versioning/evolution of a live protocol value is studied but restrictive — supports designing protocol digests as immutable with explicit migration points, mirroring the repo's 'derived-storage migrations are immutable' doctrine.
+
+CLAIM: Runtime conformance monitoring against MPST projections is established theory: Bocchi, Chen, Demangeon, Honda, Yoshida, 'Monitoring networks through multiparty session types' (TCS 2017; FMOODS/FORTE 2013) give decentralised monitors per endpoint with proven safety/transparency; Aceto et al. 'On the Monitorability of Session Types' (2021+) delimits which properties monitors can actually catch. None of this work persists a hash-linked or content-addressed conformance log.
+SRC: Monitoring Networks through Multiparty Session Types — https://link.springer.com/chapter/10.1007/978-3-642-38592-6_5 ; On the Monitorability of Session Types — https://arxiv.org/pdf/2105.06291
+REL: Closest academic prior art to 'auditable conformance': monitors check projections at runtime, but evidence is ephemeral — no journal, no digests, no proof-by-recomputation. The exploration's audit-journal marriage remains unclaimed here.
+
+CLAIM: The auditable-conformance-log idea exists for BPMN choreographies on blockchains: 'Untrusted Business Process Monitoring and Execution Using Blockchain' (Weber et al., BPM 2016) and ChorChain ('Engineering Trustable and Auditable Choreography-based Systems Using Blockchain', ACM TMIS 2022) compile choreography diagrams to Solidity contracts whose immutable execution trace lets auditors verify conformance continuously. The protocol's identity is a deployed contract address, not a content digest of a typed global protocol, and there is no projection-to-local-types type theory.
+SRC: Engineering Trustable and Auditable Choreography-based Systems Using Blockchain — https://dl.acm.org/doi/10.1145/3505225 ; Untrusted Business Process Monitoring and Execution Using Blockchain — https://www.researchgate.net/publication/303996559_Untrusted_Business_Process_Monitoring_and_Execution_Using_Blockchain
+REL: Partial novelty refutation: 'protocol + tamper-evident conformance log' is built — but with BPMN not session types, a global VM not local projections, and location-addressed (contract address) not content-addressed identity.
+
+CLAIM: Nomos (Das, Balzer, Hoffmann, Pfenning, Santurkar, 'Resource-Aware Session Types for Digital Contracts', CSF 2021 / arXiv 1902.06056) uses shared binary session types plus linear types and amortized resource analysis to enforce interaction protocols of smart contracts on a ledger; protocols are compiled types, not digest-named values.
+SRC: Resource-Aware Session Types for Digital Contracts — https://arxiv.org/abs/1902.06056
+REL: Second partial refutation: session types already run inside an auditable ledger environment — but the ledger audits state transitions, not typed protocol conformance, and protocol identity is nominal.
+
+CLAIM: Digest-as-schema-name is standardized practice for DATA schemas: Apache Avro's spec defines schema fingerprints over a Parsing Canonical Form (SchemaNormalization: Rabin CRC-64-AVRO, MD5, SHA-256), and Avro single-object encoding puts the 8-byte schema fingerprint on the wire before every message; Confluent Schema Registry has an open issue to adopt fingerprints as identifiers.
+SRC: Avro SchemaNormalization — https://avro.apache.org/docs/1.8.1/api/java/org/apache/avro/SchemaNormalization.html ; Schema Registry fingerprint issue — https://github.com/confluentinc/schema-registry/issues/1294
+REL: Strongest 'pieces already exist' evidence: canonical byte form -> digest -> universal name is production practice for value schemas. Nobody has lifted it one level to behavioral/global session types — which is precisely the exploration's claim.
+
+CLAIM: Unison (v1.0 released 2025-11-25) identifies every definition by a SHA3-512 hash of its syntax tree and ships computations between nodes by hash — content-addressed CODE identity with distributed execution — but has no session/protocol typing layer; the unit of identity is a function, not an interaction protocol.
+SRC: Unison: The Big Idea — https://www.unison-lang.org/docs/the-big-idea/ ; https://github.com/unisonweb/unison
+LIC: Unison: MIT (compiler/runtime) => ideas and code portable, though only the naming discipline is relevant here
+REL: Proves digest-named program values work end-to-end in a distributed runtime, including dependency pinning by hash — the exact mechanism the exploration wants for a global protocol value, applied one abstraction level lower.
+
+CLAIM: IPVM/UCAN (Fission) specifies content-addressed computation: function invocations, results, and workflows are named by CIDs and authorized by capability chains; it is a Wasm/IPFS execution substrate, not a typed multiparty protocol system, and has no projection notion.
+SRC: IPVM — https://fission.codes/ipvm/ ; IPVM Q1 2023 update — https://fission.codes/blog/ipvm-computation-ipfs/
+REL: Adjacent decentralized-web prior art for content-addressed workflow identity; confirms the ecosystem addresses computations and data by digest but leaves protocol/topology types nominal.
+
+CLAIM: A March 2026 design sketch by Gordon Brander ('Pi hash-addressed sessions') content-addresses AI agent session FILES (Blake3 blob + lineage sidecar, explicitly mirroring Git's object model) for p2p distribution — 'session' in the chat-log sense, with no session-type or protocol theory.
+SRC: Pi hash-addressed sessions (gist) — https://gist.github.com/gordonbrander/70b3caf6ee5414ee7f9ee7516424b1ed
+REL: Evidence the agent-tooling world is independently converging on content-addressed interaction artifacts — the journal half of foldlab — while still lacking the typed-protocol half; the marriage remains open.
+
+CLAIM: A 2024 Springer survey chapter, 'Programming Language Implementations with Multiparty Session Types', catalogs the implementation landscape and its gaps; features like delegation and dynamic participants remain largely theory-only across mainstream toolchains, which mostly support fixed-roster, first-order protocols.
+SRC: Programming Language Implementations with Multiparty Session Types — https://link.springer.com/chapter/10.1007/978-3-031-51060-1_6
+REL: The authoritative map of what real MPST tools actually support — use it to bound what beep promises: fixed-census, delegation-free protocols are the implementable fragment today.
+
+CLAIM: In-repo check: @beep/identity exists at packages/foundation/modeling/identity (package name "@beep/identity"; modules Curie.ts, Id.ts, PnLocal.ts, Vocab.ts, packages.ts), and journal-bearing source appears across at least packages/ontology/{domain,client,use-cases}, packages/epistemic/server, packages/law-practice/domain, packages/tooling/library/ai-metrics, and packages/drivers/postgres — consistent with the exploration's premise of multiple independent journal/fold instances plus a literal-typed identity layer (exact count of five not audited).
+SRC: repo paths: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/package.json ; rg -il 'journal' over packages/**/src
+REL: Grounds premise (3) of the exploration: the raw material (journals, identity fibration) exists in beep-effect; a digest-named protocol value would sit above already-present machinery rather than requiring greenfield substrate.
+==============================================================================================================
+TRACK: Content-addressed code and its runtime consequences
+
+CLAIM: Unison identifies every definition by a 512-bit SHA3 hash of its syntax tree, computed after replacing named variables with positional references and dependency names with the dependencies' own hashes; names are 'just separately stored metadata'.
+SRC: The big idea · Unison programming language — https://www.unison-lang.org/docs/the-big-idea/
+LIC: MIT (unisonweb/unison)
+REL: Exact industrial precedent for foldlab's 'one canonical byte form -> digest as universal name': the canonical form is a normalized AST (alpha-invariant, dependency-inlined-by-hash), so the digest names meaning, not spelling.
+
+CLAIM: Because names are metadata, renaming in Unison is 'instant non-breaking renames' — no dependent code changes since dependents reference by hash; and because a definition's hash transitively incorporates its dependencies' hashes, 'dependency conflicts and the diamond dependency problem are just not a thing' — multiple versions coexist as distinct hashes and upgrades are explicit rebinding done 'at your leisure'.
+SRC: The big idea · Unison programming language — https://www.unison-lang.org/docs/the-big-idea/
+LIC: MIT (unisonweb/unison)
+REL: Shows the two runtime consequences the exploration needs: (1) the human-name layer is a separate mutable register over immutable digests, and (2) digests pin the entire transitive dependency closure — a digest-named protocol would pin every agent schema it projects to.
+
+CLAIM: Unison's codebase is 'a proper database of code' with a compilation cache that is 'never invalidated' ('we can parse and typecheck definitions once, and then store the results in a cache'), and the README adds perfect test caching: deterministic tests rerun only when their dependencies' hashes change.
+SRC: The big idea — https://www.unison-lang.org/docs/the-big-idea/ ; unisonweb/unison README — https://github.com/unisonweb/unison
+LIC: MIT (unisonweb/unison)
+REL: Digest-keyed memoization of typecheck/test results is proof-by-recomputation with cached proofs — the same economics foldlab's fold results and verification ladder rely on.
+
+CLAIM: Unison's distributed story is hash-sync of code: 'arbitrary computations can just be moved from one location to another, with missing dependencies deployed on the fly' — the receiver requests hashes it lacks and caches them permanently.
+SRC: The big idea · Unison programming language — https://www.unison-lang.org/docs/the-big-idea/
+LIC: MIT (unisonweb/unison)
+REL: The distribution mechanism for a digest-named protocol value already exists as a pattern: agents that lack the protocol's digest fetch it by name, and identical digests guarantee identical protocol semantics on every node.
+
+CLAIM: On Unison Cloud, 'every deployed service is known by its ServiceHash' derived from content hashing (identical code deploys to the same hash; updates mint new versions); Remote is the foundational ability ('the I/O of the Cloud'), services are 'typed, versioned, Cloud-hosted functions' callable across nodes without serialization, and durable storage (Cell, OrderedTable, Database) persists typed Unison values under a Transaction ability.
+SRC: Core concepts | The Unison Cloud Platform — https://www.unison.cloud/docs/core-concepts/
+REL: A running service's identity IS a digest — the closest existing system to 'topology as a digest-named value'; but the digest names one service's code, not the multi-party interaction between services.
+
+CLAIM: Abilities are Unison's algebraic effects (based on the Frank language of Lindley, McBride, McLaughlin); effect requirements appear in function types as 'a ->{IO} b', typing what a single computation may do.
+SRC: Abilities and ability handlers · Unison language reference — https://www.unison-lang.org/docs/language-reference/abilities-and-ability-handlers/
+LIC: MIT (unisonweb/unison)
+REL: Abilities are per-agent local effect types — they constrain one participant's side of an interaction, with no construct relating two parties' types to a shared global type; this is the seam the protocol-as-value thesis fills.
+
+CLAIM: Unison Cloud's storage cheat sheet enumerates OrderedTable, Cell, Blobs, Batch, Config, Scratch, Table, Database, and the Storage ability — no append-only journal, event-log, or ledger abstraction appears, and no Unison documentation found connects Unison to session types, choreographies, or multiparty protocol conformance (searches for Unison + session types/multiparty return only unrelated MPST literature). UNCERTAIN: this is an absence-of-evidence claim from docs inventory and search, not an explicit statement by the Unison team.
+SRC: Storage types cheat sheet | The Unison Cloud Platform — https://www.unison.cloud/docs/storage-solutions/
+REL: Directly establishes track item (b): Unison content-addresses code and service identity but leaves journals and multi-party protocol conformance to the application — the exploration's proposed layer does not duplicate Unison.
+
+CLAIM: Multiparty session types formalize exactly the projection discipline the exploration proposes: interactions are specified as a global type, projected onto local types per participant, and 'local conformance of all participants induces global conformance of the network to the initial global type'.
+SRC: A Very Gentle Introduction to Multiparty Session Types (Yoshida & Gheri) — http://mrg.doc.ic.ac.uk/publications/a-very-gentle-introduction-to-multiparty-session-types/main.pdf
+REL: The 'each agent's local type is a projection of the global type' thesis is MPST verbatim; the novel move in protocol-as-value is making the global type a digest-named, content-addressed VALUE rather than a static artifact of the type system.
+
+CLAIM: Nix RFC 0062 makes derivation outputs content-addressed ('rather than deriving these output paths from the inputs of the build, we derive them from the output'), yielding early cutoff ('substantial build cutoffs') via resolved derivations — if two derivations differ only in deps with equal output hashes, 'resolved(drv) and resolved(drv′) will be equal' — and introduces a Realisation structure that 'decouples trust (tracked via signatures on realisations) from storage', letting mutually untrusting users share one store.
+SRC: RFC 0062: content-addressed paths (NixOS/rfcs) — https://github.com/NixOS/rfcs/blob/master/rfcs/0062-content-addressed-paths.md
+LIC: Nix implementation is LGPL-2.1 (copyleft — clean-room only if porting code); the RFC itself is a design document (reference only)
+REL: Input-addressed vs content-addressed is the recipe-name vs result-name distinction a fold engine must choose per layer, and the signed-Realisation split is prior art for foldlab's fenced register (attested decisions) sitting beside recomputable content.
+
+CLAIM: Dhall's semantic integrity check freezes an import to the SHA-256 of the CBOR binary encoding of its alpha-beta-normalized form — 'the semantic integrity check is not a hash of the raw underlying text' — an implementation 'MUST fail and alert the user if hash verification fails', the failure is not recoverable via the `?` fallback operator, and verified imports are cached keyed by the hash with multihash prefix 1220.
+SRC: Dhall standard: imports.md (dhall-lang/dhall-lang) — https://github.com/dhall-lang/dhall-lang/blob/master/standard/imports.md
+LIC: BSD-3-Clause (both dhall-lang/dhall-lang and dhall-lang/dhall-haskell) — port-with-attribution
+REL: Strongest precedent that the 'one canonical byte form' should be a NORMAL form: behavior-preserving refactors keep the digest, so semantically-equal protocol values share one name and conformance checks become digest equality; the hard-fail-on-mismatch rule is a typed refusal.
+
+CLAIM: Gabriella Gonzalez explicitly frames these semantic hashes as a replacement for version-number trust: 'Semantic integrity checks are the next generation of semantic versioning'.
+SRC: Semantic integrity checks are the next generation of semantic versioning (Haskell for all) — https://www.haskellforall.com/2017/11/semantic-integrity-checks-are-next.html
+REL: Gives the exploration its versioning story: protocol version negotiation between agents collapses to comparing the protocol value's digest, with no semver social contract needed.
+
+CLAIM: A CID is 'a self-describing content-addressed identifier' — concretely 'a tuple of (content-type, content-address)' built from multihash (hash function + length), multicodec (payload type), and multibase (string encoding) — designed so 'any compatible hash-linked structure may be addressed within the same Merkle forest'.
+SRC: CID (Content IDentifier) Specification (multiformats/cid) — https://github.com/multiformats/cid
+LIC: Spec text CC-BY-3.0 (attribution required for prose); the ipld/ipld spec repo is dual Apache-2.0/MIT (permissive) — implementation repos carry their own licenses
+REL: Solves digest-format governance the exploration will hit immediately: a bare sha256 hex string cannot survive hash migration or codec ambiguity, while a CID-style self-describing digest lets five existing beep-effect digest instances unify without agreeing on one hash function forever.
+
+CLAIM: In the IPFS merkledag, 'links to objects can authenticate the objects themselves' and 'every object contains a secure representation of its children' — edges are merkle-links, so one root digest authenticates an entire DAG.
+SRC: IPFS — Content Addressed, Versioned, P2P File System (Juan Benet) — https://arxiv.org/pdf/1407.3561
+REL: A chained journal is a merkle-linked list: the head digest authenticates the whole history, so foldlab's proof-by-recomputation inherits tamper-evidence for free and agents can trust a journal prefix by verifying one digest.
+
+CLAIM: 'At the core of Git is a simple key-value data store' — a content-addressable filesystem where blobs, trees, and commits are keyed by SHA-1 of header+content, trees reference blobs/subtrees by hash, commits reference a tree and parent commits by hash (forming a DAG), and identical content is stored exactly once.
+SRC: Pro Git, ch. 10.2 Git Internals — Git Objects — https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
+LIC: git itself is GPL-2.0-only (COPYING: 'the only valid version of the GPL as far as this project is concerned is _this_ particular version') — copyleft, clean-room only for code; concepts freely citable
+REL: Git is the journal/register split at world scale: the commit chain is a chained journal of tree digests, and refs/branches are the mutable register naming immutable content — evidence the exploration's two-surface design is the stable fixed point this class of system converges to.
+
+CLAIM: 'Build Systems à la Carte' defines build correctness AS recomputation agreement: the result is consistent with the tasks iff 'for all non-input keys k ∈ O, the result of recomputing the corresponding task matches the value stored in the result: getValue k result == compute task result' (Definition 3.1, §3.6).
+SRC: Build Systems à la Carte (Mokhov, Mitchell, Peyton Jones), Proc. ACM Program. Lang. ICFP 2018 — https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf (DOI: https://dl.acm.org/doi/10.1145/3236774)
+REL: Peer-reviewed formal warrant for foldlab's proof-by-recomputation: correctness of a cached/fold-derived store is DEFINED as 'recomputing the fold reproduces the stored value' — the exploration's R-ladder is a graded version of Definition 3.1.
+
+CLAIM: The paper's rebuilder taxonomy (§4.2): verifying traces store only hashes of dependencies and result to decide staleness; constructive traces 'additionally store the resulting value... it makes sense to record many constructive traces per key, and to share them with other users, providing cloud-build functionality' (a matching value can be copied in 'without doing any work'); deep constructive traces record only terminal input hashes, 'require the tasks to be deterministic' when skipping ≥2 levels, cannot support early cutoff, and enable shallow builds. Table 2 places Bazel/CloudBuild on constructive traces and Nix/Buck on deep constructive traces, and notes cloud build systems pair hash-bearing traces with 'a separate content-addressable cache which associates hashes with their actual contents'.
+SRC: Build Systems à la Carte, §4.2–4.3 — https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf
+REL: This taxonomy IS a verification ladder: verify-by-hash (verifying trace) vs reconstruct-from-store (constructive) vs trust-terminal-inputs (deep constructive, sound only under determinism) map onto R-ladder rungs, and the determinism precondition for deep traces is exactly the law foldlab's folds must satisfy to make digest-named results trustworthy.
+
+CLAIM: The beep-effect repo's literal-typed identity package exists at packages/foundation/modeling/identity (package.json name '@beep/identity', description 'Effect v4 identity package'), exporting Curie.ts, Id.ts, PnLocal.ts, Vocab.ts, and packages.ts.
+SRC: repo path: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/package.json
+REL: Verifies exploration context (3) in the live checkout: the identity fibration a digest-naming layer would attach to is real and located; a protocol digest could become another literal-typed identity family alongside Curie/Vocab.
+==============================================================================================================
+TRACK: Durable execution engines and their identity/verification weaknesses
+
+CLAIM: Temporal's replay model re-executes workflow code and compares each generated Command against the Event at the same position in the recorded Event History; the docs state 'that Command is compared with the Event that is in the same location within the sequence. The Event in the sequence must be an ActivityTaskScheduled Event, where the Activity name is the same as what is in the Command' — a mismatch returns a non-deterministic error.
+SRC: Temporal Workflow Definition — https://docs.temporal.io/workflow-definition
+LIC: MIT (temporalio/temporal server, per GitHub API SPDX)
+REL: Temporal keys effects by history POSITION with a NAME equality check: renaming an activity fails loudly (NDE) instead of silently re-executing. This is the contrast case for claim (b).
+
+CLAIM: Temporal's determinism obligations are handled by two evolution mechanisms: the patched()/GetVersion APIs for in-code branching, and Worker Versioning where a Deployment Version = deployment name + Build ID; 'Pinned' workflows complete entirely on the version where they started, and the docs recommend 'a hash of the code such as a Git SHA' as the Build ID.
+SRC: Temporal Worker Versioning — https://docs.temporal.io/production-deployment/worker-deployments/worker-versioning and TMPRL1100 non-determinism rule — https://github.com/temporalio/rules/blob/main/rules/TMPRL1100.md
+LIC: MIT (temporalio/temporal)
+REL: Direct prior art for (c): Temporal already treats 'code version' as a first-class routing value and recommends git SHAs — but the Build ID is user-asserted, not a machine-derived content digest, so the binding between hash and code is trust, not proof-by-recomputation.
+
+CLAIM: Restate maintains a dedicated, sequenced per-invocation journal; code must produce the exact same sequence of operations on replay; its primary versioning story is immutable deployments with unique IDs (e.g. dp_14LsPzGz9HBxXIeBoH5wYUh) and invocation pinning — 'requests start and end on the same version, by sending any retry attempts always to the same endpoint' — while modifying deployed code at the same endpoint 'can cause in-flight invocations to fail when they replay with the updated code.'
+SRC: Restate Versioning docs — https://docs.restate.dev/services/versioning and What is Durable Execution — https://restate.dev/what-is-durable-execution
+LIC: Server BUSL-1.1, SDKs MIT (github.com/restatedev/restate LICENSE)
+REL: Restate solves the identity problem operationally (pin execution to an immutable deployment ID) rather than semantically — the deployment ID is registry-assigned, not content-derived, so nothing verifies the endpoint still serves the same bytes. Copyleft-adjacent server: clean-room only; MIT SDKs portable.
+
+CLAIM: DBOS is an in-process library that checkpoints workflow inputs and every step outcome to Postgres (step results commit in the same transaction as the step's own DB writes); on restart it re-executes the workflow function, skipping any step whose checkpoint exists, which requires deterministic workflows.
+SRC: Why Postgres is a Good Choice for Durable Workflow Execution — https://www.dbos.dev/blog/why-postgres-durable-execution and dbos-transact-ts — https://github.com/dbos-inc/dbos-transact-ts
+LIC: MIT (dbos-inc/dbos-transact-ts)
+REL: DBOS is the closest architectural cousin to a journal-as-initial-algebra design: the journal lives in the same ACID store as the effects it records, so 'what happened' and 'what was decided' are transactionally fused. MIT — port-with-attribution viable.
+
+CLAIM: DBOS detects step-identity drift loudly: 'DBOS is recovering a workflow and attempts to execute step Y, but finds a checkpoint in the database for step X instead' raises an error (Go SDK ErrorCodeUnexpectedStep: 'Step function mismatch during recovery (non-deterministic workflow)') — it does not silently re-execute the renamed step.
+SRC: DBOS Troubleshooting & FAQ — https://docs.dbos.dev/faq and dbos-transact-golang package docs — https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos
+LIC: MIT
+REL: Second refutation case for (b): position-keyed journals that also record the step's name convert renames into typed refusals — exactly foldlab's 'typed refusal' posture, achieved by storing one extra fact (the name) per journal entry.
+
+CLAIM: DBOS binds recovery eligibility to a content hash of code: 'By default, application version is automatically computed from a hash of workflow source code,' every workflow is tagged with the version it started on, and recovery only picks up workflows whose version matches the running executor's version.
+SRC: DBOS Workflow Recovery — https://docs.dbos.dev/production/workflow-recovery
+LIC: MIT
+REL: The strongest production prior art for (c), the 'git-hash workflow engine': workflow identity is already gated by an automatic content digest of the code — but at whole-application granularity, and the hash gates scheduling rather than naming the protocol as an addressable value.
+
+CLAIM: Dapr Workflows is event-sourced ('the engine saves the workflow state changes to an append-only log... event-sourcing') with mandatory deterministic replay, and its docs classify 'changing the name, input, or output of a workflow or activity' and changing the number/order of tasks as breaking changes; safe evolution uses GetVersionAsync-style patches plus deploying separately-named workflow versions.
+SRC: Dapr Workflow features and concepts — https://docs.dapr.io/developing-applications/building-blocks/workflow/workflow-features-concepts/ and How to Version .NET Dapr Workflows (Diagrid) — https://www.diagrid.io/blog/how-to-version-net-workflows
+LIC: Apache-2.0 (dapr/dapr)
+REL: Dapr (Durable Task lineage) shows the mainstream pattern: history-position matching, rename = breaking change, and versioning pushed onto the author as naming discipline — the human-chosen-name fragility the exploration's digest-named-value thesis targets.
+
+CLAIM: Azure Durable Functions orchestrators use event sourcing and replay with hard determinism constraints, and the newer 'orchestration versioning' feature exists specifically because 'breaking changes to orchestrator logic or activity function signatures would cause in-flight orchestration instances to fail during replay'; it lets versions coexist so in-flight instances complete without manual intervention.
+SRC: Durable orchestrator code constraints — https://learn.microsoft.com/en-us/azure/durable-task/common/durable-task-code-constraints and Orchestration versioning in Durable Functions — https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-orchestration-versioning
+REL: The oldest widely-deployed replay engine converged on the same answer as Temporal/Restate: version the whole orchestrator as an opaque unit. No engine in this family versions the protocol as a value the type system can project.
+
+CLAIM: Golem journals at the runtime boundary instead of the SDK boundary: an 'oplog' durably records every input and effect of a WASM worker, workers are 'resumed deterministically by replaying its own oplog,' and recovery restores execution 'even when the failure occurs in the middle of some function call' — user code carries no activity annotations.
+SRC: What Is Durable Computing? (Golem) — https://golem.cloud/blog/what-is-durable-computing/ and Golem Persistence docs — https://learn.golem.cloud/v1.5/operate/persistence
+LIC: BUSL-1.1 (golemcloud/golem LICENSE; marketing pages claim an Apache-2.0 transition, timeline unverified)
+REL: Golem dissolves the determinism obligation by moving the journal below the language — the 'one canonical byte form' is the WASM instruction stream. Shows what foldlab's canonical-byte-form looks like when pushed to the VM level. BUSL: clean-room/reference only.
+
+CLAIM: Golem's code-evolution story is explicit worker updates: automatic update performs 'divergence detection during replaying the oplog' against the new component version (only safe for minor changes or untouched code paths), and manual update requires the old component to implement golem:api/save-snapshot and the new one load-snapshot, with automatic revert to the old version if load fails.
+SRC: Updating workers to newer versions (Golem docs) — https://learn.golem.cloud/docs/python-language-guide/updating
+LIC: BUSL-1.1
+REL: Golem's snapshot pair is a migration morphism between two component versions — the closest any engine gets to treating an upgrade as a typed transformation of state rather than a replay gamble.
+
+CLAIM: In Effect v4's workflow engine (effect/unstable/workflow), an Activity is 'an Effect with a stable name and schemas for its success and error values,' and the engine will 'execute it, store its result, or replay that result during a workflow run' — the replay model re-runs the whole workflow body with activities returning persisted results.
+SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/workflow/Activity.ts (module doc, lines 1-10, 28-48)
+LIC: MIT (effect-smol LICENSE)
+REL: Establishes the local engine's replay model for the field map: Restate-style re-execution, but with schema-typed activity boundaries — the 'most type-safe' engine in the comparison set.
+
+CLAIM: The Effect cluster engine keys persisted activity results by execution ID plus activity NAME only: ClusterWorkflowEngine.ts builds `const activityId = ${instance.executionId}/${activity.name}` (line 510) and persists replies under `activityPrimaryKey(options.activity.name, options.attempt)` (line 239); the in-memory engine likewise uses `${instance.executionId}/${activity.name}/${attempt}` (WorkflowEngine.ts line 693). DurableDeferred results are keyed by `deferred.name` (line 554).
+SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/cluster/ClusterWorkflowEngine.ts and ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/workflow/WorkflowEngine.ts
+LIC: MIT
+REL: VERIFIES claim (b): activity identity is exactly a string name. There is no history-position check and no recorded-name mismatch detection in the lookup path, so a renamed activity is a cache miss — on resume the workflow body re-runs and the renamed activity re-executes its side effects silently. The most type-safe engine has the least-checked effect identity.
+
+CLAIM: Effect workflow execution identity is already a content digest — of the payload, not the code: executionId = SHA-256 (truncated to 16 bytes hex) of `${workflow._tag}-${idempotencyKey(payload)}` (Workflow.ts line 317, makeHashDigest in internal/crypto.ts).
+SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/workflow/Workflow.ts line 317 and ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/workflow/internal/crypto.ts
+LIC: MIT
+REL: The engine already digest-names the (tag, payload) pair but leaves the code side of identity as bare strings — exactly the asymmetry the protocol-as-value thesis proposes to close by digest-naming the protocol/topology too.
+
+CLAIM: Inngest memoizes steps by a hash of the step ID plus a counter ('Inngest hashes the step's identifier along with a counter'; the SDK spec defines :1/:2 suffixes for repeated IDs), and its versioning doc states the SDK determines what to run 'based on the step identifiers in your code, not version numbers' — a changed step ID is a new step whose hash misses the stored state, so it re-executes.
+SRC: Inngest Function Versioning — https://www.inngest.com/docs/learn/versioning , How Inngest Functions Execute — https://www.inngest.com/docs/learn/how-functions-are-executed , SDK spec — https://github.com/inngest/inngest/blob/main/docs/SDK_SPEC.md
+LIC: SSPL-1.0 with Apache-2.0 future license (inngest/inngest LICENSE.md) — clean-room only
+REL: Second confirmed name-keyed engine for (b): rename => silent re-execution is a design family, not an Effect quirk. Inngest even hashes the name — a digest of a human-chosen label is still a human-chosen label.
+
+CLAIM: Cloudflare Workflows documents that 'step names act as the cache key in your Workflow' and that naming a step non-deterministically 'prevents it from being cached, which will cause the step to be re-run if subsequent steps fail'; completed step.do calls are skipped but all code outside them re-executes.
+SRC: Rules of Workflows (Cloudflare docs) — https://developers.cloudflare.com/workflows/build/rules-of-workflows/
+REL: Third confirmed name-keyed engine for (b). Verdict across the field: 'renaming an activity re-executes its effects' is TRUE for name-keyed engines (Effect workflow, Inngest, Cloudflare Workflows) and FALSE-but-fails-loudly for position-keyed engines (Temporal, DBOS, Dapr/DTFx, Azure DF); Restate sidesteps it by pinning invocations to immutable deployments.
+
+CLAIM: Obelisk (WASM Component Model workflow engine) binds execution to content digests of code: its configuration supports `by_component_digest`, which 'selects only executions assigned to the exact component version (by sha256 digest)', exec-activity scripts can be allowlisted 'pinned by the SHA-256 digest of the exact script text', and components can be referenced via oci:// including digest form (e.g. wasm_workflow:sha256:885d...).
+SRC: Obelisk configuration docs — https://obeli.sk/docs/latest/configuration/ and obeli-sk/obelisk — https://github.com/obeli-sk/obelisk
+LIC: AGPL-3.0 (wit/ and proto/ dirs MIT) — clean-room only for engine code
+REL: Direct prior art for (c): an engine where executors lock work by sha256 of the exact component bytes — content-addressed code identity enforcing that replay happens against the same bytes that wrote the journal. AGPL means ideas only, no vendoring.
+
+CLAIM: Windmill versions every script by an immutable hash: 'Versions of Scripts are uniquely defined by their hashes, which are an immutable reference similar to a git commit SHA,' the previous head stays deployed forever, and hash-based webhook URLs pin integrations to a specific version.
+SRC: Windmill Versioning — https://www.windmill.dev/docs/core_concepts/versioning and Deno blog on Windmill's immutable scripts — https://deno.com/blog/immutable-scripts-windmill-production-grade-ops
+LIC: Mixed: AGPLv3 default, Apache-2.0 for some files, proprietary EE (windmill-labs/windmill LICENSE) — clean-room only by default
+REL: More prior art for (c): hash-addressed, immutable, forever-callable script versions as the unit of execution identity. Note the hash is a per-deploy version identifier 'similar to' a git SHA; whether it is a pure content digest of the script text was not verified.
+
+CLAIM: Unison stores all code in an append-only content-addressed database where 'functions are identified by a hash of their implementation rather than by name' and hashes 'depend only on the structure of the code, not on the actual names used' — yielding 'instant nonbreaking renames' (a metadata change) and distributed execution that ships computations by hash with missing dependencies synced on demand.
+SRC: The big idea (Unison docs) — https://www.unison-lang.org/docs/the-big-idea/ and Trying out Unison, part 1: code as hashes (SoftwareMill) — https://softwaremill.com/trying-out-unison-part-1-code-as-hashes/
+LIC: MIT (unisonweb/unison LICENSE)
+REL: The deepest prior art for (c) and for the whole protocol-as-value thesis: when identity is a content digest, rename-breaks-replay becomes structurally impossible — the exact failure mode verified in (b) for name-keyed engines. MIT: portable ideas and code.
+
+CLAIM: Temporal's OpenAI Agents SDK integration runs the agent loop inside the Workflow and every model call as an Activity, so LLM responses are recorded in the append-only event history and 'are not repeated during Workflow replay'; streaming works by having the model Activity publish events to a Workflow Stream topic while remaining durable.
+SRC: OpenAI Agents SDK integration (Temporal docs) — https://docs.temporal.io/develop/typescript/integrations/openai-agents
+REL: The canonical answer to (d): nondeterministic-once effects become deterministic by demotion into recorded activities — record-once, replay-forever. The LLM result is journaled as a value; its identity is still the activity's position+name, not a digest of the prompt.
+
+CLAIM: Restate's AI story journals every nondeterministic action: 'Every non-deterministic action (LLM calls, tool API calls, MCP calls) is persisted in a durable journal,' via ctx.run-style durable steps; the Pydantic AI integration's DurableRunner 'persists each LLM call in Restate's journal' so failed executions resume rather than re-prompt.
+SRC: Durable AI Loops (Restate blog) — https://www.restate.dev/blog/durable-ai-loops-fault-tolerance-across-frameworks-and-without-handcuffs and Build durable agents with Restate and Pydantic AI — https://pydantic.dev/articles/restate-durable-execution-pydanticai
+REL: (d) cross-check: same record-and-replay answer with a journal-index identity. Combined with deployment pinning, Restate is the engine whose journal most resembles foldlab's chained-journal — but journal entries are named by position, not digest.
+
+CLAIM: DBOS's Pydantic AI integration documents that LLM calls 'are inherently non-deterministic, so they must be wrapped as steps whose results are journaled on first execution and never re-run on replay,' and that DBOS 'waits for all parallel tool calls to complete before emitting events in order' to guarantee deterministic replay.
+SRC: Durable Execution with DBOS (Pydantic docs) — https://pydantic.dev/docs/ai/capabilities/durable_execution/dbos/
+REL: (d) third data point, plus a subtlety for the thesis: concurrency must be linearized (a canonical order chosen) before journaling — the journal's initial-algebra property forces a canonical byte form on even parallel effects.
+
+CLAIM: No surveyed engine names a workflow or activity BY the content hash of its own code the way Unison names terms: DBOS hashes code but only to gate recovery scheduling; Temporal's Build ID is a user-asserted label that may be a git SHA; Obelisk digests components but executions are still named by generated IDs and functions by WIT interface names; Windmill hashes script versions but flows reference paths whose HEAD moves.
+SRC: Synthesis across: https://docs.dbos.dev/production/workflow-recovery , https://docs.temporal.io/production-deployment/worker-deployments/worker-versioning , https://obeli.sk/docs/latest/configuration/ , https://www.windmill.dev/docs/core_concepts/versioning
+REL: This is the open gap the exploration's thesis occupies: a digest-named protocol VALUE one level above agent schemas — with each agent's local type a projection — exists piecewise (DBOS's hash-gate, Obelisk's digest-lock, Unison's term addressing, Temporal's pinning) but nowhere as one composed design.
+==============================================================================================================
+TRACK: Auditable logs, proof-by-recomputation systems, and agent-to-agent trust substrates
+
+CLAIM: Haber & Stornetta (1991) introduced linked timestamping: each timestamp certificate includes the hash of the previous one, so the chain itself is the trust substrate — altering one entry requires recomputing all subsequent entries, and verification needs no trusted authority beyond replaying the chain. It is the most-cited prior work in the Bitcoin whitepaper (3 of 8 citations).
+SRC: How to Time-Stamp a Digital Document, Journal of Cryptology — https://dl.acm.org/doi/abs/10.1007/bf00196791 ; lineage analysis: The First Blockchain or How to Time-Stamp a Digital Document — https://decentralizedthoughts.github.io/2020-07-05-the-first-blockchain-or-how-to-time-stamp-a-digital-document/
+REL: Foldlab's chained journal is a direct descendant of a 35-year-old, well-survived design: digest-linked append-only records whose verification is recomputation of the chain. The lineage argument gives the exploration a hardened ancestor, not a novelty claim.
+
+CLAIM: Certificate Transparency operationalized Merkle-tree append-only commitments at internet scale, and its 2024-2026 evolution replaced the general-purpose RPC log server model (Trillian's CTFE) with 'tile-based' logs: the log is served as flat, immutable, content-addressed files (tiles) that verifiers download and recompute proofs from locally; Chrome's CT policy moved to accept Static-CT-API logs and away from requiring RFC 6962 APIs.
+SRC: Tile-Based Transparency Logs — https://transparency.dev/articles/tile-based-logs/ ; What 2025 Holds for Certificate Transparency — https://blog.transparency.dev/what-2025-holds-for-certificate-transparency-and-the-transparencydev-ecosystem ; Chrome CT Policy changes to accept static-ct-api logs — https://groups.google.com/a/chromium.org/g/ct-policy/c/HBFZHG0TCsY/m/HAaVRK6MAAAJ
+REL: The surviving transparency-log design converged on exactly the exploration's shape: dumb immutable byte artifacts named by position/digest, with all meaning recomputed by folds (proof recomputation) on the verifier side. The 'smart log server' lost to 'inert value + client-side fold'.
+
+CLAIM: Sunlight (Filippo Valsorda, sponsored by Let's Encrypt) is the first production tile-based CT log implementation and has run Let's Encrypt's static-ct logs since 2024; TesseraCT is transparency-dev's Static-CT-API successor to Trillian's CTFE for 2026+ temporal shards.
+SRC: Reflections on a Year of Sunlight — https://letsencrypt.org/2025/06/11/reflections-on-a-year-of-sunlight ; Introducing TesseraCT — https://blog.transparency.dev/introducing-tesseract ; repos: https://github.com/FiloSottile/sunlight , https://github.com/transparency-dev/tesseract , https://github.com/google/trillian
+LIC: Sunlight: ISC (permissive — port-with-attribution); TesseraCT: Apache-2.0; Trillian: Apache-2.0 (both port-with-attribution). Verified via GitHub API spdx_id.
+REL: If beep-effect ever wants a real tlog under its journals, the portable reference implementations are small and permissively licensed; the tile format is also a concrete design for serving journal segments as cacheable digest-named values.
+
+CLAIM: Sigstore shipped Rekor v2 ('rekor-tiles') to GA in 2025: a rewrite of its signature transparency log onto the tile-backed design, with the read path fully cacheable/CDN-servable and the 2025 log instance (log2025-1.rekor.sigstore.dev) keyed via TUF so upgraded clients verify v2 entries automatically; signers had not yet been switched by default at GA.
+SRC: Rekor v2 GA — Cheaper to run, simpler to maintain — https://blog.sigstore.dev/rekor-v2-ga/ ; https://github.com/sigstore/rekor-tiles
+LIC: rekor-tiles: Apache-2.0; rekor: Apache-2.0 (port-with-attribution). Verified via GitHub API.
+REL: Even the signature-attestation camp (Sigstore) rebuilt its log as an inert tiled value — evidence that 'journal as digest-addressed value, folds computed by readers' is the converged production architecture, not a niche aesthetic.
+
+CLAIM: AWS QLDB was retired: closed to new customers in July 2024 and fully end-of-support on 2025-07-31, with no formal blog announcement (email + doc updates only); AWS's recommended migration target is Aurora PostgreSQL with audit logging, which AWS's own guidance and third-party analyses note lacks QLDB's cryptographic verifiability.
+SRC: AWS to Kill QLDB — https://www.infoq.com/news/2024/07/aws-kill-qldb ; Moving from Amazon QLDB to ledger in Azure SQL (Microsoft) — https://techcommunity.microsoft.com/blog/azuresqlblog/moving-from-amazon-quantum-ledger-database-qldb-to-ledger-in-azure-sql/4246237 ; RIP Amazon QLDB — https://news.alvaroduran.com/p/if-amazon-cant-figure-out-how-to
+REL: The failure mode to design against: a centralized single-operator ledger whose verification story had no external verifier ecosystem died commercially — customers who only wanted audit trails took plain audit tables, and customers who wanted checkable claims went to open logs. Survival correlates with third parties being able to recompute proofs, not with the ledger data structure itself.
+
+CLAIM: Nix draws the recomputation-vs-signature line explicitly in its data model: input-addressed store paths 'need to be signed by a trusted key' to be imported, while content-addressed paths can be 'verified without any additional information such as signatures' and substituted trustlessly from any source; `nix store verify` accepts a path if it is signed by a trusted key OR content-addressed OR built locally.
+SRC: Nix Reference Manual, Glossary — https://nix.dev/manual/nix/2.24/glossary.html ; nix store verify — https://nix.dev/manual/nix/2.18/command-ref/new-cli/nix3-store-verify.html ; Ca-derivations — https://nixos.wiki/wiki/Ca-derivations
+LIC: Nix: LGPL-2.1 (copyleft — clean-room only for code; the design split is freely citable). Verified via GitHub API.
+REL: This is the cleanest existing formalization of foldlab's R0-R5 idea as a lattice of trust modes: 'recomputed locally' > 'content-addressed' > 'signed by trusted key'. A verification ladder can be typed exactly as this disjunction, per claim.
+
+CLAIM: Dhall's semantic integrity checks hash the αβ-normalized form of an expression (not its source bytes): behavior-preserving refactors of an import do not change the hash, any semantic change is rejected, and the semantic hash doubles as the content-addressed cache key (/dhall/${hash}) so protected imports are fetched once and thereafter resolved by digest.
+SRC: Dhall Safety Guarantees — https://docs.dhall-lang.org/discussions/Safety-guarantees.html ; Semantic integrity checks are the next generation of semantic versioning (Gabriella Gonzalez) — https://www.haskellforall.com/2017/11/semantic-integrity-checks-are-next.html ; intensional-hash PR — https://github.com/dhall-lang/dhall-haskell/pull/167
+LIC: dhall-lang: BSD-3-Clause (permissive — port-with-attribution). Verified via GitHub API.
+REL: The strongest single precedent for 'meaning folds are unique catamorphisms with digest names': Dhall names a value by the digest of its normal form, i.e., by the result of the fold, making 'same digest ⇒ same meaning' a theorem rather than a convention. Directly applicable to naming protocol-values and projections in the exploration.
+
+CLAIM: In the reproducible-builds ecosystem, verification IS recomputation: rebuilderd continuously rebuilds distro packages (Arch, Debian, Fedora backends) from source and compares output digests to the published binaries, publishing GOOD/BAD verdicts; anyone can run an independent rebuilder and corroborate or refute the archive.
+SRC: rebuilderd: Independent verification of binary packages — https://github.com/kpcyrd/rebuilderd ; Reproducible Builds monthly reports — https://reproducible-builds.org/reports/2026-06/
+LIC: rebuilderd: GPL-3.0 (copyleft — clean-room only; reference for design, do not vendor). Verified via GitHub API.
+REL: Working production proof that multi-party trust can rest on recomputation of a deterministic fold plus digest comparison — no shared authority, only shared inputs and a shared digest function. This is foldlab's proof-by-recomputation at distro scale.
+
+CLAIM: SLSA v1.x deliberately dropped the reproducible-builds requirement (old draft Level 4) and rests on signed in-toto/DSSE provenance attestations: trust derives from the builder's identity and platform hardening, not from anyone recomputing the artifact; SLSA's own FAQ concedes reproducibility is what would actually detect a tampered output and treats 'verified reproducible' (2+ independent builders corroborating) as a complementary, out-of-band property.
+SRC: SLSA FAQ v1.1 — https://slsa.dev/spec/v1.1/faq ; SLSA and in-toto roles — https://mikael.barbero.tech/blog/post/2023-12-28-slsa-and-slsa-and-in-toto/ (see also https://slsa.dev/spec/v1.0/distributing-provenance)
+REL: Documents the industry's design split in one artifact: attestation = 'a named party claims X happened' (cheap, scalable, revocable trust); recomputation = 'anyone can re-derive X' (expensive, but claim-checkable). A typed verification ladder should encode both rungs rather than pick one — which is exactly what foldlab's R0-R5 and Nix's verify disjunction do.
+
+CLAIM: A2A (Google, April 2025; transferred to the Linux Foundation June 2025, 150+ member orgs by 2026) discovers agents via a well-known Agent Card (/.well-known/agent-card.json) describing capabilities, auth requirements, and skills; the spec says cards 'MAY be digitally signed using JWS (RFC 7515)' to prove the card originates from the claimed provider — signing is optional, and nothing in the protocol binds an agent's runtime behavior to the card's claims.
+SRC: A2A Protocol Specification — https://github.com/a2aproject/A2A/blob/main/docs/specification.md ; A year of open collaboration (Google Open Source Blog) — https://opensource.googleblog.com/2026/04/a-year-of-open-collaboration-celebrating-the-anniversary-of-a2a.html ; https://en.wikipedia.org/wiki/Agent2Agent
+LIC: A2A spec repo: Apache-2.0 (port-with-attribution). Verified via GitHub API.
+REL: The dominant inter-agent protocol's trust substrate is claims (self-described cards, optionally signed) with no checkable-claims layer: no content addressing of the card, no hash-chained history of card changes, no conformance proof that behavior matches the card. This is the gap protocol-as-value fills: the topology/protocol as a digest-named value that agents' local types must provably project from.
+
+CLAIM: MCP's trust substrate is weaker still: tool descriptions are unverified free text injected into model context, and Invariant Labs' April 2025 'Tool Poisoning' notification plus the documented 'rug pull' class (server silently changes a tool description after initial approval) exploit exactly the absence of content-addressing/hash-pinning of tool definitions in the core protocol; mitigations (e.g. MCP-Scan) pin tool-description hashes out-of-band, and US NSA/CISA published dedicated MCP security guidance in 2026.
+SRC: MCP Security Notification: Tool Poisoning Attacks — https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks ; NSA/DoD CSI: Model Context Protocol Security — https://media.defense.gov/2026/Jun/02/2003943289/-1/-1/0/CSI_MCP_SECURITY.PDF ; MCPTox benchmark — https://arxiv.org/pdf/2508.14925
+LIC: MCP spec repo (modelcontextprotocol/modelcontextprotocol): transitioning MIT → Apache-2.0, docs CC-BY-4.0 per repo LICENSE (permissive — port-with-attribution).
+REL: Concrete evidence that agent protocols without digest-named, append-only definitions of 'what the counterparty is' are exploitable by construction: the rug pull is precisely a mutation of protocol-level meaning that a chained journal + fenced register of tool definitions would make detectable (any change forces a new digest and a registered decision).
+
+CLAIM: AGNTCY's Agent Directory Service (Cisco/Outshift et al., under the Linux Foundation) is the only major 2025-2026 agent-infrastructure stack with a content-addressed conformance story: OASF agent records are stored content-addressed (OCI CAS) with Sigstore-based signing, giving cryptographic integrity, provenance, and verifiable claims for agent metadata; its identity layer binds agent IDs to issuers via Verifiable Credentials (Agent Badges over OASF or A2A Agent Card schemas).
+SRC: The AGNTCY Agent Directory Service: Architecture and Implementation — https://arxiv.org/pdf/2509.18787 ; AGNTCY Verifiable Credentials docs — https://docs.agntcy.org/identity/credentials/ ; https://github.com/agntcy/dir
+LIC: agntcy/dir: Apache-2.0 (port-with-attribution). Verified via GitHub API.
+REL: Closest existing system to the exploration's thesis — but note it content-addresses agent *records* (metadata), not the *protocol/topology between agents*, and has no journal of interactions. The one-level-above global-type-as-value remains unoccupied territory.
+
+CLAIM: IBM's ACP (launched March 2025 for BeeAI) formally merged into A2A under the Linux Foundation in August 2025; the agent-protocol field consolidated to MCP (agent-to-tool) + A2A (agent-to-agent) as the surviving open standards.
+SRC: ACP Joins Forces with A2A — LF AI & Data — https://lfaidata.foundation/communityblog/2025/08/29/acp-joins-forces-with-a2a-under-the-linux-foundations-lf-ai-data/ ; https://github.com/orgs/i-am-bee/discussions/5
+REL: Scopes the competitive landscape: any protocol-as-value design should position as a verification/typing layer over MCP+A2A (which won distribution), not as a rival transport.
+
+CLAIM: Kang & Diponegoro's governance-gaps analysis of five agent protocols (MCP, A2A, ACP, ANP, ERC-8004) finds audit/replay, deliberation, voting, and dissent-preservation primitives absent or partial across all of them, and concludes agent-community governance is 'a missing architectural layer above current interoperability standards, not a missing feature within them.'
+SRC: Governance Gaps in Agent Interoperability Protocols: What MCP, A2A, and ACP Cannot Express — https://arxiv.org/abs/2606.31498
+REL: Independent academic support for the exploration's central structural claim: the thing that is missing sits one level above the agent schemas — exactly where the thesis puts the digest-named protocol value with per-agent projections. Their 'audit/replay' dimension is the journal; their 'decision' dimensions are the register.
+
+CLAIM: The CALM theorem (Hellerstein & Alvaro, CACM 2020): a distributed program has a consistent, coordination-free implementation if and only if it is monotonic (S ⊆ T ⇒ P(S) ⊆ P(T)) — delineating precisely which computations ever need coordination.
+SRC: Keeping CALM: When Distributed Consistency Is Easy — https://cacm.acm.org/research/keeping-calm/ ; https://arxiv.org/abs/1901.01930
+REL: Formal justification for 'coordination only at the register': appends to a journal and folds over its grow-only prefix are monotone, hence coordination-free; sealing, uniqueness, supersession, and other decisions are non-monotone and are exactly the operations CALM says must pay for coordination — the fenced register is the minimal coordination surface.
+
+CLAIM: Laddad, Power, Milano, Cheung, Crooks & Hellerstein (VLDB 16(4), 'Keep CALM and CRDT On') show CRDT convergence guarantees cover only updates — observations of CRDT state are unconstrained and unsafe in general — and that monotone queries are exactly (not merely sufficiently) the queries that can be answered safely without coordination.
+SRC: Keep CALM and CRDT On — https://www.vldb.org/pvldb/vol16/p856-power.pdf ; https://arxiv.org/abs/2210.12605
+REL: Sharpens the register argument for folds specifically: a fold read mid-journal is trustworthy iff the fold is monotone; any non-monotone reading (a decision, a 'final' answer) must be fenced. This gives the journal/register split an if-and-only-if characterization rather than a design taste.
+
+CLAIM: Reproducible builds and signed provenance are formally complementary, not substitutes: rebuilding detects tampered outputs but cannot verify the intended toolchain/inputs were used, while provenance proves origin but not output integrity; the strongest available property ('verified reproducible') requires 2+ independent build platforms corroborating the same output digest.
+SRC: Reproducible Builds: Increasing the Integrity of Software Supply Chains — https://arxiv.org/pdf/2104.06020 ; SLSA FAQ — https://slsa.dev/spec/v1.1/faq
+REL: Argues the verification ladder should treat 'k independent recomputations agree' as a distinct rung above both 'signed by builder' and 'I recomputed it once' — a quorum-of-folds rung foldlab's R0-R5 can name explicitly.
+==============================================================================================================
+TRACK: The mathematics of 'the level above': polynomial functors, fibrations, and interaction
+
+CLAIM: Niu & Spivak's monograph is, per its own abstract, 'a study of the category of polynomial endofunctors on the category of sets and its applications to modeling interaction protocols and dynamical systems' — interaction protocols are the book's stated subject, not an incidental application.
+SRC: Polynomial Functors: A Mathematical Theory of Interaction (Niu & Spivak) — https://arxiv.org/abs/2312.00990 (published as LMS Lecture Note Series, Cambridge UP: https://www.cambridge.org/us/universitypress/subjects/mathematics/logic-categories-and-sets/polynomial-functors-mathematical-theory-interaction)
+LIC: CC BY 4.0 (arXiv version; free PDF also at https://toposinstitute.github.io/poly/poly-book.pdf)
+REL: This is the canonical mathematical home for the exploration's 'protocol as mathematical object' move: Poly is an entire category whose objects are interfaces and whose morphisms are protocols.
+
+CLAIM: The book defines a morphism of polynomials as literally being a protocol, verbatim (Section 3.2, 'Dependent lenses as interaction protocols'): 'a lens depicts what we call an interaction protocol, a kind of dialogue between two agents regarding their positions and directions. ... a lens f : p -> q is an interaction protocol that prescribes how the positions of p influence the positions of q and how the directions of q influence the directions of p.'
+SRC: Poly book PDF, §3.2 — https://toposinstitute.github.io/poly/poly-book.pdf (text extracted from the PDF; verified verbatim)
+REL: Direct prior art for 'protocol as a VALUE': in Poly a protocol is not metadata about agents — it is itself a morphism, a first-class object you can compose, transform, and (in beep-effect terms) serialize and digest-name.
+
+CLAIM: Definition 4.18 of the book defines a (dependent) dynamical system as a lens φ : Sy^S -> p, where the domain monomial Sy^S is the machine's internal state system and 'the codomain polynomial p [is] the machine's interface'; Remark 4.20 adds that 'the system's interface should capture everything about how it interacts with the outside world.'
+SRC: Poly book PDF, Definition 4.18 and Remark 4.20 — https://toposinstitute.github.io/poly/poly-book.pdf
+REL: This is the exact 'agent schema below, protocol object above' factoring the exploration wants: an agent = its private state system + a lens INTO a shared interface object; two agents with different state can implement the same interface.
+
+CLAIM: Section 4.4.3 ('Wiring diagrams as interaction patterns') makes the topology itself a single morphism in Poly: for boxes Controller = By^C, Plant = Cy^{AB}, System = Cy^A, 'The wiring diagram itself is a wrapper w : Controller ⊗ Plant -> System, specifying an interaction pattern between the Controller and the Plant with the System as the wrapper interface' — and 'neither the wiring diagram nor any of the boxes within it represent dynamical systems on their own'; boxes only become systems once equipped with a lens from a state system.
+SRC: Poly book PDF, §4.4.3, Example 4.60, eq. (4.62) — https://toposinstitute.github.io/poly/poly-book.pdf
+REL: This answers question (a) affirmatively: 'protocol as an object one level above, agents plugged in beneath it' IS already worked out in Poly — the multi-agent topology is one value (a lens between a tensor of interfaces and a wrapper interface), independent of any agent implementation, exactly the digest-named topology-value the exploration proposes.
+
+CLAIM: Example 6.67 ('Dynamical systems as coalgebras') proves a natural isomorphism between dynamical systems Sy^S -> p and p-coalgebras S -> p(S), noting 'Coalgebras as models of dynamical systems have been studied extensively ... most notably by Jacobs', and that the lens view 'has the benefit of isolating the internal state system to the domain and the external interface to the codomain'.
+SRC: Poly book PDF, Example 6.67 — https://toposinstitute.github.io/poly/poly-book.pdf
+REL: Confirms the second half of question (a): agents are precisely coalgebras of the protocol/interface object, so 'agents as the protocol's coalgebras' is a theorem-backed identification, not an analogy.
+
+CLAIM: Theorem 7.28 (Ahman–Uustalu) in the book states: 'There is a one-to-one isomorphism-preserving correspondence between polynomial comonoids and (small) categories', summarized as 'Comonoids in Poly are precisely categories!'; the original result is Ahman & Uustalu, 'Directed Containers as Categories', where directed containers (= comonoid-structured containers) are in bijection up to isomorphism with small categories.
+SRC: Poly book PDF Theorem 7.28 — https://toposinstitute.github.io/poly/poly-book.pdf; Ahman & Uustalu, Directed Containers as Categories — https://arxiv.org/abs/1604.01187
+REL: Grounds the 'levels' story: the composition product ◁ in Poly generates comonoids that ARE categories, so 'the level above' is not hand-waving — protocols-with-composable-runs literally form categories inside Poly, and cofree comonoids (book Ch. 8) give behavior/trajectory spaces for any interface.
+
+CLAIM: Spivak's 'Poly: An abundant categorical setting for mode-dependent dynamics' models systems that 'reconfigure their wiring diagram dynamically, based on their collective state' (mode dependence), reformulated in Poly with its 'four interacting monoidal structures', and includes 'coalgebras as special dynamical systems—ones that do not record their history'.
+SRC: Poly: An abundant categorical setting for mode-dependent dynamics (Spivak) — https://arxiv.org/abs/2005.01894
+REL: Directly supports treating the topology as mutable data: the wiring (protocol value) can change as a function of collective state — the categorical version of 'a new digest names the new protocol version'. The aside about coalgebras not recording history sharpens why the journal (which does record history) must live as an initial algebra beside, not inside, the coalgebraic agents.
+
+CLAIM: Shapiro & Spivak's 'Dynamic Operads, Dynamic Categories: From Deep Learning to Prediction Markets' (ACT 2022) defines a monoidal double category Org of 'dynamic organizations' and dynamic categorical structures in which the organizing structure itself (the wiring/operad) evolves through the very interactions it organizes, with prediction markets as a dynamic operad and deep learning as a dynamic monoidal category.
+SRC: Dynamic Operads, Dynamic Categories: From Deep Learning to Prediction Markets — https://arxiv.org/abs/2205.03906
+REL: The closest existing mathematics to the exploration's strongest claim: the protocol is not just a value one level up, but a value that the agents' interaction can rewrite — i.e., a fenced-register entry whose successor is decided by the system it governs.
+
+CLAIM: nLab defines a Grothendieck fibration as 'a functor p: E -> B such that the fibers E_b = p^{-1}(b) depend (contravariantly) pseudofunctorially on b ∈ B', via existence of cartesian lifts (with a uniqueness property for the induced factorization), and states an equivalence of 2-categories Fib(B) ≃ [B^op, Cat] between fibrations over B and contravariant pseudofunctors, mediated by the Grothendieck construction.
+SRC: Grothendieck fibration — nLab — https://ncatlab.org/nlab/show/Grothendieck+fibration
+REL: The accessible formal citation for the @beep/identity pattern: a base category of identifier paths with a fiber of typed values over each path is exactly an indexed category / fibration, and the Grothendieck construction is the license to move between 'one big total category of identities' and 'a family of fibers over a base'.
+
+CLAIM: Bart Jacobs' 'Categorical Logic and Type Theory' (Studies in Logic 141, Elsevier 1999) is the standard textbook treatment that surveys categorical logic and type theory 'starting from the unifying concept of a fibration', covering cloven/split fibrations, change-of-base, indexed categories, and the fibrational semantics of dependent type theories.
+SRC: Categorical Logic and Type Theory — book info page https://www.cs.ru.nl/B.Jacobs/CLT/bookinfo.html; review by R.A.G. Seely https://www.math.mcgill.ca/rags/jacobs.html
+REL: The citable heavyweight reference tying fibrations to dependent types — the precise sense in which @beep/identity's literal-typed hierarchy ('fibers of schemas over a base of paths') is dependent-type semantics rather than a naming convention.
+
+CLAIM: Patterson's notes state the two equivalent presentations plainly: 'Fibered categories take the "bundle viewpoint," based on maps into a category. Indexed categories take the "(pre)sheaf viewpoint," based on maps out of a category. Fibered categories and indexed categories are equivalent via the Grothendieck construction.'
+SRC: Fibered and indexed category theory — Evan Patterson's wiki — https://www.epatters.org/wiki/algebra/fibered-category-theory
+REL: The most accessible short citation for a design doc: it names the exact design choice @beep/identity makes (indexed/presheaf style: a function from literal paths to schemas) and its equivalent bundle-style dual (tagged total type with a projection).
+
+CLAIM: In-repo check: @beep/identity (packages/foundation/modeling/identity, MIT per its README) implements a hierarchical, literal-typed identity system — per its packageDocumentation, 'Composable, type-safe identity strings and symbols ... follow a @beep/{package}/{path} convention and are validated at construction time', with per-package composers (make("my-pkg").$MyPkgId.make("UserId") => "@beep/my-pkg/UserId") built from S.Literal schemas.
+SRC: repo path: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/src/Id.ts (plus README.md)
+REL: Confirms the exploration's premise (3): the package really is an indexed-category-shaped structure — literal base segments with derived typed identifiers over them — so casting it as 'sections of a fibration over the package/path base' describes existing code, not aspiration.
+
+CLAIM: arXiv 2402.15332's actual (v2) title is 'Position: Categorical Deep Learning is an Algebraic Theory of All Architectures' (Gavranović, Lessard, Dudzik, von Glehn, Araújo, Veličković; CC BY 4.0), and its central claim, quoted from the abstract, is that 'the universal algebra of monads valued in a 2-category of parametric maps ... elegantly subsumes both constraints and implementations' of neural network design — recovering geometric deep learning's equivariance constraints and implementations such as RNNs.
+SRC: Position: Categorical Deep Learning is an Algebraic Theory of All Architectures — https://arxiv.org/abs/2402.15332
+REL: Verifies (c): the paper's actual thesis is 'architecture = (co)algebra of a structure one level up (a monad/endofunctor in Para)' — structurally the same move as 'agent = algebra/coalgebra of a protocol object one level up', which is why the exploration can cite it as a sibling instance of the pattern rather than as a deep-learning result.
+
+CLAIM: Remark 2.13 of arXiv 2402.15332, verified verbatim from the PDF: 'Interestingly, given an algebra (X, [r0, r1]), there can only ever be one algebra homomorphism from lists to it! This is because (List(A), [Nil, Cons]) is an initial object (Definition A.2) in the category of (1 + A × −)-algebras. The fact that these are initial arises from a deeper fact related to the fact that, in many cases, for a given endofunctor there is a monad whose category of monad algebras is equivalent to the original category of endofunctor algebras. We note this because the construction which takes us from one to the other, the so-called algebraically free monad on an endofunctor, will be seen in Part 3 to derive RNNs and other similar architectures from first principles.' Note: the remark states uniqueness for the list initial algebra specifically, citing general initiality (their Definition A.2) as the reason.
+SRC: Position: Categorical Deep Learning is an Algebraic Theory of All Architectures, Remark 2.13 — https://arxiv.org/pdf/2402.15332 (text extracted from PDF v2)
+REL: This is the exact citation for the exploration's 'identity/meaning folds are UNIQUE catamorphisms' claim: any fold out of the journal (an initial algebra) to a given target algebra is the only homomorphism there is — so two agents recomputing the same fold over the same journal cannot disagree, which is the mathematical backbone of foldlab-style proof-by-recomputation.
+
+CLAIM: The same paper supplies the dual, also verified verbatim: 'Dual to algebra homomorphisms and folds over inductive data structures, coalgebra homomorphisms are categorical semantics of unfolds over coinductive data structures' (Section 2, around Example 2.15 on Mealy machines), and Remark H.6: 'Analogous to Remark 2.13, there can only ever be one unfold of this type. This is because streams are a terminal object in the category of (O × −)-coalgebras.'
+SRC: Position: Categorical Deep Learning is an Algebraic Theory of All Architectures, §2.3 and Remark H.6 — https://arxiv.org/pdf/2402.15332
+REL: Completes the picture for the exploration: journal-consumers (folds from an initial algebra) are unique, and process-like agents (unfolds into terminal coalgebras, e.g. Mealy machines) are unique too — giving canonical status to both the 'what happened' readings and the agent behaviors generated from a seed state.
+
+CLAIM: Ghani, Hedges, Winschel & Zahn's 'Compositional game theory' (LICS 2018; arXiv:1603.04641) introduces open games as 'a compositional foundation of economic game theory': open games are morphisms of a symmetric monoidal category, composed sequentially by categorical composition and in parallel (simultaneous moves) by monoidal product, with 'coutility' returned to the environment and string diagrams as 'an intuitive but formal visualisation of the information flows'; representative games are shown to have the same Nash equilibria and off-equilibrium best responses as their classical counterparts.
+SRC: Compositional game theory — https://arxiv.org/abs/1603.04641 (LICS'18 version: https://strathprints.strath.ac.uk/64265/1/Ghani_etal_LICS_2018_Compositional_game_theory.pdf)
+REL: Adjacent prior art for (d): multi-agent strategic interaction where the interaction structure is itself a morphism in a monoidal category — the same 'compose agents inside a first-class interaction value' architecture the exploration proposes, but with equilibria instead of consensus as the correctness notion.
+
+CLAIM: Hedges' 'Coherence for lenses and open games' (arXiv:1704.02230) establishes that open games are built from lenses — an open game is characterized as a family of lenses satisfying functional properties — putting compositional game theory on the same lens/optic substrate that Poly's dependent lenses generalize.
+SRC: Coherence for lenses and open games (Jules Hedges) — https://arxiv.org/abs/1704.02230; see also Bayesian open games (Bolt, Hedges, Zahn) — https://arxiv.org/abs/1910.03656
+REL: The bridge claim: open games (multi-agent strategy) and Poly dynamical systems (multi-agent dynamics) share the lens abstraction, so the exploration's protocol-value can plausibly be one object serving both operational (fold/replay) and strategic (incentive) readings.
+
+CLAIM: The open-game-engine repository (CyberCat Institute) is a Haskell implementation of compositional game theory that lets you 'write those games in a programmatic way and analyze those games', build games 'from smaller modular components that you can swap out or parameterize', supply strategies, and test for equilibrium; it declares the MIT license.
+SRC: open-game-engine — https://github.com/CyberCat-Institute/open-game-engine
+LIC: MIT (permissive => port-with-attribution)
+REL: A portable engineering artifact proving the (d) mathematics runs as code: its modular game-composition DSL is a concrete design reference for a TypeScript/Effect protocol-composition surface, and MIT permits porting ideas and structure with attribution.
+==============================================================================================================
+TRACK: Positioning scan — foldlab and Cohesive Systems
+
+CLAIM: github.com/mepuka/foldlab is public, Apache-2.0 licensed, TypeScript-dominant (~31.8MB TS, 1.56MB Go, 1.39MB Lean, 110KB TLA+, plus Shell/Python), created 2026-08-12, last pushed 2026-08-19, with 2 stars, 1 fork, 55 open issues, no description/homepage/topics, and contributors 'mepuka' (945 commits) plus 'claude' (1 commit).
+SRC: GitHub API repos/mepuka/foldlab + /languages + /contributors — https://github.com/mepuka/foldlab
+LIC: Apache-2.0 (port-with-attribution)
+REL: The system the exploration positions against is 11 days old, single-author, and permissively licensed — beep-effect can cite, port, or diverge freely; there is no entrenched community whose terminology must be matched.
+
+CLAIM: foldlab's README states it builds 'Plait': programs coordinate by growing 'a shared, content-addressed body of evidence that is safe to replicate sloppily, plus a small number of declared decision points that are not. The mathematics says which is which, and the framework keeps the two physically apart.' Evidence is named by the SHA-256 hash of its canonical bytes; a reader re-derives the digest and refuses on mismatch ('Nobody is trusted; only bytes are checked').
+SRC: foldlab README — https://github.com/mepuka/foldlab (blob main/README.md)
+REL: Confirms the exploration's characterization verbatim: one canonical byte form, digests as universal names, and the evidence/decision (journal/register) split as the load-bearing bet. The exploration's initial-algebra framing is a mathematization of exactly this public claim.
+
+CLAIM: foldlab's verification story is 'the proofs are the product': four Lean proof packages with 400+ rostered machine-checked results, TLA+ model gates, model-emitted answer keys that are 'generated, never typed' ('served equals derived'), planted mutants that must die, and a VERIFICATION.md claims ledger where 'a claim absent from that ledger is not made'; every claim is graded on a rung ladder R0 (fixture walls), R1 (property tests), R2 (bounded model check), R3 (inductive invariant), R4 (lockstep conformance), R5 (mechanized proof).
+SRC: foldlab README, 'Why the proofs are the product' and 'Reading the vocabulary' sections — https://github.com/mepuka/foldlab; ledger at https://github.com/mepuka/foldlab/blob/main/VERIFICATION.md
+REL: The R0–R5 ladder and proof-by-recomputation discipline the exploration references are real and public; if protocol-as-value claims a stronger result (protocol as digest-named value with per-agent projections), it must say which rung it can be established at to speak foldlab's language.
+
+CLAIM: Plait's entire vocabulary is eight generators — declare, resolve, emit, join, fold, decide, trigger, spawn — with 'sessions, tasks, workflows, memory, schedules, and search... not features; they are compositions'; a single admission function (KernelDoor.admit) judges everything, refusals are values 'carrying the law it defends and a repair', 'every as-of-now read' is a fold, 'a head' is a 32-byte commitment to an exact history prefix, 'a fence' is 'the one place where exactly one party may win', the substrate is NATS JetStream, and an independently written Go twin provides cross-language agreement as evidence.
+SRC: foldlab README, 'How it fits together' / 'The eight generators' — https://github.com/mepuka/foldlab
+REL: This is the exact algebraic surface the exploration's thesis targets: journal (emit/head) + register (decide/fence) + folds as unique catamorphisms. Notably, nothing in the public README makes the topology/protocol itself a digest-named value projected per-agent — that gap is the exploration's claim to novelty over foldlab.
+
+CLAIM: foldlab's README scopes what runs today honestly: the kernel admission door is at 'R0 differential plus an executable no-bypass control' with the bound 'agreement on a finite committed corpus, not a proof over all candidates', and the spine (envelope identity + verified delivery over one local JetStream server) is at R0 differential plus executable integration with num_replicas: 1.
+SRC: foldlab README, 'What runs today' — https://github.com/mepuka/foldlab
+REL: The shipping surface is early (R0, single-node) despite the R5 proof packages for the model; protocol-as-value would be competing with foldlab's model-side maturity, not a deployed multi-node system.
+
+CLAIM: Cohesive Systems (cohesivesystems.com) positions itself as: 'Author software as a semantic system graph' via a three-step Author/Connect/Compile workflow — author 'modular, readable, and reviewable Cohesive artifacts', 'resolve identities and relationships across the graph', then compile 'the graph into executable artifacts and compare those realizations with their semantic requirements' — as a 'semantic layer above the stack' projecting into Terraform, Kubernetes, Docker; the Cohesive Systems Language (CSL) is 'a declarative language for defining what a system is', represented as a typed IR from which multiple interpreters derive: in-memory execution, SQL compilation, search-index materialization, durable orchestration, static analysis, and API projections onto ASP.NET Minimal APIs, OpenAPI, GraphQL, TypeScript clients.
+SRC: Cohesive Systems — https://cohesivesystems.com/ and Cohesive Systems Language — https://cohesivesystems.com/cohesive-systems-language
+REL: Closest public neighbor to the exploration's 'global type one level above, local artifacts as projections' thesis — but Cohesive projects from an authored semantic graph, with no content-addressing, digest naming, or proof-by-recomputation; protocol-as-value differs by making the global type itself a digest-named value with algebraic (catamorphism) semantics.
+
+CLAIM: Cohesive Systems is effectively a solo effort by Leo Gorodinski: the GitHub org 'cohesivesystems' (created 2026-02-16, 3 public repos, no public members) has 'eulerfx' as sole visible contributor (335 commits on the main repo), and eulerfx's GitHub profile reads name 'Leo Gorodinski', company 'Cohesive Systems', blog cohesivesystems.com, Del Mar CA.
+SRC: GitHub API orgs/cohesivesystems, repos/cohesivesystems/cohesive/contributors, users/eulerfx — https://github.com/cohesivesystems and https://github.com/eulerfx
+REL: Identifies who is behind it and the scale: one experienced practitioner, roughly six months in, pre-traction. Not a funded competitor racing to occupy the positioning; more a fellow traveler whose vocabulary ('semantic system graph', projections) is worth aligning with or explicitly diverging from.
+
+CLAIM: Leo Gorodinski is an event-sourcing veteran: he wrote 'Scaling Event-Sourcing at Jet' (Jet.com used event-sourcing 'since the beginning'), gave QCon NY 2014 talks on DDD and event-driven services with F# and EventStore, and authored Kafunk (F# Kafka client) — i.e., Cohesive Systems is built by someone with a decade of production event-sourcing pedigree.
+SRC: Scaling Event-Sourcing at Jet — https://medium.com/@eulerfx/scaling-event-sourcing-at-jet-9c873cac33b8; QCon NY 2014 speaker page — https://qconnewyork.com/ny2014/users/leo-gorodinski.html
+REL: Signals that the 'semantic graph above the stack, projections below' framing is where a seasoned event-sourcing practitioner independently landed — corroborating the exploration's direction from a second, unrelated lineage (F#/.NET rather than Effect/Lean).
+
+CLAIM: Cohesive's shipping form is a .NET (C#) library suite, repo cohesivesystems/cohesive (created 2026-02-16, pushed 2026-08-23, 3 stars, homepage cohesive.sh): 'a library suite for semantic system definition and orchestration of existing infrastructure... defining the meaning of a system first, then attaching interpretations for storage, APIs, presentation, workflows, AI, training'; packages include Cohesive.Transitions ('canonical entity-transition IR, typed authoring, validation, compilation, decisions'), Cohesive.Processes ('canonical multistep Process IR... continuations'), Cohesive.Processes.Distribution ('durable competing-consumer claims, capacity, leases, fencing, and recovery'), Cohesive.Relations, Cohesive.Presentation ('backend-declared presentation IR'), and Cohesive.AI. The LICENSE file contains verbatim Apache-2.0 text, though GitHub's SPDX detection reports NOASSERTION.
+SRC: GitHub — https://github.com/cohesivesystems/cohesive (repo API metadata, README, LICENSE)
+LIC: LICENSE file is Apache-2.0 text but GitHub SPDX says NOASSERTION — treat as reference-only until confirmed with the author
+REL: Concrete overlap map: typed IRs for transitions/processes plus fencing/leases in the distribution package cover much of the same ground as beep-effect's journal/register/fold instances, in C# rather than Effect. License ambiguity (Apache-2.0 text vs NOASSERTION SPDX) means treat as reference-only until confirmed.
+
+CLAIM: Restate's positioning: it 'lets developers build innately resilient distributed apps without the complexity tax' — one self-contained runtime binary collapsing message brokers, workflow orchestrators, durable execution, virtual objects (durable state), and agents into a single substrate.
+SRC: Restate — https://restate.dev/
+REL: Commercial neighbor selling 'the collapse' at the infrastructure layer: one log/runtime for events + workflow + state. It collapses machinery, not meaning — the protocol between services stays implicit in code, not a digest-named value.
+
+CLAIM: Temporal's positioning: 'Write code as if failure doesn't exist' / 'Replace your brittle state machines' — consolidating retries, task queues, signals, timers, and durable state persistence into a single durable-execution abstraction.
+SRC: Temporal — https://temporal.io/
+REL: The incumbent of the collapse category; its unification is operational (failure-handling machinery), and workflow identity is code-versioned, not content-addressed — the audit/history story is a byproduct, not a named value.
+
+CLAIM: Kurrent (rebranded from Event Store, Dec 2024, with a $12M raise) sells an 'event-native data platform' unifying streams and database: KurrentDB's 'event-native design simplifies data modeling and preserves data integrity while the integrated streaming engine solves distributed messaging challenges', feeding 'real-time, business-critical data with historical context' into apps, analytics, and AI.
+SRC: Kurrent press — https://www.kurrent.io/press/kurrent-previously-event-store-garners-12m-and-debuts-enterprise-edition-of-its-event-native-platform/; KurrentDB — https://github.com/kurrent-io/KurrentDB; rebrand FAQ — https://www.eventstore.com/blog/kurrent-re-brand-faq
+REL: The event-sourcing-as-database incumbent (Gorodinski's own former substrate at Jet): it unifies event log + messaging + history-for-AI, but the fold/projection layer and inter-service protocol remain user code outside the platform's guarantees.
+
+CLAIM: Golem's positioning: 'The durable agent runtime that automatically persists state, executes every tool call exactly once, and enforces every policy' — collapsing the state database, workflow orchestration, and policy/sandbox enforcement into one WASM-based runtime.
+SRC: Golem — https://golem.cloud/
+REL: Neighbor that has pivoted the collapse specifically to AI agents (exactly-once tool calls); its unification is again runtime-level — agent topology and inter-agent contracts are not first-class values.
+
+CLAIM: DBOS's positioning: an 'open source durable execution library' that makes Postgres the substrate — workflows, queues, and cron scheduling consolidated as durability primitives added to existing applications, with no separate orchestrator infrastructure.
+SRC: DBOS — https://www.dbos.dev/
+REL: The minimal-footprint version of the collapse (library + Postgres, no new server); shows the category converging on 'one substrate' while leaving protocol/topology semantics entirely to the application — the layer protocol-as-value claims.
+==============================================================================================================
+TRACK: in-repo: protocol/topology machinery gap check (beep-effect18)
+
+CLAIM: NOT FOUND: no session-type, choreography, multiparty, or protocol-projection machinery exists anywhere in packages/**/src. rg for 'session.type|choreograph|multiparty' over packages/ hits only packages/ontology/domain/src/aggregates/Session/Session.errors.ts (a user-session aggregate, unrelated); every other hit is in explorations/ prose, mostly protocol-as-value's own CAPTURE.md.
+SRC: beep-effect repo search, ~/YeeBois/projects/beep-effect18/packages (rg 'session.type|choreograph|multiparty')
+REL: The core gap the exploration proposes to fill is genuinely open: nothing in the codebase models a global protocol type or projects local endpoint types from it.
+
+CLAIM: The closest existing protocol machinery is @beep/acp (packages/drivers/acp, 'Effect-native Agent Client Protocol driver', MIT per its package.json), which schema-types the messages of a fixed external protocol (AcpProtocol.service.ts, AcpRpc.models.ts, generated schema.gen.ts) but contains no topology-as-data or projection concept.
+SRC: packages/drivers/acp/package.json + packages/drivers/acp/src/ (AcpProtocol.service.ts, README.md)
+LIC: MIT (in-repo package)
+REL: Proves the repo already types agent wire protocols schema-first, but only per-message: the protocol's global shape is implicit, exactly the level error the thesis names.
+
+CLAIM: Graph-as-data primitives exist: @beep/schema ships a Graph schema suite (packages/foundation/modeling/schema/src/Graph/ with Graph.edge.ts, Graph.encoded.ts, Graph.rebuild.ts, Graph.transforms.ts) — 'Schemas for Effect Graph values and graph-adjacent primitives' — with no protocol semantics attached.
+SRC: packages/foundation/modeling/schema/src/Graph/index.ts
+REL: A digest-named protocol value needs a serializable graph/topology carrier; the encoding substrate for 'topology as a schema value' already exists and only lacks protocol meaning.
+
+CLAIM: A geometry-as-data precedent exists inside the CLI: RegistrationGeometry.schemas.ts declares 'Schema-first contracts for package registration geometry' with LiteralKit closed domains RegistrationSurfaceKind (owned-tree, workspace-literal, identity-segment, ...) and RegistrationWriter (create-package, identity-sync, tsconfig-sync, ...), i.e. the repo's own registration topology reified as a typed value.
+SRC: packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts
+REL: Shows the repo already models 'which surfaces exist and who may write them' as a closed typed value — a small-scale instance of topology-one-level-above-the-participants.
+
+CLAIM: effect/unstable/workflow and effect/unstable/cluster are imported ONLY in scratchpad/effect-ontology (WorkflowOrchestrator.ts imports {Workflow, WorkflowEngine} from 'effect/unstable/workflow'; DurableActivities.ts and StreamingExtractionActivity.ts import Activity; ClusterRuntime.ts imports {ShardingConfig, SingleRunner} from 'effect/unstable/cluster'). rg over packages/**/*.ts returns zero hits.
+SRC: scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts, scratchpad/effect-ontology/Runtime/ClusterRuntime.ts (+ rg 'unstable/workflow|unstable/cluster' packages)
+REL: The durable-workflow substrate the protocol value would orchestrate is spiked in scratchpad only; production packages have no workflow engine seam yet, so the protocol layer can be designed before any engine API ossifies.
+
+CLAIM: goals/effect-v4-workflow-engine-spike is lifecycle 'active' (ops/manifest.json) and targets a persistence-backed WorkflowEngine.makeUnsafe adapter in packages/drivers/workflow — a package that does NOT exist (ls packages/drivers/ lists 47 drivers, no 'workflow'). @effect/cluster is not a dependency anywhere: bun.lock's only 'cluster' hit is cluster-key-slot via @redis/client.
+SRC: goals/effect-v4-workflow-engine-spike/GOAL.md + ops/manifest.json; packages/drivers/ listing; bun.lock
+REL: The workflow-engine landing zone (drivers/workflow) is reserved but unbuilt — the natural first consumer where a digest-named protocol value could generate the engine's entity/activity endpoints.
+
+CLAIM: explorations/effect-ontology-harvest/research/workflow-cluster-streaming.md records that a durable workflow engine is 'NOT FOUND in the target', that *.workflows.ts role names are reserved-but-optional per standards/ARCHITECTURE.md:983-1012, and proposes NET-NEW drivers/workflow; the harvested effect-ontology source itself runs Effect 3.19 with @effect/cluster 0.55.0 and @effect/workflow 0.15.2.
+SRC: explorations/effect-ontology-harvest/research/workflow-cluster-streaming.md
+REL: Confirms the workflow/cluster gap was already inventoried with the same conclusion, and links Mepuka's system (the exploration's counterpart) to the exact v3 packages whose v4 unstable equivalents the spike targets.
+
+CLAIM: The digest substrate has a single schema owner: @beep/schema/Sha256 (packages/foundation/modeling/schema/src/Sha256.ts) exports the branded Sha256Hex schema (64 lowercase hex chars, filter group + brand + $I annotation) and an effectful computeSha256Hex via the effect Crypto service; @beep/shared-domain re-exports it as Sha256 (packages/shared/domain/src/entity/primitives.ts:66).
+SRC: packages/foundation/modeling/schema/src/Sha256.ts; packages/shared/domain/src/entity/primitives.ts
+REL: The universal-name type for a digest-named protocol value already exists and is fibration-annotated; a content-addressed protocol needs no new digest schema.
+
+CLAIM: Canonical-JSON encoding has NO single owner — at least three independent implementations: (1) packages/epistemic/domain/src/values/internal/CanonicalJson.ts (deliberately package-private, header says 'One implementation on purpose' because grant-set and ledger seals must share bytes); (2) packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts (key-sorted compact JSON + node:crypto sha256, digest recomputed at read time and verified against the file name); (3) packages/drivers/openclaw/src/OpenclawRender.ts (encodeCanonicalValue/canonicalizeDocument, 'byte-stable jq -S-equivalent JSON' + createHash sha256 contentHash). Yeet's ProofState.ts additionally computes its own createHash fingerprints.
+SRC: packages/epistemic/domain/src/values/internal/CanonicalJson.ts; packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts; packages/drivers/openclaw/src/OpenclawRender.ts; packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts
+REL: foldlab's 'one canonical byte form' premise is violated three-plus ways today; a protocol-as-value substrate would either promote one canonical encoder to @beep/schema or accept per-instance byte forms — a fork the design must decide explicitly.
+
+CLAIM: All five journal/register/fold/digest instances named in the exploration's CAPTURE.md verify on disk: packages/epistemic/domain/src/values/ExecutionRecord/, packages/epistemic/server/src/GovernedTierGate/, packages/tooling/tool/cli/src/commands/Goals/PacketCore/ (PacketDigest.ts + PacketFold.ts), packages/law-practice/use-cases/src/CandorPolicy/, and packages/tooling/tool/cli/src/commands/Yeet/internal/ (ProofState.ts proof lock + Inbox.ts NDJSON append journal with ack-receipt files at .beep/inbox/acks/<id>).
+SRC: explorations/protocol-as-value/CAPTURE.md Act II, verified against the five package paths listed
+REL: The 'five independent instances' premise is not just narrative — each path exists with the claimed mechanism, so a unifying protocol/fold substrate has five live in-repo customers on day one.
+
+CLAIM: Multi-agent coordination surfaces that would consume a protocol value: goals/fleet-mirror is 'completed-retained' ('Derive a read-only view of every checkout sharing this origin ... without any agent posting anything') with CLI machinery at packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts and Fleet.command.ts; explorations/fleet-coordination is graduated with D7 reserving rung 2 as 'push to reachable sessions plus pull for everyone' (research/T6-cross-session-messaging.md). No cross-session messaging machinery exists in packages/**/src (NOT FOUND).
+SRC: goals/fleet-mirror/README.md; explorations/fleet-coordination/README.md + research/T6-cross-session-messaging.md; packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts
+REL: The fleet's future push/pull messaging rung is exactly an async multi-agent topology with no typed protocol yet — the most concrete in-repo consumer for a digest-named global type.
+
+CLAIM: Four in-repo MCP servers are built on effect/unstable/ai/McpServer — packages/drivers/uspto-mcp, gov-legal-mcp, m365-mcp, nlp-mcp (each Server.ts + bin.ts; uspto Server.ts imports McpProtocol and McpServer from effect/unstable/ai) — plus MCP tool surfaces in packages/law-practice/server/src/Tools.ts and packages/ontology/config/src/McpConfig.ts; and the agents slice (packages/agents/{domain,client,server,tables,use-cases}) carries Agent/Skill/ProviderInstance entities and the AgentTurnKernel streaming port (packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts).
+SRC: packages/drivers/uspto-mcp/src/Server.ts; packages/law-practice/server/src/Tools.ts; packages/agents/domain/src/entities/; explorations/effect-ontology-harvest/research/workflow-cluster-streaming.md (AssistantTurn.kernel.ts citation)
+REL: These are the live agent endpoints whose per-endpoint schemas exist today with no global type above them — the surfaces a protocol value would GENERATE (endpoint contracts) and AUDIT (journal recomputation).
+
+CLAIM: explorations/computable-workspace-geometry is 'graduated' (manifest updated 2026-08-13) with the thesis that workspace rendering becomes computable headlessly — 'space = pure function of schema', 'every panel box, block height, and line break from data' — graduated into goals/pretext-driver, goals/dock-substrate-landing (closed), and goals/thread-virtualization; it contains no protocol or agent-topology content.
+SRC: explorations/computable-workspace-geometry/README.md + ops/manifest.json
+REL: It is the repo's ratified precedent for the same category move — reify the ambient shape as a computable value one level above the content schemas — applied to UI space; protocol-as-value is the same move applied to agent topology, so the exploration can cite it as house style rather than machinery to reuse.
+
+CLAIM: @beep/identity lives at packages/foundation/modeling/identity (Apache-2.0, sole runtime dependency 'effect'; modules Curie.ts, Vocab.ts, Id.ts, PnLocal.ts, packages.ts), and the fibration handoff document the exploration relies on exists at explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md. Identity names are literal-typed paths, not content digests — there is no linkage between $I identities and the Sha256 substrate.
+SRC: packages/foundation/modeling/identity/package.json + src/; explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md
+LIC: Apache-2.0 (in-repo package)
+REL: Confirms the standing prototype is real and also exposes the seam the thesis needs: @beep/identity names things by authored literal path while the five digest instances name things by content — a protocol-as-value design must state how these two naming fibrations compose.
+==============================================================================================================
+TRACK: in-repo: @beep/identity readiness audit (beep-effect18)
+
+CLAIM: LIVE: the identity composer core is fully built — `make()` (dual-form, with optional `{authority, prefix, vocab}` binding) at src/Id.ts:2065-2107, the composer factory `createComposer` at Id.ts:1686-2013, and `$I.annote`/`annoteClass`/`annoteSchema`/`annoteKey`/`annoteHttp` implementations at Id.ts:1788-1852, all producing annotation records with interned `schemaId` (Symbol.for), branded `identifier`, `title`, and (when bound) literal-typed `iri`/`curie` (Id.ts:1730-1747).
+SRC: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/src/Id.ts
+REL: Protocol-as-value needs stable, statically-known names one level above agent schemas; the composer already mints a literal-typed, hierarchical name algebra whose annotations are machine-recoverable from schema ASTs.
+
+CLAIM: LIVE: the whole workspace is authority-bound today — src/packages.ts:46 exports the root composer as `Identity.make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId` and derives every package composer from it via one `$I.compose(...)` call, so IRI/CURIE projections are not future work; `rebase` (Id.ts:1956-1969) rebinds IRI/CURIE without touching identity or interning.
+SRC: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/src/packages.ts (line 46)
+REL: The exploration can treat globally-dereferenceable names (IRI form) as already available for protocol values; the wire encoding of a name exists without new plumbing.
+
+CLAIM: LIVE: Vocab/Curie/PnLocal codecs all ship in identity src — `CoreVocab` registry (Vocab.ts:128), `Curie<V>`/`Predicate<V>`/`Expand` literal types (Vocab.ts:375/394/411), `mergeVocab` + `SemanticFoundationVocab` (Vocab.ts:453/478); `expand`/`contract`/`makeCurieCodec`/`CoreCurieCodec`/`CurieFromIri` (Curie.ts:265/313/389/409/451); `SafePnLocal`/`escapeLocal`/`prefixedNameOrIri` Turtle-safety codecs (PnLocal.ts:136/427/447).
+SRC: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/src/{Vocab.ts,Curie.ts,PnLocal.ts}
+REL: Borrowed-vocabulary literal types prove the pattern the exploration wants for protocol roles: closed literal domains checked at compile time, zero imports at usage sites.
+
+CLAIM: LIVE (contrary to the track brief's assumption): the ontology fold is built and merged — `@beep/ontology` exists at packages/foundation/modeling/ontology with `export const fold = Effect.fn("Ontology.fold")(function* (composer: BoundComposer, input: OntologyFoldInput)` at src/Fold.assembly.ts:886, plus Fold.models/Fold.projections/Fold.markdown and a Fold.test.ts suite; per the exploration README trail it merged as PR #536 on 2026-08-01. It is NOT a `$I.ontology` composer method — DECISIONS.md 2026-07-31 superseded that to a split surface: `$I.key`/`$I.class` as composer methods in @beep/identity (Id.ts:1862-1877, wired at 2000-2011), fold + projections in @beep/ontology.
+SRC: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/ontology/src/Fold.assembly.ts (line 886); explorations/identity-as-iri/DECISIONS.md (2026-07-31 entry)
+REL: A unique-catamorphism-over-annotated-schemas fold already exists and validates the exploration's 'meaning folds are catamorphisms' thesis in-repo; protocol-as-value can reuse the fold's propose→gate→record shape instead of designing a sixth fold from scratch.
+
+CLAIM: DESIGN-LOCKED but UNBUILT: the `Fibered` kit and the `IdentityRegistry` ServiceMap.Service (`resolve(identity|iri|curie) → fiber parts`) have zero implementations — `rg "Fibered"` over packages/**/*.ts returns nothing, and the only IdentityRegistry symbols are the unrelated CLI lint command (packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts) and ai-metrics session identity. The design is locked as handoff D8/§6 and carried by goals/identity-iri-fibered (manifest: status "active", blockedBy "semantic-web PR2 cleanup" and "semantic-web PR3 cleanup" as text blockers, updated 2026-08-13; mission includes discrete Fibered kit, exact IdentityRegistry, byte-identical JSDoc migration, post-move SHACL projection, test/dev store Layers).
+SRC: ~/YeeBois/projects/beep-effect18/goals/identity-iri-fibered/ops/manifest.json; explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md §6
+REL: Protocol-as-value's 'each agent's local type is a projection of the global type' is structurally the Fibered kit's pullback/section machinery; that machinery is spoken-for by an active blocked goal, so the exploration should depend on or co-design with identity-iri-fibered rather than reinvent it.
+
+CLAIM: Interpolation ban mechanics: the composer template tag (Id.ts:1708-1715) calls `validateTemplateInterpolations` (Id.ts:1649-1655), which throws `IdentityInterpolationError` (Id.ts:141-154) on ANY interpolated value, and `validateTemplateSegmentCount` (Id.ts:1657-1669), which throws `IdentitySegmentCountError` (Id.ts:175-194) unless exactly one literal segment is present. The handoff declares this load-bearing: 'every identity and every borrowed-vocab reference must remain a static literal, statically extractable without executing code (grep-harvestable). No design below may introduce runtime-computed IRIs or CURIEs' (handoff §1). Enforcement is runtime-throw plus type-level SegmentValue/ModuleSegmentValue constraints (Id.ts:232-236, 495-496) — not a lexical/lint gate on the tag itself.
+SRC: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/src/Id.ts (lines 141-194, 1649-1669, 1708-1715); explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md §1
+REL: Grep-harvestable static identities are exactly what lets a protocol value be named and audited without executing agents — the same discipline a digest-named global protocol type needs for its member names.
+
+CLAIM: A complementary static gate exists: `bun run beep lint identity-registry` (packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts, header lines 1-15) enforces that every @beep/* workspace package is registered in packages.ts's single `$I.compose(...)` call and that 'no package outside @beep/identity constructs a local root composer via the identity make(...) export' — so all identities monorepo-wide descend from the one authority-bound root.
+SRC: ~/YeeBois/projects/beep-effect18/packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts (lines 1-15)
+REL: Single-root closure is the precondition for treating the identity space as one global namespace over which a protocol value can range; the lint proves the repo already polices that closure mechanically.
+
+CLAIM: JSDocTagDefinition.make fibration precedent, precisely: `make` (JSDocTagDefinition.model.ts:261-281) decodes the per-tag section value through the section schema (`Result.getOrThrow(S.decodeResult(JSDocTagDefinition)({ _tag, ...meta }))`, line 275), pins the base point via `_tag: S.tag(_tag)` and selects the fiber via `value: TagValue.cases[_tag]` inside `mapFields` (lines 276-278), then solders the section onto the member with `.annotate({ jsDocTagMetadata: def })` (line 279). Base = `TagName` LiteralKit (tag-values/index.ts:558); display map = `TagValue = S.Union([...]).pipe(S.toTaggedUnion("_tag"))` providing `.cases`/`.guards` (tag-values/index.ts:366-383); section record = the JSDocTagDefinition S.Class (model.ts:63-127); recovery = `X.ast.annotations?.jsDocTagMetadata` (JSDoc.ts:28 and ~36 `JSDocTagDefinition.make(...)` call sites).
+SRC: ~/YeeBois/projects/beep-effect18/packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts (lines 261-281, 63-127); .../tag-values/index.ts (lines 366-383, 558); .../JSDoc/JSDoc.ts (line 28)
+REL: This is the repo's proven pattern for 'metadata as a section over a discrete base recovered through a display map' — the exact construction protocol-as-value needs to hang per-agent projections (fibers) off a global protocol name (base point).
+
+CLAIM: Exploration manifest state: explorations/identity-as-iri/ops/manifest.json has stage "graduate", status "graduated", openQuestions [], links.goals = [identity-iri-core (COMPLETE, PR #289), identity-iri-fold (merged, PR #536), identity-iri-fibered (active/blocked)]; README.md says 'Next Open Question: None' and that a future candidate 'reopens this exploration at decompose'. DECISIONS.md closes D7 as fold-first with inline `is:` sugar 'not planned', collapses SKOS into the tuple fact channel, and names the registry service `IdentityRegistry` with interface-in-identity, graph-store layers downstream in @beep/semantic-web.
+SRC: ~/YeeBois/projects/beep-effect18/explorations/identity-as-iri/{ops/manifest.json,README.md,DECISIONS.md}
+REL: Protocol-as-value should cross-link to this graduated packet and to goals/identity-iri-fibered rather than duplicate: the fibration/registry design space is already ratified there, and reopening identity-as-iri at decompose is the sanctioned path if protocol-as-value needs new identity surface.
+
+CLAIM: The handoff's retrieval model already frames identity lookup as dereference over multiple stores sharing one index: 'fiber(x) = annotations(x) ∪ DESCRIBE iri(x) ∪ docs(slug(x)) ∪ prov(x)', with 'Address computation ... O(path length), independent of corpus size — dereference, not search' (handoff §5); the composer's interned symbols are declared the in-memory canonical form and the CURIE/IRI codec the transport form.
+SRC: ~/YeeBois/projects/beep-effect18/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md §5
+REL: This is the identity-side half of foldlab's 'digests as universal names' idea, minus content-addressing: names are path-derived, not content-derived — the delta protocol-as-value must argue for or against.
+
+CLAIM: NOT FOUND: no digest/content-addressing is wired into @beep/identity — `rg "digest|Digest|sha256|blake|content.?address"` over packages/foundation/modeling/identity/src/ returns zero matches (exit 1), and the same search over @beep/ontology src is empty. Identity canonicalization is exclusively path-based (branded strings, `Symbol.for` interning at Id.ts:1581-1582) with IRI/CURIE/slug as derived literal projections; nothing names a value by its bytes.
+SRC: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/src/ (negative rg result, verified 2026-08-23)
+REL: This is the load-bearing gap for protocol-as-value: a digest-named protocol VALUE has no existing identity-side mechanism; the exploration must either add a content-addressed projection channel beside iri/curie/slug or keep digests entirely in the journal/register layer and map them to path identities.
+
+CLAIM: NOT FOUND: the handoff §11 'static-extraction invariant' — a repo-wide grep harness CI-checking that every identity and CURIE is a static literal — has no implementation; identity's test/ contains only Curie/Identity/IriBinding/OntologyEntrypoints/PnLocal/shape-stable/Vocab tests, with the interpolation ban covered as a single runtime-throw unit test (test/Identity.test.ts:292-296), and no Lint command or script matches grep-harvest/static-extract.
+SRC: ~/YeeBois/projects/beep-effect18/packages/foundation/modeling/identity/test/Identity.test.ts (lines 292-296); explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md §11 (negative search over packages/tooling and scripts/)
+REL: If protocol-as-value leans on grep-harvestability of identities as its audit story, it inherits an enforcement gap: the promise is design-doc + runtime-throw today, not a CI invariant.

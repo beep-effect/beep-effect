@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "protocol-as-value",
+    "title": "Protocol as Value",
+    "status": "active",
+    "stage": "shape",
+    "openQuestions": [
+      "Shape review: does BRIEF.md match the picture in Benjamin's head? Exit shape only on his confirmation, then decompose into MAP.md."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-23",
+    "updated": "2026-08-23"
+  }
+}

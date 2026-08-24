@@ -1,0 +1,486 @@
+<title>One Mechanism</title>
+<style>
+  :root {
+    --ground: #F1EDDE;
+    --ink: #212B20;
+    --muted: #5E6A57;
+    --accent: #1E6B4E;
+    --bronze: #86682F;
+    --rule: #D5CDB2;
+    --surface: #E8E3CE;
+    --surface-ink: #33402F;
+    --display: "Newsreader", Georgia, "Times New Roman", serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0C1510;
+      --ink: #D8E2D4;
+      --muted: #8CA08C;
+      --accent: #57C68C;
+      --bronze: #CBA96B;
+      --rule: #24352A;
+      --surface: #13211A;
+      --surface-ink: #B9CDBB;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0C1510;
+    --ink: #D8E2D4;
+    --muted: #8CA08C;
+    --accent: #57C68C;
+    --bronze: #CBA96B;
+    --rule: #24352A;
+    --surface: #13211A;
+    --surface-ink: #B9CDBB;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.06rem;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 1.25rem;
+  }
+  .page {
+    max-width: 41rem;
+    margin: 0 auto;
+    padding: 3.5rem 0 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  a { color: var(--accent); text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 2px; }
+  a:hover { text-decoration-color: var(--accent); }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1.2rem;
+  }
+  h1 {
+    font-family: var(--display);
+    font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 7vw, 3.6rem);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    margin: 0 0 2rem;
+    text-wrap: balance;
+  }
+
+  blockquote.epigraph {
+    margin: 0 0 1.1rem;
+    padding: 0;
+    border: none;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 1.24rem;
+    line-height: 1.5;
+    color: var(--bronze);
+    text-wrap: pretty;
+  }
+  .epigraph-attr {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0 0 2.6rem;
+  }
+
+  .lede { font-size: 1.12rem; }
+
+  section { margin-top: 3.4rem; }
+  .act-label {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.4rem;
+  }
+  h2 {
+    font-family: var(--display);
+    font-size: 1.85rem;
+    font-weight: 500;
+    line-height: 1.15;
+    margin: 0 0 1.1rem;
+    text-wrap: balance;
+  }
+  h2 + p, .act-label + h2 { margin-top: 0; }
+  p { margin: 0 0 1.05rem; }
+  p:last-child { margin-bottom: 0; }
+
+  blockquote.voice {
+    margin: 1.6rem 0;
+    padding: 0 0 0 1.15rem;
+    border-left: 2px solid var(--bronze);
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 1.14rem;
+    line-height: 1.5;
+    color: var(--bronze);
+    text-wrap: pretty;
+  }
+  blockquote.voice .who {
+    display: block;
+    margin-top: 0.5rem;
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--surface);
+    color: var(--surface-ink);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .pathline code { white-space: normal; overflow-wrap: anywhere; }
+
+  ul { margin: 0 0 1.05rem; padding-left: 1.3rem; }
+  li { margin-bottom: 0.45rem; }
+  li::marker { color: var(--accent); }
+
+  figure { margin: 2.2rem 0; }
+  figure svg { max-width: 100%; height: auto; display: block; }
+  figcaption {
+    margin-top: 0.7rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .ledger { display: flex; flex-direction: column; margin: 1.8rem 0; }
+  .entry {
+    display: grid;
+    grid-template-columns: 6.4rem 1fr;
+    gap: 1.1rem;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .entry:last-child { border-bottom: 1px solid var(--rule); }
+  .entry-id {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    line-height: 1.45;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding-top: 0.25rem;
+  }
+  .entry-body h3 {
+    font-family: var(--display);
+    font-size: 1.18rem;
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+  }
+  .entry-body p { font-size: 0.99rem; margin-bottom: 0.55rem; }
+  .entry-quote {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 0.99rem;
+    color: var(--bronze);
+    margin: 0 0 0.55rem;
+  }
+  .pathline {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin: 0;
+  }
+  .pathline code { background: none; padding: 0; color: var(--muted); font-size: 0.92em; }
+
+  @media (max-width: 540px) {
+    .entry { grid-template-columns: 1fr; gap: 0.3rem; }
+    .entry-id { padding-top: 0; }
+  }
+
+  .punch {
+    font-size: 1.12rem;
+  }
+
+  .coda {
+    margin-top: 3.4rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 2rem;
+  }
+  ol.agenda { margin: 1rem 0 1.4rem; padding-left: 1.4rem; }
+  ol.agenda li { margin-bottom: 0.7rem; }
+  ol.agenda li strong { font-family: var(--display); font-weight: 600; }
+
+  .refs {
+    margin-top: 2.4rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 2;
+    color: var(--muted);
+  }
+  .refs a { overflow-wrap: anywhere; }
+  .refs .rlabel { color: var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="page">
+  <header>
+    <p class="kicker">for @mepuka &middot; aug 23 2026 &middot; ties the last ten days together</p>
+    <h1>One Mechanism</h1>
+    <blockquote class="epigraph">&ldquo;The one move that separates it from a nice event store is that programs live in the same value universe as data &mdash; so identity, meaning, and proof collapse into one mechanism, and &lsquo;which workflow is this,&rsquo; &lsquo;what did it do,&rsquo; and &lsquo;can you prove it&rsquo; become the same question asked three ways.&rdquo;</blockquote>
+    <p class="epigraph-attr">&mdash; your foldlab assessment, aug 13</p>
+    <p class="lede">Three parts. First: that sentence is a theorem, and the mechanism has a name. Second: your own hedge &mdash; <em>&ldquo;whether the gap exists because nobody needed it&rdquo;</em> &mdash; answered with an audit instead of an opinion. Third: the question you dropped last night about topology, which I think you already answered without noticing. That last part is the call agenda.</p>
+  </header>
+
+  <section>
+    <p class="act-label">Act I</p>
+    <h2>The mechanism has a name</h2>
+    <p>A journal is an initial algebra. An append-only log is <code>&mu;(1 + Entry &times; &minus;)</code> &mdash; literally the List fixpoint that the <a href="https://arxiv.org/abs/2402.15332">categorical deep learning paper</a> (Gavranovi&#263;, Lessard, Dudzik, von Glehn, Ara&uacute;jo, Veli&#269;kovi&#263;; ICML 2024) uses as its first worked example. And once the journal is <code>&mu;F</code>, your two folds stop being two features:</p>
+    <ul>
+      <li>the <strong>identity fold</strong> (hash chain) is the catamorphism into the digest algebra;</li>
+      <li>every <strong>meaning fold</strong> (reducer) is the catamorphism into a domain algebra.</li>
+    </ul>
+    <p>Same source, different target algebras. The part I think you&rsquo;re underselling is the paper&rsquo;s Remark 2.13: the homomorphism out of an initial algebra is <em>unique</em> &mdash; there can only ever be one. Fix the target algebra and the fold has zero degrees of freedom.</p>
+    <p>That uniqueness is the missing <em>why</em> under proof-by-recomputation. It needs no PKI, no trusted verifier, no zk machinery, because there is nothing to attest &mdash; the answer is forced. Re-running the fold isn&rsquo;t gathering evidence; it&rsquo;s checking the only possible value against the one you were handed. Your three questions, asked one way: <em>which workflow is this</em> is the catamorphism into names, <em>what did it do</em> is the catamorphism into state, and <em>can you prove it</em> is the fact that both arrows were the only ones that existed.</p>
+
+    <figure>
+      <svg viewBox="0 0 720 250" role="img" aria-label="One journal, drawn as the initial algebra, with two catamorphism arrows out: one to the digest algebra (the identity fold) and one to the domain algebra (the meaning fold). Each arrow is unique, which is why recomputation is proof.">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--accent)"/>
+          </marker>
+          <marker id="arrq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g fill="none" stroke="currentColor" stroke-width="1.2">
+          <rect x="24" y="62" width="188" height="126" rx="6"/>
+          <line x1="40" y1="112" x2="196" y2="112" stroke-opacity="0.45"/>
+          <line x1="40" y1="140" x2="196" y2="140" stroke-opacity="0.45"/>
+          <line x1="40" y1="168" x2="196" y2="168" stroke-opacity="0.45"/>
+        </g>
+        <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="currentColor">
+          <text x="40" y="88">journal = &#956;F</text>
+          <text x="40" y="106" font-size="11" opacity="0.65">e&#8322; &#8594; parent &#9741; digest</text>
+          <text x="40" y="134" font-size="11" opacity="0.65">e&#8321; &#8594; parent &#9741; digest</text>
+          <text x="40" y="162" font-size="11" opacity="0.65">e&#8320; &#8594; genesis</text>
+        </g>
+        <path d="M 118 62 C 96 28, 152 28, 132 58" fill="none" stroke="currentColor" stroke-width="1.1" marker-end="url(#arrq)" stroke-opacity="0.8"/>
+        <text x="150" y="30" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="currentColor" opacity="0.75">F(&#956;F) &#8773; &#956;F</text>
+
+        <g fill="none" stroke="var(--accent)" stroke-width="1.5">
+          <path d="M 212 106 C 300 78, 380 64, 470 56" marker-end="url(#arr)"/>
+          <path d="M 212 150 C 300 172, 380 186, 470 192" marker-end="url(#arr)"/>
+        </g>
+        <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="var(--accent)">
+          <text x="304" y="62">cata &mdash; the only one</text>
+          <text x="304" y="200">cata &mdash; the only one</text>
+        </g>
+
+        <g fill="none" stroke="currentColor" stroke-width="1.2">
+          <rect x="478" y="26" width="218" height="58" rx="6"/>
+          <rect x="478" y="164" width="218" height="58" rx="6"/>
+        </g>
+        <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="currentColor">
+          <text x="494" y="50">digest algebra</text>
+          <text x="494" y="68" font-size="11" opacity="0.65">identity fold &middot; hash chain</text>
+          <text x="494" y="188">domain algebra</text>
+          <text x="494" y="206" font-size="11" opacity="0.65">meaning fold &middot; reducer</text>
+        </g>
+        <text x="360" y="136" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="currentColor" opacity="0.7" text-anchor="middle">unique per algebra &#8658; re-running it is the proof</text>
+      </svg>
+      <figcaption>Identity, meaning, and proof as one mechanism: two catamorphisms out of the same initial algebra, each forced. Verification is recomputation because there was never another arrow to check against.</figcaption>
+    </figure>
+
+    <p>And &ldquo;programs live in the same value universe as data&rdquo; has a name too: Lambek&rsquo;s lemma, <code>F(&mu;F) &cong; &mu;F</code> &mdash; one layer of description applied to the data is isomorphic to the data. There is no separate metadata plane to keep in sync, because the description and the described are the same fixed point. Lessard says the blunt version out loud on <a href="https://www.youtube.com/watch?v=rie-9AEhYdY&amp;t=3583s">MLST</a>: the difference between data and code &mdash; there isn&rsquo;t one. I hit the same wall from the other side mid-refactor and wrote it up as <a href="https://github.com/beep-effect/beep-effect/blob/main/THE_SCHEMA_IS_TRUTH_A_CATEGORICAL_FEVER_DREAM_FOR_THOSE_WITH_THE_HUEVOS.md">a documented fever dream</a>: we deleted 1,206 lines of hand-written traversal helpers because every one was a hand-written copy of the unique fold the schema had already determined.</p>
+  </section>
+
+  <section>
+    <p class="act-label">Act II</p>
+    <h2>The receipts</h2>
+    <blockquote class="voice">&ldquo;The gap is real. The fair question is whether the gap exists because nobody needed it.&rdquo;<span class="who">&mdash; the assessment&rsquo;s own hedge</span></blockquote>
+    <p>That one I can answer with an audit. beep-effect is an agent-operated repo &mdash; LLM-written code, nondeterministic-once effects, agents coordinating with agents: all three of your timing conditions, live. I fanned agents across it hunting for your journal / register / fold / digest stack. It&rsquo;s there <strong>five times</strong> &mdash; built independently, in five unrelated subsystems, by efforts that never knew they were instances of one pattern and had never heard of foldlab. Every claim carries a path; verification is recomputation &mdash; go read.</p>
+
+    <div class="ledger">
+      <div class="entry">
+        <div class="entry-id">receipt&nbsp;01<br>identity fold</div>
+        <div class="entry-body">
+          <h3>Execution ledger</h3>
+          <p>Hash-chained write-ahead decision records, sealed SHA-256 over a versioned canonical-JSON encoding. Verification re-computes every seal &mdash; no signatures, no PKI.</p>
+          <p class="entry-quote">&ldquo;alter any sealed field and the seal breaks; alter the seal and the next record&rsquo;s prevHash breaks.&rdquo;</p>
+          <p class="pathline"><code>packages/epistemic/domain/src/values/ExecutionRecord/</code></p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">receipt&nbsp;02<br>fenced register</div>
+        <div class="entry-body">
+          <h3>Governed tier gate</h3>
+          <p>The decision row is sealed and appended <em>before</em> the effect may run; a failed ledger write refuses the dispatch &mdash; &ldquo;no record, no action.&rdquo; Refusal reasons are a closed literal domain, never free text, because free text is a payload-smuggling channel into a no-payload ledger &mdash; a threat-model wrinkle worth stealing: differential refusal text is also an oracle.</p>
+          <p class="pathline"><code>packages/epistemic/server/src/GovernedTierGate/</code></p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">receipt&nbsp;03<br>full stack</div>
+        <div class="entry-body">
+          <h3>Goal-packet event core</h3>
+          <p>Events are files named by the sha-256 of their canonical JSON, chained by parent digest. Appends are CAS-fenced, and losing a race is not an exception &mdash; it&rsquo;s a schema-tagged refusal value carrying the fencing evidence. Meaning is a pure fold; forks get a deterministic repair plan (&ldquo;content-deterministic, no clock trust&rdquo;); projections pin both their input tip and the fold&rsquo;s own version. The SQL projection engine is differential-tested byte-for-byte against a pure TypeScript reference evaluator &mdash; your R4, lockstep conformance.</p>
+          <p class="entry-quote">&ldquo;SQL is differential-tested, never trusted.&rdquo; &mdash; and the packet plans natively call their phases <em>rungs</em>. I didn&rsquo;t plant that.</p>
+          <p class="pathline"><code>packages/tooling/tool/cli/src/commands/Goals/PacketCore/</code></p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">receipt&nbsp;04<br>journal &times; register</div>
+        <div class="entry-body">
+          <h3>Candor gate</h3>
+          <p>Patent-practice slice. Append-only citation facts plus dated attorney dispositions that are never edited &mdash; a revision appends a record whose <code>supersedes</code> names the prior. The gate&rsquo;s verdict is never stored anywhere: it exists only as the output of re-running the fold, fail-closed. Recorded fact = theorem; meaning at law = human decision.</p>
+          <p class="pathline"><code>packages/law-practice/use-cases/src/CandorPolicy/</code></p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">receipt&nbsp;05<br>proof &#8596; bytes</div>
+        <div class="entry-body">
+          <h3>Yeet, the quality operator</h3>
+          <p>An eighteen-minute verification&rsquo;s &ldquo;proof&rdquo; is a record keyed by (command hash, tree fingerprint); drift one byte and publish refuses with <em>diff fingerprint changed</em> &mdash; recomputation owed. Failures land in an append-only journal under content-derived ids; acknowledgments are receipts at the digest-derived address. Journal for what happened, register for what was decided.</p>
+          <p class="pathline"><code>packages/tooling/tool/cli/src/commands/Yeet/internal/</code></p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-id">exhibit&nbsp;A</div>
+        <div class="entry-body">
+          <h3>Your own repo, ported foldlab-style</h3>
+          <p>The <a href="https://github.com/beep-effect/beep-effect/blob/main/scratchpad/effect-ontology/README.md">effect-ontology port</a> froze your upstream source under an aggregate sha-256 manifest before touching a line.</p>
+          <p class="entry-quote">&ldquo;If the frozen source hashes drift, implementation stops until the baseline is explicitly refreshed.&rdquo;</p>
+          <p>The method I used to port your code is shaped like foldlab.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="punch">So: did the gap exist because nobody needed it? One repo needed it so badly it built it five times without noticing it was one thing. That&rsquo;s what the gap looks like from the inside &mdash; not absence of need, absence of the <em>collapse</em>. Each instance re-derives canonical bytes, digest naming, the journal/register split, fold-as-proof &mdash; separately, with local vocabulary and local bugs. Foldlab is the substrate those five are instances of. Which is also the one-line business case: you&rsquo;re not selling a new capability, you&rsquo;re selling the collapse &mdash; one mechanism replacing every serious team&rsquo;s five.</p>
+  </section>
+
+  <section>
+    <p class="act-label">Act III</p>
+    <h2>The level above</h2>
+    <blockquote class="voice">&ldquo;The question I was breaking my brain over was trying to stuff topology of a multi-agent async system into the schemas themselves &mdash; which doesn&rsquo;t work&hellip; you need to model the topology to know what the protocol is, which is a universal type.&rdquo;<span class="who">&mdash; you, last night</span></blockquote>
+    <p>I think you answered it in the same breath &mdash; you just haven&rsquo;t taken your own words literally yet.</p>
+    <p>It can&rsquo;t live in the schemas because schemas are the <em>objects</em>. A topology isn&rsquo;t a property of any vertex; it&rsquo;s the shape of the diagram &mdash; which agents exist, which channels connect them, what may flow along each edge. Stuffing the diagram inside its own vertices is a level error. And it&rsquo;s exactly the level split the paper is about: structure &mdash; symmetry, weight-sharing, wiring &mdash; never lives in the carriers. It lives one level up, as the functor whose algebras the carriers are. A G-CNN&rsquo;s equivariance is not a property of its tensors.</p>
+    <p>&ldquo;A universal type&rdquo; is the literal answer, and the literature already half-cashed it: <strong>multiparty session types</strong>. A global type &mdash; the protocol &mdash; from which each participant&rsquo;s local type is derived by <em>projection</em>, with compatibility checked once, globally. The topology is a value; each agent&rsquo;s schema is a fold of it. Behavior precipitates from data &mdash; one level up.</p>
+
+    <figure>
+      <svg viewBox="0 0 760 300" role="img" aria-label="Two panels. Left: three agent schemas each trying to contain the whole interaction graph, marked as the level error. Right: one digest-named protocol value above three agents, projected down to each agent's local type, with the channels between agents licensed by the protocol.">
+        <defs>
+          <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="currentColor">
+          <text x="20" y="24" letter-spacing="1.5">INSIDE THE SCHEMAS &#10007;</text>
+          <text x="420" y="24" letter-spacing="1.5">ONE LEVEL ABOVE &#10003;</text>
+        </g>
+
+        <g fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.85">
+          <rect x="20" y="52" width="88" height="72" rx="6"/>
+          <rect x="140" y="52" width="88" height="72" rx="6"/>
+          <rect x="80" y="180" width="88" height="72" rx="6"/>
+        </g>
+        <g fill="currentColor" opacity="0.85">
+          <circle cx="45" cy="94" r="2.4"/><circle cx="70" cy="82" r="2.4"/><circle cx="88" cy="102" r="2.4"/>
+          <circle cx="165" cy="94" r="2.4"/><circle cx="190" cy="82" r="2.4"/><circle cx="208" cy="102" r="2.4"/>
+          <circle cx="105" cy="222" r="2.4"/><circle cx="130" cy="210" r="2.4"/><circle cx="148" cy="230" r="2.4"/>
+        </g>
+        <g stroke="currentColor" stroke-width="0.9" opacity="0.55">
+          <path d="M 45 94 L 70 82 L 88 102 L 45 94" fill="none"/>
+          <path d="M 165 94 L 190 82 L 208 102 L 165 94" fill="none"/>
+          <path d="M 105 222 L 130 210 L 148 230 L 105 222" fill="none"/>
+        </g>
+        <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="currentColor">
+          <text x="34" y="68">agent A</text>
+          <text x="154" y="68">agent B</text>
+          <text x="94" y="196">agent C</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1" opacity="0.5">
+          <line x1="108" y1="88" x2="140" y2="88"/>
+          <line x1="88" y1="124" x2="106" y2="180"/>
+          <line x1="184" y1="124" x2="150" y2="180"/>
+        </g>
+        <text x="124" y="285" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="currentColor" opacity="0.7" text-anchor="middle">each vertex carries a copy of the diagram</text>
+
+        <g fill="none" stroke="var(--accent)" stroke-width="1.5">
+          <rect x="460" y="44" width="240" height="54" rx="6"/>
+        </g>
+        <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="var(--accent)">
+          <text x="476" y="66">protocol &#119979;</text>
+          <text x="476" y="84" font-size="11" opacity="0.85">global type &middot; digest-named</text>
+        </g>
+        <g fill="none" stroke="var(--accent)" stroke-width="1.3">
+          <path d="M 500 98 L 460 168" marker-end="url(#arr2)"/>
+          <path d="M 580 98 L 580 168" marker-end="url(#arr2)"/>
+          <path d="M 660 98 L 700 168" marker-end="url(#arr2)"/>
+        </g>
+        <text x="606" y="140" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="var(--accent)">project</text>
+
+        <g fill="none" stroke="currentColor" stroke-width="1.1">
+          <rect x="416" y="172" width="84" height="52" rx="6"/>
+          <rect x="538" y="172" width="84" height="52" rx="6"/>
+          <rect x="660" y="172" width="84" height="52" rx="6"/>
+        </g>
+        <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="currentColor">
+          <text x="430" y="196">agent A</text>
+          <text x="430" y="212" opacity="0.65">local type</text>
+          <text x="552" y="196">agent B</text>
+          <text x="552" y="212" opacity="0.65">local type</text>
+          <text x="674" y="196">agent C</text>
+          <text x="674" y="212" opacity="0.65">local type</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.6">
+          <line x1="500" y1="198" x2="538" y2="198"/>
+          <line x1="622" y1="198" x2="660" y2="198"/>
+        </g>
+        <text x="580" y="285" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="currentColor" opacity="0.7" text-anchor="middle">channels are licensed by &#119979;; conformance = fold over each journal</text>
+      </svg>
+      <figcaption>The level error and its fix. Left: the diagram cannot live inside its own vertices. Right: the topology is one value above the schemas &mdash; a digest-named global type whose projections <em>are</em> the agents&rsquo; local types.</figcaption>
+    </figure>
+
+    <p>Now put your own pieces on it:</p>
+    <ul>
+      <li><strong><a href="https://www.unison-lang.org/">Unison</a></strong> (you&rsquo;re not late &mdash; you&rsquo;re on time): the name of code is the hash of code. Apply it one level up. The protocol value is digest-named, so two agents agree on the topology the way foldlab agrees on anything: by naming the same canonical bytes.</li>
+      <li><strong>Your git-hash workflow engine</strong> is this exact object. A continuation is data (Act I); its resume position is a committed digest (your Raft synthesis); and <em>which</em> continuations may resume <em>where</em> is decided by the protocol value, projected down per agent.</li>
+      <li><strong><code>Effect&lt;arbitrary&gt;</code> is fine</strong> &mdash; arbitrary is what the carriers should be. The protocol value is what refines arbitrary into lawful. You don&rsquo;t need richer schemas; you need the one value above them.</li>
+    </ul>
+    <p>And the part I only saw after writing Act II: <strong>beep already builds the level-above object &mdash; as infrastructure.</strong> <code>@beep/identity</code>&rsquo;s composer mints a base category of literal-typed names (<code>@beep/{package}/{path}</code>, interned symbols), and every schema in the workspace attaches its meaning as a section over that base via <code>$I.annote</code>; the CURIE/IRI codecs make the path, the CURIE, and the IRI literal-typed encodings of <em>one</em> value. The design doc for its next step &mdash; locked 2026-07-01, before foldlab existed, before this thread &mdash; compresses it to a sentence:</p>
+    <blockquote class="voice">&ldquo;The identity path and the IRI become two literal-typed encodings of the same value; annotations become sections over the base category <code>$I</code> mints; retrieval becomes dereference.&rdquo;<span class="who">&mdash; <a href="https://github.com/beep-effect/beep-effect/blob/main/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md">identity-iri-fibration-handoff.md</a></span></blockquote>
+    <p>One value under several literal encodings, meaning attached as sections, lookup by dereference instead of search &mdash; a Grothendieck fibration doing at the metadata level exactly what the protocol needs at the agent level. So the remaining move isn&rsquo;t inventing the level-above object; it&rsquo;s re-pointing a fibration beep already runs: <strong>global type as the base, each agent&rsquo;s local type a fiber over it, projection as the display map</strong> &mdash; then foldlab&rsquo;s contribution, digest-naming the base and folding conformance out of each agent&rsquo;s journal, is what makes the fibration operational across trust boundaries.</p>
+    <p>Smaller receipts, same shape: the goals capability projection never stores the portfolio topology &mdash; frontier, blockers, and cycles are a fold over per-packet declarations &mdash; and the dock engine computes its legal-event union from a literal domain, so the schema derives the program surface. Topology-as-data, folded into behavior.</p>
+    <p>The honest edge: a content-addressed global type that both <em>generates</em> the endpoints and <em>audits</em> them by recomputation over their journals is, as far as I can tell, the unbuilt thing. Session types stopped at typechecking; foldlab&rsquo;s move &mdash; putting the program in the value universe and folding proof out of the journal &mdash; is what would make the protocol <em>operational</em>. That is where I want to start the call.</p>
+  </section>
+
+  <section class="coda">
+    <p class="act-label">Coda</p>
+    <h2>The call</h2>
+    <ol class="agenda">
+      <li><strong>The collapse as product.</strong> What beep&rsquo;s five hand-rolled foldlabs look like re-hosted on one substrate &mdash; and what that migration story sells.</li>
+      <li><strong>Protocol as value.</strong> Pin down the level-above object: global type, digest-named, projected to per-agent schemas, conformance folded from the journal &mdash; with <code>@beep/identity</code>&rsquo;s fibration as the standing prototype.</li>
+      <li><strong>The git-hash workflow engine.</strong> Content-addressed continuations plus fenced resumption &mdash; Unison-for-effects.</li>
+    </ol>
+    <div class="refs">
+      <span class="rlabel">paper</span> &middot; <a href="https://arxiv.org/abs/2402.15332">arxiv.org/abs/2402.15332</a><br>
+      <span class="rlabel">lessard, &ldquo;data and code are one and the same&rdquo;</span> &middot; <a href="https://www.youtube.com/watch?v=rie-9AEhYdY&amp;t=3583s">MLST @ 59:43</a><br>
+      <span class="rlabel">fever dream</span> &middot; <a href="https://github.com/beep-effect/beep-effect/blob/main/THE_SCHEMA_IS_TRUTH_A_CATEGORICAL_FEVER_DREAM_FOR_THOSE_WITH_THE_HUEVOS.md">THE_SCHEMA_IS_TRUTH&hellip;.md</a><br>
+      <span class="rlabel">your repo, ported</span> &middot; <a href="https://github.com/beep-effect/beep-effect/blob/main/scratchpad/effect-ontology/README.md">scratchpad/effect-ontology</a><br>
+      <span class="rlabel">the standing fibration</span> &middot; <a href="https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/identity">@beep/identity</a> + <a href="https://github.com/beep-effect/beep-effect/blob/main/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md">identity-iri-fibration-handoff.md</a><br>
+      <span class="rlabel">the level-above precedent</span> &middot; multiparty session types (Honda, Yoshida, Carbone &mdash; global types &amp; projection)
+    </div>
+  </section>
+</div>
