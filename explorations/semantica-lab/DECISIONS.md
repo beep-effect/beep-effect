@@ -9,13 +9,16 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Draft BRIEF (enter shape); canary C0-C2 is Goal 1; graduate fast; scaffold the lab via create-package | "awaiting reconciliation review" |
+| Next work | Stage `decompose`: draft `MAP.md` (canary C0-C2 = Goal 1; `@beep/openai` driver as a pre-C1 slice; two O4 gates + atlas-sync queued) → graduate → scaffold the lab. BRIEF v1.0 ratified; shared-schema v1.2 and contract v1.3 are the contracts in force | "fold S6; Benjamin confirms" |
+| Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is EvalReport telemetry, never a gate | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier |
+| Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
+| Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
 | Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
-| Embeddings | park-pending-canary; M1 uses hosted models via the agents slice; local Snowflake/ONNX lane parked | the sheet's Snowflake+ORT pick-one |
+| Embeddings | park-pending-canary; contract = `effect/unstable/ai` `EmbeddingModel`; M1 Layer = the shipped `@effect/ai-openai` `OpenAiEmbeddingModel.layer` composed through a new `@beep/openai` driver that mirrors `@beep/anthropic` (S3-rev); Anthropic has no embeddings API; local Snowflake/ONNX lane parked | S3 (openai-compat `/embeddings` op); G6 "via the agents slice" |
 | Input | park-pending-canary; per-stage slate is probe order; PDF.js/MuPDF is a tie | the sheet's per-stage winners |
-| Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; runtime path is ledger-native; NET-NEW is a dated spike with kill criteria | the sheet's EYE pick-one |
-| Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict | the sheet's dual verdict |
-| Canary | staged C0 (days) then C1 then C2 (G1); code lives in the lab after graduation | B2's monolithic offline run |
+| Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
+| Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict, written at C0, where G-relation now scores (S7) | the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
+| Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are EvalReport telemetry (Tier-D) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the EvalReport with network off | A8's fully-offline M1 |
 | Atlas writes | only final `park`/`drop` today; `adopt`/`pick-one` values wait for a passed canary stage | D3 columns as live verdicts |
@@ -297,3 +300,121 @@ five sheets named winners before rubric §0/§4 prerequisites existed. Full reco
   activates; `<clone>/.claude/skills/semantica/SKILL.md` gets read during shape;
   `op`-prewarm lesson to machine memory; Notion-pilot workflow lessons to basic-memory at
   session close.
+
+## 2026-08-24 (shape grill) — S1–S5, ratified by Benjamin in /grill-with-docs rounds
+
+Taught first (private lesson 0001-five-decisions in the untracked docs-internal teach workspace),
+then grilled. The 22 fetched-and-verified primary sources behind S1–S5 are listed in
+[`research/SOURCES.md`](./research/SOURCES.md) §3; the decisions:
+
+- **S1 (stop rule; amends contract v1.2 falsifier, BRIEF appetite).** No calendar appetite.
+  Benjamin: "What is the need for a timeline? I don't see a reason to delay anything if
+  prerequisite work & requirements are met." Kept Shape Up's circuit breaker, denominated in
+  probes: each family gets its first-probe candidate; a stage failure buys exactly one more
+  candidate; a second failure parks the family and drops the packet back to decompose.
+  Wall-clock is Tier-D telemetry in every EvalReport. (Rejected: no stop rule at all — the
+  contract's "the bundle or the shape is wrong" could never fire; two weeks as alarm-only.)
+- **S2 (gold-label separation; amends contract gold section).** Self-enhancement bias is
+  measured (Zheng et al. 2023; Panickssery, Bowman, Feng 2024). The gold-proposer's provider
+  family must differ from the extraction run's, enforced as a schema refinement on `EvalRun`;
+  the spot-checked fraction is committed as a number in `gold/v1`. Zero new code:
+  `@beep/langextract` takes an injected `LanguageModel`; anthropic/xai/venice-ai/openai-compat
+  Layers exist. (Rejected: informal spot-check; same model "fine for a lab".)
+- **S3 (embeddings; amends G6 wording).** Contract = `effect/unstable/ai` `EmbeddingModel`
+  (effect 4.0.0-rc.111; verified in `node_modules/effect/src/unstable/ai/EmbeddingModel.ts`).
+  No Layer exists in-repo. Benjamin prefers OpenAI over Venice; Anthropic has no embeddings
+  API. M1 Layer = a new `POST /embeddings` operation + `makeEmbeddingModelFromProvider` in
+  `@beep/openai-compat` (its client already defaults to `https://api.openai.com/v1`); Venice/
+  xAI become configs later. The lab owns `EmbeddingVector` + `ModelIdentity`, borrowing
+  effect-ontology's `ProviderMetadata` dimension invariant. (Rejected: Layer in `@beep/venice-ai`
+  — provider preference; Voyage as a new driver — NET-NEW client; app-local — pays twice.)
+- **S4 (lab shape; refines D12/G2/A5).** `--app-kind tauri`, one local `cargo check` at
+  scaffold time, `src-tauri` frozen through C0-C2, plus a hand-written `server/main.ts` and
+  `src/runtime/Layer.ts` on day one (Professional Desktop's split) so the headless canary has
+  a real process. (Rejected: service-kind now and re-scaffold — D12 churn; sidecar wiring in
+  M1 — unproven in Labs CI, violates A5.)
+- **S5 (C2 runtime reasoner; refines G3/G5).** ρdf closure: five predicates, six W3C rules
+  (rdfs2, 3, 5, 7, 9, 11; Muñoz, Pérez, Gutierrez 2009, sound and complete) as `RdfsRule`
+  values plus one explicit SKOS broader-transitivity rule, naive fixpoint, pure and replayable,
+  emitting `InferenceEvent`s. Oracle agreement is judged at (conclusion, premise-set, rule),
+  never proof-tree isomorphism (EYE nests `r:Extraction`/`r:Conjunction` steps we never emit).
+  G-entailment splits into `G-entailment/rdfs` (gates C2) and `G-entailment/rules` (the ~20
+  production-rule cases; gates the spike, where the v3 Rete salvage and the NET-NEW kernel are
+  ablated against EYE). Decisive facts: the v3 `rete` has no proof objects and no truth
+  maintenance (fails gate 8 as-is), is Effect 3.18 with mutable state and a React import; SKOS
+  hierarchy is not RDFS entailment. (Rejected: Rete salvage as C2 runtime — weeks of engine
+  work inside the canary; EYE as runtime too — reverses G3/G5, agreement becomes vacuous.)
+- **S6 (research loop, open).** `RESEARCH.md` listed the `scratchpad/effect-ontology` deep read
+  as still open; Benjamin re-raised it. A mapped, adversarially verified symbol → shared-schema
+  family table is in flight (`research/effect-ontology-map.md` on landing); BRIEF goes to v1.0
+  only after it folds in.
+- **S3-rev (supersedes S3's mechanism, same provider).** After `bash scripts/setup-agent-memory.sh`
+  re-linked `.repos/effect` → `<HOME>/YeeBois/dev/effect` (`Effect-TS/effect` main, 02a5146d69; effect-smol
+  is retired as the v4 reference), the checkout showed `@effect/ai-openai` 4.0.0-rc.111 already
+  ships `OpenAiEmbeddingModel.layer({ model, dimensions })` (provides `EmbeddingModel` +
+  `Dimensions` over `OpenAiClient`), and it is already a root dependency. No `/embeddings`
+  operation is written anywhere. Doctrine home (`03-driver-boundaries.md`; desktop precedent
+  composes `AnthropicLive`/`makeAnthropicLanguageModelLayer` from `@beep/anthropic`): a new
+  `@beep/openai` driver via `beep create-package`, mirroring `@beep/anthropic` (typed config with
+  `op://` key ref, `OpenAiLive = OpenAiClient.layerConfig(...)` + `FetchHttpClient`,
+  `makeOpenAiEmbeddingModelLayer`, `makeOpenAiLanguageModelLayer`); the lab composes it in
+  `src/runtime/Layer.ts`. Also supplies S2's second provider family. (Rejected: app-local
+  composition of `@effect/ai-openai` — drift from the driver boundary; keeping the openai-compat
+  op plan — duplicates shipped Effect code.)
+- **Mission confirmed** for the private, untracked docs-internal teaching workspace.
+
+## 2026-08-24 (PR #794 review closeout) — S7–S8, review amendments
+
+Applied while closing the shape PR's review threads (Codex P1s, verified against the tree);
+Benjamin's merge of #794 ratifies them. Both tighten the canary without changing its shape.
+
+- **S7 (extractor tripwire timing; amends BRIEF C0/C1).** BRIEF v1.0 wrote the Extractor verdict
+  at C0 but scored G-relation only at C1, so an extractor with the known LangExtract relation-drop
+  defect could earn a verdict before the tripwire ran. Now C0 runs over F1 + the three G-relation
+  W1 papers and scores G-structure, G-entity and G-relation; the Extractor verdict and the
+  tripwire live in the same stage. C1 keeps rebuild identity and dimension keying. (Rejected:
+  defer the Extractor verdict to C1 — spreads one family across two stages.)
+- **S8 (oracle agreement; amends S5).** Comparing `(conclusion, premise-set, rule)` false-fails
+  when an entailment has two valid derivations (two subclass paths) and EYE and the fixpoint pick
+  different sound supports. The C2 gate is now closure equality on the conclusion set plus
+  validation of every `InferenceEvent` against its own rule (premises present in inputs or
+  closure, rule instance correct). EYE supplies the gold conclusions and is a spot-check oracle;
+  its premise choice is not a spec. (Rejected: enumerate all minimal supports — spike-grade work;
+  shared canonicalization first — same.)
+- **Clarifications from the same review:** the D13 charter line now distinguishes construction-
+  side derived projections (C1's rebuild-from-ledger proofs, lab-owned) from consumption-side
+  retrieval/analytics/UX (`trustgraph-workbench`); `VerifiedSpan` lives in `@beep/langextract`
+  (`@beep/langextract/VerifiedSpan`), not `@beep/nlp-processing`; the scaffold command carries the
+  `--description` that `--lab` requires.
+
+## 2026-08-24 (tracker sweep) — T1–T3, ratified by Benjamin
+
+Source: [`research/upstream-tracker-mining.md`](./research/upstream-tracker-mining.md) (725-item
+sweep, skeptic RATIFY-WITH-EDITS applied) and its six open questions; Benjamin answered in one
+round.
+
+- **T1 (evals gate wording; refines O4).** The queued evals-harness gate fires only when the lab
+  proves a schema-validated `EvalReport` + gold-proposer ≠ extractor (S2) + replay identity (G7)
+  reusable beyond semantica inputs. Upstream's live runner PR #1090 landing does not touch the
+  gate; the gate is about the report contract, not a runner.
+- **T2 (MAP rule: never wait on overlapping upstream PRs).** Duplicates are routine upstream
+  (RETE #1077 vs catalog twins, SHACL docs #1158 vs #1150, Turtle escape #1148 vs #1122). The
+  port decides from the shared schema; which upstream PR lands is telemetry for the atlas, not a
+  MAP dependency.
+- **T3 (benchmarks skim).** The relocated eval suite (#607, #570–#575, out-of-tree repo) is
+  skimmed by one bounded Grok lane for `EvalReport` metric vocabulary only
+  (`research/benchmarks-vocab.md`); it is not a W1 corpus change. **Landed the same day:** the
+  sidecar repo is not fetchable (404 on both URLs, absent from the org), and the last in-tree
+  snapshot is a pytest-benchmark throughput harness, not a correctness suite. Verdict: gold sets
+  G-structure/G-entity/G-relation/G-entailment unchanged; the `EvalReport` metric vocabulary
+  adopts the *names* from issue #574 (entity span F1 over CanonicalText spans, REBEL-style
+  end-to-end triple F1 over Statements, pairwise F1 + B-Cubed over Entity clusters) and nothing
+  else from that harness.
+- **Upstream posting (extends O2).** Prepare for Benjamin's review: one upstream PR carrying the
+  three danklocal Explorer fixes (dedupe: DELETE and URL-key unreported; persist cousin-matched
+  #376/#1134; cite #518 as the registry spec); a new upstream issue for the simulated
+  HermiT/Pellet consistency checks (zero tracker hits, unique D6 finding); a comment on #1090
+  for the evals docs contradiction instead of standalone doc issue 2. Doc issue 3's rewrite is
+  not chosen yet. Nothing posts without him.
+- **PR vehicle.** #794 merges first (his merge); the sweep lands as a follow-up docs PR from
+  `main`.

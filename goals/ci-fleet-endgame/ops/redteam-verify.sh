@@ -1,6 +1,19 @@
 #!/usr/bin/env zsh
 set -euo pipefail
 
+# Usage:
+#   redteam-verify.sh [ref] [expected-ami]
+#
+# ref defaults to REDTEAM_REF, then the current branch, then main. expected-ami
+# defaults to REDTEAM_EXPECTED_AMI, and when both are absent it is resolved from
+# the serving SSM pin (/beep-ci/controller/runner-ami-id) so the AMI_PIN gate is
+# always evaluated whenever AWS is reachable; an unreadable pin fails the gate.
+# AWS credentials are required for a PASS: without them AMI_PIN fails, so the
+# only remaining PASS shape is the fully asserted one.
+# When the run log exposes an instance id, teardown waits only for
+# beep-ci-<instance-id>; otherwise it falls back to all controller runners
+# observed during the run.
+
 readonly repo="beep-effect/beep-effect"
 readonly workflow="fleet-shadow-check.yml"
 readonly poll_seconds=20
@@ -19,6 +32,8 @@ if [[ -z "${branch}" ]]; then
   branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
 fi
 readonly branch="${branch:-main}"
+expected_ami="${2:-${REDTEAM_EXPECTED_AMI:-}}"
+readonly serving_pin_parameter="/beep-ci/controller/runner-ami-id"
 
 work_dir="$(mktemp -d "${TMPDIR:-/tmp}/ci-fleet-redteam.XXXXXX")"
 readonly work_dir
@@ -112,7 +127,9 @@ if (( run_completed == 1 )); then
   grep -E 'GATE [A-Z0-9_]+: (PASS|FAIL)$' "${run_log}" || true
   [[ "${conclusion}" == success ]] || run_failed=1
   for gate in "${required_gates[@]}"; do
-    if [[ "$(grep -Fc "GATE ${gate}: PASS" "${run_log}" || true)" -ne 1 ]]; then
+    # Anchor to end-of-line: `gh run view --log` also renders the step's
+    # `echo "GATE …: PASS"` source line, which a fixed-string count would double.
+    if [[ "$(grep -Ec "GATE ${gate}: PASS$" "${run_log}" || true)" -ne 1 ]]; then
       echo "required gate did not report exactly one PASS: ${gate}"
       gate_failed=1
     fi
@@ -131,6 +148,19 @@ if [[ -s "${run_log}" ]]; then
   # CSF-003 denies runner-user IMDS access; the workflow derives identity from RUNNER_NAME.
   instance_id="$(sed -n 's/.*Runner instance-id: \(i-[0-9a-f][0-9a-f]*\).*/\1/p' "${run_log}" | head -1)"
 fi
+deregistration_names="${seen_names}"
+if [[ -n "${instance_id}" ]]; then
+  scoped_runner_name="beep-ci-${instance_id}"
+  deregistration_names="${work_dir}/deregistration-runner-names"
+  print -r -- "${scoped_runner_name}" > "${deregistration_names}"
+  other_observed="$(awk -v target="${scoped_runner_name}" '$0 != target { count++ } END { print count + 0 }' \
+    "${seen_names}")"
+  echo "deregistration scope: ${scoped_runner_name} (${other_observed} other controller runners observed and ignored)"
+else
+  echo "deregistration scope: all observed controller runners (instance id not recovered)"
+fi
+readonly deregistration_names
+
 aws_available=0
 if command -v aws >/dev/null 2>&1 && aws sts get-caller-identity >/dev/null 2>&1; then
   aws_available=1
@@ -140,6 +170,56 @@ if command -v aws >/dev/null 2>&1 && aws sts get-caller-identity >/dev/null 2>&1
 else
   ec2_assertion_skipped=1
   echo "AWS credentials unavailable; EC2 termination assertion skipped"
+fi
+
+# Without an operator-supplied expectation the gate binds the worker to the
+# serving pin itself; a PASS must never certify an image nobody compared.
+ami_pin_unresolved=0
+if [[ -z "${expected_ami}" ]] && (( aws_available == 1 )); then
+  pin_error="${work_dir}/ssm-serving-pin.error"
+  if expected_ami="$(aws ssm get-parameter --region us-east-1 \
+    --name "${serving_pin_parameter}" \
+    --query 'Parameter.Value' --output text 2>"${pin_error}")" \
+    && [[ "${expected_ami}" == ami-* ]]; then
+    echo "AMI pin expectation resolved from ${serving_pin_parameter}: ${expected_ami}"
+  else
+    expected_ami=""
+    ami_pin_unresolved=1
+    echo "GATE AMI_PIN: FAIL (no expected AMI given and ${serving_pin_parameter} could not be read)"
+    sed -n '1,8p' "${pin_error}"
+    gate_failed=1
+  fi
+fi
+
+if (( ami_pin_unresolved == 1 )); then
+  :
+elif (( aws_available == 0 )); then
+  # Deployment proof needs AWS: without it the worker's image is never compared
+  # with the pin, and a qualified PASS is too easy to accept by mistake.
+  echo "GATE AMI_PIN: FAIL (AWS credentials unavailable; the worker image cannot be compared with the pin)"
+  gate_failed=1
+elif [[ -z "${instance_id}" ]]; then
+  echo "GATE AMI_PIN: FAIL (worker instance id was not recovered)"
+  gate_failed=1
+else
+  ami_error="${work_dir}/ec2-image-id.error"
+  if actual_ami="$(aws ec2 describe-instances --region us-east-1 \
+    --instance-ids "${instance_id}" \
+    --query 'Reservations[0].Instances[0].ImageId' --output text 2>"${ami_error}")"; then
+    if [[ "${actual_ami}" == "${expected_ami}" ]]; then
+      echo "GATE AMI_PIN: PASS (${actual_ami})"
+    else
+      echo "GATE AMI_PIN: FAIL (expected ${expected_ami}, got ${actual_ami})"
+      gate_failed=1
+    fi
+  elif grep -q 'InvalidInstanceID.NotFound' "${ami_error}"; then
+    echo "GATE AMI_PIN: FAIL (instance already terminated before ImageId could be read)"
+    gate_failed=1
+  else
+    echo "GATE AMI_PIN: FAIL (describe-instances failed before ImageId could be read)"
+    sed -n '1,8p' "${ami_error}"
+    gate_failed=1
+  fi
 fi
 
 teardown_start="$(date +%s)"
@@ -164,7 +244,7 @@ while true; do
       remaining=1
       echo "waiting for runner deregistration: ${runner}"
     fi
-  done < "${seen_names}"
+  done < "${deregistration_names}"
 
   if (( aws_available == 1 )) && [[ -n "${instance_id}" ]]; then
     ec2_error="${work_dir}/ec2-describe.error"

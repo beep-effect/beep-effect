@@ -57,9 +57,9 @@ fallback + `LlamaStore` placeholder.
   reconciled to park-pending-canary (B1) after the second adversarial pass.
 - **IR pipeline**: LANDED — `scratchpad/semantica-ir/` extracted 6,105 symbol records from 354
   files, zero validation failures ([`research/ir-extraction-report.md`](./research/ir-extraction-report.md)).
-- **Still open:** `scratchpad/effect-ontology` deep read (its PORTING_LEDGER is a template
-  precedent for atlas symbol work); `<clone>/.claude/skills/semantica/SKILL.md` in the workstation
-  clone (read during shape per O5).
+- **Closed 2026-08-24 (S6):** `scratchpad/effect-ontology` deep read done — 159-row symbol → family
+  map with skeptic flags in [`research/effect-ontology-map.md`](./research/effect-ontology-map.md);
+  folded into shared-schema v1.2 and BRIEF v1.0.
 - **llms.txt census** — LANDED: [`research/docs-url-census.md`](./research/docs-url-census.md)
   (Grok, all URLs fetch-verified). llms.txt coverage far better than expected (Pinecone,
   Weaviate, Milvus, Qdrant, FalkorDB, Neo4j, Neptune, OpenAI all serve one). License flags:
@@ -68,3 +68,32 @@ fallback + `LlamaStore` placeholder.
   no TS/WASM Datalog engine clears both hard gates** (Dusa GPL-3.0; CozoDB MPL-2.0 but stalled
   2024-12; datalog-ts MIT but stalled 2024-12; DataScript alive but EPL-1.0/ClojureScript) —
   the reasoning family's ecosystem gap is real, not assumed.
+
+## 2026-08-24 — upstream tracker sweep (stage loop from decompose)
+
+Benjamin's car thought: mine semantica's issues and PRs for bugs, features, and gaps that should
+shape the graduated goals. The packet had never read the tracker (all prior grounding was source,
+docs, and the Notion atlas). Method: full `gh` pull of the semantica-agi/semantica tracker (330
+issues, 67 open PRs, 328 PRs merged since 2026-06-01 = 725 items), seven concurrent Grok 4.6
+lanes classifying every item into one shared-schema family and one disposition, a Grok
+synthesis lane, and a Codex Sol skeptic that verified all 188 cited numbers against the raw
+dump. Outputs: [`research/upstream-tracker-mining.md`](./research/upstream-tracker-mining.md),
+the committed inventory [`research/tracker/inventory.jsonl`](./research/tracker/inventory.jsonl),
+the [review](./research/reviews/2026-08-24-tracker-mining-review.md) (RATIFY-WITH-EDITS, edits
+applied), and a dedupe-status block on the held drafts.
+
+What it changed: both O4 gates come back **STRENGTHENED** with community evidence (reasoning:
+#300 reports Rete `_matches`/`_can_join` always `True`, #1095 wants provenanced rule actions;
+evals: #1133/#1091 want reproducible, objective-bearing evaluation while in-tree evals stay a
+stub until #1090). Two of the three held `danklocal` fixes are unreported upstream and the third
+is only cousin-matched, so they post as-is. Six of the eight D6 findings are independently
+reported by the community (two only partially); the sequential pipeline engine, the simulated
+HermiT/Pellet checks, and the Explorer DELETE/URL-key defects remain unique to us. 88 port-hazard rows are bug classes the shared schema forbids by
+construction. Six open questions for Benjamin sit at the end of the synthesis; MAP consumes the
+per-family "what a MAP author must see" tables.
+
+Follow-ups the same day (DECISIONS T1–T3): the benchmarks sidecar turned out unfetchable, so
+[`research/benchmarks-vocab.md`](./research/benchmarks-vocab.md) borrows only metric names from
+issue #574; a Codex-drafted, spot-checked upstream issue for the simulated HermiT/Pellet checks
+sits in [`research/drafts/upstream-issue-hermit-pellet.md`](./research/drafts/upstream-issue-hermit-pellet.md)
+(hold until Benjamin posts).

@@ -16,17 +16,21 @@ import {
 } from "@beep/repo-cli/commands/Quality/Tasks";
 import {
   baselineEntriesLostByReplacement,
+  CoverageBaselineChangeSet,
   CoverageComparisonFailure,
   CoverageFileBaseline,
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
   CoverageScopeOwner,
   CoverageUncoveredCounts,
+  changedCoverageOwners,
   collectEffectTsgoDiagnosticLines,
   compareCoverageRegressionSnapshotsForExpectedPackagesForTesting,
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageBaselineWriterChangedFiles,
+  coverageBaselineWriteSummary,
   coverageDispositionGapsForTesting,
   coverageFullStepsForTesting,
   coveragePackageBaselineFromSummaryForTesting,
@@ -51,7 +55,9 @@ import {
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
   planCoverageAffectedScope,
+  planCoverageBaselineWrite,
   planCoverageFullShards,
+  planWorkspaceCoverageAffectedScope,
   promotedFallowGithubCheckLaneIdsForTesting,
   QualityTaskFailed,
   QualityTaskGroupFailed,
@@ -70,6 +76,7 @@ import {
   sqlIntegrationStepForTesting,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
+  validateCoverageTaskArgsForTesting,
   withoutUnusableRemoteCacheForTesting,
   workspaceTaskFiltersForTesting,
   writeCoverageRegressionBaseline,
@@ -91,7 +98,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit, FileSystem, Inspectable, Layer, Order, Path, pipe } from "effect";
+import { Cause, ConfigProvider, Effect, Exit, FileSystem, Inspectable, Layer, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -188,17 +195,17 @@ const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const originalCwd = process.cwd();
+      const originalCwd = process.cwd;
       const repositoryPath = yield* fs.makeTempDirectory();
 
       yield* Effect.sync(() => {
-        process.chdir(repositoryPath);
+        process.cwd = () => repositoryPath;
       });
       yield* fs.makeDirectory(path.join(repositoryPath, ".git"), { recursive: true });
       yield* Effect.addFinalizer(() =>
         Effect.gen(function* () {
           yield* Effect.sync(() => {
-            process.chdir(originalCwd);
+            process.cwd = originalCwd;
           });
           yield* fs.remove(repositoryPath, { force: true, recursive: true }).pipe(Effect.orDie);
         })
@@ -1527,12 +1534,12 @@ describe("quality task adapter", () => {
     });
   });
 
-  it("keeps report-only coverage reserved for baseline regeneration", () => {
+  it("keeps report-only coverage reserved for baseline regeneration and strips writer controls", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
       withEnvVar("NODE_OPTIONS", undefined, () =>
         rootQualityStepsForTesting(
           "/repo",
-          getInvocation(["coverage", "--", "--write-baseline", "--concurrency=1", "--force"])
+          getInvocation(["coverage", "--", "--write-baseline", "--replace-all", "--concurrency=1", "--force"])
         )
       )
     );
@@ -1563,7 +1570,35 @@ describe("quality task adapter", () => {
         VITEST_COVERAGE_REPORT_ONLY: "1",
       },
     });
+    expect(steps[0]?.args).not.toContain("--write-baseline");
+    expect(steps[0]?.args).not.toContain("--replace-all");
   });
+
+  it.effect(
+    "rejects replace-all without baseline writing or with scoped baseline writing",
+    Effect.fnUntraced(function* () {
+      const exit = yield* Effect.exit(validateCoverageTaskArgsForTesting("/repo", ["--replace-all"]));
+
+      assert.isTrue(Exit.isFailure(exit));
+      if (Exit.isFailure(exit)) {
+        assert.include(Cause.pretty(exit.cause), "--replace-all requires --write-baseline");
+      }
+
+      for (const scopeArg of ["--filter=@beep/repo-cli", "--since=origin/main", "--affected"]) {
+        const scopedExit = yield* Effect.exit(
+          validateCoverageTaskArgsForTesting("/repo", ["--write-baseline", "--replace-all", scopeArg])
+        );
+
+        assert.isTrue(Exit.isFailure(scopedExit));
+        if (Exit.isFailure(scopedExit)) {
+          assert.include(
+            Cause.pretty(scopedExit.cause),
+            "--replace-all only applies to an unscoped --write-baseline run"
+          );
+        }
+      }
+    }, provideScopedLayer(PlatformLayer))
+  );
 
   it("compares coverage snapshots with fail-on-drop and warning-only new package semantics", () => {
     const result = compareCoverageRegressionSnapshotsForTesting(
@@ -2007,6 +2042,119 @@ describe("quality task adapter", () => {
     })
   );
 
+  it.effect(
+    "holds an unchanged package without a comparison base and replaces it after a dirty package change",
+    Effect.fnUntraced(function* () {
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repoRoot = yield* fs.makeTempDirectory();
+          yield* Effect.addFinalizer(() => fs.remove(repoRoot, { force: true, recursive: true }).pipe(Effect.orDie));
+          const packageDir = path.join(repoRoot, "packages/existing");
+          const sourcePath = path.join(packageDir, "src/Index.ts");
+          const coverageDirectory = path.join(packageDir, "coverage");
+          const standardsDirectory = path.join(repoRoot, "standards");
+          const baselinePath = path.join(standardsDirectory, "coverage.regression-baseline.jsonc");
+          const committedRow = CoveragePackageBaseline.make({
+            path: "packages/existing",
+            ...coveragePercentages(40),
+            uncovered: coverageUncovered(6),
+            files: {
+              "packages/existing/src/Index.ts": coverageFileBaseline(40, 6),
+            },
+          });
+
+          yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
+          yield* fs.makeDirectory(coverageDirectory, { recursive: true });
+          yield* fs.makeDirectory(standardsDirectory, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(repoRoot, "package.json"),
+            encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
+          );
+          yield* fs.writeFileString(
+            path.join(packageDir, "package.json"),
+            encodeJson({ name: "@beep/existing", private: true, scripts: { coverage: "vitest" } })
+          );
+          yield* fs.writeFileString(sourcePath, "export const value = 1;\n");
+          yield* fs.writeFileString(
+            path.join(coverageDirectory, "coverage-summary.json"),
+            encodeJson({
+              total: vitestCoverageMetrics(10, 9, 90),
+              "src/Index.ts": vitestCoverageMetrics(10, 9, 90),
+            })
+          );
+          yield* fs.writeFileString(
+            baselinePath,
+            encodeJson({
+              schema_version: 2,
+              generated_at: "2026-07-06T00:00:00.000Z",
+              git_sha: "committed-sha",
+              command: "bun run coverage:baseline:write",
+              epsilon: 0.001,
+              minimum: coveragePercentages(0),
+              exemptions: {},
+              follow_ups: {},
+              packages: { "@beep/existing": committedRow },
+            })
+          );
+
+          yield* runGit(repoRoot, ["init"]);
+          yield* runGit(repoRoot, ["config", "user.email", "coverage@example.invalid"]);
+          yield* runGit(repoRoot, ["config", "user.name", "Coverage Test"]);
+          yield* runGit(repoRoot, ["add", "--all"]);
+          yield* runGit(repoRoot, ["commit", "-m", "test: seed unchanged coverage fixture"]);
+
+          expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, [])).toMatchObject({ _tag: "noop" });
+          expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["package.json"])).toMatchObject({ _tag: "full" });
+
+          yield* writeCoverageRegressionBaseline(repoRoot, false).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "origin/main" })
+            )
+          );
+          const heldBaseline = yield* decodeCoverageRegressionBaselineJsoncForTesting(
+            yield* fs.readFileString(baselinePath)
+          );
+          expect(heldBaseline.generated_at).toBe("2026-07-06T00:00:00.000Z");
+          expect(heldBaseline.git_sha).toBe("committed-sha");
+          expect(heldBaseline.packages["@beep/existing"]).toEqual(committedRow);
+          expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+            "replaced 0 changed package(s), added 0, held 1 unchanged package(s) at committed rows, pruned 0 (base: dirty worktree only)"
+          );
+          expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+            "[coverage-ratchet] TURBO_SCM_BASE origin/main does not resolve here; falling back to origin/main merge-base or dirty-worktree files only"
+          );
+
+          yield* runGit(repoRoot, ["add", "--all"]);
+          yield* runGit(repoRoot, ["commit", "-m", "test: commit held baseline"]);
+          yield* fs.writeFileString(sourcePath, "export const value = 2;\n");
+
+          yield* writeCoverageRegressionBaseline(repoRoot, false).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "origin/main" })
+            )
+          );
+          const replacedBaseline = yield* decodeCoverageRegressionBaselineJsoncForTesting(
+            yield* fs.readFileString(baselinePath)
+          );
+          expect(replacedBaseline.generated_at).not.toBe("2026-07-06T00:00:00.000Z");
+          expect(replacedBaseline.git_sha).not.toBe("committed-sha");
+          expect(replacedBaseline.packages["@beep/existing"]?.lines).toBe(90);
+          expect(replacedBaseline.packages["@beep/existing"]?.uncovered).toEqual(coverageUncovered(1));
+          expect(replacedBaseline.packages["@beep/existing"]?.files).toEqual({
+            "packages/existing/src/Index.ts": coverageFileBaseline(90, 1),
+          });
+          expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+            "replaced 1 changed package(s), added 0, held 0 unchanged package(s) at committed rows, pruned 0 (base: dirty worktree only)"
+          );
+        })
+      ).pipe(provideScopedLayer(PlatformLayer));
+    })
+  );
+
   it("only fails missing baseline-package summaries for unscoped coverage runs", () => {
     expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], false).missingActuals).toEqual([
       "@beep/existing",
@@ -2014,6 +2162,16 @@ describe("quality task adapter", () => {
     expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], true).missingActuals).toEqual(
       []
     );
+  });
+
+  it("excludes the coverage baseline artifact only from writer change-set planning", () => {
+    expect(
+      coverageBaselineWriterChangedFiles([
+        "packages/example/src/Index.ts",
+        "standards/coverage.regression-baseline.jsonc",
+        "vitest.config.ts",
+      ])
+    ).toEqual(["packages/example/src/Index.ts", "vitest.config.ts"]);
   });
 
   it("keeps rendered coverage diagnostics free of terminal control characters", () => {
@@ -2207,6 +2365,7 @@ describe("quality task adapter", () => {
         "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
       ])
     ).toMatchObject({ _tag: "full" });
+    expect(changedCoverageOwners(owners, ["package.json", "packages/b/package.json"])).toEqual(["@beep/b"]);
   });
 
   it("skips affected coverage for docs-only and packages without a coverage task", () => {
@@ -2726,6 +2885,153 @@ describe("quality task adapter", () => {
     );
   });
 
+  it("keeps full-run reasons diagnostic while adopting only changed owners", () => {
+    const committedHeld = CoveragePackageBaseline.make({
+      path: "packages/held",
+      ...coveragePercentages(61),
+      uncovered: coverageUncovered(7),
+      files: {
+        "packages/held/src/Index.ts": coverageFileBaseline(61, 7),
+      },
+    });
+    const measuredHeld = CoveragePackageBaseline.make({
+      path: "packages/held",
+      ...coveragePercentages(93),
+      uncovered: coverageUncovered(1),
+      files: {
+        "packages/held/src/Index.ts": coverageFileBaseline(93, 1),
+      },
+    });
+    const changeSet = CoverageBaselineChangeSet.make({
+      baseDescription: "origin/main merge-base a1b2c3d",
+      packageNames: ["@beep/changed"],
+      fullReasons: ["vitest.config.ts: global coverage input changed"],
+    });
+    const plan = planCoverageBaselineWrite(
+      {
+        "@beep/changed": coveragePackageBaseline("packages/changed", 50),
+        "@beep/held": committedHeld,
+      },
+      [
+        { packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) },
+        { packageName: "@beep/held", baseline: measuredHeld },
+      ],
+      changeSet,
+      { replaceAll: false }
+    );
+
+    expect(plan.dispositions).toEqual({
+      "@beep/changed": "replaced",
+      "@beep/held": "held",
+    });
+    expect(plan.packages["@beep/changed"]?.lines).toBe(80);
+    expect(plan.packages["@beep/held"]).toEqual(committedHeld);
+    expect(plan.changeSet.fullReasons).toEqual(["vitest.config.ts: global coverage input changed"]);
+    expect(coverageBaselineWriteSummary(plan, false)).toBe(
+      "[coverage-ratchet] wrote standards/coverage.regression-baseline.jsonc: replaced 1 changed package(s), added 0, held 1 unchanged package(s) at committed rows, pruned 0 (base: origin/main merge-base a1b2c3d) — global coverage inputs changed (vitest.config.ts: global coverage input changed); pass --replace-all if every floor should be re-measured"
+    );
+  });
+
+  it("splits selected baseline rows into replaced, held, added, and pruned dispositions", () => {
+    const committedHeld = CoveragePackageBaseline.make({
+      path: "packages/held",
+      ...coveragePercentages(61),
+      uncovered: coverageUncovered(7),
+      files: {
+        "packages/held/src/Index.ts": coverageFileBaseline(61, 7),
+      },
+    });
+    const measuredHeld = CoveragePackageBaseline.make({
+      path: "packages/held",
+      ...coveragePercentages(93),
+      uncovered: coverageUncovered(1),
+      files: {
+        "packages/held/src/Index.ts": coverageFileBaseline(93, 1),
+        "packages/held/src/LocalOnly.ts": coverageFileBaseline(100, 0),
+      },
+    });
+    const plan = planCoverageBaselineWrite(
+      {
+        "@beep/changed": coveragePackageBaseline("packages/changed", 50),
+        "@beep/held": committedHeld,
+        "@beep/removed": coveragePackageBaseline("packages/removed", 70),
+      },
+      [
+        { packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) },
+        { packageName: "@beep/held", baseline: measuredHeld },
+        { packageName: "@beep/new", baseline: coveragePackageBaseline("packages/new", 90) },
+      ],
+      CoverageBaselineChangeSet.make({
+        baseDescription: "origin/main merge-base a1b2c3d",
+        packageNames: ["@beep/changed"],
+        fullReasons: [],
+      }),
+      { replaceAll: false }
+    );
+
+    expect(plan.dispositions).toEqual({
+      "@beep/changed": "replaced",
+      "@beep/held": "held",
+      "@beep/new": "added",
+      "@beep/removed": "pruned",
+    });
+    expect(plan.packages["@beep/changed"]?.lines).toBe(80);
+    expect(plan.packages["@beep/held"]).toEqual(committedHeld);
+    expect(plan.packages["@beep/held"]?.uncovered).toEqual(coverageUncovered(7));
+    expect(plan.packages["@beep/held"]?.files).toEqual(committedHeld.files);
+    expect(plan.packages["@beep/new"]?.lines).toBe(90);
+    expect(plan.packages).not.toHaveProperty("@beep/removed");
+  });
+
+  it("holds every existing measured row for a no-op baseline change set", () => {
+    const plan = planCoverageBaselineWrite(
+      {
+        "@beep/a": coveragePackageBaseline("packages/a", 40),
+        "@beep/b": coveragePackageBaseline("packages/b", 50),
+      },
+      [
+        { packageName: "@beep/a", baseline: coveragePackageBaseline("packages/a", 80) },
+        { packageName: "@beep/b", baseline: coveragePackageBaseline("packages/b", 90) },
+      ],
+      CoverageBaselineChangeSet.make({
+        baseDescription: "dirty worktree only",
+        packageNames: [],
+        fullReasons: [],
+      }),
+      { replaceAll: false }
+    );
+
+    expect(plan.dispositions).toEqual({ "@beep/a": "held", "@beep/b": "held" });
+    expect(plan.packages["@beep/a"]?.lines).toBe(40);
+    expect(plan.packages["@beep/b"]?.lines).toBe(50);
+  });
+
+  it("replaces every measured row when replace-all overrides a no-op change set", () => {
+    const plan = planCoverageBaselineWrite(
+      { "@beep/existing": coveragePackageBaseline("packages/existing", 50) },
+      [
+        { packageName: "@beep/existing", baseline: coveragePackageBaseline("packages/existing", 80) },
+        { packageName: "@beep/new", baseline: coveragePackageBaseline("packages/new", 90) },
+      ],
+      CoverageBaselineChangeSet.make({
+        baseDescription: "dirty worktree only",
+        packageNames: [],
+        fullReasons: [],
+      }),
+      { replaceAll: true }
+    );
+
+    expect(plan.dispositions).toEqual({
+      "@beep/existing": "replaced",
+      "@beep/new": "replaced",
+    });
+    expect(plan.packages["@beep/existing"]?.lines).toBe(80);
+    expect(plan.packages["@beep/new"]?.lines).toBe(90);
+    expect(coverageBaselineWriteSummary(plan, true)).toBe(
+      "[coverage-ratchet] wrote standards/coverage.regression-baseline.jsonc: replaced all 2 package(s), pruned 0 (--replace-all; base: dirty worktree only)"
+    );
+  });
+
   it("merges a scoped snapshot over the committed packages instead of replacing them", () => {
     const merged = mergeCoverageBaselinePackagesForTesting(
       {
@@ -3190,7 +3496,7 @@ describe("quality task adapter", () => {
             })
           );
 
-          process.chdir(packageDir);
+          process.cwd = () => packageDir;
           yield* runQualityTask(getInvocation(["lint"]));
 
           const lines = yield* TestConsole.logLines;
