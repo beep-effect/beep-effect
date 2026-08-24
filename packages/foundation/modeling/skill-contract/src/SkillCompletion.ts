@@ -23,6 +23,8 @@ const $I = $SkillContractId.create("SkillCompletion");
 const predicateTypeEquivalence = S.toEquivalence(EvidencePredicateType);
 const gateIdEquivalence = S.toEquivalence(GateId);
 const gateSeverityEquivalence = S.toEquivalence(GateSeverity);
+const evidenceSubjectEquivalence = S.toEquivalence(EvidenceSubject);
+const evidenceSubjectsEquivalence = S.toEquivalence(S.NonEmptyArray(EvidenceSubject));
 
 /**
  * Persistable structural evidence emitted from a live completion proof.
@@ -178,9 +180,12 @@ export class EvaluateSkillCompletionInput extends S.Class<EvaluateSkillCompletio
  * @since 0.0.0
  */
 export const CompletionInvariantReason = LiteralKit([
+  "conditional-gate-applicability-unverified",
+  "contract-evidence-mismatch",
   "gate-summary-predicate-type-mismatch",
   "ladder-predicate-type-mismatch",
   "gate-summary-registry-mismatch",
+  "output-subjects-mismatch",
 ]).pipe(
   $I.annoteSchema("CompletionInvariantReason", {
     description: "Malformed internal receipt and registry bindings rejected by completion evaluation.",
@@ -194,6 +199,16 @@ export const CompletionInvariantReason = LiteralKit([
  * @since 0.0.0
  */
 export type CompletionInvariantReason = typeof CompletionInvariantReason.Type;
+
+const CompletionInvariantErrorFields = {
+  message: S.NonEmptyString,
+  reason: CompletionInvariantReason,
+} satisfies S.Struct.Fields;
+const sameCompletionInvariantErrorFields = S.toEquivalence(
+  S.TaggedStruct("CompletionInvariantError", CompletionInvariantErrorFields)
+);
+const sameCompletionInvariantError = (self: CompletionInvariantError, that: CompletionInvariantError): boolean =>
+  sameCompletionInvariantErrorFields(self, that);
 
 /**
  * Boundary failure for malformed internal completion bindings.
@@ -215,12 +230,14 @@ export type CompletionInvariantReason = typeof CompletionInvariantReason.Type;
  */
 export class CompletionInvariantError extends S.TaggedError<CompletionInvariantError>($I`CompletionInvariantError`)(
   "CompletionInvariantError",
-  {
-    message: S.NonEmptyString,
-    reason: CompletionInvariantReason,
-  },
-  $I.annote("CompletionInvariantError", {
-    description: "Malformed internal contract, ladder, or gate-summary binding rejected by completion evaluation.",
+  CompletionInvariantErrorFields,
+  $I.annoteClass<
+    S.declare<CompletionInvariantError>,
+    readonly [S.TaggedStruct<"CompletionInvariantError", typeof CompletionInvariantErrorFields>]
+  >("CompletionInvariantError", {
+    description:
+      "Malformed internal contract, ladder, output, or gate-summary binding rejected by completion evaluation.",
+    toEquivalence: () => sameCompletionInvariantError,
   })
 ) {}
 
@@ -342,6 +359,14 @@ const blockingGateIsMissingOrDenied = (input: EvaluateSkillCompletionInput): boo
     );
   });
 
+const hasUnverifiedBlockingConditionalGate = (input: EvaluateSkillCompletionInput): boolean =>
+  A.some(
+    input.contract.gates.declarations,
+    (declaration) =>
+      GateSeverity.is.blocking(declaration.severity) &&
+      GateApplicability.match(declaration.applicability, { always: () => false, conditional: () => true })
+  );
+
 /**
  * Evaluates top-rung and blocking-gate evidence into live opaque completion proof.
  *
@@ -374,16 +399,34 @@ export const evaluateSkillCompletion = Effect.fn("SkillCompletion.evaluate")(fun
       reason: "gate-summary-predicate-type-mismatch",
     });
   }
+  if (!evidenceSubjectEquivalence(input.gateSummary.predicate.contractSubject, input.contract.evidenceSubject)) {
+    return yield* CompletionInvariantError.make({
+      message: "Gate summary evidence is not bound to the evaluated contract subject.",
+      reason: "contract-evidence-mismatch",
+    });
+  }
   if (!S.is(evidenceLadderFor(input.contract.receiptTypes.ladder))(input.ladder)) {
     return yield* CompletionInvariantError.make({
       message: "Evidence ladder receipt types do not match the contract bindings.",
       reason: "ladder-predicate-type-mismatch",
     });
   }
+  if (hasUnverifiedBlockingConditionalGate(input)) {
+    return yield* CompletionInvariantError.make({
+      message: "Conditional blocking-gate applicability requires a live evaluator before completion.",
+      reason: "conditional-gate-applicability-unverified",
+    });
+  }
   if (!summaryBindingsMatchRegistry(input)) {
     return yield* CompletionInvariantError.make({
       message: "Gate summary results do not bind uniquely and coherently to the contract registry.",
       reason: "gate-summary-registry-mismatch",
+    });
+  }
+  if (!evidenceSubjectsEquivalence(input.outputSubjects, input.ladder.semanticallyApplied.subjects)) {
+    return yield* CompletionInvariantError.make({
+      message: "Output subjects are not covered by the semantic-application evidence.",
+      reason: "output-subjects-mismatch",
     });
   }
   if (blockingGateIsMissingOrDenied(input)) {

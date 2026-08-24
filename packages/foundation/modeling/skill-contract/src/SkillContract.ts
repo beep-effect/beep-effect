@@ -9,6 +9,7 @@ import { $SkillContractId } from "@beep/identity/packages";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as S from "effect/Schema";
 import { EvidenceLadderReceiptTypes } from "./EvidenceLadder.ts";
+import { EvidenceSubject } from "./EvidenceReceipt.ts";
 import { EvidencePredicateType, GateRegistry } from "./Gate.ts";
 import { RecoveryPolicy } from "./Recovery.ts";
 import { SchemaReference } from "./SchemaReference.ts";
@@ -92,6 +93,7 @@ export class ReceiptTypeBindings extends S.Class<ReceiptTypeBindings>($I`Receipt
  */
 export class SkillContract extends S.Class<SkillContract>($I`SkillContract`)(
   {
+    evidenceSubject: EvidenceSubject,
     gates: GateRegistry,
     id: SkillContractId,
     input: SchemaReference,
@@ -102,6 +104,7 @@ export class SkillContract extends S.Class<SkillContract>($I`SkillContract`)(
     version: SemanticVersion,
   },
   $I.annote("SkillContract", {
-    description: "Aggregate root for one versioned typed skill promise, its gates, receipts, and recovery policy.",
+    description:
+      "Digest-bound aggregate root for one versioned typed skill promise, its gates, receipts, and recovery policy.",
   })
 ) {}

@@ -6,6 +6,7 @@ import {
   AlwaysGateApplicability,
   AttestationResource,
   CompletionEvaluation,
+  CompletionInvariantError,
   CompletionInvariantReason,
   ConditionalGateApplicability,
   EvaluateSkillCompletionInput,
@@ -51,6 +52,8 @@ const digest = EvidenceDigest.make({
 });
 const outputSubject = EvidenceSubject.make({ digest, name: "qa/output.json" });
 const summarySubject = EvidenceSubject.make({ digest, name: "qa/gate-summary.json" });
+const contractSubject = EvidenceSubject.make({ digest, name: "contracts/completion-test/1.0.0.json" });
+const unrelatedSubject = EvidenceSubject.make({ digest, name: "qa/unrelated-output.json" });
 const policy = AttestationResource.make({ digest, uri: URLStr.make("https://beep.dev/policy/skill/v1") });
 const inputAttestation = AttestationResource.make({
   digest,
@@ -72,13 +75,15 @@ const ladderTypes = EvidenceLadderReceiptTypes.make({
   persisted: persistedType,
   semanticallyApplied: appliedType,
 });
-const reference = (predicateType: EvidencePredicateType) =>
-  EvidenceReceiptReference.make({ predicateType, receipt: summarySubject });
+const reference = (
+  predicateType: EvidencePredicateType,
+  subjects: A.NonEmptyReadonlyArray<EvidenceSubject> = [summarySubject]
+) => EvidenceReceiptReference.make({ predicateType, receipt: summarySubject, subjects });
 const ladder = SemanticallyApplied.make({
   accepted: reference(acceptedType),
   delivered: reference(deliveredType),
   persisted: reference(persistedType),
-  semanticallyApplied: reference(appliedType),
+  semanticallyApplied: reference(appliedType, [outputSubject]),
 });
 const always = AlwaysGateApplicability.make({});
 const conditional = ConditionalGateApplicability.make({
@@ -91,13 +96,6 @@ const blockingGate = GateDeclaration.make({
   remediationOwner: "qa",
   severity: "blocking",
 });
-const advisoryGate = GateDeclaration.make({
-  applicability: always,
-  evidence: GateEvidenceRequirement.make({ predicateType: gateEvidenceType }),
-  id: QaGateId.make("advisory-gate"),
-  remediationOwner: "qa",
-  severity: "advisory",
-});
 const conditionalGate = GateDeclaration.make({
   applicability: conditional,
   evidence: GateEvidenceRequirement.make({ predicateType: gateEvidenceType }),
@@ -105,15 +103,24 @@ const conditionalGate = GateDeclaration.make({
   remediationOwner: "qa",
   severity: "blocking",
 });
+const conditionalAdvisoryGate = GateDeclaration.make({
+  applicability: conditional,
+  evidence: GateEvidenceRequirement.make({ predicateType: gateEvidenceType }),
+  id: QaGateId.make("conditional-gate"),
+  remediationOwner: "qa",
+  severity: "advisory",
+});
 
 const contractFor = (
   declarations: ReadonlyArray<GateDeclaration>,
   options?: {
     readonly gateSummaryType?: EvidencePredicateType;
+    readonly evidenceSubject?: EvidenceSubject;
     readonly receiptLadderTypes?: EvidenceLadderReceiptTypes;
   }
 ) =>
   SkillContract.make({
+    evidenceSubject: options?.evidenceSubject ?? contractSubject,
     gates: GateRegistry.make({ declarations }),
     id: SkillContractId.make("completion-test"),
     input: SchemaReference.make({ schemaId: SchemaReferenceId.make("completion.input/v1") }),
@@ -148,6 +155,7 @@ const gateSummaryReceipt = (gateResults: ReadonlyArray<GateResultSummary>) => {
     (result) => !result.applicable || result.severity === "advisory" || result.outcome === "allowed"
   );
   const summary = GateSummary.make({
+    contractSubject,
     gateResults,
     inputAttestations: [inputAttestation],
     policy,
@@ -167,13 +175,14 @@ const gateSummaryReceipt = (gateResults: ReadonlyArray<GateResultSummary>) => {
 const evaluationInput = (
   contract: SkillContract,
   summary: GateSummaryReceipt,
-  evidenceLadder: SemanticallyApplied = ladder
+  evidenceLadder: SemanticallyApplied = ladder,
+  outputSubjects: A.NonEmptyReadonlyArray<EvidenceSubject> = [outputSubject]
 ) =>
   EvaluateSkillCompletionInput.make({
     contract,
     gateSummary: summary,
     ladder: evidenceLadder,
-    outputSubjects: [outputSubject],
+    outputSubjects,
   });
 
 describe("@beep/skill-contract SkillCompletion", () => {
@@ -234,21 +243,57 @@ describe("@beep/skill-contract SkillCompletion", () => {
     })
   );
 
-  it.effect("allows a non-applicable conditional blocker and a denied advisory gate", () =>
+  it.effect("fails closed on an unverified conditional blocker and allows a denied advisory gate", () =>
     Effect.gen(function* () {
       const conditionalSummary = gateSummaryReceipt([
         gateResult(conditionalGate, { applicable: false, outcome: "denied" }),
       ]);
-      const advisorySummary = gateSummaryReceipt([gateResult(advisoryGate, { applicable: true, outcome: "denied" })]);
-      const conditionalResult = yield* evaluateSkillCompletion(
+      const advisorySummary = gateSummaryReceipt([
+        gateResult(conditionalAdvisoryGate, { applicable: false, outcome: "denied" }),
+      ]);
+      const conditionalFailure = yield* evaluateSkillCompletion(
         evaluationInput(contractFor([conditionalGate]), conditionalSummary)
-      );
+      ).pipe(Effect.flip);
       const advisoryResult = yield* evaluateSkillCompletion(
-        evaluationInput(contractFor([advisoryGate]), advisorySummary)
+        evaluationInput(contractFor([conditionalAdvisoryGate]), advisorySummary)
       );
 
-      expect(conditionalResult.verdict).toBe("allowed");
+      expect(conditionalFailure.reason).toBe("conditional-gate-applicability-unverified");
       expect(advisoryResult.verdict).toBe("allowed");
+    })
+  );
+
+  it("compares completion invariant errors by their declared fields", () => {
+    const left = CompletionInvariantError.make({
+      message: "Gate summary predicate type does not match the contract binding.",
+      reason: "gate-summary-predicate-type-mismatch",
+    });
+    const same = CompletionInvariantError.make({
+      message: left.message,
+      reason: left.reason,
+    });
+    const different = CompletionInvariantError.make({
+      message: "Output subjects do not match.",
+      reason: "output-subjects-mismatch",
+    });
+    const equivalence = S.toEquivalence(CompletionInvariantError);
+
+    expect(equivalence(left, same)).toBe(true);
+    expect(equivalence(left, different)).toBe(false);
+  });
+
+  it.effect("rejects evidence bound to another contract or another output", () =>
+    Effect.gen(function* () {
+      const summary = gateSummaryReceipt([gateResult(blockingGate, { applicable: true, outcome: "allowed" })]);
+      const contractFailure = yield* evaluateSkillCompletion(
+        evaluationInput(contractFor([blockingGate], { evidenceSubject: unrelatedSubject }), summary)
+      ).pipe(Effect.flip);
+      const outputFailure = yield* evaluateSkillCompletion(
+        evaluationInput(contractFor([blockingGate]), summary, ladder, [unrelatedSubject])
+      ).pipe(Effect.flip);
+
+      expect(contractFailure.reason).toBe("contract-evidence-mismatch");
+      expect(outputFailure.reason).toBe("output-subjects-mismatch");
     })
   );
 

@@ -10,9 +10,8 @@ import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { Duration, HashSet, Tuple } from "effect";
+import { DateTime, Duration, Number as Num, Predicate, Tuple } from "effect";
 import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import { EvidenceReceipt, EvidenceSubject } from "./EvidenceReceipt.ts";
 import { EvidencePredicateType } from "./Gate.ts";
@@ -212,30 +211,70 @@ const FailureReceiptPredicateFields = S.Struct({
 
 const RecoveryBudgetCoherenceCheck = S.makeFilter(
   (failure: typeof FailureReceiptPredicateFields.Type) => {
-    const attemptOrdinals = A.map(failure.attempts, (attempt) => attempt.attempt);
-    const unique = Eq.equals(HashSet.size(HashSet.fromIterable(attemptOrdinals)), A.length(attemptOrdinals));
-    const ordered = A.every(
-      A.zipWith(failure.attempts, A.drop(failure.attempts, 1), (left, right) => left.attempt < right.attempt),
-      (isOrdered) => isOrdered
+    const attemptsContiguous = A.every(failure.attempts, (attempt, index) =>
+      Num.Equivalence(attempt.attempt, Num.increment(index))
     );
-    const attemptsWithinBudget =
-      failure.consumed.attempts <= failure.budget.maxAttempts &&
-      A.every(failure.attempts, (attempt) => attempt.attempt <= failure.budget.maxAttempts);
-    const operationsWithinBudget = failure.consumed.operations <= failure.budget.maxOperations;
+    const attemptTimings = A.map(failure.attempts, (attempt) => {
+      const startedAt = DateTime.makeUnsafe(attempt.startedAt);
+      const endedAt = DateTime.makeUnsafe(attempt.endedAt);
+      return { elapsed: DateTime.distance(startedAt, endedAt), endedAt, startedAt };
+    });
+    const attemptTimingsWithinBudget = A.every(
+      attemptTimings,
+      ({ elapsed }) =>
+        !Duration.isNegative(elapsed) && Duration.isLessThanOrEqualTo(elapsed, failure.budget.perAttemptTimeout)
+    );
+    const attemptsChronological = A.every(
+      A.zip(attemptTimings, A.drop(attemptTimings, 1)),
+      ([left, right]) => !Duration.isNegative(DateTime.distance(left.endedAt, right.startedAt))
+    );
+    const observedElapsed = A.match(attemptTimings, {
+      onEmpty: () => Duration.zero,
+      onNonEmpty: (timings) => DateTime.distance(A.headNonEmpty(timings).startedAt, A.lastNonEmpty(timings).endedAt),
+    });
+    const observedOperations = Num.sumAll(A.map(failure.attempts, (attempt) => attempt.operations));
+    const consumedMatchesHistory =
+      Num.Equivalence(failure.consumed.attempts, A.length(failure.attempts)) &&
+      Num.Equivalence(failure.consumed.operations, observedOperations) &&
+      Duration.equals(failure.consumed.elapsed, observedElapsed);
+    const attemptsWithinBudget = Num.isLessThanOrEqualTo(failure.consumed.attempts, failure.budget.maxAttempts);
+    const operationsWithinBudget = Num.isLessThanOrEqualTo(failure.consumed.operations, failure.budget.maxOperations);
     const elapsedWithinBudget = Duration.isLessThanOrEqualTo(failure.consumed.elapsed, failure.budget.totalTimeout);
+    const terminalReasonMatchesBudget = FailureTerminalReason.$match(failure.terminalReason, {
+      "attempt-budget-exhausted": () =>
+        Num.isGreaterThanOrEqualTo(failure.consumed.attempts, failure.budget.maxAttempts),
+      cancelled: () => true,
+      "non-retryable-failure": () => true,
+      "operation-budget-exhausted": () =>
+        Num.isGreaterThanOrEqualTo(failure.consumed.operations, failure.budget.maxOperations),
+      "time-budget-exhausted": () =>
+        Duration.isGreaterThanOrEqualTo(failure.consumed.elapsed, failure.budget.totalTimeout),
+    });
 
-    return unique && ordered && attemptsWithinBudget && operationsWithinBudget && elapsedWithinBudget
+    return A.every(
+      [
+        attemptsContiguous,
+        attemptTimingsWithinBudget,
+        attemptsChronological,
+        consumedMatchesHistory,
+        attemptsWithinBudget,
+        operationsWithinBudget,
+        elapsedWithinBudget,
+        terminalReasonMatchesBudget,
+      ],
+      Predicate.isTruthy
+    )
       ? undefined
       : {
           path: ["consumed"],
           issue:
-            "Recovery attempts must be unique and ordered, and consumed counts and duration must remain within budget.",
+            "Recovery history, consumed resources, per-attempt timing, and terminal reason must agree with the declared budget.",
         };
   },
   {
     identifier: $I`RecoveryBudgetCoherenceCheck`,
     title: "Recovery budget coherence",
-    description: "Recovery attempts and consumed resources cannot exceed their declared bounded-recovery budget.",
+    description: "Recovery attempt history, consumed resources, timing, and terminal reason agree with the budget.",
   }
 );
 

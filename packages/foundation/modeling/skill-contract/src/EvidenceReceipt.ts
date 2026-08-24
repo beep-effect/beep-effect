@@ -245,6 +245,26 @@ export const GateVerifiedLevel = LiteralKit(["BEEP_SKILL_CONTRACT_BLOCKING_GATES
  */
 export type GateVerifiedLevel = typeof GateVerifiedLevel.Type;
 
+const GateResultSummaryFields = S.Struct({
+  applicable: S.Boolean,
+  evidenceSubjects: S.Array(EvidenceSubject),
+  evidenceType: EvidencePredicateType,
+  gateId: GateId,
+  outcome: GateOutcome,
+  severity: GateSeverity,
+});
+
+const AllowedGateEvidenceCheck = S.makeFilter(
+  (result: typeof GateResultSummaryFields.Type) =>
+    !result.applicable || !GateOutcome.is.allowed(result.outcome) || A.isReadonlyArrayNonEmpty(result.evidenceSubjects),
+  {
+    identifier: $I`AllowedGateEvidenceCheck`,
+    title: "Allowed gate evidence",
+    description: "Every applicable allowed gate result must cite at least one digest-bound evidence subject.",
+    message: "Applicable allowed gate results require non-empty evidence subjects",
+  }
+);
+
 /**
  * Normalized common evidence for one evaluated gate.
  *
@@ -260,14 +280,7 @@ export type GateVerifiedLevel = typeof GateVerifiedLevel.Type;
  * @since 0.0.0
  */
 export class GateResultSummary extends S.Class<GateResultSummary>($I`GateResultSummary`)(
-  {
-    applicable: S.Boolean,
-    evidenceSubjects: S.Array(EvidenceSubject),
-    evidenceType: EvidencePredicateType,
-    gateId: GateId,
-    outcome: GateOutcome,
-    severity: GateSeverity,
-  },
+  GateResultSummaryFields.check(AllowedGateEvidenceCheck),
   $I.annote("GateResultSummary", {
     description: "Normalized common fields for one evaluated gate without consumer-specific audit detail.",
   })
@@ -288,6 +301,7 @@ const gateResultsPassBlockingPolicy = (gateResults: ReadonlyArray<GateResultSumm
   );
 
 const GateSummaryFields = S.Struct({
+  contractSubject: EvidenceSubject,
   gateResults: S.Array(GateResultSummary),
   inputAttestations: S.NonEmptyArray(AttestationResource),
   policy: AttestationResource,

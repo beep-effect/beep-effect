@@ -16,6 +16,7 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -41,6 +42,7 @@ const summaryFor = (options: {
 }) => {
   const passed = !options.applicable || options.severity === "advisory" || options.outcome === "allowed";
   return GateSummary.make({
+    contractSubject: subject,
     gateResults: [
       GateResultSummary.make({
         applicable: options.applicable,
@@ -102,6 +104,20 @@ describe("@beep/skill-contract GateSummary", () => {
 
       expect(wrongResult.message).toContain("must agree");
       expect(wrongLevels.message).toContain("must agree");
+    })
+  );
+
+  it.effect("rejects an applicable allowed gate result without evidence subjects", () =>
+    Effect.gen(function* () {
+      const passing = summaryFor({ applicable: true, outcome: "allowed", severity: "blocking" });
+      const encoded = yield* S.encodeUnknownEffect(GateSummary)(passing);
+      const missingEvidenceInput: unknown = {
+        ...encoded,
+        gateResults: A.map(encoded.gateResults, (result) => ({ ...result, evidenceSubjects: [] })),
+      };
+      const failure = yield* S.decodeUnknownEffect(GateSummary)(missingEvidenceInput).pipe(Effect.flip);
+
+      expect(failure.message).toContain("require non-empty evidence subjects");
     })
   );
 

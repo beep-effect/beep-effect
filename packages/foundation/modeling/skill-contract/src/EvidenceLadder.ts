@@ -35,9 +35,10 @@ export class EvidenceReceiptReference extends S.Class<EvidenceReceiptReference>(
   {
     predicateType: EvidencePredicateType,
     receipt: EvidenceSubject,
+    subjects: S.NonEmptyArray(EvidenceSubject),
   },
   $I.annote("EvidenceReceiptReference", {
-    description: "Predicate identity and digest-bound subject proving one evidence-ladder rung.",
+    description: "Predicate identity, receipt digest, and covered subjects proving one evidence-ladder rung.",
   })
 ) {}
 

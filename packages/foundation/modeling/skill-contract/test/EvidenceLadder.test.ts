@@ -37,7 +37,7 @@ const receiptTypes = EvidenceLadderReceiptTypes.make({
   semanticallyApplied: appliedType,
 });
 const reference = (predicateType: EvidencePredicateType) =>
-  EvidenceReceiptReference.make({ predicateType, receipt: receiptSubject });
+  EvidenceReceiptReference.make({ predicateType, receipt: receiptSubject, subjects: [receiptSubject] });
 
 describe("@beep/skill-contract EvidenceLadder", () => {
   it("maps transport completion to Accepted and exposes only immediate monotonic transitions", () => {

@@ -1,6 +1,9 @@
+import { Sha256Hex } from "@beep/schema/Sha256";
 import {
+  EvidenceDigest,
   EvidenceLadderReceiptTypes,
   EvidencePredicateType,
+  EvidenceSubject,
   FailurePredicateType,
   GateRegistry,
   GateSummaryPredicateType,
@@ -18,7 +21,14 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const rungType = (name: string) => EvidencePredicateType.make(`https://beep.dev/evidence/${name}/v1`);
+const evidenceSubject = EvidenceSubject.make({
+  digest: EvidenceDigest.make({
+    sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+  }),
+  name: "contracts/qa-inventory-judge/1.0.0.json",
+});
 const contract = SkillContract.make({
+  evidenceSubject,
   gates: GateRegistry.make({ declarations: [] }),
   id: SkillContractId.make("qa-inventory-judge"),
   input: SchemaReference.make({ schemaId: SchemaReferenceId.make("qa.inventory/v1") }),
@@ -46,6 +56,10 @@ describe("@beep/skill-contract SkillContract", () => {
       const decoded = yield* S.decodeEffect(SkillContract)(encoded);
 
       expect(S.toEquivalence(SkillContract)(decoded, contract)).toBe(true);
+      expect(encoded.evidenceSubject).toEqual({
+        digest: { sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" },
+        name: "contracts/qa-inventory-judge/1.0.0.json",
+      });
       expect(encoded.input).toEqual({ schemaId: "qa.inventory/v1" });
       expect(encoded.output).toEqual({ schemaId: "qa.inventory/verdict/v1" });
       expect(encoded.recovery).toEqual({ mode: "none" });
