@@ -230,6 +230,11 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         yield* AtomRegistry.getResult(registry, timelineAtom);
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         yield* AtomRegistry.getResult(registry, runTurnAtom).pipe(Effect.exit);
+        yield* Effect.suspend(() =>
+          A.isReadonlyArrayNonEmpty(registry.get(unreconciledAtom))
+            ? Effect.void
+            : Effect.fail("failed turn is still reconciling")
+        ).pipe(Effect.retry(reconciliationSchedule));
 
         expect(registry.get(draftAtom)).toStrictEqual(O.none());
         expect(registry.get(draftRevisionAtom)).toBe(0);
