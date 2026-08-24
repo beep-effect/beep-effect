@@ -180,9 +180,12 @@ export const runBakeCommandForTesting = Effect.fn("Runners.runBakeCommandForTest
 const bakeCommand = Command.make(
   "bake",
   {
-    plan: Flag.boolean("plan").pipe(Flag.withDescription("Render the AWS-free bake plan")),
-    check: Flag.boolean("check").pipe(Flag.withDescription("Check the live AMI's lockfile and Bun-version tags")),
-    json: Flag.boolean("json").pipe(Flag.withDescription("Emit schema-encoded JSON")),
+    plan: Flag.boolean("plan").pipe(Flag.withDefault(false), Flag.withDescription("Render the AWS-free bake plan")),
+    check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Check the live AMI's lockfile and Bun-version tags")
+    ),
+    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Emit schema-encoded JSON")),
     region: Flag.string("region").pipe(Flag.withDefault(DEFAULT_REGION), Flag.withDescription("AWS region")),
     subnet: Flag.string("subnet").pipe(Flag.optional, Flag.withDescription("Bake instance subnet id")),
     securityGroup: Flag.string("security-group").pipe(

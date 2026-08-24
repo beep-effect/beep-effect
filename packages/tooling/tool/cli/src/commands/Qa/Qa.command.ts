@@ -125,6 +125,7 @@ const rulesFlag = Flag.fileSchema("rules", ExtractionRuleSet, { format: "json" }
   Flag.optional
 );
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print and persist the extraction plan without running any driver")
 );
 const surfaceFlag = Flag.string("surface").pipe(

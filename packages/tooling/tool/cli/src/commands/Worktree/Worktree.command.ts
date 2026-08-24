@@ -783,7 +783,10 @@ const worktreeRemoveCommand = Command.make(
   "remove",
   {
     name: Argument.string("name").pipe(Argument.withDescription("Worktree name under the worktrees root")),
-    force: Flag.boolean("force").pipe(Flag.withDescription("Remove even when the worktree has uncommitted changes")),
+    force: Flag.boolean("force").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Remove even when the worktree has uncommitted changes")
+    ),
   },
   Effect.fn(function* ({ name, force }) {
     yield* runWorktreeRemove({ name, force }).pipe(

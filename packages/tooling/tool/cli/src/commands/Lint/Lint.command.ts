@@ -568,7 +568,7 @@ const lintDeprecatedApisCommand = Command.make("deprecated-apis", {}, runDepreca
 const lintPolicyCommand = Command.make(
   "policy",
   {
-    full: Flag.boolean("full").pipe(Flag.withDescription("Run the full policy sweep locally")),
+    full: Flag.boolean("full").pipe(Flag.withDefault(false), Flag.withDescription("Run the full policy sweep locally")),
   },
   ({ full }) => runRootLintPolicyTask(full)
 ).pipe(Command.withDescription("Run repo-wide lint policy checks"));

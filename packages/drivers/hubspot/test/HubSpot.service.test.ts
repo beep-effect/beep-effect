@@ -246,7 +246,12 @@ describe("@beep/hubspot", () => {
           expectRoundTrip(HubSpotUpsertContactRequest, upsertRequest);
           expectRoundTrip(HubSpotSubmitFormResponse, submitResponse);
           expectRoundTrip(HubSpotUpsertContactResponse, upsertResponse);
-          expectRoundTrip(HubSpotError, error);
+
+          const encodedError = encode(HubSpotError, error);
+          const decodedError = decode(HubSpotError, encodedError);
+
+          expect(decodedError).toBeInstanceOf(HubSpotError);
+          expect(encode(HubSpotError, decodedError)).toEqual(encodedError);
         }
       ),
       fcRuns(50)

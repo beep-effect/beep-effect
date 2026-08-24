@@ -54,6 +54,7 @@ port = 5432
         const rendered = Cause.pretty(result.cause);
 
         expect(rendered).toContain("Invalid TOML input");
+        expect(rendered).toMatch(/Expected a value but found '='|Unexpected = .*"=" found/);
       }
     })
   );

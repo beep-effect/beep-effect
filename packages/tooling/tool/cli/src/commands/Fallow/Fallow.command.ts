@@ -465,8 +465,14 @@ const boundariesCommand = Command.make(
       Flag.withDefault(DEFAULT_BOUNDARY_CONFIG_PATH),
       Flag.withDescription("Generated Fallow boundary config path")
     ),
-    write: Flag.boolean("write").pipe(Flag.withDescription("Write the generated boundary config")),
-    check: Flag.boolean("check").pipe(Flag.withDescription("Fail when the generated boundary config is stale")),
+    write: Flag.boolean("write").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Write the generated boundary config")
+    ),
+    check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when the generated boundary config is stale")
+    ),
   },
   Effect.fn(function* ({ output, write, check }) {
     if (write && check) {

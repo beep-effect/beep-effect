@@ -299,9 +299,11 @@ const remoteSkillSourcesByName: Readonly<Record<string, RemoteSkillSource>> = pi
 );
 
 const checkFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Report skill drift without writing files and exit non-zero when changes are needed")
 );
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Preview skill updates without writing files or failing on drift")
 );
 const skillFlag = Flag.string("skill").pipe(
@@ -312,6 +314,7 @@ const provenanceSkillArgument = Argument.string("skill").pipe(
   Argument.withDescription("Installed skill to resolve; the P1 pilot supports shadcn")
 );
 const provenanceJsonFlag = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Render the would-be skills-lock/v2 entry as JSON")
 );
 

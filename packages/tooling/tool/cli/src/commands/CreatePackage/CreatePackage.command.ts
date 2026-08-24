@@ -1130,11 +1130,13 @@ export const createPackageCommand = Command.make(
       Flag.withDefault("")
     ),
     lab: Flag.boolean("lab").pipe(
+      Flag.withDefault(false),
       Flag.withDescription(
         "Scaffold a lab app under apps/labs with a schema-validated lab manifest, the labs portless namespace, and the generated labs identity segment"
       )
     ),
     reuseRetiredName: Flag.boolean("reuse-retired-name").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Allow reusing a package name recorded in standards/changesets.retired-packages.json")
     ),
     parentDir: Flag.string("parent-dir").pipe(
@@ -1158,11 +1160,16 @@ export const createPackageCommand = Command.make(
       Flag.withDefault("")
     ),
     description: Flag.string("description").pipe(Flag.withDescription("Package description"), Flag.withDefault("")),
-    dryRun: Flag.boolean("dry-run").pipe(Flag.withDescription("Preview changes without writing files")),
+    dryRun: Flag.boolean("dry-run").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Preview changes without writing files")
+    ),
     skipLockfile: Flag.boolean("skip-lockfile").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Skip the default bun.lock refresh after package creation")
     ),
     withStoriesTsconfig: Flag.boolean("with-stories-tsconfig").pipe(
+      Flag.withDefault(false),
       Flag.withDescription(
         "Generate tsconfig.stories.json and wire beep:check:stories for foundation/ui-system packages"
       )

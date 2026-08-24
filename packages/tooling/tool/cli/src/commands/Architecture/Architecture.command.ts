@@ -48,6 +48,7 @@ const domainKindFlag = Flag.string("domain-kind").pipe(
 );
 
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Emit the schema-versioned JSON operation plan without writing files")
 );
 

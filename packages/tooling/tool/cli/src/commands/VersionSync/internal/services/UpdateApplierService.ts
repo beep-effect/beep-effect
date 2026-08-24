@@ -14,6 +14,7 @@ import * as S from "effect/Schema";
 import { updateBiomeSchema } from "../resolvers/BiomeResolver.ts";
 import { updateCatalogEntry, updatePackageManagerField } from "../updaters/PackageJsonUpdater.ts";
 import { updatePlainTextFile } from "../updaters/PlainTextUpdater.ts";
+import { updateVercelBunVersion } from "../updaters/VercelJsonUpdater.ts";
 import { replaceNodeVersionWithFile, updateYamlValue } from "../updaters/YamlFileUpdater.ts";
 import type { FileSystem } from "effect";
 import type { VersionCategoryReport, VersionSyncError, VersionSyncResolution } from "../../VersionSync.schemas.ts";
@@ -69,6 +70,15 @@ const applyBunUpdates = Effect.fn(function* (repoRoot: string, report: VersionCa
       Match.when(".bun-version:version", () => updatePlainTextFile(path.join(repoRoot, ".bun-version"), item.expected)),
       Match.when("package.json:packageManager", () =>
         updatePackageManagerField(path.join(repoRoot, "package.json"), Str.replace(/^bun@/, "")(item.expected))
+      ),
+      Match.when("apps/oip-web/vercel.json:installCommand Bun version", () =>
+        updateVercelBunVersion(path.join(repoRoot, "apps", "oip-web", "vercel.json"), "installCommand", item.expected)
+      ),
+      Match.when("apps/oip-web/vercel.json:buildCommand Bun version", () =>
+        updateVercelBunVersion(path.join(repoRoot, "apps", "oip-web", "vercel.json"), "buildCommand", item.expected)
+      ),
+      Match.when(".bun-linux-x64.sha256:bun-linux-x64.zip sha256", () =>
+        updatePlainTextFile(path.join(repoRoot, ".bun-linux-x64.sha256"), item.expected)
       ),
       Match.orElse(() => Effect.succeed(false))
     );

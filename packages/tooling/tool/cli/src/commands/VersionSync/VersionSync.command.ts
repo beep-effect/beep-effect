@@ -51,22 +51,32 @@ export const versionSyncCommand = Command.make(
   "version-sync",
   {
     write: Flag.boolean("write").pipe(
+      Flag.withDefault(false),
       Flag.withAlias("w"),
       Flag.withDescription("Apply version updates (without this, only reports drift)")
     ),
     dryRun: Flag.boolean("dry-run").pipe(
+      Flag.withDefault(false),
       Flag.withAlias("d"),
       Flag.withDescription("Show what --write would do without modifying files")
     ),
     skipNetwork: Flag.boolean("skip-network").pipe(
+      Flag.withDefault(false),
       Flag.withAlias("s"),
       Flag.withDescription("Skip upstream version resolution (only check internal consistency)")
     ),
-    bunOnly: Flag.boolean("bun-only").pipe(Flag.withDescription("Only sync Bun versions")),
-    nodeOnly: Flag.boolean("node-only").pipe(Flag.withDescription("Only sync Node versions")),
-    dockerOnly: Flag.boolean("docker-only").pipe(Flag.withDescription("Only sync Docker image versions")),
-    biomeOnly: Flag.boolean("biome-only").pipe(Flag.withDescription("Only sync Biome schema version")),
+    bunOnly: Flag.boolean("bun-only").pipe(Flag.withDefault(false), Flag.withDescription("Only sync Bun versions")),
+    nodeOnly: Flag.boolean("node-only").pipe(Flag.withDefault(false), Flag.withDescription("Only sync Node versions")),
+    dockerOnly: Flag.boolean("docker-only").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Only sync Docker image versions")
+    ),
+    biomeOnly: Flag.boolean("biome-only").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Only sync Biome schema version")
+    ),
     effectOnly: Flag.boolean("effect-only").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Only sync lockstep Effect catalog versions in the root package.json")
     ),
   },
@@ -100,6 +110,6 @@ export const versionSyncCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Detect and fix version drift across .bun-version, package.json, .nvmrc, CI workflows, docker-compose.yml, biome.jsonc, and the root Effect catalog"
+    "Detect and fix version drift across Bun runtime pins and checksums, Node pins, CI workflows, Docker images, Biome, and the root Effect catalog"
   )
 );

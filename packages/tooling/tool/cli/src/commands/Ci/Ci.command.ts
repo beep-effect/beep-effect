@@ -307,7 +307,10 @@ export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
 const appendTurboSummaryCommand = Command.make(
   "append-turbo-summary",
   {
-    all: Flag.boolean("all").pipe(Flag.withDescription("Append every Turbo run summary from the current job")),
+    all: Flag.boolean("all").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Append every Turbo run summary from the current job")
+    ),
     summaryPath: Argument.string("summary-path").pipe(Argument.optional),
   },
   ({ all, summaryPath }) =>

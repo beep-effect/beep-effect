@@ -251,8 +251,12 @@ export const writePortfolioIndex = Effect.fn("Goals.writePortfolioIndex")(functi
   return content;
 });
 
-const writeFlag = Flag.boolean("write").pipe(Flag.withDescription("Write goals/INDEX.md from the current manifests"));
+const writeFlag = Flag.boolean("write").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Write goals/INDEX.md from the current manifests")
+);
 const checkFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Fail when goals/INDEX.md drifts from the current manifests")
 );
 

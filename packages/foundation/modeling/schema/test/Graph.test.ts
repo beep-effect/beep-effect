@@ -50,12 +50,11 @@ describe("Graph edge schemas", () => {
     expect(schema.annotate({}).data).toBe(S.FiniteFromString);
   });
 
-  it("transforms encoded edges into Graph.Edge instances and back", () => {
+  it("transforms encoded edges into Graph.Edge values and back", () => {
     const schema = GraphSchema.EdgeTransform(S.FiniteFromString);
     const decoded = S.decodeUnknownSync(schema)({ source: 0, target: 1, data: "1" });
 
     expect(GraphSchema.isEdge(decoded)).toBe(true);
-    expect(decoded).toBeInstanceOf(Graph_.Edge);
     expect(decoded.source).toBe(0);
     expect(decoded.target).toBe(1);
     expect(decoded.data).toBe(1);
@@ -66,31 +65,29 @@ describe("Graph edge schemas", () => {
     const schema = GraphSchema.Edge(S.FiniteFromString);
     const decoded = S.decodeUnknownSync(schema)({ source: 0, target: 1, data: "1" });
 
-    expect(decoded).toBeInstanceOf(Graph_.Edge);
+    expect(GraphSchema.isEdge(decoded)).toBe(true);
     expect(decoded.data).toBe(1);
   });
 
-  it("validates existing Graph.Edge instances with nested transforms", () => {
+  it("validates existing Graph.Edge values with nested transforms", () => {
     const schema = GraphSchema.EdgeFromSelf(S.FiniteFromString);
-    const decoded = S.decodeSync(schema)(new Graph_.Edge({ source: 0, target: 1, data: "1" }));
+    const decoded = S.decodeSync(schema)({ source: 0, target: 1, data: "1" });
 
-    expect(decoded).toBeInstanceOf(Graph_.Edge);
+    expect(GraphSchema.isEdge(decoded)).toBe(true);
     expect(decoded.data).toBe(1);
-    expect(() => S.decodeUnknownSync(schema)(new Graph_.Edge({ source: 0, target: 1, data: null }))).toThrow(
-      "Expected string"
-    );
+    expect(() => S.decodeUnknownSync(schema)({ source: 0, target: 1, data: null })).toThrow("Expected string");
   });
 
-  it("rejects non-edge values and derives edge equivalence", () => {
+  it("rejects malformed edge values and derives edge equivalence", () => {
     const schema = GraphSchema.EdgeFromSelf(S.String);
     const equivalent = S.toEquivalence(schema);
-    const edge = new Graph_.Edge({ source: 0, target: 1, data: "x" });
+    const edge = { source: 0, target: 1, data: "x" };
 
-    expect(() => S.decodeUnknownSync(schema)({ source: 0, target: 1, data: "x" })).toThrow();
-    expect(equivalent(edge, new Graph_.Edge({ source: 0, target: 1, data: "x" }))).toBe(true);
-    expect(equivalent(edge, new Graph_.Edge({ source: 1, target: 1, data: "x" }))).toBe(false);
-    expect(equivalent(edge, new Graph_.Edge({ source: 0, target: 2, data: "x" }))).toBe(false);
-    expect(equivalent(edge, new Graph_.Edge({ source: 0, target: 1, data: "y" }))).toBe(false);
+    expect(() => S.decodeSync(schema)({ source: -1, target: 1, data: "x" })).toThrow();
+    expect(equivalent(edge, { source: 0, target: 1, data: "x" })).toBe(true);
+    expect(equivalent(edge, { source: 1, target: 1, data: "x" })).toBe(false);
+    expect(equivalent(edge, { source: 0, target: 2, data: "x" })).toBe(false);
+    expect(equivalent(edge, { source: 0, target: 1, data: "y" })).toBe(false);
   });
 });
 
@@ -130,9 +127,7 @@ describe("DirectedGraph", () => {
       [0, 1],
       [1, 2],
     ]);
-    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([
-      [0, new Graph_.Edge({ source: 0, target: 1, data: "a" })],
-    ]);
+    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([[0, { source: 0, target: 1, data: "a" }]]);
   });
 
   it("encodes immutable directed graphs back to the wire shape", () => {
@@ -222,9 +217,7 @@ describe("UndirectedGraph", () => {
 
     expect(decoded.type).toBe("undirected");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([
-      [0, new Graph_.Edge({ source: 0, target: 1, data: 1 })],
-    ]);
+    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([[0, { source: 0, target: 1, data: 1 }]]);
   });
 
   it("validates existing immutable undirected graphs with nested transforms", () => {

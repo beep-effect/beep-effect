@@ -263,7 +263,10 @@ export const codegenCommand = Command.make(
       Flag.withDescription("Package directory to generate barrel exports for"),
       Flag.withDefault(".")
     ),
-    dryRun: Flag.boolean("dry-run").pipe(Flag.withDescription("Preview changes without writing files")),
+    dryRun: Flag.boolean("dry-run").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Preview changes without writing files")
+    ),
   },
   Effect.fn(function* (config) {
     const fs = yield* FileSystem.FileSystem;

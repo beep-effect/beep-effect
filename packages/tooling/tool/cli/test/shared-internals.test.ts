@@ -15,6 +15,7 @@ Bun.env.BEEP_SI_BOOL_BAD = "maybe";
 import {
   applyJsoncModification,
   booleanEnvValue,
+  configStringEqualsSync,
   configStringOption,
   configStringOptionSync,
   cursorArgs,
@@ -219,6 +220,13 @@ describe("EnvConfig readers", () => {
   it("configStringOptionSync reads present and absent snapshot values", () => {
     expect(configStringOptionSync("BEEP_SI_STR")).toEqual(O.some("value"));
     expect(O.isNone(configStringOptionSync(UNSET))).toBe(true);
+  });
+
+  it("configStringEqualsSync compares present and absent snapshot values", () => {
+    expect(configStringEqualsSync("BEEP_SI_STR", "value")).toBe(true);
+    expect(configStringEqualsSync("value")("BEEP_SI_STR")).toBe(true);
+    expect(configStringEqualsSync("BEEP_SI_STR", "other")).toBe(false);
+    expect(configStringEqualsSync(UNSET, "value")).toBe(false);
   });
 
   it("envValue returns the value or falls back", () => {

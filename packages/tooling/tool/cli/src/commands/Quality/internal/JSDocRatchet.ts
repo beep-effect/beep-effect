@@ -430,7 +430,7 @@ const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (
 
   yield* writeArtifact({
     path: absolutePath,
-    body: `${content}\n`,
+    body: content,
     onError: (cause) => QualityScriptCommandError.new(cause, `Failed to write ${baselinePath}.`),
   });
 });

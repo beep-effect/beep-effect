@@ -2222,16 +2222,21 @@ const makeFallowFeatureCommand = (feature: FallowFeature) =>
   Command.make(
     feature,
     {
-      advisory: Flag.boolean("advisory").pipe(Flag.withDescription("Exit zero while preserving Fallow exit status")),
+      advisory: Flag.boolean("advisory").pipe(
+        Flag.withDefault(false),
+        Flag.withDescription("Exit zero while preserving Fallow exit status")
+      ),
       base: Flag.string("base").pipe(
         Flag.withDefault(defaultBaseRef),
         Flag.withDescription("Git base ref used by diff-aware Fallow commands")
       ),
       check: Flag.boolean("check").pipe(
+        Flag.withDefault(false),
         Flag.withDescription("Fail only for promoted blocking lanes; advisory P1 lanes do not promote findings")
       ),
       out: Flag.string("out").pipe(Flag.withDefault(""), Flag.withDescription("Envelope output path")),
       quiet: Flag.boolean("quiet").pipe(
+        Flag.withDefault(false),
         Flag.withDescription("Suppress Fallow tool chatter in raw output where supported")
       ),
     },
@@ -2262,6 +2267,7 @@ const envelopeCheckCommand = Command.make(
       Flag.withDescription("Expected reportPath recorded in the envelope")
     ),
     requireRawOutput: Flag.boolean("require-raw-output").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Require the envelope rawOutputRef artifact to exist")
     ),
   },
@@ -2277,6 +2283,7 @@ const commandContractCheckCommand = Command.make(
       Flag.withDescription("Comma-separated Fallow feature commands expected in the quality surface")
     ),
     requireEnvelope: Flag.boolean("require-envelope").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Run each advisory command and validate the emitted envelope")
     ),
     outDir: Flag.string("out-dir").pipe(
@@ -2290,7 +2297,10 @@ const commandContractCheckCommand = Command.make(
 const boundariesConfigCheckCommand = Command.make(
   "config-check",
   {
-    check: Flag.boolean("check").pipe(Flag.withDescription("Fail when generated Fallow boundary config is stale")),
+    check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when generated Fallow boundary config is stale")
+    ),
   },
   ({ check }) => runBoundariesConfigCheck(check)
 ).pipe(Command.withDescription("Verify generated Fallow boundary config freshness"));
@@ -2311,12 +2321,18 @@ const ciContractCheckCommand = Command.make(
       Flag.withDefault(defaultOutDir),
       Flag.withDescription("Expected envelope artifact output directory")
     ),
-    requireUpload: Flag.boolean("require-upload").pipe(Flag.withDescription("Require artifact upload wiring")),
+    requireUpload: Flag.boolean("require-upload").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Require artifact upload wiring")
+    ),
     ifNoFilesFound: Flag.string("if-no-files-found").pipe(
       Flag.withDefault("error"),
       Flag.withDescription("Expected upload-artifact missing-file behavior")
     ),
-    advisory: Flag.boolean("advisory").pipe(Flag.withDescription("Require advisory Fallow invocations")),
+    advisory: Flag.boolean("advisory").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Require advisory Fallow invocations")
+    ),
   },
   ({ advisory, expectBlockingLanes, expectLanes, expectOutDir, ifNoFilesFound, requireUpload, workflow }) =>
     runCiContractCheck(
