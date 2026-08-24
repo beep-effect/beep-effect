@@ -25,6 +25,12 @@ readonly required_gates=(
   C_TAILNET_LAN
   D_CONTAINER_IMDS
   E_RUNNER_IMDS_HOOK
+  F_ROOT_IMDS
+  G_HOSTNET_CONTAINER_IMDS
+  H_PRIVILEGED_CONTAINER_IMDS
+  I_ROOT_STS
+  J_HOOK_STILL_ARMED
+  L_IAM_EDGES
 )
 
 branch="${1:-${REDTEAM_REF:-}}"
@@ -218,6 +224,38 @@ else
   else
     echo "GATE AMI_PIN: FAIL (describe-instances failed before ImageId could be read)"
     sed -n '1,8p' "${ami_error}"
+    gate_failed=1
+  fi
+fi
+
+# Read metadata state once while the worker record still exists. The guest
+# poweroff path may terminate it before teardown polling begins.
+if (( aws_available == 0 )); then
+  echo "GATE METADATA_DISABLED: FAIL (AWS credentials unavailable; metadata state cannot be read)"
+  gate_failed=1
+elif [[ -z "${instance_id}" ]]; then
+  echo "GATE METADATA_DISABLED: FAIL (worker instance id was not recovered)"
+  gate_failed=1
+else
+  metadata_error="${work_dir}/ec2-metadata-options.error"
+  if metadata_options="$(aws ec2 describe-instances --region us-east-1 \
+    --instance-ids "${instance_id}" \
+    --query 'Reservations[0].Instances[0].MetadataOptions.[HttpEndpoint,State]' \
+    --output text 2>"${metadata_error}")"; then
+    metadata_endpoint="${metadata_options%%[[:space:]]*}"
+    metadata_state="${metadata_options##*[[:space:]]}"
+    if [[ "${metadata_endpoint}" == disabled && "${metadata_state}" == applied ]]; then
+      echo "GATE METADATA_DISABLED: PASS (disabled applied)"
+    else
+      echo "GATE METADATA_DISABLED: FAIL (expected disabled applied, got ${metadata_endpoint} ${metadata_state})"
+      gate_failed=1
+    fi
+  elif grep -q 'InvalidInstanceID.NotFound' "${metadata_error}"; then
+    echo "GATE METADATA_DISABLED: FAIL (instance already terminated before metadata state could be read)"
+    gate_failed=1
+  else
+    echo "GATE METADATA_DISABLED: FAIL (describe-instances failed before metadata state could be read)"
+    sed -n '1,8p' "${metadata_error}"
     gate_failed=1
   fi
 fi

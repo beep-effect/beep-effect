@@ -143,9 +143,12 @@ describe("@beep/infra CiFleetController", () => {
   });
 
   it.effect(
-    "provisions and verifies iptables-nft before wiring the fail-closed per-job hook",
+    "wires the fail-closed workload identity boundary before runner startup",
     Effect.fnUntraced(function* () {
       const modulePostInstall = MutableHashMap.empty<string, string>();
+      const moduleManagedPolicyArns = MutableHashMap.empty<string, unknown>();
+      const moduleMetadataOptions = MutableHashMap.empty<string, unknown>();
+      const policyDocuments = MutableHashMap.empty<string, string>();
 
       yield* Effect.acquireUseRelease(
         Effect.tryPromise(() =>
@@ -156,6 +159,23 @@ describe("@beep/infra CiFleetController", () => {
                 const postInstall = args.inputs.userdata_post_install;
                 if (args.type === "ghaRunners:index:Module" && isString(postInstall)) {
                   MutableHashMap.set(modulePostInstall, args.name, postInstall);
+                  MutableHashMap.set(
+                    moduleManagedPolicyArns,
+                    args.name,
+                    args.inputs.runner_iam_role_managed_policy_arns
+                  );
+                  MutableHashMap.set(moduleMetadataOptions, args.name, args.inputs.runner_metadata_options);
+                }
+                const policy = args.inputs.policy;
+                if (args.type === "aws:iam/policy:Policy" && isString(policy)) {
+                  MutableHashMap.set(policyDocuments, args.name, policy);
+                  return {
+                    id: `${args.name}-id`,
+                    state: {
+                      ...args.inputs,
+                      arn: "arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable",
+                    },
+                  };
                 }
                 return { id: `${args.name}-id`, state: args.inputs };
               },
@@ -183,12 +203,49 @@ describe("@beep/infra CiFleetController", () => {
       );
 
       const captured = MutableHashMap.get(modulePostInstall, "ci-fleet-controller-test");
+      const capturedManagedPolicyArns = MutableHashMap.get(moduleManagedPolicyArns, "ci-fleet-controller-test");
+      const capturedMetadataOptions = MutableHashMap.get(moduleMetadataOptions, "ci-fleet-controller-test");
+      const capturedPolicy = MutableHashMap.get(policyDocuments, "ci-fleet-controller-test-runner-imds-disable");
       assert.isTrue(O.isSome(captured));
-      if (O.isNone(captured)) {
+      assert.isTrue(O.isSome(capturedManagedPolicyArns));
+      assert.isTrue(O.isSome(capturedMetadataOptions));
+      assert.isTrue(O.isSome(capturedPolicy));
+      if (
+        O.isNone(captured) ||
+        O.isNone(capturedManagedPolicyArns) ||
+        O.isNone(capturedMetadataOptions) ||
+        O.isNone(capturedPolicy)
+      ) {
         return;
       }
 
       const postInstall = captured.value;
+      expect(capturedManagedPolicyArns.value).toEqual(["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"]);
+      expect(capturedMetadataOptions.value).toEqual({
+        http_endpoint: "enabled",
+        http_put_response_hop_limit: 1,
+        http_tokens: "required",
+        instance_metadata_tags: "enabled",
+      });
+      expect(capturedPolicy.value).toBe(
+        JSON.stringify({
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Sid: "DisableOwnMetadataEndpoint",
+              Effect: "Allow",
+              Action: "ec2:ModifyInstanceMetadataOptions",
+              Resource: "arn:aws:ec2:*:*:instance/*",
+              Condition: {
+                StringEquals: {
+                  "aws:ARN": "${ec2:SourceInstanceARN}",
+                  "ec2:MetadataHttpEndpoint": "disabled",
+                },
+              },
+            },
+          ],
+        })
+      );
       // The toolbelt install must stay marker-gated and fail open: the baked
       // image stamps /etc/beep-ci/baked-runner, an unbaked boot installs.
       assert.isTrue(Str.includes("if [ -f /etc/beep-ci/baked-runner ]; then")(postInstall));
@@ -210,6 +267,31 @@ describe("@beep/infra CiFleetController", () => {
       assert.isTrue(Str.includes("#!/usr/bin/env bash\nset -eu\nrunner_uid=")(postInstall));
       assert.isTrue(Str.includes("exec sudo /opt/beep/imds-job-started.sh")(postInstall));
       assert.isTrue(Str.includes("ec2-user ALL=(root) NOPASSWD: /opt/beep/imds-job-started.sh")(postInstall));
+      assert.isTrue(Str.includes("ec2-user ALL=(root) NOPASSWD: /opt/beep/imds-disable.sh")(postInstall));
+      assert.isTrue(Str.includes("ec2-user ALL=(root) NOPASSWD: /opt/beep/self-poweroff.sh")(postInstall));
+      assertSubstringBefore(
+        postInstall,
+        "chmod 0440 /etc/sudoers.d/beep-imds-boundary",
+        "visudo -cf /etc/sudoers.d/beep-imds-boundary"
+      );
+      assertSubstringBefore(
+        postInstall,
+        "aws ec2 modify-instance-metadata-options",
+        "IPv4 and IPv6 IMDS probes both failed; runner may start"
+      );
+      assertSubstringBefore(
+        postInstall,
+        "mv /opt/actions-runner/run.sh /opt/actions-runner/run.module.sh",
+        "cat > /opt/actions-runner/run.sh"
+      );
+      assertSubstringBefore(postInstall, "sudo /opt/beep/imds-disable.sh", 'if ./run.module.sh "$@"; then');
+      assert.isTrue(
+        Str.includes(
+          'logger -t beep-runner-shim "module runner exited with status $runner_status; powering off"\n' +
+            "if ! sudo /opt/beep/self-poweroff.sh; then\n" +
+            '  logger -t beep-runner-shim "poweroff failed after runner exit"'
+        )(postInstall)
+      );
       assert.isTrue(
         Str.includes('iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "$${runner_uid}" -j DROP')(
           postInstall
@@ -231,6 +313,41 @@ describe("@beep/infra CiFleetController", () => {
       );
       assert.isTrue(Str.includes('if [ -d "${runner_dir}" ]; then')(rendered));
       assert.isTrue(Str.includes('if [ "${hook_armed}" = false ]; then')(rendered));
+      assert.isTrue(
+        Str.includes(
+          'aws ec2 modify-instance-metadata-options \\\n  --instance-id "$instance_id" \\\n  --http-endpoint disabled \\\n  --region "$region"'
+        )(rendered)
+      );
+      assert.isTrue(Str.includes('edge_error_file="$(mktemp /tmp/beep-imds-edges.XXXXXX)"')(rendered));
+      assert.isTrue(Str.includes('>/dev/null 2>"$edge_error_file"')(rendered));
+      assert.isTrue(Str.includes("grep -oE '\\([A-Za-z0-9._-]+\\)'")(rendered));
+      assert.isTrue(Str.includes("aws ec2 modify-instance-metadata-options \\\n    --dry-run")(rendered));
+      assert.isTrue(Str.includes('self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"')(rendered));
+      assert.isTrue(Str.includes('self_reenable_code="$(imds_edge_dry_run "$instance_id" enabled)"')(rendered));
+      assert.isTrue(Str.includes('other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"')(rendered));
+      assert.isTrue(Str.includes('logger -t beep-imds-edges "IMDS_EDGE self_disable: PASS"')(rendered));
+      assert.isTrue(Str.includes('logger -t beep-imds-edges "IMDS_EDGE self_reenable: PASS"')(rendered));
+      assert.isTrue(Str.includes('logger -t beep-imds-edges "IMDS_EDGE other_disable: PASS"')(rendered));
+      assert.isTrue(
+        Str.includes(
+          'case "$self_disable_code" in\n' +
+            '  DryRunOperation) logger -t beep-imds-edges "IMDS_EDGE self_disable: PASS" ;;\n' +
+            '  *) logger -t beep-imds-edges "IMDS_EDGE self_disable: FAIL ($self_disable_code)"; exit 1 ;;\n' +
+            "esac"
+        )(rendered)
+      );
+      assertSubstringBefore(
+        rendered,
+        'self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"',
+        'logger -t beep-imds-disable "disabling IMDS on $instance_id in $region"'
+      );
+      assert.isTrue(Str.includes("http://169.254.169.254/latest/api/token")(rendered));
+      assert.isTrue(Str.includes("'http://[fd00:ec2::254]/latest/api/token'")(rendered));
+      assert.isTrue(Str.includes("deadline=$(( $(date +%s) + 90 ))")(rendered));
+      assert.isTrue(Str.includes('if [ "$ipv4_reachable" = false ] && [ "$ipv6_reachable" = false ]; then')(rendered));
+      assert.isTrue(Str.includes("if ! sudo /opt/beep/imds-disable.sh; then")(rendered));
+      assert.isTrue(Str.includes('if ./run.module.sh "$@"; then')(rendered));
+      assert.isTrue(Str.includes('exit "$runner_status"')(rendered));
       assert.isTrue(
         Str.includes('logger -t beep-imds-hook "runner directory not found; per-job IMDS hook NOT armed"\n    exit 1')(
           rendered

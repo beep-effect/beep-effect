@@ -56,6 +56,131 @@ jobs:
             echo "DENIED AS EXPECTED: runner could not reach IMDSv2"
           fi
 
+      - name: Gate F - deny root IMDS reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_f_root_imds
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          for endpoint in \
+            'http://169.254.169.254/latest/api/token' \
+            'http://[fd00:ec2::254]/latest/api/token'; do
+            if sudo curl --noproxy '*' --silent --show-error --fail --globoff \
+              --connect-timeout 2 --max-time 3 \
+              --request PUT \
+              --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
+              --output /dev/null \
+              "${endpoint}"; then
+              echo "FORBIDDEN SUCCESS: root reached ${endpoint}"
+              failed=1
+            else
+              echo "DENIED AS EXPECTED: root could not reach ${endpoint}"
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate G - deny host-network container IMDS reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_g_hostnet_container_imds
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          for endpoint in \
+            'http://169.254.169.254/latest/api/token' \
+            'http://[fd00:ec2::254]/latest/api/token'; do
+            if docker run --rm --network host curlimages/curl:8.16.0 \
+              --noproxy '*' --silent --show-error --fail --globoff \
+              --connect-timeout 2 --max-time 3 \
+              --request PUT \
+              --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
+              --output /dev/null \
+              "${endpoint}"; then
+              echo "FORBIDDEN SUCCESS: host-network container reached ${endpoint}"
+              failed=1
+            else
+              echo "DENIED AS EXPECTED: host-network container could not reach ${endpoint}"
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate H - deny privileged host-network container IMDS reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_h_privileged_container_imds
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          for endpoint in \
+            'http://169.254.169.254/latest/api/token' \
+            'http://[fd00:ec2::254]/latest/api/token'; do
+            if docker run --rm --privileged --network host curlimages/curl:8.16.0 \
+              --noproxy '*' --silent --show-error --fail --globoff \
+              --connect-timeout 2 --max-time 3 \
+              --request PUT \
+              --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
+              --output /dev/null \
+              "${endpoint}"; then
+              echo "FORBIDDEN SUCCESS: privileged host-network container reached ${endpoint}"
+              failed=1
+            else
+              echo "DENIED AS EXPECTED: privileged host-network container could not reach ${endpoint}"
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate J - require the owner IMDS hook to remain armed
+        if: ${{ always() && inputs.redteam }}
+        id: gate_j_hook_still_armed
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_hook='ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/beep/imds-job-started-hook.sh'
+          grep -Fxq "${expected_hook}" /opt/actions-runner/.env
+          test -x /opt/beep/imds-job-started-hook.sh
+          runner_uid="$(id -u)"
+          sudo iptables -C OUTPUT \
+            -d 169.254.169.254/32 \
+            -m owner --uid-owner "${runner_uid}" \
+            -j DROP
+          if command -v ip6tables >/dev/null 2>&1; then
+            sudo ip6tables -C OUTPUT \
+              -d fd00:ec2::254/128 \
+              -m owner --uid-owner "${runner_uid}" \
+              -j DROP
+          fi
+          echo "Gate E owner DROP remains armed"
+
+      - name: Gate L - require live IAM edge dry-runs
+        if: ${{ always() && inputs.redteam }}
+        id: gate_l_iam_edges
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          edge_log="${RUNNER_TEMP}/imds-edges.log"
+          if ! sudo journalctl -t beep-imds-edges --no-pager -o cat > "${edge_log}"; then
+            sudo grep -h beep-imds-edges /var/log/messages > "${edge_log}" || : > "${edge_log}"
+          fi
+          grep -E \
+            'IMDS_EDGE (self_disable|self_reenable|other_disable): (PASS|FAIL|INCONCLUSIVE)' \
+            "${edge_log}" || true
+          edge_count() { grep -Ec "$1" "${edge_log}" || true; }
+          [[ "$(edge_count 'IMDS_EDGE self_disable: PASS$'):$(edge_count 'IMDS_EDGE self_disable: ')" == 1:1 ]]
+          [[ "$(edge_count 'IMDS_EDGE self_reenable: PASS$'):$(edge_count 'IMDS_EDGE self_reenable: ')" == 1:1 ]]
+          case "$(edge_count 'IMDS_EDGE other_disable: PASS$'):$(edge_count \
+            'IMDS_EDGE other_disable: INCONCLUSIVE( \([A-Za-z0-9._-]+\))?$'):$(edge_count \
+            'IMDS_EDGE other_disable: ')" in
+            1:0:1) ;;
+            0:1:1) echo "NOTE: other-instance authorization order was inconclusive; accepting Gate L" ;;
+            *) exit 1 ;;
+          esac
+
       - name: Ensure AWS CLI is available
         if: ${{ inputs.redteam }}
         id: aws_cli
@@ -85,6 +210,57 @@ jobs:
             --install-dir "${install_dir}" --bin-dir "${bin_dir}"
           echo "${bin_dir}" >> "${GITHUB_PATH}"
           "${bin_dir}/aws" --version
+
+      - name: Gate I - deny root STS identity
+        if: ${{ always() && inputs.redteam }}
+        id: gate_i_root_sts
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          if ! sudo aws --version >/dev/null 2>&1; then
+            echo "AWS CLI unavailable to root; denial cannot be proven"
+            exit 1
+          fi
+          if ! sudo env -i PATH=/usr/local/bin:/usr/bin:/bin aws --version >/dev/null 2>&1; then
+            echo "AWS CLI unavailable to clean-environment root; denial cannot be proven"
+            exit 1
+          fi
+          failed=0
+          if sudo aws sts get-caller-identity >/dev/null 2>&1; then
+            echo "FORBIDDEN SUCCESS: sudo aws obtained an STS identity"
+            failed=1
+          else
+            echo "DENIED AS EXPECTED: sudo aws could not obtain an STS identity"
+          fi
+          if sudo env -i PATH=/usr/local/bin:/usr/bin:/bin \
+            aws sts get-caller-identity >/dev/null 2>&1; then
+            echo "FORBIDDEN SUCCESS: clean-environment root obtained an STS identity"
+            failed=1
+          else
+            echo "DENIED AS EXPECTED: clean-environment root could not obtain an STS identity"
+          fi
+          exit "${failed}"
+
+      - name: Informational K - report JIT argv residue
+        if: ${{ always() && inputs.redteam }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          jit_visible=false
+          for cmdline in /proc/[0-9]*/cmdline; do
+            if [[ -r "${cmdline}" ]] && \
+              tr '\0' '\n' < "${cmdline}" 2>/dev/null | grep -Fxq -- '--jitconfig'; then
+              jit_visible=true
+              break
+            fi
+          done
+          if [[ "${jit_visible}" == true ]]; then
+            echo "JIT residue: visible"
+          else
+            echo "JIT residue: absent"
+          fi
 
       - name: Gate A - deny GitHub App secrets
         if: ${{ always() && inputs.redteam }}
@@ -238,6 +414,42 @@ jobs:
             echo "GATE E_RUNNER_IMDS_HOOK: PASS"
           else
             echo "GATE E_RUNNER_IMDS_HOOK: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_f_root_imds.outcome }}" == success ]]; then
+            echo "GATE F_ROOT_IMDS: PASS"
+          else
+            echo "GATE F_ROOT_IMDS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_g_hostnet_container_imds.outcome }}" == success ]]; then
+            echo "GATE G_HOSTNET_CONTAINER_IMDS: PASS"
+          else
+            echo "GATE G_HOSTNET_CONTAINER_IMDS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_h_privileged_container_imds.outcome }}" == success ]]; then
+            echo "GATE H_PRIVILEGED_CONTAINER_IMDS: PASS"
+          else
+            echo "GATE H_PRIVILEGED_CONTAINER_IMDS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_i_root_sts.outcome }}" == success ]]; then
+            echo "GATE I_ROOT_STS: PASS"
+          else
+            echo "GATE I_ROOT_STS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_j_hook_still_armed.outcome }}" == success ]]; then
+            echo "GATE J_HOOK_STILL_ARMED: PASS"
+          else
+            echo "GATE J_HOOK_STILL_ARMED: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_l_iam_edges.outcome }}" == success ]]; then
+            echo "GATE L_IAM_EDGES: PASS"
+          else
+            echo "GATE L_IAM_EDGES: FAIL"
             failed=1
           fi
           exit "${failed}"

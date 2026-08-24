@@ -118,6 +118,175 @@ BEEP_IMDS_DROP
 )
 `;
 
+// The pinned module fetches and deletes the one-use JIT configuration before
+// invoking /opt/actions-runner/run.sh as ec2-user. Replacing that entrypoint in
+// post-install puts the one-way metadata shutdown after the last bootstrap
+// credential use but before the runner can accept a job. The two sudo targets
+// are root-owned and job-non-writable. They deliberately remain callable by a
+// job: metadata disable is idempotent, and powering off one ephemeral worker is
+// only self-denial of service. Keep the whole installer subshell-scoped because
+// the module inlines it into the surrounding user-data shell.
+const imdsWorkloadBoundaryPostInstall = `(
+  set -eu
+  install -d -o root -g root -m 0755 /opt/beep
+
+  cat > /opt/beep/imds-disable.sh <<'BEEP_IMDS_DISABLE'
+#!/usr/bin/env bash
+set -eu
+
+logger -t beep-imds-disable "requesting IMDSv2 bootstrap token"
+imds_token="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --request PUT \\
+  --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\
+  http://169.254.169.254/latest/api/token)"
+instance_id="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --header "X-aws-ec2-metadata-token: $imds_token" \\
+  http://169.254.169.254/latest/meta-data/instance-id)"
+region="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --header "X-aws-ec2-metadata-token: $imds_token" \\
+  http://169.254.169.254/latest/dynamic/instance-identity/document | jq -er '.region')"
+unset imds_token
+
+edge_error_file="$(mktemp /tmp/beep-imds-edges.XXXXXX)"
+trap 'rm -f -- "$edge_error_file"' EXIT
+imds_edge_dry_run() {
+  local error_code
+  : > "$edge_error_file"
+  if aws ec2 modify-instance-metadata-options \\
+    --dry-run \\
+    --instance-id "$1" \\
+    --http-endpoint "$2" \\
+    --region "$region" \\
+    >/dev/null 2>"$edge_error_file"; then
+    printf '%s\\n' NoError
+    return
+  fi
+  error_code="$(grep -oE '\\([A-Za-z0-9._-]+\\)' "$edge_error_file" | head -n 1 | tr -d '()' || true)"
+  printf '%s\\n' "\${error_code:-UnknownError}"
+}
+
+self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"
+case "$self_disable_code" in
+  DryRunOperation) logger -t beep-imds-edges "IMDS_EDGE self_disable: PASS" ;;
+  *) logger -t beep-imds-edges "IMDS_EDGE self_disable: FAIL ($self_disable_code)"; exit 1 ;;
+esac
+
+self_reenable_code="$(imds_edge_dry_run "$instance_id" enabled)"
+case "$self_reenable_code" in
+  UnauthorizedOperation) logger -t beep-imds-edges "IMDS_EDGE self_reenable: PASS" ;;
+  *) logger -t beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)" ;;
+esac
+
+other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"
+case "$other_disable_code" in
+  UnauthorizedOperation) logger -t beep-imds-edges "IMDS_EDGE other_disable: PASS" ;;
+  InvalidInstanceID.NotFound|InvalidInstanceID.Malformed)
+    logger -t beep-imds-edges "IMDS_EDGE other_disable: INCONCLUSIVE ($other_disable_code)" ;;
+  *) logger -t beep-imds-edges "IMDS_EDGE other_disable: FAIL ($other_disable_code)" ;;
+esac
+
+logger -t beep-imds-disable "disabling IMDS on $instance_id in $region"
+aws ec2 modify-instance-metadata-options \\
+  --instance-id "$instance_id" \\
+  --http-endpoint disabled \\
+  --region "$region" \\
+  >/dev/null
+logger -t beep-imds-disable "disable request accepted; waiting for both host endpoints to fail"
+
+deadline=$(( $(date +%s) + 90 ))
+while :; do
+  ipv4_reachable=false
+  ipv6_reachable=false
+  if curl --noproxy '*' --silent --show-error --fail \\
+    --connect-timeout 2 --max-time 3 \\
+    --request PUT \\
+    --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\
+    --output /dev/null \\
+    http://169.254.169.254/latest/api/token 2>/dev/null; then
+    ipv4_reachable=true
+  fi
+  if curl --noproxy '*' --silent --show-error --fail --globoff --ipv6 \\
+    --connect-timeout 2 --max-time 3 \\
+    --request PUT \\
+    --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\
+    --output /dev/null \\
+    'http://[fd00:ec2::254]/latest/api/token' 2>/dev/null; then
+    ipv6_reachable=true
+  fi
+
+  if [ "$ipv4_reachable" = false ] && [ "$ipv6_reachable" = false ]; then
+    logger -t beep-imds-disable "IPv4 and IPv6 IMDS probes both failed; runner may start"
+    exit 0
+  fi
+  if [ "$(date +%s)" -ge "$deadline" ]; then
+    logger -t beep-imds-disable \\
+      "IMDS remained reachable at deadline (ipv4=$ipv4_reachable ipv6=$ipv6_reachable); failing closed"
+    exit 1
+  fi
+  sleep 1
+done
+BEEP_IMDS_DISABLE
+
+  cat > /opt/beep/self-poweroff.sh <<'BEEP_SELF_POWEROFF'
+#!/usr/bin/env bash
+set -eu
+logger -t beep-self-poweroff "powering off ephemeral runner"
+exec shutdown -P now
+BEEP_SELF_POWEROFF
+
+  chown root:root /opt/beep/imds-disable.sh /opt/beep/self-poweroff.sh
+  chmod 0755 /opt/beep/imds-disable.sh /opt/beep/self-poweroff.sh
+  printf '%s\\n' \\
+    '${runnerRunAs} ALL=(root) NOPASSWD: /opt/beep/imds-disable.sh' \\
+    '${runnerRunAs} ALL=(root) NOPASSWD: /opt/beep/self-poweroff.sh' \\
+    > /etc/sudoers.d/beep-imds-boundary
+  chown root:root /etc/sudoers.d/beep-imds-boundary
+  chmod 0440 /etc/sudoers.d/beep-imds-boundary
+  visudo -cf /etc/sudoers.d/beep-imds-boundary
+
+  if [ ! -f /opt/actions-runner/run.sh ]; then
+    logger -t beep-runner-shim "module run.sh missing; refusing to register runner"
+    exit 1
+  fi
+  if [ -e /opt/actions-runner/run.module.sh ]; then
+    logger -t beep-runner-shim "run.module.sh already exists; refusing ambiguous runner entrypoint"
+    exit 1
+  fi
+  mv /opt/actions-runner/run.sh /opt/actions-runner/run.module.sh
+  cat > /opt/actions-runner/run.sh <<'BEEP_RUNNER_SHIM'
+#!/usr/bin/env bash
+set -eu
+
+if ! sudo /opt/beep/imds-disable.sh; then
+  logger -t beep-runner-shim "IMDS disable failed; runner will not start"
+  if ! sudo /opt/beep/self-poweroff.sh; then
+    logger -t beep-runner-shim "poweroff failed after IMDS disable failure"
+  fi
+  exit 1
+fi
+
+logger -t beep-runner-shim "IMDS disabled and unreachable; starting module runner"
+if ./run.module.sh "$@"; then
+  runner_status=0
+else
+  runner_status=$?
+fi
+logger -t beep-runner-shim "module runner exited with status $runner_status; powering off"
+if ! sudo /opt/beep/self-poweroff.sh; then
+  logger -t beep-runner-shim "poweroff failed after runner exit"
+  exit 1
+fi
+exit "$runner_status"
+BEEP_RUNNER_SHIM
+  chown root:root /opt/actions-runner/run.sh
+  chmod 0755 /opt/actions-runner/run.sh /opt/actions-runner/run.module.sh
+  logger -t beep-runner-shim "installed fail-closed IMDS boundary runner shim"
+)
+`;
+
 // The terraform-module bridge writes module inputs into `pulumi.tf.json`, and
 // Terraform's JSON syntax parses every string value as an HCL template: a
 // literal bash `${...}` (or `%{...}`) plans as an HCL reference and fails the
@@ -130,7 +299,27 @@ const escapeHclTemplateSequences = flow(
   Str.replaceAll("%{", "%%{")
 );
 
-const runnerPostInstall = escapeHclTemplateSequences(runnerToolbeltPostInstall + imdsJobHookPostInstall);
+const runnerPostInstall = escapeHclTemplateSequences(
+  runnerToolbeltPostInstall + imdsJobHookPostInstall + imdsWorkloadBoundaryPostInstall
+);
+
+const runnerImdsDisablePolicyDocument = JSON.stringify({
+  Version: "2012-10-17",
+  Statement: [
+    {
+      Sid: "DisableOwnMetadataEndpoint",
+      Effect: "Allow",
+      Action: "ec2:ModifyInstanceMetadataOptions",
+      Resource: "arn:aws:ec2:*:*:instance/*",
+      Condition: {
+        StringEquals: {
+          "aws:ARN": "${ec2:SourceInstanceARN}",
+          "ec2:MetadataHttpEndpoint": "disabled",
+        },
+      },
+    },
+  ],
+});
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
@@ -349,33 +538,30 @@ type CiFleetControllerArgs = {
  *
  * **Gotchas**
  *
- * The host IMDS credential-theft mitigation (CSF-003) is wired as a per-job
- * `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook (`imdsJobHookPostInstall`) that
- * installs the uid-scoped `iptables` OWNER-match DROP after the agent has
- * registered but before any job step runs. History that shaped it: the
- * original post-install DROP was deployed and rolled back the same day after
- * the worker failed to register (`runner-start-failed`) — but the toolbelt
- * post-install later reproduced the identical failure with no firewall at
- * all, because the module inlines `userdata_post_install` into its user-data
- * script and a leaked `set -u` kills the runner-start section on its own
- * unset variables. The DROP's culpability was never proven; the retest must
- * keep every snippet subshell-scoped, and no failure story about the hook is
- * believed until reproduced in that form. The hook design accounts for the
- * two structural constraints the rollback exposed: agent and steps share one
- * uid (so the DROP lands per-job, when the agent no longer needs IMDS), and
- * root's config-time IMDS for JIT registration stays open (uid-scoped rule).
- * Privilege transition is explicit — the hook wrapper execs the root-owned
- * installer through a sudoers entry scoped to exactly that script. Boot first
- * installs `iptables-nft` and verifies the nft backend plus OWNER match before
- * writing or wiring the hook. The installer and wrapper propagate failures so
- * GitHub's job-start hook fails closed before any job step can run. A missing
- * runner directory now aborts post-install before runner registration. Gate E
- * then proves live job pickup and denial of the runner user's IMDSv2 token PUT;
- * no live deployment proof is claimed here. Deploys are gated on Gate E plus
- * the full guest-isolation red-team re-run on a live ephemeral worker; the
- * always-on layers remain IMDSv2 hop limit 1, the permissions-boundary-capped
- * instance role, the ephemeral one-job-one-VM lifecycle, and JIT config that
- * keeps no registration token on the instance.
+ * The primary workload-identity boundary is the post-install `run.sh` shim.
+ * The pinned module first uses IMDS to read its instance facts, fetches static
+ * and one-use JIT configuration from SSM, deletes the JIT parameter, and then
+ * invokes the shim as `ec2-user`. The shim calls a root-owned helper that may
+ * only disable IMDS on the source instance. It waits until both host metadata
+ * endpoints are unreachable before it starts the module runner. Failure powers
+ * off the guest without starting the runner. The launch template converts that
+ * guest shutdown into EC2 termination, so teardown does not need role
+ * credentials after IMDS closes.
+ *
+ * The `ACTIONS_RUNNER_HOOK_JOB_STARTED` owner DROP remains defense in depth.
+ * Its root-owned installer is exposed through one exact sudoers entry, and
+ * every prerequisite fails closed before a job step. Gate E proves the runner
+ * user's token PUT remains denied; Gate J separately proves the owner rule is
+ * still armed after the stronger endpoint shutdown lands. A job may call the
+ * disable helper again or power off its own one-job VM. Neither call grants
+ * privilege.
+ *
+ * The module inlines `userdata_post_install` into one user-data script. Each
+ * snippet must keep shell options in a subshell because a leaked `set -u`
+ * kills the module's later start section on unset variables. Terraform also
+ * parses every module-input string as an HCL template, so literal shell
+ * `${...}` and `%{...}` sequences must pass through
+ * `escapeHclTemplateSequences`.
  *
  * Reliability semantics for the one-job-one-VM fleet: `job_retry` rescues a
  * job whose runner died between launch and pickup (spot reclaim, boot
@@ -467,6 +653,22 @@ export class CiFleetController extends pulumi.ComponentResource {
         },
         type: "String",
         value: resolvedAmiId,
+      },
+      { parent: this }
+    );
+
+    const runnerImdsDisablePolicy = new aws.iam.Policy(
+      `${name}-runner-imds-disable`,
+      {
+        description: "Allow a CI runner to disable IMDS on only its own instance.",
+        name: "beep-ci-runner-imds-disable",
+        path: "/beep-ci/",
+        policy: runnerImdsDisablePolicyDocument,
+        tags: {
+          App: "ci-runners",
+          ManagedBy: "pulumi",
+          Project: "beep-ci",
+        },
       },
       { parent: this }
     );
@@ -586,6 +788,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         runner_disable_default_labels: true,
         runner_ec2_tags: { "beep-ci": "runner" },
         runner_extra_labels: [args.config.runnerLabel],
+        runner_iam_role_managed_policy_arns: [runnerImdsDisablePolicy.arn],
         runner_metadata_options: {
           http_endpoint: "enabled",
           http_put_response_hop_limit: 1,

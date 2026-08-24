@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`; P1 complete 2026-08-24, P2 next
+Lifecycle: `active`; P1 complete 2026-08-24, P2 in progress
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -64,19 +64,24 @@ Use this command for execution-capable sessions:
 6. [`research/P0-FACTS.md`](./research/P0-FACTS.md) - sanitized live inventory.
 7. [`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md) - fresh bake,
    deployment, red-team, fast-path, teardown, and closure-ready proof.
-8. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 friction
+8. [`research/P2-DESIGN.md`](./research/P2-DESIGN.md) - workload identity
+   realization, IAM edges, boot handoff, proof plan, and operator steps.
+9. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 friction
    receipts and prevention notes.
-9. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
+10. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
    ledger.
-10. The three source packets named in the transfer table.
-11. The fleet packet evidence named above.
+11. The three source packets named in the transfer table.
+12. The fleet packet evidence named above.
 
 ## Current Phase
 
 `P1 08-24 CSF-003/CSF-009 deployment proof` completed on 2026-08-24 with
 closure-ready evidence retained in
 [`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md). P2 Workload identity
-boundary is next, followed by P3 Admission defense in depth.
+source work is in progress under
+[`research/P2-DESIGN.md`](./research/P2-DESIGN.md). Policy simulation,
+deployment, live red-team proof, and the P4 replay probe remain outstanding.
+P3 Admission defense in depth follows workload identity proof.
 
 ## Latest Evidence
 
