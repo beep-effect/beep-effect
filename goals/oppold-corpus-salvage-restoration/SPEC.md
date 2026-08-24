@@ -142,6 +142,11 @@ The packet inherits both binding predecessor debt ledgers:
 - [ ] Capacity preflight records an approved ceiling before the archive run.
 - [ ] Every current T7 archive object copies once while a streaming SHA-256 is
       computed. No source is fully buffered before redundancy exists.
+- [ ] Every archive row carries a pre/post source-stability check (size and
+      mtime re-stat around the streaming copy); a source observed changing
+      during copy receives a terminal `changed-during-copy` outcome and is
+      re-copied from its stable state — its first copy never becomes a PASS
+      row.
 - [ ] Atomic destinations land under `raw/t7-salvage-2026-08-10/`; an
       existing destination follows the truncate-and-resume-by-hash policy
       instead of failing closed.
@@ -149,6 +154,11 @@ The packet inherits both binding predecessor debt ledgers:
       own archive object.
 - [ ] A fresh process independently reparses the destination manifest and
       verifies every terminal row against destination bytes.
+- [ ] Payload files, manifest appends, renames, and their parent directories
+      are durably synced (file and directory fsync) before any terminal PASS
+      row is written, and a recovery proof (crash/power-cut simulation over
+      the copy→verify→PASS boundary) demonstrates that an interrupted run
+      resumes without a false PASS.
 - [ ] The archive operation extends the out-of-repo `raw/provenance.jsonl`
       ledger through the schema-defined records.
 - [ ] The inherited-loss ledger records the collector, missing-pair, stripped

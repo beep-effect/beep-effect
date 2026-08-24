@@ -87,10 +87,15 @@ disk/time ceilings, and no more than one full transformation run occurs.
    amplification, and terminal exception classes.
 3. Write `history/reflections/<YYYY-MM-DD>-<agent>.md` through `/reflect` and
    pass `bun run beep lint reflection-artifacts`.
-4. Run `bun run beep yeet repair`, `verify`, `publish --pr`, and `monitor`
-   until `merge-ready: yes`.
-5. Flip the goal lifecycle and final phase status in the same PR as the final
-   work and closeout reflection.
+4. Run `bun run beep yeet repair`, `verify`,
+   `publish --pr --message "<conventional commit>"`, and `monitor` until
+   `merge-ready: yes` (a message-less publish is only valid for an
+   already-committed clean HEAD or the explicit amend/no-edit retry).
+5. Flip every authoritative closeout surface together in the same PR as the
+   final work and closeout reflection: `initiative.status` and the top-level
+   `lifecycle` in `ops/manifest.json`, the README `Lifecycle:` token, and the
+   final phase status — partial flips trip the goals doctor's
+   status-consistency findings.
 
 ## Current blockers
 
