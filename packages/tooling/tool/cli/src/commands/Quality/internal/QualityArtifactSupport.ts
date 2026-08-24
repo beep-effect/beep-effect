@@ -89,8 +89,17 @@ export const JsonRecord = S.Record(S.String, S.Unknown).pipe(
  */
 export type JsonRecord = typeof JsonRecord.Type;
 
+// Dependency names mapped to version specifiers for one package.json bucket.
+const PackageJsonDependencyRecord = S.Record(S.String, S.String);
+
 /**
  * Package manifest fields consumed by Quality artifact generators.
+ *
+ * **Details**
+ *
+ * The four dependency buckets are read so coverage scope planning can follow
+ * workspace-internal edges to dependents; every bucket is optional because a
+ * manifest may omit any of them.
  *
  * @category models
  * @since 0.0.0
@@ -101,6 +110,10 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
     scripts: S.optionalKey(S.Record(S.String, S.String)),
     workspaces: S.optionalKey(S.Unknown),
     exports: S.optionalKey(S.Unknown),
+    dependencies: S.optionalKey(PackageJsonDependencyRecord),
+    devDependencies: S.optionalKey(PackageJsonDependencyRecord),
+    peerDependencies: S.optionalKey(PackageJsonDependencyRecord),
+    optionalDependencies: S.optionalKey(PackageJsonDependencyRecord),
   },
   $I.annote("PackageJson", {
     description: "Package manifest fields used by repo CLI support scripts.",
