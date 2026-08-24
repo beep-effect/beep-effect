@@ -143,7 +143,8 @@ Locked in the source exploration; back-links, not copies
 - 2026-08-13 §first retrofit — qa judge gate.
 - 2026-08-13 §verdicts are values / kernel deps — derived from doctrine.
 - 2026-08-13 §SKILL.md projection — in wave 1, via `@beep/md` (operator override).
-- 2026-08-13 §graduation shape — this packet only; exploration stays active.
+- 2026-08-13 §graduation shape — this packet only; exploration stayed active at the time
+  (superseded by the 2026-08-24 §status flip below).
 - 2026-08-24 §status flip — exploration flipped to `graduated` per the graduation contract.
 - 2026-08-24 §drift corrections + digest seam — `S.TaggedError` replaces retired
   `TaggedErrorClass`; `render`/`renderUnsafe` replace deprecated `DocumentToMarkdown`;

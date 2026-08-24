@@ -68,7 +68,9 @@ The bricks this goal composes (verified `file:line` citations in the inventory r
 - `@beep/identity` — `$I` composers, `$SchemaId`: **reuse**.
 - `@beep/provenance` — `VerifiedTextAnchor` opaque-constructor + receipt split: **reuse as
   pattern**.
-- `@beep/md` — document model for the SKILL.md projection (`S.encode` render): **reuse**.
+- `@beep/md` — document model for the SKILL.md projection, rendered via `render`/
+  `renderUnsafe` (the deprecated `DocumentToMarkdown` `S.encode` path is not the target;
+  see `SPEC.md` §Objective): **reuse**.
 - `@beep/repo-cli` Qa command — `Inventory.schemas.ts`, `JudgeCheck.ts`, `JudgeIngest.ts`,
   `JudgeLint.ts`: **extend** (retrofit target; parity required).
 - Verdict-value precedents — `@beep/mcp-kit` `TierGate.ts`; `ClaimGateResult` model in
