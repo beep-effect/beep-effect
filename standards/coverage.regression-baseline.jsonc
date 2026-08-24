@@ -24951,15 +24951,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": {
-          "lines": 88.05,
-          "statements": 88.23,
-          "branches": 92.85,
-          "functions": 85.71,
+          "lines": 74.66,
+          "statements": 75,
+          "branches": 80,
+          "functions": 77.77,
           "uncovered": {
-            "lines": 8,
-            "statements": 8,
-            "branches": 3,
-            "functions": 4
+            "lines": 19,
+            "statements": 19,
+            "branches": 9,
+            "functions": 6
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts": {
