@@ -96,3 +96,39 @@ ratifies.
   the connected read/write MCP but every write returned `MCP tool call requires approval, but
   approval policy is never`; read-only fetches still worked. Prevention: launch atlas-operator
   sessions with Notion write approval enabled and verify one additive schema call before fan-out.
+
+- **2026-08-24 — Refs gate rejected a backticked private-workspace path; one full proof cycle
+  lost.** The shape PR's first `yeet publish` failed at `quality:lint-policy` with
+  `knowledge semantic-delta: 3 introduced blocking finding(s)`: three packet-root mentions of the
+  gitignored teaching workspace under docs-internal, written with backticks, counted as
+  `broken-tracked-path`. This packet already carried a receipt for the same gate class (future
+  and external paths); the private-workspace case is a third spelling of it. Prevention: spell
+  any untracked/gitignored/future path in prose in packet-root files; run
+  `bun run beep ci lane lint-policy` on the committed branch before the full proof. Attribution
+  note: the `@beep/xai#build` TS2589 seen in the same proof is the known native-compiler flake;
+  the build lane retried green and needed no repair. A second full cycle
+  then failed on `knowledge:refs-check` for one `~/YeeBois/dev/effect` anchor in the same
+  DECISIONS entry (`external-mirror-reference`, home-relative). Two cycles for two spellings of
+  one gate. Cheapest prevention is a pre-verify grep over packet-root files:
+  `grep -n -E '~/|docs/_internal' explorations/<slug>/{README,BRIEF,DECISIONS,RESEARCH}.md`.
+- **2026-08-24 — Headless Grok lanes died in turn 1 on the repo's MCP tool schema.** Seven
+  env-scrubbed grok-4.6 lanes (tracker sweep) failed with `API Error: 400 ... [invalid_client_tool_schema]
+  mcp__nlp__Analyze: tool parameter root must be an object type` because `.mcp.json` loads the
+  `nlp` server into every headless session and the xAI proxy rejects that schema. Fix that worked:
+  `--strict-mcp-config --mcp-config '{"mcpServers":{}}'` on lane invocations (lanes need only
+  Read/Write/Bash). Prevention: make it part of the headless-lane recipe; consider fixing the `nlp`
+  MCP root schema (a `$ref` root) at the source.
+- **2026-08-24 — Two orchestrator gotchas cost a relaunch.** `pkill -f 'tracker/run.sh'` matched
+  the Bash tool's own shell (the command line contains the pattern) and killed the cleanup
+  mid-way (exit 144); use bracket patterns (`run[.]sh`). In the same line, zsh's
+  `no matches found` on an empty glob aborted the whole `rm`, leaving stale first-run logs that a
+  monitor then mis-reported as live errors. Prevention: `setopt nullglob` or `rm -f` per path;
+  never chain kills with globbed cleanup.
+- **2026-08-24 — A review round lost to unpropagated post-review edits.** After applying the
+  skeptic's corrections to the tracker synthesis (#518 reclassified, #683 downgraded), the
+  Numbers table, the per-lane rows, a bolded "0 rows" sentence, and a downstream "seven of eight"
+  count were not all updated; PR #797's first review caught six threads of exactly that. A
+  follow-up regex fix then rewrote a per-lane count that was correct. Prevention: when a
+  disposition changes on one row, regenerate every derived count from the inventory (`jq`) rather
+  than hand-editing prose; treat counts in prose as generated text.
+
