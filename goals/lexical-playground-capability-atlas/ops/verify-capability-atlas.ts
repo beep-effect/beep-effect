@@ -772,10 +772,7 @@ const missingActivationPathWaivers = atlas.capabilities.flatMap((capability) =>
   capability.activationPaths
     .filter(
       (path) =>
-        path.evidenceStatus === "unverified" &&
-        path.surface !== "programmatic" &&
-        capability.evidenceStatus !== "verified-source" &&
-        !approvedWaiverIds.has(capability.id)
+        path.evidenceStatus === "unverified" && path.surface !== "programmatic" && !approvedWaiverIds.has(capability.id)
     )
     .map((path) => `${capability.id}/${path.surface}`)
 );

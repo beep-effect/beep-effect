@@ -8,8 +8,9 @@ unverified: six pinned Playground defects and four capabilities unavailable in
 the pinned Playground. The other 152 exercised entries are `verified-live`.
 
 P0's entry gate is closed (152 exercised + 10 approved waivers). The
-activation-path gate is open (12 user-visible paths on `verified-live` entries),
-so P0 remains `in-progress` until those paths are exercised or waived.
+activation-path gate is open (13 user-visible paths: 12 on `verified-live`
+entries plus `interchange.canonical-json/importer` on a `verified-source`
+entry), so P0 remains `in-progress` until those paths are exercised or waived.
 
 ## Remaining unverified entries
 
@@ -29,7 +30,10 @@ so P0 remains `in-progress` until those paths are exercised or waived.
 ## Activation-path gate
 
 The live audit records 45 activation paths with `evidenceStatus: unverified`.
-The gate is open on these 12 user-visible paths from `verified-live` entries:
+The gate is open on 13 user-visible paths: the 12 below from `verified-live`
+entries, plus `interchange.canonical-json/importer`, whose capability is
+`verified-source` (no Playground importer exists for `@beep/md` canonical JSON;
+P0.5 must either exercise a product-host importer or add an entry waiver):
 
 | Atlas ID | Surface |
 | --- | --- |
@@ -46,10 +50,11 @@ The gate is open on these 12 user-visible paths from `verified-live` entries:
 | `table.column-reorder` | `context-menu` |
 | `document.read-only` | `read-only` |
 
-The remaining 33 paths do not open the live gate. Twenty-two are
-`programmatic`, so source evidence or the P1 resolver tests prove them. Eleven
-are covered at entry level: 10 are on capabilities with approved waivers, and
-`interchange.canonical-json/importer` is on a `verified-source` capability.
+The remaining 32 paths do not open the live gate. Twenty-two are
+`programmatic`, so source evidence or the P1 resolver tests prove them. Ten
+are covered at entry level by capabilities with approved waivers. A
+`verified-source` capability does not shield its user-visible paths: the gate
+counts them until they are exercised or waived.
 
 ## Approved waivers
 

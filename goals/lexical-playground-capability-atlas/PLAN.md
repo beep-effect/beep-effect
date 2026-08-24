@@ -95,8 +95,10 @@ Status: `active`
   `format.inline-code/markdown-shortcut`,
   `format.semantic-highlight/markdown-shortcut`, `extension.history/toolbar`,
   `authoring.autocomplete/selection`, `table.column-reorder/context-menu`, and
-  `document.read-only/read-only`. The 22 `programmatic` paths are classified as
-  source/P1-proven. P0.5: exercise the 12 user-visible paths, then flip P0.
+  `document.read-only/read-only`, plus `interchange.canonical-json/importer`
+  on a `verified-source` entry (13 in total). The 22 `programmatic` paths are
+  classified as source/P1-proven. P0.5: exercise or waive the 13 user-visible
+  paths, then flip P0.
   The verifier also reconciles 38 root nodes, 41 effective rich-text nodes, 29
   settings, 73 top-level registrations, 23 Markdown transformers, 32 observed
   keybindings, 11 document actions, and 17 screenshots. The exercise harness
