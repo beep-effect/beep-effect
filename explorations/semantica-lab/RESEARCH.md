@@ -57,9 +57,9 @@ fallback + `LlamaStore` placeholder.
   reconciled to park-pending-canary (B1) after the second adversarial pass.
 - **IR pipeline**: LANDED — `scratchpad/semantica-ir/` extracted 6,105 symbol records from 354
   files, zero validation failures ([`research/ir-extraction-report.md`](./research/ir-extraction-report.md)).
-- **Still open:** `scratchpad/effect-ontology` deep read (its PORTING_LEDGER is a template
-  precedent for atlas symbol work); `<clone>/.claude/skills/semantica/SKILL.md` in the workstation
-  clone (read during shape per O5).
+- **Closed 2026-08-24 (S6):** `scratchpad/effect-ontology` deep read done — 159-row symbol → family
+  map with skeptic flags in [`research/effect-ontology-map.md`](./research/effect-ontology-map.md);
+  folded into shared-schema v1.2 and BRIEF v1.0.
 - **llms.txt census** — LANDED: [`research/docs-url-census.md`](./research/docs-url-census.md)
   (Grok, all URLs fetch-verified). llms.txt coverage far better than expected (Pinecone,
   Weaviate, Milvus, Qdrant, FalkorDB, Neo4j, Neptune, OpenAI all serve one). License flags:

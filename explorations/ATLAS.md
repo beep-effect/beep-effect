@@ -39,13 +39,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
-- [`semantica-lab`](./semantica-lab/README.md) — research
+- [`semantica-lab`](./semantica-lab/README.md) — decompose
   (2026-08-24): Semantica (MIT Python KG framework) port atlas +
   future apps/labs/semantica Tauri lab. Rubric v2.0 ratified; five family sheets
   are candidate slates (park-pending-canary); construction-vs-consumption
   charter split with trustgraph-workbench. Notion page `@beep/semantica`
   mirrors facts; the packet owns decisions.
-  Next: shape — draft BRIEF with staged canary C0–C2 as milestone 1.
+  BRIEF v1.0 ratified (staged canary C0–C2 = Goal 1, probe-denominated stop rule,
+  S1–S6 settled). Next: MAP.md → graduate → scaffold lab.
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
   (digest-named global protocol type + projections + journal-audited
