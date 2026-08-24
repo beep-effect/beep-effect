@@ -1,1 +1,0 @@
-{"action":"manual","detail":"Chromium fake-media can exercise permission plumbing, but the pinned Web Speech API still depends on a real browser speech service and audible utterance; transcription quality and permission UX require an interactive microphone session.","entryId":"document.speech-to-text","outcome":"skipped","step":1}

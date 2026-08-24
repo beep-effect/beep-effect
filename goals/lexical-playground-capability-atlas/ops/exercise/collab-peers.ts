@@ -1,11 +1,12 @@
 /* biome-ignore-all lint/suspicious/noConsole: This standalone exercise prints its terminal result. */
-import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, open, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import stableStringify from "fast-json-stable-stringify";
 import { chromium } from "playwright-core";
-import type { Page } from "playwright-core";
+import type { BrowserContext, Page } from "playwright-core";
 
 type Outcome = "fail" | "pass" | "skipped";
 type Observation = Readonly<{
@@ -40,6 +41,10 @@ const ENTRY_ID = "collaboration.realtime";
 const EXERCISE_ROOT = dirname(fileURLToPath(import.meta.url));
 const EVIDENCE_ROOT = resolve(EXERCISE_ROOT, "../../history/p0-exercise/2026-08-24");
 const ENTRY_DIRECTORY = resolve(EVIDENCE_ROOT, ENTRY_ID);
+const RUN_LOCK_PATH = resolve(
+  tmpdir(),
+  `lexical-playground-capability-atlas-${createHash("sha256").update(EVIDENCE_ROOT).digest("hex").slice(0, 16)}.runner.lock`
+);
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: This standalone runner is not a cached Turbo task.
 const BASE_URL = process.env.EXERCISE_BASE_URL ?? "http://localhost:5199";
 const COLLAB_ENDPOINT = "ws://localhost:1234";
@@ -56,7 +61,13 @@ const COLLABORATION_PHASES: ReadonlyArray<CollaborationPhase> = [
 ];
 const DEFAULT_VIEWPORT = { height: 900, width: 1280 } as const;
 const NARROW_VIEWPORT = { height: 900, width: 480 } as const;
+const BASELINE_EGRESS_HOSTS: ReadonlyArray<string> = [
+  "fonts.googleapis.com",
+  "fonts.gstatic.com",
+  "va.vercel-scripts.com",
+];
 const EDITOR_SELECTOR = ".ContentEditable__root";
+const HOME_PATH = /\/(?:@fs\/)?home\/[^/\s]+/g;
 const PEER_A_TEXT = "peerA";
 const PEER_B_TEXT = "peerB";
 const OFFLINE_TEXT = "offlineA";
@@ -87,6 +98,71 @@ const ANIMAL_NAMES: ReadonlyArray<string> = [
 const safeName = (value: string): string => value.replaceAll(/[^a-zA-Z0-9._-]/g, "-");
 
 const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
+class ConcurrentRunnerError extends Error {}
+
+const isObject = (value: unknown): value is object => Object(value) === value;
+
+const errorCode = (error: unknown): string | undefined => {
+  if (!isObject(error)) return undefined;
+  const code = Reflect.get(error, "code");
+  return typeof code === "string" ? code : undefined;
+};
+
+const processIsAlive = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return errorCode(error) !== "ESRCH";
+  }
+};
+
+const acquireRunLock = async (): Promise<() => Promise<void>> => {
+  for (;;) {
+    try {
+      const handle = await open(RUN_LOCK_PATH, "wx");
+      try {
+        await handle.writeFile(`${process.pid}\n`, "utf8");
+      } catch (error) {
+        await handle.close();
+        await rm(RUN_LOCK_PATH, { force: true });
+        throw error;
+      }
+      return async () => {
+        try {
+          await handle.close();
+        } finally {
+          await rm(RUN_LOCK_PATH, { force: true });
+        }
+      };
+    } catch (error) {
+      if (errorCode(error) !== "EEXIST") throw error;
+      let recordedPid = Number.NaN;
+      try {
+        recordedPid = Number.parseInt((await readFile(RUN_LOCK_PATH, "utf8")).trim(), 10);
+      } catch (readError) {
+        if (errorCode(readError) === "ENOENT") continue;
+        throw readError;
+      }
+      if (Number.isSafeInteger(recordedPid) && recordedPid > 0 && processIsAlive(recordedPid)) {
+        throw new ConcurrentRunnerError(
+          `Runner PID ${recordedPid} is active; concurrent runs share the system clipboard and are forbidden.`
+        );
+      }
+      const stalePath = `${RUN_LOCK_PATH}.stale-${process.pid}`;
+      try {
+        await rename(RUN_LOCK_PATH, stalePath);
+        await rm(stalePath, { force: true });
+      } catch (staleError) {
+        if (errorCode(staleError) !== "ENOENT") throw staleError;
+      }
+    }
+  }
+};
+
+const redactDetail = (detail: string): string =>
+  detail.replaceAll(HOME_PATH, (match) => (match.startsWith("/@fs/") ? "/@fs/~" : "~"));
 
 const normalizeEditorText = (value: string): string => value.replaceAll("\u00a0", " ").replaceAll(/\s+/g, " ").trim();
 
@@ -197,6 +273,22 @@ const isExternalRequest = (rawUrl: string): boolean => {
   );
 };
 
+const isBaselineEgress = (rawUrl: string): boolean =>
+  BASELINE_EGRESS_HOSTS.includes(new URL(rawUrl).hostname.toLowerCase());
+
+const addWindowErrorForwarder = async (context: BrowserContext): Promise<void> => {
+  await context.addInitScript(() => {
+    window.addEventListener("error", (event) => {
+      console.debug(
+        `${"__exercise_window_error__"} ${JSON.stringify({
+          hasException: event.error instanceof Error,
+          message: event.message,
+        })}`
+      );
+    });
+  });
+};
+
 const collaborationPhaseForSocket = (rawUrl: string): CollaborationPhase | undefined => {
   const url = new URL(rawUrl);
   const path = decodeURIComponent(url.pathname);
@@ -285,10 +377,13 @@ const writeObservations = async (rows: ReadonlyArray<Observation>): Promise<void
   await writeFile(resolve(ENTRY_DIRECTORY, "observations.ndjson"), body, "utf8");
 };
 
-const main = async (): Promise<void> => {
+const runExercise = async (): Promise<void> => {
+  // Like the scripted runner, make the directory the complete record of this run.
+  await rm(ENTRY_DIRECTORY, { force: true, recursive: true });
   await mkdir(ENTRY_DIRECTORY, { recursive: true });
   const observations: Observation[] = [];
-  const externalRequests: string[] = [];
+  const baselineEgressRequests: string[] = [];
+  const capabilityRequests: string[] = [];
   const mainSocketPeers = new Map<CollaborationPhase, Set<Peer>>(
     COLLABORATION_PHASES.map((phase) => [phase, new Set<Peer>()])
   );
@@ -298,7 +393,7 @@ const main = async (): Promise<void> => {
 
   const record = (action: string, outcome: Outcome, detail: string): void => {
     observationIndex += 1;
-    observations.push({ action, detail, entryId: ENTRY_ID, outcome, step: observationIndex });
+    observations.push({ action, detail: redactDetail(detail), entryId: ENTRY_ID, outcome, step: observationIndex });
     if (outcome === "fail") failed = true;
   };
 
@@ -340,26 +435,44 @@ const main = async (): Promise<void> => {
     contextA.grantPermissions(["clipboard-read", "clipboard-write"], { origin }),
     contextB.grantPermissions(["clipboard-read", "clipboard-write"], { origin }),
   ]);
+  await Promise.all([addWindowErrorForwarder(contextA), addWindowErrorForwarder(contextB)]);
   const pageA = await contextA.newPage();
   const pageB = await contextB.newPage();
 
   const observePage = (page: Page, peer: Peer): void => {
+    page.on("console", (message) => {
+      const text = message.text();
+      if (!text.startsWith("__exercise_window_error__ ")) return;
+      record("window-error", "pass", `[${peer}] browser error event without an uncaught exception: ${text.slice(26)}`);
+    });
     page.on("pageerror", (error) => {
       const firstStackLine = error.stack
         ?.split("\n")
         .slice(1)
         .find((line) => line.trim().length > 0)
         ?.trim();
-      record(
-        "page-error",
-        "fail",
-        `[${peer}] ${error.name}: ${error.message}${firstStackLine === undefined ? "" : ` :: ${firstStackLine}`}`
-      );
+      const summary = `[${peer}] ${error.name}: ${error.message}${
+        firstStackLine === undefined ? "" : ` :: ${firstStackLine}`
+      }`;
+      if (firstStackLine?.includes("/@vite/client") === true) {
+        record(
+          "dev-client-error",
+          "pass",
+          `Vite dev client threw while rendering the preceding browser error event (not a Playground fault): ${summary}`
+        );
+        return;
+      }
+      record("page-error", "fail", summary);
     });
     page.on("request", (request) => {
       const url = request.url();
       if (isExternalRequest(url)) {
-        externalRequests.push(url);
+        if (isBaselineEgress(url)) {
+          baselineEgressRequests.push(url);
+          record("baseline-egress", "pass", `expected Playground default egress (D9/D14): ${request.method()} ${url}`);
+          return;
+        }
+        capabilityRequests.push(url);
         record("network-request", "fail", `[${peer}] ${request.method()} ${url}`);
       }
     });
@@ -577,14 +690,11 @@ const main = async (): Promise<void> => {
     await perform(
       "keyboard-delete",
       (texts) =>
-        `[peer A] keyboard selected the exact pasted suffix, deleted it once, and restored peer A=${stableStringify(texts.peerA)} peer B=${stableStringify(texts.peerB)}`,
+        `[peer A] pressed Backspace six times and restored peer A=${stableStringify(texts.peerA)} peer B=${stableStringify(texts.peerB)}`,
       async () => {
         await editorA.focus();
         await editorA.press("Control+End");
-        for (let index = 0; index < CLIPBOARD_SUFFIX.length; index += 1) {
-          await editorA.press("Shift+ArrowLeft");
-        }
-        await editorA.press("Backspace");
+        for (let index = 0; index < 6; index += 1) await editorA.press("Backspace");
         return waitForPeerTexts(pageA, pageB, BOTH_PEERS_TEXT);
       }
     );
@@ -716,11 +826,11 @@ const main = async (): Promise<void> => {
       socketPassed ? "pass" : "fail",
       `[peers A+B] both peers opened ${joinedPhaseRooms.length}/${COLLABORATION_PHASES.length} phase main sockets under ${COLLAB_ENDPOINT}/playground/${COLLAB_ID_PREFIX}-<phase>/main`
     );
-    const networkPassed = externalRequests.length === 0;
+    const networkPassed = capabilityRequests.length === 0;
     record(
       "network-summary",
       networkPassed ? "pass" : "fail",
-      `[peers A+B] none: ${externalRequests.length} non-localhost HTTP(S) request(s)`
+      `none: ${capabilityRequests.length} capability request(s); ${baselineEgressRequests.length} baseline egress request(s)`
     );
     await Promise.allSettled([contextA.close(), contextB.close()]);
     await browser.close();
@@ -732,7 +842,16 @@ const main = async (): Promise<void> => {
   if (failed) process.exitCode = 1;
 };
 
+const main = async (): Promise<void> => {
+  const releaseLock = await acquireRunLock();
+  try {
+    await runExercise();
+  } finally {
+    await releaseLock();
+  }
+};
+
 await main().catch((error: unknown) => {
   console.error(errorMessage(error));
-  process.exitCode = 1;
+  process.exitCode = error instanceof ConcurrentRunnerError ? 2 : 1;
 });

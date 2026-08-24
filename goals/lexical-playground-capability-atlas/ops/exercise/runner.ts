@@ -1,6 +1,8 @@
 /* biome-ignore-all lint/suspicious/noConsole: This CLI prints its inventory, progress, and terminal result. */
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { mkdir, open, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Str from "effect/String";
 import stableStringify from "fast-json-stable-stringify";
@@ -19,16 +21,123 @@ type Observation = Readonly<{
 }>;
 type BatchManifest = Readonly<Record<string, Readonly<{ group: string; manualReason?: string; scripted: boolean }>>>;
 type ParsedCli = Readonly<{ kind: "all" | "batch" | "entry" | "list"; value?: string }>;
+type RuntimeState = {
+  copiedEditorText?: string;
+};
 
 const EXERCISE_ROOT = dirname(fileURLToPath(import.meta.url));
 const EVIDENCE_ROOT = resolve(EXERCISE_ROOT, "../../history/p0-exercise/2026-08-24");
 const MANIFEST_PATH = resolve(EXERCISE_ROOT, "batches.json");
+const RUN_LOCK_PATH = resolve(
+  tmpdir(),
+  `lexical-playground-capability-atlas-${createHash("sha256").update(EVIDENCE_ROOT).digest("hex").slice(0, 16)}.runner.lock`
+);
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: This standalone runner is not a cached Turbo task.
 const BASE_URL = process.env.EXERCISE_BASE_URL ?? "http://localhost:3000";
 const DEFAULT_VIEWPORT = { height: 900, width: 1280 } as const;
+const BASELINE_EGRESS_HOSTS: ReadonlyArray<string> = [
+  "fonts.googleapis.com",
+  "fonts.gstatic.com",
+  "va.vercel-scripts.com",
+];
 const REGEXP_META = /[.*+?^${}()|[\]\\]/g;
+const HOME_PATH = /\/(?:@fs\/)?home\/[^/\s]+/g;
 
 const usage = "Usage: bun runner.ts --batch <surface-group> | --entry <atlas-id> | --list | --all";
+
+class ConcurrentRunnerError extends Error {}
+
+const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
+  Object.prototype.toString.call(value) === "[object Object]";
+
+const isObject = (value: unknown): value is object => Object(value) === value;
+
+const errorCode = (error: unknown): string | undefined => {
+  if (!isObject(error)) return undefined;
+  const code = Reflect.get(error, "code");
+  return typeof code === "string" ? code : undefined;
+};
+
+const processIsAlive = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return errorCode(error) !== "ESRCH";
+  }
+};
+
+const acquireRunLock = async (): Promise<() => Promise<void>> => {
+  for (;;) {
+    try {
+      const handle = await open(RUN_LOCK_PATH, "wx");
+      try {
+        await handle.writeFile(`${process.pid}\n`, "utf8");
+      } catch (error) {
+        await handle.close();
+        await rm(RUN_LOCK_PATH, { force: true });
+        throw error;
+      }
+      return async () => {
+        try {
+          await handle.close();
+        } finally {
+          await rm(RUN_LOCK_PATH, { force: true });
+        }
+      };
+    } catch (error) {
+      if (errorCode(error) !== "EEXIST") throw error;
+      let recordedPid = Number.NaN;
+      try {
+        recordedPid = Number.parseInt((await readFile(RUN_LOCK_PATH, "utf8")).trim(), 10);
+      } catch (readError) {
+        if (errorCode(readError) === "ENOENT") continue;
+        throw readError;
+      }
+      if (Number.isSafeInteger(recordedPid) && recordedPid > 0 && processIsAlive(recordedPid)) {
+        throw new ConcurrentRunnerError(
+          `Runner PID ${recordedPid} is active; concurrent runs share the system clipboard and are forbidden.`
+        );
+      }
+      const stalePath = `${RUN_LOCK_PATH}.stale-${process.pid}`;
+      try {
+        await rename(RUN_LOCK_PATH, stalePath);
+        await rm(stalePath, { force: true });
+      } catch (staleError) {
+        if (errorCode(staleError) !== "ENOENT") throw staleError;
+      }
+    }
+  }
+};
+
+const comparableText = (value: string): string => value.replaceAll(/\s+/g, "");
+
+const redactDetail = (detail: string): string =>
+  detail.replaceAll(HOME_PATH, (match) => (match.startsWith("/@fs/") ? "/@fs/~" : "~"));
+
+const requireCopiedEditorText = (state: RuntimeState): string => {
+  if (state.copiedEditorText === undefined) throw new Error("No editor text was captured by clipboard-copy");
+  return state.copiedEditorText;
+};
+
+const countOccurrences = (value: string, expected: string): number => {
+  let count = 0;
+  let offset = 0;
+  while (offset <= value.length - expected.length) {
+    const index = value.indexOf(expected, offset);
+    if (index < 0) break;
+    count += 1;
+    offset = index + expected.length;
+  }
+  return count;
+};
+
+const serializedText = (value: unknown): string => {
+  if (Array.isArray(value)) return value.map(serializedText).join("");
+  if (!isRecord(value)) return "";
+  if (typeof value.text === "string") return value.text;
+  return Object.values(value).map(serializedText).join("");
+};
 
 const parseCli = (argv: ReadonlyArray<string>): ParsedCli => {
   if (argv.length === 1 && argv[0] === "--list") return { kind: "list" };
@@ -109,6 +218,12 @@ const stepDetail = (step: Step): string => {
       return describeLocator(step.locator);
     case "clipboard-paste":
       return `${describeLocator(step.locator)} ${step.payload?.mimeType ?? "system clipboard"}`;
+    case "clipboard-verify":
+      return `${describeLocator(step.locator)} system clipboard matches captured editor text`;
+    case "paste-verify":
+      return `${describeLocator(step.locator)} contains two whitespace-stripped copies of captured editor text`;
+    case "export-verify":
+      return `download-slot=${step.downloadSlot} editorState.root contains captured editor text`;
     case "set-viewport":
       return `${step.width}x${step.height}`;
     case "mark-manual":
@@ -186,8 +301,9 @@ const executeStep = async (
   step: Step,
   screenshotIndex: number,
   entryDirectory: string,
-  downloads: Map<string, string>
-): Promise<void> => {
+  downloads: Map<string, string>,
+  state: RuntimeState
+): Promise<string | undefined> => {
   switch (step.action) {
     case "goto":
       await page.goto(gotoUrl(step), { waitUntil: "domcontentloaded" });
@@ -223,9 +339,13 @@ const executeStep = async (
       else await locator.pressSequentially(step.text, { delay: 8 });
       return;
     }
-    case "expect-selector":
-      await toLocator(page, step.locator).waitFor({ state: step.state ?? "visible" });
+    case "expect-selector": {
+      const locator = toLocator(page, step.locator);
+      const state = step.state ?? "visible";
+      if (state === "visible") await locator.first().waitFor({ state });
+      else await locator.waitFor({ state });
       return;
+    }
     case "expect-text": {
       const value = (await toLocator(page, step.locator).textContent()) ?? "";
       const matches = step.exact === true ? value === step.text : value.includes(step.text);
@@ -248,8 +368,29 @@ const executeStep = async (
       return;
     case "clipboard-copy": {
       const locator = toLocator(page, step.locator);
+      state.copiedEditorText = (await locator.textContent()) ?? "";
+      await locator.evaluate(() => navigator.clipboard.writeText(""));
+      await locator.focus();
+      await locator.press("Control+A");
       await locator.press("Control+A");
       await locator.press("Control+C");
+      // Lexical applies DOM `selectionchange` asynchronously. A caret key (End,
+      // ArrowRight) sent within ~50ms of the select-all leaves Lexical's own
+      // selection covering the document, and the next Enter deletes it. Collapse
+      // through the DOM and give Lexical a frame to observe it before continuing.
+      const selectionCollapsed = await locator.evaluate(() => {
+        const selection = window.getSelection();
+        if (selection !== null && selection.rangeCount > 0) {
+          selection.collapseToEnd();
+          return true;
+        }
+        return false;
+      });
+      if (!selectionCollapsed) {
+        await locator.focus();
+        await locator.press("End");
+      }
+      await page.waitForTimeout(150);
       return;
     }
     case "clipboard-paste": {
@@ -266,6 +407,76 @@ const executeStep = async (
         }, step.payload);
       }
       return;
+    }
+    case "clipboard-verify": {
+      const captured = requireCopiedEditorText(state);
+      const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+      const expected = comparableText(captured);
+      const received = comparableText(clipboard);
+      if (received !== expected) {
+        throw new Error(
+          `Expected system clipboard ${stableStringify(captured)}, received ${stableStringify(clipboard)}`
+        );
+      }
+      return `${describeLocator(step.locator)} system clipboard matched captured editor text ${stableStringify(captured)}`;
+    }
+    case "paste-verify": {
+      const captured = requireCopiedEditorText(state);
+      const expected = comparableText(captured);
+      const readEditorText = async (): Promise<string> => (await toLocator(page, step.locator).textContent()) ?? "";
+      let receivedText = await readEditorText();
+      let received = comparableText(receivedText);
+      // Lexical applies the paste inside an editor update; poll briefly so the
+      // verification observes the settled document rather than the pre-paste text.
+      for (
+        let attempt = 0;
+        attempt < 20 && expected.length > 0 && countOccurrences(received, expected) < 2;
+        attempt += 1
+      ) {
+        await page.waitForTimeout(250);
+        receivedText = await readEditorText();
+        received = comparableText(receivedText);
+      }
+      if (expected.length === 0) {
+        if (received.length > 0) {
+          throw new Error(
+            `Expected an empty editor after the inserted line break, received ${stableStringify(receivedText)}`
+          );
+        }
+        return `${describeLocator(step.locator)} remained empty after the inserted line break`;
+      }
+      const copies = countOccurrences(received, expected);
+      if (copies !== 2) {
+        throw new Error(
+          `Expected two copies of ${stableStringify(captured)}, found ${copies} in ${stableStringify(receivedText)}`
+        );
+      }
+      return `${describeLocator(step.locator)} contains ${copies} whitespace-stripped copies of captured editor text ${stableStringify(captured)}`;
+    }
+    case "export-verify": {
+      const downloadPath = downloads.get(step.downloadSlot);
+      if (downloadPath === undefined) throw new Error(`No download in slot ${step.downloadSlot}`);
+      const fileName = basename(downloadPath);
+      try {
+        const document: unknown = JSON.parse(await readFile(downloadPath, "utf8"));
+        if (!isRecord(document) || !isRecord(document.editorState) || !isRecord(document.editorState.root)) {
+          throw new Error("missing editorState.root");
+        }
+        const captured = requireCopiedEditorText(state);
+        const serialized = serializedText(document.editorState.root);
+        const expected = comparableText(captured);
+        const received = comparableText(serialized);
+        if (expected.length > 0 && !received.includes(expected)) {
+          throw new Error(
+            `captured editor text ${stableStringify(captured)} was absent; received ${stableStringify(serialized)}`
+          );
+        }
+        return `${fileName} editorState.root text contains captured editor text ${stableStringify(captured)}`;
+      } catch (error) {
+        throw new Error(
+          `Downloaded file ${fileName} failed export verification: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
     }
     case "set-viewport":
       await page.setViewportSize({ height: step.height, width: step.width });
@@ -288,27 +499,26 @@ const isExternalRequest = (rawUrl: string): boolean => {
   );
 };
 
-const runScenario = async (browser: Browser, scenario: Scenario): Promise<boolean> => {
+const isBaselineEgress = (rawUrl: string): boolean =>
+  BASELINE_EGRESS_HOSTS.includes(new URL(rawUrl).hostname.toLowerCase());
+
+const runScenario = async (browser: Browser, scenario: Scenario): Promise<Outcome> => {
+  if (!scenario.scripted) return "skipped";
   const entryDirectory = resolve(EVIDENCE_ROOT, scenario.id);
+  await rm(entryDirectory, { force: true, recursive: true });
   await mkdir(entryDirectory, { recursive: true });
   const observations: Observation[] = [];
   let observationIndex = 0;
   const record = (action: string, outcome: Outcome, detail: string): void => {
     observationIndex += 1;
-    observations.push({ action, detail, entryId: scenario.id, outcome, step: observationIndex });
+    observations.push({ action, detail: redactDetail(detail), entryId: scenario.id, outcome, step: observationIndex });
   };
-
-  if (!scenario.scripted) {
-    record("manual", "skipped", scenario.manualReason ?? "Manual exercise required");
-    await writeObservations(entryDirectory, observations);
-    return true;
-  }
 
   const screenshotCount = scenario.steps.filter(({ action }) => action === "screenshot").length;
   if (screenshotCount < 2 || screenshotCount > 4) {
     record("scenario-validation", "fail", `Expected 2-4 screenshots, found ${screenshotCount}`);
     await writeObservations(entryDirectory, observations);
-    return false;
+    return "fail";
   }
 
   const context = await browser.newContext({
@@ -319,25 +529,57 @@ const runScenario = async (browser: Browser, scenario: Scenario): Promise<boolea
   await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(BASE_URL).origin });
   const page = await context.newPage();
   const downloads = new Map<string, string>();
-  const externalRequests: string[] = [];
+  const baselineEgressRequests: string[] = [];
+  const capabilityRequests: string[] = [];
+  const state: RuntimeState = {};
   let failed = false;
+  // Browser `error` events that carry no exception object (for example the
+  // benign "ResizeObserver loop completed with undelivered notifications")
+  // never reach Playwright's `pageerror`, but the Vite dev client still tries
+  // to render them in its ErrorOverlay and throws while doing so. Forward the
+  // event through the console so the evidence names the underlying event.
+  await context.addInitScript(() => {
+    window.addEventListener("error", (event) => {
+      console.debug(
+        `${"__exercise_window_error__"} ${JSON.stringify({
+          hasException: event.error instanceof Error,
+          message: event.message,
+        })}`
+      );
+    });
+  });
+  page.on("console", (message) => {
+    const text = message.text();
+    if (!text.startsWith("__exercise_window_error__ ")) return;
+    record("window-error", "pass", `browser error event without an uncaught exception: ${text.slice(26)}`);
+  });
   page.on("pageerror", (error) => {
-    failed = true;
     const firstStackLine = error.stack
       ?.split("\n")
       .slice(1)
       .find((line) => line.trim().length > 0)
       ?.trim();
-    record(
-      "page-error",
-      "fail",
-      `${error.name}: ${error.message}${firstStackLine === undefined ? "" : ` :: ${firstStackLine}`}`
-    );
+    const summary = `${error.name}: ${error.message}${firstStackLine === undefined ? "" : ` :: ${firstStackLine}`}`;
+    if (firstStackLine?.includes("/@vite/client") === true) {
+      record(
+        "dev-client-error",
+        "pass",
+        `Vite dev client threw while rendering the preceding browser error event (not a Playground fault): ${summary}`
+      );
+      return;
+    }
+    failed = true;
+    record("page-error", "fail", summary);
   });
   page.on("request", (request) => {
     const url = request.url();
     if (isExternalRequest(url)) {
-      externalRequests.push(url);
+      if (isBaselineEgress(url)) {
+        baselineEgressRequests.push(url);
+        record("baseline-egress", "pass", `expected Playground default egress (D9/D14): ${request.method()} ${url}`);
+        return;
+      }
+      capabilityRequests.push(url);
       const outcome =
         scenario.networkExpectation === "none" || scenario.networkExpectation === "rejected" ? "fail" : "pass";
       record("network-request", outcome, `${request.method()} ${url}`);
@@ -348,8 +590,8 @@ const runScenario = async (browser: Browser, scenario: Scenario): Promise<boolea
   for (const step of scenario.steps) {
     if (step.action === "screenshot") screenshotIndex += 1;
     try {
-      await executeStep(page, context, step, screenshotIndex, entryDirectory, downloads);
-      record(step.action, "pass", stepDetail(step));
+      const detail = await executeStep(page, context, step, screenshotIndex, entryDirectory, downloads, state);
+      record(step.action, "pass", detail ?? stepDetail(step));
     } catch (error) {
       failed = true;
       record(step.action, "fail", `${stepDetail(step)} :: ${error instanceof Error ? error.message : String(error)}`);
@@ -357,16 +599,16 @@ const runScenario = async (browser: Browser, scenario: Scenario): Promise<boolea
   }
 
   const inertExpectation = scenario.networkExpectation === "none" || scenario.networkExpectation === "rejected";
-  const networkPassed = inertExpectation ? externalRequests.length === 0 : externalRequests.length > 0;
+  const networkPassed = inertExpectation ? capabilityRequests.length === 0 : capabilityRequests.length > 0;
   if (!networkPassed) failed = true;
   record(
     "network-summary",
     networkPassed ? "pass" : "fail",
-    `${scenario.networkExpectation}: ${externalRequests.length} non-localhost request(s)`
+    `${scenario.networkExpectation}: ${capabilityRequests.length} capability request(s); ${baselineEgressRequests.length} baseline egress request(s)`
   );
   await context.close();
   await writeObservations(entryDirectory, observations);
-  return !failed;
+  return failed ? "fail" : "pass";
 };
 
 const writeObservations = async (entryDirectory: string, rows: ReadonlyArray<Observation>): Promise<void> => {
@@ -429,26 +671,46 @@ const main = async (): Promise<void> => {
     return;
   }
   const selected = selectScenarios(cli);
-  const browser = await chromium.launch({
-    args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"],
-    // biome-ignore lint/suspicious/noUndeclaredEnvVars: This standalone runner is not a cached Turbo task.
-    headless: process.env.EXERCISE_HEADLESS !== "0",
-  });
+  const releaseLock = await acquireRunLock();
   let passed = 0;
+  let failed = 0;
+  let skipped = 0;
   try {
-    for (const scenario of selected) {
-      const ok = await runScenario(browser, scenario);
-      console.log(`${ok ? "PASS" : "FAIL"} ${scenario.id}`);
-      if (ok) passed += 1;
+    if (selected.some(({ scripted }) => scripted)) {
+      const browser = await chromium.launch({
+        args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"],
+        // biome-ignore lint/suspicious/noUndeclaredEnvVars: This standalone runner is not a cached Turbo task.
+        headless: process.env.EXERCISE_HEADLESS !== "0",
+      });
+      try {
+        for (const scenario of selected) {
+          const outcome = await runScenario(browser, scenario);
+          if (outcome === "skipped") {
+            skipped += 1;
+            console.log(`SKIP ${scenario.id} — manual: ${scenario.manualReason ?? "Manual exercise required"}`);
+          } else {
+            console.log(`${outcome === "pass" ? "PASS" : "FAIL"} ${scenario.id}`);
+            if (outcome === "pass") passed += 1;
+            else failed += 1;
+          }
+        }
+      } finally {
+        await browser.close();
+      }
+    } else {
+      for (const scenario of selected) {
+        skipped += 1;
+        console.log(`SKIP ${scenario.id} — manual: ${scenario.manualReason ?? "Manual exercise required"}`);
+      }
     }
   } finally {
-    await browser.close();
+    await releaseLock();
   }
-  console.log(`Completed ${selected.length}: ${passed} passed, ${selected.length - passed} failed`);
-  if (passed !== selected.length) process.exitCode = 1;
+  console.log(`Completed ${selected.length}: ${passed} passed, ${failed} failed, ${skipped} skipped`);
+  if (failed > 0) process.exitCode = 1;
 };
 
 await main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
+  process.exitCode = error instanceof ConcurrentRunnerError ? 2 : 1;
 });

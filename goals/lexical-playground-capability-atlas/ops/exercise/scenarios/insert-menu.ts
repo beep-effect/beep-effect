@@ -111,6 +111,7 @@ export const scenarios = [
       "Insert Figma through toolbar, slash picker, and automatic URL recognition while recording provider requests.",
     group: GROUP.insertMenu,
     id: "node.figma",
+    networkExpectation: "authorized-provider",
     steps: multiPathLifecycle(
       [
         embedDialog(INSERT_ITEM.figma, "figma", FIGMA_URL),
@@ -205,6 +206,7 @@ export const scenarios = [
       "Insert X/Tweet through toolbar, slash picker, and automatic URL recognition while recording provider requests.",
     group: GROUP.insertMenu,
     id: "node.tweet",
+    networkExpectation: "authorized-provider",
     steps: multiPathLifecycle(
       [
         embedDialog(INSERT_ITEM.tweet, "tweet", TWEET_URL),
@@ -220,6 +222,7 @@ export const scenarios = [
       "Insert YouTube through toolbar, slash picker, and automatic URL recognition while recording provider requests.",
     group: GROUP.insertMenu,
     id: "node.youtube",
+    networkExpectation: "authorized-provider",
     steps: multiPathLifecycle(
       [
         embedDialog(INSERT_ITEM.youtube, "youtube-video", YOUTUBE_URL),

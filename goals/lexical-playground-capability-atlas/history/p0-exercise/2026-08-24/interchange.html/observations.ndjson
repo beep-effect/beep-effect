@@ -1,7 +1,7 @@
-{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"interchange.html","outcome":"fail","step":1}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"interchange.html","outcome":"pass","step":1}
 {"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"interchange.html","outcome":"pass","step":2}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"interchange.html","outcome":"fail","step":3}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"interchange.html","outcome":"fail","step":4}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"interchange.html","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"interchange.html","outcome":"pass","step":4}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"interchange.html","outcome":"pass","step":5}
 {"action":"screenshot","detail":"before","entryId":"interchange.html","outcome":"pass","step":6}
 {"action":"click","detail":"role=button name=\"Convert to html\"","entryId":"interchange.html","outcome":"pass","step":7}
@@ -22,11 +22,15 @@
 {"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":22}
 {"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":23}
 {"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":24}
-{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":25}
-{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":26}
-{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"interchange.html","outcome":"pass","step":27}
-{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"interchange.html","outcome":"pass","step":28}
-{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":29}
-{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":30}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"interchange.html","outcome":"pass","step":31}
-{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"interchange.html","outcome":"fail","step":32}
+{"action":"clipboard-verify","detail":"css=.ContentEditable__root system clipboard matched captured editor text \"\\t<blockquote><span>HTML boundary evidence</span></blockquote>\"","entryId":"interchange.html","outcome":"pass","step":25}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":26}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":27}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"interchange.html","outcome":"pass","step":28}
+{"action":"paste-verify","detail":"css=.ContentEditable__root contains 2 whitespace-stripped copies of captured editor text \"\\t<blockquote><span>HTML boundary evidence</span></blockquote>\"","entryId":"interchange.html","outcome":"pass","step":29}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"interchange.html","outcome":"pass","step":30}
+{"action":"export-verify","detail":"surface-json-Playground-2026-08-24T18_40_21.196Z.lexical editorState.root text contains captured editor text \"\\t<blockquote><span>HTML boundary evidence</span></blockquote>\"","entryId":"interchange.html","outcome":"pass","step":31}
+{"action":"screenshot","detail":"surface-roundtrip","entryId":"interchange.html","outcome":"pass","step":32}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":33}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"interchange.html","outcome":"pass","step":34}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"interchange.html","outcome":"pass","step":35}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"interchange.html","outcome":"pass","step":36}

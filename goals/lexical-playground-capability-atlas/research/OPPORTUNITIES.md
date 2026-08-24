@@ -70,3 +70,21 @@ sweep, so a shared-helper bug fails fast instead of after 162 entries;
 vanished DOM is not evidence, the exception is; (c) the same browser-capable
 QA lane the previous receipt asks for, so authoring and proving happen in one
 loop instead of a scratchpad relay.
+
+## 2026-08-24 — Cross-contaminated exports from a non-hermetic clipboard round trip
+
+**What was happening:** judging the P0 live-exercise exports after operators
+had rerun entries in parallel against one system clipboard. The shared
+`surfaceLifecycle` tail recorded keypress completion but did not verify the
+clipboard, pasted document, or downloaded editor state.
+
+**Evidence:** the `authoring.undo` export contained `authoring.redo`'s
+document, `document.clear` contained a 5x5 table, and `document.html-source`
+contained `document.export-lexical-json` text. A focused probe showed that
+`Ctrl+A → End → Enter` wipes the document when the caret key follows select-all
+within about 50 ms because Lexical still holds a document-wide selection.
+
+**What would have prevented it:** clipboard, paste, and export verification
+rows in the first harness version; a shared run lock that refuses parallel
+entry processes; and never treating a successful keypress row as proof that
+the intended editor-state change occurred.

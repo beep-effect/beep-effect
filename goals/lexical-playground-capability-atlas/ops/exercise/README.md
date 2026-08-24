@@ -28,7 +28,73 @@ bun goals/lexical-playground-capability-atlas/ops/exercise/runner.ts --entry for
 bun goals/lexical-playground-capability-atlas/ops/exercise/runner.ts --all
 ```
 
-Evidence lands under `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/<atlas-id>/`. Each entry receives `observations.ndjson`; scripted entries also receive two to four labeled screenshots. Every non-localhost HTTP(S) request is an observation and is judged against the entry's network expectation. An uncaught page exception adds a failing `page-error` row with its error name/message and first stack frame. Evidence captured before this change does not contain `page-error` rows.
+Run one harness process at a time. Never run entries in parallel because every
+browser context uses the same system clipboard. The runner and the dedicated
+collaboration script acquire the same PID lock in the operating system's
+temporary directory, keyed by a SHA-256 hash of the dated evidence root. A
+second process exits with status 2 while the recorded PID is alive. A dead PID
+marks a stale lock, which the next process replaces.
+
+Evidence lands under `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/<atlas-id>/`.
+Before each scripted rerun, the runner removes that entry directory and creates
+it again. The resulting directory contains only the current run's artifacts.
+Manual entries do not create, clear, or write an entry directory. They print
+`SKIP <atlas-id> — manual: <reason>`, count toward the skipped total, and do not
+make the process fail. In particular, `--all` leaves the dedicated
+`collaboration.realtime/` evidence untouched.
+
+Each scripted entry receives `observations.ndjson` and two to four labeled
+screenshots. Surface lifecycles now select the whole document with two
+`Control+A` presses before copying. They record `clipboard-verify`,
+`paste-verify`, and `export-verify` rows, then capture the fourth
+`surface-roundtrip` screenshot before clearing the editor. These rows compare
+the selected text with the system clipboard, the pasted editor text, and text
+nodes under the downloaded `.lexical` file's `editorState.root`. Comparisons
+strip all whitespace because DOM `textContent`, clipboard text, and serialized
+text nodes use different separators between cells and blocks. Observation
+details retain the original readable text. `clipboard-copy` clears the system
+clipboard before selecting and copying, so an empty or unsuccessful copy stays
+empty instead of reusing text from the preceding sequential entry.
+
+An `expect-selector` step with the default `visible` state waits for the first
+match. Its contract is at least one visible match, so a round trip that creates
+two genuine copies does not fail Playwright strict mode. Detached, hidden, and
+attached checks keep their previous unmodified-locator semantics. No scenario
+uses `expect-selector` as an exactly-one assertion.
+
+Selection cadence law: Lexical applies DOM `selectionchange` asynchronously.
+Under Playwright's key cadence, a caret key (`End`, `ArrowRight`) sent within
+about 50 ms of a select-all collapses the DOM caret while Lexical's own
+selection still covers the document, so the next `Enter` deletes the selected
+content and a following paste restores exactly one copy. The original sweep's
+copy → `End` → `Enter` → paste tail therefore wiped and re-pasted instead of
+duplicating, which is how one parallel run's clipboard ended up in another
+run's export. The `clipboard-copy` step now collapses the selection through the
+DOM (`Selection.collapseToEnd()`) when a DOM range exists. If no DOM selection
+exists, it focuses the root editor and presses `End`. It then waits 150 ms
+before the lifecycle continues; `paste-verify` polls for the settled document.
+A 1 s pause or one typed character also resyncs Lexical, so this is a harness
+cadence artifact, not a Playground defect.
+
+Requests to `fonts.googleapis.com`, `fonts.gstatic.com`, and
+`va.vercel-scripts.com` are expected Playground defaults from D9/D14. The
+harness records them as passing `baseline-egress` rows and excludes them from
+the capability-request count in `network-summary`. It judges every other
+non-localhost HTTP(S) request against the entry's network expectation. An
+uncaught page exception adds a failing `page-error` row with its error
+name/message and first stack frame.
+
+Browser `error` events without an exception object never reach Playwright's
+`pageerror` event. Both scripts forward those events through a console marker
+and record a passing `window-error` row. One example is `ResizeObserver loop
+completed with undelivered notifications`. Vite's development ErrorOverlay can
+then throw a `TypeError` while trying to render that exception-less event. A
+first stack frame under `/@vite/client` records a passing `dev-client-error`
+row because it is the development client failing to display the preceding
+browser event, not a Playground exception. Other `pageerror` events remain
+failing `page-error` rows. Before writing any observation, both scripts redact
+the recorder's absolute home-directory prefix from its detail (with or without
+Vite's `/@fs/` filesystem-serving prefix in front of it), replacing it with `~`.
 
 ## Two-peer collaboration
 
@@ -39,7 +105,7 @@ cd goals/lexical-playground-capability-atlas
 bun run ops/exercise/collab-peers.ts
 ```
 
-Override the Playground origin with `EXERCISE_BASE_URL`. The script writes the collaboration lifecycle, four peer-labeled screenshots, and one `.lexical` export under `history/p0-exercise/2026-08-24/collaboration.realtime/`. Each step records its own result, so a failed assertion does not stop later lifecycle checks. Uncaught errors from either peer page are recorded as `page-error` failures.
+Override the Playground origin with `EXERCISE_BASE_URL`. The script writes the collaboration lifecycle, four peer-labeled screenshots, and one `.lexical` export under `history/p0-exercise/2026-08-24/collaboration.realtime/`. Each step records its own result, so a failed assertion does not stop later lifecycle checks. It uses the same `window-error`, `dev-client-error`, and `page-error` classification as the main runner.
 
 The pinned v1 collaboration binding has two distinct undo results. If peer B appends inside the simple TextNode created by peer A, undoing peer A's capture also removes peer B's merged append. The exercise records the empty result as the expected pinned behavior. It then creates peer B's edit in a separate paragraph and proves that peer A's undo preserves that paragraph.
 

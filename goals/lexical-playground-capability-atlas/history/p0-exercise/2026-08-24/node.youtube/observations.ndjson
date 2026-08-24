@@ -1,12 +1,12 @@
-{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"node.youtube","outcome":"fail","step":1}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"node.youtube","outcome":"pass","step":1}
 {"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"node.youtube","outcome":"pass","step":2}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"node.youtube","outcome":"fail","step":3}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"node.youtube","outcome":"fail","step":4}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"node.youtube","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"node.youtube","outcome":"pass","step":4}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.youtube","outcome":"pass","step":5}
 {"action":"click","detail":"role=button name=\"Insert specialized editor node\"","entryId":"node.youtube","outcome":"pass","step":6}
 {"action":"click","detail":"scope=.dropdown:visible role=button name-prefix=\"Youtube Video\"","entryId":"node.youtube","outcome":"pass","step":7}
 {"action":"type","detail":"fill \"https://www.youtube.com/watch?v=jNQXAC9IVRw\" in css=[data-test-id=\"youtube-video-embed-modal-url\"]","entryId":"node.youtube","outcome":"pass","step":8}
-{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/embed/jNQXAC9IVRw","entryId":"node.youtube","outcome":"fail","step":9}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/embed/jNQXAC9IVRw","entryId":"node.youtube","outcome":"pass","step":9}
 {"action":"click","detail":"css=[data-test-id=\"youtube-video-embed-modal-submit-btn\"]","entryId":"node.youtube","outcome":"pass","step":10}
 {"action":"expect-selector","detail":"css=iframe[title=\"YouTube video\"] is visible","entryId":"node.youtube","outcome":"pass","step":11}
 {"action":"screenshot","detail":"activation-path-1","entryId":"node.youtube","outcome":"pass","step":12}
@@ -16,7 +16,7 @@
 {"action":"type","detail":"insert \"/\" in css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":16}
 {"action":"click","detail":"role=option name=\"Embed Youtube Video\"","entryId":"node.youtube","outcome":"pass","step":17}
 {"action":"type","detail":"fill \"https://www.youtube.com/watch?v=jNQXAC9IVRw\" in css=[data-test-id=\"youtube-video-embed-modal-url\"]","entryId":"node.youtube","outcome":"pass","step":18}
-{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/embed/jNQXAC9IVRw","entryId":"node.youtube","outcome":"fail","step":19}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/embed/jNQXAC9IVRw","entryId":"node.youtube","outcome":"pass","step":19}
 {"action":"click","detail":"css=[data-test-id=\"youtube-video-embed-modal-submit-btn\"]","entryId":"node.youtube","outcome":"pass","step":20}
 {"action":"expect-selector","detail":"css=iframe[title=\"YouTube video\"] is visible","entryId":"node.youtube","outcome":"pass","step":21}
 {"action":"screenshot","detail":"activation-path-2","entryId":"node.youtube","outcome":"pass","step":22}
@@ -25,25 +25,40 @@
 {"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":25}
 {"action":"clipboard-paste","detail":"css=.ContentEditable__root text/plain","entryId":"node.youtube","outcome":"pass","step":26}
 {"action":"expect-selector","detail":"role=option name=\"Embed Youtube Video\" is visible","entryId":"node.youtube","outcome":"pass","step":27}
-{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/embed/jNQXAC9IVRw","entryId":"node.youtube","outcome":"fail","step":28}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/embed/jNQXAC9IVRw","entryId":"node.youtube","outcome":"pass","step":28}
 {"action":"click","detail":"role=option name=\"Embed Youtube Video\"","entryId":"node.youtube","outcome":"pass","step":29}
 {"action":"expect-selector","detail":"css=iframe[title=\"YouTube video\"] is visible","entryId":"node.youtube","outcome":"pass","step":30}
 {"action":"screenshot","detail":"activation-path-3","entryId":"node.youtube","outcome":"pass","step":31}
-{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":32}
-{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":33}
-{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":34}
-{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/embed/jNQXAC9IVRw","entryId":"node.youtube","outcome":"fail","step":35}
-{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"node.youtube","outcome":"pass","step":36}
-{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"node.youtube","outcome":"pass","step":37}
-{"action":"set-viewport","detail":"480x900","entryId":"node.youtube","outcome":"pass","step":38}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.youtube","outcome":"pass","step":39}
-{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/player/e937390a/www-player.css","entryId":"node.youtube","outcome":"fail","step":40}
-{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/_/ytembeds/_/ss/k=ytembeds.base.YwsQU3S55Qk.L.W.O/am=AAAAQA/d=1/br=1/rs=AGKMywGl81FodG7qX0s36mf7LnanVAh7_A/m=root,base","entryId":"node.youtube","outcome":"fail","step":41}
-{"action":"network-request","detail":"GET https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2","entryId":"node.youtube","outcome":"fail","step":42}
-{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/_/ytembeds/_/js/k=ytembeds.base.en_US.h9yeDSf_crw.es5.O/am=AAAAQA/d=1/excm=base,root/br=1/rs=AGKMywEApSdk-czwFzY33eaCOsIffco1Sg/m=root,base","entryId":"node.youtube","outcome":"fail","step":43}
-{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/player/e937390a/player_embed.vflset/en_US/base.js","entryId":"node.youtube","outcome":"fail","step":44}
-{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"node.youtube","outcome":"pass","step":45}
-{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":46}
-{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":47}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.youtube","outcome":"pass","step":48}
-{"action":"network-summary","detail":"none: 12 non-localhost request(s)","entryId":"node.youtube","outcome":"fail","step":49}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/player/e937390a/www-player.css","entryId":"node.youtube","outcome":"pass","step":32}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/_/ytembeds/_/ss/k=ytembeds.base.f-7_7F-6xmc.L.W.O/am=AAAAQA/d=1/br=1/rs=AGKMywGu3h6Ls91zsaCPcwDQORPOkwMt2A/m=root,base","entryId":"node.youtube","outcome":"pass","step":33}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2","entryId":"node.youtube","outcome":"pass","step":34}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/_/ytembeds/_/js/k=ytembeds.base.en_US.pVZpqNH8SyQ.es5.O/am=AAAAQA/d=1/excm=base,root/br=1/rs=AGKMywGTTj3-cTgD-pjEZcKhpleKhdcFmg/m=root,base","entryId":"node.youtube","outcome":"pass","step":35}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/player/e937390a/player_embed_tcc.vflset/en_US/base.js","entryId":"node.youtube","outcome":"pass","step":36}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":37}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":38}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/_/ytembeds/_/js/k=ytembeds.base.en_US.pVZpqNH8SyQ.es5.O/ck=ytembeds.base.f-7_7F-6xmc.L.W.O/am=AAAAQA/d=1/exm=base,root/excm=base,root/ed=1/br=1/rs=AGKMywFHyaab2mCtlM29mRoTuGXwnGFOFg/m=r78Drb","entryId":"node.youtube","outcome":"pass","step":39}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":40}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/embed/jNQXAC9IVRw","entryId":"node.youtube","outcome":"pass","step":41}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"node.youtube","outcome":"pass","step":42}
+{"action":"network-request","detail":"GET https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg?sqp=-oaymwEmCOADEOgC8quKqQMa8AEB-AG-AoAC8AGKAgwIABABGFUgWShlMA8=&rs=AOn4CLA9eLBatYv9WbkD4BbZ2Im-biSPTw","entryId":"node.youtube","outcome":"pass","step":43}
+{"action":"network-request","detail":"GET https://yt3.ggpht.com/uI3VE4PVqvCy0xnWLqMJnEzyBUm3T8VHOCp4ee-1RxdHqKXCdUE_qXYQnpf9AfuEoIPactVyDhM=s68-c-k-c0x00ffffff-no-rj","entryId":"node.youtube","outcome":"pass","step":44}
+{"action":"network-request","detail":"GET https://www.gstatic.com/youtube/img/icons/mweb/youtube_fill/logo/v2/67px.svg","entryId":"node.youtube","outcome":"pass","step":45}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/player/e937390a/www-player.css","entryId":"node.youtube","outcome":"pass","step":46}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/_/ytembeds/_/ss/k=ytembeds.base.f-7_7F-6xmc.L.W.O/am=AAAAQA/d=1/br=1/rs=AGKMywGu3h6Ls91zsaCPcwDQORPOkwMt2A/m=root,base","entryId":"node.youtube","outcome":"pass","step":47}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/_/ytembeds/_/js/k=ytembeds.base.en_US.pVZpqNH8SyQ.es5.O/am=AAAAQA/d=1/excm=base,root/br=1/rs=AGKMywGTTj3-cTgD-pjEZcKhpleKhdcFmg/m=root,base","entryId":"node.youtube","outcome":"pass","step":48}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/player/e937390a/player_embed.vflset/en_US/base.js","entryId":"node.youtube","outcome":"pass","step":49}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2","entryId":"node.youtube","outcome":"pass","step":50}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"node.youtube","outcome":"pass","step":51}
+{"action":"set-viewport","detail":"480x900","entryId":"node.youtube","outcome":"pass","step":52}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.youtube","outcome":"pass","step":53}
+{"action":"network-request","detail":"GET https://www.youtube-nocookie.com/s/_/ytembeds/_/js/k=ytembeds.base.en_US.pVZpqNH8SyQ.es5.O/ck=ytembeds.base.f-7_7F-6xmc.L.W.O/am=AAAAQA/d=1/exm=base,root/excm=base,root/ed=1/br=1/rs=AGKMywFHyaab2mCtlM29mRoTuGXwnGFOFg/m=r78Drb","entryId":"node.youtube","outcome":"pass","step":54}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"node.youtube","outcome":"pass","step":55}
+{"action":"network-request","detail":"GET https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg?sqp=-oaymwEmCOADEOgC8quKqQMa8AEB-AG-AoAC8AGKAgwIABABGFUgWShlMA8=&rs=AOn4CLA9eLBatYv9WbkD4BbZ2Im-biSPTw","entryId":"node.youtube","outcome":"pass","step":56}
+{"action":"network-request","detail":"GET https://yt3.ggpht.com/uI3VE4PVqvCy0xnWLqMJnEzyBUm3T8VHOCp4ee-1RxdHqKXCdUE_qXYQnpf9AfuEoIPactVyDhM=s68-c-k-c0x00ffffff-no-rj","entryId":"node.youtube","outcome":"pass","step":57}
+{"action":"network-request","detail":"GET https://www.gstatic.com/youtube/img/icons/mweb/youtube_fill/logo/v2/67px.svg","entryId":"node.youtube","outcome":"pass","step":58}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":59}
+{"action":"network-request","detail":"POST https://www.youtube-nocookie.com/youtubei/v1/log_event?alt=json","entryId":"node.youtube","outcome":"pass","step":60}
+{"action":"network-request","detail":"POST https://www.youtube-nocookie.com/youtubei/v1/log_event?alt=json","entryId":"node.youtube","outcome":"pass","step":61}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.youtube","outcome":"pass","step":62}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.youtube","outcome":"pass","step":63}
+{"action":"network-summary","detail":"authorized-provider: 22 capability request(s); 5 baseline egress request(s)","entryId":"node.youtube","outcome":"pass","step":64}

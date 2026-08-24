@@ -264,6 +264,7 @@ export const TABLE_RESIZER = css(".TableCellResizer__resizer", 0);
 
 // Source: packages/lexical-playground/src/plugins/TreeViewPlugin/index.tsx.
 export const TIME_TRAVEL_BUTTON = css(".debug-timetravel-button");
+export const TIME_TRAVEL_EXIT = role("button", "Exit", { exact: true, scope: ".debug-timetravel-panel" });
 
 // Source: packages/lexical-playground/src/themes/PlaygroundEditorTheme.ts,
 // packages/lexical-playground/src/ui/ContentEditable.tsx,

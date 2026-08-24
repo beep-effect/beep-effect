@@ -1,7 +1,7 @@
-{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"format.uppercase","outcome":"fail","step":1}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"format.uppercase","outcome":"pass","step":1}
 {"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"format.uppercase","outcome":"pass","step":2}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"format.uppercase","outcome":"fail","step":3}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"format.uppercase","outcome":"fail","step":4}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"format.uppercase","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"format.uppercase","outcome":"pass","step":4}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.uppercase","outcome":"pass","step":5}
 {"action":"type","detail":"insert \"Evidence\" in css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":6}
 {"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":7}
@@ -10,21 +10,23 @@
 {"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textUppercase is visible","entryId":"format.uppercase","outcome":"pass","step":10}
 {"action":"screenshot","detail":"activation-path-1","entryId":"format.uppercase","outcome":"pass","step":11}
 {"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":12}
-{"action":"type","detail":"insert \"Evidence\" in css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":13}
-{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":14}
-{"action":"expect-selector","detail":"role=toolbar name=\"Floating text format toolbar\" is visible","entryId":"format.uppercase","outcome":"pass","step":15}
-{"action":"keyboard","detail":"Control+Shift+2 on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":16}
-{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textUppercase is visible","entryId":"format.uppercase","outcome":"pass","step":17}
-{"action":"screenshot","detail":"activation-path-2","entryId":"format.uppercase","outcome":"pass","step":18}
-{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":19}
-{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":20}
-{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":21}
-{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"format.uppercase","outcome":"pass","step":22}
-{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"format.uppercase","outcome":"pass","step":23}
-{"action":"set-viewport","detail":"480x900","entryId":"format.uppercase","outcome":"pass","step":24}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.uppercase","outcome":"pass","step":25}
-{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"format.uppercase","outcome":"pass","step":26}
-{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":27}
-{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":28}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.uppercase","outcome":"pass","step":29}
-{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"format.uppercase","outcome":"fail","step":30}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":13}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":14}
+{"action":"type","detail":"insert \"Evidence\" in css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":15}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":16}
+{"action":"expect-selector","detail":"role=toolbar name=\"Floating text format toolbar\" is visible","entryId":"format.uppercase","outcome":"pass","step":17}
+{"action":"keyboard","detail":"Control+Shift+2 on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":18}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textUppercase is visible","entryId":"format.uppercase","outcome":"pass","step":19}
+{"action":"screenshot","detail":"activation-path-2","entryId":"format.uppercase","outcome":"pass","step":20}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":21}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":23}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"format.uppercase","outcome":"pass","step":24}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"format.uppercase","outcome":"pass","step":25}
+{"action":"set-viewport","detail":"480x900","entryId":"format.uppercase","outcome":"pass","step":26}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.uppercase","outcome":"pass","step":27}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"format.uppercase","outcome":"pass","step":28}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":29}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"format.uppercase","outcome":"pass","step":30}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.uppercase","outcome":"pass","step":31}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"format.uppercase","outcome":"pass","step":32}

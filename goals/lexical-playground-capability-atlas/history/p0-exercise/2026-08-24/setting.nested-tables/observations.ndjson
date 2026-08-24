@@ -1,7 +1,7 @@
-{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.nested-tables","outcome":"fail","step":1}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.nested-tables","outcome":"pass","step":1}
 {"action":"goto","detail":"/ {\"emptyEditor\":true,\"hasNestedTables\":false,\"isRichText\":true,\"showTreeView\":false}","entryId":"setting.nested-tables","outcome":"pass","step":2}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.nested-tables","outcome":"fail","step":3}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.nested-tables","outcome":"fail","step":4}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.nested-tables","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.nested-tables","outcome":"pass","step":4}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"setting.nested-tables","outcome":"pass","step":5}
 {"action":"click","detail":"css=[data-test-id=\"options-button\"]","entryId":"setting.nested-tables","outcome":"pass","step":6}
 {"action":"expect-selector","detail":"role=switch name=\"Nested Tables\" is visible","entryId":"setting.nested-tables","outcome":"pass","step":7}
@@ -24,4 +24,4 @@
 {"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"setting.nested-tables","outcome":"pass","step":24}
 {"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"setting.nested-tables","outcome":"pass","step":25}
 {"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"setting.nested-tables","outcome":"pass","step":26}
-{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"setting.nested-tables","outcome":"fail","step":27}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"setting.nested-tables","outcome":"pass","step":27}

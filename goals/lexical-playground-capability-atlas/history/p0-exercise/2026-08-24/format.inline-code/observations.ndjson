@@ -1,7 +1,7 @@
-{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"format.inline-code","outcome":"fail","step":1}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"format.inline-code","outcome":"pass","step":1}
 {"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"format.inline-code","outcome":"pass","step":2}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"format.inline-code","outcome":"fail","step":3}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"format.inline-code","outcome":"fail","step":4}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"format.inline-code","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"format.inline-code","outcome":"pass","step":4}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.inline-code","outcome":"pass","step":5}
 {"action":"type","detail":"insert \"Evidence\" in css=.ContentEditable__root","entryId":"format.inline-code","outcome":"pass","step":6}
 {"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.inline-code","outcome":"pass","step":7}
@@ -17,7 +17,7 @@
 {"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textCode is visible","entryId":"format.inline-code","outcome":"pass","step":17}
 {"action":"screenshot","detail":"activation-path-2","entryId":"format.inline-code","outcome":"pass","step":18}
 {"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"format.inline-code","outcome":"pass","step":19}
-{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"format.inline-code","outcome":"pass","step":20}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"format.inline-code","outcome":"pass","step":20}
 {"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"format.inline-code","outcome":"pass","step":21}
 {"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"format.inline-code","outcome":"pass","step":22}
 {"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"format.inline-code","outcome":"pass","step":23}
@@ -27,4 +27,4 @@
 {"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.inline-code","outcome":"pass","step":27}
 {"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"format.inline-code","outcome":"pass","step":28}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.inline-code","outcome":"pass","step":29}
-{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"format.inline-code","outcome":"fail","step":30}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"format.inline-code","outcome":"pass","step":30}

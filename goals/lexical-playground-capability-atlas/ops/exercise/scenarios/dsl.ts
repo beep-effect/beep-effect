@@ -123,6 +123,18 @@ export type Step = Readonly<
       }>;
     }
   | {
+      action: "clipboard-verify";
+      locator: LocatorSpec;
+    }
+  | {
+      action: "paste-verify";
+      locator: LocatorSpec;
+    }
+  | {
+      action: "export-verify";
+      downloadSlot: string;
+    }
+  | {
       action: "set-viewport";
       height: number;
       width: number;
@@ -213,6 +225,9 @@ export const clipboardPaste = (
   locator: LocatorSpec,
   payload?: Readonly<{ mimeType: "text/html" | "text/plain"; text: string }>
 ): Step => ({ action: "clipboard-paste", locator, payload });
+export const clipboardVerify = (locator: LocatorSpec): Step => ({ action: "clipboard-verify", locator });
+export const pasteVerify = (locator: LocatorSpec): Step => ({ action: "paste-verify", locator });
+export const exportVerify = (downloadSlot: string): Step => ({ action: "export-verify", downloadSlot });
 export const setViewport = (width: number, height: number): Step => ({ action: "set-viewport", height, width });
 export const markManual = (reason: string): Step => ({ action: "mark-manual", reason });
 

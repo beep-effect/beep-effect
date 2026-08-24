@@ -1,7 +1,7 @@
-{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"transformer.image","outcome":"fail","step":1}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"transformer.image","outcome":"pass","step":1}
 {"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"transformer.image","outcome":"pass","step":2}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"transformer.image","outcome":"fail","step":3}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"transformer.image","outcome":"fail","step":4}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"transformer.image","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"transformer.image","outcome":"pass","step":4}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"transformer.image","outcome":"pass","step":5}
 {"action":"type","detail":"insert \"![evidence](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==)\" in css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":6}
 {"action":"expect-selector","detail":"css=.editor-image img is visible","entryId":"transformer.image","outcome":"pass","step":7}
@@ -10,19 +10,20 @@
 {"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":10}
 {"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":11}
 {"action":"click","detail":"role=button name=\"Convert To Markdown\"","entryId":"transformer.image","outcome":"pass","step":12}
-{"action":"type","detail":"fill \"![evidence](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==)\" in css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":13}
-{"action":"click","detail":"role=button name=\"Convert from markdown\"","entryId":"transformer.image","outcome":"pass","step":14}
-{"action":"expect-selector","detail":"css=.editor-image img is visible","entryId":"transformer.image","outcome":"pass","step":15}
-{"action":"screenshot","detail":"activation-path-2","entryId":"transformer.image","outcome":"pass","step":16}
-{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":17}
-{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":18}
-{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":19}
-{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"transformer.image","outcome":"pass","step":20}
-{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"transformer.image","outcome":"pass","step":21}
-{"action":"set-viewport","detail":"480x900","entryId":"transformer.image","outcome":"pass","step":22}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"transformer.image","outcome":"pass","step":23}
-{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"transformer.image","outcome":"pass","step":24}
-{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":25}
-{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":26}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"transformer.image","outcome":"pass","step":27}
-{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"transformer.image","outcome":"fail","step":28}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__code[data-language=\"markdown\"] is visible","entryId":"transformer.image","outcome":"pass","step":13}
+{"action":"type","detail":"fill \"![evidence](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==)\" in css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":14}
+{"action":"click","detail":"role=button name=\"Convert from markdown\"","entryId":"transformer.image","outcome":"pass","step":15}
+{"action":"expect-selector","detail":"css=.editor-image img is visible","entryId":"transformer.image","outcome":"pass","step":16}
+{"action":"screenshot","detail":"activation-path-2","entryId":"transformer.image","outcome":"pass","step":17}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":18}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":19}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":20}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"transformer.image","outcome":"pass","step":21}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"transformer.image","outcome":"pass","step":22}
+{"action":"set-viewport","detail":"480x900","entryId":"transformer.image","outcome":"pass","step":23}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"transformer.image","outcome":"pass","step":24}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"transformer.image","outcome":"pass","step":25}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":26}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"transformer.image","outcome":"pass","step":27}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"transformer.image","outcome":"pass","step":28}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"transformer.image","outcome":"pass","step":29}

@@ -10,6 +10,7 @@ import {
   OUTPUT,
   SETTING_QUERY,
   TIME_TRAVEL_BUTTON,
+  TIME_TRAVEL_EXIT,
 } from "./sourced.ts";
 
 const rawLexicalJson = stableStringify({
@@ -195,6 +196,9 @@ export const scenarios = [
         keyboard("Tab"),
         keyboard("ArrowLeft"),
         keyboard("ArrowRight"),
+        click(TIME_TRAVEL_EXIT),
+        expectSelector(TIME_TRAVEL_EXIT, "detached"),
+        expectSelector(TIME_TRAVEL_BUTTON),
       ],
       { query: { [SETTING_QUERY.treeView]: true }, seed: "Time travel" }
     ),

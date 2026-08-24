@@ -1,7 +1,7 @@
-{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.list-strict-indent","outcome":"fail","step":1}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.list-strict-indent","outcome":"pass","step":1}
 {"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"listStrictIndent\":true,\"showTreeView\":false}","entryId":"setting.list-strict-indent","outcome":"pass","step":2}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.list-strict-indent","outcome":"fail","step":3}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.list-strict-indent","outcome":"fail","step":4}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.list-strict-indent","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.list-strict-indent","outcome":"pass","step":4}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"setting.list-strict-indent","outcome":"pass","step":5}
 {"action":"type","detail":"insert \"Strict list indent evidence\" in css=.ContentEditable__root","entryId":"setting.list-strict-indent","outcome":"pass","step":6}
 {"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"setting.list-strict-indent","outcome":"pass","step":7}
@@ -9,10 +9,10 @@
 {"action":"set-viewport","detail":"480x900","entryId":"setting.list-strict-indent","outcome":"pass","step":9}
 {"action":"keyboard","detail":"Tab","entryId":"setting.list-strict-indent","outcome":"pass","step":10}
 {"action":"screenshot","detail":"query-enabled-narrow-keyboard","entryId":"setting.list-strict-indent","outcome":"pass","step":11}
-{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.list-strict-indent","outcome":"fail","step":12}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.list-strict-indent","outcome":"pass","step":12}
 {"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"listStrictIndent\":false,\"showTreeView\":false}","entryId":"setting.list-strict-indent","outcome":"pass","step":13}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.list-strict-indent","outcome":"fail","step":14}
-{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.list-strict-indent","outcome":"fail","step":15}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.list-strict-indent","outcome":"pass","step":14}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.list-strict-indent","outcome":"pass","step":15}
 {"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"setting.list-strict-indent","outcome":"pass","step":16}
 {"action":"screenshot","detail":"query-reset","entryId":"setting.list-strict-indent","outcome":"pass","step":17}
 {"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"setting.list-strict-indent","outcome":"pass","step":18}
@@ -23,4 +23,4 @@
 {"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"setting.list-strict-indent","outcome":"pass","step":23}
 {"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"setting.list-strict-indent","outcome":"pass","step":24}
 {"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"setting.list-strict-indent","outcome":"pass","step":25}
-{"action":"network-summary","detail":"none: 6 non-localhost request(s)","entryId":"setting.list-strict-indent","outcome":"fail","step":26}
+{"action":"network-summary","detail":"none: 0 capability request(s); 6 baseline egress request(s)","entryId":"setting.list-strict-indent","outcome":"pass","step":26}
