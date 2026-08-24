@@ -2,13 +2,13 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Normalize live/source evidence into stable atlas entries; reconcile all registrations and activation paths; lock the minimal descriptor contract. | Atlas has no unexplained features, compatibility gaps are explicit, and descriptor fields are justified by entries rather than speculation. |
+| P0 Research | active | Normalize live/source evidence into stable atlas entries; reconcile all registrations and activation paths; lock the minimal descriptor contract. | Atlas has no unexplained features, compatibility gaps are explicit, and descriptor fields are justified by entries rather than speculation. |
 | P1 Implement | pending | Add the `@beep/editor` schemas/resolver/command projection, compatibility defaults, Storybook profiles, and synthetic dock panel. | All implementation acceptance criteria and focused tests pass without new document semantics or product persistence. |
 | P2 Verify | pending | Run package/app proof and the recorded browser QA loop across keyboard, pointer, responsive/touch, and accessibility scenarios. | Targeted proof and full `bun run beep yeet verify` are green; QA inventory has zero required findings. |
 | P3 Yeet: PR to mergeable | pending | Publish intentionally through Yeet and close exact-head hosted checks and review threads. | PR is mergeable with required hosted checks and reviews green. |
@@ -87,6 +87,12 @@ Status: `pending`
 
 ## Execution Notes
 
+- 2026-08-24: landed the authored `editor-capability-atlas/v1`, its Effect v4
+  schemas, the exact verifier, and the live-evidence gap ledger. The verifier
+  reconciles 38 root nodes, 41 effective rich-text nodes, 29 settings, 73
+  top-level registrations, including query overrides, 23 Markdown transformers, 32 observed keybindings,
+  11 document actions, and 17 screenshots. P0 remains active because 162 atlas
+  entries still require live lifecycle evidence or user-approved waivers.
 - Preserve unrelated worktree changes and inspect current state before edits.
 - Use live source/barrel discovery; do not use the retired export catalog.
 - Keep `SPEC.md` normative. Record new user decisions in the source
