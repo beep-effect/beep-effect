@@ -38,7 +38,11 @@ Closed. All five phases complete.
 
 2026-08-24: P4 closeout — reflection
 [`history/reflections/2026-08-24-claude.md`](./history/reflections/2026-08-24-claude.md)
-written, lifecycle flipped to `completed-retained`.
+written, lifecycle flipped to `completed-retained`. Closeout rode PR #777 as
+a recorded exception to the same-PR flip law (final work merged in PR #680;
+see `SPEC.md` Exception Ledger). The SPEC's protobuf ownership guard expired
+2026-08-13 when the sibling clone removed `@beep/protobuf` in PR #690;
+deletion checks now verify tracked state via `git ls-files`.
 
 2026-08-13: P1–P3 merged as
 [PR #680](https://github.com/beep-effect/beep-effect/pull/680) — three
