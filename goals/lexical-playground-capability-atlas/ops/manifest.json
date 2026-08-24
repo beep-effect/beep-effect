@@ -5,12 +5,12 @@
     "title": "Lexical Playground Capability Atlas",
     "status": "active",
     "created": "2026-08-04",
-    "updated": "2026-08-04",
+    "updated": "2026-08-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lexical-playground-capability-atlas",
   "lifecycle": "active",
-  "statusNote": "Graduated and activated on 2026-08-04; execution has not started.",
+  "statusNote": "P0 core artifacts landed on 2026-08-24; P0 remains active pending live lifecycle evidence or user-approved waivers for 162 unverified atlas entries.",
   "mission": "Version the complete Lexical Playground capability atlas and prove the minimal schema-backed editor profile resolver in Storybook and a synthetic Professional Desktop dock panel.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -33,9 +33,15 @@
     "goals/lexical-playground-capability-atlas/SPEC.md",
     "goals/lexical-playground-capability-atlas/PLAN.md",
     "goals/lexical-playground-capability-atlas/GOAL.md",
-    "goals/lexical-playground-capability-atlas/research/SOURCES.md"
+    "goals/lexical-playground-capability-atlas/research/SOURCES.md",
+    "goals/lexical-playground-capability-atlas/research/capability-atlas.json",
+    "goals/lexical-playground-capability-atlas/research/p0-evidence-gaps.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/capability-atlas.json",
+    "research/p0-evidence-gaps.md"
+  ],
   "plannedArtifacts": [
     {
       "path": "research/capability-atlas.json",
@@ -43,6 +49,21 @@
       "ownership": "authored",
       "schemaPath": "ops/CapabilityAtlas.schemas.ts",
       "verificationCommand": "bun run goals/lexical-playground-capability-atlas/ops/verify-capability-atlas.ts"
+    },
+    {
+      "path": "ops/CapabilityAtlas.schemas.ts",
+      "ownership": "authored",
+      "purpose": "Effect v4 schema-first contract for editor-capability-atlas/v1"
+    },
+    {
+      "path": "ops/verify-capability-atlas.ts",
+      "ownership": "authored",
+      "purpose": "Exact atlas decoder, stable-ID and evidence reconciliation verifier"
+    },
+    {
+      "path": "research/p0-evidence-gaps.md",
+      "ownership": "authored",
+      "purpose": "Complete unverified-entry browser exercise and waiver ledger"
     }
   ],
   "stakeholderSurfaces": [
@@ -65,7 +86,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
