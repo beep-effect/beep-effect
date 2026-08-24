@@ -30,6 +30,10 @@ const AuthConfig = Layer.succeed(ConfigService, {
 const InterruptedAuthDependencies = Layer.merge(InterruptedTicketService, AuthConfig);
 
 describe("AuthRouter", () => {
+  it("requires API authentication by default", () => {
+    assert.isTrue(DEFAULT_CONFIG.api.requireAuth);
+  });
+
   it.layer(InterruptedAuthDependencies)("with an interrupted ticket service", (it) => {
     it.effect(
       "preserves interruption from ticket creation",
