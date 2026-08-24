@@ -4,8 +4,10 @@ import { CompatibilityFormat, EditorCapabilityAtlas } from "./CapabilityAtlas.sc
 
 const atlasPath = Bun.fileURLToPath(new URL("../research/capability-atlas.json", import.meta.url));
 const evidenceGapsPath = Bun.fileURLToPath(new URL("../research/p0-evidence-gaps.md", import.meta.url));
+const specPath = Bun.fileURLToPath(new URL("../SPEC.md", import.meta.url));
 const repoRoot = Bun.fileURLToPath(new URL("../../../", import.meta.url));
 const exerciseScreenshotPrefix = "goals/lexical-playground-capability-atlas/history/";
+const exerciseAuditPath = "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md";
 const expectedCommit = "a933222c489e7025d87b9217c2489d309fc8a3cf";
 const expectedVersion = "0.49.0";
 
@@ -652,17 +654,55 @@ if (counts.settings !== 29 || counts.screenshots !== 17 || counts.observedKeybin
 
 const evidenceGaps = await Bun.file(evidenceGapsPath).text();
 const recordedGapIds = [...evidenceGaps.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
-compareExactInventory(
-  "P0 evidence-gap ledger",
-  recordedGapIds,
-  atlas.capabilities.filter((item) => item.evidenceStatus === "unverified").map((item) => item.id)
-);
+const unverifiedIds = atlas.capabilities.filter((item) => item.evidenceStatus === "unverified").map((item) => item.id);
+compareExactInventory("P0 evidence-gap ledger", recordedGapIds, unverifiedIds);
 if (/\b(?:TODO|TBD|FIXME|PLACEHOLDER)\b/i.test(evidenceGaps)) {
   fail("P0 evidence-gap ledger contains placeholder text");
 }
-if (!evidenceGaps.includes("P0 is not complete.")) {
-  fail("P0 evidence-gap ledger must state that P0 is not complete");
+if (!evidenceGaps.includes("P0's live-evidence gate is closed")) {
+  fail("P0 evidence-gap ledger must state that the live-evidence gate is closed");
 }
+
+const spec = await Bun.file(specPath).text();
+const exceptionLedgerHeading = "## Exception Ledger";
+const exceptionLedgerStart = spec.indexOf(exceptionLedgerHeading);
+let exceptionLedgerSection = "";
+if (exceptionLedgerStart === -1) {
+  fail("SPEC is missing the Exception Ledger");
+} else {
+  const afterExceptionLedgerHeading = spec.slice(exceptionLedgerStart + exceptionLedgerHeading.length).trimStart();
+  const nextSectionStart = afterExceptionLedgerHeading.search(/^## /m);
+  exceptionLedgerSection =
+    nextSectionStart === -1 ? afterExceptionLedgerHeading : afterExceptionLedgerHeading.slice(0, nextSectionStart);
+}
+
+const approvedWaiverIds = new Set<string>();
+const exceptionLedgerRows = exceptionLedgerSection
+  .split("\n")
+  .filter((line) => line.startsWith("| ") && !line.startsWith("| Exception ") && !line.startsWith("| --- "));
+for (const row of exceptionLedgerRows) {
+  const match = row.match(/^\| ([^|]+) \| `([^`]+)` \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$/);
+  if (match === null) {
+    fail(`malformed Exception Ledger row: ${row}`);
+    continue;
+  }
+  const exception = match[1] ?? "";
+  const scope = match[2] ?? "";
+  if (!exception.startsWith("user-approved")) {
+    fail(`Exception Ledger row for ${scope} is not user-approved`);
+  }
+  if (approvedWaiverIds.has(scope)) {
+    fail(`Exception Ledger contains duplicate atlas ID ${scope}`);
+  }
+  approvedWaiverIds.add(scope);
+  const capability = capabilityById.get(scope);
+  if (capability === undefined) {
+    fail(`Exception Ledger names unknown atlas ID ${scope}`);
+  } else if (capability.evidenceStatus !== "unverified") {
+    fail(`Exception Ledger waives ${scope}, but its evidenceStatus is ${capability.evidenceStatus}`);
+  }
+}
+const missingWaiverIds = unverifiedIds.filter((id) => !approvedWaiverIds.has(id));
 
 const summarize = (select: (capability: EditorCapabilityAtlas["capabilities"][number]) => string) => {
   const summary = new Map<string, number>();
@@ -697,9 +737,13 @@ writeLine(
     .map(([key, value]) => `${key}=${value}`)
     .join(", ")}`
 );
-const unverifiedCount = atlas.capabilities.filter((item) => item.evidenceStatus === "unverified").length;
+const verifiedLiveByExerciseCount = atlas.capabilities.filter(
+  (item) =>
+    item.evidenceStatus === "verified-live" &&
+    item.upstreamEvidence.live.some((evidence) => evidence.auditPath === exerciseAuditPath)
+).length;
 writeLine(
-  unverifiedCount === 0
-    ? "P0 evidence gate: complete"
-    : `P0 evidence gate: OPEN (${unverifiedCount} entries still require live exercise or user-approved waivers)`
+  missingWaiverIds.length === 0
+    ? `P0 evidence gate: complete (${verifiedLiveByExerciseCount} verified-live by exercise; ${unverifiedIds.length} unverified entries carry user-approved Exception Ledger waivers)`
+    : `P0 evidence gate: OPEN (${missingWaiverIds.length} unverified entries lack user-approved Exception Ledger waivers: ${missingWaiverIds.join(", ")})`
 );

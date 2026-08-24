@@ -37,10 +37,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research is in progress. The authored capability atlas, Effect v4 schemas,
-exact verifier, and P0 evidence-gap ledger landed on 2026-08-24. Source and
-inventory reconciliation passes, but 162 entries remain `unverified` and need
-live lifecycle evidence or user-approved waivers before P0 can complete.
+P0 Research completed on 2026-08-24. The final atlas has 154 `verified-live`
+entries, 14 `verified-source` entries, and 10 `unverified` entries covered by
+user-approved Exception Ledger waivers. The exercise harness has been hermetic
+since PR #793.
 
 - [`research/capability-atlas.json`](./research/capability-atlas.json) is the
   normative `editor-capability-atlas/v1` artifact.
@@ -50,7 +50,7 @@ live lifecycle evidence or user-approved waivers before P0 can complete.
   schema validity, stable IDs, dependencies, evidence paths, and pinned
   inventories.
 - [`research/p0-evidence-gaps.md`](./research/p0-evidence-gaps.md) is the exact
-  browser-exercise remainder. P0 is not complete while it has unwaived rows.
+  browser-exercise remainder and points to the approved Exception Ledger.
 
 ## Latest Evidence
 

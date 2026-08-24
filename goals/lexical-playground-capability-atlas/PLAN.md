@@ -8,7 +8,7 @@ Status: `active`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | active | Normalize live/source evidence into stable atlas entries; reconcile all registrations and activation paths; lock the minimal descriptor contract. | Atlas has no unexplained features, compatibility gaps are explicit, and descriptor fields are justified by entries rather than speculation. |
+| P0 Research | complete | Normalize live/source evidence into stable atlas entries; reconcile all registrations and activation paths; lock the minimal descriptor contract. | Atlas has no unexplained features, compatibility gaps are explicit, and descriptor fields are justified by entries rather than speculation. |
 | P1 Implement | pending | Add the `@beep/editor` schemas/resolver/command projection, compatibility defaults, Storybook profiles, and synthetic dock panel. | All implementation acceptance criteria and focused tests pass without new document semantics or product persistence. |
 | P2 Verify | pending | Run package/app proof and the recorded browser QA loop across keyboard, pointer, responsive/touch, and accessibility scenarios. | Targeted proof and full `bun run beep yeet verify` are green; QA inventory has zero required findings. |
 | P3 Yeet: PR to mergeable | pending | Publish intentionally through Yeet and close exact-head hosted checks and review threads. | PR is mergeable with required hosted checks and reviews green. |
@@ -16,25 +16,25 @@ Status: `active`
 
 ## P0 Research Checklist
 
-1. Read the exploration `CAPTURE`, `RESEARCH`, `DECISIONS`, `BRIEF`, `MAP`,
+- [x] Read the exploration `CAPTURE`, `RESEARCH`, `DECISIONS`, `BRIEF`, `MAP`,
    both detailed audits, and `research/SOURCES.md`.
-2. Verify the local Lexical checkout still resolves to pinned commit `a933222`.
+- [x] Verify the local Lexical checkout still resolves to pinned commit `a933222`.
    If it moved, audit the pinned commit or explicitly version a new evidence set.
-3. Create the normative authored `research/capability-atlas.json`
+- [x] Create the normative authored `research/capability-atlas.json`
    (`editor-capability-atlas/v1`), `ops/CapabilityAtlas.schemas.ts`, and the
    exact `ops/verify-capability-atlas.ts` verifier named by `SPEC.md`.
-4. Reconcile root nodes, effective nodes, top-level extensions/plugins,
+- [x] Reconcile root nodes, effective nodes, top-level extensions/plugins,
    settings/query flags, transformers, toolbar/slash/context activation paths,
    document actions, imports/exports, and keybindings.
-5. Give every entry a disposition, owner, target goal, compatibility row,
+- [x] Give every entry a disposition, owner, target goal, compatibility row,
    read-only fallback, accessibility/responsive contract, and evidence link.
-6. Derive the smallest public capability/profile schema from the reconciled
+- [x] Derive the smallest public capability/profile schema from the reconciled
    atlas; record alternatives and migration of current `ComposerFeatures`.
-7. Exercise every production-eligible user-visible capability and activation
+- [x] Exercise every production-eligible user-visible capability and activation
    path through its applicable lifecycle with screenshot/interaction evidence.
-   Close every current unverified item or obtain a user-approved, goal-owned
+   Close every current unverified item or obtain a user-approved, owner-backed
    waiver in the Exception Ledger.
-8. Stop for user direction if any feature needs a new product/security decision.
+- [x] Stop for user direction if any feature needs a new product/security decision.
 
 ## P1 Implementation Checklist
 
@@ -87,12 +87,15 @@ Status: `active`
 
 ## Execution Notes
 
-- 2026-08-24: landed the authored `editor-capability-atlas/v1`, its Effect v4
-  schemas, the exact verifier, and the live-evidence gap ledger. The verifier
-  reconciles 38 root nodes, 41 effective rich-text nodes, 29 settings, 73
-  top-level registrations, including query overrides, 23 Markdown transformers, 32 observed keybindings,
-  11 document actions, and 17 screenshots. P0 remains active because 162 atlas
-  entries still require live lifecycle evidence or user-approved waivers.
+- 2026-08-24: P0 completed with the authored
+  `editor-capability-atlas/v1`, its Effect v4 schemas, the exact verifier, and
+  the approved Exception Ledger. The final evidence states are 154
+  `verified-live`, 14 `verified-source`, and 10 `unverified` with user-approved
+  waivers. The exercise harness has been hermetic since PR #793, and the user
+  approved the 10-row ledger on 2026-08-24. The verifier reconciles 38 root
+  nodes, 41 effective rich-text nodes, 29 settings, 73 top-level registrations,
+  including query overrides, 23 Markdown transformers, 32 observed
+  keybindings, 11 document actions, and 17 screenshots.
 - Preserve unrelated worktree changes and inspect current state before edits.
 - Use live source/barrel discovery; do not use the retired export catalog.
 - Keep `SPEC.md` normative. Record new user decisions in the source
