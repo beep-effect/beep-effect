@@ -23,6 +23,21 @@ import type { PlatformError } from "effect";
 
 const $I = $RepoAiMetricsId.create("identity-registry");
 
+const AiMetricsIdentityRegistryErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsIdentityRegistryErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsIdentityRegistryError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsIdentityRegistryErrorFields.message,
+  })
+);
+const sameAiMetricsIdentityRegistryError = (
+  self: AiMetricsIdentityRegistryError,
+  that: AiMetricsIdentityRegistryError
+): boolean => sameAiMetricsIdentityRegistryErrorFields(self, that);
+
 const identityRegistryVersion = "ai-metrics-identity-registry/v1";
 const hashSaltNamespaceMarker = "ai-metrics-hash-salt-namespace/v1";
 const identityDirName = "identity";
@@ -308,12 +323,13 @@ export class AiMetricsIdentityRegistryError extends S.TaggedError<AiMetricsIdent
   $I`AiMetricsIdentityRegistryError`
 )(
   "AiMetricsIdentityRegistryError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsIdentityRegistryError", {
+  AiMetricsIdentityRegistryErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsIdentityRegistryError>,
+    readonly [S.TaggedStruct<"AiMetricsIdentityRegistryError", typeof AiMetricsIdentityRegistryErrorFields>]
+  >("AiMetricsIdentityRegistryError", {
     description: "Typed failure raised while deriving or persisting AI metrics root identity.",
+    toEquivalence: () => sameAiMetricsIdentityRegistryError,
   })
 ) {}
 

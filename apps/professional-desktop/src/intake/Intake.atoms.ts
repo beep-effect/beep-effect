@@ -519,25 +519,83 @@ export const intakeDroppedFilePayload = (input: DroppedDocumentInput): IntakeDro
     filingContext: DefaultVaultFilingContext,
   });
 
-class VaultDirectoryPickerInvocationError extends S.TaggedError<VaultDirectoryPickerInvocationError>(
+const VaultDirectoryPickerInvocationErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+} satisfies S.Struct.Fields;
+const VaultDirectoryPickerInvocationErrorEquivalenceFields = {} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameVaultDirectoryPickerInvocationErrorFields = S.toEquivalence(
+  S.TaggedStruct("VaultDirectoryPickerInvocationError", VaultDirectoryPickerInvocationErrorEquivalenceFields)
+);
+const sameVaultDirectoryPickerInvocationError = (
+  self: VaultDirectoryPickerInvocationError,
+  that: VaultDirectoryPickerInvocationError
+): boolean => sameVaultDirectoryPickerInvocationErrorFields(self, that);
+
+/**
+ * Technical failure raised while invoking the Tauri workspace vault picker.
+ *
+ * **Example** (Create an invocation failure)
+ *
+ * ```ts
+ * import { VaultDirectoryPickerInvocationError } from "@/intake/Intake.atoms"
+ *
+ * const error = VaultDirectoryPickerInvocationError.make({ cause: new Error("dialog unavailable") })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class VaultDirectoryPickerInvocationError extends S.TaggedError<VaultDirectoryPickerInvocationError>(
   $I`VaultDirectoryPickerInvocationError`
 )(
   "VaultDirectoryPickerInvocationError",
-  {
-    cause: S.Defect({ includeStack: true }),
-  },
-  $I.annote("VaultDirectoryPickerInvocationError", {
+  VaultDirectoryPickerInvocationErrorFields,
+  $I.annoteClass<
+    S.declare<VaultDirectoryPickerInvocationError>,
+    readonly [S.TaggedStruct<"VaultDirectoryPickerInvocationError", typeof VaultDirectoryPickerInvocationErrorFields>]
+  >("VaultDirectoryPickerInvocationError", {
     description: "Technical failure raised while invoking the Tauri workspace vault picker.",
+    toEquivalence: () => sameVaultDirectoryPickerInvocationError,
   })
 ) {}
 
-class BrowserFileReadError extends S.TaggedError<BrowserFileReadError>($I`BrowserFileReadError`)(
+const BrowserFileReadErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+} satisfies S.Struct.Fields;
+const BrowserFileReadErrorEquivalenceFields = {} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameBrowserFileReadErrorFields = S.toEquivalence(
+  S.TaggedStruct("BrowserFileReadError", BrowserFileReadErrorEquivalenceFields)
+);
+const sameBrowserFileReadError = (self: BrowserFileReadError, that: BrowserFileReadError): boolean =>
+  sameBrowserFileReadErrorFields(self, that);
+
+/**
+ * Technical failure raised while reading a browser `File` into memory.
+ *
+ * **Example** (Create a file-read failure)
+ *
+ * ```ts
+ * import { BrowserFileReadError } from "@/intake/Intake.atoms"
+ *
+ * const error = BrowserFileReadError.make({ cause: new Error("read failed") })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class BrowserFileReadError extends S.TaggedError<BrowserFileReadError>($I`BrowserFileReadError`)(
   "BrowserFileReadError",
-  {
-    cause: S.Defect({ includeStack: true }),
-  },
-  $I.annote("BrowserFileReadError", {
+  BrowserFileReadErrorFields,
+  $I.annoteClass<
+    S.declare<BrowserFileReadError>,
+    readonly [S.TaggedStruct<"BrowserFileReadError", typeof BrowserFileReadErrorFields>]
+  >("BrowserFileReadError", {
     description: "Technical failure raised while reading a browser File into memory.",
+    toEquivalence: () => sameBrowserFileReadError,
   })
 ) {}
 

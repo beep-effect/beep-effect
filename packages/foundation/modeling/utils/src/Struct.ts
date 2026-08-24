@@ -54,6 +54,18 @@ type FromEntries<E extends readonly [PropertyKey, unknown]> = Simplify<{
 }>;
 
 const NonEmptyStringKeys = S.NonEmptyArray(S.String);
+const EmptyStructErrorFields = {
+  input: S.Unknown,
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// input is opaque unknown data: equivalence is declared diagnostic identity, input stays payload.
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const EmptyStructErrorComparableFields = {} satisfies S.Struct.Fields;
+const sameEmptyStructErrorFields = S.toEquivalence(
+  S.TaggedStruct("EmptyStructError", EmptyStructErrorComparableFields)
+);
+const sameEmptyStructError = (self: EmptyStructError, that: EmptyStructError): boolean =>
+  sameEmptyStructErrorFields(self, that);
 
 /**
  * Thrown when a struct expected to have at least one string key is empty.
@@ -72,12 +84,13 @@ const NonEmptyStringKeys = S.NonEmptyArray(S.String);
  */
 export class EmptyStructError extends S.TaggedError<EmptyStructError>($I`EmptyStructError`)(
   "EmptyStructError",
-  {
-    input: S.Unknown,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("EmptyStructError", {
+  EmptyStructErrorFields,
+  $I.annoteClass<
+    S.declare<EmptyStructError>,
+    readonly [S.TaggedStruct<"EmptyStructError", typeof EmptyStructErrorFields>]
+  >("EmptyStructError", {
     description: "Invariant violation thrown when a struct expected to have at least one string key is empty.",
+    toEquivalence: () => sameEmptyStructError,
   })
 ) {}
 

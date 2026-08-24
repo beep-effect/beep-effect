@@ -219,6 +219,19 @@ export type PandocJsonFromString = typeof PandocJsonFromString.Type;
 
 const PandocJsonObject = S.Record(S.String, S.Json);
 const PandocJsonObjectFromString = S.fromJsonString(PandocJsonObject);
+const PandocDecodeErrorFields = {
+  message: S.String,
+  cause: S.Defect({ includeStack: true }),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const PandocDecodeErrorComparableFields = {
+  message: PandocDecodeErrorFields.message,
+} satisfies S.Struct.Fields;
+const samePandocDecodeErrorFields = S.toEquivalence(
+  S.TaggedStruct("PandocDecodeError", PandocDecodeErrorComparableFields)
+);
+const samePandocDecodeError = (self: PandocDecodeError, that: PandocDecodeError): boolean =>
+  samePandocDecodeErrorFields(self, that);
 
 /**
  * Typed failure raised by strict or lossless Pandoc JSON decoding.
@@ -240,12 +253,13 @@ const PandocJsonObjectFromString = S.fromJsonString(PandocJsonObject);
  */
 export class PandocDecodeError extends S.TaggedError<PandocDecodeError>($I`PandocDecodeError`)(
   "PandocDecodeError",
-  {
-    message: S.String,
-    cause: S.Defect({ includeStack: true }),
-  },
-  $I.annote("PandocDecodeError", {
+  PandocDecodeErrorFields,
+  $I.annoteClass<
+    S.declare<PandocDecodeError>,
+    readonly [S.TaggedStruct<"PandocDecodeError", typeof PandocDecodeErrorFields>]
+  >("PandocDecodeError", {
     description: "Typed failure raised when a Pandoc semantic or lossless JSON payload cannot be decoded.",
+    toEquivalence: () => samePandocDecodeError,
   })
 ) {}
 

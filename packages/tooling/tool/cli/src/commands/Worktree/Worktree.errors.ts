@@ -21,6 +21,25 @@ type WorktreeCommandErrorOptions =
       readonly path?: string;
     };
 
+const WorktreeCommandErrorFields = {
+  message: S.String,
+  command: S.optionalKey(S.String),
+  exitCode: S.optionalKey(S.Finite),
+  path: S.optionalKey(S.String),
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameWorktreeCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("WorktreeCommandError", {
+    message: WorktreeCommandErrorFields.message,
+    command: WorktreeCommandErrorFields.command,
+    exitCode: WorktreeCommandErrorFields.exitCode,
+    path: WorktreeCommandErrorFields.path,
+  })
+);
+const sameWorktreeCommandError = (self: WorktreeCommandError, that: WorktreeCommandError): boolean =>
+  sameWorktreeCommandErrorFields(self, that);
+
 /**
  * Operational failure raised while planning or running a worktree operation.
  *
@@ -38,15 +57,13 @@ type WorktreeCommandErrorOptions =
  */
 export class WorktreeCommandError extends S.TaggedError<WorktreeCommandError>($I`WorktreeCommandError`)(
   "WorktreeCommandError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    path: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("WorktreeCommandError", {
+  WorktreeCommandErrorFields,
+  $I.annoteClass<
+    S.declare<WorktreeCommandError>,
+    readonly [S.TaggedStruct<"WorktreeCommandError", typeof WorktreeCommandErrorFields>]
+  >("WorktreeCommandError", {
     description: "Failure raised while planning or executing a git worktree operation.",
+    toEquivalence: () => sameWorktreeCommandError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */
@@ -75,6 +92,15 @@ export class WorktreeCommandError extends S.TaggedError<WorktreeCommandError>($I
   );
 }
 
+const WorktreeDirtyErrorFields = {
+  message: S.String,
+  path: S.String,
+  changeCount: S.Finite,
+} satisfies S.Struct.Fields;
+const sameWorktreeDirtyErrorFields = S.toEquivalence(S.TaggedStruct("WorktreeDirtyError", WorktreeDirtyErrorFields));
+const sameWorktreeDirtyError = (self: WorktreeDirtyError, that: WorktreeDirtyError): boolean =>
+  sameWorktreeDirtyErrorFields(self, that);
+
 /**
  * Removal refused because the target worktree has uncommitted changes.
  *
@@ -92,13 +118,13 @@ export class WorktreeCommandError extends S.TaggedError<WorktreeCommandError>($I
  */
 export class WorktreeDirtyError extends S.TaggedError<WorktreeDirtyError>($I`WorktreeDirtyError`)(
   "WorktreeDirtyError",
-  {
-    message: S.String,
-    path: S.String,
-    changeCount: S.Finite,
-  },
-  $I.annote("WorktreeDirtyError", {
+  WorktreeDirtyErrorFields,
+  $I.annoteClass<
+    S.declare<WorktreeDirtyError>,
+    readonly [S.TaggedStruct<"WorktreeDirtyError", typeof WorktreeDirtyErrorFields>]
+  >("WorktreeDirtyError", {
     description: "Worktree removal was refused because the target has uncommitted changes.",
+    toEquivalence: () => sameWorktreeDirtyError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */
@@ -120,6 +146,14 @@ export class WorktreeDirtyError extends S.TaggedError<WorktreeDirtyError>($I`Wor
     });
 }
 
+const WorktreeExistsErrorFields = {
+  message: S.String,
+  path: S.String,
+} satisfies S.Struct.Fields;
+const sameWorktreeExistsErrorFields = S.toEquivalence(S.TaggedStruct("WorktreeExistsError", WorktreeExistsErrorFields));
+const sameWorktreeExistsError = (self: WorktreeExistsError, that: WorktreeExistsError): boolean =>
+  sameWorktreeExistsErrorFields(self, that);
+
 /**
  * Creation refused because a worktree directory already exists at the target path.
  *
@@ -137,12 +171,13 @@ export class WorktreeDirtyError extends S.TaggedError<WorktreeDirtyError>($I`Wor
  */
 export class WorktreeExistsError extends S.TaggedError<WorktreeExistsError>($I`WorktreeExistsError`)(
   "WorktreeExistsError",
-  {
-    message: S.String,
-    path: S.String,
-  },
-  $I.annote("WorktreeExistsError", {
+  WorktreeExistsErrorFields,
+  $I.annoteClass<
+    S.declare<WorktreeExistsError>,
+    readonly [S.TaggedStruct<"WorktreeExistsError", typeof WorktreeExistsErrorFields>]
+  >("WorktreeExistsError", {
     description: "Worktree creation was refused because a directory already exists at the target path.",
+    toEquivalence: () => sameWorktreeExistsError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */

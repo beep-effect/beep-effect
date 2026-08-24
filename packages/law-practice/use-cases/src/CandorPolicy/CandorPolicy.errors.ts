@@ -42,6 +42,16 @@ export const CandorRecordReadReason = CandorRecordReadReasonBase.pipe(
  */
 export type CandorRecordReadReason = typeof CandorRecordReadReason.Type;
 
+const CandorRecordReadErrorFields = {
+  message: S.String,
+  reason: CandorRecordReadReason,
+} satisfies S.Struct.Fields;
+const sameCandorRecordReadErrorFields = S.toEquivalence(
+  S.TaggedStruct("CandorRecordReadError", CandorRecordReadErrorFields)
+);
+const sameCandorRecordReadError = (self: CandorRecordReadError, that: CandorRecordReadError): boolean =>
+  sameCandorRecordReadErrorFields(self, that);
+
 /**
  * The recorded events or dispositions for a filing could not be read.
  *
@@ -69,12 +79,14 @@ export type CandorRecordReadReason = typeof CandorRecordReadReason.Type;
  */
 export class CandorRecordReadError extends S.TaggedError<CandorRecordReadError>($I`CandorRecordReadError`)(
   "CandorRecordReadError",
-  {
-    message: S.String,
-    reason: CandorRecordReadReason,
-  },
-  $I.annote("CandorRecordReadError", {
+  CandorRecordReadErrorFields,
+  $I.annoteClass<
+    S.declare<CandorRecordReadError>,
+    readonly [S.TaggedStruct<"CandorRecordReadError", typeof CandorRecordReadErrorFields>]
+  >("CandorRecordReadError", {
     description: "Failure raised when recorded candor events or dispositions cannot be read for a filing.",
+
+    toEquivalence: () => sameCandorRecordReadError,
   })
 ) {
   /**

@@ -69,6 +69,155 @@ const statusFields = <Status extends S.Top>(status: Status) =>
     status,
   }) as const;
 
+const ClientHttpErrorFields = {
+  message: S.String,
+  status: HttpStatus.HttpStatus4XX,
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+const sameClientHttpErrorFields = S.toEquivalence(
+  S.TaggedStruct("ClientHttpError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: ClientHttpErrorFields.message,
+    status: ClientHttpErrorFields.status,
+  })
+);
+const sameClientHttpError = (self: ClientHttpError, that: ClientHttpError): boolean =>
+  sameClientHttpErrorFields(self, that);
+
+const ServerHttpErrorFields = {
+  message: S.String,
+  status: HttpStatus.HttpStatus5XX,
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+const sameServerHttpErrorFields = S.toEquivalence(
+  S.TaggedStruct("ServerHttpError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: ServerHttpErrorFields.message,
+    status: ServerHttpErrorFields.status,
+  })
+);
+const sameServerHttpError = (self: ServerHttpError, that: ServerHttpError): boolean =>
+  sameServerHttpErrorFields(self, that);
+
+const BadRequestErrorFields = statusFields(HttpStatus.BadRequest) satisfies S.Struct.Fields;
+const sameBadRequestErrorFields = S.toEquivalence(
+  S.TaggedStruct("BadRequestError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: BadRequestErrorFields.message,
+    status: BadRequestErrorFields.status,
+  })
+);
+const sameBadRequestError = (self: BadRequestError, that: BadRequestError): boolean =>
+  sameBadRequestErrorFields(self, that);
+
+const UnauthorizedErrorFields = statusFields(HttpStatus.Unauthorized) satisfies S.Struct.Fields;
+const sameUnauthorizedErrorFields = S.toEquivalence(
+  S.TaggedStruct("UnauthorizedError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: UnauthorizedErrorFields.message,
+    status: UnauthorizedErrorFields.status,
+  })
+);
+const sameUnauthorizedError = (self: UnauthorizedError, that: UnauthorizedError): boolean =>
+  sameUnauthorizedErrorFields(self, that);
+
+const ForbiddenErrorFields = statusFields(HttpStatus.Forbidden) satisfies S.Struct.Fields;
+const sameForbiddenErrorFields = S.toEquivalence(
+  S.TaggedStruct("ForbiddenError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: ForbiddenErrorFields.message,
+    status: ForbiddenErrorFields.status,
+  })
+);
+const sameForbiddenError = (self: ForbiddenError, that: ForbiddenError): boolean =>
+  sameForbiddenErrorFields(self, that);
+
+const NotFoundErrorFields = statusFields(HttpStatus.NotFound) satisfies S.Struct.Fields;
+const sameNotFoundErrorFields = S.toEquivalence(
+  S.TaggedStruct("NotFoundError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: NotFoundErrorFields.message,
+    status: NotFoundErrorFields.status,
+  })
+);
+const sameNotFoundError = (self: NotFoundError, that: NotFoundError): boolean => sameNotFoundErrorFields(self, that);
+
+const ConflictErrorFields = statusFields(HttpStatus.Conflict) satisfies S.Struct.Fields;
+const sameConflictErrorFields = S.toEquivalence(
+  S.TaggedStruct("ConflictError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: ConflictErrorFields.message,
+    status: ConflictErrorFields.status,
+  })
+);
+const sameConflictError = (self: ConflictError, that: ConflictError): boolean => sameConflictErrorFields(self, that);
+
+const UnprocessableEntityErrorFields = statusFields(HttpStatus.UnprocessableEntity) satisfies S.Struct.Fields;
+const sameUnprocessableEntityErrorFields = S.toEquivalence(
+  S.TaggedStruct("UnprocessableEntityError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: UnprocessableEntityErrorFields.message,
+    status: UnprocessableEntityErrorFields.status,
+  })
+);
+const sameUnprocessableEntityError = (self: UnprocessableEntityError, that: UnprocessableEntityError): boolean =>
+  sameUnprocessableEntityErrorFields(self, that);
+
+const TooManyRequestsErrorFields = statusFields(HttpStatus.TooManyRequests) satisfies S.Struct.Fields;
+const sameTooManyRequestsErrorFields = S.toEquivalence(
+  S.TaggedStruct("TooManyRequestsError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: TooManyRequestsErrorFields.message,
+    status: TooManyRequestsErrorFields.status,
+  })
+);
+const sameTooManyRequestsError = (self: TooManyRequestsError, that: TooManyRequestsError): boolean =>
+  sameTooManyRequestsErrorFields(self, that);
+
+const InternalServerErrorErrorFields = statusFields(HttpStatus.InternalServerError) satisfies S.Struct.Fields;
+const sameInternalServerErrorErrorFields = S.toEquivalence(
+  S.TaggedStruct("InternalServerErrorError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: InternalServerErrorErrorFields.message,
+    status: InternalServerErrorErrorFields.status,
+  })
+);
+const sameInternalServerErrorError = (self: InternalServerErrorError, that: InternalServerErrorError): boolean =>
+  sameInternalServerErrorErrorFields(self, that);
+
+const BadGatewayErrorFields = statusFields(HttpStatus.BadGateway) satisfies S.Struct.Fields;
+const sameBadGatewayErrorFields = S.toEquivalence(
+  S.TaggedStruct("BadGatewayError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: BadGatewayErrorFields.message,
+    status: BadGatewayErrorFields.status,
+  })
+);
+const sameBadGatewayError = (self: BadGatewayError, that: BadGatewayError): boolean =>
+  sameBadGatewayErrorFields(self, that);
+
+const ServiceUnavailableErrorFields = statusFields(HttpStatus.ServiceUnavailable) satisfies S.Struct.Fields;
+const sameServiceUnavailableErrorFields = S.toEquivalence(
+  S.TaggedStruct("ServiceUnavailableError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: ServiceUnavailableErrorFields.message,
+    status: ServiceUnavailableErrorFields.status,
+  })
+);
+const sameServiceUnavailableError = (self: ServiceUnavailableError, that: ServiceUnavailableError): boolean =>
+  sameServiceUnavailableErrorFields(self, that);
+
+const GatewayTimeoutErrorFields = statusFields(HttpStatus.GatewayTimeout) satisfies S.Struct.Fields;
+const sameGatewayTimeoutErrorFields = S.toEquivalence(
+  S.TaggedStruct("GatewayTimeoutError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: GatewayTimeoutErrorFields.message,
+    status: GatewayTimeoutErrorFields.status,
+  })
+);
+const sameGatewayTimeoutError = (self: GatewayTimeoutError, that: GatewayTimeoutError): boolean =>
+  sameGatewayTimeoutErrorFields(self, that);
+
 /**
  * Shared tagged error for 4xx HTTP responses with `Warn` severity.
  *
@@ -92,13 +241,13 @@ const statusFields = <Status extends S.Top>(status: Status) =>
  */
 export class ClientHttpError extends S.TaggedError<ClientHttpError>($I`ClientHttpError`)(
   "ClientHttpError",
-  {
-    message: S.String,
-    status: HttpStatus.HttpStatus4XX,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("ClientHttpError", {
+  ClientHttpErrorFields,
+  $I.annoteClass<
+    S.declare<ClientHttpError>,
+    readonly [S.TaggedStruct<"ClientHttpError", typeof ClientHttpErrorFields>]
+  >("ClientHttpError", {
     description: "Shared tagged error for 4xx HTTP responses.",
+    toEquivalence: () => sameClientHttpError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Warn";
@@ -128,13 +277,13 @@ export class ClientHttpError extends S.TaggedError<ClientHttpError>($I`ClientHtt
  */
 export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHttpError`)(
   "ServerHttpError",
-  {
-    message: S.String,
-    status: HttpStatus.HttpStatus5XX,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("ServerHttpError", {
+  ServerHttpErrorFields,
+  $I.annoteClass<
+    S.declare<ServerHttpError>,
+    readonly [S.TaggedStruct<"ServerHttpError", typeof ServerHttpErrorFields>]
+  >("ServerHttpError", {
     description: "Shared tagged error for 5xx HTTP responses.",
+    toEquivalence: () => sameServerHttpError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Error";
@@ -159,9 +308,13 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHtt
  */
 export class BadRequestError extends S.TaggedError<BadRequestError>($I`BadRequestError`)(
   "BadRequestError",
-  statusFields(HttpStatus.BadRequest),
-  $I.annote("BadRequestError", {
+  BadRequestErrorFields,
+  $I.annoteClass<
+    S.declare<BadRequestError>,
+    readonly [S.TaggedStruct<"BadRequestError", typeof BadRequestErrorFields>]
+  >("BadRequestError", {
     description: "400 tagged error.",
+    toEquivalence: () => sameBadRequestError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Warn";
@@ -186,9 +339,13 @@ export class BadRequestError extends S.TaggedError<BadRequestError>($I`BadReques
  */
 export class UnauthorizedError extends S.TaggedError<UnauthorizedError>($I`UnauthorizedError`)(
   "UnauthorizedError",
-  statusFields(HttpStatus.Unauthorized),
-  $I.annote("UnauthorizedError", {
+  UnauthorizedErrorFields,
+  $I.annoteClass<
+    S.declare<UnauthorizedError>,
+    readonly [S.TaggedStruct<"UnauthorizedError", typeof UnauthorizedErrorFields>]
+  >("UnauthorizedError", {
     description: "401 tagged error.",
+    toEquivalence: () => sameUnauthorizedError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Warn";
@@ -213,10 +370,14 @@ export class UnauthorizedError extends S.TaggedError<UnauthorizedError>($I`Unaut
  */
 export class ForbiddenError extends S.TaggedError<ForbiddenError>($I`ForbiddenError`)(
   "ForbiddenError",
-  statusFields(HttpStatus.Forbidden),
-  $I.annote("ForbiddenError", {
-    description: "403 tagged error.",
-  })
+  ForbiddenErrorFields,
+  $I.annoteClass<S.declare<ForbiddenError>, readonly [S.TaggedStruct<"ForbiddenError", typeof ForbiddenErrorFields>]>(
+    "ForbiddenError",
+    {
+      description: "403 tagged error.",
+      toEquivalence: () => sameForbiddenError,
+    }
+  )
 ) {
   override readonly [ErrorReporter.severity] = "Warn";
   override readonly [ErrorReporter.attributes] = clientStatusAttributes(this.status);
@@ -240,10 +401,14 @@ export class ForbiddenError extends S.TaggedError<ForbiddenError>($I`ForbiddenEr
  */
 export class NotFoundError extends S.TaggedError<NotFoundError>($I`NotFoundError`)(
   "NotFoundError",
-  statusFields(HttpStatus.NotFound),
-  $I.annote("NotFoundError", {
-    description: "404 tagged error.",
-  })
+  NotFoundErrorFields,
+  $I.annoteClass<S.declare<NotFoundError>, readonly [S.TaggedStruct<"NotFoundError", typeof NotFoundErrorFields>]>(
+    "NotFoundError",
+    {
+      description: "404 tagged error.",
+      toEquivalence: () => sameNotFoundError,
+    }
+  )
 ) {
   override readonly [ErrorReporter.severity] = "Info";
   override readonly [ErrorReporter.attributes] = clientStatusAttributes(this.status);
@@ -267,10 +432,14 @@ export class NotFoundError extends S.TaggedError<NotFoundError>($I`NotFoundError
  */
 export class ConflictError extends S.TaggedError<ConflictError>($I`ConflictError`)(
   "ConflictError",
-  statusFields(HttpStatus.Conflict),
-  $I.annote("ConflictError", {
-    description: "409 tagged error.",
-  })
+  ConflictErrorFields,
+  $I.annoteClass<S.declare<ConflictError>, readonly [S.TaggedStruct<"ConflictError", typeof ConflictErrorFields>]>(
+    "ConflictError",
+    {
+      description: "409 tagged error.",
+      toEquivalence: () => sameConflictError,
+    }
+  )
 ) {
   override readonly [ErrorReporter.severity] = "Warn";
   override readonly [ErrorReporter.attributes] = clientStatusAttributes(this.status);
@@ -294,9 +463,13 @@ export class ConflictError extends S.TaggedError<ConflictError>($I`ConflictError
  */
 export class UnprocessableEntityError extends S.TaggedError<UnprocessableEntityError>($I`UnprocessableEntityError`)(
   "UnprocessableEntityError",
-  statusFields(HttpStatus.UnprocessableEntity),
-  $I.annote("UnprocessableEntityError", {
+  UnprocessableEntityErrorFields,
+  $I.annoteClass<
+    S.declare<UnprocessableEntityError>,
+    readonly [S.TaggedStruct<"UnprocessableEntityError", typeof UnprocessableEntityErrorFields>]
+  >("UnprocessableEntityError", {
     description: "422 tagged error.",
+    toEquivalence: () => sameUnprocessableEntityError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Warn";
@@ -321,9 +494,13 @@ export class UnprocessableEntityError extends S.TaggedError<UnprocessableEntityE
  */
 export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError>($I`TooManyRequestsError`)(
   "TooManyRequestsError",
-  statusFields(HttpStatus.TooManyRequests),
-  $I.annote("TooManyRequestsError", {
+  TooManyRequestsErrorFields,
+  $I.annoteClass<
+    S.declare<TooManyRequestsError>,
+    readonly [S.TaggedStruct<"TooManyRequestsError", typeof TooManyRequestsErrorFields>]
+  >("TooManyRequestsError", {
     description: "429 tagged error.",
+    toEquivalence: () => sameTooManyRequestsError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Warn";
@@ -348,9 +525,13 @@ export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError>($I
  */
 export class InternalServerErrorError extends S.TaggedError<InternalServerErrorError>($I`InternalServerErrorError`)(
   "InternalServerErrorError",
-  statusFields(HttpStatus.InternalServerError),
-  $I.annote("InternalServerErrorError", {
+  InternalServerErrorErrorFields,
+  $I.annoteClass<
+    S.declare<InternalServerErrorError>,
+    readonly [S.TaggedStruct<"InternalServerErrorError", typeof InternalServerErrorErrorFields>]
+  >("InternalServerErrorError", {
     description: "500 tagged error.",
+    toEquivalence: () => sameInternalServerErrorError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Error";
@@ -375,9 +556,13 @@ export class InternalServerErrorError extends S.TaggedError<InternalServerErrorE
  */
 export class BadGatewayError extends S.TaggedError<BadGatewayError>($I`BadGatewayError`)(
   "BadGatewayError",
-  statusFields(HttpStatus.BadGateway),
-  $I.annote("BadGatewayError", {
+  BadGatewayErrorFields,
+  $I.annoteClass<
+    S.declare<BadGatewayError>,
+    readonly [S.TaggedStruct<"BadGatewayError", typeof BadGatewayErrorFields>]
+  >("BadGatewayError", {
     description: "502 tagged error.",
+    toEquivalence: () => sameBadGatewayError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Error";
@@ -402,9 +587,13 @@ export class BadGatewayError extends S.TaggedError<BadGatewayError>($I`BadGatewa
  */
 export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableError>($I`ServiceUnavailableError`)(
   "ServiceUnavailableError",
-  statusFields(HttpStatus.ServiceUnavailable),
-  $I.annote("ServiceUnavailableError", {
+  ServiceUnavailableErrorFields,
+  $I.annoteClass<
+    S.declare<ServiceUnavailableError>,
+    readonly [S.TaggedStruct<"ServiceUnavailableError", typeof ServiceUnavailableErrorFields>]
+  >("ServiceUnavailableError", {
     description: "503 tagged error.",
+    toEquivalence: () => sameServiceUnavailableError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Error";
@@ -429,9 +618,13 @@ export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableErr
  */
 export class GatewayTimeoutError extends S.TaggedError<GatewayTimeoutError>($I`GatewayTimeoutError`)(
   "GatewayTimeoutError",
-  statusFields(HttpStatus.GatewayTimeout),
-  $I.annote("GatewayTimeoutError", {
+  GatewayTimeoutErrorFields,
+  $I.annoteClass<
+    S.declare<GatewayTimeoutError>,
+    readonly [S.TaggedStruct<"GatewayTimeoutError", typeof GatewayTimeoutErrorFields>]
+  >("GatewayTimeoutError", {
     description: "504 tagged error.",
+    toEquivalence: () => sameGatewayTimeoutError,
   })
 ) {
   override readonly [ErrorReporter.severity] = "Error";

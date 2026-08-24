@@ -22,6 +22,21 @@ import type { DuckDbClient, DuckDbError } from "@beep/duckdb";
 
 const $I = $RepoAiMetricsId.create("derived-storage");
 
+const AiMetricsDerivedStorageErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsDerivedStorageErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsDerivedStorageError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsDerivedStorageErrorFields.message,
+  })
+);
+const sameAiMetricsDerivedStorageError = (
+  self: AiMetricsDerivedStorageError,
+  that: AiMetricsDerivedStorageError
+): boolean => sameAiMetricsDerivedStorageErrorFields(self, that);
+
 const DERIVED_TABLES = [
   "ai_metrics_ingest_runs",
   "ai_metrics_source_files",
@@ -680,12 +695,13 @@ export class AiMetricsDerivedStorageError extends S.TaggedError<AiMetricsDerived
   $I`AiMetricsDerivedStorageError`
 )(
   "AiMetricsDerivedStorageError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsDerivedStorageError", {
+  AiMetricsDerivedStorageErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsDerivedStorageError>,
+    readonly [S.TaggedStruct<"AiMetricsDerivedStorageError", typeof AiMetricsDerivedStorageErrorFields>]
+  >("AiMetricsDerivedStorageError", {
     description: "Typed failure raised while projecting AI metrics records into DuckDB derived storage.",
+    toEquivalence: () => sameAiMetricsDerivedStorageError,
   })
 ) {}
 

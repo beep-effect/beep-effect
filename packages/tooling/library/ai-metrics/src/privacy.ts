@@ -17,6 +17,19 @@ import { AiMetricsSourceAttribution, AiMetricsSourceRole, AiMetricsTranscriptSou
 import type { TranscriptIngestSummary } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("privacy");
+
+const AiMetricsPrivacyErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsPrivacyErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsPrivacyError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsPrivacyErrorFields.message,
+  })
+);
+const sameAiMetricsPrivacyError = (self: AiMetricsPrivacyError, that: AiMetricsPrivacyError): boolean =>
+  sameAiMetricsPrivacyErrorFields(self, that);
 const decodeNonEmptyTrimmedOption = S.decodeUnknownOption(NonEmptyTrimmedStr);
 const NonEmptyTrimmedStringInput = S.Union([S.String, S.Option(NonEmptyTrimmedStr)]);
 
@@ -305,12 +318,13 @@ export class AiMetricsPrivacyCheckResult extends S.Class<AiMetricsPrivacyCheckRe
  */
 export class AiMetricsPrivacyError extends S.TaggedError<AiMetricsPrivacyError>($I`AiMetricsPrivacyError`)(
   "AiMetricsPrivacyError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsPrivacyError", {
+  AiMetricsPrivacyErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsPrivacyError>,
+    readonly [S.TaggedStruct<"AiMetricsPrivacyError", typeof AiMetricsPrivacyErrorFields>]
+  >("AiMetricsPrivacyError", {
     description: "Typed failure raised by AI metrics privacy and hashing helpers.",
+    toEquivalence: () => sameAiMetricsPrivacyError,
   })
 ) {}
 

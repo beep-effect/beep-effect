@@ -19,10 +19,21 @@ const mode = Match.value(Bun.argv.includes("--check")).pipe(
   Match.orElse(() => "write" as const)
 );
 
-class StaleMigrationBundle extends S.TaggedError<StaleMigrationBundle>()("StaleMigrationBundle", {
+const StaleMigrationBundleFields = {
   message: S.String,
   command: S.String,
-}) {}
+} satisfies S.Struct.Fields;
+const sameStaleMigrationBundleFields = S.toEquivalence(
+  S.TaggedStruct("StaleMigrationBundle", StaleMigrationBundleFields)
+);
+const sameStaleMigrationBundle = (self: StaleMigrationBundle, that: StaleMigrationBundle): boolean =>
+  sameStaleMigrationBundleFields(self, that);
+
+class StaleMigrationBundle extends S.TaggedError<StaleMigrationBundle>()(
+  "StaleMigrationBundle",
+  StaleMigrationBundleFields,
+  { toEquivalence: () => sameStaleMigrationBundle }
+) {}
 
 const quoteTemplateLiteral = (value: string): string =>
   `\`${value.replaceAll("\\", "\\\\").replaceAll("`", "\\`").replaceAll("${", "\\${")}\``;

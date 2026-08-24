@@ -29,6 +29,21 @@ import {
 
 const $I = $RepoAiMetricsId.create("source-discovery");
 
+const AiMetricsSourceDiscoveryErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsSourceDiscoveryErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsSourceDiscoveryError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsSourceDiscoveryErrorFields.message,
+  })
+);
+const sameAiMetricsSourceDiscoveryError = (
+  self: AiMetricsSourceDiscoveryError,
+  that: AiMetricsSourceDiscoveryError
+): boolean => sameAiMetricsSourceDiscoveryErrorFields(self, that);
+
 const DEFAULT_MAX_FILES = 200;
 
 /**
@@ -280,12 +295,13 @@ export class AiMetricsSourceDiscoveryError extends S.TaggedError<AiMetricsSource
   $I`AiMetricsSourceDiscoveryError`
 )(
   "AiMetricsSourceDiscoveryError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsSourceDiscoveryError", {
+  AiMetricsSourceDiscoveryErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsSourceDiscoveryError>,
+    readonly [S.TaggedStruct<"AiMetricsSourceDiscoveryError", typeof AiMetricsSourceDiscoveryErrorFields>]
+  >("AiMetricsSourceDiscoveryError", {
     description: "Typed failure raised by AI metrics source discovery.",
+    toEquivalence: () => sameAiMetricsSourceDiscoveryError,
   })
 ) {}
 

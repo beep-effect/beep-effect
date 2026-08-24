@@ -58,6 +58,21 @@ export const SourceTextResolverErrorReason = LiteralKit([
  * @since 0.0.0
  */
 export type SourceTextResolverErrorReason = typeof SourceTextResolverErrorReason.Type;
+const SourceTextResolverErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+  message: S.NonEmptyString,
+  reason: SourceTextResolverErrorReason,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const SourceTextResolverErrorComparableFields = {
+  message: SourceTextResolverErrorFields.message,
+  reason: SourceTextResolverErrorFields.reason,
+} satisfies S.Struct.Fields;
+const sameSourceTextResolverErrorFields = S.toEquivalence(
+  S.TaggedStruct("SourceTextResolverError", SourceTextResolverErrorComparableFields)
+);
+const sameSourceTextResolverError = (self: SourceTextResolverError, that: SourceTextResolverError): boolean =>
+  sameSourceTextResolverErrorFields(self, that);
 
 /**
  * Typed, fail-closed source-text resolution failure.
@@ -76,13 +91,13 @@ export type SourceTextResolverErrorReason = typeof SourceTextResolverErrorReason
  */
 export class SourceTextResolverError extends S.TaggedError<SourceTextResolverError>($I`SourceTextResolverError`)(
   "SourceTextResolverError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-    message: S.NonEmptyString,
-    reason: SourceTextResolverErrorReason,
-  },
-  $I.annote("SourceTextResolverError", {
+  SourceTextResolverErrorFields,
+  $I.annoteClass<
+    S.declare<SourceTextResolverError>,
+    readonly [S.TaggedStruct<"SourceTextResolverError", typeof SourceTextResolverErrorFields>]
+  >("SourceTextResolverError", {
     description: "Typed, fail-closed failure emitted by canonical source-text resolution or paging.",
+    toEquivalence: () => sameSourceTextResolverError,
   })
 ) {
   /**

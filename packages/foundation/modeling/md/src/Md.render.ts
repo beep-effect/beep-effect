@@ -103,6 +103,19 @@ const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flo
   O.getOrElse(thunkEmptyStr)
 );
 
+const RenderErrorFields = {
+  adapter: S.String,
+  message: S.String,
+  cause: S.Defect({ includeStack: true }),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const RenderErrorComparableFields = {
+  adapter: RenderErrorFields.adapter,
+  message: RenderErrorFields.message,
+} satisfies S.Struct.Fields;
+const sameRenderErrorFields = S.toEquivalence(S.TaggedStruct("RenderError", RenderErrorComparableFields));
+const sameRenderError = (self: RenderError, that: RenderError): boolean => sameRenderErrorFields(self, that);
+
 /**
  * Error raised when a render adapter fails while producing output.
  *
@@ -124,14 +137,14 @@ const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flo
  */
 export class RenderError extends S.TaggedError<RenderError>($I`RenderError`)(
   "RenderError",
-  {
-    adapter: S.String,
-    message: S.String,
-    cause: S.Defect({ includeStack: true }),
-  },
-  $I.annote("RenderError", {
-    description: "Typed error raised when a Markdown render adapter fails.",
-  })
+  RenderErrorFields,
+  $I.annoteClass<S.declare<RenderError>, readonly [S.TaggedStruct<"RenderError", typeof RenderErrorFields>]>(
+    "RenderError",
+    {
+      description: "Typed error raised when a Markdown render adapter fails.",
+      toEquivalence: () => sameRenderError,
+    }
+  )
 ) {}
 
 /**

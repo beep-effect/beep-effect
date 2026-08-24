@@ -10,8 +10,20 @@ import { Err } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { commandErrorFields } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/Runners/Runners.errors");
+
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameRunnersCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("RunnersCommandError", {
+    message: commandErrorFields.message,
+    command: commandErrorFields.command,
+    exitCode: commandErrorFields.exitCode,
+  })
+);
+const sameRunnersCommandError = (self: RunnersCommandError, that: RunnersCommandError): boolean =>
+  sameRunnersCommandErrorFields(self, that);
 
 /**
  * Operational failure raised while planning, checking, or baking a runner AMI.
@@ -30,13 +42,14 @@ const $I = $RepoCliId.create("commands/Runners/Runners.errors");
  */
 export class RunnersCommandError extends S.TaggedError<RunnersCommandError>($I`RunnersCommandError`)(
   "RunnersCommandError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("RunnersCommandError", { description: "Failure raised by the runner AMI bake command family." })
+  commandErrorFields,
+  $I.annoteClass<
+    S.declare<RunnersCommandError>,
+    readonly [S.TaggedStruct<"RunnersCommandError", typeof commandErrorFields>]
+  >("RunnersCommandError", {
+    description: "Failure raised by the runner AMI bake command family.",
+    toEquivalence: () => sameRunnersCommandError,
+  })
 ) {
   /**
    * Exit status returned when the error reaches the CLI runtime.

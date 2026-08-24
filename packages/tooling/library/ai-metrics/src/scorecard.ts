@@ -29,6 +29,19 @@ import { hashPublicTextSha256, redactAiMetricsSensitiveText } from "./privacy.ts
 
 const $I = $RepoAiMetricsId.create("scorecard");
 
+const AiMetricsScorecardErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsScorecardErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsScorecardError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsScorecardErrorFields.message,
+  })
+);
+const sameAiMetricsScorecardError = (self: AiMetricsScorecardError, that: AiMetricsScorecardError): boolean =>
+  sameAiMetricsScorecardErrorFields(self, that);
+
 // Canonical coverage-gap code domain — one source of truth for the conditional detector
 // (coverageGapsFor) and the empty-scorecards fallback list.
 const AiMetricsCoverageGap = LiteralKit([
@@ -65,12 +78,13 @@ const AiMetricsCoverageGap = LiteralKit([
  */
 export class AiMetricsScorecardError extends S.TaggedError<AiMetricsScorecardError>($I`AiMetricsScorecardError`)(
   "AiMetricsScorecardError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsScorecardError", {
+  AiMetricsScorecardErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsScorecardError>,
+    readonly [S.TaggedStruct<"AiMetricsScorecardError", typeof AiMetricsScorecardErrorFields>]
+  >("AiMetricsScorecardError", {
     description: "Typed failure raised by AI metrics label, benchmark, and scorecard workflows.",
+    toEquivalence: () => sameAiMetricsScorecardError,
   })
 ) {}
 

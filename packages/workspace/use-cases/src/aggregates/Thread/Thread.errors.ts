@@ -19,6 +19,15 @@ const ThreadStoreErrorReason = S.NonEmptyString.pipe(
   })
 );
 
+const ThreadStoreNotFoundFields = {
+  threadId: WorkspaceIdentity.ThreadId.annotateKey({
+    description: "Thread id requested by the failed operation.",
+  }),
+} satisfies S.Struct.Fields;
+const sameThreadStoreNotFoundFields = S.toEquivalence(S.TaggedStruct("ThreadStoreNotFound", ThreadStoreNotFoundFields));
+const sameThreadStoreNotFound = (self: ThreadStoreNotFound, that: ThreadStoreNotFound): boolean =>
+  sameThreadStoreNotFoundFields(self, that);
+
 /**
  * Persistence failure raised when a Thread row is absent.
  *
@@ -44,16 +53,29 @@ const ThreadStoreErrorReason = S.NonEmptyString.pipe(
  */
 export class ThreadStoreNotFound extends S.TaggedError<ThreadStoreNotFound>($I`ThreadStoreNotFound`)(
   "ThreadStoreNotFound",
-  {
-    threadId: WorkspaceIdentity.ThreadId.annotateKey({
-      description: "Thread id requested by the failed operation.",
-    }),
-  },
-  $I.annote("ThreadStoreNotFound", {
+  ThreadStoreNotFoundFields,
+  $I.annoteClass<
+    S.declare<ThreadStoreNotFound>,
+    readonly [S.TaggedStruct<"ThreadStoreNotFound", typeof ThreadStoreNotFoundFields>]
+  >("ThreadStoreNotFound", {
     title: "Thread store not found",
     description: "The ThreadStore could not find the requested thread.",
+
+    toEquivalence: () => sameThreadStoreNotFound,
   })
 ) {}
+
+const ThreadStoreConflictFields = {
+  threadId: WorkspaceIdentity.ThreadId.annotateKey({
+    description: "Thread id involved in the conflicting write.",
+  }),
+  reason: ThreadStoreErrorReason.annotateKey({
+    description: "Non-empty explanation of the rejected write.",
+  }),
+} satisfies S.Struct.Fields;
+const sameThreadStoreConflictFields = S.toEquivalence(S.TaggedStruct("ThreadStoreConflict", ThreadStoreConflictFields));
+const sameThreadStoreConflict = (self: ThreadStoreConflict, that: ThreadStoreConflict): boolean =>
+  sameThreadStoreConflictFields(self, that);
 
 /**
  * Persistence failure raised when a ThreadStore write conflicts.
@@ -80,19 +102,28 @@ export class ThreadStoreNotFound extends S.TaggedError<ThreadStoreNotFound>($I`T
  */
 export class ThreadStoreConflict extends S.TaggedError<ThreadStoreConflict>($I`ThreadStoreConflict`)(
   "ThreadStoreConflict",
-  {
-    threadId: WorkspaceIdentity.ThreadId.annotateKey({
-      description: "Thread id involved in the conflicting write.",
-    }),
-    reason: ThreadStoreErrorReason.annotateKey({
-      description: "Non-empty explanation of the rejected write.",
-    }),
-  },
-  $I.annote("ThreadStoreConflict", {
+  ThreadStoreConflictFields,
+  $I.annoteClass<
+    S.declare<ThreadStoreConflict>,
+    readonly [S.TaggedStruct<"ThreadStoreConflict", typeof ThreadStoreConflictFields>]
+  >("ThreadStoreConflict", {
     title: "Thread store conflict",
     description: "The ThreadStore rejected a conflicting write.",
+
+    toEquivalence: () => sameThreadStoreConflict,
   })
 ) {}
+
+const ThreadStoreUnavailableFields = {
+  reason: ThreadStoreErrorReason.annotateKey({
+    description: "Non-empty explanation of the unavailable persistence operation.",
+  }),
+} satisfies S.Struct.Fields;
+const sameThreadStoreUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("ThreadStoreUnavailable", ThreadStoreUnavailableFields)
+);
+const sameThreadStoreUnavailable = (self: ThreadStoreUnavailable, that: ThreadStoreUnavailable): boolean =>
+  sameThreadStoreUnavailableFields(self, that);
 
 /**
  * Persistence failure raised when the ThreadStore is unavailable.
@@ -111,14 +142,15 @@ export class ThreadStoreConflict extends S.TaggedError<ThreadStoreConflict>($I`T
  */
 export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable>($I`ThreadStoreUnavailable`)(
   "ThreadStoreUnavailable",
-  {
-    reason: ThreadStoreErrorReason.annotateKey({
-      description: "Non-empty explanation of the unavailable persistence operation.",
-    }),
-  },
-  $I.annote("ThreadStoreUnavailable", {
+  ThreadStoreUnavailableFields,
+  $I.annoteClass<
+    S.declare<ThreadStoreUnavailable>,
+    readonly [S.TaggedStruct<"ThreadStoreUnavailable", typeof ThreadStoreUnavailableFields>]
+  >("ThreadStoreUnavailable", {
     title: "Thread store unavailable",
     description: "The ThreadStore could not serve the request.",
+
+    toEquivalence: () => sameThreadStoreUnavailable,
   })
 ) {}
 

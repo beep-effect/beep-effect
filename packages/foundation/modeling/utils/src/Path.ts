@@ -19,14 +19,24 @@ import * as S from "effect/Schema";
 import type { Path as PlatformPath } from "effect";
 
 const $I = $UtilsId.create("Path");
+const NodePathUnavailableErrorFields = {
+  module: S.Literal("node:path"),
+} satisfies S.Struct.Fields;
+const sameNodePathUnavailableErrorFields = S.toEquivalence(
+  S.TaggedStruct("NodePathUnavailableError", NodePathUnavailableErrorFields)
+);
+const sameNodePathUnavailableError = (self: NodePathUnavailableError, that: NodePathUnavailableError): boolean =>
+  sameNodePathUnavailableErrorFields(self, that);
 
 class NodePathUnavailableError extends S.TaggedError<NodePathUnavailableError>($I`NodePathUnavailableError`)(
   "NodePathUnavailableError",
-  {
-    module: S.Literal("node:path"),
-  },
-  $I.annote("NodePathUnavailableError", {
+  NodePathUnavailableErrorFields,
+  $I.annoteClass<
+    S.declare<NodePathUnavailableError>,
+    readonly [S.TaggedStruct<"NodePathUnavailableError", typeof NodePathUnavailableErrorFields>]
+  >("NodePathUnavailableError", {
     description: "Thrown when node:path is unavailable to path helpers.",
+    toEquivalence: () => sameNodePathUnavailableError,
   })
 ) {}
 

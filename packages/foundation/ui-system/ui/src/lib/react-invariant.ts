@@ -40,6 +40,19 @@ export class ReactContextInvariantOptions extends S.Class<ReactContextInvariantO
   })
 ) {}
 
+const ReactContextInvariantErrorFields = {
+  message: S.NonEmptyString.pipe(
+    $I.annoteKey("ReactContextInvariantError.message", {
+      description: "Human-facing diagnostic emitted when a React context is missing.",
+    })
+  ),
+} satisfies S.Struct.Fields;
+const sameReactContextInvariantErrorFields = S.toEquivalence(
+  S.TaggedStruct("ReactContextInvariantError", ReactContextInvariantErrorFields)
+);
+const sameReactContextInvariantError = (self: ReactContextInvariantError, that: ReactContextInvariantError): boolean =>
+  sameReactContextInvariantErrorFields(self, that);
+
 /**
  * Error thrown when a React context hook is used outside its provider.
  *
@@ -59,15 +72,13 @@ export class ReactContextInvariantError extends S.TaggedError<ReactContextInvari
   $I`ReactContextInvariantError`
 )(
   "ReactContextInvariantError",
-  {
-    message: S.NonEmptyString.pipe(
-      $I.annoteKey("ReactContextInvariantError.message", {
-        description: "Human-facing diagnostic emitted when a React context is missing.",
-      })
-    ),
-  },
-  $I.annote("ReactContextInvariantError", {
+  ReactContextInvariantErrorFields,
+  $I.annoteClass<
+    S.declare<ReactContextInvariantError>,
+    readonly [S.TaggedStruct<"ReactContextInvariantError", typeof ReactContextInvariantErrorFields>]
+  >("ReactContextInvariantError", {
     description: "Synchronous React context invariant failure.",
+    toEquivalence: () => sameReactContextInvariantError,
   })
 ) {}
 

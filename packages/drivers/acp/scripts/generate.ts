@@ -21,13 +21,25 @@ const GENERATED_META_ID = '$AcpId.create("_generated/meta.gen")';
 const $I = $AcpId.create("scripts/generate");
 const schemaNameOrder = Order.make<string>((left, right) => Str.localeCompare(right)(left));
 
+const GenerateCommandErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameGenerateCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("GenerateCommandError", GenerateCommandErrorFields)
+);
+const sameGenerateCommandError = (self: GenerateCommandError, that: GenerateCommandError): boolean =>
+  sameGenerateCommandErrorFields(self, that);
+
 class GenerateCommandError extends S.TaggedError<GenerateCommandError>($I`GenerateCommandError`)(
   "GenerateCommandError",
-  {
-    message: S.String,
-  },
-  $I.annote("GenerateCommandError", {
+  GenerateCommandErrorFields,
+  $I.annoteClass<
+    S.declare<GenerateCommandError>,
+    readonly [S.TaggedStruct<"GenerateCommandError", typeof GenerateCommandErrorFields>]
+  >("GenerateCommandError", {
     description: "An error occurred while generating the ACP schema.",
+
+    toEquivalence: () => sameGenerateCommandError,
   })
 ) {}
 
@@ -84,13 +96,25 @@ class TextReplacement extends S.Class<TextReplacement>($I`TextReplacement`)(
   })
 ) {}
 
+const AcpGeneratorOutputErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAcpGeneratorOutputErrorFields = S.toEquivalence(
+  S.TaggedStruct("AcpGeneratorOutputError", AcpGeneratorOutputErrorFields)
+);
+const sameAcpGeneratorOutputError = (self: AcpGeneratorOutputError, that: AcpGeneratorOutputError): boolean =>
+  sameAcpGeneratorOutputErrorFields(self, that);
+
 class AcpGeneratorOutputError extends S.TaggedError<AcpGeneratorOutputError>($I`AcpGeneratorOutputError`)(
   "AcpGeneratorOutputError",
-  {
-    message: S.String,
-  },
-  $I.annote("AcpGeneratorOutputError", {
+  AcpGeneratorOutputErrorFields,
+  $I.annoteClass<
+    S.declare<AcpGeneratorOutputError>,
+    readonly [S.TaggedStruct<"AcpGeneratorOutputError", typeof AcpGeneratorOutputErrorFields>]
+  >("AcpGeneratorOutputError", {
     description: "Generator output from the upstream JSON-schema converter was not in the expected shape.",
+
+    toEquivalence: () => sameAcpGeneratorOutputError,
   })
 ) {}
 

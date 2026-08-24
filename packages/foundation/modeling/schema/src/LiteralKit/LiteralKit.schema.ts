@@ -305,6 +305,39 @@ const LiteralKitEnumMappingCoverageErrorFields = {
 const LiteralKitTaggedUnionLiteralErrorFields = {
   literal: LiteralValueSchema,
 } satisfies S.Struct.Fields;
+const sameLiteralNotInSetErrorFields = S.toEquivalence(
+  S.TaggedStruct("LiteralNotInSetError", LiteralNotInSetErrorFields)
+);
+const sameLiteralNotInSetError = (self: LiteralNotInSetError, that: LiteralNotInSetError): boolean =>
+  sameLiteralNotInSetErrorFields(self, that);
+const sameLiteralKitKeyCollisionErrorFields = S.toEquivalence(
+  S.TaggedStruct("LiteralKitKeyCollisionError", LiteralKitKeyCollisionErrorFields)
+);
+const sameLiteralKitKeyCollisionError = (
+  self: LiteralKitKeyCollisionError,
+  that: LiteralKitKeyCollisionError
+): boolean => sameLiteralKitKeyCollisionErrorFields(self, that);
+const sameLiteralKitEnumMappingDuplicateLiteralErrorFields = S.toEquivalence(
+  S.TaggedStruct("LiteralKitEnumMappingDuplicateLiteralError", LiteralKitEnumMappingDuplicateLiteralErrorFields)
+);
+const sameLiteralKitEnumMappingDuplicateLiteralError = (
+  self: LiteralKitEnumMappingDuplicateLiteralError,
+  that: LiteralKitEnumMappingDuplicateLiteralError
+): boolean => sameLiteralKitEnumMappingDuplicateLiteralErrorFields(self, that);
+const sameLiteralKitEnumMappingCoverageErrorFields = S.toEquivalence(
+  S.TaggedStruct("LiteralKitEnumMappingCoverageError", LiteralKitEnumMappingCoverageErrorFields)
+);
+const sameLiteralKitEnumMappingCoverageError = (
+  self: LiteralKitEnumMappingCoverageError,
+  that: LiteralKitEnumMappingCoverageError
+): boolean => sameLiteralKitEnumMappingCoverageErrorFields(self, that);
+const sameLiteralKitTaggedUnionLiteralErrorFields = S.toEquivalence(
+  S.TaggedStruct("LiteralKitTaggedUnionLiteralError", LiteralKitTaggedUnionLiteralErrorFields)
+);
+const sameLiteralKitTaggedUnionLiteralError = (
+  self: LiteralKitTaggedUnionLiteralError,
+  that: LiteralKitTaggedUnionLiteralError
+): boolean => sameLiteralKitTaggedUnionLiteralErrorFields(self, that);
 
 /**
  * Error thrown when an input value is not found in the provided literals
@@ -329,9 +362,13 @@ const LiteralKitTaggedUnionLiteralErrorFields = {
 export class LiteralNotInSetError extends S.TaggedError<LiteralNotInSetError>($I.make("LiteralNotInSetError"))(
   "LiteralNotInSetError",
   LiteralNotInSetErrorFields,
-  $I.annote("LiteralNotInSetError", {
+  $I.annoteClass<
+    S.declare<LiteralNotInSetError>,
+    readonly [S.TaggedStruct<"LiteralNotInSetError", typeof LiteralNotInSetErrorFields>]
+  >("LiteralNotInSetError", {
     title: "Not In Literals Error",
     description: "Error thrown when an input value is not found in the provided literals array.",
+    toEquivalence: () => sameLiteralNotInSetError,
   })
 ) {}
 
@@ -360,9 +397,13 @@ export class LiteralKitKeyCollisionError extends S.TaggedError<LiteralKitKeyColl
 )(
   "LiteralKitKeyCollisionError",
   LiteralKitKeyCollisionErrorFields,
-  $I.annote("LiteralKitKeyCollisionError", {
+  $I.annoteClass<
+    S.declare<LiteralKitKeyCollisionError>,
+    readonly [S.TaggedStruct<"LiteralKitKeyCollisionError", typeof LiteralKitKeyCollisionErrorFields>]
+  >("LiteralKitKeyCollisionError", {
     title: "LiteralKit Key Collision Error",
     description: "Different literals encoded to the same LiteralKit helper key.",
+    toEquivalence: () => sameLiteralKitKeyCollisionError,
   })
 ) {}
 
@@ -393,9 +434,18 @@ export class LiteralKitEnumMappingDuplicateLiteralError extends S.TaggedError<Li
 )(
   "LiteralKitEnumMappingDuplicateLiteralError",
   LiteralKitEnumMappingDuplicateLiteralErrorFields,
-  $I.annote("LiteralKitEnumMappingDuplicateLiteralError", {
+  $I.annoteClass<
+    S.declare<LiteralKitEnumMappingDuplicateLiteralError>,
+    readonly [
+      S.TaggedStruct<
+        "LiteralKitEnumMappingDuplicateLiteralError",
+        typeof LiteralKitEnumMappingDuplicateLiteralErrorFields
+      >,
+    ]
+  >("LiteralKitEnumMappingDuplicateLiteralError", {
     title: "LiteralKit Enum Mapping Duplicate Literal Error",
     description: "The same source literal appeared more than once in a manual LiteralKit enum mapping.",
+    toEquivalence: () => sameLiteralKitEnumMappingDuplicateLiteralError,
   })
 ) {}
 
@@ -425,9 +475,13 @@ export class LiteralKitEnumMappingCoverageError extends S.TaggedError<LiteralKit
 )(
   "LiteralKitEnumMappingCoverageError",
   LiteralKitEnumMappingCoverageErrorFields,
-  $I.annote("LiteralKitEnumMappingCoverageError", {
+  $I.annoteClass<
+    S.declare<LiteralKitEnumMappingCoverageError>,
+    readonly [S.TaggedStruct<"LiteralKitEnumMappingCoverageError", typeof LiteralKitEnumMappingCoverageErrorFields>]
+  >("LiteralKitEnumMappingCoverageError", {
     title: "LiteralKit Enum Mapping Coverage Error",
     description: "A manual LiteralKit enum mapping did not exactly match the provided literal set.",
+    toEquivalence: () => sameLiteralKitEnumMappingCoverageError,
   })
 ) {}
 
@@ -454,9 +508,13 @@ export class LiteralKitTaggedUnionLiteralError extends S.TaggedError<LiteralKitT
 )(
   "LiteralKitTaggedUnionLiteralError",
   LiteralKitTaggedUnionLiteralErrorFields,
-  $I.annote("LiteralKitTaggedUnionLiteralError", {
+  $I.annoteClass<
+    S.declare<LiteralKitTaggedUnionLiteralError>,
+    readonly [S.TaggedStruct<"LiteralKitTaggedUnionLiteralError", typeof LiteralKitTaggedUnionLiteralErrorFields>]
+  >("LiteralKitTaggedUnionLiteralError", {
     title: "LiteralKit Tagged Union Literal Error",
     description: "LiteralKit.toTaggedUnion only supports literals that can be used as object property keys.",
+    toEquivalence: () => sameLiteralKitTaggedUnionLiteralError,
   })
 ) {}
 

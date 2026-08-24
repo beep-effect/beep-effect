@@ -109,7 +109,22 @@ const $I = {
     identifier,
     ...extras,
   }),
+  annoteClass: <Schema extends S.Top, TP extends ReadonlyArray<S.Top>>(
+    identifier: string,
+    extras: S.Annotations.Declaration<Schema["Type"], TP>
+  ) => ({
+    schemaId: Symbol.for(identifier),
+    identifier,
+    ...extras,
+  }),
 };
+
+const IdentityInterpolationErrorFields = {} satisfies S.Struct.Fields;
+const sameIdentityInterpolationErrorFields = S.toEquivalence(
+  S.TaggedStruct("IdentityInterpolationError", IdentityInterpolationErrorFields)
+);
+const sameIdentityInterpolationError = (self: IdentityInterpolationError, that: IdentityInterpolationError): boolean =>
+  sameIdentityInterpolationErrorFields(self, that);
 
 /**
  * Error thrown when an identity template tag receives interpolation values.
@@ -142,16 +157,26 @@ export class IdentityInterpolationError extends S.TaggedError<IdentityInterpolat
   "@beep/identity/errors/IdentityInterpolationError"
 )(
   "IdentityInterpolationError",
-  {},
+  IdentityInterpolationErrorFields,
+  // `$I.annote` (not `annoteClass`): indexing `S.declare<IdentityInterpolationError>["Type"]` from the
+  // base-class expression is a type cycle under docgen's tsc, while a plain comparator thunk is not.
   $I.annote("@beep/identity/errors/IdentityInterpolationError", {
     title: "Identity Interpolation Error",
     description: "Identity template tags do not allow interpolations.",
+    toEquivalence: () => sameIdentityInterpolationError,
   })
 ) {
   override get message() {
     return "Identity template tags do not allow interpolations.";
   }
 }
+
+const IdentitySegmentCountErrorFields = {} satisfies S.Struct.Fields;
+const sameIdentitySegmentCountErrorFields = S.toEquivalence(
+  S.TaggedStruct("IdentitySegmentCountError", IdentitySegmentCountErrorFields)
+);
+const sameIdentitySegmentCountError = (self: IdentitySegmentCountError, that: IdentitySegmentCountError): boolean =>
+  sameIdentitySegmentCountErrorFields(self, that);
 
 /**
  * Error thrown when an identity template tag receives more or fewer than one literal segment.
@@ -176,10 +201,13 @@ export class IdentitySegmentCountError extends S.TaggedError<IdentitySegmentCoun
   "@beep/identity/errors/IdentitySegmentCountError"
 )(
   "IdentitySegmentCountError",
-  {},
+  IdentitySegmentCountErrorFields,
+  // `$I.annote` (not `annoteClass`): indexing `S.declare<IdentitySegmentCountError>["Type"]` from the
+  // base-class expression is a type cycle under docgen's tsc, while a plain comparator thunk is not.
   $I.annote("@beep/identity/errors/IdentitySegmentCountError", {
     title: "Identity Segment Count Error",
     description: "Identity template tags must use a single literal segment.",
+    toEquivalence: () => sameIdentitySegmentCountError,
   })
 ) {
   /**

@@ -346,6 +346,15 @@ export const encodeWorkerResult = (result: WorkerResult): typeof WorkerResult.En
 export const decodeWorkerResult: (input: unknown) => Result.Result<WorkerResult, S.SchemaError> =
   S.decodeUnknownResult(WorkerResult);
 
+const OntologyWorkerUndecodableCommandFields = { reason: S.String } satisfies S.Struct.Fields;
+const sameOntologyWorkerUndecodableCommandFields = S.toEquivalence(
+  S.TaggedStruct("OntologyWorkerUndecodableCommand", OntologyWorkerUndecodableCommandFields)
+);
+const sameOntologyWorkerUndecodableCommand = (
+  self: OntologyWorkerUndecodableCommand,
+  that: OntologyWorkerUndecodableCommand
+): boolean => sameOntologyWorkerUndecodableCommandFields(self, that);
+
 /**
  * A command the graph worker could not decode.
  *
@@ -369,8 +378,13 @@ export class OntologyWorkerUndecodableCommand extends S.TaggedError<OntologyWork
   $I`OntologyWorkerUndecodableCommand`
 )(
   "OntologyWorkerUndecodableCommand",
-  { reason: S.String },
-  $I.annote("OntologyWorkerUndecodableCommand", {
+  OntologyWorkerUndecodableCommandFields,
+  $I.annoteClass<
+    S.declare<OntologyWorkerUndecodableCommand>,
+    readonly [S.TaggedStruct<"OntologyWorkerUndecodableCommand", typeof OntologyWorkerUndecodableCommandFields>]
+  >("OntologyWorkerUndecodableCommand", {
     description: "The graph worker received a message it could not decode as a WorkerCommand.",
+
+    toEquivalence: () => sameOntologyWorkerUndecodableCommand,
   })
 ) {}

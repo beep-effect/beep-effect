@@ -98,15 +98,50 @@ const ChatDbIncompatibleRecoveryMessage =
 
 const ViteFileSystemPrefix = "/@fs/";
 
-class IncompatiblePgliteDataDir extends S.TaggedError<IncompatiblePgliteDataDir>($I`IncompatiblePgliteDataDir`)(
+const IncompatiblePgliteDataDirFields = {
+  cause: S.Unknown.annotateKey({ description: "Failure raised while probing the existing PGlite data directory." }),
+  dataDir: S.String.annotateKey({ description: "PGlite data directory that failed the compatibility probe." }),
+  recovery: S.String.annotateKey({ description: "Operator guidance for safely recovering the incompatible data." }),
+} satisfies S.Struct.Fields;
+const IncompatiblePgliteDataDirEquivalenceFields = {
+  dataDir: IncompatiblePgliteDataDirFields.dataDir,
+  recovery: IncompatiblePgliteDataDirFields.recovery,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameIncompatiblePgliteDataDirFields = S.toEquivalence(
+  S.TaggedStruct("IncompatiblePgliteDataDir", IncompatiblePgliteDataDirEquivalenceFields)
+);
+const sameIncompatiblePgliteDataDir = (self: IncompatiblePgliteDataDir, that: IncompatiblePgliteDataDir): boolean =>
+  sameIncompatiblePgliteDataDirFields(self, that);
+
+/**
+ * Failure raised when the bundled PGlite runtime cannot open an existing data directory.
+ *
+ * **Example** (Create a compatibility failure)
+ *
+ * ```ts
+ * import { IncompatiblePgliteDataDir } from "@/runtime/Pglite"
+ *
+ * const error = IncompatiblePgliteDataDir.make({
+ *   cause: new Error("unsupported data format"),
+ *   dataDir: "/data/chat-db",
+ *   recovery: "Export with the prior desktop build."
+ * })
+ * console.log(error.dataDir)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class IncompatiblePgliteDataDir extends S.TaggedError<IncompatiblePgliteDataDir>($I`IncompatiblePgliteDataDir`)(
   "IncompatiblePgliteDataDir",
-  {
-    cause: S.Unknown.annotateKey({ description: "Failure raised while probing the existing PGlite data directory." }),
-    dataDir: S.String.annotateKey({ description: "PGlite data directory that failed the compatibility probe." }),
-    recovery: S.String.annotateKey({ description: "Operator guidance for safely recovering the incompatible data." }),
-  },
-  $I.annote("IncompatiblePgliteDataDir", {
+  IncompatiblePgliteDataDirFields,
+  $I.annoteClass<
+    S.declare<IncompatiblePgliteDataDir>,
+    readonly [S.TaggedStruct<"IncompatiblePgliteDataDir", typeof IncompatiblePgliteDataDirFields>]
+  >("IncompatiblePgliteDataDir", {
     description: "An existing PGlite data directory cannot be opened by the bundled in-process runtime.",
+    toEquivalence: () => sameIncompatiblePgliteDataDir,
   })
 ) {}
 

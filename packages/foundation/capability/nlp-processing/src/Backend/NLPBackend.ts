@@ -42,6 +42,15 @@ const isBackendNotSupportedDataFirst = (args: IArguments): boolean => args.lengt
 
 const isBackendOperationErrorDataFirst = (args: IArguments): boolean => args.length >= 3;
 
+const BackendNotSupportedFields = {
+  backend: S.String,
+  message: S.String,
+  operation: S.String,
+} satisfies S.Struct.Fields;
+const sameBackendNotSupportedFields = S.toEquivalence(S.TaggedStruct("BackendNotSupported", BackendNotSupportedFields));
+const sameBackendNotSupported = (self: BackendNotSupported, that: BackendNotSupported): boolean =>
+  sameBackendNotSupportedFields(self, that);
+
 /**
  * Failure raised when a backend does not support a requested operation.
  *
@@ -63,13 +72,14 @@ const isBackendOperationErrorDataFirst = (args: IArguments): boolean => args.len
  */
 export class BackendNotSupported extends S.TaggedError<BackendNotSupported>($I`BackendNotSupported`)(
   "BackendNotSupported",
-  {
-    backend: S.String,
-    message: S.String,
-    operation: S.String,
-  },
-  $I.annote("BackendNotSupported", {
+  BackendNotSupportedFields,
+  $I.annoteClass<
+    S.declare<BackendNotSupported>,
+    readonly [S.TaggedStruct<"BackendNotSupported", typeof BackendNotSupportedFields>]
+  >("BackendNotSupported", {
     description: "Failure raised when an NLP backend does not support a requested operation.",
+
+    toEquivalence: () => sameBackendNotSupported,
   })
 ) {
   static readonly forOperation: {
@@ -85,6 +95,22 @@ export class BackendNotSupported extends S.TaggedError<BackendNotSupported>($I`B
       })
   );
 }
+
+const BackendInitErrorFields = {
+  backend: S.String,
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const BackendInitErrorEquivalenceFields = {
+  backend: BackendInitErrorFields.backend,
+  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+  message: BackendInitErrorFields.message,
+} satisfies S.Struct.Fields;
+const sameBackendInitErrorFields = S.toEquivalence(
+  S.TaggedStruct("BackendInitError", BackendInitErrorEquivalenceFields)
+);
+const sameBackendInitError = (self: BackendInitError, that: BackendInitError): boolean =>
+  sameBackendInitErrorFields(self, that);
 
 /**
  * Failure raised when a backend fails to initialize.
@@ -107,13 +133,14 @@ export class BackendNotSupported extends S.TaggedError<BackendNotSupported>($I`B
  */
 export class BackendInitError extends S.TaggedError<BackendInitError>($I`BackendInitError`)(
   "BackendInitError",
-  {
-    backend: S.String,
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("BackendInitError", {
+  BackendInitErrorFields,
+  $I.annoteClass<
+    S.declare<BackendInitError>,
+    readonly [S.TaggedStruct<"BackendInitError", typeof BackendInitErrorFields>]
+  >("BackendInitError", {
     description: "Failure raised when an NLP backend fails to initialize.",
+
+    toEquivalence: () => sameBackendInitError,
   })
 ) {
   static readonly fromCause: {
@@ -129,6 +156,24 @@ export class BackendInitError extends S.TaggedError<BackendInitError>($I`Backend
       })
   );
 }
+
+const BackendOperationErrorFields = {
+  backend: S.String,
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+  operation: S.String,
+} satisfies S.Struct.Fields;
+const BackendOperationErrorEquivalenceFields = {
+  backend: BackendOperationErrorFields.backend,
+  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+  message: BackendOperationErrorFields.message,
+  operation: BackendOperationErrorFields.operation,
+} satisfies S.Struct.Fields;
+const sameBackendOperationErrorFields = S.toEquivalence(
+  S.TaggedStruct("BackendOperationError", BackendOperationErrorEquivalenceFields)
+);
+const sameBackendOperationError = (self: BackendOperationError, that: BackendOperationError): boolean =>
+  sameBackendOperationErrorFields(self, that);
 
 /**
  * Failure raised when a backend operation fails at runtime.
@@ -152,14 +197,14 @@ export class BackendInitError extends S.TaggedError<BackendInitError>($I`Backend
  */
 export class BackendOperationError extends S.TaggedError<BackendOperationError>($I`BackendOperationError`)(
   "BackendOperationError",
-  {
-    backend: S.String,
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-    operation: S.String,
-  },
-  $I.annote("BackendOperationError", {
+  BackendOperationErrorFields,
+  $I.annoteClass<
+    S.declare<BackendOperationError>,
+    readonly [S.TaggedStruct<"BackendOperationError", typeof BackendOperationErrorFields>]
+  >("BackendOperationError", {
     description: "Failure raised when an NLP backend operation fails at runtime.",
+
+    toEquivalence: () => sameBackendOperationError,
   })
 ) {
   static readonly fromCause: {

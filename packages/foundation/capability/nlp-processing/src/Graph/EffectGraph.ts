@@ -102,6 +102,13 @@ export const generateNodeId: Effect.Effect<NodeId> = Effect.gen(function* () {
   return NodeId.make(`node-${ms}-${rand}`);
 });
 
+const NodeNotFoundErrorFields = {
+  nodeId: NodeId,
+} satisfies S.Struct.Fields;
+const sameNodeNotFoundErrorFields = S.toEquivalence(S.TaggedStruct("NodeNotFoundError", NodeNotFoundErrorFields));
+const sameNodeNotFoundError = (self: NodeNotFoundError, that: NodeNotFoundError): boolean =>
+  sameNodeNotFoundErrorFields(self, that);
+
 /**
  * Error raised when traversal cannot resolve a node id.
  *
@@ -119,11 +126,14 @@ export const generateNodeId: Effect.Effect<NodeId> = Effect.gen(function* () {
  */
 export class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>($I`NodeNotFoundError`)(
   "NodeNotFoundError",
-  {
-    nodeId: NodeId,
-  },
-  $I.annote("NodeNotFoundError", {
+  NodeNotFoundErrorFields,
+  $I.annoteClass<
+    S.declare<NodeNotFoundError>,
+    readonly [S.TaggedStruct<"NodeNotFoundError", typeof NodeNotFoundErrorFields>]
+  >("NodeNotFoundError", {
     description: "Raised when a graph node id cannot be resolved during traversal.",
+
+    toEquivalence: () => sameNodeNotFoundError,
   })
 ) {}
 

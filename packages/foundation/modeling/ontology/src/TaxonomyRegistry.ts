@@ -86,6 +86,13 @@ export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput
   })
 ) {}
 
+const TaxonomyConceptNotFoundFields = { conceptIri: IRIReference } satisfies S.Struct.Fields;
+const sameTaxonomyConceptNotFoundFields = S.toEquivalence(
+  S.TaggedStruct("TaxonomyConceptNotFound", TaxonomyConceptNotFoundFields)
+);
+const sameTaxonomyConceptNotFound = (self: TaxonomyConceptNotFound, that: TaxonomyConceptNotFound): boolean =>
+  sameTaxonomyConceptNotFoundFields(self, that);
+
 /**
  *  Raised when a requested concept is absent from loaded registry data.
  *
@@ -102,11 +109,26 @@ export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput
  */
 export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFound>($I`TaxonomyConceptNotFound`)(
   "TaxonomyConceptNotFound",
-  { conceptIri: IRIReference },
-  $I.annote("TaxonomyConceptNotFound", {
+  TaxonomyConceptNotFoundFields,
+  $I.annoteClass<
+    S.declare<TaxonomyConceptNotFound>,
+    readonly [S.TaggedStruct<"TaxonomyConceptNotFound", typeof TaxonomyConceptNotFoundFields>]
+  >("TaxonomyConceptNotFound", {
     description: "The requested concept IRI is absent from the loaded taxonomy registry.",
+
+    toEquivalence: () => sameTaxonomyConceptNotFound,
   })
 ) {}
+
+const UnsupportedDocumentClassFields = {
+  conceptIri: IRIReference,
+  documentClass: DocumentClass,
+} satisfies S.Struct.Fields;
+const sameUnsupportedDocumentClassFields = S.toEquivalence(
+  S.TaggedStruct("UnsupportedDocumentClass", UnsupportedDocumentClassFields)
+);
+const sameUnsupportedDocumentClass = (self: UnsupportedDocumentClass, that: UnsupportedDocumentClass): boolean =>
+  sameUnsupportedDocumentClassFields(self, that);
 
 /**
  *  Raised when a concept does not admit the requested document class.
@@ -124,9 +146,14 @@ export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFou
  */
 export class UnsupportedDocumentClass extends S.TaggedError<UnsupportedDocumentClass>($I`UnsupportedDocumentClass`)(
   "UnsupportedDocumentClass",
-  { conceptIri: IRIReference, documentClass: DocumentClass },
-  $I.annote("UnsupportedDocumentClass", {
+  UnsupportedDocumentClassFields,
+  $I.annoteClass<
+    S.declare<UnsupportedDocumentClass>,
+    readonly [S.TaggedStruct<"UnsupportedDocumentClass", typeof UnsupportedDocumentClassFields>]
+  >("UnsupportedDocumentClass", {
     description: "The selected taxonomy concept does not admit the requested document class.",
+
+    toEquivalence: () => sameUnsupportedDocumentClass,
   })
 ) {}
 

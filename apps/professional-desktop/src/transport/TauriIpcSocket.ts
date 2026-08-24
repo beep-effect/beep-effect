@@ -144,40 +144,82 @@ const sidecarClosedMessage = (payload: SidecarClosedPayload): string =>
     onSome: (message) => `sidecar ${payload.kind}: ${message}`,
   });
 
+const SidecarClosedErrorFields = {
+  message: S.String,
+  payload: SidecarClosedPayload,
+} satisfies S.Struct.Fields;
+const sameSidecarClosedErrorFields = S.toEquivalence(S.TaggedStruct("SidecarClosedError", SidecarClosedErrorFields));
+const sameSidecarClosedError = (self: SidecarClosedError, that: SidecarClosedError): boolean =>
+  sameSidecarClosedErrorFields(self, that);
+
 /**
  * Raised when the sidecar reports a terminal lifecycle event on
  * `sidecar://closed`, carrying the decoded payload so callers keep the typed
  * close reason.
  *
+ * **Example** (Create a terminal sidecar failure)
+ *
+ * ```ts
+ * import { SidecarClosedError, SidecarClosedPayload } from "@/transport/TauriIpcSocket"
+ *
+ * const error = SidecarClosedError.make({
+ *   message: "sidecar terminated",
+ *   payload: SidecarClosedPayload.make({ kind: "terminated" })
+ * })
+ * console.log(error.payload.kind)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-class SidecarClosedError extends S.TaggedError<SidecarClosedError>($I`SidecarClosedError`)(
+export class SidecarClosedError extends S.TaggedError<SidecarClosedError>($I`SidecarClosedError`)(
   "SidecarClosedError",
-  {
-    message: S.String,
-    payload: SidecarClosedPayload,
-  },
-  $I.annote("SidecarClosedError", {
+  SidecarClosedErrorFields,
+  $I.annoteClass<
+    S.declare<SidecarClosedError>,
+    readonly [S.TaggedStruct<"SidecarClosedError", typeof SidecarClosedErrorFields>]
+  >("SidecarClosedError", {
     description: "The sidecar emitted a terminal `sidecar://closed` lifecycle event.",
+    toEquivalence: () => sameSidecarClosedError,
   })
 ) {}
+
+const SidecarSendErrorFields = {
+  causeMessage: S.String,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameSidecarSendErrorFields = S.toEquivalence(S.TaggedStruct("SidecarSendError", SidecarSendErrorFields));
+const sameSidecarSendError = (self: SidecarSendError, that: SidecarSendError): boolean =>
+  sameSidecarSendErrorFields(self, that);
 
 /**
  * Raised when writing an outbound frame to the sidecar's stdin via the
  * `sidecar_send` command fails at the Tauri boundary.
  *
+ * **Example** (Create a sidecar send failure)
+ *
+ * ```ts
+ * import { SidecarSendError } from "@/transport/TauriIpcSocket"
+ *
+ * const error = SidecarSendError.make({
+ *   causeMessage: "stdin closed",
+ *   message: "sidecar send failed: stdin closed"
+ * })
+ * console.log(error.causeMessage)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-class SidecarSendError extends S.TaggedError<SidecarSendError>($I`SidecarSendError`)(
+export class SidecarSendError extends S.TaggedError<SidecarSendError>($I`SidecarSendError`)(
   "SidecarSendError",
-  {
-    causeMessage: S.String,
-    message: S.String,
-  },
-  $I.annote("SidecarSendError", {
+  SidecarSendErrorFields,
+  $I.annoteClass<
+    S.declare<SidecarSendError>,
+    readonly [S.TaggedStruct<"SidecarSendError", typeof SidecarSendErrorFields>]
+  >("SidecarSendError", {
     description: "Writing an outbound ndjson frame to the sidecar's stdin failed.",
+    toEquivalence: () => sameSidecarSendError,
   })
 ) {}
 

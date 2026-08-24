@@ -65,21 +65,55 @@ class MentionMenuOption extends MenuOption {
   }
 }
 
-class MentionLookupError extends S.TaggedError<MentionLookupError>($I`MentionLookupError`)(
+const MentionLookupErrorFields = {
+  reason: S.Literals(["source-failed", "invalid-results"]).annotateKey({
+    description: "Stable reason the mention lookup failed.",
+  }),
+  message: S.String.annotateKey({
+    description: "User-safe lookup failure message.",
+  }),
+  cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+    description: "Underlying source or schema failure retained for structured diagnostics.",
+  }),
+} satisfies S.Struct.Fields;
+const MentionLookupErrorEquivalenceFields = {
+  reason: MentionLookupErrorFields.reason,
+  message: MentionLookupErrorFields.message,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameMentionLookupErrorFields = S.toEquivalence(
+  S.TaggedStruct("MentionLookupError", MentionLookupErrorEquivalenceFields)
+);
+const sameMentionLookupError = (self: MentionLookupError, that: MentionLookupError): boolean =>
+  sameMentionLookupErrorFields(self, that);
+
+/**
+ * Typed failure raised when a mention source rejects or returns invalid candidates.
+ *
+ * **Example** (Create a mention lookup failure)
+ *
+ * ```ts
+ * import { MentionLookupError } from "@beep/editor/chat/typeahead"
+ *
+ * const error = MentionLookupError.make({
+ *   reason: "source-failed",
+ *   message: "Mentions are unavailable right now."
+ * })
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class MentionLookupError extends S.TaggedError<MentionLookupError>($I`MentionLookupError`)(
   "MentionLookupError",
-  {
-    reason: S.Literals(["source-failed", "invalid-results"]).annotateKey({
-      description: "Stable reason the mention lookup failed.",
-    }),
-    message: S.String.annotateKey({
-      description: "User-safe lookup failure message.",
-    }),
-    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
-      description: "Underlying source or schema failure retained for structured diagnostics.",
-    }),
-  },
-  $I.annote("MentionLookupError", {
+  MentionLookupErrorFields,
+  $I.annoteClass<
+    S.declare<MentionLookupError>,
+    readonly [S.TaggedStruct<"MentionLookupError", typeof MentionLookupErrorFields>]
+  >("MentionLookupError", {
     description: "Typed failure raised when a mention source rejects or returns invalid candidates.",
+    toEquivalence: () => sameMentionLookupError,
   })
 ) {}
 

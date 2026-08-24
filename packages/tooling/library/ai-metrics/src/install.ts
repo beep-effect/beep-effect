@@ -28,6 +28,21 @@ import { AiMetricsSourceDiscoveryResult, AiMetricsSourceStatus } from "./source-
 
 const $I = $RepoAiMetricsId.create("install");
 
+const AiMetricsInstallConfigurationErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsInstallConfigurationErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsInstallConfigurationError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsInstallConfigurationErrorFields.message,
+  })
+);
+const sameAiMetricsInstallConfigurationError = (
+  self: AiMetricsInstallConfigurationError,
+  that: AiMetricsInstallConfigurationError
+): boolean => sameAiMetricsInstallConfigurationErrorFields(self, that);
+
 const defaultCandidateTools = [
   AiMetricsTool.Enum.langfuse,
   AiMetricsTool.Enum.phoenix,
@@ -137,13 +152,14 @@ export class AiMetricsInstallConfigurationError extends S.TaggedError<AiMetricsI
   $I`AiMetricsInstallConfigurationError`
 )(
   "AiMetricsInstallConfigurationError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsInstallConfigurationError", {
+  AiMetricsInstallConfigurationErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsInstallConfigurationError>,
+    readonly [S.TaggedStruct<"AiMetricsInstallConfigurationError", typeof AiMetricsInstallConfigurationErrorFields>]
+  >("AiMetricsInstallConfigurationError", {
     description:
       "Typed failure raised when a requested AI metrics install target is missing required safety configuration.",
+    toEquivalence: () => sameAiMetricsInstallConfigurationError,
   })
 ) {}
 

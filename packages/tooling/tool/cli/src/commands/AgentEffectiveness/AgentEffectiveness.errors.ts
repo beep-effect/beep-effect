@@ -10,6 +10,27 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.errors");
 
+const AgentEffectivenessEvalScorerErrorFields = {
+  message: S.String,
+  file: S.optionalKey(S.String),
+  command: S.optionalKey(S.String),
+  exitCode: S.optionalKey(S.Finite),
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameAgentEffectivenessEvalScorerErrorFields = S.toEquivalence(
+  S.TaggedStruct("AgentEffectivenessEvalScorerError", {
+    message: AgentEffectivenessEvalScorerErrorFields.message,
+    file: AgentEffectivenessEvalScorerErrorFields.file,
+    command: AgentEffectivenessEvalScorerErrorFields.command,
+    exitCode: AgentEffectivenessEvalScorerErrorFields.exitCode,
+  })
+);
+const sameAgentEffectivenessEvalScorerError = (
+  self: AgentEffectivenessEvalScorerError,
+  that: AgentEffectivenessEvalScorerError
+): boolean => sameAgentEffectivenessEvalScorerErrorFields(self, that);
+
 /**
  * Operational failure raised while scoring a SkillOpt eval fixture.
  *
@@ -31,15 +52,13 @@ export class AgentEffectivenessEvalScorerError extends S.TaggedError<AgentEffect
   $I`AgentEffectivenessEvalScorerError`
 )(
   "AgentEffectivenessEvalScorerError",
-  {
-    message: S.String,
-    file: S.optionalKey(S.String),
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("AgentEffectivenessEvalScorerError", {
+  AgentEffectivenessEvalScorerErrorFields,
+  $I.annoteClass<
+    S.declare<AgentEffectivenessEvalScorerError>,
+    readonly [S.TaggedStruct<"AgentEffectivenessEvalScorerError", typeof AgentEffectivenessEvalScorerErrorFields>]
+  >("AgentEffectivenessEvalScorerError", {
     description: "Operational scorer failure; law and completion findings stay in score reports instead.",
+    toEquivalence: () => sameAgentEffectivenessEvalScorerError,
   })
 ) {
   static readonly new = (message: string, options: AgentEffectivenessEvalScorerError.Options = {}) =>

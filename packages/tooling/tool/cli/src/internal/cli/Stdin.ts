@@ -10,7 +10,16 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 
+export { CliReportedExit } from "./ExitCodeError.ts";
+
 const $I = $RepoCliId.create("internal/cli/Stdin");
+
+const StdinDocumentErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameStdinDocumentErrorFields = S.toEquivalence(S.TaggedStruct("StdinDocumentError", StdinDocumentErrorFields));
+const sameStdinDocumentError = (self: StdinDocumentError, that: StdinDocumentError): boolean =>
+  sameStdinDocumentErrorFields(self, that);
 
 /**
  * Failure while reading a stdin document, carrying the caller's phrasing.
@@ -29,11 +38,13 @@ const $I = $RepoCliId.create("internal/cli/Stdin");
  */
 export class StdinDocumentError extends S.TaggedError<StdinDocumentError>($I`StdinDocumentError`)(
   "StdinDocumentError",
-  {
-    message: S.String,
-  },
-  $I.annote("StdinDocumentError", {
+  StdinDocumentErrorFields,
+  $I.annoteClass<
+    S.declare<StdinDocumentError>,
+    readonly [S.TaggedStruct<"StdinDocumentError", typeof StdinDocumentErrorFields>]
+  >("StdinDocumentError", {
     description: "Failure while reading a stdin document for a --from-stdin command flag.",
+    toEquivalence: () => sameStdinDocumentError,
   })
 ) {}
 

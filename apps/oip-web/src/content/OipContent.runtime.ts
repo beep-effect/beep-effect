@@ -41,16 +41,44 @@ type OipContentLoadErrorOptions = {
   readonly status?: number;
 };
 
-class OipContentLoadError extends S.TaggedError<OipContentLoadError>($I`OipContentLoadError`)(
+const OipContentLoadErrorFields = {
+  provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  reason: OipContentLoadErrorReason,
+  status: S.OptionFromOptionalKey(OipContentProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
+} satisfies S.Struct.Fields;
+const sameOipContentLoadErrorFields = S.toEquivalence(S.TaggedStruct("OipContentLoadError", OipContentLoadErrorFields));
+const sameOipContentLoadError = (self: OipContentLoadError, that: OipContentLoadError): boolean =>
+  sameOipContentLoadErrorFields(self, that);
+
+/**
+ * Typed server-side failure raised while loading OIP site content.
+ *
+ * **Example** (Create a provider content failure)
+ *
+ * ```ts
+ * import { OipContentLoadError } from "@/content/OipContent.runtime"
+ *
+ * const error = OipContentLoadError.fromReason("provider", {
+ *   provider: "sanity",
+ *   providerReason: "unavailable",
+ *   status: 503
+ * })
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class OipContentLoadError extends S.TaggedError<OipContentLoadError>($I`OipContentLoadError`)(
   "OipContentLoadError",
-  {
-    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    reason: OipContentLoadErrorReason,
-    status: S.OptionFromOptionalKey(OipContentProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
-  },
-  $I.annote("OipContentLoadError", {
+  OipContentLoadErrorFields,
+  $I.annoteClass<
+    S.declare<OipContentLoadError>,
+    readonly [S.TaggedStruct<"OipContentLoadError", typeof OipContentLoadErrorFields>]
+  >("OipContentLoadError", {
     description: "Typed server-side OIP content loading failure.",
+    toEquivalence: () => sameOipContentLoadError,
   })
 ) {
   static readonly fromReason = (

@@ -118,6 +118,15 @@ export const CanonicalizationErrorReason = LiteralKit([
  * @since 0.0.0
  */
 export type CanonicalizationErrorReason = typeof CanonicalizationErrorReason.Type;
+const CanonicalizationErrorFields = {
+  reason: CanonicalizationErrorReason,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameCanonicalizationErrorFields = S.toEquivalence(
+  S.TaggedStruct("CanonicalizationError", CanonicalizationErrorFields)
+);
+const sameCanonicalizationError = (self: CanonicalizationError, that: CanonicalizationError): boolean =>
+  sameCanonicalizationErrorFields(self, that);
 
 /**
  * Typed canonicalization error.
@@ -140,13 +149,14 @@ export type CanonicalizationErrorReason = typeof CanonicalizationErrorReason.Typ
  */
 export class CanonicalizationError extends S.TaggedError<CanonicalizationError>($I`CanonicalizationError`)(
   "CanonicalizationError",
-  {
-    reason: CanonicalizationErrorReason,
-    message: S.String,
-  },
-  $I.annote("CanonicalizationError", {
+  CanonicalizationErrorFields,
+  $I.annoteClass<
+    S.declare<CanonicalizationError>,
+    readonly [S.TaggedStruct<"CanonicalizationError", typeof CanonicalizationErrorFields>]
+  >("CanonicalizationError", {
     description: "Typed canonicalization error.",
     semanticSchemaMetadata: serviceContractMetadata("CanonicalizationError", "Typed canonicalization error."),
+    toEquivalence: () => sameCanonicalizationError,
   })
 ) {}
 

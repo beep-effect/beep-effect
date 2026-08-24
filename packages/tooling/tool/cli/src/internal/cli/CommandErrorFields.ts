@@ -17,9 +17,21 @@
  * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
+import { Console, Effect, Inspectable } from "effect";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "./ExitCodeError.ts";
+
+const causeMessage = (cause: unknown): string => {
+  if (P.isError(cause)) {
+    return cause.message;
+  }
+  if (P.hasProperty(cause, "message") && P.isString(cause.message)) {
+    return cause.message;
+  }
+  return Inspectable.toStringUnknown(cause, 0);
+};
 
 /**
  * Schema fields shared by repo-cli command-suite error classes.
@@ -57,7 +69,32 @@ export const commandErrorFields = {
   command: S.optionalKey(S.String),
   exitCode: S.optionalKey(S.Finite),
   cause: S.optionalKey(S.Defect({ includeStack: true })),
-};
+} satisfies S.Struct.Fields;
+
+/**
+ * Append a readable unknown cause to a CLI error message.
+ *
+ * **Details**
+ *
+ * Error instances and objects with a string `message` use that message. Other
+ * values use Effect's compact unknown-value inspector.
+ *
+ * **Example** (Format a command failure)
+ *
+ * ```ts
+ * import { messageWithCause } from "@beep/repo-cli/internal/cli/CommandErrorFields"
+ *
+ * console.log(messageWithCause("Version sync failed", { message: "Network unavailable" }))
+ * // "Version sync failed: Network unavailable"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const messageWithCause: {
+  (cause: unknown): (message: string) => string;
+  (message: string, cause: unknown): string;
+} = dual(2, (message: string, cause: unknown): string => `${message}: ${causeMessage(cause)}`);
 
 /**
  * Resolve the process exit code for a command error, defaulting to `1`.

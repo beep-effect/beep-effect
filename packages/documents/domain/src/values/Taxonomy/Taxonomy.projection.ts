@@ -21,6 +21,17 @@ const INBOX_SEGMENT = "00-inbox" as const;
 const FALLBACK_STEM = "document" as const;
 const SHORT_DIGEST_LENGTH = 12;
 
+const TaxonomyProjectionErrorFields = {
+  reason: S.NonEmptyString.annotateKey({
+    description: "Deterministic projection failure reason.",
+  }),
+} satisfies S.Struct.Fields;
+const sameTaxonomyProjectionErrorFields = S.toEquivalence(
+  S.TaggedStruct("TaxonomyProjectionError", TaxonomyProjectionErrorFields)
+);
+const sameTaxonomyProjectionError = (self: TaxonomyProjectionError, that: TaxonomyProjectionError): boolean =>
+  sameTaxonomyProjectionErrorFields(self, that);
+
 /**
  * Failure raised when deterministic vault path projection cannot complete.
  *
@@ -38,13 +49,13 @@ const SHORT_DIGEST_LENGTH = 12;
  */
 export class TaxonomyProjectionError extends S.TaggedError<TaxonomyProjectionError>($I`TaxonomyProjectionError`)(
   "TaxonomyProjectionError",
-  {
-    reason: S.NonEmptyString.annotateKey({
-      description: "Deterministic projection failure reason.",
-    }),
-  },
-  $I.annote("TaxonomyProjectionError", {
+  TaxonomyProjectionErrorFields,
+  $I.annoteClass<
+    S.declare<TaxonomyProjectionError>,
+    readonly [S.TaggedStruct<"TaxonomyProjectionError", typeof TaxonomyProjectionErrorFields>]
+  >("TaxonomyProjectionError", {
     description: "Failure raised when deterministic vault path projection cannot be completed.",
+    toEquivalence: () => sameTaxonomyProjectionError,
   })
 ) {}
 

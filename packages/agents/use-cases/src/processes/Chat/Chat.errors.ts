@@ -11,6 +11,13 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("processes/Chat/Chat.errors");
 
+const ChatActionErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameChatActionErrorFields = S.toEquivalence(S.TaggedStruct("ChatActionError", ChatActionErrorFields));
+const sameChatActionError = (self: ChatActionError, that: ChatActionError): boolean =>
+  sameChatActionErrorFields(self, that);
+
 /**
  * Public action failure carried on every {@link ChatRpcs} request. The chat rpc
  * handler (app sidecar) translates port and kernel failures into this
@@ -30,11 +37,14 @@ const $I = $AgentsUseCasesId.create("processes/Chat/Chat.errors");
  */
 export class ChatActionError extends S.TaggedError<ChatActionError>($I`ChatActionError`)(
   "ChatActionError",
-  {
-    message: S.String,
-  },
-  $I.annote("ChatActionError", {
+  ChatActionErrorFields,
+  $I.annoteClass<
+    S.declare<ChatActionError>,
+    readonly [S.TaggedStruct<"ChatActionError", typeof ChatActionErrorFields>]
+  >("ChatActionError", {
     description: "Client-safe failure raised when a chat action cannot be completed.",
+
+    toEquivalence: () => sameChatActionError,
   })
 ) {
   static readonly new = (message: string) => ChatActionError.make({ message });

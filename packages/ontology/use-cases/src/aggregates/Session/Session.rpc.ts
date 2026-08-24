@@ -25,6 +25,13 @@ import {
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
 
+const OntologyActionErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameOntologyActionErrorFields = S.toEquivalence(S.TaggedStruct("OntologyActionError", OntologyActionErrorFields));
+const sameOntologyActionError = (self: OntologyActionError, that: OntologyActionError): boolean =>
+  sameOntologyActionErrorFields(self, that);
+
 /**
  * Client-safe ontology action failure carried on every ontology RPC request.
  *
@@ -43,11 +50,14 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
  */
 export class OntologyActionError extends S.TaggedError<OntologyActionError>($I`OntologyActionError`)(
   "OntologyActionError",
-  {
-    message: S.String,
-  },
-  $I.annote("OntologyActionError", {
+  OntologyActionErrorFields,
+  $I.annoteClass<
+    S.declare<OntologyActionError>,
+    readonly [S.TaggedStruct<"OntologyActionError", typeof OntologyActionErrorFields>]
+  >("OntologyActionError", {
     description: "Client-safe failure raised when an ontology workbench action cannot be completed.",
+
+    toEquivalence: () => sameOntologyActionError,
   })
 ) {
   static readonly new = (message: string) => OntologyActionError.make({ message });

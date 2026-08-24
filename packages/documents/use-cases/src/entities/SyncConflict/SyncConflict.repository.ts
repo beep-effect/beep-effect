@@ -76,6 +76,19 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
   })
 ) {}
 
+const SyncConflictRepositoryNotFoundFields = {
+  conflictId: Documents.SyncConflictId.annotateKey({
+    description: "SyncConflict identity that could not be found.",
+  }),
+} satisfies S.Struct.Fields;
+const sameSyncConflictRepositoryNotFoundFields = S.toEquivalence(
+  S.TaggedStruct("SyncConflictRepositoryNotFound", SyncConflictRepositoryNotFoundFields)
+);
+const sameSyncConflictRepositoryNotFound = (
+  self: SyncConflictRepositoryNotFound,
+  that: SyncConflictRepositoryNotFound
+): boolean => sameSyncConflictRepositoryNotFoundFields(self, that);
+
 /**
  * Persistence failure raised when a SyncConflict row is absent.
  *
@@ -99,18 +112,31 @@ export class SyncConflictRepositoryNotFound extends S.TaggedError<SyncConflictRe
   $I`SyncConflictRepositoryNotFound`
 )(
   "SyncConflictRepositoryNotFound",
-  {
-    conflictId: Documents.SyncConflictId.annotateKey({
-      description: "SyncConflict identity that could not be found.",
-    }),
-  },
-  $I.annote("SyncConflictRepositoryNotFound", {
+  SyncConflictRepositoryNotFoundFields,
+  $I.annoteClass<
+    S.declare<SyncConflictRepositoryNotFound>,
+    readonly [S.TaggedStruct<"SyncConflictRepositoryNotFound", typeof SyncConflictRepositoryNotFoundFields>]
+  >("SyncConflictRepositoryNotFound", {
     title: "SyncConflict repository not found",
     description: "The SyncConflict repository could not find the requested entity.",
+    toEquivalence: () => sameSyncConflictRepositoryNotFound,
   })
 ) {
   static readonly is = S.is(SyncConflictRepositoryNotFound);
 }
+
+const SyncConflictRepositoryUnavailableFields = {
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository availability diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const sameSyncConflictRepositoryUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("SyncConflictRepositoryUnavailable", SyncConflictRepositoryUnavailableFields)
+);
+const sameSyncConflictRepositoryUnavailable = (
+  self: SyncConflictRepositoryUnavailable,
+  that: SyncConflictRepositoryUnavailable
+): boolean => sameSyncConflictRepositoryUnavailableFields(self, that);
 
 /**
  * Persistence failure raised when the SyncConflict repository is unavailable.
@@ -131,14 +157,14 @@ export class SyncConflictRepositoryUnavailable extends S.TaggedError<SyncConflic
   $I`SyncConflictRepositoryUnavailable`
 )(
   "SyncConflictRepositoryUnavailable",
-  {
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository availability diagnostic.",
-    }),
-  },
-  $I.annote("SyncConflictRepositoryUnavailable", {
+  SyncConflictRepositoryUnavailableFields,
+  $I.annoteClass<
+    S.declare<SyncConflictRepositoryUnavailable>,
+    readonly [S.TaggedStruct<"SyncConflictRepositoryUnavailable", typeof SyncConflictRepositoryUnavailableFields>]
+  >("SyncConflictRepositoryUnavailable", {
     title: "SyncConflict repository unavailable",
     description: "The SyncConflict repository could not serve the request.",
+    toEquivalence: () => sameSyncConflictRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(SyncConflictRepositoryUnavailable);

@@ -6,24 +6,11 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { Err } from "@beep/utils";
-import { Inspectable } from "effect";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.errors");
-
-const causeMessage = (cause: unknown): string => {
-  if (P.isError(cause)) {
-    return cause.message;
-  }
-  if (P.hasProperty(cause, "message") && P.isString(cause.message)) {
-    return cause.message;
-  }
-  return Inspectable.toStringUnknown(cause, 0);
-};
-
-const messageWithCause = (message: string, cause: unknown): string => `${message}: ${causeMessage(cause)}`;
 
 const makeSkillsCommandError = (cause: unknown, message: string, file?: string, skill?: string): SkillsCommandError => {
   const fields: {
@@ -44,6 +31,23 @@ const makeSkillsCommandError = (cause: unknown, message: string, file?: string, 
   return SkillsCommandError.make(fields);
 };
 
+const SkillsCommandErrorFields = {
+  message: S.String,
+  file: S.optionalKey(S.String),
+  skill: S.optionalKey(S.String),
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameSkillsCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("SkillsCommandError", {
+    message: SkillsCommandErrorFields.message,
+    file: SkillsCommandErrorFields.file,
+    skill: SkillsCommandErrorFields.skill,
+  })
+);
+const sameSkillsCommandError = (self: SkillsCommandError, that: SkillsCommandError): boolean =>
+  sameSkillsCommandErrorFields(self, that);
+
 /**
  * Operational error while reading, fetching, hashing, or writing repo-local skills.
  *
@@ -61,15 +65,14 @@ const makeSkillsCommandError = (cause: unknown, message: string, file?: string, 
  */
 export class SkillsCommandError extends S.TaggedError<SkillsCommandError>($I`SkillsCommandError`)(
   "SkillsCommandError",
-  {
-    message: S.String,
-    file: S.optionalKey(S.String),
-    skill: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("SkillsCommandError", {
+  SkillsCommandErrorFields,
+  $I.annoteClass<
+    S.declare<SkillsCommandError>,
+    readonly [S.TaggedStruct<"SkillsCommandError", typeof SkillsCommandErrorFields>]
+  >("SkillsCommandError", {
     title: "Skills Command Error",
     description: "Failed to read, fetch, hash, or write repo-local skill configuration.",
+    toEquivalence: () => sameSkillsCommandError,
   })
 ) {
   /**
@@ -91,6 +94,14 @@ export class SkillsCommandError extends S.TaggedError<SkillsCommandError>($I`Ski
   );
 }
 
+const SkillsDriftErrorFields = {
+  message: S.String,
+  driftCount: S.Finite,
+} satisfies S.Struct.Fields;
+const sameSkillsDriftErrorFields = S.toEquivalence(S.TaggedStruct("SkillsDriftError", SkillsDriftErrorFields));
+const sameSkillsDriftError = (self: SkillsDriftError, that: SkillsDriftError): boolean =>
+  sameSkillsDriftErrorFields(self, that);
+
 /**
  * Drift detected while running skills update in check mode.
  *
@@ -108,13 +119,14 @@ export class SkillsCommandError extends S.TaggedError<SkillsCommandError>($I`Ski
  */
 export class SkillsDriftError extends S.TaggedError<SkillsDriftError>($I`SkillsDriftError`)(
   "SkillsDriftError",
-  {
-    message: S.String,
-    driftCount: S.Finite,
-  },
-  $I.annote("SkillsDriftError", {
+  SkillsDriftErrorFields,
+  $I.annoteClass<
+    S.declare<SkillsDriftError>,
+    readonly [S.TaggedStruct<"SkillsDriftError", typeof SkillsDriftErrorFields>]
+  >("SkillsDriftError", {
     title: "Skills Drift Error",
     description: "Repo-local skill drift was detected while running in check mode.",
+    toEquivalence: () => sameSkillsDriftError,
   })
 ) {
   /**

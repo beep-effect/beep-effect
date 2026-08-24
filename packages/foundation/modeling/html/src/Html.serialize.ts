@@ -225,6 +225,15 @@ export const HtmlSerializeRule = LiteralKit([
  */
 export type HtmlSerializeRule = typeof HtmlSerializeRule.Type;
 
+const HtmlSerializeErrorFields = {
+  path: S.Array(S.String),
+  rule: HtmlSerializeRule,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameHtmlSerializeErrorFields = S.toEquivalence(S.TaggedStruct("HtmlSerializeError", HtmlSerializeErrorFields));
+const sameHtmlSerializeError = (self: HtmlSerializeError, that: HtmlSerializeError): boolean =>
+  sameHtmlSerializeErrorFields(self, that);
+
 /**
  * Typed canonical-serialization failure.
  *
@@ -246,13 +255,13 @@ export type HtmlSerializeRule = typeof HtmlSerializeRule.Type;
  */
 export class HtmlSerializeError extends S.TaggedError<HtmlSerializeError>($I`HtmlSerializeError`)(
   "HtmlSerializeError",
-  {
-    path: S.Array(S.String),
-    rule: HtmlSerializeRule,
-    message: S.String,
-  },
-  $I.annote("HtmlSerializeError", {
+  HtmlSerializeErrorFields,
+  $I.annoteClass<
+    S.declare<HtmlSerializeError>,
+    readonly [S.TaggedStruct<"HtmlSerializeError", typeof HtmlSerializeErrorFields>]
+  >("HtmlSerializeError", {
     description: "Canonical HTML serialization could not preserve the modeled AST.",
+    toEquivalence: () => sameHtmlSerializeError,
   })
 ) {}
 

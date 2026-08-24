@@ -23,6 +23,19 @@ import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("ingest");
 
+const AiMetricsIngestErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsIngestErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsIngestError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsIngestErrorFields.message,
+  })
+);
+const sameAiMetricsIngestError = (self: AiMetricsIngestError, that: AiMetricsIngestError): boolean =>
+  sameAiMetricsIngestErrorFields(self, that);
+
 const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString(TranscriptIngestSummary));
 
 /**
@@ -45,12 +58,13 @@ const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString
  */
 export class AiMetricsIngestError extends S.TaggedError<AiMetricsIngestError>($I`AiMetricsIngestError`)(
   "AiMetricsIngestError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsIngestError", {
+  AiMetricsIngestErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsIngestError>,
+    readonly [S.TaggedStruct<"AiMetricsIngestError", typeof AiMetricsIngestErrorFields>]
+  >("AiMetricsIngestError", {
     description: "Typed failure raised by AI metrics transcript ingest helpers.",
+    toEquivalence: () => sameAiMetricsIngestError,
   })
 ) {}
 

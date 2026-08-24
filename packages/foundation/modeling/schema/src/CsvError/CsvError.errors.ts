@@ -15,6 +15,9 @@ const CsvErrorFields = {
   message: S.String,
   offset: S.optionalKey(S.Finite),
 } satisfies S.Struct.Fields;
+const sameCsvErrorFields = S.toEquivalence(S.TaggedStruct("CsvError", CsvErrorFields));
+const sameCsvError = (self: CsvError, that: CsvError): boolean => sameCsvErrorFields(self, that);
+
 /**
  * Raised when CSV parsing, header validation, or formatting fails.
  *
@@ -33,8 +36,9 @@ const CsvErrorFields = {
 export class CsvError extends S.TaggedError<CsvError>($I`CsvError`)(
   "CsvError",
   CsvErrorFields,
-  $I.annote("CsvError", {
+  $I.annoteClass<S.declare<CsvError>, readonly [S.TaggedStruct<"CsvError", typeof CsvErrorFields>]>("CsvError", {
     description: "Raised when CSV parsing, header validation, or formatting fails.",
+    toEquivalence: () => sameCsvError,
   })
 ) {}
 

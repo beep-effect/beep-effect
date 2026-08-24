@@ -27,17 +27,29 @@ type WithStatics<Schema extends object, Statics extends Record<string, unknown>>
 type WithStaticsTransform<Schema extends object, Statics extends Record<string, unknown>> = (
   schema: Schema
 ) => WithStatics<Schema, Statics>;
+const WithStaticsStaticRedefinitionErrorFields = {
+  key: S.String,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameWithStaticsStaticRedefinitionErrorFields = S.toEquivalence(
+  S.TaggedStruct("WithStaticsStaticRedefinitionError", WithStaticsStaticRedefinitionErrorFields)
+);
+const sameWithStaticsStaticRedefinitionError = (
+  self: WithStaticsStaticRedefinitionError,
+  that: WithStaticsStaticRedefinitionError
+): boolean => sameWithStaticsStaticRedefinitionErrorFields(self, that);
 
 class WithStaticsStaticRedefinitionError extends S.TaggedError<WithStaticsStaticRedefinitionError>(
   $I`WithStaticsStaticRedefinitionError`
 )(
   "WithStaticsStaticRedefinitionError",
-  {
-    key: S.String,
-    message: S.String,
-  },
-  $I.annote("WithStaticsStaticRedefinitionError", {
+  WithStaticsStaticRedefinitionErrorFields,
+  $I.annoteClass<
+    S.declare<WithStaticsStaticRedefinitionError>,
+    readonly [S.TaggedStruct<"WithStaticsStaticRedefinitionError", typeof WithStaticsStaticRedefinitionErrorFields>]
+  >("WithStaticsStaticRedefinitionError", {
     description: "Raised when schema statics would redefine a non-configurable property with a different value.",
+    toEquivalence: () => sameWithStaticsStaticRedefinitionError,
   })
 ) {}
 

@@ -22,6 +22,25 @@ type YeetCommandErrorOptions =
       readonly file?: string;
     };
 
+const YeetCommandErrorFields = {
+  message: S.String,
+  command: S.optionalKey(S.String),
+  exitCode: S.optionalKey(S.Finite),
+  file: S.optionalKey(S.String),
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameYeetCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("YeetCommandError", {
+    message: YeetCommandErrorFields.message,
+    command: YeetCommandErrorFields.command,
+    exitCode: YeetCommandErrorFields.exitCode,
+    file: YeetCommandErrorFields.file,
+  })
+);
+const sameYeetCommandError = (self: YeetCommandError, that: YeetCommandError): boolean =>
+  sameYeetCommandErrorFields(self, that);
+
 /**
  * Operational error raised by the yeet command.
  *
@@ -39,15 +58,13 @@ type YeetCommandErrorOptions =
  */
 export class YeetCommandError extends S.TaggedError<YeetCommandError>($I`YeetCommandError`)(
   "YeetCommandError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    file: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("YeetCommandError", {
+  YeetCommandErrorFields,
+  $I.annoteClass<
+    S.declare<YeetCommandError>,
+    readonly [S.TaggedStruct<"YeetCommandError", typeof YeetCommandErrorFields>]
+  >("YeetCommandError", {
     description: "Failure raised while planning or executing a yeet run.",
+    toEquivalence: () => sameYeetCommandError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */

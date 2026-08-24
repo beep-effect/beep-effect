@@ -79,6 +79,10 @@ const REF_IRI_PREFIX = "urn:beep:rdf:prov:ref:";
 const RECORD_IRI_PREFIX = "urn:beep:rdf:prov:record:";
 const RELATION_IRI_PREFIX = "urn:beep:rdf:prov:relation:";
 const defaultGraph = DefaultGraph.make({ termType: "DefaultGraph", value: "" });
+const ProvRdfCodecErrorFields = { message: S.String } satisfies S.Struct.Fields;
+const sameProvRdfCodecErrorFields = S.toEquivalence(S.TaggedStruct("ProvRdfCodecError", ProvRdfCodecErrorFields));
+const sameProvRdfCodecError = (self: ProvRdfCodecError, that: ProvRdfCodecError): boolean =>
+  sameProvRdfCodecErrorFields(self, that);
 
 /**
  * Typed failure returned when a PROV bundle cannot be projected without loss.
@@ -97,9 +101,13 @@ const defaultGraph = DefaultGraph.make({ termType: "DefaultGraph", value: "" });
  */
 export class ProvRdfCodecError extends S.TaggedError<ProvRdfCodecError>($I`ProvRdfCodecError`)(
   "ProvRdfCodecError",
-  { message: S.String },
-  $I.annote("ProvRdfCodecError", {
+  ProvRdfCodecErrorFields,
+  $I.annoteClass<
+    S.declare<ProvRdfCodecError>,
+    readonly [S.TaggedStruct<"ProvRdfCodecError", typeof ProvRdfCodecErrorFields>]
+  >("ProvRdfCodecError", {
     description: "Typed failure returned when a PROV bundle cannot be projected without loss.",
+    toEquivalence: () => sameProvRdfCodecError,
   })
 ) {}
 

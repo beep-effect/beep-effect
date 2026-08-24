@@ -15,6 +15,19 @@ import { AiMetricsDeployTarget } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("data-root");
 
+const AiMetricsDataRootErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsDataRootErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsDataRootError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsDataRootErrorFields.message,
+  })
+);
+const sameAiMetricsDataRootError = (self: AiMetricsDataRootError, that: AiMetricsDataRootError): boolean =>
+  sameAiMetricsDataRootErrorFields(self, that);
+
 const dankserverDataRoot = "/srv/data/ai-metrics";
 const absolutePathPattern = /^(?:[A-Za-z]:[\\/]|\\\\|\/)/u;
 
@@ -180,12 +193,13 @@ export class AiMetricsDataRoot extends S.Class<AiMetricsDataRoot>($I`AiMetricsDa
  */
 export class AiMetricsDataRootError extends S.TaggedError<AiMetricsDataRootError>($I`AiMetricsDataRootError`)(
   "AiMetricsDataRootError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsDataRootError", {
+  AiMetricsDataRootErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsDataRootError>,
+    readonly [S.TaggedStruct<"AiMetricsDataRootError", typeof AiMetricsDataRootErrorFields>]
+  >("AiMetricsDataRootError", {
     description: "Typed failure raised when an AI metrics data root is not an absolute path.",
+    toEquivalence: () => sameAiMetricsDataRootError,
   })
 ) {}
 

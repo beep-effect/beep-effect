@@ -59,6 +59,32 @@ export const ClaimDispositionOperation = ClaimDispositionOperationBase.pipe(
  */
 export type ClaimDispositionOperation = typeof ClaimDispositionOperation.Type;
 
+const ClaimDispositionRepositoryUnavailableFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({
+      description: "Optional underlying driver defect captured when the repository could not serve a request.",
+    }),
+  operation: ClaimDispositionOperation.annotateKey({
+    description: "Repository operation that could not be served.",
+  }),
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository availability diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const ClaimDispositionRepositoryUnavailableEquivalenceFields = {
+  operation: ClaimDispositionRepositoryUnavailableFields.operation,
+  reason: ClaimDispositionRepositoryUnavailableFields.reason,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameClaimDispositionRepositoryUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("ClaimDispositionRepositoryUnavailable", ClaimDispositionRepositoryUnavailableEquivalenceFields)
+);
+const sameClaimDispositionRepositoryUnavailable = (
+  self: ClaimDispositionRepositoryUnavailable,
+  that: ClaimDispositionRepositoryUnavailable
+): boolean => sameClaimDispositionRepositoryUnavailableFields(self, that);
+
 /**
  * Raised when the claim disposition repository could not serve a request.
  *
@@ -84,22 +110,16 @@ export class ClaimDispositionRepositoryUnavailable extends S.TaggedError<ClaimDi
   $I`ClaimDispositionRepositoryUnavailable`
 )(
   "ClaimDispositionRepositoryUnavailable",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({
-        description: "Optional underlying driver defect captured when the repository could not serve a request.",
-      }),
-    operation: ClaimDispositionOperation.annotateKey({
-      description: "Repository operation that could not be served.",
-    }),
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository availability diagnostic.",
-    }),
-  },
-  $I.annote("ClaimDispositionRepositoryUnavailable", {
+  ClaimDispositionRepositoryUnavailableFields,
+  $I.annoteClass<
+    S.declare<ClaimDispositionRepositoryUnavailable>,
+    readonly [
+      S.TaggedStruct<"ClaimDispositionRepositoryUnavailable", typeof ClaimDispositionRepositoryUnavailableFields>,
+    ]
+  >("ClaimDispositionRepositoryUnavailable", {
     title: "Claim disposition repository unavailable",
     description: "The claim disposition repository could not serve the request.",
+    toEquivalence: () => sameClaimDispositionRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(ClaimDispositionRepositoryUnavailable);

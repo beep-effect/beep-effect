@@ -57,6 +57,26 @@ class ContainedTarget extends S.Class<ContainedTarget>($I`ContainedTarget`)(
   })
 ) {}
 
+const FsGuardErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+  message: S.String,
+  path: S.String,
+  reason: FsGuardFailureReason,
+  root: S.String,
+  target: S.String,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameFsGuardErrorFields = S.toEquivalence(
+  S.TaggedStruct("FsGuardError", {
+    message: FsGuardErrorFields.message,
+    path: FsGuardErrorFields.path,
+    reason: FsGuardErrorFields.reason,
+    root: FsGuardErrorFields.root,
+    target: FsGuardErrorFields.target,
+  })
+);
+const sameFsGuardError = (self: FsGuardError, that: FsGuardError): boolean => sameFsGuardErrorFields(self, that);
+
 /**
  * Typed refusal from a root-contained, no-follow filesystem operation.
  *
@@ -88,17 +108,14 @@ class ContainedTarget extends S.Class<ContainedTarget>($I`ContainedTarget`)(
  */
 export class FsGuardError extends S.TaggedError<FsGuardError>($I`FsGuardError`)(
   "FsGuardError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-    message: S.String,
-    path: S.String,
-    reason: FsGuardFailureReason,
-    root: S.String,
-    target: S.String,
-  },
-  $I.annote("FsGuardError", {
-    description: "Typed refusal from a root-contained filesystem operation that never accepts symlink entries.",
-  })
+  FsGuardErrorFields,
+  $I.annoteClass<S.declare<FsGuardError>, readonly [S.TaggedStruct<"FsGuardError", typeof FsGuardErrorFields>]>(
+    "FsGuardError",
+    {
+      description: "Typed refusal from a root-contained filesystem operation that never accepts symlink entries.",
+      toEquivalence: () => sameFsGuardError,
+    }
+  )
 ) {}
 
 /**

@@ -16,6 +16,15 @@ import type { Effect } from "effect";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository");
 
+const WorkerRepositoryNotFoundFields = {
+  workerId: ArchitectureLabIdentity.WorkerId,
+} satisfies S.Struct.Fields;
+const sameWorkerRepositoryNotFoundFields = S.toEquivalence(
+  S.TaggedStruct("WorkerRepositoryNotFound", WorkerRepositoryNotFoundFields)
+);
+const sameWorkerRepositoryNotFound = (self: WorkerRepositoryNotFound, that: WorkerRepositoryNotFound): boolean =>
+  sameWorkerRepositoryNotFoundFields(self, that);
+
 /**
  * Persistence failure raised when a Worker row is absent.
  *
@@ -39,16 +48,30 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository"
  */
 export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotFound>($I`WorkerRepositoryNotFound`)(
   "WorkerRepositoryNotFound",
-  {
-    workerId: ArchitectureLabIdentity.WorkerId,
-  },
-  $I.annote("WorkerRepositoryNotFound", {
+  WorkerRepositoryNotFoundFields,
+  $I.annoteClass<
+    S.declare<WorkerRepositoryNotFound>,
+    readonly [S.TaggedStruct<"WorkerRepositoryNotFound", typeof WorkerRepositoryNotFoundFields>]
+  >("WorkerRepositoryNotFound", {
     title: "Worker repository not found",
     description: "The Worker repository could not find the requested entity.",
+    toEquivalence: () => sameWorkerRepositoryNotFound,
   })
 ) {
   static readonly is = S.is(WorkerRepositoryNotFound);
 }
+
+const WorkerRepositoryConflictFields = {
+  workerId: ArchitectureLabIdentity.WorkerId,
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository conflict diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkerRepositoryConflictFields = S.toEquivalence(
+  S.TaggedStruct("WorkerRepositoryConflict", WorkerRepositoryConflictFields)
+);
+const sameWorkerRepositoryConflict = (self: WorkerRepositoryConflict, that: WorkerRepositoryConflict): boolean =>
+  sameWorkerRepositoryConflictFields(self, that);
 
 /**
  * Persistence failure raised when a Worker write conflicts.
@@ -74,19 +97,31 @@ export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotF
  */
 export class WorkerRepositoryConflict extends S.TaggedError<WorkerRepositoryConflict>($I`WorkerRepositoryConflict`)(
   "WorkerRepositoryConflict",
-  {
-    workerId: ArchitectureLabIdentity.WorkerId,
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository conflict diagnostic.",
-    }),
-  },
-  $I.annote("WorkerRepositoryConflict", {
+  WorkerRepositoryConflictFields,
+  $I.annoteClass<
+    S.declare<WorkerRepositoryConflict>,
+    readonly [S.TaggedStruct<"WorkerRepositoryConflict", typeof WorkerRepositoryConflictFields>]
+  >("WorkerRepositoryConflict", {
     title: "Worker repository conflict",
     description: "The Worker repository rejected a conflicting write.",
+    toEquivalence: () => sameWorkerRepositoryConflict,
   })
 ) {
   static readonly is = S.is(WorkerRepositoryConflict);
 }
+
+const WorkerRepositoryUnavailableFields = {
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository availability diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkerRepositoryUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("WorkerRepositoryUnavailable", WorkerRepositoryUnavailableFields)
+);
+const sameWorkerRepositoryUnavailable = (
+  self: WorkerRepositoryUnavailable,
+  that: WorkerRepositoryUnavailable
+): boolean => sameWorkerRepositoryUnavailableFields(self, that);
 
 /**
  * Persistence failure raised when the Worker repository is unavailable.
@@ -108,14 +143,14 @@ export class WorkerRepositoryUnavailable extends S.TaggedError<WorkerRepositoryU
   $I`WorkerRepositoryUnavailable`
 )(
   "WorkerRepositoryUnavailable",
-  {
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository availability diagnostic.",
-    }),
-  },
-  $I.annote("WorkerRepositoryUnavailable", {
+  WorkerRepositoryUnavailableFields,
+  $I.annoteClass<
+    S.declare<WorkerRepositoryUnavailable>,
+    readonly [S.TaggedStruct<"WorkerRepositoryUnavailable", typeof WorkerRepositoryUnavailableFields>]
+  >("WorkerRepositoryUnavailable", {
     title: "Worker repository unavailable",
     description: "The Worker repository could not serve the request.",
+    toEquivalence: () => sameWorkerRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(WorkerRepositoryUnavailable);

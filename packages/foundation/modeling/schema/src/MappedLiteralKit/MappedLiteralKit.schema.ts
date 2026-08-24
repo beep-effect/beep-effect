@@ -23,6 +23,13 @@ const MappedLiteralDuplicateErrorFields = {
   firstIndex: S.Int.check(isNonNegative),
   secondIndex: S.Int.check(isNonNegative),
 } satisfies S.Struct.Fields;
+const sameMappedLiteralDuplicateErrorFields = S.toEquivalence(
+  S.TaggedStruct("MappedLiteralDuplicateError", MappedLiteralDuplicateErrorFields)
+);
+const sameMappedLiteralDuplicateError = (
+  self: MappedLiteralDuplicateError,
+  that: MappedLiteralDuplicateError
+): boolean => sameMappedLiteralDuplicateErrorFields(self, that);
 
 type LiteralValue = SchemaAST.LiteralValue;
 type Literals = A.NonEmptyReadonlyArray<LiteralValue>;
@@ -93,9 +100,13 @@ export class MappedLiteralDuplicateError extends S.TaggedError<MappedLiteralDupl
 )(
   "MappedLiteralDuplicateError",
   MappedLiteralDuplicateErrorFields,
-  $I.annote("MappedLiteralDuplicateError", {
+  $I.annoteClass<
+    S.declare<MappedLiteralDuplicateError>,
+    readonly [S.TaggedStruct<"MappedLiteralDuplicateError", typeof MappedLiteralDuplicateErrorFields>]
+  >("MappedLiteralDuplicateError", {
     title: "Mapped Literal Duplicate Error",
     description: "Thrown when mapped literal entries are not one-to-one.",
+    toEquivalence: () => sameMappedLiteralDuplicateError,
   })
 ) {}
 

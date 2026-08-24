@@ -13,6 +13,19 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Corpus/Corpus.errors");
 
+const CorpusCommandErrorFields = {
+  message: S.String,
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameCorpusCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("CorpusCommandError", {
+    message: CorpusCommandErrorFields.message,
+  })
+);
+const sameCorpusCommandError = (self: CorpusCommandError, that: CorpusCommandError): boolean =>
+  sameCorpusCommandErrorFields(self, that);
+
 /**
  * Error raised by corpus curation commands.
  *
@@ -30,12 +43,13 @@ const $I = $RepoCliId.create("commands/Corpus/Corpus.errors");
  */
 export class CorpusCommandError extends S.TaggedError<CorpusCommandError>($I`CorpusCommandError`)(
   "CorpusCommandError",
-  {
-    message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("CorpusCommandError", {
+  CorpusCommandErrorFields,
+  $I.annoteClass<
+    S.declare<CorpusCommandError>,
+    readonly [S.TaggedStruct<"CorpusCommandError", typeof CorpusCommandErrorFields>]
+  >("CorpusCommandError", {
     description: "A failure raised while preparing or applying a corpus curation operation.",
+    toEquivalence: () => sameCorpusCommandError,
   })
 ) {
   /**
@@ -50,6 +64,19 @@ export class CorpusCommandError extends S.TaggedError<CorpusCommandError>($I`Cor
 
   static readonly mapError = Err.mapToError(this.new);
 }
+
+const CorpusArchiveMoveUncoveredFileErrorFields = {
+  message: S.String,
+  originPath: S.NonEmptyString,
+  sourcePath: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const sameCorpusArchiveMoveUncoveredFileErrorFields = S.toEquivalence(
+  S.TaggedStruct("CorpusArchiveMoveUncoveredFileError", CorpusArchiveMoveUncoveredFileErrorFields)
+);
+const sameCorpusArchiveMoveUncoveredFileError = (
+  self: CorpusArchiveMoveUncoveredFileError,
+  that: CorpusArchiveMoveUncoveredFileError
+): boolean => sameCorpusArchiveMoveUncoveredFileErrorFields(self, that);
 
 /**
  * Error raised when an archive-move source file has no covering provenance row.
@@ -74,16 +101,31 @@ export class CorpusArchiveMoveUncoveredFileError extends S.TaggedError<CorpusArc
   $I`CorpusArchiveMoveUncoveredFileError`
 )(
   "CorpusArchiveMoveUncoveredFileError",
-  {
-    message: S.String,
-    originPath: S.NonEmptyString,
-    sourcePath: S.NonEmptyString,
-  },
-  $I.annote("CorpusArchiveMoveUncoveredFileError", {
+  CorpusArchiveMoveUncoveredFileErrorFields,
+  $I.annoteClass<
+    S.declare<CorpusArchiveMoveUncoveredFileError>,
+    readonly [S.TaggedStruct<"CorpusArchiveMoveUncoveredFileError", typeof CorpusArchiveMoveUncoveredFileErrorFields>]
+  >("CorpusArchiveMoveUncoveredFileError", {
     title: "Corpus Archive Move Uncovered File Error",
     description: "A source file selected for archive-move was not covered by the provided provenance manifests.",
+    toEquivalence: () => sameCorpusArchiveMoveUncoveredFileError,
   })
 ) {}
+
+const CorpusArchiveMoveDigestMismatchErrorFields = {
+  actualSha256: Sha256Hex,
+  expectedSha256: Sha256Hex,
+  message: S.String,
+  originPath: S.NonEmptyString,
+  rawPath: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const sameCorpusArchiveMoveDigestMismatchErrorFields = S.toEquivalence(
+  S.TaggedStruct("CorpusArchiveMoveDigestMismatchError", CorpusArchiveMoveDigestMismatchErrorFields)
+);
+const sameCorpusArchiveMoveDigestMismatchError = (
+  self: CorpusArchiveMoveDigestMismatchError,
+  that: CorpusArchiveMoveDigestMismatchError
+): boolean => sameCorpusArchiveMoveDigestMismatchErrorFields(self, that);
 
 /**
  * Error raised when a provenance-covered raw file digest does not match.
@@ -111,18 +153,29 @@ export class CorpusArchiveMoveDigestMismatchError extends S.TaggedError<CorpusAr
   $I`CorpusArchiveMoveDigestMismatchError`
 )(
   "CorpusArchiveMoveDigestMismatchError",
-  {
-    actualSha256: Sha256Hex,
-    expectedSha256: Sha256Hex,
-    message: S.String,
-    originPath: S.NonEmptyString,
-    rawPath: S.NonEmptyString,
-  },
-  $I.annote("CorpusArchiveMoveDigestMismatchError", {
+  CorpusArchiveMoveDigestMismatchErrorFields,
+  $I.annoteClass<
+    S.declare<CorpusArchiveMoveDigestMismatchError>,
+    readonly [S.TaggedStruct<"CorpusArchiveMoveDigestMismatchError", typeof CorpusArchiveMoveDigestMismatchErrorFields>]
+  >("CorpusArchiveMoveDigestMismatchError", {
     title: "Corpus Archive Move Digest Mismatch Error",
     description: "A raw file referenced by archive-move provenance did not hash to the recorded SHA-256 digest.",
+    toEquivalence: () => sameCorpusArchiveMoveDigestMismatchError,
   })
 ) {}
+
+const CorpusArchiveMoveDestinationConflictErrorFields = {
+  archivePath: S.NonEmptyString,
+  message: S.String,
+  sourcePath: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const sameCorpusArchiveMoveDestinationConflictErrorFields = S.toEquivalence(
+  S.TaggedStruct("CorpusArchiveMoveDestinationConflictError", CorpusArchiveMoveDestinationConflictErrorFields)
+);
+const sameCorpusArchiveMoveDestinationConflictError = (
+  self: CorpusArchiveMoveDestinationConflictError,
+  that: CorpusArchiveMoveDestinationConflictError
+): boolean => sameCorpusArchiveMoveDestinationConflictErrorFields(self, that);
 
 /**
  * Error raised when archive-move would overwrite an existing archive target.
@@ -147,14 +200,19 @@ export class CorpusArchiveMoveDestinationConflictError extends S.TaggedError<Cor
   $I`CorpusArchiveMoveDestinationConflictError`
 )(
   "CorpusArchiveMoveDestinationConflictError",
-  {
-    archivePath: S.NonEmptyString,
-    message: S.String,
-    sourcePath: S.NonEmptyString,
-  },
-  $I.annote("CorpusArchiveMoveDestinationConflictError", {
+  CorpusArchiveMoveDestinationConflictErrorFields,
+  $I.annoteClass<
+    S.declare<CorpusArchiveMoveDestinationConflictError>,
+    readonly [
+      S.TaggedStruct<
+        "CorpusArchiveMoveDestinationConflictError",
+        typeof CorpusArchiveMoveDestinationConflictErrorFields
+      >,
+    ]
+  >("CorpusArchiveMoveDestinationConflictError", {
     title: "Corpus Archive Move Destination Conflict Error",
     description: "An archive-move destination already exists or is duplicated by another selected source.",
+    toEquivalence: () => sameCorpusArchiveMoveDestinationConflictError,
   })
 ) {}
 

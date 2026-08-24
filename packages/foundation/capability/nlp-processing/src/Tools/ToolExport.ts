@@ -76,6 +76,22 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
   );
 };
 
+const ExportedToolErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+  message: S.String,
+  toolName: S.String,
+} satisfies S.Struct.Fields;
+const ExportedToolErrorEquivalenceFields = {
+  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+  message: ExportedToolErrorFields.message,
+  toolName: ExportedToolErrorFields.toolName,
+} satisfies S.Struct.Fields;
+const sameExportedToolErrorFields = S.toEquivalence(
+  S.TaggedStruct("ExportedToolError", ExportedToolErrorEquivalenceFields)
+);
+const sameExportedToolError = (self: ExportedToolError, that: ExportedToolError): boolean =>
+  sameExportedToolErrorFields(self, that);
+
 /**
  * Typed failure for the positional tool export adapter.
  *
@@ -113,13 +129,14 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
  */
 export class ExportedToolError extends S.TaggedError<ExportedToolError>($I`ExportedToolError`)(
   "ExportedToolError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-    message: S.String,
-    toolName: S.String,
-  },
-  $I.annote("ExportedToolError", {
+  ExportedToolErrorFields,
+  $I.annoteClass<
+    S.declare<ExportedToolError>,
+    readonly [S.TaggedStruct<"ExportedToolError", typeof ExportedToolErrorFields>]
+  >("ExportedToolError", {
     description: "Failure raised while exporting or executing a positional NLP tool.",
+
+    toEquivalence: () => sameExportedToolError,
   })
 ) {
   /**

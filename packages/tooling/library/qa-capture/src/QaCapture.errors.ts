@@ -15,6 +15,41 @@ const $I = $QaCaptureId.create("QaCapture.errors");
 const QaCaptureDefect = S.Defect({ includeStack: true });
 const isQaCaptureDefect = S.is(QaCaptureDefect);
 
+const QaCaptureErrorFields = {
+  cause: S.OptionFromOptionalKey(QaCaptureDefect).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("QaCaptureError.cause", {
+      description: "Inspectable originating defect, when available.",
+    })
+  ),
+  message: S.String.pipe(
+    $I.annoteKey("QaCaptureError.message", {
+      description: "Human-readable QA capture failure summary.",
+    })
+  ),
+  operation: S.String.pipe(
+    $I.annoteKey("QaCaptureError.operation", {
+      description: "Pipeline operation that emitted the failure.",
+    })
+  ),
+  path: S.OptionFromOptionalKey(S.String).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("QaCaptureError.path", {
+      description: "File-system path involved in the failure, when available.",
+    })
+  ),
+} satisfies S.Struct.Fields;
+const sameQaCaptureErrorFields = S.toEquivalence(
+  S.TaggedStruct("QaCaptureError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: QaCaptureErrorFields.message,
+    operation: QaCaptureErrorFields.operation,
+    path: QaCaptureErrorFields.path,
+  })
+);
+const sameQaCaptureError = (self: QaCaptureError, that: QaCaptureError): boolean =>
+  sameQaCaptureErrorFields(self, that);
+
 type QaCaptureErrorContextInput = {
   readonly cause?: unknown;
   readonly path?: string;
@@ -42,33 +77,14 @@ const existingQaCaptureError = (cause: unknown): O.Option<QaCaptureError> =>
  */
 export class QaCaptureError extends S.TaggedError<QaCaptureError>($I`QaCaptureError`)(
   "QaCaptureError",
-  {
-    cause: S.OptionFromOptionalKey(QaCaptureDefect).pipe(
-      SchemaUtils.withNoneDefault,
-      $I.annoteKey("QaCaptureError.cause", {
-        description: "Inspectable originating defect, when available.",
-      })
-    ),
-    message: S.String.pipe(
-      $I.annoteKey("QaCaptureError.message", {
-        description: "Human-readable QA capture failure summary.",
-      })
-    ),
-    operation: S.String.pipe(
-      $I.annoteKey("QaCaptureError.operation", {
-        description: "Pipeline operation that emitted the failure.",
-      })
-    ),
-    path: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      $I.annoteKey("QaCaptureError.path", {
-        description: "File-system path involved in the failure, when available.",
-      })
-    ),
-  },
-  $I.annote("QaCaptureError", {
-    description: "Technical QA capture failure scoped to a pipeline operation.",
-  })
+  QaCaptureErrorFields,
+  $I.annoteClass<S.declare<QaCaptureError>, readonly [S.TaggedStruct<"QaCaptureError", typeof QaCaptureErrorFields>]>(
+    "QaCaptureError",
+    {
+      description: "Technical QA capture failure scoped to a pipeline operation.",
+      toEquivalence: () => sameQaCaptureError,
+    }
+  )
 ) {
   static readonly is = S.is(QaCaptureError);
 

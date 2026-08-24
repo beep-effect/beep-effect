@@ -12,15 +12,49 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
-class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()("MigrationsDriftError", {
+const MigrationsDriftErrorFields = {
   message: S.String,
   newFolders: S.Array(S.String),
-}) {}
+} satisfies S.Struct.Fields;
+const sameMigrationsDriftErrorFields = S.toEquivalence(
+  S.TaggedStruct("MigrationsDriftError", MigrationsDriftErrorFields)
+);
+const sameMigrationsDriftError = (self: MigrationsDriftError, that: MigrationsDriftError): boolean =>
+  sameMigrationsDriftErrorFields(self, that);
+const MigrationsDriftErrorAnnotations = {
+  toEquivalence: () => sameMigrationsDriftError,
+} satisfies S.Annotations.Declaration<
+  MigrationsDriftError,
+  readonly [S.TaggedStruct<"MigrationsDriftError", typeof MigrationsDriftErrorFields>]
+>;
 
-class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>()("MigrationGenerationError", {
+class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()(
+  "MigrationsDriftError",
+  MigrationsDriftErrorFields,
+  MigrationsDriftErrorAnnotations
+) {}
+
+const MigrationGenerationErrorFields = {
   exitCode: S.Int,
   message: S.String,
-}) {}
+} satisfies S.Struct.Fields;
+const sameMigrationGenerationErrorFields = S.toEquivalence(
+  S.TaggedStruct("MigrationGenerationError", MigrationGenerationErrorFields)
+);
+const sameMigrationGenerationError = (self: MigrationGenerationError, that: MigrationGenerationError): boolean =>
+  sameMigrationGenerationErrorFields(self, that);
+const MigrationGenerationErrorAnnotations = {
+  toEquivalence: () => sameMigrationGenerationError,
+} satisfies S.Annotations.Declaration<
+  MigrationGenerationError,
+  readonly [S.TaggedStruct<"MigrationGenerationError", typeof MigrationGenerationErrorFields>]
+>;
+
+class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>()(
+  "MigrationGenerationError",
+  MigrationGenerationErrorFields,
+  MigrationGenerationErrorAnnotations
+) {}
 
 const program = Effect.scoped(
   Effect.gen(function* () {

@@ -33,7 +33,7 @@ import {
 } from "effect/Option";
 import { hasProperty, isUndefined } from "effect/Predicate";
 import { empty, get as getRecord, set } from "effect/Record";
-import { String as StringSchema, TaggedError } from "effect/Schema";
+import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
 import { toLowerCase } from "effect/String";
 import {
   makeRelationsConfig,
@@ -48,10 +48,28 @@ import * as Derive from "./derive.ts";
 import { toPgTable } from "./table.ts";
 import type { RelationsBuilder, RelationsBuilderConfig } from "drizzle-orm";
 import type { Option } from "effect/Option";
+import type { Annotations, Struct } from "effect/Schema";
 import type { Edge, Junction, SchemaName } from "../core/assembly.ts";
 import type * as Meta from "../core/Meta.ts";
 import type { AnyModel, FieldsInput } from "./model.ts";
 import type { EnumRegistry, TableOf } from "./table.ts";
+
+const SchemaAssemblyErrorFields = {
+  message: StringSchema,
+  sourceTable: StringSchema,
+  fieldName: StringSchema,
+  targetTable: StringSchema,
+} satisfies Struct.Fields;
+const sameSchemaAssemblyErrorFields = toEquivalence(TaggedStruct("SchemaAssemblyError", SchemaAssemblyErrorFields));
+const sameSchemaAssemblyError = (self: SchemaAssemblyError, that: SchemaAssemblyError): boolean =>
+  sameSchemaAssemblyErrorFields(self, that);
+const SchemaAssemblyErrorAnnotations = {
+  description: "A @beep/effect-drizzle cross-table reference could not be resolved or validated.",
+  toEquivalence: () => sameSchemaAssemblyError,
+} satisfies Annotations.Declaration<
+  SchemaAssemblyError,
+  readonly [TaggedStruct<"SchemaAssemblyError", typeof SchemaAssemblyErrorFields>]
+>;
 
 /**
  * Reports a cross-model reference or enum conflict during schema assembly.
@@ -82,15 +100,8 @@ import type { EnumRegistry, TableOf } from "./table.ts";
  */
 export class SchemaAssemblyError extends TaggedError<SchemaAssemblyError>("@beep/effect-drizzle/SchemaAssemblyError")(
   "SchemaAssemblyError",
-  {
-    message: StringSchema,
-    sourceTable: StringSchema,
-    fieldName: StringSchema,
-    targetTable: StringSchema,
-  },
-  {
-    description: "A @beep/effect-drizzle cross-table reference could not be resolved or validated.",
-  }
+  SchemaAssemblyErrorFields,
+  SchemaAssemblyErrorAnnotations
 ) {}
 
 /**

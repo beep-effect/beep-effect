@@ -18,13 +18,31 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
-class MissingTargetTripleError extends S.TaggedError<MissingTargetTripleError>()("MissingTargetTripleError", {
+const MissingTargetTripleErrorFields = {
   message: S.String,
-}) {}
+} satisfies S.Struct.Fields;
+const sameMissingTargetTripleErrorFields = S.toEquivalence(
+  S.TaggedStruct("MissingTargetTripleError", MissingTargetTripleErrorFields)
+);
+const sameMissingTargetTripleError = (self: MissingTargetTripleError, that: MissingTargetTripleError): boolean =>
+  sameMissingTargetTripleErrorFields(self, that);
 
-class SidecarBuildError extends S.TaggedError<SidecarBuildError>()("SidecarBuildError", {
+class MissingTargetTripleError extends S.TaggedError<MissingTargetTripleError>()(
+  "MissingTargetTripleError",
+  MissingTargetTripleErrorFields,
+  { toEquivalence: () => sameMissingTargetTripleError }
+) {}
+
+const SidecarBuildErrorFields = {
   exitCode: S.Int,
   message: S.String,
+} satisfies S.Struct.Fields;
+const sameSidecarBuildErrorFields = S.toEquivalence(S.TaggedStruct("SidecarBuildError", SidecarBuildErrorFields));
+const sameSidecarBuildError = (self: SidecarBuildError, that: SidecarBuildError): boolean =>
+  sameSidecarBuildErrorFields(self, that);
+
+class SidecarBuildError extends S.TaggedError<SidecarBuildError>()("SidecarBuildError", SidecarBuildErrorFields, {
+  toEquivalence: () => sameSidecarBuildError,
 }) {}
 
 const program = Effect.gen(function* () {

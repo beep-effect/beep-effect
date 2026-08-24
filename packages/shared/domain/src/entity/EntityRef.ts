@@ -14,15 +14,31 @@ import * as EntityId from "./EntityId.ts";
 const $I = $SharedDomainId.create("entity/EntityRef");
 const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;
 
+const EntityRefInvariantErrorFields = {
+  actualEntityType: S.String,
+  actualId: S.Unknown,
+  entityType: S.String,
+} satisfies S.Struct.Fields;
+const EntityRefInvariantErrorEquivalenceFields = {
+  actualEntityType: EntityRefInvariantErrorFields.actualEntityType,
+  entityType: EntityRefInvariantErrorFields.entityType,
+} satisfies S.Struct.Fields;
+// actualId is opaque unknown: equivalence is declared diagnostic identity, actualId stays payload.
+const sameEntityRefInvariantErrorFields = S.toEquivalence(
+  S.TaggedStruct("EntityRefInvariantError", EntityRefInvariantErrorEquivalenceFields)
+);
+const sameEntityRefInvariantError = (self: EntityRefInvariantError, that: EntityRefInvariantError): boolean =>
+  sameEntityRefInvariantErrorFields(self, that);
+
 class EntityRefInvariantError extends S.TaggedError<EntityRefInvariantError>($I`EntityRefInvariantError`)(
   "EntityRefInvariantError",
-  {
-    actualEntityType: S.String,
-    actualId: S.Unknown,
-    entityType: S.String,
-  },
-  $I.annote("EntityRefInvariantError", {
+  EntityRefInvariantErrorFields,
+  $I.annoteClass<
+    S.declare<EntityRefInvariantError>,
+    readonly [S.TaggedStruct<"EntityRefInvariantError", typeof EntityRefInvariantErrorFields>]
+  >("EntityRefInvariantError", {
     description: "EntityRef runtime invariant failure.",
+    toEquivalence: () => sameEntityRefInvariantError,
   })
 ) {}
 

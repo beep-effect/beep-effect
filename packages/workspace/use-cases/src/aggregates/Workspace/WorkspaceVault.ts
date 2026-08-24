@@ -85,6 +85,17 @@ export class SetWorkspaceVaultInput extends S.Class<SetWorkspaceVaultInput>($I`S
   })
 ) {}
 
+const WorkspaceVaultStoreUnavailableFields = {
+  reason: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const sameWorkspaceVaultStoreUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("WorkspaceVaultStoreUnavailable", WorkspaceVaultStoreUnavailableFields)
+);
+const sameWorkspaceVaultStoreUnavailable = (
+  self: WorkspaceVaultStoreUnavailable,
+  that: WorkspaceVaultStoreUnavailable
+): boolean => sameWorkspaceVaultStoreUnavailableFields(self, that);
+
 /**
  * Raised when the workspace vault store cannot serve a request.
  *
@@ -104,13 +115,26 @@ export class WorkspaceVaultStoreUnavailable extends S.TaggedError<WorkspaceVault
   $I`WorkspaceVaultStoreUnavailable`
 )(
   "WorkspaceVaultStoreUnavailable",
-  {
-    reason: S.NonEmptyString,
-  },
-  $I.annote("WorkspaceVaultStoreUnavailable", {
+  WorkspaceVaultStoreUnavailableFields,
+  $I.annoteClass<
+    S.declare<WorkspaceVaultStoreUnavailable>,
+    readonly [S.TaggedStruct<"WorkspaceVaultStoreUnavailable", typeof WorkspaceVaultStoreUnavailableFields>]
+  >("WorkspaceVaultStoreUnavailable", {
     description: "The workspace vault store could not serve the request.",
+
+    toEquivalence: () => sameWorkspaceVaultStoreUnavailable,
   })
 ) {}
+
+const WorkspaceVaultRootInvalidFields = {
+  path: S.String,
+  reason: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const sameWorkspaceVaultRootInvalidFields = S.toEquivalence(
+  S.TaggedStruct("WorkspaceVaultRootInvalid", WorkspaceVaultRootInvalidFields)
+);
+const sameWorkspaceVaultRootInvalid = (self: WorkspaceVaultRootInvalid, that: WorkspaceVaultRootInvalid): boolean =>
+  sameWorkspaceVaultRootInvalidFields(self, that);
 
 /**
  * Raised when a selected workspace vault root is not usable by the server.
@@ -132,12 +156,14 @@ export class WorkspaceVaultStoreUnavailable extends S.TaggedError<WorkspaceVault
  */
 export class WorkspaceVaultRootInvalid extends S.TaggedError<WorkspaceVaultRootInvalid>($I`WorkspaceVaultRootInvalid`)(
   "WorkspaceVaultRootInvalid",
-  {
-    path: S.String,
-    reason: S.NonEmptyString,
-  },
-  $I.annote("WorkspaceVaultRootInvalid", {
+  WorkspaceVaultRootInvalidFields,
+  $I.annoteClass<
+    S.declare<WorkspaceVaultRootInvalid>,
+    readonly [S.TaggedStruct<"WorkspaceVaultRootInvalid", typeof WorkspaceVaultRootInvalidFields>]
+  >("WorkspaceVaultRootInvalid", {
     description: "The selected workspace vault root is not an existing writable directory.",
+
+    toEquivalence: () => sameWorkspaceVaultRootInvalid,
   })
 ) {}
 
@@ -176,6 +202,15 @@ export const WorkspaceVaultStoreError = S.Union([WorkspaceVaultStoreUnavailable,
  */
 export type WorkspaceVaultStoreError = typeof WorkspaceVaultStoreError.Type;
 
+const WorkspaceVaultActionErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameWorkspaceVaultActionErrorFields = S.toEquivalence(
+  S.TaggedStruct("WorkspaceVaultActionError", WorkspaceVaultActionErrorFields)
+);
+const sameWorkspaceVaultActionError = (self: WorkspaceVaultActionError, that: WorkspaceVaultActionError): boolean =>
+  sameWorkspaceVaultActionErrorFields(self, that);
+
 /**
  * Client-safe workspace vault configuration failure.
  *
@@ -193,11 +228,14 @@ export type WorkspaceVaultStoreError = typeof WorkspaceVaultStoreError.Type;
  */
 export class WorkspaceVaultActionError extends S.TaggedError<WorkspaceVaultActionError>($I`WorkspaceVaultActionError`)(
   "WorkspaceVaultActionError",
-  {
-    message: S.String,
-  },
-  $I.annote("WorkspaceVaultActionError", {
+  WorkspaceVaultActionErrorFields,
+  $I.annoteClass<
+    S.declare<WorkspaceVaultActionError>,
+    readonly [S.TaggedStruct<"WorkspaceVaultActionError", typeof WorkspaceVaultActionErrorFields>]
+  >("WorkspaceVaultActionError", {
     description: "Client-safe workspace vault configuration failure.",
+
+    toEquivalence: () => sameWorkspaceVaultActionError,
   })
 ) {
   static readonly new = (message: string) => WorkspaceVaultActionError.make({ message });

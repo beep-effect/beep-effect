@@ -51,15 +51,29 @@ import { EnumeratedGlobalAttributes, GlobalAttributes, tokenizeHtmlSpaceSeparate
 import { toAsciiLowerCase } from "../src/internal/Html.ascii.ts";
 
 const $I = $HtmlId.create("scripts/generate");
+const HtmlGenerationErrorFields = {
+  cause: S.Defect({ includeStack: true }).pipe(S.optionalKey),
+  message: S.String,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const HtmlGenerationErrorComparableFields = {
+  message: HtmlGenerationErrorFields.message,
+} satisfies S.Struct.Fields;
+const sameHtmlGenerationErrorFields = S.toEquivalence(
+  S.TaggedStruct("HtmlGenerationError", HtmlGenerationErrorComparableFields)
+);
+const sameHtmlGenerationError = (self: HtmlGenerationError, that: HtmlGenerationError): boolean =>
+  sameHtmlGenerationErrorFields(self, that);
 
 class HtmlGenerationError extends S.TaggedError<HtmlGenerationError>($I`HtmlGenerationError`)(
   "HtmlGenerationError",
-  {
-    cause: S.Defect({ includeStack: true }).pipe(S.optionalKey),
-    message: S.String,
-  },
-  $I.annote("HtmlGenerationError", {
+  HtmlGenerationErrorFields,
+  $I.annoteClass<
+    S.declare<HtmlGenerationError>,
+    readonly [S.TaggedStruct<"HtmlGenerationError", typeof HtmlGenerationErrorFields>]
+  >("HtmlGenerationError", {
     description: "Typed failure raised when pinned HTML metadata cannot produce a valid deterministic model.",
+    toEquivalence: () => sameHtmlGenerationError,
   })
 ) {}
 

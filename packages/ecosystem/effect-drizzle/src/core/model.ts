@@ -6,9 +6,25 @@
  *
  * @since 0.0.0
  */
-import { String as StringSchema, TaggedError } from "effect/Schema";
+import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
+import type { Annotations, Struct } from "effect/Schema";
 import type * as Field from "./Field.ts";
 import type * as Meta from "./Meta.ts";
+
+const ModelInvariantErrorFields = {
+  message: StringSchema,
+  fieldName: StringSchema,
+} satisfies Struct.Fields;
+const sameModelInvariantErrorFields = toEquivalence(TaggedStruct("ModelInvariantError", ModelInvariantErrorFields));
+const sameModelInvariantError = (self: ModelInvariantError, that: ModelInvariantError): boolean =>
+  sameModelInvariantErrorFields(self, that);
+const ModelInvariantErrorAnnotations = {
+  description: "An @beep/effect-drizzle model declaration violates a SQL invariant.",
+  toEquivalence: () => sameModelInvariantError,
+} satisfies Annotations.Declaration<
+  ModelInvariantError,
+  readonly [TaggedStruct<"ModelInvariantError", typeof ModelInvariantErrorFields>]
+>;
 
 /**
  * Reports a model declaration that violates a SQL invariant at runtime.
@@ -38,10 +54,8 @@ import type * as Meta from "./Meta.ts";
  */
 export class ModelInvariantError extends TaggedError<ModelInvariantError>("@beep/effect-drizzle/ModelInvariantError")(
   "ModelInvariantError",
-  { message: StringSchema, fieldName: StringSchema },
-  {
-    description: "An @beep/effect-drizzle model declaration violates a SQL invariant.",
-  }
+  ModelInvariantErrorFields,
+  ModelInvariantErrorAnnotations
 ) {}
 
 /**

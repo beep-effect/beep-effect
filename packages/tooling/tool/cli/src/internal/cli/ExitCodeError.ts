@@ -14,6 +14,14 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/cli/ExitCodeError");
 
+const CliReportedExitFields = {
+  message: S.String,
+  exitCode: S.Finite,
+} satisfies S.Struct.Fields;
+const sameCliReportedExitFields = S.toEquivalence(S.TaggedStruct("CliReportedExit", CliReportedExitFields));
+const sameCliReportedExit = (self: CliReportedExit, that: CliReportedExit): boolean =>
+  sameCliReportedExitFields(self, that);
+
 /**
  * Silent non-zero process exit requested after command output was rendered.
  *
@@ -31,12 +39,13 @@ const $I = $RepoCliId.create("internal/cli/ExitCodeError");
  */
 export class CliReportedExit extends S.TaggedError<CliReportedExit>($I`CliReportedExit`)(
   "CliReportedExit",
-  {
-    message: S.String,
-    exitCode: S.Finite,
-  },
-  $I.annote("CliReportedExit", {
+  CliReportedExitFields,
+  $I.annoteClass<
+    S.declare<CliReportedExit>,
+    readonly [S.TaggedStruct<"CliReportedExit", typeof CliReportedExitFields>]
+  >("CliReportedExit", {
     description: "Silent non-zero process exit requested after command output was rendered.",
+    toEquivalence: () => sameCliReportedExit,
   })
 ) {
   /** Process exit code reported when this sentinel reaches the runtime boundary. */

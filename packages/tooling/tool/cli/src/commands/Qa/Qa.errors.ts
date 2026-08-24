@@ -12,6 +12,19 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Qa/Qa.errors");
 
+const QaCommandErrorFields = {
+  message: S.String,
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameQaCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("QaCommandError", {
+    message: QaCommandErrorFields.message,
+  })
+);
+const sameQaCommandError = (self: QaCommandError, that: QaCommandError): boolean =>
+  sameQaCommandErrorFields(self, that);
+
 /**
  * Error raised by `beep qa` capture, extraction, and judge commands.
  *
@@ -29,13 +42,14 @@ const $I = $RepoCliId.create("commands/Qa/Qa.errors");
  */
 export class QaCommandError extends S.TaggedError<QaCommandError>($I`QaCommandError`)(
   "QaCommandError",
-  {
-    message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("QaCommandError", {
-    description: "A failure raised while recording, extracting, or judging a QA capture round.",
-  })
+  QaCommandErrorFields,
+  $I.annoteClass<S.declare<QaCommandError>, readonly [S.TaggedStruct<"QaCommandError", typeof QaCommandErrorFields>]>(
+    "QaCommandError",
+    {
+      description: "A failure raised while recording, extracting, or judging a QA capture round.",
+      toEquivalence: () => sameQaCommandError,
+    }
+  )
 ) {
   /**
    * Construct a QA command error from an original cause and message.

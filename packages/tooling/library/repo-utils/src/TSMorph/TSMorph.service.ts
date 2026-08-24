@@ -85,6 +85,74 @@ const DEFAULT_TSCONFIG_FILE_NAME = "tsconfig.json";
 const utf8Encoder = new TextEncoder();
 
 const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
+const TsMorphServiceUnavailableErrorFields = {
+  method: S.String,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameTsMorphServiceUnavailableErrorFields = S.toEquivalence(
+  S.TaggedStruct("TsMorphServiceUnavailableError", TsMorphServiceUnavailableErrorFields)
+);
+const sameTsMorphServiceUnavailableError = (
+  self: TsMorphServiceUnavailableError,
+  that: TsMorphServiceUnavailableError
+): boolean => sameTsMorphServiceUnavailableErrorFields(self, that);
+
+const TsMorphScopeResolutionErrorFields = {
+  entrypoint: S.String,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameTsMorphScopeResolutionErrorFields = S.toEquivalence(
+  S.TaggedStruct("TsMorphScopeResolutionError", TsMorphScopeResolutionErrorFields)
+);
+const sameTsMorphScopeResolutionError = (
+  self: TsMorphScopeResolutionError,
+  that: TsMorphScopeResolutionError
+): boolean => sameTsMorphScopeResolutionErrorFields(self, that);
+
+const TsMorphProjectLoadErrorFields = {
+  scopeId: ProjectScopeId,
+  tsConfigPath: TsConfigFilePath,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameTsMorphProjectLoadErrorFields = S.toEquivalence(
+  S.TaggedStruct("TsMorphProjectLoadError", TsMorphProjectLoadErrorFields)
+);
+const sameTsMorphProjectLoadError = (self: TsMorphProjectLoadError, that: TsMorphProjectLoadError): boolean =>
+  sameTsMorphProjectLoadErrorFields(self, that);
+
+const TsMorphSourceFileErrorFields = {
+  scopeId: S.OptionFromNullOr(ProjectScopeId),
+  filePath: S.Option(TypeScriptFilePath),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameTsMorphSourceFileErrorFields = S.toEquivalence(
+  S.TaggedStruct("TsMorphSourceFileError", TsMorphSourceFileErrorFields)
+);
+const sameTsMorphSourceFileError = (self: TsMorphSourceFileError, that: TsMorphSourceFileError): boolean =>
+  sameTsMorphSourceFileErrorFields(self, that);
+
+const TsMorphSymbolNotFoundErrorFields = {
+  scopeId: ProjectScopeId,
+  symbolId: SymbolId,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameTsMorphSymbolNotFoundErrorFields = S.toEquivalence(
+  S.TaggedStruct("TsMorphSymbolNotFoundError", TsMorphSymbolNotFoundErrorFields)
+);
+const sameTsMorphSymbolNotFoundError = (self: TsMorphSymbolNotFoundError, that: TsMorphSymbolNotFoundError): boolean =>
+  sameTsMorphSymbolNotFoundErrorFields(self, that);
+
+const TsMorphUnsupportedFileErrorFields = {
+  filePath: TypeScriptFilePath,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameTsMorphUnsupportedFileErrorFields = S.toEquivalence(
+  S.TaggedStruct("TsMorphUnsupportedFileError", TsMorphUnsupportedFileErrorFields)
+);
+const sameTsMorphUnsupportedFileError = (
+  self: TsMorphUnsupportedFileError,
+  that: TsMorphUnsupportedFileError
+): boolean => sameTsMorphUnsupportedFileErrorFields(self, that);
 /**
  * Typed error retained for compatibility with older placeholder service wiring.
  *
@@ -103,13 +171,14 @@ export class TsMorphServiceUnavailableError extends S.TaggedError<TsMorphService
   $I`TsMorphServiceUnavailableError`
 )(
   "TsMorphServiceUnavailableError",
-  {
-    method: S.String,
-    message: S.String,
-  },
-  $I.annote("TsMorphServiceUnavailableError", {
+  TsMorphServiceUnavailableErrorFields,
+  $I.annoteClass<
+    S.declare<TsMorphServiceUnavailableError>,
+    readonly [S.TaggedStruct<"TsMorphServiceUnavailableError", typeof TsMorphServiceUnavailableErrorFields>]
+  >("TsMorphServiceUnavailableError", {
     description:
       "Typed compatibility error for placeholder TSMorphService methods; the current read-only live methods should not emit it.",
+    toEquivalence: () => sameTsMorphServiceUnavailableError,
   })
 ) {}
 
@@ -131,13 +200,14 @@ export class TsMorphScopeResolutionError extends S.TaggedError<TsMorphScopeResol
   $I`TsMorphScopeResolutionError`
 )(
   "TsMorphScopeResolutionError",
-  {
-    entrypoint: S.String,
-    message: S.String,
-  },
-  $I.annote("TsMorphScopeResolutionError", {
+  TsMorphScopeResolutionErrorFields,
+  $I.annoteClass<
+    S.declare<TsMorphScopeResolutionError>,
+    readonly [S.TaggedStruct<"TsMorphScopeResolutionError", typeof TsMorphScopeResolutionErrorFields>]
+  >("TsMorphScopeResolutionError", {
     description:
       "Typed error indicating that a repository path or tsconfig scope could not be resolved for TSMorphService.",
+    toEquivalence: () => sameTsMorphScopeResolutionError,
   })
 ) {}
 
@@ -157,13 +227,13 @@ export class TsMorphScopeResolutionError extends S.TaggedError<TsMorphScopeResol
  */
 export class TsMorphProjectLoadError extends S.TaggedError<TsMorphProjectLoadError>($I`TsMorphProjectLoadError`)(
   "TsMorphProjectLoadError",
-  {
-    scopeId: ProjectScopeId,
-    tsConfigPath: TsConfigFilePath,
-    message: S.String,
-  },
-  $I.annote("TsMorphProjectLoadError", {
+  TsMorphProjectLoadErrorFields,
+  $I.annoteClass<
+    S.declare<TsMorphProjectLoadError>,
+    readonly [S.TaggedStruct<"TsMorphProjectLoadError", typeof TsMorphProjectLoadErrorFields>]
+  >("TsMorphProjectLoadError", {
     description: "Typed error indicating that a ts-morph Project could not be initialized for a resolved scope.",
+    toEquivalence: () => sameTsMorphProjectLoadError,
   })
 ) {}
 
@@ -183,14 +253,14 @@ export class TsMorphProjectLoadError extends S.TaggedError<TsMorphProjectLoadErr
  */
 export class TsMorphSourceFileError extends S.TaggedError<TsMorphSourceFileError>($I`TsMorphSourceFileError`)(
   "TsMorphSourceFileError",
-  {
-    scopeId: S.OptionFromNullOr(ProjectScopeId),
-    filePath: S.Option(TypeScriptFilePath),
-    message: S.String,
-  },
-  $I.annote("TsMorphSourceFileError", {
+  TsMorphSourceFileErrorFields,
+  $I.annoteClass<
+    S.declare<TsMorphSourceFileError>,
+    readonly [S.TaggedStruct<"TsMorphSourceFileError", typeof TsMorphSourceFileErrorFields>]
+  >("TsMorphSourceFileError", {
     description:
       "Typed error indicating that a TypeScript source file could not be loaded or normalized by TSMorphService.",
+    toEquivalence: () => sameTsMorphSourceFileError,
   })
 ) {
   /**
@@ -234,16 +304,16 @@ export class TsMorphSymbolNotFoundError extends S.TaggedError<TsMorphSymbolNotFo
   $I`TsMorphSymbolNotFoundError`
 )(
   "TsMorphSymbolNotFoundError",
-  {
-    scopeId: ProjectScopeId,
-    symbolId: SymbolId,
-    message: S.String,
-  },
-  $I.annote("TsMorphSymbolNotFoundError", {
+  TsMorphSymbolNotFoundErrorFields,
+  $I.annoteClass<
+    S.declare<TsMorphSymbolNotFoundError>,
+    readonly [S.TaggedStruct<"TsMorphSymbolNotFoundError", typeof TsMorphSymbolNotFoundErrorFields>]
+  >("TsMorphSymbolNotFoundError", {
     description: "Typed error indicating that a stable symbol id could not be resolved inside a ts-morph scope.",
     reason: "Raised when a requested stable symbol id is absent from the scope-local symbol index.",
     owner: "repo-utils",
     issueContext: "ts-morph-read-only-v1",
+    toEquivalence: () => sameTsMorphSymbolNotFoundError,
   })
 ) {}
 
@@ -265,13 +335,14 @@ export class TsMorphUnsupportedFileError extends S.TaggedError<TsMorphUnsupporte
   $I`TsMorphUnsupportedFileError`
 )(
   "TsMorphUnsupportedFileError",
-  {
-    filePath: TypeScriptFilePath,
-    message: S.String,
-  },
-  $I.annote("TsMorphUnsupportedFileError", {
+  TsMorphUnsupportedFileErrorFields,
+  $I.annoteClass<
+    S.declare<TsMorphUnsupportedFileError>,
+    readonly [S.TaggedStruct<"TsMorphUnsupportedFileError", typeof TsMorphUnsupportedFileErrorFields>]
+  >("TsMorphUnsupportedFileError", {
     description:
       "Typed error indicating that a TypeScript file is valid input but is not yet supported by the current TSMorphService operation.",
+    toEquivalence: () => sameTsMorphUnsupportedFileError,
   })
 ) {}
 

@@ -34,6 +34,19 @@ import { hashPrivateIdentifier, hashPublicTextSha256, makeAiMetricsPrivacyCheckR
 
 const $I = $RepoAiMetricsId.create("retention");
 
+const AiMetricsRetentionErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsRetentionErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsRetentionError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsRetentionErrorFields.message,
+  })
+);
+const sameAiMetricsRetentionError = (self: AiMetricsRetentionError, that: AiMetricsRetentionError): boolean =>
+  sameAiMetricsRetentionErrorFields(self, that);
+
 const retentionSchemaVersion = "beep.ai_metrics.retention_inventory.v1";
 const retentionMutationSchemaVersion = "beep.ai_metrics.retention_mutation.v1";
 const retentionEnforcementSchemaVersion = "beep.ai_metrics.retention_enforcement.v1";
@@ -211,12 +224,13 @@ const validateRawArchivePath = (
  */
 export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionError>($I`AiMetricsRetentionError`)(
   "AiMetricsRetentionError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsRetentionError", {
+  AiMetricsRetentionErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsRetentionError>,
+    readonly [S.TaggedStruct<"AiMetricsRetentionError", typeof AiMetricsRetentionErrorFields>]
+  >("AiMetricsRetentionError", {
     description: "Typed failure raised by AI metrics retention, restore, delete, and compaction workflows.",
+    toEquivalence: () => sameAiMetricsRetentionError,
   })
 ) {}
 

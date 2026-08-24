@@ -118,14 +118,26 @@ const levelMapping: Readonly<Record<ColorSupportLevelType, AnsiRenderLevel>> = {
   2: AnsiRenderLevel.Enum.ansi256,
   3: AnsiRenderLevel.Enum.ansi16m,
 };
+const MissingBuilderMetadataErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameMissingBuilderMetadataErrorFields = S.toEquivalence(
+  S.TaggedStruct("MissingBuilderMetadataError", MissingBuilderMetadataErrorFields)
+);
+const sameMissingBuilderMetadataError = (
+  self: MissingBuilderMetadataError,
+  that: MissingBuilderMetadataError
+): boolean => sameMissingBuilderMetadataErrorFields(self, that);
 
 class MissingBuilderMetadataError extends S.TaggedError<MissingBuilderMetadataError>($I`MissingBuilderMetadataError`)(
   "MissingBuilderMetadataError",
-  {
-    message: S.String,
-  },
-  $I.annote("MissingBuilderMetadataError", {
+  MissingBuilderMetadataErrorFields,
+  $I.annoteClass<
+    S.declare<MissingBuilderMetadataError>,
+    readonly [S.TaggedStruct<"MissingBuilderMetadataError", typeof MissingBuilderMetadataErrorFields>]
+  >("MissingBuilderMetadataError", {
     description: "Raised when Chalk builder metadata is unexpectedly unavailable.",
+    toEquivalence: () => sameMissingBuilderMetadataError,
   })
 ) {}
 

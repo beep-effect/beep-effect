@@ -12,6 +12,19 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Research/Research.errors");
 
+const ResearchCommandErrorFields = {
+  message: S.String,
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameResearchCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("ResearchCommandError", {
+    message: ResearchCommandErrorFields.message,
+  })
+);
+const sameResearchCommandError = (self: ResearchCommandError, that: ResearchCommandError): boolean =>
+  sameResearchCommandErrorFields(self, that);
+
 /**
  * Error raised by research knowledge-vault commands.
  *
@@ -29,12 +42,13 @@ const $I = $RepoCliId.create("commands/Research/Research.errors");
  */
 export class ResearchCommandError extends S.TaggedError<ResearchCommandError>($I`ResearchCommandError`)(
   "ResearchCommandError",
-  {
-    message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("ResearchCommandError", {
+  ResearchCommandErrorFields,
+  $I.annoteClass<
+    S.declare<ResearchCommandError>,
+    readonly [S.TaggedStruct<"ResearchCommandError", typeof ResearchCommandErrorFields>]
+  >("ResearchCommandError", {
     description: "A failure raised while preparing or applying a research knowledge-vault operation.",
+    toEquivalence: () => sameResearchCommandError,
   })
 ) {
   /**

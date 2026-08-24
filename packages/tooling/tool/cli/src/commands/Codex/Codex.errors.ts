@@ -19,6 +19,21 @@ type CodexCommandErrorOptions =
       readonly exitCode?: undefined | number;
     };
 
+const CodexCommandErrorFields = {
+  message: S.String,
+  exitCode: S.optionalKey(S.Finite),
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameCodexCommandErrorFields = S.toEquivalence(
+  S.TaggedStruct("CodexCommandError", {
+    message: CodexCommandErrorFields.message,
+    exitCode: CodexCommandErrorFields.exitCode,
+  })
+);
+const sameCodexCommandError = (self: CodexCommandError, that: CodexCommandError): boolean =>
+  sameCodexCommandErrorFields(self, that);
+
 /**
  * Typed failure for Codex helper commands.
  *
@@ -34,13 +49,13 @@ type CodexCommandErrorOptions =
  */
 export class CodexCommandError extends S.TaggedError<CodexCommandError>($I`CodexCommandError`)(
   "CodexCommandError",
-  {
-    message: S.String,
-    exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("CodexCommandError", {
+  CodexCommandErrorFields,
+  $I.annoteClass<
+    S.declare<CodexCommandError>,
+    readonly [S.TaggedStruct<"CodexCommandError", typeof CodexCommandErrorFields>]
+  >("CodexCommandError", {
     description: "Failure raised by Codex helper commands.",
+    toEquivalence: () => sameCodexCommandError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */

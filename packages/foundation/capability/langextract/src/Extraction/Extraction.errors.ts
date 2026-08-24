@@ -57,6 +57,14 @@ type LangExtractErrorFromReason = {
   (reason: LangExtractErrorReason, options: FromReasonOptions): LangExtractError;
   (options: FromReasonOptions): (reason: LangExtractErrorReason) => LangExtractError;
 };
+const LangExtractErrorFields = {
+  details: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  message: S.String,
+  reason: LangExtractErrorReason,
+} satisfies S.Struct.Fields;
+const sameLangExtractErrorFields = S.toEquivalence(S.TaggedStruct("LangExtractError", LangExtractErrorFields));
+const sameLangExtractError = (self: LangExtractError, that: LangExtractError): boolean =>
+  sameLangExtractErrorFields(self, that);
 
 /**
  * Sanitized LangExtract capability error.
@@ -74,13 +82,13 @@ type LangExtractErrorFromReason = {
  */
 export class LangExtractError extends S.TaggedError<LangExtractError>($I`LangExtractError`)(
   "LangExtractError",
-  {
-    details: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    message: S.String,
-    reason: LangExtractErrorReason,
-  },
-  $I.annote("LangExtractError", {
+  LangExtractErrorFields,
+  $I.annoteClass<
+    S.declare<LangExtractError>,
+    readonly [S.TaggedStruct<"LangExtractError", typeof LangExtractErrorFields>]
+  >("LangExtractError", {
     description: "Sanitized error emitted by provider-neutral LangExtract operations.",
+    toEquivalence: () => sameLangExtractError,
   })
 ) {
   /**

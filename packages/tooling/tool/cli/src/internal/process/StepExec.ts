@@ -464,6 +464,16 @@ const captureTextStream = (
   return decodedText(handle.all);
 };
 
+const CapturePipeWedgedErrorFields = {
+  commandLine: S.String,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameCapturePipeWedgedErrorFields = S.toEquivalence(
+  S.TaggedStruct("CapturePipeWedgedError", CapturePipeWedgedErrorFields)
+);
+const sameCapturePipeWedgedError = (self: CapturePipeWedgedError, that: CapturePipeWedgedError): boolean =>
+  sameCapturePipeWedgedErrorFields(self, that);
+
 /**
  * Defect raised when a capture pipe stays open after the child exited and its process group was
  * reaped — an escaped descendant (double-fork or `setsid` daemon) still holds the write end.
@@ -471,17 +481,30 @@ const captureTextStream = (
  * @category errors
  * @since 0.0.0
  */
-class CapturePipeWedgedError extends S.TaggedError<CapturePipeWedgedError>($I`CapturePipeWedgedError`)(
+export class CapturePipeWedgedError extends S.TaggedError<CapturePipeWedgedError>($I`CapturePipeWedgedError`)(
   "CapturePipeWedgedError",
-  {
-    commandLine: S.String,
-    message: S.String,
-  },
-  $I.annote("CapturePipeWedgedError", {
+  CapturePipeWedgedErrorFields,
+  $I.annoteClass<
+    S.declare<CapturePipeWedgedError>,
+    readonly [S.TaggedStruct<"CapturePipeWedgedError", typeof CapturePipeWedgedErrorFields>]
+  >("CapturePipeWedgedError", {
     description:
       "Capture pipe still open after child exit and process-group reap; an escaped descendant holds the write end.",
+    toEquivalence: () => sameCapturePipeWedgedError,
   })
 ) {}
+
+const CaptureCommandTimedOutErrorFields = {
+  commandLine: S.String,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameCaptureCommandTimedOutErrorFields = S.toEquivalence(
+  S.TaggedStruct("CaptureCommandTimedOutError", CaptureCommandTimedOutErrorFields)
+);
+const sameCaptureCommandTimedOutError = (
+  self: CaptureCommandTimedOutError,
+  that: CaptureCommandTimedOutError
+): boolean => sameCaptureCommandTimedOutErrorFields(self, that);
 
 /**
  * Error raised when a captured command does not exit within its caller's budget.
@@ -493,12 +516,13 @@ export class CaptureCommandTimedOutError extends S.TaggedError<CaptureCommandTim
   $I`CaptureCommandTimedOutError`
 )(
   "CaptureCommandTimedOutError",
-  {
-    commandLine: S.String,
-    message: S.String,
-  },
-  $I.annote("CaptureCommandTimedOutError", {
+  CaptureCommandTimedOutErrorFields,
+  $I.annoteClass<
+    S.declare<CaptureCommandTimedOutError>,
+    readonly [S.TaggedStruct<"CaptureCommandTimedOutError", typeof CaptureCommandTimedOutErrorFields>]
+  >("CaptureCommandTimedOutError", {
     description: "Captured command exceeded its configured runtime budget and was interrupted.",
+    toEquivalence: () => sameCaptureCommandTimedOutError,
   })
 ) {}
 

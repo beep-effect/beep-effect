@@ -19,6 +19,15 @@ import type { Curie, Expand, Predicate, VocabShape } from "./Vocab.ts";
 
 const $I = $IdentityId.create("Curie");
 
+const CurieCodecInvariantErrorFields = {
+  value: S.String,
+} satisfies S.Struct.Fields;
+const sameCurieCodecInvariantErrorFields = S.toEquivalence(
+  S.TaggedStruct("CurieCodecInvariantError", CurieCodecInvariantErrorFields)
+);
+const sameCurieCodecInvariantError = (self: CurieCodecInvariantError, that: CurieCodecInvariantError): boolean =>
+  sameCurieCodecInvariantErrorFields(self, that);
+
 // Internal invariant guard for the literal-preserving `expand`/`contract`
 // overloads: the CURIE/IRI is asserted registered by its literal type, so the
 // unresolved branch is type-level unreachable. Modeled as a S.TaggedError
@@ -28,10 +37,14 @@ class CurieCodecInvariantError extends S.TaggedError<CurieCodecInvariantError>(
   "@beep/identity/errors/CurieCodecInvariantError"
 )(
   "CurieCodecInvariantError",
-  { value: S.String },
-  $I.annote("@beep/identity/errors/CurieCodecInvariantError", {
+  CurieCodecInvariantErrorFields,
+  $I.annoteClass<
+    S.declare<CurieCodecInvariantError>,
+    readonly [S.TaggedStruct<"CurieCodecInvariantError", typeof CurieCodecInvariantErrorFields>]
+  >("@beep/identity/errors/CurieCodecInvariantError", {
     description:
       "A CURIE/IRI asserted registered by its literal type failed to resolve (type-level-unreachable invariant).",
+    toEquivalence: () => sameCurieCodecInvariantError,
   })
 ) {}
 

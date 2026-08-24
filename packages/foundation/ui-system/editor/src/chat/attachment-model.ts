@@ -152,6 +152,15 @@ const AttachmentCaptureLimitBytes = S.Finite.pipe(
 const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
   Result.getOrElse(S.decodeResult(AttachmentCaptureLimitBytes)(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
 
+const AttachmentTooLargeFields = {
+  filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
+  size: AttachmentByteCount.annotateKey({ description: "Rejected file size in bytes." }),
+  maxBytes: AttachmentByteCount.annotateKey({ description: "Effective byte limit used during capture." }),
+} satisfies S.Struct.Fields;
+const sameAttachmentTooLargeFields = S.toEquivalence(S.TaggedStruct("AttachmentTooLarge", AttachmentTooLargeFields));
+const sameAttachmentTooLarge = (self: AttachmentTooLarge, that: AttachmentTooLarge): boolean =>
+  sameAttachmentTooLargeFields(self, that);
+
 /**
  * A captured file rejected because it exceeds the (clamped) byte budget.
  *
@@ -174,15 +183,25 @@ const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
  */
 export class AttachmentTooLarge extends S.TaggedError<AttachmentTooLarge>($I`AttachmentTooLarge`)(
   "AttachmentTooLarge",
-  {
-    filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
-    size: AttachmentByteCount.annotateKey({ description: "Rejected file size in bytes." }),
-    maxBytes: AttachmentByteCount.annotateKey({ description: "Effective byte limit used during capture." }),
-  },
-  $I.annote("AttachmentTooLarge", {
+  AttachmentTooLargeFields,
+  $I.annoteClass<
+    S.declare<AttachmentTooLarge>,
+    readonly [S.TaggedStruct<"AttachmentTooLarge", typeof AttachmentTooLargeFields>]
+  >("AttachmentTooLarge", {
     description: "A captured file rejected because it exceeds the (clamped) byte budget.",
+    toEquivalence: () => sameAttachmentTooLarge,
   })
 ) {}
+
+const AttachmentInvalidMimeTypeFields = {
+  filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
+  mimeType: S.String.annotateKey({ description: "Raw browser File.type string that failed MIME decoding." }),
+} satisfies S.Struct.Fields;
+const sameAttachmentInvalidMimeTypeFields = S.toEquivalence(
+  S.TaggedStruct("AttachmentInvalidMimeType", AttachmentInvalidMimeTypeFields)
+);
+const sameAttachmentInvalidMimeType = (self: AttachmentInvalidMimeType, that: AttachmentInvalidMimeType): boolean =>
+  sameAttachmentInvalidMimeTypeFields(self, that);
 
 /**
  * A captured file rejected because its `file.type` is empty or not a recognized
@@ -206,14 +225,31 @@ export class AttachmentTooLarge extends S.TaggedError<AttachmentTooLarge>($I`Att
  */
 export class AttachmentInvalidMimeType extends S.TaggedError<AttachmentInvalidMimeType>($I`AttachmentInvalidMimeType`)(
   "AttachmentInvalidMimeType",
-  {
-    filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
-    mimeType: S.String.annotateKey({ description: "Raw browser File.type string that failed MIME decoding." }),
-  },
-  $I.annote("AttachmentInvalidMimeType", {
+  AttachmentInvalidMimeTypeFields,
+  $I.annoteClass<
+    S.declare<AttachmentInvalidMimeType>,
+    readonly [S.TaggedStruct<"AttachmentInvalidMimeType", typeof AttachmentInvalidMimeTypeFields>]
+  >("AttachmentInvalidMimeType", {
     description: "A captured file rejected because its `file.type` is empty or not a recognized MIME type.",
+    toEquivalence: () => sameAttachmentInvalidMimeType,
   })
 ) {}
+
+const AttachmentPortFailedFields = {
+  message: S.String.annotateKey({ description: "User-safe upload-port failure message." }),
+  cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+    description: "Optional underlying defect retained for structured logs, never rendered directly.",
+  }),
+} satisfies S.Struct.Fields;
+const AttachmentPortFailedEquivalenceFields = {
+  message: AttachmentPortFailedFields.message,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameAttachmentPortFailedFields = S.toEquivalence(
+  S.TaggedStruct("AttachmentPortFailed", AttachmentPortFailedEquivalenceFields)
+);
+const sameAttachmentPortFailed = (self: AttachmentPortFailed, that: AttachmentPortFailed): boolean =>
+  sameAttachmentPortFailedFields(self, that);
 
 /**
  * The consumer's `onAttach` upload port rejected while being notified of
@@ -236,14 +272,13 @@ export class AttachmentInvalidMimeType extends S.TaggedError<AttachmentInvalidMi
  */
 export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I`AttachmentPortFailed`)(
   "AttachmentPortFailed",
-  {
-    message: S.String.annotateKey({ description: "User-safe upload-port failure message." }),
-    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
-      description: "Optional underlying defect retained for structured logs, never rendered directly.",
-    }),
-  },
-  $I.annote("AttachmentPortFailed", {
+  AttachmentPortFailedFields,
+  $I.annoteClass<
+    S.declare<AttachmentPortFailed>,
+    readonly [S.TaggedStruct<"AttachmentPortFailed", typeof AttachmentPortFailedFields>]
+  >("AttachmentPortFailed", {
     description: "The consumer's `onAttach` upload port rejected the current attachment batch.",
+    toEquivalence: () => sameAttachmentPortFailed,
   })
 ) {}
 

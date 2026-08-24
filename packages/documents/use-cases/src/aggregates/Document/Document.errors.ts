@@ -12,6 +12,15 @@ import * as S from "effect/Schema";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Document/Document.errors");
 
+const FilingDecisionUnavailableFields = {
+  reason: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const sameFilingDecisionUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("FilingDecisionUnavailable", FilingDecisionUnavailableFields)
+);
+const sameFilingDecisionUnavailable = (self: FilingDecisionUnavailable, that: FilingDecisionUnavailable): boolean =>
+  sameFilingDecisionUnavailableFields(self, that);
+
 /**
  * Raised when the FilingDecision port cannot classify a document.
  *
@@ -29,13 +38,26 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/Document.errors");
  */
 export class FilingDecisionUnavailable extends S.TaggedError<FilingDecisionUnavailable>($I`FilingDecisionUnavailable`)(
   "FilingDecisionUnavailable",
-  {
-    reason: S.NonEmptyString,
-  },
-  $I.annote("FilingDecisionUnavailable", {
+  FilingDecisionUnavailableFields,
+  $I.annoteClass<
+    S.declare<FilingDecisionUnavailable>,
+    readonly [S.TaggedStruct<"FilingDecisionUnavailable", typeof FilingDecisionUnavailableFields>]
+  >("FilingDecisionUnavailable", {
     description: "The FilingDecision port could not decide a taxonomy concept.",
+    toEquivalence: () => sameFilingDecisionUnavailable,
   })
 ) {}
+
+const DocumentMaterializationFailedFields = {
+  reason: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const sameDocumentMaterializationFailedFields = S.toEquivalence(
+  S.TaggedStruct("DocumentMaterializationFailed", DocumentMaterializationFailedFields)
+);
+const sameDocumentMaterializationFailed = (
+  self: DocumentMaterializationFailed,
+  that: DocumentMaterializationFailed
+): boolean => sameDocumentMaterializationFailedFields(self, that);
 
 /**
  * Raised when workspace vault materialization fails.
@@ -56,11 +78,13 @@ export class DocumentMaterializationFailed extends S.TaggedError<DocumentMateria
   $I`DocumentMaterializationFailed`
 )(
   "DocumentMaterializationFailed",
-  {
-    reason: S.NonEmptyString,
-  },
-  $I.annote("DocumentMaterializationFailed", {
+  DocumentMaterializationFailedFields,
+  $I.annoteClass<
+    S.declare<DocumentMaterializationFailed>,
+    readonly [S.TaggedStruct<"DocumentMaterializationFailed", typeof DocumentMaterializationFailedFields>]
+  >("DocumentMaterializationFailed", {
     description: "The workspace vault materialization write failed.",
+    toEquivalence: () => sameDocumentMaterializationFailed,
   })
 ) {}
 
@@ -108,6 +132,15 @@ export const DocumentIntakeError = S.Union([FilingDecisionUnavailable, DocumentM
  */
 export type DocumentIntakeError = typeof DocumentIntakeError.Type;
 
+const DocumentIntakeActionErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameDocumentIntakeActionErrorFields = S.toEquivalence(
+  S.TaggedStruct("DocumentIntakeActionError", DocumentIntakeActionErrorFields)
+);
+const sameDocumentIntakeActionError = (self: DocumentIntakeActionError, that: DocumentIntakeActionError): boolean =>
+  sameDocumentIntakeActionErrorFields(self, that);
+
 /**
  * Client-safe failure raised when dropped-file intake cannot complete.
  *
@@ -125,11 +158,13 @@ export type DocumentIntakeError = typeof DocumentIntakeError.Type;
  */
 export class DocumentIntakeActionError extends S.TaggedError<DocumentIntakeActionError>($I`DocumentIntakeActionError`)(
   "DocumentIntakeActionError",
-  {
-    message: S.String,
-  },
-  $I.annote("DocumentIntakeActionError", {
+  DocumentIntakeActionErrorFields,
+  $I.annoteClass<
+    S.declare<DocumentIntakeActionError>,
+    readonly [S.TaggedStruct<"DocumentIntakeActionError", typeof DocumentIntakeActionErrorFields>]
+  >("DocumentIntakeActionError", {
     description: "Client-safe failure raised when dropped-file intake cannot complete.",
+    toEquivalence: () => sameDocumentIntakeActionError,
   })
 ) {
   static readonly new = (message: string) => DocumentIntakeActionError.make({ message });

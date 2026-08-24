@@ -157,6 +157,20 @@ export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I
   })
 ) {}
 
+const PracticeKgClaimsErrorFields = {
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+  message: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const PracticeKgClaimsErrorEquivalenceFields = {
+  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+  message: PracticeKgClaimsErrorFields.message,
+} satisfies S.Struct.Fields;
+const samePracticeKgClaimsErrorFields = S.toEquivalence(
+  S.TaggedStruct("PracticeKgClaimsError", PracticeKgClaimsErrorEquivalenceFields)
+);
+const samePracticeKgClaimsError = (self: PracticeKgClaimsError, that: PracticeKgClaimsError): boolean =>
+  samePracticeKgClaimsErrorFields(self, that);
+
 /**
  * Typed batch failure with the provider or persistence cause retained locally.
  *
@@ -172,12 +186,14 @@ export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I
  */
 export class PracticeKgClaimsError extends S.TaggedError<PracticeKgClaimsError>($I`PracticeKgClaimsError`)(
   "PracticeKgClaimsError",
-  {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    message: S.NonEmptyString,
-  },
-  $I.annote("PracticeKgClaimsError", {
+  PracticeKgClaimsErrorFields,
+  $I.annoteClass<
+    S.declare<PracticeKgClaimsError>,
+    readonly [S.TaggedStruct<"PracticeKgClaimsError", typeof PracticeKgClaimsErrorFields>]
+  >("PracticeKgClaimsError", {
     description: "Failure while extracting or persisting the practice KG claims batch.",
+
+    toEquivalence: () => samePracticeKgClaimsError,
   })
 ) {}
 

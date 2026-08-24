@@ -15,6 +15,15 @@ import type { Effect } from "effect";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.repository");
 
+const WorkItemRepositoryNotFoundFields = {
+  workItemId: DomainWorkItem.WorkItemId,
+} satisfies S.Struct.Fields;
+const sameWorkItemRepositoryNotFoundFields = S.toEquivalence(
+  S.TaggedStruct("WorkItemRepositoryNotFound", WorkItemRepositoryNotFoundFields)
+);
+const sameWorkItemRepositoryNotFound = (self: WorkItemRepositoryNotFound, that: WorkItemRepositoryNotFound): boolean =>
+  sameWorkItemRepositoryNotFoundFields(self, that);
+
 /**
  * Persistence failure raised when a WorkItem row is absent.
  *
@@ -39,16 +48,30 @@ export class WorkItemRepositoryNotFound extends S.TaggedError<WorkItemRepository
   $I`WorkItemRepositoryNotFound`
 )(
   "WorkItemRepositoryNotFound",
-  {
-    workItemId: DomainWorkItem.WorkItemId,
-  },
-  $I.annote("WorkItemRepositoryNotFound", {
+  WorkItemRepositoryNotFoundFields,
+  $I.annoteClass<
+    S.declare<WorkItemRepositoryNotFound>,
+    readonly [S.TaggedStruct<"WorkItemRepositoryNotFound", typeof WorkItemRepositoryNotFoundFields>]
+  >("WorkItemRepositoryNotFound", {
     title: "WorkItem repository not found",
     description: "The WorkItem repository could not find the requested aggregate.",
+    toEquivalence: () => sameWorkItemRepositoryNotFound,
   })
 ) {
   static readonly is = S.is(WorkItemRepositoryNotFound);
 }
+
+const WorkItemRepositoryConflictFields = {
+  workItemId: DomainWorkItem.WorkItemId,
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository conflict diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkItemRepositoryConflictFields = S.toEquivalence(
+  S.TaggedStruct("WorkItemRepositoryConflict", WorkItemRepositoryConflictFields)
+);
+const sameWorkItemRepositoryConflict = (self: WorkItemRepositoryConflict, that: WorkItemRepositoryConflict): boolean =>
+  sameWorkItemRepositoryConflictFields(self, that);
 
 /**
  * Persistence failure raised when a WorkItem write conflicts.
@@ -75,19 +98,31 @@ export class WorkItemRepositoryConflict extends S.TaggedError<WorkItemRepository
   $I`WorkItemRepositoryConflict`
 )(
   "WorkItemRepositoryConflict",
-  {
-    workItemId: DomainWorkItem.WorkItemId,
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository conflict diagnostic.",
-    }),
-  },
-  $I.annote("WorkItemRepositoryConflict", {
+  WorkItemRepositoryConflictFields,
+  $I.annoteClass<
+    S.declare<WorkItemRepositoryConflict>,
+    readonly [S.TaggedStruct<"WorkItemRepositoryConflict", typeof WorkItemRepositoryConflictFields>]
+  >("WorkItemRepositoryConflict", {
     title: "WorkItem repository conflict",
     description: "The WorkItem repository rejected a conflicting write.",
+    toEquivalence: () => sameWorkItemRepositoryConflict,
   })
 ) {
   static readonly is = S.is(WorkItemRepositoryConflict);
 }
+
+const WorkItemRepositoryUnavailableFields = {
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository availability diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkItemRepositoryUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("WorkItemRepositoryUnavailable", WorkItemRepositoryUnavailableFields)
+);
+const sameWorkItemRepositoryUnavailable = (
+  self: WorkItemRepositoryUnavailable,
+  that: WorkItemRepositoryUnavailable
+): boolean => sameWorkItemRepositoryUnavailableFields(self, that);
 
 /**
  * Persistence failure raised when the WorkItem repository is unavailable.
@@ -109,14 +144,14 @@ export class WorkItemRepositoryUnavailable extends S.TaggedError<WorkItemReposit
   $I`WorkItemRepositoryUnavailable`
 )(
   "WorkItemRepositoryUnavailable",
-  {
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository availability diagnostic.",
-    }),
-  },
-  $I.annote("WorkItemRepositoryUnavailable", {
+  WorkItemRepositoryUnavailableFields,
+  $I.annoteClass<
+    S.declare<WorkItemRepositoryUnavailable>,
+    readonly [S.TaggedStruct<"WorkItemRepositoryUnavailable", typeof WorkItemRepositoryUnavailableFields>]
+  >("WorkItemRepositoryUnavailable", {
     title: "WorkItem repository unavailable",
     description: "The WorkItem repository could not serve the request.",
+    toEquivalence: () => sameWorkItemRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(WorkItemRepositoryUnavailable);

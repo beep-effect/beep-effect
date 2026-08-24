@@ -34,6 +34,13 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.error
  */
 export const WORK_ITEM_ACTION_UNAVAILABLE_REASON = "WorkItem service is unavailable." as const;
 
+const WorkItemNotFoundFields = {
+  workItemId: DomainWorkItem.WorkItemId,
+} satisfies S.Struct.Fields;
+const sameWorkItemNotFoundFields = S.toEquivalence(S.TaggedStruct("WorkItemNotFound", WorkItemNotFoundFields));
+const sameWorkItemNotFound = (self: WorkItemNotFound, that: WorkItemNotFound): boolean =>
+  sameWorkItemNotFoundFields(self, that);
+
 /**
  * Public failure raised when a requested WorkItem is absent.
  *
@@ -56,14 +63,28 @@ export const WORK_ITEM_ACTION_UNAVAILABLE_REASON = "WorkItem service is unavaila
  */
 export class WorkItemNotFound extends S.TaggedError<WorkItemNotFound>($I`WorkItemNotFound`)(
   "WorkItemNotFound",
-  {
-    workItemId: DomainWorkItem.WorkItemId,
-  },
-  $I.annote("WorkItemNotFound", {
+  WorkItemNotFoundFields,
+  $I.annoteClass<
+    S.declare<WorkItemNotFound>,
+    readonly [S.TaggedStruct<"WorkItemNotFound", typeof WorkItemNotFoundFields>]
+  >("WorkItemNotFound", {
     title: "WorkItem not found",
     description: "The requested architecture lab WorkItem does not exist.",
+    toEquivalence: () => sameWorkItemNotFound,
   })
 ) {}
+
+const WorkItemConflictFields = {
+  workItemId: DomainWorkItem.WorkItemId.annotateKey({
+    description: "WorkItem identity whose command conflicted with persisted state.",
+  }),
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty public conflict reason.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkItemConflictFields = S.toEquivalence(S.TaggedStruct("WorkItemConflict", WorkItemConflictFields));
+const sameWorkItemConflict = (self: WorkItemConflict, that: WorkItemConflict): boolean =>
+  sameWorkItemConflictFields(self, that);
 
 /**
  * Public failure raised when a command conflicts with persisted state.
@@ -88,19 +109,30 @@ export class WorkItemNotFound extends S.TaggedError<WorkItemNotFound>($I`WorkIte
  */
 export class WorkItemConflict extends S.TaggedError<WorkItemConflict>($I`WorkItemConflict`)(
   "WorkItemConflict",
-  {
-    workItemId: DomainWorkItem.WorkItemId.annotateKey({
-      description: "WorkItem identity whose command conflicted with persisted state.",
-    }),
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty public conflict reason.",
-    }),
-  },
-  $I.annote("WorkItemConflict", {
+  WorkItemConflictFields,
+  $I.annoteClass<
+    S.declare<WorkItemConflict>,
+    readonly [S.TaggedStruct<"WorkItemConflict", typeof WorkItemConflictFields>]
+  >("WorkItemConflict", {
     title: "WorkItem conflict",
     description: "The requested WorkItem command conflicts with persisted state.",
+    toEquivalence: () => sameWorkItemConflict,
   })
 ) {}
+
+const WorkItemActionRejectedFields = {
+  workItemId: DomainWorkItem.WorkItemId.annotateKey({
+    description: "WorkItem identity whose domain action was rejected.",
+  }),
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty public rejection reason.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkItemActionRejectedFields = S.toEquivalence(
+  S.TaggedStruct("WorkItemActionRejected", WorkItemActionRejectedFields)
+);
+const sameWorkItemActionRejected = (self: WorkItemActionRejected, that: WorkItemActionRejected): boolean =>
+  sameWorkItemActionRejectedFields(self, that);
 
 /**
  * Public failure raised when the domain rejects a WorkItem action.
@@ -125,19 +157,27 @@ export class WorkItemConflict extends S.TaggedError<WorkItemConflict>($I`WorkIte
  */
 export class WorkItemActionRejected extends S.TaggedError<WorkItemActionRejected>($I`WorkItemActionRejected`)(
   "WorkItemActionRejected",
-  {
-    workItemId: DomainWorkItem.WorkItemId.annotateKey({
-      description: "WorkItem identity whose domain action was rejected.",
-    }),
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty public rejection reason.",
-    }),
-  },
-  $I.annote("WorkItemActionRejected", {
+  WorkItemActionRejectedFields,
+  $I.annoteClass<
+    S.declare<WorkItemActionRejected>,
+    readonly [S.TaggedStruct<"WorkItemActionRejected", typeof WorkItemActionRejectedFields>]
+  >("WorkItemActionRejected", {
     title: "WorkItem action rejected",
     description: "The WorkItem aggregate rejected the requested action.",
+    toEquivalence: () => sameWorkItemActionRejected,
   })
 ) {}
+
+const WorkItemActionFailedFields = {
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty public failure reason with internal repository details redacted.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkItemActionFailedFields = S.toEquivalence(
+  S.TaggedStruct("WorkItemActionFailed", WorkItemActionFailedFields)
+);
+const sameWorkItemActionFailed = (self: WorkItemActionFailed, that: WorkItemActionFailed): boolean =>
+  sameWorkItemActionFailedFields(self, that);
 
 /**
  * Public failure raised when an action cannot be completed.
@@ -157,14 +197,14 @@ export class WorkItemActionRejected extends S.TaggedError<WorkItemActionRejected
  */
 export class WorkItemActionFailed extends S.TaggedError<WorkItemActionFailed>($I`WorkItemActionFailed`)(
   "WorkItemActionFailed",
-  {
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty public failure reason with internal repository details redacted.",
-    }),
-  },
-  $I.annote("WorkItemActionFailed", {
+  WorkItemActionFailedFields,
+  $I.annoteClass<
+    S.declare<WorkItemActionFailed>,
+    readonly [S.TaggedStruct<"WorkItemActionFailed", typeof WorkItemActionFailedFields>]
+  >("WorkItemActionFailed", {
     title: "WorkItem action failed",
     description: "The WorkItem use-case action could not be completed.",
+    toEquivalence: () => sameWorkItemActionFailed,
   })
 ) {}
 

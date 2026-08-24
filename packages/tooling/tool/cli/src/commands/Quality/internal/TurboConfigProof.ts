@@ -14,7 +14,11 @@ import { Effect, Order, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { commandErrorFields } from "../../../internal/cli/CommandErrorFields.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
+
+export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";
+
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
@@ -91,6 +95,17 @@ export const TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECT
  */
 export type TurboConfigProofSelectorMode = typeof TurboConfigProofSelectorMode.Type;
 
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameTurboConfigProofErrorFields = S.toEquivalence(
+  S.TaggedStruct("TurboConfigProofError", {
+    message: commandErrorFields.message,
+    command: commandErrorFields.command,
+    exitCode: commandErrorFields.exitCode,
+  })
+);
+const sameTurboConfigProofError = (self: TurboConfigProofError, that: TurboConfigProofError): boolean =>
+  sameTurboConfigProofErrorFields(self, that);
+
 /**
  * Typed error raised while collecting Turbo scoped-config proof data.
  *
@@ -99,14 +114,13 @@ export type TurboConfigProofSelectorMode = typeof TurboConfigProofSelectorMode.T
  */
 export class TurboConfigProofError extends S.TaggedError<TurboConfigProofError>($I`TurboConfigProofError`)(
   "TurboConfigProofError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("TurboConfigProofError", {
+  commandErrorFields,
+  $I.annoteClass<
+    S.declare<TurboConfigProofError>,
+    readonly [S.TaggedStruct<"TurboConfigProofError", typeof commandErrorFields>]
+  >("TurboConfigProofError", {
     description: "Failure raised by the Turbo scoped-config proof harness.",
+    toEquivalence: () => sameTurboConfigProofError,
   })
 ) {
   /**

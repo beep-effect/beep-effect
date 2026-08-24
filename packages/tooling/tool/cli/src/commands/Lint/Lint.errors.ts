@@ -15,6 +15,15 @@ const $I = $RepoCliId.create("commands/Lint/Lint.errors");
 const messageWithCause = (message: string, cause: unknown): string =>
   `${message}: ${Inspectable.toStringUnknown(cause, 0)}`;
 
+const LintCircularAnalysisErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameLintCircularAnalysisErrorFields = S.toEquivalence(
+  S.TaggedStruct("LintCircularAnalysisError", LintCircularAnalysisErrorFields)
+);
+const sameLintCircularAnalysisError = (self: LintCircularAnalysisError, that: LintCircularAnalysisError): boolean =>
+  sameLintCircularAnalysisErrorFields(self, that);
+
 /**
  * Failure raised when circular dependency analysis cannot complete.
  *
@@ -32,11 +41,13 @@ const messageWithCause = (message: string, cause: unknown): string =>
  */
 export class LintCircularAnalysisError extends S.TaggedError<LintCircularAnalysisError>($I`LintCircularAnalysisError`)(
   "LintCircularAnalysisError",
-  {
-    message: S.String,
-  },
-  $I.annote("LintCircularAnalysisError", {
+  LintCircularAnalysisErrorFields,
+  $I.annoteClass<
+    S.declare<LintCircularAnalysisError>,
+    readonly [S.TaggedStruct<"LintCircularAnalysisError", typeof LintCircularAnalysisErrorFields>]
+  >("LintCircularAnalysisError", {
     description: "Circular dependency analysis failed for a target directory.",
+    toEquivalence: () => sameLintCircularAnalysisError,
   })
 ) {
   static readonly new = (message: string): LintCircularAnalysisError => LintCircularAnalysisError.make({ message });
@@ -45,6 +56,17 @@ export class LintCircularAnalysisError extends S.TaggedError<LintCircularAnalysi
     LintCircularAnalysisError.new(messageWithCause(message, cause))
   );
 }
+
+const LintFileDiscoveryErrorFields = {
+  message: S.String,
+  root: S.String,
+  path: S.String,
+} satisfies S.Struct.Fields;
+const sameLintFileDiscoveryErrorFields = S.toEquivalence(
+  S.TaggedStruct("LintFileDiscoveryError", LintFileDiscoveryErrorFields)
+);
+const sameLintFileDiscoveryError = (self: LintFileDiscoveryError, that: LintFileDiscoveryError): boolean =>
+  sameLintFileDiscoveryErrorFields(self, that);
 
 /**
  * Failure raised when lint file discovery cannot read a source root.
@@ -63,13 +85,13 @@ export class LintCircularAnalysisError extends S.TaggedError<LintCircularAnalysi
  */
 export class LintFileDiscoveryError extends S.TaggedError<LintFileDiscoveryError>($I`LintFileDiscoveryError`)(
   "LintFileDiscoveryError",
-  {
-    message: S.String,
-    root: S.String,
-    path: S.String,
-  },
-  $I.annote("LintFileDiscoveryError", {
+  LintFileDiscoveryErrorFields,
+  $I.annoteClass<
+    S.declare<LintFileDiscoveryError>,
+    readonly [S.TaggedStruct<"LintFileDiscoveryError", typeof LintFileDiscoveryErrorFields>]
+  >("LintFileDiscoveryError", {
     description: "TypeScript file discovery failed for a lint root.",
+    toEquivalence: () => sameLintFileDiscoveryError,
   })
 ) {
   /**
@@ -96,6 +118,15 @@ export class LintFileDiscoveryError extends S.TaggedError<LintFileDiscoveryError
   );
 }
 
+const TestTypecheckBaselineErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameTestTypecheckBaselineErrorFields = S.toEquivalence(
+  S.TaggedStruct("TestTypecheckBaselineError", TestTypecheckBaselineErrorFields)
+);
+const sameTestTypecheckBaselineError = (self: TestTypecheckBaselineError, that: TestTypecheckBaselineError): boolean =>
+  sameTestTypecheckBaselineErrorFields(self, that);
+
 /**
  * Failure raised when the test-typecheck blind-spot baseline cannot be read,
  * decoded, or rewritten.
@@ -119,11 +150,13 @@ export class TestTypecheckBaselineError extends S.TaggedError<TestTypecheckBasel
   $I`TestTypecheckBaselineError`
 )(
   "TestTypecheckBaselineError",
-  {
-    message: S.String,
-  },
-  $I.annote("TestTypecheckBaselineError", {
+  TestTypecheckBaselineErrorFields,
+  $I.annoteClass<
+    S.declare<TestTypecheckBaselineError>,
+    readonly [S.TaggedStruct<"TestTypecheckBaselineError", typeof TestTypecheckBaselineErrorFields>]
+  >("TestTypecheckBaselineError", {
     description: "Raised when the committed test-typecheck blind-spot baseline cannot be read, decoded, or written.",
+    toEquivalence: () => sameTestTypecheckBaselineError,
   })
 ) {
   /**
@@ -141,6 +174,17 @@ export class TestTypecheckBaselineError extends S.TaggedError<TestTypecheckBasel
     TestTypecheckBaselineError.new(cause, message)
   );
 }
+
+const SchemaFirstInventoryReadErrorFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameSchemaFirstInventoryReadErrorFields = S.toEquivalence(
+  S.TaggedStruct("SchemaFirstInventoryReadError", SchemaFirstInventoryReadErrorFields)
+);
+const sameSchemaFirstInventoryReadError = (
+  self: SchemaFirstInventoryReadError,
+  that: SchemaFirstInventoryReadError
+): boolean => sameSchemaFirstInventoryReadErrorFields(self, that);
 
 /**
  * Failure raised when the schema-first inventory cannot be read or decoded.
@@ -161,11 +205,13 @@ export class SchemaFirstInventoryReadError extends S.TaggedError<SchemaFirstInve
   $I`SchemaFirstInventoryReadError`
 )(
   "SchemaFirstInventoryReadError",
-  {
-    message: S.String,
-  },
-  $I.annote("SchemaFirstInventoryReadError", {
+  SchemaFirstInventoryReadErrorFields,
+  $I.annoteClass<
+    S.declare<SchemaFirstInventoryReadError>,
+    readonly [S.TaggedStruct<"SchemaFirstInventoryReadError", typeof SchemaFirstInventoryReadErrorFields>]
+  >("SchemaFirstInventoryReadError", {
     description: "Raised when the committed schema-first inventory cannot be parsed or decoded.",
+    toEquivalence: () => sameSchemaFirstInventoryReadError,
   })
 ) {
   static readonly new = (message: string): SchemaFirstInventoryReadError =>

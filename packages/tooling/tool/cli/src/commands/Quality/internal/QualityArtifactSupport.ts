@@ -20,6 +20,27 @@ type QualityArtifactGeneratorErrorOptions = {
   readonly filePath?: undefined | string;
 };
 
+const QualityArtifactGeneratorErrorFields = {
+  message: S.String,
+  command: S.optionalKey(S.String),
+  exitCode: S.optionalKey(S.Finite),
+  filePath: S.optionalKey(S.String),
+  cause: S.optionalKey(S.Defect({ includeStack: true })),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameQualityArtifactGeneratorErrorFields = S.toEquivalence(
+  S.TaggedStruct("QualityArtifactGeneratorError", {
+    message: QualityArtifactGeneratorErrorFields.message,
+    command: QualityArtifactGeneratorErrorFields.command,
+    exitCode: QualityArtifactGeneratorErrorFields.exitCode,
+    filePath: QualityArtifactGeneratorErrorFields.filePath,
+  })
+);
+const sameQualityArtifactGeneratorError = (
+  self: QualityArtifactGeneratorError,
+  that: QualityArtifactGeneratorError
+): boolean => sameQualityArtifactGeneratorErrorFields(self, that);
+
 /**
  * Error raised while building or checking Quality command generated artifacts.
  *
@@ -30,15 +51,13 @@ export class QualityArtifactGeneratorError extends S.TaggedError<QualityArtifact
   $I`QualityArtifactGeneratorError`
 )(
   "QualityArtifactGeneratorError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    filePath: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("QualityArtifactGeneratorError", {
+  QualityArtifactGeneratorErrorFields,
+  $I.annoteClass<
+    S.declare<QualityArtifactGeneratorError>,
+    readonly [S.TaggedStruct<"QualityArtifactGeneratorError", typeof QualityArtifactGeneratorErrorFields>]
+  >("QualityArtifactGeneratorError", {
     description: "Typed failure raised by repo quality artifact generators.",
+    toEquivalence: () => sameQualityArtifactGeneratorError,
   })
 ) {
   /**

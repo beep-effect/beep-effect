@@ -72,6 +72,32 @@ export const LegalPositionRecordOperation = LegalPositionRecordOperationBase.pip
  */
 export type LegalPositionRecordOperation = typeof LegalPositionRecordOperation.Type;
 
+const LegalPositionRecordRepositoryUnavailableFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({
+      description: "Optional underlying driver defect captured when the repository could not serve a request.",
+    }),
+  operation: LegalPositionRecordOperation.annotateKey({
+    description: "Repository operation that could not be served.",
+  }),
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository availability diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const LegalPositionRecordRepositoryUnavailableEquivalenceFields = {
+  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+  operation: LegalPositionRecordRepositoryUnavailableFields.operation,
+  reason: LegalPositionRecordRepositoryUnavailableFields.reason,
+} satisfies S.Struct.Fields;
+const sameLegalPositionRecordRepositoryUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("LegalPositionRecordRepositoryUnavailable", LegalPositionRecordRepositoryUnavailableEquivalenceFields)
+);
+const sameLegalPositionRecordRepositoryUnavailable = (
+  self: LegalPositionRecordRepositoryUnavailable,
+  that: LegalPositionRecordRepositoryUnavailable
+): boolean => sameLegalPositionRecordRepositoryUnavailableFields(self, that);
+
 /**
  * Raised when the legal position record repository could not serve a request.
  *
@@ -103,22 +129,17 @@ export class LegalPositionRecordRepositoryUnavailable extends S.TaggedError<Lega
   $I`LegalPositionRecordRepositoryUnavailable`
 )(
   "LegalPositionRecordRepositoryUnavailable",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({
-        description: "Optional underlying driver defect captured when the repository could not serve a request.",
-      }),
-    operation: LegalPositionRecordOperation.annotateKey({
-      description: "Repository operation that could not be served.",
-    }),
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository availability diagnostic.",
-    }),
-  },
-  $I.annote("LegalPositionRecordRepositoryUnavailable", {
+  LegalPositionRecordRepositoryUnavailableFields,
+  $I.annoteClass<
+    S.declare<LegalPositionRecordRepositoryUnavailable>,
+    readonly [
+      S.TaggedStruct<"LegalPositionRecordRepositoryUnavailable", typeof LegalPositionRecordRepositoryUnavailableFields>,
+    ]
+  >("LegalPositionRecordRepositoryUnavailable", {
     title: "Legal position record repository unavailable",
     description: "The legal position record repository could not serve the request.",
+
+    toEquivalence: () => sameLegalPositionRecordRepositoryUnavailable,
   })
 ) {
   /**

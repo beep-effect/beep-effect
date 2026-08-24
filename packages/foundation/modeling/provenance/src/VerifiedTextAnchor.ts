@@ -61,6 +61,15 @@ export const VerifiedTextAnchorErrorReason = LiteralKit([
  * @since 0.0.0
  */
 export type VerifiedTextAnchorErrorReason = typeof VerifiedTextAnchorErrorReason.Type;
+const VerifiedTextAnchorErrorFields = {
+  message: S.String,
+  reason: VerifiedTextAnchorErrorReason,
+} satisfies S.Struct.Fields;
+const sameVerifiedTextAnchorErrorFields = S.toEquivalence(
+  S.TaggedStruct("VerifiedTextAnchorError", VerifiedTextAnchorErrorFields)
+);
+const sameVerifiedTextAnchorError = (self: VerifiedTextAnchorError, that: VerifiedTextAnchorError): boolean =>
+  sameVerifiedTextAnchorErrorFields(self, that);
 
 /**
  * Sanitized failure emitted by verified-anchor construction.
@@ -79,12 +88,13 @@ export type VerifiedTextAnchorErrorReason = typeof VerifiedTextAnchorErrorReason
  */
 export class VerifiedTextAnchorError extends S.TaggedError<VerifiedTextAnchorError>($I`VerifiedTextAnchorError`)(
   "VerifiedTextAnchorError",
-  {
-    message: S.String,
-    reason: VerifiedTextAnchorErrorReason,
-  },
-  $I.annote("VerifiedTextAnchorError", {
+  VerifiedTextAnchorErrorFields,
+  $I.annoteClass<
+    S.declare<VerifiedTextAnchorError>,
+    readonly [S.TaggedStruct<"VerifiedTextAnchorError", typeof VerifiedTextAnchorErrorFields>]
+  >("VerifiedTextAnchorError", {
     description: "Sanitized failure emitted when an anchor cannot be proven against the expected exact source.",
+    toEquivalence: () => sameVerifiedTextAnchorError,
   })
 ) {
   /**

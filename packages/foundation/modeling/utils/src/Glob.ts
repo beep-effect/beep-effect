@@ -123,6 +123,20 @@ const GlobErrorCause = S.Defect({ includeStack: true }).pipe(
     description: "A defect captured from an underlying glob implementation.",
   })
 );
+const GlobErrorFields = {
+  pattern: Pattern.annotateKey({
+    description: "Glob pattern being evaluated when matching failed.",
+  }),
+  cause: S.OptionFromOptionalKey(GlobErrorCause).annotateKey({
+    description: "Optional decoded defect captured from the underlying glob implementation.",
+  }),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const GlobErrorComparableFields = {
+  pattern: GlobErrorFields.pattern,
+} satisfies S.Struct.Fields;
+const sameGlobErrorFields = S.toEquivalence(S.TaggedStruct("GlobError", GlobErrorComparableFields));
+const sameGlobError = (self: GlobError, that: GlobError): boolean => sameGlobErrorFields(self, that);
 
 /**
  * Namespace for the encoded form of {@link GlobError}.
@@ -186,16 +200,10 @@ export declare namespace GlobError {
  */
 export class GlobError extends S.TaggedError<GlobError>($I`GlobError`)(
   "GlobError",
-  {
-    pattern: Pattern.annotateKey({
-      description: "Glob pattern being evaluated when matching failed.",
-    }),
-    cause: S.OptionFromOptionalKey(GlobErrorCause).annotateKey({
-      description: "Optional decoded defect captured from the underlying glob implementation.",
-    }),
-  },
-  $I.annote("GlobError", {
+  GlobErrorFields,
+  $I.annoteClass<S.declare<GlobError>, readonly [S.TaggedStruct<"GlobError", typeof GlobErrorFields>]>("GlobError", {
     description: "An error that occurs during glob pattern matching.",
+    toEquivalence: () => sameGlobError,
   })
 ) {
   static readonly new: {

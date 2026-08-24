@@ -14,6 +14,90 @@ const commonFields = {
   message: S.String,
   cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
 } satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const CspErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameCspErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.CONTENT_SECURITY_POLICY, CspErrorComparableFields)
+);
+const sameCspError = (self: CspError, that: CspError): boolean => sameCspErrorFields(self, that);
+const ForceHttpsRedirectErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameForceHttpsRedirectErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.FORCE_HTTPS_REDIRECT, ForceHttpsRedirectErrorComparableFields)
+);
+const sameForceHttpsRedirectError = (self: ForceHttpsRedirectError, that: ForceHttpsRedirectError): boolean =>
+  sameForceHttpsRedirectErrorFields(self, that);
+const XssProtectionErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameXssProtectionErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.XSS_PROTECTION, XssProtectionErrorComparableFields)
+);
+const sameXssProtectionError = (self: XssProtectionError, that: XssProtectionError): boolean =>
+  sameXssProtectionErrorFields(self, that);
+const ReferrerPolicyErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameReferrerPolicyErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.REFERRER_POLICY, ReferrerPolicyErrorComparableFields)
+);
+const sameReferrerPolicyError = (self: ReferrerPolicyError, that: ReferrerPolicyError): boolean =>
+  sameReferrerPolicyErrorFields(self, that);
+const NoSniffErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameNoSniffErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.NO_SNIFF, NoSniffErrorComparableFields)
+);
+const sameNoSniffError = (self: NoSniffError, that: NoSniffError): boolean => sameNoSniffErrorFields(self, that);
+const NoOpenErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameNoOpenErrorFields = S.toEquivalence(S.TaggedStruct(SecureHeader.Enum.NO_OPEN, NoOpenErrorComparableFields));
+const sameNoOpenError = (self: NoOpenError, that: NoOpenError): boolean => sameNoOpenErrorFields(self, that);
+const FrameGuardErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameFrameGuardErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.FRAME_GUARD, FrameGuardErrorComparableFields)
+);
+const sameFrameGuardError = (self: FrameGuardError, that: FrameGuardError): boolean =>
+  sameFrameGuardErrorFields(self, that);
+const ExpectCtErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameExpectCtErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.EXPECT_CT, ExpectCtErrorComparableFields)
+);
+const sameExpectCtError = (self: ExpectCtError, that: ExpectCtError): boolean => sameExpectCtErrorFields(self, that);
+const PermissionsPolicyErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const samePermissionsPolicyErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.PERMISSIONS_POLICY, PermissionsPolicyErrorComparableFields)
+);
+const samePermissionsPolicyError = (self: PermissionsPolicyError, that: PermissionsPolicyError): boolean =>
+  samePermissionsPolicyErrorFields(self, that);
+const CrossOriginOpenerPolicyErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameCrossOriginOpenerPolicyErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.CROSS_ORIGIN_OPENER_POLICY, CrossOriginOpenerPolicyErrorComparableFields)
+);
+const sameCrossOriginOpenerPolicyError = (
+  self: CrossOriginOpenerPolicyError,
+  that: CrossOriginOpenerPolicyError
+): boolean => sameCrossOriginOpenerPolicyErrorFields(self, that);
+const CrossOriginEmbedderPolicyErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameCrossOriginEmbedderPolicyErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.CROSS_ORIGIN_EMBEDDER_POLICY, CrossOriginEmbedderPolicyErrorComparableFields)
+);
+const sameCrossOriginEmbedderPolicyError = (
+  self: CrossOriginEmbedderPolicyError,
+  that: CrossOriginEmbedderPolicyError
+): boolean => sameCrossOriginEmbedderPolicyErrorFields(self, that);
+const CrossOriginResourcePolicyErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameCrossOriginResourcePolicyErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.CROSS_ORIGIN_RESOURCE_POLICY, CrossOriginResourcePolicyErrorComparableFields)
+);
+const sameCrossOriginResourcePolicyError = (
+  self: CrossOriginResourcePolicyError,
+  that: CrossOriginResourcePolicyError
+): boolean => sameCrossOriginResourcePolicyErrorFields(self, that);
+const PermittedCrossDomainPoliciesErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const samePermittedCrossDomainPoliciesErrorFields = S.toEquivalence(
+  S.TaggedStruct(SecureHeader.Enum.PERMITTED_CROSS_DOMAIN_POLICIES, PermittedCrossDomainPoliciesErrorComparableFields)
+);
+const samePermittedCrossDomainPoliciesError = (
+  self: PermittedCrossDomainPoliciesError,
+  that: PermittedCrossDomainPoliciesError
+): boolean => samePermittedCrossDomainPoliciesErrorFields(self, that);
+const CoreErrorComparableFields = { message: commonFields.message } satisfies S.Struct.Fields;
+const sameCoreErrorFields = S.toEquivalence(S.TaggedStruct(SecureHeader.Enum.CORE, CoreErrorComparableFields));
+const sameCoreError = (self: CoreError, that: CoreError): boolean => sameCoreErrorFields(self, that);
 
 /**
  * Error raised while building a Content-Security-Policy header.
@@ -34,7 +118,10 @@ const commonFields = {
 export class CspError extends S.TaggedError<CspError>($I.make("CspError"))(
   SecureHeader.Enum.CONTENT_SECURITY_POLICY,
   commonFields,
-  $I.annote("CspError", { description: "A CSP error." })
+  $I.annoteClass<
+    S.declare<CspError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.CONTENT_SECURITY_POLICY, typeof commonFields>]
+  >("CspError", { description: "A CSP error.", toEquivalence: () => sameCspError })
 ) {}
 
 /**
@@ -56,7 +143,13 @@ export class CspError extends S.TaggedError<CspError>($I.make("CspError"))(
 export class ForceHttpsRedirectError extends S.TaggedError<ForceHttpsRedirectError>($I.make("ForceHttpsRedirectError"))(
   SecureHeader.Enum.FORCE_HTTPS_REDIRECT,
   commonFields,
-  $I.annote("ForceHttpsRedirectError", { description: "A force HTTPS redirect error." })
+  $I.annoteClass<
+    S.declare<ForceHttpsRedirectError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.FORCE_HTTPS_REDIRECT, typeof commonFields>]
+  >("ForceHttpsRedirectError", {
+    description: "A force HTTPS redirect error.",
+    toEquivalence: () => sameForceHttpsRedirectError,
+  })
 ) {}
 
 /**
@@ -78,7 +171,10 @@ export class ForceHttpsRedirectError extends S.TaggedError<ForceHttpsRedirectErr
 export class XssProtectionError extends S.TaggedError<XssProtectionError>($I.make("XssProtectionError"))(
   SecureHeader.Enum.XSS_PROTECTION,
   commonFields,
-  $I.annote("XssProtectionError", { description: "An XSS protection error." })
+  $I.annoteClass<
+    S.declare<XssProtectionError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.XSS_PROTECTION, typeof commonFields>]
+  >("XssProtectionError", { description: "An XSS protection error.", toEquivalence: () => sameXssProtectionError })
 ) {}
 
 /**
@@ -100,7 +196,10 @@ export class XssProtectionError extends S.TaggedError<XssProtectionError>($I.mak
 export class ReferrerPolicyError extends S.TaggedError<ReferrerPolicyError>($I.make("ReferrerPolicyError"))(
   SecureHeader.Enum.REFERRER_POLICY,
   commonFields,
-  $I.annote("ReferrerPolicyError", { description: "A referrer policy error." })
+  $I.annoteClass<
+    S.declare<ReferrerPolicyError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.REFERRER_POLICY, typeof commonFields>]
+  >("ReferrerPolicyError", { description: "A referrer policy error.", toEquivalence: () => sameReferrerPolicyError })
 ) {}
 
 /**
@@ -122,7 +221,10 @@ export class ReferrerPolicyError extends S.TaggedError<ReferrerPolicyError>($I.m
 export class NoSniffError extends S.TaggedError<NoSniffError>($I.make("NoSniffError"))(
   SecureHeader.Enum.NO_SNIFF,
   commonFields,
-  $I.annote("NoSniffError", { description: "A no sniff error." })
+  $I.annoteClass<
+    S.declare<NoSniffError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.NO_SNIFF, typeof commonFields>]
+  >("NoSniffError", { description: "A no sniff error.", toEquivalence: () => sameNoSniffError })
 ) {}
 
 /**
@@ -144,7 +246,10 @@ export class NoSniffError extends S.TaggedError<NoSniffError>($I.make("NoSniffEr
 export class NoOpenError extends S.TaggedError<NoOpenError>($I.make("NoOpenError"))(
   SecureHeader.Enum.NO_OPEN,
   commonFields,
-  $I.annote("NoOpenError", { description: "A no open error." })
+  $I.annoteClass<
+    S.declare<NoOpenError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.NO_OPEN, typeof commonFields>]
+  >("NoOpenError", { description: "A no open error.", toEquivalence: () => sameNoOpenError })
 ) {}
 
 /**
@@ -166,7 +271,10 @@ export class NoOpenError extends S.TaggedError<NoOpenError>($I.make("NoOpenError
 export class FrameGuardError extends S.TaggedError<FrameGuardError>($I.make("FrameGuardError"))(
   SecureHeader.Enum.FRAME_GUARD,
   commonFields,
-  $I.annote("FrameGuardError", { description: "A frame guard error." })
+  $I.annoteClass<
+    S.declare<FrameGuardError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.FRAME_GUARD, typeof commonFields>]
+  >("FrameGuardError", { description: "A frame guard error.", toEquivalence: () => sameFrameGuardError })
 ) {}
 
 /**
@@ -188,7 +296,10 @@ export class FrameGuardError extends S.TaggedError<FrameGuardError>($I.make("Fra
 export class ExpectCtError extends S.TaggedError<ExpectCtError>($I.make("ExpectCtError"))(
   SecureHeader.Enum.EXPECT_CT,
   commonFields,
-  $I.annote("ExpectCtError", { description: "An Expect-CT error." })
+  $I.annoteClass<
+    S.declare<ExpectCtError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.EXPECT_CT, typeof commonFields>]
+  >("ExpectCtError", { description: "An Expect-CT error.", toEquivalence: () => sameExpectCtError })
 ) {}
 
 /**
@@ -210,7 +321,13 @@ export class ExpectCtError extends S.TaggedError<ExpectCtError>($I.make("ExpectC
 export class PermissionsPolicyError extends S.TaggedError<PermissionsPolicyError>($I.make("PermissionsPolicyError"))(
   SecureHeader.Enum.PERMISSIONS_POLICY,
   commonFields,
-  $I.annote("PermissionsPolicyError", { description: "A permissions policy error." })
+  $I.annoteClass<
+    S.declare<PermissionsPolicyError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.PERMISSIONS_POLICY, typeof commonFields>]
+  >("PermissionsPolicyError", {
+    description: "A permissions policy error.",
+    toEquivalence: () => samePermissionsPolicyError,
+  })
 ) {}
 
 /**
@@ -234,7 +351,13 @@ export class CrossOriginOpenerPolicyError extends S.TaggedError<CrossOriginOpene
 )(
   SecureHeader.Enum.CROSS_ORIGIN_OPENER_POLICY,
   commonFields,
-  $I.annote("CrossOriginOpenerPolicyError", { description: "A cross-origin opener policy error." })
+  $I.annoteClass<
+    S.declare<CrossOriginOpenerPolicyError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.CROSS_ORIGIN_OPENER_POLICY, typeof commonFields>]
+  >("CrossOriginOpenerPolicyError", {
+    description: "A cross-origin opener policy error.",
+    toEquivalence: () => sameCrossOriginOpenerPolicyError,
+  })
 ) {}
 
 /**
@@ -258,7 +381,13 @@ export class CrossOriginEmbedderPolicyError extends S.TaggedError<CrossOriginEmb
 )(
   SecureHeader.Enum.CROSS_ORIGIN_EMBEDDER_POLICY,
   commonFields,
-  $I.annote("CrossOriginEmbedderPolicyError", { description: "A cross-origin embedder policy error." })
+  $I.annoteClass<
+    S.declare<CrossOriginEmbedderPolicyError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.CROSS_ORIGIN_EMBEDDER_POLICY, typeof commonFields>]
+  >("CrossOriginEmbedderPolicyError", {
+    description: "A cross-origin embedder policy error.",
+    toEquivalence: () => sameCrossOriginEmbedderPolicyError,
+  })
 ) {}
 
 /**
@@ -282,7 +411,13 @@ export class CrossOriginResourcePolicyError extends S.TaggedError<CrossOriginRes
 )(
   SecureHeader.Enum.CROSS_ORIGIN_RESOURCE_POLICY,
   commonFields,
-  $I.annote("CrossOriginResourcePolicyError", { description: "A cross-origin resource policy error." })
+  $I.annoteClass<
+    S.declare<CrossOriginResourcePolicyError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.CROSS_ORIGIN_RESOURCE_POLICY, typeof commonFields>]
+  >("CrossOriginResourcePolicyError", {
+    description: "A cross-origin resource policy error.",
+    toEquivalence: () => sameCrossOriginResourcePolicyError,
+  })
 ) {}
 
 /**
@@ -306,7 +441,13 @@ export class PermittedCrossDomainPoliciesError extends S.TaggedError<PermittedCr
 )(
   SecureHeader.Enum.PERMITTED_CROSS_DOMAIN_POLICIES,
   commonFields,
-  $I.annote("PermittedCrossDomainPoliciesError", { description: "A permitted cross-domain policies error." })
+  $I.annoteClass<
+    S.declare<PermittedCrossDomainPoliciesError>,
+    readonly [S.TaggedStruct<typeof SecureHeader.Enum.PERMITTED_CROSS_DOMAIN_POLICIES, typeof commonFields>]
+  >("PermittedCrossDomainPoliciesError", {
+    description: "A permitted cross-domain policies error.",
+    toEquivalence: () => samePermittedCrossDomainPoliciesError,
+  })
 ) {}
 
 /**
@@ -328,7 +469,10 @@ export class PermittedCrossDomainPoliciesError extends S.TaggedError<PermittedCr
 export class CoreError extends S.TaggedError<CoreError>($I.make("CoreError"))(
   SecureHeader.Enum.CORE,
   commonFields,
-  $I.annote("CoreError", { description: "A core error." })
+  $I.annoteClass<S.declare<CoreError>, readonly [S.TaggedStruct<typeof SecureHeader.Enum.CORE, typeof commonFields>]>(
+    "CoreError",
+    { description: "A core error.", toEquivalence: () => sameCoreError }
+  )
 ) {}
 
 /**

@@ -17,6 +17,21 @@ import { hashPublicTextSha256 } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("config-snapshot");
 
+const AiMetricsConfigSnapshotErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameAiMetricsConfigSnapshotErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiMetricsConfigSnapshotError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: AiMetricsConfigSnapshotErrorFields.message,
+  })
+);
+const sameAiMetricsConfigSnapshotError = (
+  self: AiMetricsConfigSnapshotError,
+  that: AiMetricsConfigSnapshotError
+): boolean => sameAiMetricsConfigSnapshotErrorFields(self, that);
+
 const CONFIG_ROOTS = [".codex", ".claude", ".ai", ".aiassistant"] as const;
 const AGENT_DOC_NAMES = ["AGENTS.md", "CLAUDE.md"] as const;
 const SESSION_SCOPE_PATHS: ReadonlyArray<string> = [
@@ -552,12 +567,13 @@ export class AiMetricsConfigSnapshotError extends S.TaggedError<AiMetricsConfigS
   $I`AiMetricsConfigSnapshotError`
 )(
   "AiMetricsConfigSnapshotError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-  },
-  $I.annote("AiMetricsConfigSnapshotError", {
+  AiMetricsConfigSnapshotErrorFields,
+  $I.annoteClass<
+    S.declare<AiMetricsConfigSnapshotError>,
+    readonly [S.TaggedStruct<"AiMetricsConfigSnapshotError", typeof AiMetricsConfigSnapshotErrorFields>]
+  >("AiMetricsConfigSnapshotError", {
     description: "Typed failure raised while building an AI metrics config snapshot.",
+    toEquivalence: () => sameAiMetricsConfigSnapshotError,
   })
 ) {}
 

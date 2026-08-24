@@ -17,6 +17,9 @@ import { $ApiTransportId } from "@beep/identity";
 import * as S from "effect/Schema";
 
 const $I = $ApiTransportId.create("EgressDenied");
+const EgressDeniedFields = {} satisfies S.Struct.Fields;
+const sameEgressDeniedFields = S.toEquivalence(S.TaggedStruct("EgressDenied", EgressDeniedFields));
+const sameEgressDenied = (self: EgressDenied, that: EgressDenied): boolean => sameEgressDeniedFields(self, that);
 
 /**
  * A governed egress boundary refused the request's destination.
@@ -45,10 +48,14 @@ const $I = $ApiTransportId.create("EgressDenied");
  */
 export class EgressDenied extends S.TaggedError<EgressDenied>($I`EgressDenied`)(
   "EgressDenied",
-  {},
-  $I.annote("EgressDenied", {
-    description: "A governed egress boundary refused the request's destination; deliberately reason-free.",
-  })
+  EgressDeniedFields,
+  $I.annoteClass<S.declare<EgressDenied>, readonly [S.TaggedStruct<"EgressDenied", typeof EgressDeniedFields>]>(
+    "EgressDenied",
+    {
+      description: "A governed egress boundary refused the request's destination; deliberately reason-free.",
+      toEquivalence: () => sameEgressDenied,
+    }
+  )
 ) {
   static readonly is = S.is(EgressDenied);
 }

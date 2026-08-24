@@ -1612,15 +1612,44 @@ const GRAPH_WORKER_MESSAGE_ERROR = "Ontology graph worker message failed to dese
 
 const GRAPH_WORKER_TIMEOUT_MESSAGE = "The graph worker did not respond. The diagram could not be drawn.";
 
-class OntologyGraphWorkerTimeoutError extends S.TaggedError<OntologyGraphWorkerTimeoutError>(
+const OntologyGraphWorkerTimeoutErrorFields = {
+  message: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const sameOntologyGraphWorkerTimeoutErrorFields = S.toEquivalence(
+  S.TaggedStruct("OntologyGraphWorkerTimeoutError", OntologyGraphWorkerTimeoutErrorFields)
+);
+const sameOntologyGraphWorkerTimeoutError = (
+  self: OntologyGraphWorkerTimeoutError,
+  that: OntologyGraphWorkerTimeoutError
+): boolean => sameOntologyGraphWorkerTimeoutErrorFields(self, that);
+
+/**
+ * Failure raised when ontology graph projection exceeds the worker response deadline.
+ *
+ * **Example** (Construct the timeout failure surfaced to the session)
+ *
+ * ```ts
+ * import { OntologyGraphWorkerTimeoutError } from "@beep/ontology-client/aggregates/Session"
+ *
+ * const failure = OntologyGraphWorkerTimeoutError.make({ message: "The graph worker did not respond." })
+ * console.log(failure._tag) // "OntologyGraphWorkerTimeoutError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class OntologyGraphWorkerTimeoutError extends S.TaggedError<OntologyGraphWorkerTimeoutError>(
   $I`OntologyGraphWorkerTimeoutError`
 )(
   "OntologyGraphWorkerTimeoutError",
-  {
-    message: S.NonEmptyString,
-  },
-  $I.annote("OntologyGraphWorkerTimeoutError", {
+  OntologyGraphWorkerTimeoutErrorFields,
+  $I.annoteClass<
+    S.declare<OntologyGraphWorkerTimeoutError>,
+    readonly [S.TaggedStruct<"OntologyGraphWorkerTimeoutError", typeof OntologyGraphWorkerTimeoutErrorFields>]
+  >("OntologyGraphWorkerTimeoutError", {
     description: "The ontology graph projection worker exceeded its response deadline.",
+
+    toEquivalence: () => sameOntologyGraphWorkerTimeoutError,
   })
 ) {}
 

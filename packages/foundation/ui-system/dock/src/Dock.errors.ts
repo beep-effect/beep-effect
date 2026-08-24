@@ -63,6 +63,15 @@ export const DockRejectionReason = LiteralKit([
  */
 export type DockRejectionReason = typeof DockRejectionReason.Type;
 
+const DockCommandRejectedFields = {
+  commandId: CommandId,
+  reason: DockRejectionReason,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameDockCommandRejectedFields = S.toEquivalence(S.TaggedStruct("DockCommandRejected", DockCommandRejectedFields));
+const sameDockCommandRejected = (self: DockCommandRejected, that: DockCommandRejected): boolean =>
+  sameDockCommandRejectedFields(self, that);
+
 /**
  * Typed expected command rejection that leaves state untouched.
  *
@@ -80,13 +89,13 @@ export type DockRejectionReason = typeof DockRejectionReason.Type;
  */
 export class DockCommandRejected extends S.TaggedError<DockCommandRejected>($I`DockCommandRejected`)(
   "DockCommandRejected",
-  {
-    commandId: CommandId,
-    reason: DockRejectionReason,
-    message: S.String,
-  },
-  $I.annote("DockCommandRejected", {
+  DockCommandRejectedFields,
+  $I.annoteClass<
+    S.declare<DockCommandRejected>,
+    readonly [S.TaggedStruct<"DockCommandRejected", typeof DockCommandRejectedFields>]
+  >("DockCommandRejected", {
     description: "An expected command rejection that leaves state untouched.",
+    toEquivalence: () => sameDockCommandRejected,
   })
 ) {}
 
@@ -134,6 +143,16 @@ export const DockInvariantReason = LiteralKit([
  */
 export type DockInvariantReason = typeof DockInvariantReason.Type;
 
+const DockInvariantViolationFields = {
+  reason: DockInvariantReason,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameDockInvariantViolationFields = S.toEquivalence(
+  S.TaggedStruct("DockInvariantViolation", DockInvariantViolationFields)
+);
+const sameDockInvariantViolation = (self: DockInvariantViolation, that: DockInvariantViolation): boolean =>
+  sameDockInvariantViolationFields(self, that);
+
 /**
  * Typed workspace invariant failure detected before publication.
  *
@@ -151,12 +170,13 @@ export type DockInvariantReason = typeof DockInvariantReason.Type;
  */
 export class DockInvariantViolation extends S.TaggedError<DockInvariantViolation>($I`DockInvariantViolation`)(
   "DockInvariantViolation",
-  {
-    reason: DockInvariantReason,
-    message: S.String,
-  },
-  $I.annote("DockInvariantViolation", {
+  DockInvariantViolationFields,
+  $I.annoteClass<
+    S.declare<DockInvariantViolation>,
+    readonly [S.TaggedStruct<"DockInvariantViolation", typeof DockInvariantViolationFields>]
+  >("DockInvariantViolation", {
     description: "A workspace invariant failed before state publication.",
+    toEquivalence: () => sameDockInvariantViolation,
   })
 ) {}
 
@@ -197,6 +217,14 @@ export const DockInputBoundary = LiteralKit(["command", "snapshot"]).annotate(
  */
 export type DockInputBoundary = typeof DockInputBoundary.Type;
 
+const DockInputErrorFields = {
+  boundary: DockInputBoundary,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameDockInputErrorFields = S.toEquivalence(S.TaggedStruct("DockInputError", DockInputErrorFields));
+const sameDockInputError = (self: DockInputError, that: DockInputError): boolean =>
+  sameDockInputErrorFields(self, that);
+
 /**
  * Typed decoding failure at a public input boundary.
  *
@@ -214,13 +242,14 @@ export type DockInputBoundary = typeof DockInputBoundary.Type;
  */
 export class DockInputError extends S.TaggedError<DockInputError>($I`DockInputError`)(
   "DockInputError",
-  {
-    boundary: DockInputBoundary,
-    message: S.String,
-  },
-  $I.annote("DockInputError", {
-    description: "Schema decoding failure mapped at a public POC boundary.",
-  })
+  DockInputErrorFields,
+  $I.annoteClass<S.declare<DockInputError>, readonly [S.TaggedStruct<"DockInputError", typeof DockInputErrorFields>]>(
+    "DockInputError",
+    {
+      description: "Schema decoding failure mapped at a public POC boundary.",
+      toEquivalence: () => sameDockInputError,
+    }
+  )
 ) {}
 
 /**
@@ -260,6 +289,16 @@ export const DockPersistenceOperation = LiteralKit(["load", "save"]).annotate(
  */
 export type DockPersistenceOperation = typeof DockPersistenceOperation.Type;
 
+const DockPersistenceErrorFields = {
+  operation: DockPersistenceOperation,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameDockPersistenceErrorFields = S.toEquivalence(
+  S.TaggedStruct("DockPersistenceError", DockPersistenceErrorFields)
+);
+const sameDockPersistenceError = (self: DockPersistenceError, that: DockPersistenceError): boolean =>
+  sameDockPersistenceErrorFields(self, that);
+
 /**
  * Typed failure from a replaceable snapshot-store adapter.
  *
@@ -277,14 +316,22 @@ export type DockPersistenceOperation = typeof DockPersistenceOperation.Type;
  */
 export class DockPersistenceError extends S.TaggedError<DockPersistenceError>($I`DockPersistenceError`)(
   "DockPersistenceError",
-  {
-    operation: DockPersistenceOperation,
-    message: S.String,
-  },
-  $I.annote("DockPersistenceError", {
+  DockPersistenceErrorFields,
+  $I.annoteClass<
+    S.declare<DockPersistenceError>,
+    readonly [S.TaggedStruct<"DockPersistenceError", typeof DockPersistenceErrorFields>]
+  >("DockPersistenceError", {
     description: "Failure while loading or saving a dock snapshot.",
+    toEquivalence: () => sameDockPersistenceError,
   })
 ) {}
+
+const DockSnapshotMissingFields = {
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameDockSnapshotMissingFields = S.toEquivalence(S.TaggedStruct("DockSnapshotMissing", DockSnapshotMissingFields));
+const sameDockSnapshotMissing = (self: DockSnapshotMissing, that: DockSnapshotMissing): boolean =>
+  sameDockSnapshotMissingFields(self, that);
 
 /**
  * Typed absence of a requested persisted snapshot.
@@ -303,11 +350,13 @@ export class DockPersistenceError extends S.TaggedError<DockPersistenceError>($I
  */
 export class DockSnapshotMissing extends S.TaggedError<DockSnapshotMissing>($I`DockSnapshotMissing`)(
   "DockSnapshotMissing",
-  {
-    message: S.String,
-  },
-  $I.annote("DockSnapshotMissing", {
+  DockSnapshotMissingFields,
+  $I.annoteClass<
+    S.declare<DockSnapshotMissing>,
+    readonly [S.TaggedStruct<"DockSnapshotMissing", typeof DockSnapshotMissingFields>]
+  >("DockSnapshotMissing", {
     description: "No persisted snapshot exists for a restore action.",
+    toEquivalence: () => sameDockSnapshotMissing,
   })
 ) {}
 

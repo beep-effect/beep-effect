@@ -52,6 +52,17 @@ export const SessionChangeRejectedReason = LiteralKit(["unknownPartition", "inva
  */
 export type SessionChangeRejectedReason = typeof SessionChangeRejectedReason.Type;
 
+const SessionChangeRejectedFields = {
+  sessionId: SessionId,
+  reason: SessionChangeRejectedReason,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameSessionChangeRejectedFields = S.toEquivalence(
+  S.TaggedStruct("SessionChangeRejected", SessionChangeRejectedFields)
+);
+const sameSessionChangeRejected = (self: SessionChangeRejected, that: SessionChangeRejected): boolean =>
+  sameSessionChangeRejectedFields(self, that);
+
 /**
  * Typed domain error for rejected ontology session changes.
  *
@@ -75,12 +86,13 @@ export type SessionChangeRejectedReason = typeof SessionChangeRejectedReason.Typ
  */
 export class SessionChangeRejected extends S.TaggedError<SessionChangeRejected>($I`SessionChangeRejected`)(
   "SessionChangeRejected",
-  {
-    sessionId: SessionId,
-    reason: SessionChangeRejectedReason,
-    message: S.String,
-  },
-  $I.annote("SessionChangeRejected", {
+  SessionChangeRejectedFields,
+  $I.annoteClass<
+    S.declare<SessionChangeRejected>,
+    readonly [S.TaggedStruct<"SessionChangeRejected", typeof SessionChangeRejectedFields>]
+  >("SessionChangeRejected", {
     description: "Typed domain error for rejected ontology session changes.",
+
+    toEquivalence: () => sameSessionChangeRejected,
   })
 ) {}

@@ -97,6 +97,22 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
   })
 ) {}
 
+const SyncOperationRepositoryConflictFields = {
+  idempotencyKey: S.NonEmptyString.annotateKey({
+    description: "Idempotency key that already has an enqueued operation.",
+  }),
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository conflict diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const sameSyncOperationRepositoryConflictFields = S.toEquivalence(
+  S.TaggedStruct("SyncOperationRepositoryConflict", SyncOperationRepositoryConflictFields)
+);
+const sameSyncOperationRepositoryConflict = (
+  self: SyncOperationRepositoryConflict,
+  that: SyncOperationRepositoryConflict
+): boolean => sameSyncOperationRepositoryConflictFields(self, that);
+
 /**
  * Persistence failure raised when an enqueue replays an existing idempotency key.
  *
@@ -119,21 +135,31 @@ export class SyncOperationRepositoryConflict extends S.TaggedError<SyncOperation
   $I`SyncOperationRepositoryConflict`
 )(
   "SyncOperationRepositoryConflict",
-  {
-    idempotencyKey: S.NonEmptyString.annotateKey({
-      description: "Idempotency key that already has an enqueued operation.",
-    }),
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository conflict diagnostic.",
-    }),
-  },
-  $I.annote("SyncOperationRepositoryConflict", {
+  SyncOperationRepositoryConflictFields,
+  $I.annoteClass<
+    S.declare<SyncOperationRepositoryConflict>,
+    readonly [S.TaggedStruct<"SyncOperationRepositoryConflict", typeof SyncOperationRepositoryConflictFields>]
+  >("SyncOperationRepositoryConflict", {
     title: "SyncOperation repository conflict",
     description: "The SyncOperation repository rejected a duplicate idempotency key.",
+    toEquivalence: () => sameSyncOperationRepositoryConflict,
   })
 ) {
   static readonly is = S.is(SyncOperationRepositoryConflict);
 }
+
+const SyncOperationRepositoryNotFoundFields = {
+  syncOperationId: Documents.SyncOperationId.annotateKey({
+    description: "SyncOperation identity that could not be found.",
+  }),
+} satisfies S.Struct.Fields;
+const sameSyncOperationRepositoryNotFoundFields = S.toEquivalence(
+  S.TaggedStruct("SyncOperationRepositoryNotFound", SyncOperationRepositoryNotFoundFields)
+);
+const sameSyncOperationRepositoryNotFound = (
+  self: SyncOperationRepositoryNotFound,
+  that: SyncOperationRepositoryNotFound
+): boolean => sameSyncOperationRepositoryNotFoundFields(self, that);
 
 /**
  * Persistence failure raised when a SyncOperation row is absent.
@@ -158,18 +184,31 @@ export class SyncOperationRepositoryNotFound extends S.TaggedError<SyncOperation
   $I`SyncOperationRepositoryNotFound`
 )(
   "SyncOperationRepositoryNotFound",
-  {
-    syncOperationId: Documents.SyncOperationId.annotateKey({
-      description: "SyncOperation identity that could not be found.",
-    }),
-  },
-  $I.annote("SyncOperationRepositoryNotFound", {
+  SyncOperationRepositoryNotFoundFields,
+  $I.annoteClass<
+    S.declare<SyncOperationRepositoryNotFound>,
+    readonly [S.TaggedStruct<"SyncOperationRepositoryNotFound", typeof SyncOperationRepositoryNotFoundFields>]
+  >("SyncOperationRepositoryNotFound", {
     title: "SyncOperation repository not found",
     description: "The SyncOperation repository could not find the requested entity.",
+    toEquivalence: () => sameSyncOperationRepositoryNotFound,
   })
 ) {
   static readonly is = S.is(SyncOperationRepositoryNotFound);
 }
+
+const SyncOperationRepositoryUnavailableFields = {
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository availability diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const sameSyncOperationRepositoryUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("SyncOperationRepositoryUnavailable", SyncOperationRepositoryUnavailableFields)
+);
+const sameSyncOperationRepositoryUnavailable = (
+  self: SyncOperationRepositoryUnavailable,
+  that: SyncOperationRepositoryUnavailable
+): boolean => sameSyncOperationRepositoryUnavailableFields(self, that);
 
 /**
  * Persistence failure raised when the SyncOperation repository is unavailable.
@@ -190,14 +229,14 @@ export class SyncOperationRepositoryUnavailable extends S.TaggedError<SyncOperat
   $I`SyncOperationRepositoryUnavailable`
 )(
   "SyncOperationRepositoryUnavailable",
-  {
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository availability diagnostic.",
-    }),
-  },
-  $I.annote("SyncOperationRepositoryUnavailable", {
+  SyncOperationRepositoryUnavailableFields,
+  $I.annoteClass<
+    S.declare<SyncOperationRepositoryUnavailable>,
+    readonly [S.TaggedStruct<"SyncOperationRepositoryUnavailable", typeof SyncOperationRepositoryUnavailableFields>]
+  >("SyncOperationRepositoryUnavailable", {
     title: "SyncOperation repository unavailable",
     description: "The SyncOperation repository could not serve the request.",
+    toEquivalence: () => sameSyncOperationRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(SyncOperationRepositoryUnavailable);

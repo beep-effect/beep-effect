@@ -34,6 +34,13 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.errors");
  */
 export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable." as const;
 
+const WorkerNotFoundFields = {
+  workerId: ArchitectureLabIdentity.WorkerId,
+} satisfies S.Struct.Fields;
+const sameWorkerNotFoundFields = S.toEquivalence(S.TaggedStruct("WorkerNotFound", WorkerNotFoundFields));
+const sameWorkerNotFound = (self: WorkerNotFound, that: WorkerNotFound): boolean =>
+  sameWorkerNotFoundFields(self, that);
+
 /**
  * Public failure raised when a requested Worker is absent.
  *
@@ -57,14 +64,28 @@ export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable."
  */
 export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFound`)(
   "WorkerNotFound",
-  {
-    workerId: ArchitectureLabIdentity.WorkerId,
-  },
-  $I.annote("WorkerNotFound", {
-    title: "Worker not found",
-    description: "The requested architecture lab Worker does not exist.",
-  })
+  WorkerNotFoundFields,
+  $I.annoteClass<S.declare<WorkerNotFound>, readonly [S.TaggedStruct<"WorkerNotFound", typeof WorkerNotFoundFields>]>(
+    "WorkerNotFound",
+    {
+      title: "Worker not found",
+      description: "The requested architecture lab Worker does not exist.",
+      toEquivalence: () => sameWorkerNotFound,
+    }
+  )
 ) {}
+
+const WorkerConflictFields = {
+  workerId: ArchitectureLabIdentity.WorkerId.annotateKey({
+    description: "Worker identity whose command conflicted with persisted state.",
+  }),
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty public conflict reason.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkerConflictFields = S.toEquivalence(S.TaggedStruct("WorkerConflict", WorkerConflictFields));
+const sameWorkerConflict = (self: WorkerConflict, that: WorkerConflict): boolean =>
+  sameWorkerConflictFields(self, that);
 
 /**
  * Public failure raised when a Worker command conflicts with persisted state.
@@ -90,19 +111,25 @@ export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFo
  */
 export class WorkerConflict extends S.TaggedError<WorkerConflict>($I`WorkerConflict`)(
   "WorkerConflict",
-  {
-    workerId: ArchitectureLabIdentity.WorkerId.annotateKey({
-      description: "Worker identity whose command conflicted with persisted state.",
-    }),
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty public conflict reason.",
-    }),
-  },
-  $I.annote("WorkerConflict", {
-    title: "Worker conflict",
-    description: "The requested Worker command conflicts with persisted state.",
-  })
+  WorkerConflictFields,
+  $I.annoteClass<S.declare<WorkerConflict>, readonly [S.TaggedStruct<"WorkerConflict", typeof WorkerConflictFields>]>(
+    "WorkerConflict",
+    {
+      title: "Worker conflict",
+      description: "The requested Worker command conflicts with persisted state.",
+      toEquivalence: () => sameWorkerConflict,
+    }
+  )
 ) {}
+
+const WorkerActionFailedFields = {
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty public failure reason with internal repository details redacted.",
+  }),
+} satisfies S.Struct.Fields;
+const sameWorkerActionFailedFields = S.toEquivalence(S.TaggedStruct("WorkerActionFailed", WorkerActionFailedFields));
+const sameWorkerActionFailed = (self: WorkerActionFailed, that: WorkerActionFailed): boolean =>
+  sameWorkerActionFailedFields(self, that);
 
 /**
  * Public failure raised when a Worker action cannot be completed.
@@ -122,14 +149,14 @@ export class WorkerConflict extends S.TaggedError<WorkerConflict>($I`WorkerConfl
  */
 export class WorkerActionFailed extends S.TaggedError<WorkerActionFailed>($I`WorkerActionFailed`)(
   "WorkerActionFailed",
-  {
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty public failure reason with internal repository details redacted.",
-    }),
-  },
-  $I.annote("WorkerActionFailed", {
+  WorkerActionFailedFields,
+  $I.annoteClass<
+    S.declare<WorkerActionFailed>,
+    readonly [S.TaggedStruct<"WorkerActionFailed", typeof WorkerActionFailedFields>]
+  >("WorkerActionFailed", {
     title: "Worker action failed",
     description: "The Worker use-case action could not be completed.",
+    toEquivalence: () => sameWorkerActionFailed,
   })
 ) {}
 

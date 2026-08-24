@@ -9,16 +9,32 @@
 
 import { taggedEnum } from "effect/Data";
 import { hasProperty, isString, isUndefined } from "effect/Predicate";
-import { String as StringSchema, TaggedError } from "effect/Schema";
+import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
 import type { SQL } from "drizzle-orm";
 import type { TaggedEnum } from "effect/Data";
+import type { Annotations, Struct } from "effect/Schema";
+
+const SqlExpressionErrorFields = {
+  message: StringSchema,
+  context: StringSchema,
+} satisfies Struct.Fields;
+const sameSqlExpressionErrorFields = toEquivalence(TaggedStruct("SqlExpressionError", SqlExpressionErrorFields));
+const sameSqlExpressionError = (self: SqlExpressionError, that: SqlExpressionError): boolean =>
+  sameSqlExpressionErrorFields(self, that);
+const SqlExpressionErrorAnnotations = {
+  description: "A schema-level SQL expression contains bound parameters.",
+  toEquivalence: () => sameSqlExpressionError,
+} satisfies Annotations.Declaration<
+  SqlExpressionError,
+  readonly [TaggedStruct<"SqlExpressionError", typeof SqlExpressionErrorFields>]
+>;
 
 /** A typed schema expression rendered bound parameters that DDL cannot carry. */
 /** @internal */
 class SqlExpressionError extends TaggedError<SqlExpressionError>("@beep/effect-drizzle/SqlExpressionError")(
   "SqlExpressionError",
-  { message: StringSchema, context: StringSchema },
-  { description: "A schema-level SQL expression contains bound parameters." }
+  SqlExpressionErrorFields,
+  SqlExpressionErrorAnnotations
 ) {}
 
 /**

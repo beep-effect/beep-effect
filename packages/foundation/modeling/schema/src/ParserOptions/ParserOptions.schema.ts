@@ -41,6 +41,15 @@ const ParserOptionsErrorFields = {
   cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
   message: S.String,
 } satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const ParserOptionsErrorComparableFields = {
+  message: ParserOptionsErrorFields.message,
+} satisfies S.Struct.Fields;
+const sameParserOptionsErrorFields = S.toEquivalence(
+  S.TaggedStruct("ParserOptionsError", ParserOptionsErrorComparableFields)
+);
+const sameParserOptionsError = (self: ParserOptionsError, that: ParserOptionsError): boolean =>
+  sameParserOptionsErrorFields(self, that);
 
 /**
  * A parser header configuration input.
@@ -90,8 +99,12 @@ export type HeaderValueInput = typeof HeaderValueInput.Type;
 export class ParserOptionsError extends S.TaggedError<ParserOptionsError>($I.make("ParserOptionsError"))(
   "ParserOptionsError",
   ParserOptionsErrorFields,
-  $I.annote("ParserOptionsError", {
+  $I.annoteClass<
+    S.declare<ParserOptionsError>,
+    readonly [S.TaggedStruct<"ParserOptionsError", typeof ParserOptionsErrorFields>]
+  >("ParserOptionsError", {
     description: "Raised when CSV parser options cannot be decoded or normalized.",
+    toEquivalence: () => sameParserOptionsError,
   })
 ) {}
 

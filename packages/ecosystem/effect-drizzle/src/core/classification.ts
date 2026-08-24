@@ -23,13 +23,29 @@ import {
 import { equals } from "effect/Equal";
 import { getOrElse, isSome } from "effect/Option";
 import { isTagged, not, or } from "effect/Predicate";
-import { String as StringSchema, TaggedError } from "effect/Schema";
+import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import type { Option } from "effect/Option";
-import type { Top } from "effect/Schema";
+import type { Annotations, Struct, Top } from "effect/Schema";
 import type { AST } from "effect/SchemaAST";
 import type * as Field from "./Field.ts";
 import type * as Meta from "./Meta.ts";
+
+const DeriveColumnErrorFields = {
+  message: StringSchema,
+  fieldName: StringSchema,
+  astTag: StringSchema,
+} satisfies Struct.Fields;
+const sameDeriveColumnErrorFields = toEquivalence(TaggedStruct("DeriveColumnError", DeriveColumnErrorFields));
+const sameDeriveColumnError = (self: DeriveColumnError, that: DeriveColumnError): boolean =>
+  sameDeriveColumnErrorFields(self, that);
+const DeriveColumnErrorAnnotations = {
+  description: "A bare schema field's column could not be derived from its encoded AST.",
+  toEquivalence: () => sameDeriveColumnError,
+} satisfies Annotations.Declaration<
+  DeriveColumnError,
+  readonly [TaggedStruct<"DeriveColumnError", typeof DeriveColumnErrorFields>]
+>;
 
 /**
  * Failure to derive one unambiguous SQL column from an encoded schema.
@@ -39,10 +55,8 @@ import type * as Meta from "./Meta.ts";
  */
 export class DeriveColumnError extends TaggedError<DeriveColumnError>("@beep/effect-drizzle/DeriveColumnError")(
   "DeriveColumnError",
-  { message: StringSchema, fieldName: StringSchema, astTag: StringSchema },
-  {
-    description: "A bare schema field's column could not be derived from its encoded AST.",
-  }
+  DeriveColumnErrorFields,
+  DeriveColumnErrorAnnotations
 ) {}
 
 /**

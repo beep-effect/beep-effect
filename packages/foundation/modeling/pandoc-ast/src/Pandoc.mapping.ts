@@ -42,6 +42,19 @@ import type { PandocBlock, PandocInline } from "./Pandoc.model.ts";
 import type { JsonPath, PandocMappingDirection, PandocMappingSeverity } from "./Pandoc.report.ts";
 
 const $I = $PandocAstId.create("Pandoc.mapping");
+const PandocMappingErrorFields = {
+  message: S.String,
+  cause: S.Defect({ includeStack: true }),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const PandocMappingErrorComparableFields = {
+  message: PandocMappingErrorFields.message,
+} satisfies S.Struct.Fields;
+const samePandocMappingErrorFields = S.toEquivalence(
+  S.TaggedStruct("PandocMappingError", PandocMappingErrorComparableFields)
+);
+const samePandocMappingError = (self: PandocMappingError, that: PandocMappingError): boolean =>
+  samePandocMappingErrorFields(self, that);
 
 /**
  * Typed failure raised when a Pandoc-to-Md projection cannot be completed.
@@ -64,12 +77,13 @@ const $I = $PandocAstId.create("Pandoc.mapping");
  */
 export class PandocMappingError extends S.TaggedError<PandocMappingError>($I`PandocMappingError`)(
   "PandocMappingError",
-  {
-    message: S.String,
-    cause: S.Defect({ includeStack: true }),
-  },
-  $I.annote("PandocMappingError", {
+  PandocMappingErrorFields,
+  $I.annoteClass<
+    S.declare<PandocMappingError>,
+    readonly [S.TaggedStruct<"PandocMappingError", typeof PandocMappingErrorFields>]
+  >("PandocMappingError", {
     description: "Typed failure raised when a Pandoc and Md compatibility projection cannot be completed.",
+    toEquivalence: () => samePandocMappingError,
   })
 ) {}
 

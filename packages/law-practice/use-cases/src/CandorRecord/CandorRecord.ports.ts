@@ -64,6 +64,32 @@ export const CandorRecordOperation = CandorRecordOperationBase.pipe(
  */
 export type CandorRecordOperation = typeof CandorRecordOperation.Type;
 
+const CandorRecordRepositoryUnavailableFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({
+      description: "Optional underlying driver defect captured when the repository could not serve a request.",
+    }),
+  operation: CandorRecordOperation.annotateKey({
+    description: "Repository operation that could not be served.",
+  }),
+  reason: S.NonEmptyString.annotateKey({
+    description: "Non-empty repository availability diagnostic.",
+  }),
+} satisfies S.Struct.Fields;
+const CandorRecordRepositoryUnavailableEquivalenceFields = {
+  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+  operation: CandorRecordRepositoryUnavailableFields.operation,
+  reason: CandorRecordRepositoryUnavailableFields.reason,
+} satisfies S.Struct.Fields;
+const sameCandorRecordRepositoryUnavailableFields = S.toEquivalence(
+  S.TaggedStruct("CandorRecordRepositoryUnavailable", CandorRecordRepositoryUnavailableEquivalenceFields)
+);
+const sameCandorRecordRepositoryUnavailable = (
+  self: CandorRecordRepositoryUnavailable,
+  that: CandorRecordRepositoryUnavailable
+): boolean => sameCandorRecordRepositoryUnavailableFields(self, that);
+
 /**
  * Raised when the candor record repository could not serve a request.
  *
@@ -95,22 +121,15 @@ export class CandorRecordRepositoryUnavailable extends S.TaggedError<CandorRecor
   $I`CandorRecordRepositoryUnavailable`
 )(
   "CandorRecordRepositoryUnavailable",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({
-        description: "Optional underlying driver defect captured when the repository could not serve a request.",
-      }),
-    operation: CandorRecordOperation.annotateKey({
-      description: "Repository operation that could not be served.",
-    }),
-    reason: S.NonEmptyString.annotateKey({
-      description: "Non-empty repository availability diagnostic.",
-    }),
-  },
-  $I.annote("CandorRecordRepositoryUnavailable", {
+  CandorRecordRepositoryUnavailableFields,
+  $I.annoteClass<
+    S.declare<CandorRecordRepositoryUnavailable>,
+    readonly [S.TaggedStruct<"CandorRecordRepositoryUnavailable", typeof CandorRecordRepositoryUnavailableFields>]
+  >("CandorRecordRepositoryUnavailable", {
     title: "Candor record repository unavailable",
     description: "The candor record repository could not serve the request.",
+
+    toEquivalence: () => sameCandorRecordRepositoryUnavailable,
   })
 ) {
   /**

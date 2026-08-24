@@ -46,16 +46,46 @@ type ContactSubmissionErrorOptions = {
   readonly status?: number;
 };
 
-class ContactSubmissionError extends S.TaggedError<ContactSubmissionError>($I`ContactSubmissionError`)(
+const ContactSubmissionErrorFields = {
+  provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  reason: ContactSubmissionErrorReason,
+  status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
+} satisfies S.Struct.Fields;
+const sameContactSubmissionErrorFields = S.toEquivalence(
+  S.TaggedStruct("ContactSubmissionError", ContactSubmissionErrorFields)
+);
+const sameContactSubmissionError = (self: ContactSubmissionError, that: ContactSubmissionError): boolean =>
+  sameContactSubmissionErrorFields(self, that);
+
+/**
+ * Typed server-side failure raised by the OIP contact submission boundary.
+ *
+ * **Example** (Create a provider submission failure)
+ *
+ * ```ts
+ * import { ContactSubmissionError } from "@/contact/ContactSubmission.service"
+ *
+ * const error = ContactSubmissionError.fromReason("provider", {
+ *   provider: "hubspot",
+ *   providerReason: "unavailable",
+ *   status: 503
+ * })
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ContactSubmissionError extends S.TaggedError<ContactSubmissionError>($I`ContactSubmissionError`)(
   "ContactSubmissionError",
-  {
-    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    reason: ContactSubmissionErrorReason,
-    status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
-  },
-  $I.annote("ContactSubmissionError", {
+  ContactSubmissionErrorFields,
+  $I.annoteClass<
+    S.declare<ContactSubmissionError>,
+    readonly [S.TaggedStruct<"ContactSubmissionError", typeof ContactSubmissionErrorFields>]
+  >("ContactSubmissionError", {
     description: "Typed server-side contact submission boundary failure.",
+    toEquivalence: () => sameContactSubmissionError,
   })
 ) {
   static readonly fromReason = (
