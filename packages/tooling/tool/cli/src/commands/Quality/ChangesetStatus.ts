@@ -385,11 +385,10 @@ export const uncoveredWorkspacePackageNames: {
   ): ReadonlyArray<string>;
 } = dual(3, uncoveredImpl);
 
-const collectChangedFilesSince = Effect.fn("ChangesetStatus.collectChangedFilesSince")(function* (
+const collectGitDiffNameOnlyPaths = Effect.fn("ChangesetStatus.collectGitDiffNameOnlyPaths")(function* (
   repoRoot: string,
-  since: string
+  args: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<string>, ChangesetStatusError, ChildProcessSpawner.ChildProcessSpawner> {
-  const args = ["diff", "--name-only", "-z", "--no-renames", "--diff-filter=ACMRTUXBD", `${since}...HEAD`] as const;
   const result = yield* runCaptured({
     command: "git",
     args,
@@ -403,6 +402,19 @@ const collectChangedFilesSince = Effect.fn("ChangesetStatus.collectChangedFilesS
   }
   return toNulSeparatedPaths(result.output);
 });
+
+const collectChangedFilesSince = (
+  repoRoot: string,
+  since: string
+): Effect.Effect<ReadonlyArray<string>, ChangesetStatusError, ChildProcessSpawner.ChildProcessSpawner> =>
+  collectGitDiffNameOnlyPaths(repoRoot, [
+    "diff",
+    "--name-only",
+    "-z",
+    "--no-renames",
+    "--diff-filter=ACMRTUXBD",
+    `${since}...HEAD`,
+  ]);
 
 const readChangesetIgnoredPackageNames = Effect.fn("ChangesetStatus.readChangesetIgnoredPackageNames")(function* (
   repoRoot: string
@@ -433,20 +445,17 @@ const collectAddedChangesetReferences = Effect.fn("ChangesetStatus.collectAddedC
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const args = ["diff", "--name-only", "-z", "--diff-filter=A", `${since}...HEAD`, "--", changesetDirName] as const;
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(ChangesetStatusError.mapError(`Failed to run git ${A.join(args, " ")}.`));
-  if (result.exitCode !== 0) {
-    return yield* ChangesetStatusError.make({
-      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`,
-    });
-  }
+  const addedPaths = yield* collectGitDiffNameOnlyPaths(repoRoot, [
+    "diff",
+    "--name-only",
+    "-z",
+    "--diff-filter=A",
+    `${since}...HEAD`,
+    "--",
+    changesetDirName,
+  ]);
   const changesetFiles = pipe(
-    toNulSeparatedPaths(result.output),
+    addedPaths,
     A.filter(
       (file) => Str.endsWith(".md")(file) && !Str.equivalence(file, `${changesetDirName}/${changesetReadmeFilename}`)
     ),
