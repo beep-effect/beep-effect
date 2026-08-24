@@ -34,6 +34,8 @@
     "goals/skill-contract-kernel/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/p0-fact-base.md",
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "../../explorations/typed-agent-skill-contracts/research/SOURCES.md",
     "../../explorations/typed-agent-skill-contracts/research/inventory/contract-kernel-evidence.md",
@@ -54,7 +56,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",

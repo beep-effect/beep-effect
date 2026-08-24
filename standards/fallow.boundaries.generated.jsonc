@@ -684,6 +684,12 @@
         ]
       },
       {
+        "name": "@beep/skill-contract",
+        "patterns": [
+          "packages/foundation/modeling/skill-contract/src/**"
+        ]
+      },
+      {
         "name": "@beep/storybook",
         "patterns": [
           "apps/storybook/src/**"
@@ -2862,6 +2868,7 @@
           "@beep/repo-utils",
           "@beep/runpod",
           "@beep/schema",
+          "@beep/skill-contract",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
@@ -2890,6 +2897,7 @@
           "@beep/repo-utils",
           "@beep/runpod",
           "@beep/schema",
+          "@beep/skill-contract",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
@@ -3143,6 +3151,21 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-use-cases",
+          "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/skill-contract",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/skill-contract",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/skill-contract",
           "@beep/test-utils"
         ]
       },

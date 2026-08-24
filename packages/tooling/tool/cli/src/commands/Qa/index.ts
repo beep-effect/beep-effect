@@ -6,6 +6,13 @@
  */
 
 /**
+ * Typed fail-closed gate for cited QA artifacts.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./CitedArtifactExistsGate.ts";
+/**
  * Live-session control for `qa stop` and `qa mark`.
  *
  * @category use-cases

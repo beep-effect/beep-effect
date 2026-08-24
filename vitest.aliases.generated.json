@@ -1754,5 +1754,11 @@
   ],
   "@beep/repo-cli/commands/Explore": [
     "./packages/tooling/tool/cli/src/commands/Explore/index.ts"
+  ],
+  "@beep/skill-contract": [
+    "./packages/foundation/modeling/skill-contract/src/index.ts"
+  ],
+  "@beep/skill-contract/*": [
+    "./packages/foundation/modeling/skill-contract/src/*"
   ]
 }
