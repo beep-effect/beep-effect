@@ -235,7 +235,7 @@ describe("@beep/infra CiFleetController", () => {
           Version: "2012-10-17",
           Statement: [
             {
-              Sid: "DisableOwnMetadataEndpoint",
+              Sid: "DisableOwnMetadataEndpointWhileEnabled",
               Effect: "Allow",
               Action: "ec2:ModifyInstanceMetadataOptions",
               Resource: "arn:aws:ec2:*:*:instance/*",
@@ -244,7 +244,7 @@ describe("@beep/infra CiFleetController", () => {
                   "ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/${ec2:InstanceID}",
                 },
                 StringEquals: {
-                  "ec2:MetadataHttpEndpoint": "disabled",
+                  "ec2:MetadataHttpEndpoint": "enabled",
                 },
               },
             },
@@ -282,7 +282,7 @@ describe("@beep/infra CiFleetController", () => {
       assertSubstringBefore(
         postInstall,
         "aws ec2 modify-instance-metadata-options",
-        "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; runner may start"
+        "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; testing metadata-options lock"
       );
       assertSubstringBefore(
         postInstall,
@@ -347,10 +347,20 @@ describe("@beep/infra CiFleetController", () => {
       assert.isTrue(Str.includes("grep -oE '\\([A-Za-z0-9._-]+\\)'")(rendered));
       assert.isTrue(Str.includes("aws ec2 modify-instance-metadata-options \\\n    --dry-run")(rendered));
       assert.isTrue(Str.includes('self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"')(rendered));
-      assert.isTrue(Str.includes('self_reenable_code="$(imds_edge_dry_run "$instance_id" enabled)"')(rendered));
       assert.isTrue(Str.includes('other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"')(rendered));
+      assert.isTrue(
+        Str.includes('self_reenable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" enabled)"')(
+          rendered
+        )
+      );
+      assert.isTrue(
+        Str.includes('self_redisable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" disabled)"')(
+          rendered
+        )
+      );
       assert.isTrue(Str.includes('beep_log beep-imds-edges "IMDS_EDGE self_disable: PASS"')(rendered));
       assert.isTrue(Str.includes('beep_log beep-imds-edges "IMDS_EDGE self_reenable: PASS"')(rendered));
+      assert.isTrue(Str.includes('beep_log beep-imds-edges "IMDS_EDGE self_redisable: PASS"')(rendered));
       assert.isTrue(Str.includes('beep_log beep-imds-edges "IMDS_EDGE other_disable: PASS"')(rendered));
       assert.isTrue(
         Str.includes(
@@ -364,7 +374,15 @@ describe("@beep/infra CiFleetController", () => {
         Str.includes(
           'case "$self_reenable_code" in\n' +
             '  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_reenable: PASS" ;;\n' +
-            '  *) beep_exit_reason="IMDS_EDGE self_reenable failed ($self_reenable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)"; exit 1 ;;\n' +
+            '  *) beep_exit_reason="IMDS_EDGE self_reenable failed ($self_reenable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)"; discard_cached_credentials; exit 1 ;;\n' +
+            "esac"
+        )(rendered)
+      );
+      assert.isTrue(
+        Str.includes(
+          'case "$self_redisable_code" in\n' +
+            '  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_redisable: PASS" ;;\n' +
+            '  *) beep_exit_reason="IMDS_EDGE self_redisable failed ($self_redisable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_redisable: FAIL ($self_redisable_code)"; discard_cached_credentials; exit 1 ;;\n' +
             "esac"
         )(rendered)
       );
@@ -381,12 +399,51 @@ describe("@beep/infra CiFleetController", () => {
       assertSubstringBefore(
         rendered,
         'self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"',
-        'beep_log beep-imds-disable "disabling IMDS on $instance_id in $region"'
+        'aws ec2 modify-instance-metadata-options \\\n  --instance-id "$instance_id"'
       );
       assertSubstringBefore(
         rendered,
         'other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"',
-        'beep_log beep-imds-disable "disabling IMDS on $instance_id in $region"'
+        'aws ec2 modify-instance-metadata-options \\\n  --instance-id "$instance_id"'
+      );
+      assertSubstringBefore(
+        rendered,
+        'role_name="$(curl --noproxy',
+        'aws ec2 modify-instance-metadata-options \\\n  --instance-id "$instance_id"'
+      );
+      assertSubstringBefore(
+        rendered,
+        'cached_session_token="$(printf',
+        'aws ec2 modify-instance-metadata-options \\\n  --instance-id "$instance_id"'
+      );
+      assertSubstringBefore(
+        rendered,
+        "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; testing metadata-options lock",
+        'self_reenable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" enabled)"'
+      );
+      assertSubstringBefore(
+        rendered,
+        "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; testing metadata-options lock",
+        'self_redisable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" disabled)"'
+      );
+      assertSubstringBefore(
+        rendered,
+        'self_reenable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" enabled)"',
+        'self_redisable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" disabled)"'
+      );
+      assert.isTrue(
+        Str.includes(
+          'env \\\n    AWS_ACCESS_KEY_ID="$cached_access_key_id" \\\n    AWS_SECRET_ACCESS_KEY="$cached_secret_access_key" \\\n    AWS_SESSION_TOKEN="$cached_session_token"'
+        )(rendered)
+      );
+      assert.isTrue(
+        Str.includes(
+          "unset cached_access_key_id cached_secret_access_key cached_session_token\n" +
+            '  beep_log beep-imds-disable "cached credentials discarded"'
+        )(rendered)
+      );
+      expect(rendered).not.toMatch(
+        /beep_log[^\n]*\$(?:cached_access_key_id|cached_secret_access_key|cached_session_token|role_credentials_json)/u
       );
       assert.isTrue(Str.includes("modify_exit_code=$?")(rendered));
       assert.isTrue(

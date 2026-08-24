@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# IAM's custom-policy simulator does not resolve the instance-profile policy's
-# ${ec2:SourceInstanceARN} variable from context entries. Self-scoping is NOT
-# simulator-provable; the helper's live pre-disable dry-runs prove it in Gate L.
+# For ec2:ModifyInstanceMetadataOptions, ec2:MetadataHttpEndpoint describes the
+# target instance's current state, not the requested value. This harness proves
+# the boundary's one-way lock: disabled is denied, enabled is allowed, and an
+# absent key represents a non-instance resource and is allowed by the stand-in
+# identity policy. Self-scoping remains live-proven by the helper and Gate L.
 set -euo pipefail
 
 command -v aws >/dev/null 2>&1
@@ -81,7 +83,7 @@ simulate() {
 }
 
 failed=0
-simulate "endpoint_disabled" disabled allowed || failed=1
-simulate "endpoint_enabled" enabled explicitDeny || failed=1
-simulate "endpoint_absent" absent explicitDeny || failed=1
+simulate "current_endpoint_disabled" disabled explicitDeny || failed=1
+simulate "current_endpoint_enabled" enabled allowed || failed=1
+simulate "non_instance_key_absent" absent allowed || failed=1
 exit "${failed}"

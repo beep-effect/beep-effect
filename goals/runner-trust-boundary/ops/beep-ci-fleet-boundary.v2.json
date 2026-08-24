@@ -44,12 +44,12 @@
       "Resource": "*"
     },
     {
-      "Sid": "DenyMetadataEndpointReenable",
+      "Sid": "DenyMetadataOptionsOnceDisabled",
       "Effect": "Deny",
       "Action": "ec2:ModifyInstanceMetadataOptions",
       "Resource": "*",
       "Condition": {
-        "StringNotEquals": {
+        "StringEquals": {
           "ec2:MetadataHttpEndpoint": "disabled"
         }
       }

@@ -202,7 +202,6 @@ region="$(curl --noproxy '*' --silent --show-error --fail \\
   --connect-timeout 2 --max-time 5 \\
   --header "X-aws-ec2-metadata-token: $imds_token" \\
   http://169.254.169.254/latest/dynamic/instance-identity/document | jq -er '.region')"
-unset imds_token
 beep_log beep-imds-disable "instance id + region resolved: instance_id=$instance_id region=$region"
 beep_exit_reason="IMDS edge validation aborted"
 
@@ -227,16 +226,38 @@ imds_edge_dry_run() {
   printf '%s\\n' "\${error_code:-UnknownError}"
 }
 
+imds_edge_dry_run_with_cached_credentials() {
+  local aws_error_line error_code
+  : > "$edge_error_file"
+  if env \\
+    AWS_ACCESS_KEY_ID="$cached_access_key_id" \\
+    AWS_SECRET_ACCESS_KEY="$cached_secret_access_key" \\
+    AWS_SESSION_TOKEN="$cached_session_token" \\
+    AWS_EC2_METADATA_DISABLED=true \\
+    aws ec2 modify-instance-metadata-options \\
+      --dry-run \\
+      --instance-id "$1" \\
+      --http-endpoint "$2" \\
+      --region "$region" \\
+      >/dev/null 2>"$edge_error_file"; then
+    printf '%s\\n' NoError
+    return
+  fi
+  aws_error_line="$(tr '\\n' ' ' < "$edge_error_file" | sed 's/  */ /g' || true)"
+  beep_log beep-imds-edges "AWS CLI stderr: $aws_error_line"
+  error_code="$(grep -oE '\\([A-Za-z0-9._-]+\\)' "$edge_error_file" | head -n 1 | tr -d '()' || true)"
+  printf '%s\\n' "\${error_code:-UnknownError}"
+}
+
+discard_cached_credentials() {
+  unset cached_access_key_id cached_secret_access_key cached_session_token
+  beep_log beep-imds-disable "cached credentials discarded"
+}
+
 self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"
 case "$self_disable_code" in
   DryRunOperation) beep_log beep-imds-edges "IMDS_EDGE self_disable: PASS" ;;
   *) beep_exit_reason="IMDS_EDGE self_disable failed ($self_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_disable: FAIL ($self_disable_code)"; exit 1 ;;
-esac
-
-self_reenable_code="$(imds_edge_dry_run "$instance_id" enabled)"
-case "$self_reenable_code" in
-  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_reenable: PASS" ;;
-  *) beep_exit_reason="IMDS_EDGE self_reenable failed ($self_reenable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)"; exit 1 ;;
 esac
 
 other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"
@@ -246,6 +267,22 @@ case "$other_disable_code" in
     beep_log beep-imds-edges "IMDS_EDGE other_disable: INCONCLUSIVE ($other_disable_code)" ;;
   *) beep_exit_reason="IMDS_EDGE other_disable failed ($other_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE other_disable: FAIL ($other_disable_code)"; exit 1 ;;
 esac
+
+beep_exit_reason="instance-profile role name resolution failed"
+role_name="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --header "X-aws-ec2-metadata-token: $imds_token" \\
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/)"
+beep_exit_reason="instance-profile credential resolution failed"
+role_credentials_json="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --header "X-aws-ec2-metadata-token: $imds_token" \\
+  "http://169.254.169.254/latest/meta-data/iam/security-credentials/$role_name")"
+cached_access_key_id="$(printf '%s' "$role_credentials_json" | jq -er '.AccessKeyId | strings | select(length > 0)')"
+cached_secret_access_key="$(printf '%s' "$role_credentials_json" | jq -er '.SecretAccessKey | strings | select(length > 0)')"
+cached_session_token="$(printf '%s' "$role_credentials_json" | jq -er '.Token | strings | select(length > 0)')"
+unset role_credentials_json imds_token
+beep_log beep-imds-disable "instance-profile credentials cached in memory for post-disable lock probes"
 
 beep_exit_reason="modify call aborted"
 beep_log beep-imds-disable "disabling IMDS on $instance_id in $region"
@@ -310,11 +347,29 @@ while :; do
   if [ "$denial_streak" -ge "$required_denial_streak" ]; then
     beep_exit_reason="IMDS was unreachable for $denial_streak consecutive checks"
     beep_log beep-imds-disable \\
-      "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; runner may start"
-    exit 0
+      "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; testing metadata-options lock"
+    break
   fi
   sleep 1
 done
+
+beep_exit_reason="post-disable IAM edge validation aborted"
+self_reenable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" enabled)"
+case "$self_reenable_code" in
+  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_reenable: PASS" ;;
+  *) beep_exit_reason="IMDS_EDGE self_reenable failed ($self_reenable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)"; discard_cached_credentials; exit 1 ;;
+esac
+
+self_redisable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" disabled)"
+case "$self_redisable_code" in
+  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_redisable: PASS" ;;
+  *) beep_exit_reason="IMDS_EDGE self_redisable failed ($self_redisable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_redisable: FAIL ($self_redisable_code)"; discard_cached_credentials; exit 1 ;;
+esac
+
+discard_cached_credentials
+beep_exit_reason="IMDS disabled and metadata-options lock proven"
+beep_log beep-imds-disable "metadata-options lock proven; runner may start"
+exit 0
 BEEP_IMDS_DISABLE
 
   cat > /opt/beep/self-poweroff.sh <<'BEEP_SELF_POWEROFF'
@@ -401,19 +456,20 @@ const runnerPostInstall = escapeHclTemplateSequences(
   runnerToolbeltPostInstall + imdsJobHookPostInstall + imdsWorkloadBoundaryPostInstall
 );
 
-// Self-only and disable-only: the caller's own instance ARN
+// Self-only and enabled-state-only: the caller's own instance ARN
 // (`ec2:SourceInstanceARN`, present for instance-profile credentials) must name
-// the target instance (`ec2:InstanceID`), and the requested endpoint state must
-// be `disabled`. The module's `"aws:ARN": "${ec2:SourceInstanceARN}"` shape is
-// NOT used: IAM Access Analyzer reports `aws:ARN` as an unsupported condition
-// key, and the 2026-08-24 canary confirmed that shape is refused with
-// `UnauthorizedOperation` on the self dry-run. A bare `${ec2:SourceInstanceARN}`
-// in `Resource` is rejected as malformed by IAM.
+// the target instance (`ec2:InstanceID`). The role may act only while that
+// instance's endpoint is enabled, so after the disable it has no authority over
+// its metadata options. For this action the metadata condition keys describe
+// current resource state, not requested values, so the requested value cannot
+// be constrained through them. That is acceptable because the caller is the
+// root-only bootstrap helper and every option other than the endpoint is
+// harmless.
 const runnerImdsDisablePolicyDocument = JSON.stringify({
   Version: "2012-10-17",
   Statement: [
     {
-      Sid: "DisableOwnMetadataEndpoint",
+      Sid: "DisableOwnMetadataEndpointWhileEnabled",
       Effect: "Allow",
       Action: "ec2:ModifyInstanceMetadataOptions",
       Resource: "arn:aws:ec2:*:*:instance/*",
@@ -422,7 +478,7 @@ const runnerImdsDisablePolicyDocument = JSON.stringify({
           "ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/${ec2:InstanceID}",
         },
         StringEquals: {
-          "ec2:MetadataHttpEndpoint": "disabled",
+          "ec2:MetadataHttpEndpoint": "enabled",
         },
       },
     },

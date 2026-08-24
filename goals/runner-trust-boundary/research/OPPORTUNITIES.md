@@ -103,3 +103,18 @@ matching registered runner.
 **What would have prevented it.** Given the prior bake-report pin, the proof
 script could wait for pre-flip instances to drain before dispatch. At minimum,
 the operator recipe must state that drain precondition.
+
+## Modify-action condition keys were mistaken for request values
+
+**What.** The first P2 policy treated EC2 metadata-options condition keys as
+requested values. For `ec2:ModifyInstanceMetadataOptions`, they describe the
+target resource's current state, so the Allow could not authorize disable and
+the boundary denied it.
+
+**Evidence.** Two canaries failed own-disable with `UnauthorizedOperation`.
+A throwaway role conditioned on current `enabled` authorized both requested
+endpoint values; the same role conditioned on `disabled` authorized neither.
+
+**What would have prevented it.** Probe ambiguous condition-key semantics with
+a throwaway role against a disposable target before deploying any `Modify*`
+policy or boundary.

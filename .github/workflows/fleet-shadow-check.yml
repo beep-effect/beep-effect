@@ -217,11 +217,12 @@ jobs:
             sudo grep -h beep-imds-edges /var/log/messages > "${edge_log}" || : > "${edge_log}"
           fi
           grep -E \
-            'IMDS_EDGE (self_disable|self_reenable|other_disable): (PASS|FAIL|INCONCLUSIVE)' \
+            'IMDS_EDGE (self_disable|self_reenable|self_redisable|other_disable): (PASS|FAIL|INCONCLUSIVE)' \
             "${edge_log}" || true
           edge_count() { grep -Ec "$1" "${edge_log}" || true; }
           [[ "$(edge_count 'IMDS_EDGE self_disable: PASS$'):$(edge_count 'IMDS_EDGE self_disable: ')" == 1:1 ]]
           [[ "$(edge_count 'IMDS_EDGE self_reenable: PASS$'):$(edge_count 'IMDS_EDGE self_reenable: ')" == 1:1 ]]
+          [[ "$(edge_count 'IMDS_EDGE self_redisable: PASS$'):$(edge_count 'IMDS_EDGE self_redisable: ')" == 1:1 ]]
           case "$(edge_count 'IMDS_EDGE other_disable: PASS$'):$(edge_count \
             'IMDS_EDGE other_disable: INCONCLUSIVE( \([A-Za-z0-9._-]+\))?$'):$(edge_count \
             'IMDS_EDGE other_disable: ')" in
