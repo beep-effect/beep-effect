@@ -1,0 +1,9 @@
+{
+  "annotations": [
+    {
+      "level": "failure",
+      "message": "The self-hosted runner lost communication with the server. Verify the machine is running and has a healthy network connection. Anything in your workflow that terminates the runner process, starves it for CPU/Memory, or blocks its network access can cause this error."
+    }
+  ],
+  "job_id": 97318717263
+}

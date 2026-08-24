@@ -72,9 +72,16 @@ the week. Measurement at decision time:
 
 ## Decision (2026-08-24): TRIPWIRE WEEK CALM — P1 complete
 
-The monitored week (revert deploy 2026-08-16T23:30Z through 2026-08-23)
-closed with **zero interruption-attributed re-runs** against the >2/week
-tripwire. Full attribution in `p1-tripwire-week-evidence.md`:
+The monitored week closed with **zero interruption-attributed re-runs**
+against the >2/week tripwire. Window anchor: #730 merged
+2026-08-16T23:29:16Z and the apply ran the same night per the dated
+record above; the exact apply-completion timestamp was not retained, so
+the verdict is anchored robustly instead — an extension capture through
+2026-08-24T06:39Z shows exactly one interruption-attributed re-run in the
+entire post-merge range, so every fully-measured 7-day spot window
+(any apply completion up to 2026-08-17T06:39Z) contains at most 1, far
+under threshold (details in the evidence addendum). Full attribution in
+`p1-tripwire-week-evidence.md`:
 
 - 16 re-runs in the fetch window; 3 pre-deploy, 12 in-window, 1 after.
 - All 12 in-window re-runs attribute to non-interruption classes with

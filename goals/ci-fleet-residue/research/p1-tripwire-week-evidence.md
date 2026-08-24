@@ -51,3 +51,38 @@ The monitoring window is `2026-08-16T23:30:00Z <= created_at < 2026-08-24T00:00:
 ## Never-rerun completeness scan
 
 **Runner-lost-shaped IDs: none determinable from the supplied `runs-window.jsonl`.** The file contains 472 unique run-level records, including 53 attempt-1 failures and 63 attempt-1 cancellations that were never re-run, but its schema has no job, `runner_name`, labels, failed-step, or annotation fields. The supplied job and annotation evidence covers only the 16 re-run run IDs. Consequently, no never-rerun ID can be responsibly asserted to be both self-hosted and runner-lost-shaped from the local artifacts; this is an evidence limitation, not proof that no such never-rerun event occurred.
+
+## Addendum (2026-08-24, PR #778 review hardening)
+
+Three reviewer findings, each addressed with new evidence:
+
+**Every prior attempt is now classified.** Run 32040357343 reached
+`run_attempt: 3`, so attempt 2 needed its own classification.
+Attempt-2 evidence (`p1-tripwire-week-raw/rerun-evidence/
+jobs-32040357343-attempt2.json`): two jobs failed at `Set up job` —
+hosted `GitHub Actions 1000009685` and self-hosted
+`beep-ci-i-0f1777d1ec0633cf0`. Both check-run annotation sets are empty,
+so the self-hosted job's full log was pulled
+(`rerun-evidence/job-95420324181.log`): `actions/checkout` archive
+download failed HTTP 429, then 502, then 429 — "Failed to download
+archive ... after 3 attempts". Same action-download storm as attempt 1
+and as the simultaneous hosted failure; not an interruption. Every
+attempt of every re-run in the window is now classified; the in-window
+interruption count remains **0**.
+
+**Raw inputs are archived.** The run listing, per-attempt job records,
+annotations, and the attempt-2 log are committed under
+`p1-tripwire-week-raw/` with the exact fetch recipes, so the table above
+is regenerable after GitHub's retention expires.
+
+**The verdict is anchored robustly, not to a derived timestamp.** The
+repo-retained anchor facts are: #730 merged 2026-08-16T23:29:16Z, and the
+dated operator record in `p1-spot-revert-baseline.md` that the pulumi
+apply ran the same night. The exact apply-completion timestamp was not
+retained. The verdict does not depend on it: an extension capture through
+2026-08-24T06:39Z (see `p1-tripwire-week-raw/README.md`) shows exactly
+**one** interruption-attributed re-run (32688837330, 2026-08-24T04:07Z)
+in the entire post-merge range. Therefore any 7-day spot window whose
+apply completed by 2026-08-17T06:39Z — over seven hours past the latest
+plausible apply on the dated record — is fully measured and contains at
+most 1 interruption-attributed re-run, far under the >2/week tripwire.
