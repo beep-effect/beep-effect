@@ -134,6 +134,24 @@ be closed, not tolerated.
   hosted Coverage Regression job on the PR reports the same `EnvConfig.ts` row as the local
   run; (4) the prebuild step keeps its remote-cache reads on main pushes (it never receives the
   coverage env).
+- **B10 Dependents in pull-request coverage scope.** The `--affected` planner selected only the
+  direct owners of changed files, so a change to `@beep/md` measured `@beep/md` in 110 s and
+  went green while the dependent `@beep/pandoc-ast` row dropped — surfacing only in `main`'s
+  full run after the merge (7 red pushes, 3 inherited PR reds, hand-fixed in #783). The
+  planner now reads every workspace-internal dependency edge from the owner inventory
+  (`CoverageScopeOwner.workspaceDependencies`) and selects the transitive coverage-bearing
+  dependents of every changed owner whose non-test files changed; a `test/`-only change stays
+  scoped to its owner, labs and coverage-less packages are walked through but never selected,
+  and the repository root is excluded from the inventory. Selections heavier than the proven
+  single-invocation budget (300 s of planner weight) execute like the full lane — one prebuild
+  filtered to the selection, then weighted `--only` shards — because dependents make wide
+  selections routine (`@beep/md` → 18 owners, the seven foundation packages → ≥111 of 128).
+  Baseline adoption on `--write-baseline` stays the direct owners (DECISIONS 2026-08-24).
+  **Acceptance:** (1) `planCoverageAffectedScope` on the live workspace selects
+  `@beep/pandoc-ast` for a `@beep/md` source change and only `@beep/schema` for a
+  `@beep/schema` test change; (2) a wide selection dispatches `coverage:prebuild` with one
+  `--filter` per selected owner and no empty shard; (3) a real `coverage --affected` run under
+  `CI=true` executes the sharded selected path and the ratchet compares every selected row.
 
 ## Workstream C — Turbo cache: readers, warmth, proof
 

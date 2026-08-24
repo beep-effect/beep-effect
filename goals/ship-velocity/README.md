@@ -31,3 +31,5 @@ posture); see [the P1 closeout reflection](history/reflections/2026-08-17-claude
 B9 (P3 prerequisite) landed 2026-08-24: the coverage runtime pins the pull-request Turbo
 posture so local, PR, and main-push runs measure identical per-file rows; the 150-run sweep
 that motivated it is the 2026-08-24 receipt in [research/OPPORTUNITIES.md](research/OPPORTUNITIES.md).
+B10 followed the same day: the pull-request coverage planner now measures workspace dependents
+of a changed owner, so a dependent's ratchet drop fails the PR instead of `main` after the merge.
