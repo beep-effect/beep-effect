@@ -16,6 +16,7 @@
 
 import { $ExiftoolId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, Str } from "@beep/utils";
 import * as S from "effect/Schema";
 import { BeepQaProvenance, EpochMilliseconds, TagAssignment } from "./Exiftool.models.ts";
@@ -356,7 +357,7 @@ ${propertyLines}
 `;
   });
 
-const encodeJsonText = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJsonText = Unknown.encodeUnknownSyncFromJsonString;
 const decodeToolVersions = S.decodeUnknownOption(S.fromJsonString(S.Record(S.String, S.String)));
 
 const qualifiedTagName = (name: BeepQaTagName): string => `${BEEP_QA_XMP_GROUP}:${name}`;

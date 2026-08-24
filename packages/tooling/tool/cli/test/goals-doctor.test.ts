@@ -1,17 +1,17 @@
 import { lintCommand } from "@beep/repo-cli";
 import { classifyGoalDoctorFindings, GoalDoctorFinding, goalsCommand } from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, Layer, Runtime } from "effect";
-import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,

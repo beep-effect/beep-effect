@@ -21,6 +21,7 @@ import {
   Types,
   UriReferenceString,
 } from "@beep/schema/JSONSchema";
+import { Unknown } from "@beep/schema/Unknown";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
@@ -39,8 +40,8 @@ const decodeDocumentResult = S.decodeUnknownResult(Document);
 const encodeDocumentResult = S.encodeResult(Document);
 const decodeSubSchemaResult = S.decodeUnknownResult(SubSchema);
 const encodeSubSchemaResult = S.encodeResult(SubSchema);
-const decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
-const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const decodeJsonResult = Unknown.decodeUnknownResultFromJsonString;
+const encodeJsonResult = Unknown.encodeUnknownResultFromJsonString;
 const isAbsoluteUriString = S.is(AbsoluteUriString);
 const isIdUriReferenceString = S.is(IdUriReferenceString);
 const isUriReferenceString = S.is(UriReferenceString);
@@ -225,9 +226,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
     it.effect(
       "preserves a hostile __proto__ wire key without prototype pollution",
       Effect.fnUntraced(function* () {
-        const wire: unknown = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(
-          '{"__proto__": {"polluted": 1}, "x-a": 2}'
-        );
+        const wire: unknown = yield* Unknown.decodeEffectFromJsonString('{"__proto__": {"polluted": 1}, "x-a": 2}');
         const node = yield* decodeNode(wire);
         expect(Object.getOwnPropertyDescriptor(node.extensions, "__proto__")?.value).toEqual({ polluted: 1 });
         expect(({} as { polluted?: unknown }).polluted).toBeUndefined();

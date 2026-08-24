@@ -8,13 +8,13 @@ import {
   runChangesetStatus,
   uncoveredWorkspacePackageNames,
 } from "@beep/repo-cli/test/Quality";
+import { Unknown } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -27,7 +27,7 @@ const provideScopedLayer =
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const makeHandle = (output: string) =>
   ChildProcessSpawner.makeHandle({

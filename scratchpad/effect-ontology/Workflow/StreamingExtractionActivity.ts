@@ -1,6 +1,8 @@
 /**
  * Workflow: Streaming Extraction Activity
  *
+ * **Details**
+ *
  * Durable activity wrapper for the 6-phase unified streaming extraction pipeline.
  * This is the single source of truth for all document extraction in batch workflows.
  *
@@ -12,26 +14,24 @@
  * 5. Relation Extraction - LLM-based relation extraction
  * 6. Grounding - Filter relations by embedding similarity (≥0.8)
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
-import { DateTime, Duration, Effect, Schedule } from "effect";
-import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import { Cause, Crypto, DateTime, Duration, Effect, Encoding, pipe, Schedule } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Activity } from "effect/unstable/workflow";
 import { ActivityError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
-import type { BatchId } from "../Domain/Identity.ts";
 import { ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
-import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import { ChunkingConfig, GroundingPolicy, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import type { ExtractionActivityInput } from "../Domain/Schema/Batch.ts";
@@ -41,11 +41,19 @@ import { ConfigService } from "../Service/Config.ts";
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
 import { RdfBuilder, rdfStoreAddQuad } from "../Service/Rdf.ts";
 import { StorageService } from "../Service/Storage.ts";
-import { claimsDataToQuads, knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
+import {
+  ClaimExtractionArtifact,
+  claimExtractionArtifactToQuads,
+  claimsDataToQuads,
+  knowledgeGraphToClaims,
+} from "../Utils/ClaimFactory.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { makeProvenanceUri } from "../Utils/Provenance.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtractionActivity");
+const isActivityError = S.is(ActivityError);
+const preserveActivityError = (error: unknown): ActivityError =>
+  isActivityError(error) ? error : toActivityError(error);
 const textEncoder = new TextEncoder();
 
 // -----------------------------------------------------------------------------
@@ -55,12 +63,21 @@ const textEncoder = new TextEncoder();
 /**
  * Output schema for StreamingExtractionActivity
  *
- * Describes the persisted graph and extraction counts produced for one document.
- *
  * **Details**
+ *
+ * Describes the persisted graph and extraction counts produced for one document.
  *
  * The schema is local to the canonical streaming activity so its output contract
  * cannot drift from a retired activity implementation.
+ *
+ * **Example** (Validate streaming extraction output)
+ *
+ * ```ts
+ * import { StreamingExtractionOutput } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(StreamingExtractionOutput)({}))
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -108,7 +125,13 @@ export const StreamingExtractionOutput = S.Struct({
   })
 );
 
-/** Runtime output produced by the streaming extraction activity. */
+/**
+ *  Runtime output produced by the streaming extraction activity.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StreamingExtractionOutput = typeof StreamingExtractionOutput.Type;
 
 // -----------------------------------------------------------------------------
@@ -116,7 +139,7 @@ export type StreamingExtractionOutput = typeof StreamingExtractionOutput.Type;
 // -----------------------------------------------------------------------------
 
 const stripGsPrefix = (uri: string): string =>
-  Str.startsWith("gs://")(uri) ? uri.replace(/^gs:\/\/[^/]+\//, "") : uri;
+  Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri;
 
 const requireContent = (opt: O.Option<string>, key: string) =>
   O.match(opt, {
@@ -134,7 +157,9 @@ const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
  * - Jitter to prevent thundering herd
  */
 const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
-  Schedule.jittered
+  Schedule.jittered,
+  Schedule.setInputType<Cause.Cause<unknown>>(),
+  Schedule.while((meta) => Cause.hasInterrupts(meta.input))
 );
 
 // -----------------------------------------------------------------------------
@@ -147,29 +172,45 @@ const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Sche
 const computeContentHash = Effect.fn("StreamingExtractionActivity.computeContentHash")(function* (content: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", textEncoder.encode(content));
-  return yield* S.decodeEffect(ContentHash)(Encoding.encodeHex(digest));
+  return yield* ContentHash.decodeEffect(Encoding.encodeHex(digest));
 });
 
 /** Extracts the ontology name component from a storage URI path. */
 const extractOntologyName = (uri: string): OntologyName => {
   const path = stripGsPrefix(uri);
-  const filename = path.split("/").pop() ?? "ontology";
-  const name = filename.replace(/\.(ttl|rdf|owl|n3)$/, "");
+  const filename = pipe(
+    Str.split("/")(path),
+    A.last,
+    O.getOrElse(() => "ontology")
+  );
+  const name = Str.replace(/\.(ttl|rdf|owl|n3)$/, "")(filename);
   // Ensure valid OntologyName pattern (alphanumeric + hyphens + underscores)
-  const sanitized = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
-  return OntologyName.make(sanitized || "ontology");
+  const sanitized = pipe(name, Str.replace(/[^a-zA-Z0-9_-]/g, "-"), Str.toLowerCase);
+  return OntologyName.make(Str.isNonEmpty(sanitized) ? sanitized : "ontology");
 };
 
 /**
  * Build RunConfig from ExtractionActivityInput
  *
+ * **Details**
+ *
  * Translates the batch activity input (with preprocessing hints) to the
  * RunConfig format expected by StreamingExtraction.
+ *
+ * **Example** (Inspect build run config)
+ *
+ * ```ts
+ * import { buildRunConfig } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ *
+ * console.log(buildRunConfig)
+ * ```
  *
  * @param input - Extraction activity input with optional preprocessing hints
  * @param llmConfig - LLM configuration from ConfigService
  * @param ontologyContentHash - Pre-computed hash of ontology CONTENT (not URI)
  * @returns RunConfig for StreamingExtraction
+ * @category factories
+ * @since 0.0.0
  */
 export const buildRunConfig = dual3(
   (
@@ -178,7 +219,10 @@ export const buildRunConfig = dual3(
       model: string;
       temperature: number;
       maxTokens: number;
-      timeoutMs: number;
+      timeout: Duration.Duration;
+      groundingEnabled: boolean;
+      groundingThreshold: Confidence;
+      groundingBatchSize: PosInt;
     },
     ontologyContentHash: ContentHash
   ): RunConfig => {
@@ -192,9 +236,9 @@ export const buildRunConfig = dual3(
 
     // Build ChunkingConfig - use preprocessing hints if available, otherwise defaults
     const chunkingConfig = ChunkingConfig.make({
-      maxChunkSize: PosInt.make(500), // Default chunk size (TODO: get from preprocessing hints)
-      preserveSentences: true,
-      overlapTokens: NonNegativeInt.make(50),
+      maxChunkSize: PosInt.make(input.chunking.chunkSize),
+      preserveSentences: input.chunking.preserveSentences,
+      overlapSentences: NonNegativeInt.make(2),
     });
 
     // Build LlmConfig from service config
@@ -202,7 +246,7 @@ export const buildRunConfig = dual3(
       model: llmConfig.model,
       temperature: llmConfig.temperature,
       maxTokens: PosInt.make(llmConfig.maxTokens),
-      timeout: Duration.millis(llmConfig.timeoutMs),
+      timeout: llmConfig.timeout,
     });
 
     return RunConfig.make({
@@ -210,7 +254,12 @@ export const buildRunConfig = dual3(
       chunking: chunkingConfig,
       llm: llmConfigSchema,
       concurrency: PosInt.make(5), // Default concurrency
-      enableGrounding: true, // Always enable grounding for quality
+      grounding: llmConfig.groundingEnabled
+        ? GroundingPolicy.cases.Enabled.make({
+            threshold: llmConfig.groundingThreshold,
+            batchSize: llmConfig.groundingBatchSize,
+          })
+        : GroundingPolicy.cases.Disabled.make({}),
     });
   }
 );
@@ -218,23 +267,35 @@ export const buildRunConfig = dual3(
 /**
  * Enrich extracted entities with document-level metadata
  *
+ * **Details**
+ *
  * Adds provenance information to each entity for traceability.
+ *
+ * **Example** (Inspect enrich entity metadata)
+ *
+ * ```ts
+ * import { enrichEntityMetadata } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ *
+ * console.log(enrichEntityMetadata)
+ * ```
  *
  * @param entities - Extracted entities from StreamingExtraction
  * @param input - Original extraction input with document metadata
  * @param extractedAt - Timestamp of extraction
  * @returns Enriched entities with document metadata
+ * @category workflows
+ * @since 0.0.0
  */
 export const enrichEntityMetadata = dual3(
   (entities: ReadonlyArray<Entity>, input: ExtractionActivityInput, extractedAt: DateTime.Utc): ReadonlyArray<Entity> =>
-    entities.map((entity) =>
+    A.map(entities, (entity) =>
       Entity.make({
         ...entity,
         documentId: O.some(input.documentId),
         sourceUri: O.some(input.sourceUri),
         extractedAt: O.some(extractedAt),
         // Inherit eventTime from document metadata (if available)
-        eventTime: input.eventTime ?? entity.eventTime,
+        eventTime: O.orElse(input.eventTime, () => entity.eventTime),
       })
     )
 );
@@ -245,6 +306,8 @@ export const enrichEntityMetadata = dual3(
 
 /**
  * Durable Streaming Extraction Activity
+ *
+ * **Details**
  *
  * Unified extraction activity that uses the 6-phase streaming extraction pipeline.
  * This replaces makeExtractionActivity in DurableActivities.ts as the canonical
@@ -264,9 +327,17 @@ export const enrichEntityMetadata = dual3(
  * 6. Serialize to RDF using claimsDataToQuads()
  * 7. Write graph to storage and return output
  *
+ * **Example** (Inspect make streaming extraction activity)
+ *
+ * ```ts
+ * import { makeStreamingExtractionActivity } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ *
+ * console.log(makeStreamingExtractionActivity)
+ * ```
+ *
  * @param input - Extraction activity input (from batch workflow)
  * @returns Durable activity with journaled execution
- *
+ * @category constructors
  * @since 0.0.0
  */
 export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) =>
@@ -293,8 +364,8 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       // 1. Read source document
       const sourceKey = stripGsPrefix(input.sourceUri);
       const sourceContent = yield* storage
-        .get(sourceKey)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), sourceKey)));
+        .getOption(sourceKey)
+        .pipe(Effect.flatMap((opt) => requireContent(opt, sourceKey)));
 
       yield* Effect.logInfo("Source document loaded", {
         documentId: input.documentId,
@@ -303,9 +374,11 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
 
       // 2. Load ontology and compute content hash for cache invalidation
       const ontologyKey = stripGsPrefix(input.ontologyUri);
-      const ontologyContent = yield* storage.get(ontologyKey).pipe(
-        Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), ontologyKey)),
-        Effect.mapError((error) => toActivityError(new Error(`Failed to load ontology: ${ontologyKey} - ${error}`)))
+      const ontologyContent = yield* storage.getOption(ontologyKey).pipe(
+        Effect.flatMap((opt) => requireContent(opt, ontologyKey)),
+        Effect.mapError((error) =>
+          ActivityError.serviceFailure("StorageService", `get ontology ${ontologyKey}`, error, true)
+        )
       );
       const ontologyContentHash = yield* computeContentHash(ontologyContent);
 
@@ -323,7 +396,10 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
           model: config.llm.model,
           temperature: 0.0, // Deterministic extraction
           maxTokens: config.llm.maxTokens,
-          timeoutMs: config.llm.timeoutMs,
+          timeout: config.llm.retryPolicy.attemptTimeout,
+          groundingEnabled: config.grounder.enabled,
+          groundingThreshold: config.grounder.confidenceThreshold,
+          groundingBatchSize: config.grounder.batchSize,
         },
         ontologyContentHash
       );
@@ -333,42 +409,45 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         ontologyRef: runConfig.ontology.shortId,
         chunkSize: runConfig.chunking.maxChunkSize,
         concurrency: runConfig.concurrency,
-        enableGrounding: runConfig.enableGrounding,
+        grounding: runConfig.grounding.mode,
       });
 
       // 4. Run 6-phase streaming extraction
-      const rawGraph = yield* extractionWorkflow.extract(sourceContent, runConfig).pipe(
+      const outcome = yield* extractionWorkflow.extract(sourceContent, runConfig).pipe(
         Effect.withLogSpan("streaming-extraction-6-phase"),
-        Effect.tap((graph) =>
+        Effect.tap(({ graph, telemetry }) =>
           Effect.logInfo("Streaming extraction complete", {
             documentId: input.documentId,
             entityCount: graph.entities.length,
             relationCount: graph.relations.length,
+            chunkCount: telemetry.chunkCount,
+            tokenUsage: telemetry.usage._tag,
           })
-        ),
-        Effect.mapError((error) =>
-          toActivityError(error instanceof Error ? error : new Error(`Streaming extraction failed: ${String(error)}`))
         )
       );
+      const rawGraph = outcome.graph;
 
       // 5. Enrich entities with document metadata
       const extractedAt = yield* DateTime.now;
       const enrichedEntities = enrichEntityMetadata(rawGraph.entities, input, extractedAt);
 
       const graph = KnowledgeGraph.make({
-        entities: Array.from(enrichedEntities),
+        entities: enrichedEntities,
         relations: rawGraph.relations,
         sourceText: O.some(sourceContent),
+        provenance: rawGraph.provenance,
+        entityObservations: rawGraph.entityObservations,
+        relationObservations: rawGraph.relationObservations,
       });
 
       yield* Effect.logInfo("Entities enriched with document metadata", {
         documentId: input.documentId,
         entityCount: graph.entities.length,
-        hasEventTime: input.eventTime !== undefined,
+        hasEventTime: O.isSome(input.eventTime),
       });
 
       // 6. Generate provenance URI and create claims
-      const provenanceUri = makeProvenanceUri(input.batchId as BatchId, input.documentId, undefined);
+      const provenanceUri = makeProvenanceUri(input.batchId, input.documentId, undefined);
 
       // Serialize with named graph for provenance tracking
       const store = yield* rdf.createStore;
@@ -380,11 +459,16 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         graphUri: provenanceUri,
         targetNamespace: input.targetNamespace,
       });
+      const provenanceDataset = yield* Effect.fromResult(provBundleToDataset(graph.provenance));
+      A.forEach(provenanceDataset.quads, (quad) => rdfStoreAddQuad(store, quad));
 
       // 7. Create claims from extracted entities and relations
       // Convert Namespace identifier to full IRI
-      const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
-      const baseDomain = P.isNotNull(match) ? match[0] : "http://example.org/";
+      const baseDomain = pipe(
+        Str.match(/^https?:\/\/[^/]+\//)(config.rdf.baseNamespace),
+        O.flatMap(A.head),
+        O.getOrElse(() => "https://example.org/")
+      );
       const baseNamespace = `${baseDomain}${input.targetNamespace}/`;
       const claims = knowledgeGraphToClaims(graph.entities, graph.relations, {
         baseNamespace,
@@ -394,12 +478,19 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       });
 
       // Convert claims to RDF quads and add to store
-      const claimQuads = claimsDataToQuads(claims, provenanceUri, extractedAt.toString());
+      const claimQuads = claimsDataToQuads(claims, provenanceUri, DateTime.formatIso(extractedAt));
 
       // Add claim quads to the store
-      for (const quad of claimQuads) {
-        rdfStoreAddQuad(store, quad);
-      }
+      A.forEach(claimQuads, (quad) => rdfStoreAddQuad(store, quad));
+      const extractionArtifactQuads = yield* claimExtractionArtifactToQuads(
+        ClaimExtractionArtifact.make({
+          claims,
+          entityObservations: graph.entityObservations,
+          relationObservations: graph.relationObservations,
+        }),
+        provenanceUri
+      );
+      A.forEach(extractionArtifactQuads, (quad) => rdfStoreAddQuad(store, quad));
 
       yield* Effect.logInfo("Claims created from extraction", {
         documentId: input.documentId,
@@ -421,7 +512,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       const graphPath = PathLayout.document.graph(input.documentId);
       yield* storage.set(graphPath, trigContent);
 
-      const graphUri = GcsUri.fromUnknown(`gs://${bucket}/${graphPath}`);
+      const graphUri = yield* GcsUri.decodeEffect(`gs://${bucket}/${graphPath}`);
 
       // Note: Claims are persisted only after SHACL validation passes,
       // via makeClaimPersistenceActivity in WorkflowOrchestrator.
@@ -446,6 +537,6 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         claimCount: NonNegativeInt.make(claims.length),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });

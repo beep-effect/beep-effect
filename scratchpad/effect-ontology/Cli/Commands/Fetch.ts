@@ -1,59 +1,62 @@
 /**
  * CLI: Fetch and Link Ingestion Commands
  *
+ * **Details**
+ *
  * Commands for fetching web content via Jina Reader API,
  * ingesting URLs to storage, and managing ingested documents.
  *
- * @since 2.0.0
- * @module Cli/Commands/Fetch
+ * @packageDocumentation
+ * @since 0.0.0
  */
-import {pipe} from "effect/Function";
-import * as Str from "effect/String";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Unknown } from "@beep/schema/Unknown";
+import { getSomesStruct } from "@beep/utils/Option";
+import { thunkEmptyStr } from "@beep/utils/thunk";
+import { Console, DateTime, Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
-import {Console, Effect, FileSystem} from "effect";
-import {getSomesStruct} from "@beep/utils/Option";
-import * as DateTime from "effect/DateTime";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import {Argument as Args, Command, Flag as Options} from "effect/unstable/cli";
-import {ContentEnrichmentAgent} from "../../Service/ContentEnrichmentAgent.ts";
-import {JinaReaderClient} from "../../Service/JinaReaderClient.ts";
-import type {IngestResult} from "../../Service/LinkIngestionService.ts";
-import {
-  LinkIngestionError,
-  LinkIngestionService
-} from "../../Service/LinkIngestionService.ts";
-import {withErrorHandler} from "../ErrorHandler.ts";
+import * as Str from "effect/String";
+import * as Argument from "effect/unstable/cli/Argument";
+import * as Command from "effect/unstable/cli/Command";
+import * as Flag from "effect/unstable/cli/Flag";
+import { LinkStatus } from "../../Domain/Schema/LinkIngestion.ts";
+import { ContentEnrichmentAgent } from "../../Service/ContentEnrichmentAgent.ts";
+import { JinaReaderClient } from "../../Service/JinaReaderClient.ts";
+import type { IngestResult } from "../../Service/LinkIngestionService.ts";
+import { LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
+import { withErrorHandler } from "../ErrorHandler.ts";
 
 // =============================================================================
 // Fetch Command - Preview URL content without storage
 // =============================================================================
 
-const fetchUrl = Args.string("url").pipe(Args.withDescription("URL to fetch content from"));
+const fetchUrl = Argument.string("url").pipe(Argument.withDescription("URL to fetch content from"));
 
-const showMetadataOption = Options.boolean("metadata").pipe(
-  Options.withAlias("m"),
-  Options.withDefault(false),
-  Options.withDescription("Show Jina metadata (title, siteName, etc.)")
+const showMetadataOption = Flag.boolean("metadata").pipe(
+  Flag.withAlias("m"),
+  Flag.withDefault(false),
+  Flag.withDescription("Show Jina metadata (title, siteName, etc.)")
 );
 
-const enrichOption = Options.boolean("enrich").pipe(
-  Options.withAlias("e"),
-  Options.withDefault(false),
-  Options.withDescription("Run AI enrichment to extract structured metadata")
+const enrichOption = Flag.boolean("enrich").pipe(
+  Flag.withAlias("e"),
+  Flag.withDefault(false),
+  Flag.withDescription("Run AI enrichment to extract structured metadata")
 );
 
-const truncateOption = Options.integer("truncate").pipe(
-  Options.withAlias("t"),
-  Options.optional,
-  Options.withDescription("Truncate content to N characters (default: show all)")
+const truncateOption = Flag.integer("truncate").pipe(
+  Flag.withAlias("t"),
+  Flag.optional,
+  Flag.withDescription("Truncate content to N characters (default: show all)")
 );
 
-const OutputJSON = S.fromJsonString(S.Unknown, {space: 2}).pipe(
+const OutputJSON = S.fromJsonString(Unknown, { space: 2 }).pipe(
   SchemaUtils.withStatics((schema) => ({
-    decodeUnknownEffect: S.decodeUnknownEffect(schema)
+    decodeUnknownEffect: S.decodeUnknownEffect(schema),
   }))
 );
 
@@ -66,7 +69,7 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
   const jina = yield* JinaReaderClient;
   yield* Console.log(`Fetching: ${url}\n---`);
   const response = yield* jina.fetchUrl(url);
-  const {content} = response;
+  const { content } = response;
   if (showMetadata) {
     const metadataLines = [
       "Metadata:",
@@ -88,8 +91,8 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
           onSome: (enricher) => enricher.enrichFromJina(content).pipe(Effect.map(O.some)),
         })
       ),
-      Effect.catch((error) =>
-        Effect.gen(function* () {
+      Effect.catch(
+        Effect.fnUntraced(function* (error) {
           yield* Effect.log(`Enrichment failed: ${error}`);
           return O.none();
         })
@@ -125,6 +128,20 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
   yield* Console.log(contentOutput);
 });
 
+/**
+ * Retrieves fetch command data for downstream processing.
+ *
+ * **Example** (Inspect fetch command)
+ *
+ * ```ts
+ * import { fetchCommand } from "@effect-ontology/Cli/Commands/Fetch"
+ *
+ * console.log(fetchCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const fetchCommand = Command.make(
   "fetch",
   {
@@ -133,45 +150,40 @@ export const fetchCommand = Command.make(
     enrich: enrichOption,
     truncate: truncateOption,
   },
-  ({
-     enrich,
-     metadata,
-     truncate,
-     url
-   }) => withErrorHandler(fetchHandler(url, metadata, enrich, truncate))
+  ({ enrich, metadata, truncate, url }) => withErrorHandler(fetchHandler(url, metadata, enrich, truncate))
 ).pipe(Command.withDescription("Fetch URL content via Jina Reader (preview, no storage)"));
 
 // =============================================================================
 // Ingest Link Command - Fetch and store URL content
 // =============================================================================
 
-const ingestUrlArg = Args.string("url").pipe(Args.withDescription("URL to ingest"));
+const ingestUrlArg = Argument.string("url").pipe(Argument.withDescription("URL to ingest"));
 
-const skipEnrichOption = Options.boolean("skip-enrich").pipe(
-  Options.withDefault(false),
-  Options.withDescription("Skip AI enrichment (just fetch and store)")
+const skipEnrichOption = Flag.boolean("skip-enrich").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Skip AI enrichment (just fetch and store)")
 );
 
-const sourceTypeOption = Options.choice("source-type", [
+const sourceTypeOption = Flag.choice("source-type", [
   "news",
   "blog",
   "press_release",
   "official",
   "academic",
   "unknown",
-]).pipe(Options.optional, Options.withDescription("Override source type classification"));
+]).pipe(Flag.optional, Flag.withDescription("Override source type classification"));
 
-const noDuplicateOption = Options.boolean("allow-duplicates").pipe(
-  Options.withDefault(false),
-  Options.withDescription("Allow re-ingesting duplicate content")
+const noDuplicateOption = Flag.boolean("allow-duplicates").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Allow re-ingesting duplicate content")
 );
 
-const ontologyIdOption = Options.string("ontology").pipe(
-  Options.withAlias("o"),
-  Options.withDescription("Ontology ID for scoping (e.g., 'seattle')")
+const ontologyIdOption = Flag.string("ontology").pipe(
+  Flag.withAlias("o"),
+  Flag.withDescription("Ontology ID for scoping (e.g., 'seattle')")
 );
 
-const ingestLinkHandler = Effect.fn(function* (
+const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
   url: string,
   ontologyId: string,
   skipEnrich: boolean,
@@ -185,24 +197,38 @@ const ingestLinkHandler = Effect.fn(function* (
   const result = yield* ingestion.ingestUrl(url, {
     ontologyId,
     enrich: !skipEnrich,
-    ...getSomesStruct({sourceType}),
+    ...getSomesStruct({ sourceType }),
     skipDuplicates: !allowDuplicates,
   });
 
   const outputLines = result.duplicate
     ? ["Content already exists (duplicate)", `  ID: ${result.id}`, `  Hash: ${result.contentHash}`]
     : [
-      "Ingestion complete:",
-      `  ID: ${result.id}`,
-      `  Hash: ${result.contentHash}`,
-      `  Storage: ${result.storageUri}`,
-      ...(P.isNotUndefined(result.headline) ? [`  Headline: ${result.headline}`] : []),
-      ...(P.isNotUndefined(result.wordCount) ? [`  Word count: ${result.wordCount}`] : []),
-    ];
+        "Ingestion complete:",
+        `  ID: ${result.id}`,
+        `  Hash: ${result.contentHash}`,
+        `  Storage: ${result.storageUri}`,
+        ...(P.isNotUndefined(result.headline) ? [`  Headline: ${result.headline}`] : []),
+        ...(P.isNotUndefined(result.wordCount) ? [`  Word count: ${result.wordCount}`] : []),
+      ];
 
   yield* Console.log(outputLines.join("\n"));
 });
 
+/**
+ * Exposes ingest link command for composition by callers of this module.
+ *
+ * **Example** (Inspect ingest link command)
+ *
+ * ```ts
+ * import { ingestLinkCommand } from "@effect-ontology/Cli/Commands/Fetch"
+ *
+ * console.log(ingestLinkCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const ingestLinkCommand = Command.make(
   "ingest-link",
   {
@@ -212,7 +238,7 @@ export const ingestLinkCommand = Command.make(
     sourceType: sourceTypeOption,
     allowDuplicates: noDuplicateOption,
   },
-  ({allowDuplicates, ontologyId, skipEnrich, sourceType, url}) =>
+  ({ allowDuplicates, ontologyId, skipEnrich, sourceType, url }) =>
     withErrorHandler(ingestLinkHandler(url, ontologyId, skipEnrich, sourceType, allowDuplicates))
 ).pipe(Command.withDescription("Fetch URL via Jina Reader and ingest to storage"));
 
@@ -220,32 +246,29 @@ export const ingestLinkCommand = Command.make(
 // Documents Command - List ingested documents
 // =============================================================================
 
-const statusFilterOption = Options.choice("status", ["pending", "enriched", "processed", "failed"]).pipe(
-  Options.optional,
-  Options.withDescription("Filter by status")
+const statusFilterOption = Flag.choice("status", ["pending", "enriched", "processed", "failed"]).pipe(
+  Flag.optional,
+  Flag.withDescription("Filter by status")
 );
 
-const sourceTypeFilterOption = Options.choice("type", [
+const sourceTypeFilterOption = Flag.choice("type", [
   "news",
   "blog",
   "press_release",
   "official",
   "academic",
   "unknown",
-]).pipe(Options.optional, Options.withDescription("Filter by source type"));
+]).pipe(Flag.optional, Flag.withDescription("Filter by source type"));
 
-const limitOption = Options.integer("limit").pipe(
-  Options.withAlias("l"),
-  Options.withDefault(20),
-  Options.withDescription("Maximum results to show")
+const limitOption = Flag.integer("limit").pipe(
+  Flag.withAlias("l"),
+  Flag.withDefault(20),
+  Flag.withDescription("Maximum results to show")
 );
 
-const offsetOption = Options.integer("offset").pipe(Options.withDefault(0), Options.withDescription("Skip N results"));
+const offsetOption = Flag.integer("offset").pipe(Flag.withDefault(0), Flag.withDescription("Skip N results"));
 
-const jsonOutputOption = Options.boolean("json").pipe(
-  Options.withDefault(false),
-  Options.withDescription("Output as JSON")
-);
+const jsonOutputOption = Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Output as JSON"));
 
 const documentsHandler = Effect.fn("documentsHandler")(function* (
   status: O.Option<string>,
@@ -255,13 +278,17 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
   jsonOutput: boolean
 ) {
   const ingestion = yield* LinkIngestionService;
+  const canonicalStatus = yield* O.match(status, {
+    onNone: () => Effect.succeed(O.none()),
+    onSome: flow(S.decodeUnknownEffect(LinkStatus), Effect.map(O.some)),
+  });
   const documents = yield* ingestion.list({
-    ...getSomesStruct({status, sourceType}),
+    ...getSomesStruct({ status: canonicalStatus, sourceType }),
     limit,
     offset,
   });
   if (jsonOutput) {
-    const output = documents.map((doc: any) => ({
+    const output = A.map(documents, (doc) => ({
       id: doc.id,
       contentHash: doc.contentHash,
       sourceUri: doc.sourceUri,
@@ -296,6 +323,20 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
   }
 });
 
+/**
+ * Exposes documents command for composition by callers of this module.
+ *
+ * **Example** (Inspect documents command)
+ *
+ * ```ts
+ * import { documentsCommand } from "@effect-ontology/Cli/Commands/Fetch"
+ *
+ * console.log(documentsCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const documentsCommand = Command.make(
   "documents",
   {
@@ -305,7 +346,7 @@ export const documentsCommand = Command.make(
     offset: offsetOption,
     json: jsonOutputOption,
   },
-  ({json, limit, offset, sourceType, status}) =>
+  ({ json, limit, offset, sourceType, status }) =>
     withErrorHandler(documentsHandler(status, sourceType, limit, offset, json))
 ).pipe(Command.withDescription("List ingested documents"));
 
@@ -313,12 +354,12 @@ export const documentsCommand = Command.make(
 // Ingest Batch Command - Bulk ingest from file
 // =============================================================================
 
-const urlsFileArg = Args.file("file").pipe(Args.withDescription("File containing URLs (one per line)"));
+const urlsFileArg = Argument.file("file").pipe(Argument.withDescription("File containing URLs (one per line)"));
 
-const concurrencyOption = Options.integer("concurrency").pipe(
-  Options.withAlias("c"),
-  Options.withDefault(5),
-  Options.withDescription("Number of concurrent fetches")
+const concurrencyOption = Flag.integer("concurrency").pipe(
+  Flag.withAlias("c"),
+  Flag.withDefault(5),
+  Flag.withDescription("Number of concurrent fetches")
 );
 
 const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
@@ -334,7 +375,8 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
     content,
     Str.split("\n"),
     A.map(Str.trim),
-    A.filter(P.and(Str.isNonEmpty, P.not(Str.startsWith("#")))));
+    A.filter(P.and(Str.isNonEmpty, P.not(Str.startsWith("#"))))
+  );
   yield* Console.log(`Ingesting ${urls.length} URLs with concurrency ${concurrency} (ontology: ${ontologyId})\n`);
   const results = yield* ingestion.ingestUrls(urls, {
     ontologyId,
@@ -346,42 +388,53 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
     if (LinkIngestionError.is(result)) {
       return Effect.succeed(`[ERROR] ${result.url ?? "unknown"}: ${result.message}`);
     } else {
-      const ingestResult = result as IngestResult;
+      const ingestResult = result;
       if (ingestResult.duplicate) {
         return Effect.succeed(`[SKIP] ${Str.slice(0, 12)(ingestResult.contentHash)}... (duplicate)`);
       } else {
         return Effect.succeed(
-          `[OK] ${Str.slice(0, 12)(ingestResult.contentHash)}... ${
-            O.fromNullishOr(ingestResult.headline).pipe(O.match({
-              onNone: () => "",
-              onSome: Str.slice(0, 40)
-            }))}`
+          `[OK] ${Str.slice(0, 12)(ingestResult.contentHash)}... ${O.fromNullishOr(ingestResult.headline).pipe(
+            O.match({
+              onNone: thunkEmptyStr,
+              onSome: Str.slice(0, 40),
+            })
+          )}`
         );
       }
     }
   });
-  const counts = results.reduce(
-    (acc, result: IngestResult | LinkIngestionError) => {
-      if (LinkIngestionError.is(result)) {
-        return {...acc, errorCount: acc.errorCount + 1};
-      } else {
-        if (result.duplicate) {
-          return {...acc, duplicateCount: acc.duplicateCount + 1};
-        } else {
-          return {...acc, successCount: acc.successCount + 1};
-        }
-      }
-    },
-    {successCount: 0, duplicateCount: 0, errorCount: 0}
+  const errors = A.filter(results, LinkIngestionError.is);
+  const successes = A.filter(results, (result): result is IngestResult => !LinkIngestionError.is(result));
+  const counts = {
+    successCount: A.length(A.filter(successes, (result) => !result.duplicate)),
+    duplicateCount: A.length(A.filter(successes, (result) => result.duplicate)),
+    errorCount: A.length(errors),
+  };
+  const output = A.join(
+    [
+      ...resultLines,
+      "",
+      `Summary: ${counts.successCount} ingested, ${counts.duplicateCount} duplicates, ${counts.errorCount} errors`,
+    ],
+    "\n"
   );
-  const output = A.join([
-    ...resultLines,
-    "",
-    `Summary: ${counts.successCount} ingested, ${counts.duplicateCount} duplicates, ${counts.errorCount} errors`,
-  ], "\n");
   yield* Console.log(output);
 });
 
+/**
+ * Exposes ingest batch command for composition by callers of this module.
+ *
+ * **Example** (Inspect ingest batch command)
+ *
+ * ```ts
+ * import { ingestBatchCommand } from "@effect-ontology/Cli/Commands/Fetch"
+ *
+ * console.log(ingestBatchCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const ingestBatchCommand = Command.make(
   "ingest-batch",
   {
@@ -390,6 +443,6 @@ export const ingestBatchCommand = Command.make(
     concurrency: concurrencyOption,
     skipEnrich: skipEnrichOption,
   },
-  ({concurrency, file, ontologyId, skipEnrich}) =>
+  ({ concurrency, file, ontologyId, skipEnrich }) =>
     withErrorHandler(ingestBatchHandler(file, ontologyId, concurrency, skipEnrich))
 ).pipe(Command.withDescription("Bulk ingest URLs from a file"));

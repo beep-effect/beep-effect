@@ -1,39 +1,48 @@
 /**
  * Service: OntologyAgent
  *
+ * **Details**
+ *
  * Unified abstraction layer for ontology-guided LLM operations.
  * Wraps extraction, validation, querying, and reasoning services
  * into a single composable interface.
  *
- * @since 2.0.0
- * @module Service/OntologyAgent
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
+import type { DrizzleError } from "@beep/drizzle";
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import type { SparqlQueryProfile } from "@beep/semantic-web/services/sparql-query";
+import type { SparqlQueryProfile, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
-import { Chunk, Context, Data, DateTime, Duration, Effect, Layer, Match, MutableHashMap } from "effect";
+import { Chunk, Context, DateTime, Duration, Effect, Inspectable, Layer, Match, MutableHashMap, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
-import type { ValidationPolicyError } from "../Domain/Error/Shacl.ts";
+import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
+import type { ExtractionError } from "../Domain/Error/Extraction.ts";
+import type { OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";
+import type { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
+import type { ValidationPolicyError, ValidationReportError } from "../Domain/Error/Shacl.ts";
 import { ContentHash, Namespace, OntologyName } from "../Domain/Identity.ts";
-import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import { LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import type { ExtractionOutcome } from "../Domain/Model/ExtractionTelemetry.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
-import type { ExtractWithClaimsOptions, OntologyAgentConfig } from "../Domain/Model/OntologyAgent.ts";
+import type { ExtractWithClaimsOptions } from "../Domain/Model/OntologyAgent.ts";
 import {
   EnhancedValidationReport,
   ExtractionMetrics,
   ExtractionResult,
   ExtractWithClaimsResult,
+  OntologyAgentConfig,
   QueryBinding,
   QueryResult,
   ViolationExplanation,
@@ -49,6 +58,8 @@ import type { RdfStore } from "./Rdf.ts";
 import { RdfBuilder, rdfStoreSize, rdfStoreToDataset } from "./Rdf.ts";
 import type { ReasoningError, ReasoningResult, RuleParseError } from "./Reasoner.ts";
 import { Reasoner, ReasoningConfig } from "./Reasoner.ts";
+import type { RetryPolicyInput } from "./Retry.ts";
+import { retryEffect } from "./Retry.ts";
 import type { ShaclValidationReport } from "./Shacl.ts";
 import { ShaclWorkflowService, ValidationPolicy } from "./Shacl.ts";
 import type { SparqlGenerationError } from "./SparqlGenerator.ts";
@@ -57,20 +68,88 @@ import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/OntologyAgent");
 
+type OntologyExtractionError = ExtractionError | RdfError | SerializationFailed | OntologyAgentError;
+type OntologyClaimExtractionError = OntologyExtractionError | DrizzleError;
+type OntologyValidatedExtractionError =
+  | OntologyExtractionError
+  | OntologyAgentError
+  | ValidationReportError
+  | ShaclValidationError;
+type OntologyGraphValidationError =
+  | OntologyAgentError
+  | ValidationReportError
+  | ShaclValidationError
+  | ValidationPolicyError;
+type OntologyQueryError =
+  | OntologyFileNotFound
+  | OntologyParsingFailed
+  | ParsingFailed
+  | RdfError
+  | SparqlGenerationError
+  | OntologyAgentError;
+
 /**
  * Failure while orchestrating an ontology-agent operation.
  *
- * @since 2.0.0
- * @category Errors
+ * **Example** (Inspect ontology agent error)
+ *
+ * ```ts
+ * import { OntologyAgentError } from "@effect-ontology/Service/OntologyAgent"
+ *
+ * console.log(OntologyAgentError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-export class OntologyAgentError extends Data.TaggedError("OntologyAgentError")<{
-  readonly operation: "loadOntology" | "parseOntology" | "formatAnswer";
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class OntologyAgentError extends S.TaggedError<OntologyAgentError>($I`OntologyAgentError`)(
+  "OntologyAgentError",
+  {
+    operation: S.Literals(["loadOntology", "parseOntology", "decodeResult", "formatAnswer"]).annotateKey({
+      description: "Ontology-agent operation that failed.",
+    }),
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable ontology-agent failure diagnostic.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional underlying ontology, RDF, or language-model defect.",
+    }),
+  },
+  $I.annote("OntologyAgentError", {
+    description: "Failure while orchestrating an ontology-agent operation.",
+  })
+) {
+  static readonly is = S.is(this);
+}
+
+const decodeAgentModel = <A, I>(
+  schema: S.Codec<A, I>,
+  input: unknown,
+  model: string
+): Effect.Effect<A, OntologyAgentError> =>
+  S.decodeUnknownEffect(schema)(input).pipe(
+    Effect.mapError((cause) =>
+      OntologyAgentError.make({
+        operation: "decodeResult",
+        message: `Failed to construct ${model}`,
+        cause: O.some(cause),
+      })
+    )
+  );
+
+const makeExtractionMetrics = (outcome: ExtractionOutcome, duration: Duration.Duration): ExtractionMetrics =>
+  ExtractionMetrics.make({
+    entityCount: NonNegativeInt.make(outcome.graph.entities.length),
+    relationCount: NonNegativeInt.make(outcome.graph.relations.length),
+    chunkCount: outcome.telemetry.chunkCount,
+    usage: outcome.telemetry.usage,
+    duration,
+  });
 
 /**
  * OntologyAgent - Unified interface for ontology-guided operations
+ *
+ * **Details**
  *
  * Provides a higher-level abstraction that combines extraction, validation,
  * querying, and reasoning into a single composable service.
@@ -81,26 +160,17 @@ export class OntologyAgentError extends Data.TaggedError("OntologyAgentError")<{
  * - `validateWithPolicy` - Policy-based validation for workflow control
  * - `explainViolations` - Convert SHACL violations to LLM-friendly explanations
  *
- * @example
- * ```typescript
- * Effect.gen(function*() {
- *   const agent = yield* OntologyAgent
+ * **Example** (Inspect the ontology-agent layer)
  *
- *   // Extract from text
- *   const result = yield* agent.extract(text, config)
- *   console.log(`Extracted ${result.metrics.entityCount} entities`)
+ * ```ts
+ * import { Layer } from "effect"
+ * import { OntologyAgent } from "@effect-ontology/Service/OntologyAgent"
  *
- *   // Validate the graph
- *   const report = yield* agent.validate(rdfStore, shapesStore)
- *   if (!report.conforms) {
- *     const explanations = agent.explainViolations(report.violations)
- *     // Use explanations for LLM correction feedback
- *   }
- * })
+ * console.log(Layer.isLayer(OntologyAgent.Default)) // true
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @category services
+ * @since 0.0.0
  */
 export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyAgent`, {
   make: Effect.gen(function* () {
@@ -116,6 +186,26 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
     const llm = yield* LanguageModel.LanguageModel;
     const storage = yield* StorageService;
 
+    const sparqlResultTriples = Match.type<SparqlQueryResult>().pipe(
+      Match.discriminatorsExhaustive("profile")({
+        select: ({ rows }) =>
+          A.flatMap(rows, (row) =>
+            A.map(R.toEntries(row), ([variable, value]) => ({
+              subject: "result",
+              predicate: variable,
+              object: value.termType === "Literal" ? value.value : extractLocalName(value.value),
+            }))
+          ),
+        construct: ({ dataset }) =>
+          A.map(dataset.quads, (quad) => ({
+            subject: extractLocalName(quad.subject.value),
+            predicate: extractLocalName(quad.predicate.value),
+            object: quad.object.termType === "Literal" ? quad.object.value : extractLocalName(quad.object.value),
+          })),
+        ask: ({ value }) => [{ subject: "query", predicate: "result", object: value ? "true" : "false" }],
+      })
+    );
+
     // Cache the parsed ontology RDF store for SHACL shape generation
     // Uses StorageService for cloud-native loading (GCS/local)
     const getOntologyStore = yield* Effect.cached(
@@ -125,33 +215,31 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
         yield* Effect.logDebug("Loading ontology for SHACL shapes", { ontologyPath });
 
         // Load from storage (GCS or local filesystem via StorageService)
-        const contentOpt = yield* storage.get(ontologyPath).pipe(
-          Effect.mapError(
-            (cause) =>
-              new OntologyAgentError({
-                operation: "loadOntology",
-                message: `Failed to load ontology from storage: ${cause.message}`,
-                cause,
-              })
+        const contentOpt = yield* storage.getOption(ontologyPath).pipe(
+          Effect.mapError((cause) =>
+            OntologyAgentError.make({
+              operation: "loadOntology",
+              message: `Failed to load ontology from storage: ${cause.message}`,
+              cause: O.some(cause),
+            })
           )
         );
 
-        if (contentOpt === undefined) {
-          return yield* new OntologyAgentError({
+        if (O.isNone(contentOpt)) {
+          return yield* OntologyAgentError.make({
             operation: "loadOntology",
             message: `Ontology file not found at ${ontologyPath}`,
           });
         }
 
         // Parse Turtle to RDF store
-        const ontologyStore = yield* rdfBuilder.parseTurtle(contentOpt).pipe(
-          Effect.mapError(
-            (cause) =>
-              new OntologyAgentError({
-                operation: "parseOntology",
-                message: `Failed to parse ontology: ${cause.message}`,
-                cause,
-              })
+        const ontologyStore = yield* rdfBuilder.parseTurtle(contentOpt.value).pipe(
+          Effect.mapError((cause) =>
+            OntologyAgentError.make({
+              operation: "parseOntology",
+              message: `Failed to parse ontology: ${cause.message}`,
+              cause: O.some(cause),
+            })
           )
         );
 
@@ -182,7 +270,10 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param agentConfig - Optional configuration overrides
        * @returns ExtractionResult with graph, turtle, and metrics
        */
-      extract: (text: string, agentConfig?: OntologyAgentConfig): Effect.Effect<ExtractionResult, unknown> =>
+      extract: (
+        text: string,
+        agentConfig?: OntologyAgentConfig
+      ): Effect.Effect<ExtractionResult, OntologyExtractionError> =>
         Effect.gen(function* () {
           const startTime = yield* DateTime.now;
 
@@ -196,7 +287,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Execute extraction workflow
-          const graph = yield* extractionWorkflow.extract(text, runConfig);
+          const outcome = yield* extractionWorkflow.extract(text, runConfig);
+          const { graph } = outcome;
 
           yield* Effect.logDebug("Extraction complete, building RDF store", {
             entityCount: graph.entities.length,
@@ -215,14 +307,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           // Build metrics from graph
-          const metrics = ExtractionMetrics.fromUnknown({
-            entityCount: NonNegativeInt.make(graph.entities.length),
-            relationCount: NonNegativeInt.make(graph.relations.length),
-            chunkCount: NonNegativeInt.make(1), // TODO: Get actual chunk count from workflow
-            inputTokens: NonNegativeInt.make(0), // TODO: Track from workflow when available
-            outputTokens: NonNegativeInt.make(0),
-            duration: Duration.toMillis(duration),
-          });
+          const metrics = makeExtractionMetrics(outcome, duration);
 
           yield* Effect.logInfo("OntologyAgent.extract complete", {
             entityCount: metrics.entityCount,
@@ -231,11 +316,15 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             durationMs: Duration.toMillis(metrics.duration),
           });
 
-          return ExtractionResult.fromUnknown({
-            graph,
-            metrics,
-            turtle,
-          });
+          return yield* decodeAgentModel(
+            ExtractionResult,
+            {
+              graph,
+              metrics,
+              turtle,
+            },
+            "extraction result"
+          );
         }),
 
       /**
@@ -258,8 +347,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param options - Options including articleId and agent config overrides
        * @returns ExtractWithClaimsResult with graph, metrics, and claim count
        *
-       * @example
-       * ```typescript
+       * **Example** (Use extractWithClaims)
+       * ```ts
        * const result = yield* agent.extractWithClaims(text, {
        *   articleId: "article-001",
        *   defaultConfidence: 0.85
@@ -270,7 +359,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
       extractWithClaims: (
         text: string,
         options: ExtractWithClaimsOptions
-      ): Effect.Effect<ExtractWithClaimsResult, unknown> =>
+      ): Effect.Effect<ExtractWithClaimsResult, OntologyClaimExtractionError> =>
         Effect.gen(function* () {
           const startTime = yield* DateTime.now;
 
@@ -285,7 +374,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Execute extraction workflow
-          const graph = yield* extractionWorkflow.extract(text, runConfig);
+          const outcome = yield* extractionWorkflow.extract(text, runConfig);
+          const { graph } = outcome;
 
           yield* Effect.logDebug("Extraction complete, creating claims from relations", {
             entityCount: graph.entities.length,
@@ -313,7 +403,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             ? (() => {
                 // Extract protocol://domain/ from config.rdf.baseNamespace
                 const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
-                const baseDomain = P.isNotNull(match) ? match[0] : "http://example.org/";
+                const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
                 return `${baseDomain}${options.targetNamespace.value}/`;
               })()
             : config.rdf.baseNamespace;
@@ -330,14 +420,14 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             );
 
             // Determine if object is entity reference or literal
-            const isEntityRef = typeof relation.object === "string" && relation.isEntityReference;
+            const isEntityRef = P.isString(relation.object) && relation.isEntityReference;
             const objectValue = isEntityRef
               ? O.getOrElse(
-                  MutableHashMap.get(entityIriMap, relation.object as string),
+                  MutableHashMap.get(entityIriMap, relation.object),
                   () => `${baseNamespace}${relation.object}`
                 )
               : String(relation.object);
-            const objectType = isEntityRef ? ("iri" as const) : ("literal" as const);
+            const objectType = isEntityRef ? "iri" : "literal";
 
             // Get confidence from evidence span if available
             const confidence = O.match(relation.evidence, {
@@ -373,14 +463,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           // Build metrics from graph
-          const metrics = ExtractionMetrics.fromUnknown({
-            entityCount: NonNegativeInt.make(graph.entities.length),
-            relationCount: NonNegativeInt.make(graph.relations.length),
-            chunkCount: NonNegativeInt.make(1),
-            inputTokens: NonNegativeInt.make(0),
-            outputTokens: NonNegativeInt.make(0),
-            duration: Duration.toMillis(duration),
-          });
+          const metrics = makeExtractionMetrics(outcome, duration);
 
           yield* Effect.logInfo("OntologyAgent.extractWithClaims complete", {
             entityCount: metrics.entityCount,
@@ -389,13 +472,17 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             durationMs: Duration.toMillis(metrics.duration),
           });
 
-          return ExtractWithClaimsResult.fromUnknown({
-            graph,
-            metrics,
-            turtle,
-            claimCount,
-            articleId: options.articleId,
-          });
+          return yield* decodeAgentModel(
+            ExtractWithClaimsResult,
+            {
+              graph,
+              metrics,
+              turtle,
+              claimCount,
+              articleId: options.articleId,
+            },
+            "claim extraction result"
+          );
         }),
 
       /**
@@ -418,8 +505,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param reasoningConfig - Optional reasoning configuration (defaults to subclass-only)
        * @returns ExtractionResult with graph containing inferred types
        *
-       * @example
-       * ```typescript
+       * **Example** (Use extractWithReasoning)
+       * ```ts
        * const result = yield* agent.extractWithReasoning(text)
        * // Turtle now includes inferred type assertions from rdfs:subClassOf
        * console.log(`Inferred triples included in RDF output`)
@@ -429,7 +516,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
         text: string,
         agentConfig?: OntologyAgentConfig,
         reasoningConfig?: ReasoningConfig
-      ): Effect.Effect<ExtractionResult, unknown> =>
+      ): Effect.Effect<ExtractionResult, OntologyExtractionError> =>
         Effect.gen(function* () {
           const startTime = yield* DateTime.now;
 
@@ -442,7 +529,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Execute extraction workflow
-          const graph = yield* extractionWorkflow.extract(text, runConfig);
+          const outcome = yield* extractionWorkflow.extract(text, runConfig);
+          const { graph } = outcome;
 
           yield* Effect.logDebug("Extraction complete, building RDF store", {
             entityCount: graph.entities.length,
@@ -461,11 +549,11 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const reasoningResult = yield* reasoner.reason(store, effectiveReasoningConfig).pipe(
             Effect.catch((error) =>
               Effect.logWarning("Reasoning failed, continuing with unaugmented graph", {
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               }).pipe(
                 Effect.map(() => ({
                   inferredTripleCount: NonNegativeInt.make(0),
-                  rulesApplied: [] as ReadonlyArray<string>,
+                  rulesApplied: [],
                   durationMs: 0,
                 }))
               )
@@ -486,14 +574,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           // Build metrics from graph
-          const metrics = ExtractionMetrics.fromUnknown({
-            entityCount: NonNegativeInt.make(graph.entities.length),
-            relationCount: NonNegativeInt.make(graph.relations.length),
-            chunkCount: NonNegativeInt.make(1),
-            inputTokens: NonNegativeInt.make(0),
-            outputTokens: NonNegativeInt.make(0),
-            duration: Duration.toMillis(duration),
-          });
+          const metrics = makeExtractionMetrics(outcome, duration);
 
           yield* Effect.logInfo("OntologyAgent.extractWithReasoning complete", {
             entityCount: metrics.entityCount,
@@ -503,11 +584,15 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             durationMs: Duration.toMillis(metrics.duration),
           });
 
-          return ExtractionResult.fromUnknown({
-            graph,
-            metrics,
-            turtle,
-          });
+          return yield* decodeAgentModel(
+            ExtractionResult,
+            {
+              graph,
+              metrics,
+              turtle,
+            },
+            "reasoned extraction result"
+          );
         }),
 
       /**
@@ -520,7 +605,10 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param agentConfig - Optional configuration overrides
        * @returns ExtractionResult with graph, turtle, metrics, and validation report
        */
-      extractAndValidate: (text: string, agentConfig?: OntologyAgentConfig): Effect.Effect<ExtractionResult, unknown> =>
+      extractAndValidate: (
+        text: string,
+        agentConfig?: OntologyAgentConfig
+      ): Effect.Effect<ExtractionResult, OntologyValidatedExtractionError> =>
         Effect.gen(function* () {
           const startTime = yield* DateTime.now;
 
@@ -532,7 +620,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Execute extraction
-          const graph = yield* extractionWorkflow.extract(text, runConfig);
+          const outcome = yield* extractionWorkflow.extract(text, runConfig);
+          const { graph } = outcome;
 
           // Build RDF store from extracted graph
           const rdfStore = yield* rdfBuilder.createStore;
@@ -547,11 +636,11 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             Effect.catch((error) =>
               // Log reasoning error but continue with validation on raw graph
               Effect.logWarning("Reasoning failed, continuing with unaugmented graph", {
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               }).pipe(
                 Effect.map(() => ({
                   inferredTripleCount: 0,
-                  rulesApplied: [] as ReadonlyArray<string>,
+                  rulesApplied: [],
                   durationMs: 0,
                 }))
               )
@@ -577,14 +666,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           // Build metrics
-          const metrics = ExtractionMetrics.fromUnknown({
-            entityCount: NonNegativeInt.make(graph.entities.length),
-            relationCount: NonNegativeInt.make(graph.relations.length),
-            chunkCount: NonNegativeInt.make(1),
-            inputTokens: NonNegativeInt.make(0),
-            outputTokens: NonNegativeInt.make(0),
-            duration: Duration.toMillis(duration),
-          });
+          const metrics = makeExtractionMetrics(outcome, duration);
 
           yield* Effect.logInfo("OntologyAgent.extractAndValidate complete", {
             entityCount: metrics.entityCount,
@@ -594,12 +676,16 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             violationCount: report.validation.violations.length,
           });
 
-          return ExtractionResult.fromUnknown({
-            graph,
-            metrics,
-            turtle,
-            validationReport: report,
-          });
+          return yield* decodeAgentModel(
+            ExtractionResult,
+            {
+              graph,
+              metrics,
+              turtle,
+              validationReport: report,
+            },
+            "validated extraction result"
+          );
         }),
 
       /**
@@ -684,8 +770,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param policy - Optional validation policy (defaults to fail on violations only)
        * @returns EnhancedValidationReport with explanations and grouped violations
        *
-       * @example
-       * ```typescript
+       * **Example** (Use validateGraph)
+       * ```ts
        * const report = yield* agent.validateGraph(rdfStore)
        * if (!report.conforms) {
        *   console.log("Critical:", report.byLevel.violations)
@@ -698,7 +784,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
       validateGraph: (
         dataStore: RdfStore,
         policy?: ValidationPolicy
-      ): Effect.Effect<EnhancedValidationReport, ShaclValidationError | ValidationPolicyError | unknown> =>
+      ): Effect.Effect<EnhancedValidationReport, OntologyGraphValidationError> =>
         Effect.gen(function* () {
           const startTime = yield* DateTime.now;
 
@@ -718,11 +804,11 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Validate with policy if provided, otherwise just validate
-          const effectivePolicy = policy ?? ValidationPolicy.fromUnknown({});
+          const effectivePolicy = policy ?? (yield* decodeAgentModel(ValidationPolicy, {}, "validation policy"));
           const report = yield* shaclService.validateWithPolicy(dataStore, shapesStore, effectivePolicy);
 
           // Group violations by severity
-          const byLevel = groupViolationsBySeverity(report.validation.violations);
+          const byLevel = yield* groupViolationsBySeverity(report.validation.violations);
 
           // Generate explanations
           const explanations = report.validation.violations.map((v) =>
@@ -746,15 +832,19 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             durationMs: Duration.toMillis(duration),
           });
 
-          return EnhancedValidationReport.fromUnknown({
-            conforms: report.validation.conforms,
-            violationCount: report.validation.violations.length,
-            explanations,
-            byLevel,
-            duration: Duration.toMillis(duration),
-            dataGraphTripleCount: NonNegativeInt.make(report.dataGraphTripleCount),
-            shapesCount: NonNegativeInt.make(shapesCount),
-          });
+          return yield* decodeAgentModel(
+            EnhancedValidationReport,
+            {
+              conforms: report.validation.conforms,
+              violationCount: report.validation.violations.length,
+              explanations,
+              byLevel,
+              duration: Duration.toMillis(duration),
+              dataGraphTripleCount: NonNegativeInt.make(report.dataGraphTripleCount),
+              shapesCount: NonNegativeInt.make(shapesCount),
+            },
+            "enhanced validation report"
+          );
         }),
 
       /**
@@ -774,8 +864,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param dataStore - RDF store containing the knowledge graph
        * @returns QueryResult with answer, SPARQL, bindings, and confidence
        *
-       * @example
-       * ```typescript
+       * **Example** (Use query)
+       * ```ts
        * const result = yield* agent.query(
        *   "Who founded Acme Corp?",
        *   rdfStore
@@ -784,7 +874,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * console.log(result.sparql) // "SELECT ?founder WHERE { ... }"
        * ```
        */
-      query: (question: string, dataStore: RdfStore): Effect.Effect<QueryResult, SparqlGenerationError | unknown> =>
+      query: (question: string, dataStore: RdfStore): Effect.Effect<QueryResult, OntologyQueryError> =>
         Effect.gen(function* () {
           const startTime = yield* DateTime.now;
 
@@ -815,12 +905,13 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             : Str.startsWith("CONSTRUCT")(normalizedQuery) || Str.startsWith("DESCRIBE")(normalizedQuery)
               ? "construct"
               : "select";
+          const dataset = yield* rdfStoreToDataset(dataStore);
           const execution = yield* sparqlService
             .execute(
               SparqlQueryRequest.make({
                 query: sparqlResult.sparql,
                 profile,
-                dataset: rdfStoreToDataset(dataStore),
+                dataset,
               })
             )
             .pipe(Effect.result);
@@ -840,29 +931,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
           const triplesForLlm = yield* Result.match(execution, {
             onFailure: fallbackTriples,
-            onSuccess: (result) =>
-              Effect.succeed(
-                Match.value(result).pipe(
-                  Match.discriminatorsExhaustive("profile")({
-                    select: ({ rows }) =>
-                      A.flatMap(rows, (row) =>
-                        A.map(R.toEntries(row), ([variable, value]) => ({
-                          subject: "result",
-                          predicate: variable,
-                          object: value.termType === "Literal" ? value.value : extractLocalName(value.value),
-                        }))
-                      ),
-                    construct: ({ dataset }) =>
-                      A.map(dataset.quads, (quad) => ({
-                        subject: extractLocalName(quad.subject.value),
-                        predicate: extractLocalName(quad.predicate.value),
-                        object:
-                          quad.object.termType === "Literal" ? quad.object.value : extractLocalName(quad.object.value),
-                      })),
-                    ask: ({ value }) => [{ subject: "query", predicate: "result", object: value ? "true" : "false" }],
-                  })
-                )
-              ),
+            onSuccess: (result) => Effect.succeed(sparqlResultTriples(result)),
           });
 
           yield* Effect.logDebug("SPARQL execution complete", {
@@ -875,12 +944,11 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
 
           // Format answer using LLM
           const answerResult = yield* formatAnswerWithLlm(
-            llm,
             question,
             sparqlResult.sparql,
             triplesForLlm,
-            config.llm.timeoutMs
-          );
+            config.llm.retryPolicy
+          ).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
 
           const endTime = yield* DateTime.now;
           const durationMs = DateTime.distance(startTime, endTime);
@@ -931,12 +999,16 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             durationMs,
           });
 
-          return QueryResult.fromUnknown({
-            answer: answerResult,
-            sparql: sparqlResult.sparql,
-            bindings,
-            confidence: Confidence.make(confidence),
-          });
+          return yield* decodeAgentModel(
+            QueryResult,
+            {
+              answer: answerResult,
+              sparql: sparqlResult.sparql,
+              bindings,
+              confidence: Confidence.make(confidence),
+            },
+            "query result"
+          );
         }),
 
       /**
@@ -979,8 +1051,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param reasoningConfig - Optional reasoning configuration (defaults to full RDFS)
        * @returns Reasoning result with statistics
        *
-       * @example
-       * ```typescript
+       * **Example** (Use reason)
+       * ```ts
        * const result = yield* agent.reason(rdfStore)
        * console.log(`Inferred ${result.inferredTripleCount} new triples`)
        * ```
@@ -1064,44 +1136,28 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
  */
 const buildRunConfig = (configService: AppConfig, agentConfig?: OntologyAgentConfig): Effect.Effect<RunConfig> =>
   Effect.sync(() => {
-    // Build ontology ref from path or use provided
-    // Use branded type constructors for identity types
-    const ontologyRef =
-      agentConfig === undefined
-        ? OntologyRef.make({
-            namespace: Namespace.make("default"),
-            name: OntologyName.make("ontology"),
-            contentHash: ContentHash.make(Str.repeat(64)("0")),
-          })
-        : O.getOrElse(agentConfig.ontology, () =>
-            OntologyRef.make({
-              namespace: Namespace.make("default"),
-              name: OntologyName.make("ontology"),
-              contentHash: ContentHash.make(Str.repeat(64)("0")),
-            })
-          );
-
-    // Build chunking config
-    const chunkingConfig = ChunkingConfig.make({
-      maxChunkSize: PosInt.make(agentConfig?.chunking.maxChunkSize ?? 2000),
-      preserveSentences: agentConfig?.chunking.preserveSentences ?? true,
-      overlapTokens: NonNegativeInt.make(50),
-    });
+    const resolvedAgentConfig = O.getOrElse(O.fromUndefinedOr(agentConfig), OntologyAgentConfig.default);
+    const ontologyRef = O.getOrElse(resolvedAgentConfig.ontology, () =>
+      OntologyRef.make({
+        namespace: Namespace.make("default"),
+        name: OntologyName.make("ontology"),
+        contentHash: ContentHash.make(Str.repeat(64)("0")),
+      })
+    );
 
     // Build LLM config from service config
     const llmConfig = LlmConfig.make({
       model: configService.llm.model,
       temperature: configService.llm.temperature,
       maxTokens: PosInt.make(configService.llm.maxTokens),
-      timeout: Duration.millis(configService.llm.timeoutMs),
+      timeout: configService.llm.retryPolicy.attemptTimeout,
     });
 
     return RunConfig.make({
       ontology: ontologyRef,
-      chunking: chunkingConfig,
+      chunking: resolvedAgentConfig.chunking,
       llm: llmConfig,
-      concurrency: PosInt.make(agentConfig?.concurrency ?? 4),
-      enableGrounding: true,
+      concurrency: resolvedAgentConfig.concurrency,
     });
   });
 
@@ -1141,30 +1197,42 @@ const generateCorrectionSuggestion = (violation: ShaclValidationViolation): stri
  *
  * Categorizes SHACL violations into violations (critical), warnings, and info.
  */
-const groupViolationsBySeverity = (violations: ReadonlyArray<ShaclValidationViolation>): ViolationsByLevel => {
-  const grouped = {
-    violations: [] as Array<string>,
-    warnings: [] as Array<string>,
-    info: [] as Array<string>,
-  };
-
-  for (const v of violations) {
-    const message = formatViolationExplanation(v);
-    switch (v.severity) {
-      case "violation":
-        grouped.violations.push(message);
-        break;
-      case "warning":
-        grouped.warnings.push(message);
-        break;
-      case "info":
-        grouped.info.push(message);
-        break;
-    }
-  }
-
-  return ViolationsByLevel.fromUnknown(grouped);
+type GroupedViolations = {
+  readonly violations: ReadonlyArray<string>;
+  readonly warnings: ReadonlyArray<string>;
+  readonly info: ReadonlyArray<string>;
 };
+
+const appendViolationBySeverity = Match.type<ShaclValidationViolation["severity"]>().pipe(
+  Match.when("violation", () => (byLevel: GroupedViolations, message: string) => ({
+    ...byLevel,
+    violations: A.append(byLevel.violations, message),
+  })),
+  Match.when("warning", () => (byLevel: GroupedViolations, message: string) => ({
+    ...byLevel,
+    warnings: A.append(byLevel.warnings, message),
+  })),
+  Match.when("info", () => (byLevel: GroupedViolations, message: string) => ({
+    ...byLevel,
+    info: A.append(byLevel.info, message),
+  })),
+  Match.exhaustive
+);
+
+const groupViolationsBySeverity = Effect.fn("OntologyAgent.groupViolationsBySeverity")(function* (
+  violations: ReadonlyArray<ShaclValidationViolation>
+) {
+  const grouped = A.reduce<ShaclValidationViolation, GroupedViolations>(
+    violations,
+    { violations: A.empty(), warnings: A.empty(), info: A.empty() },
+    (byLevel, violation) => {
+      const message = formatViolationExplanation(violation);
+      return appendViolationBySeverity(violation.severity)(byLevel, message);
+    }
+  );
+
+  return yield* decodeAgentModel(ViolationsByLevel, grouped, "grouped validation violations");
+});
 
 /**
  * Extract local name from IRI
@@ -1193,12 +1261,11 @@ interface TripleForLlm {
  * and uses LLM to generate a natural language answer.
  */
 const formatAnswerWithLlm = (
-  llm: LanguageModel.Service,
   question: string,
   sparql: string,
   triples: ReadonlyArray<TripleForLlm>,
-  timeoutMs: number
-): Effect.Effect<string, unknown> =>
+  retryPolicy: RetryPolicyInput
+): Effect.Effect<string, OntologyAgentError, LanguageModel.LanguageModel> =>
   Effect.gen(function* () {
     // If no triples, return a "no results" answer
     if (triples.length === 0) {
@@ -1228,19 +1295,19 @@ Please provide a concise, natural language answer to the question based on the k
 If the data doesn't contain enough information to fully answer the question, say so.
 Keep the answer brief and factual.`;
 
+    const llm = yield* LanguageModel.LanguageModel;
     const response = yield* llm
       .generateText({
         prompt,
       })
       .pipe(
-        Effect.timeout(Duration.millis(timeoutMs)),
-        Effect.mapError(
-          (cause) =>
-            new OntologyAgentError({
-              operation: "formatAnswer",
-              message: `Failed to format answer: ${cause}`,
-              cause,
-            })
+        retryEffect(retryPolicy),
+        Effect.mapError((cause) =>
+          OntologyAgentError.make({
+            operation: "formatAnswer",
+            message: `Failed to format answer: ${cause}`,
+            cause: O.some(cause),
+          })
         )
       );
 

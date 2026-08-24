@@ -10,6 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { Unknown } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
@@ -20,7 +21,6 @@ import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as S from "effect/Schema";
 
 import * as ClaudeProject from "../../claudecode/ClaudeProject.ts";
 import * as ClaudeRuntime from "../../claudecode/ClaudeRuntime.ts";
@@ -44,7 +44,7 @@ const PROJECT_SETTINGS = `${CWD}/.claude/settings.json`;
 const PLUGIN_ROOT = "/plugin";
 const SKILL_PATH = `${PLUGIN_ROOT}/skills/review/SKILL.md`;
 const $I = $ScratchpadId.create("test/claudecode/ClaudeRuntime.test");
-const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeSyncFromJsonString;
 
 const permissionDeniedError = (path: string) =>
   PlatformError.systemError({

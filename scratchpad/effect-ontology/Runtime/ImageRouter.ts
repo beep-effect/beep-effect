@@ -1,14 +1,17 @@
 /**
  * Router: Image API
  *
+ * **Details**
+ *
  * HTTP endpoints for serving images with caching, streaming,
  * and listing images for links/documents.
  *
- * @since 2.0.0
- * @module Runtime/ImageRouter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import { Effect, Option } from "effect";
+import { Duration, Effect } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { ImageBlobStore } from "../Service/ImageBlobStore.ts";
@@ -38,6 +41,20 @@ const buildETag = (hash: string): string => `"${hash}"`;
 // Image Router
 // =============================================================================
 
+/**
+ * Exposes image router for composition by callers of this module.
+ *
+ * **Example** (Inspect image router)
+ *
+ * ```ts
+ * import { ImageRouter } from "@effect-ontology/Runtime/ImageRouter"
+ *
+ * console.log(ImageRouter)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const ImageRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -69,7 +86,7 @@ export const ImageRouter = HttpRouter.addAll([
 
       // Get metadata for content type (also validates existence)
       const metadataOpt = yield* blobStore.getMetadata(hash);
-      if (Option.isNone(metadataOpt)) {
+      if (O.isNone(metadataOpt)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -83,8 +100,8 @@ export const ImageRouter = HttpRouter.addAll([
 
       // Try to get signed URL for direct GCS access (1 hour expiry)
       if (blobStore.supportsSignedUrls) {
-        const signedUrlOpt = yield* blobStore.getSignedUrl(hash, 3600);
-        if (Option.isSome(signedUrlOpt)) {
+        const signedUrlOpt = yield* blobStore.getSignedUrl(hash, Duration.hours(1));
+        if (O.isSome(signedUrlOpt)) {
           // Redirect to signed URL - client downloads directly from GCS
           return HttpServerResponse.empty({
             status: 302,
@@ -98,7 +115,7 @@ export const ImageRouter = HttpRouter.addAll([
 
       // Fallback: proxy bytes through server (for local/memory storage)
       const bytesOpt = yield* blobStore.getBytes(hash);
-      if (Option.isNone(bytesOpt)) {
+      if (O.isNone(bytesOpt)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -140,7 +157,7 @@ export const ImageRouter = HttpRouter.addAll([
       const blobStore = yield* ImageBlobStore;
 
       const metadataOpt = yield* blobStore.getMetadata(hash);
-      if (Option.isNone(metadataOpt)) {
+      if (O.isNone(metadataOpt)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -179,9 +196,9 @@ export const ImageRouter = HttpRouter.addAll([
       const linkService = yield* LinkIngestionService;
 
       // Look up link by ID to get contentHash (images are stored by contentHash)
-      const link = yield* linkService.getById(linkId).pipe(Effect.map((optLink) => Option.getOrNull(optLink)));
+      const link = yield* linkService.getById(linkId);
 
-      if (link === null) {
+      if (O.isNone(link)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -192,7 +209,7 @@ export const ImageRouter = HttpRouter.addAll([
       }
 
       // Verify ontology matches
-      if (link.ontologyId !== ontologyId) {
+      if (link.value.ontologyId !== ontologyId) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -202,7 +219,7 @@ export const ImageRouter = HttpRouter.addAll([
         );
       }
 
-      const images = yield* imageStore.listByOwner("link", link.contentHash);
+      const images = yield* imageStore.listByOwner("link", link.value.contentHash);
 
       return yield* HttpServerResponse.json(
         {
@@ -316,7 +333,7 @@ export const ImageRouter = HttpRouter.addAll([
 
       const manifestOpt = yield* imageStore.getManifest(ownerType, ownerId);
 
-      if (Option.isNone(manifestOpt)) {
+      if (O.isNone(manifestOpt)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",

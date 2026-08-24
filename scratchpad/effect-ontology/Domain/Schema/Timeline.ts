@@ -7,28 +7,90 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { SchemaGetter } from "effect";
-import * as DateTime from "effect/DateTime";
+import { Sha256Hex } from "@beep/schema/Sha256";
+import { UUID } from "@beep/schema/String";
+import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
-import { ClaimId, ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
+import { ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
+const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));
 
 /**
  * Claim-rank vocabulary re-exported for timeline source-path parity.
  *
- * @example
+ * **Example** (Use BooleanQueryValueDefinition)
  * ```ts
- * import { ClaimRank } from "@effect-ontology/Schema/Timeline.ts"
+ * import { ClaimRank } from "@effect-ontology/Schema/Timeline"
  *
  * console.log(ClaimRank.is.preferred("preferred")) // true
  * ```
  *
- * @category claims
+ * @category schemas
  * @since 0.0.0
  */
 export { ClaimRank };
+
+/**
+ * Database UUID identifying one persisted claim row.
+ *
+ * **Example** (Decode a persisted claim identifier)
+ *
+ * ```ts
+ * import { PersistedClaimId } from "@effect-ontology/Schema/Timeline"
+ *
+ * const id = PersistedClaimId.make("00000000-0000-4000-8000-000000000011")
+ * console.log(id)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersistedClaimId = UUID.annotate({
+  toArbitrary: () => (fc) => fc.uuid().map(UUID.make),
+}).pipe(
+  $I.annoteSchema("PersistedClaimId", {
+    description: "Database UUID identifying a persisted claim row, distinct from a content-derived ClaimId.",
+  })
+);
+/**
+ * Runtime value decoded by {@link PersistedClaimId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersistedClaimId = typeof PersistedClaimId.Type;
+
+/**
+ * Database UUID identifying one persisted correction row.
+ *
+ * **Example** (Decode a persisted correction identifier)
+ *
+ * ```ts
+ * import { PersistedCorrectionId } from "@effect-ontology/Schema/Timeline"
+ *
+ * const id = PersistedCorrectionId.make("00000000-0000-4000-8000-000000000099")
+ * console.log(id)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersistedCorrectionId = UUID.annotate({
+  toArbitrary: () => (fc) => fc.uuid().map(UUID.make),
+}).pipe(
+  $I.annoteSchema("PersistedCorrectionId", {
+    description: "Database UUID identifying a persisted correction row.",
+  })
+);
+/**
+ * Runtime value decoded by {@link PersistedCorrectionId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersistedCorrectionId = typeof PersistedCorrectionId.Type;
 
 const BooleanQueryValueDefinition = LiteralKit(["true", "false", "1", "0"]).pipe(
   S.decodeTo(S.Boolean, {
@@ -65,43 +127,43 @@ const PositiveIntQuery = S.FiniteFromString.pipe(
   })
 );
 
-const TimelineRangeFields = S.Struct({
+const TimelineRangeDefinition = S.Struct({
   from: S.DateTimeUtcFromString.annotateKey({
     description: "Inclusive UTC range start.",
   }),
   to: S.DateTimeUtcFromString.annotateKey({
     description: "Inclusive UTC range end.",
   }),
-});
-
-const TimelineRangeDefinition = TimelineRangeFields.check(
-  S.makeFilter(
-    (range) =>
-      DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)
-        ? undefined
-        : {
-            path: ["to"],
-            issue: "Timeline range end must not precede its start.",
-          },
-    {
-      identifier: $I`TimelineRangeOrderCheck`,
-      title: "Ordered Timeline Range",
-      description: "A UTC query range whose end is not before its start.",
-      message: "Timeline range end must be greater than or equal to its start.",
-    }
+})
+  .check(
+    S.makeFilter(
+      (range) =>
+        DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)
+          ? undefined
+          : {
+              path: ["to"],
+              issue: "Timeline range end must not precede its start.",
+            },
+      {
+        identifier: $I`TimelineRangeOrderCheck`,
+        title: "Ordered Timeline Range",
+        description: "A UTC query range whose end is not before its start.",
+        message: "Timeline range end must be greater than or equal to its start.",
+      }
+    )
   )
-);
+  .pipe(SchemaUtils.withCodecStatics);
 
 const TimelineRangeFromSelf = S.declare((input: unknown): input is typeof TimelineRangeDefinition.Type =>
-  S.is(TimelineRangeDefinition)(input)
+  TimelineRangeDefinition.is(input)
 ).annotate({
   toArbitrary: () => (fc) =>
     fc
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
-        TimelineRangeFields.make({
-          from: S.decodeSync(S.DateTimeUtcFromMillis)(from),
-          to: S.decodeSync(S.DateTimeUtcFromMillis)(from + duration),
+        TimelineRangeDefinition.make({
+          from: DateTime.makeUnsafe(from),
+          to: DateTime.makeUnsafe(from + duration),
         })
       ),
 });
@@ -122,17 +184,19 @@ const TimelineRangeQuery = S.fromJsonString(TimelineRangeDefinition).pipe(
 /**
  * Compact source-article projection used for timeline attribution.
  *
- * @example
+ * **Example** (Use ArticleSummary)
  * ```ts
- * import { ArticleSummary } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ArticleSummary } from "@effect-ontology/Schema/Timeline"
  *
- * const article = ArticleSummary.fromUnknown({
+ * const article = S.decodeUnknownOption(ArticleSummary)({
  *   id: "article-42",
  *   uri: "https://example.com/news/42",
  *   publishedAt: "2026-07-25T10:00:00.000Z",
  *   ingestedAt: "2026-07-25T10:05:00.000Z"
  * })
- * console.log(article.id) // "article-42"
+ * console.log(O.map(article, (value) => value.id)) // Some("article-42")
  * ```
  *
  * @category models
@@ -162,20 +226,20 @@ export class ArticleSummary extends S.Class<ArticleSummary>($I`ArticleSummary`)(
   })
 ) {
   static readonly is = S.is(ArticleSummary);
-  static readonly fromUnknown = S.decodeUnknownSync(ArticleSummary);
 }
 
 /**
  * Claim projection enriched for bitemporal timeline queries.
  *
- * @remarks
- * Valid-world time and knowledge-base transaction time are nested separately.
+ * **Details**
+ *
+ * * Valid-world time and knowledge-base transaction time are nested separately.
  * The RDF object keeps its canonical term discriminator, and missing
  * confidence or evidence is normalized to `Option`.
  *
- * @example
+ * **Example** (Use ClaimWithRank)
  * ```ts
- * import type { ClaimWithRank } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { ClaimWithRank } from "@effect-ontology/Schema/Timeline"
  *
  * const readRank = (claim: ClaimWithRank) => claim.rank
  * console.log(readRank)
@@ -186,7 +250,7 @@ export class ArticleSummary extends S.Class<ArticleSummary>($I`ArticleSummary`)(
  */
 export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
   {
-    id: ClaimId,
+    id: PersistedClaimId,
     subject: IRI,
     predicate: IRI,
     object: RdfObject,
@@ -212,17 +276,19 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
 /**
  * Compact record of one claim correction or supersession.
  *
- * @example
+ * **Example** (Use CorrectionSummary)
  * ```ts
- * import { CorrectionSummary } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { CorrectionSummary } from "@effect-ontology/Schema/Timeline"
  *
- * const correction = CorrectionSummary.fromUnknown({
- *   id: "correction-42",
- *   correctionType: "superseded",
+ * const correction = S.decodeUnknownOption(CorrectionSummary)({
+ *   id: "00000000-0000-4000-8000-000000000099",
+ *   correctionType: "update",
  *   correctionDate: "2026-07-25T12:00:00.000Z",
- *   originalClaimId: "claim-abc123def456"
+ *   originalClaimId: "00000000-0000-4000-8000-000000000011"
  * })
- * console.log(correction.correctionType) // "superseded"
+ * console.log(O.map(correction, (value) => value.correctionType)) // Some("update")
  * ```
  *
  * @category models
@@ -230,32 +296,30 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
  */
 export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionSummary`)(
   {
-    id: S.NonEmptyString,
+    id: PersistedCorrectionId,
     correctionType: S.NonEmptyString,
     reason: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     correctionDate: S.DateTimeUtcFromString,
-    originalClaimId: ClaimId,
-    newClaimId: S.OptionFromNullishOr(ClaimId).pipe(SchemaUtils.withNoneDefault),
+    originalClaimId: PersistedClaimId,
+    newClaimId: S.OptionFromNullishOr(PersistedClaimId).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CorrectionSummary", {
     description: "Compact correction record linking an original claim to an optional replacement.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(CorrectionSummary);
-}
+) {}
 
 /**
  * Article detail response with its timeline claims and aggregate counts.
  *
- * @example
+ * **Example** (Use ArticleDetailResponse)
  * ```ts
- * import { ArticleDetailResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import { ArticleDetailResponse } from "@effect-ontology/Schema/Timeline"
  *
  * const countClaims = (response: ArticleDetailResponse) => response.claims.length
  * console.log(countClaims)
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`ArticleDetailResponse`)(
@@ -273,19 +337,22 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
 /**
  * Query for one entity's timeline state.
  *
- * @example
+ * **Example** (Use TimelineEntityQuery)
  * ```ts
- * import { TimelineEntityQuery } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TimelineEntityQuery } from "@effect-ontology/Schema/Timeline"
  *
- * const query = TimelineEntityQuery.fromUnknown({})
- * console.log(query.includeDeprecated) // false
+ * const query = S.decodeUnknownOption(TimelineEntityQuery)({ ontologyId: "ontology-a" })
+ * console.log(O.map(query, (value) => value.includeDeprecated)) // Some(false)
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`TimelineEntityQuery`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for the timeline query." }),
     asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
     range: S.OptionFromOptionalKey(TimelineRangeQuery).pipe(SchemaUtils.withNoneDefault),
     includeDeprecated: BooleanQueryValue.pipe(SchemaUtils.withKeyDefaults(false)),
@@ -293,22 +360,20 @@ export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`Timelin
   $I.annote("TimelineEntityQuery", {
     description: "Entity-timeline query with optional UTC snapshot/range and a false deprecated-claim default.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(TimelineEntityQuery);
-}
+) {}
 
 /**
  * Timeline response for one entity IRI.
  *
- * @example
+ * **Example** (Use TimelineEntityResponse)
  * ```ts
- * import type { TimelineEntityResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { TimelineEntityResponse } from "@effect-ontology/Schema/Timeline"
  *
  * const countCorrections = (response: TimelineEntityResponse) => response.corrections.length
  * console.log(countCorrections)
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`TimelineEntityResponse`)(
@@ -326,19 +391,22 @@ export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`T
 /**
  * Filter and pagination query for timeline claims.
  *
- * @example
+ * **Example** (Use TimelineClaimsQuery)
  * ```ts
- * import { TimelineClaimsQuery } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TimelineClaimsQuery } from "@effect-ontology/Schema/Timeline"
  *
- * const query = TimelineClaimsQuery.fromUnknown({})
- * console.log(query.limit) // 20
+ * const query = S.decodeUnknownOption(TimelineClaimsQuery)({ ontologyId: "ontology-a" })
+ * console.log(O.map(query, (value) => value.limit)) // Some(20)
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`TimelineClaimsQuery`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for the claim query." }),
     subject: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
     predicate: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
     asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
@@ -350,22 +418,20 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
   $I.annote("TimelineClaimsQuery", {
     description: "Timeline-claim filters with Option-normalized criteria and constrained pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(TimelineClaimsQuery);
-}
+) {}
 
 /**
  * Paginated response containing timeline claims.
  *
- * @example
+ * **Example** (Use TimelineClaimsResponse)
  * ```ts
- * import type { TimelineClaimsResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { TimelineClaimsResponse } from "@effect-ontology/Schema/Timeline"
  *
  * const hasNext = (response: TimelineClaimsResponse) => response.hasMore
  * console.log(hasNext)
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`TimelineClaimsResponse`)(
@@ -384,14 +450,14 @@ export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`T
 /**
  * Correction-history query controls.
  *
- * @example
+ * **Example** (Use CorrectionHistoryQuery)
  * ```ts
- * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/Timeline.ts"
+ * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/Timeline"
  *
  * console.log(CorrectionHistoryQuery.make({}).includeOriginalClaims) // false
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class CorrectionHistoryQuery extends S.Class<CorrectionHistoryQuery>($I`CorrectionHistoryQuery`)(
@@ -411,9 +477,9 @@ const AffectedClaim = S.Struct({
 /**
  * Full correction record and the claims it affected.
  *
- * @example
+ * **Example** (Use CorrectionWithClaims)
  * ```ts
- * import type { CorrectionWithClaims } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { CorrectionWithClaims } from "@effect-ontology/Schema/Timeline"
  *
  * const affectedCount = (correction: CorrectionWithClaims) => correction.affectedClaims.length
  * console.log(affectedCount)
@@ -439,15 +505,15 @@ export class CorrectionWithClaims extends S.Class<CorrectionWithClaims>($I`Corre
 /**
  * Correction-history response for one article.
  *
- * @example
+ * **Example** (Use CorrectionHistoryResponse)
  * ```ts
- * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/Timeline"
  *
  * const response = CorrectionHistoryResponse.make({ articleId: "article-42" })
  * console.log(response.corrections.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class CorrectionHistoryResponse extends S.Class<CorrectionHistoryResponse>($I`CorrectionHistoryResponse`)(
@@ -460,7 +526,21 @@ export class CorrectionHistoryResponse extends S.Class<CorrectionHistoryResponse
   })
 ) {}
 
-const ConflictStatus = LiteralKit(["pending", "resolved", "ignored"])
+/**
+ * Lifecycle vocabulary for persisted claim conflicts.
+ *
+ * **Example** (Check a pending status)
+ *
+ * ```ts
+ * import { ConflictStatus } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * console.log(ConflictStatus.is.pending("pending")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ConflictStatus = LiteralKit(["pending", "resolved", "ignored"])
   .annotate({
     toArbitrary: () => (fc) => fc.constantFrom("pending", "resolved", "ignored"),
   })
@@ -470,47 +550,106 @@ const ConflictStatus = LiteralKit(["pending", "resolved", "ignored"])
     })
   );
 
-const ConflictType = LiteralKit(["position", "temporal", "contradictory", "duplicate"])
+/**
+ * Decoded lifecycle value accepted by {@link ConflictStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConflictStatus = typeof ConflictStatus.Type;
+
+/**
+ * Authoritative semantic categories persisted for claim conflicts.
+ *
+ * **Example** (Check a temporal conflict kind)
+ *
+ * ```ts
+ * import { ConflictKind } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * console.log(ConflictKind.is.temporal("temporal")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ConflictKind = LiteralKit(["position", "temporal"])
   .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("position", "temporal", "contradictory", "duplicate"),
+    toArbitrary: () => (fc) => fc.constantFrom("position", "temporal"),
   })
   .annotate(
-    $I.annote("ConflictType", {
-      description: "Supported semantic categories of claim conflict.",
+    $I.annote("ConflictKind", {
+      description: "Authoritative semantic categories persisted for claim conflicts.",
     })
   );
 
 /**
- * Filter and pagination query for detected claim conflicts.
+ * Decoded semantic category accepted by {@link ConflictKind}.
  *
- * @example
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConflictKind = typeof ConflictKind.Type;
+
+/**
+ * Request-local identity recorded when a conflict reaches a terminal state.
+ *
+ * **Example** (Create a system actor)
+ *
  * ```ts
- * import { ConflictsQuery } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import { ConflictActor } from "@effect-ontology/Domain/Schema/Timeline"
  *
- * const query = ConflictsQuery.fromUnknown({})
- * console.log(query.limit) // 20
+ * const actor = ConflictActor.make({ principal: "system", credentialFingerprint: O.none() })
+ * console.log(actor.principal) // "system"
  * ```
  *
- * @category requests
+ * @category models
+ * @since 0.0.0
+ */
+export class ConflictActor extends S.Class<ConflictActor>($I`ConflictActor`)(
+  {
+    principal: S.NonEmptyString,
+    credentialFingerprint: S.Option(Sha256HexString),
+  },
+  $I.annote("ConflictActor", {
+    description: "Authenticated request principal and optional irreversible credential fingerprint.",
+  })
+) {}
+
+/**
+ * Filter and pagination query for detected claim conflicts.
+ *
+ * **Example** (Use ConflictsQuery)
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ConflictsQuery } from "@effect-ontology/Schema/Timeline"
+ *
+ * const query = S.decodeUnknownOption(ConflictsQuery)({ ontologyId: "acme" })
+ * console.log(O.map(query, (value) => value.limit)) // Some(20)
+ * ```
+ *
+ * @category dtos
  * @since 0.0.0
  */
 export class ConflictsQuery extends S.Class<ConflictsQuery>($I`ConflictsQuery`)(
   {
+    ontologyId: S.NonEmptyString,
     status: S.OptionFromOptionalKey(ConflictStatus).pipe(SchemaUtils.withNoneDefault),
     subject: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
+    articleId: S.OptionFromOptionalKey(UUID).pipe(SchemaUtils.withNoneDefault),
     limit: PositiveIntQuery.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
     offset: NonNegativeIntQuery.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
   },
   $I.annote("ConflictsQuery", {
     description: "Conflict filters with Option-normalized criteria and constrained pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(ConflictsQuery);
-}
+) {}
 
 const ConflictPair = {
   id: S.NonEmptyString,
-  conflictType: ConflictType,
+  ontologyId: S.NonEmptyString,
+  conflictType: ConflictKind,
   claimA: ClaimWithRank,
   claimB: ClaimWithRank,
 };
@@ -520,6 +659,8 @@ const ClaimConflictDefinition = S.TaggedUnion({
   ignored: {
     ...ConflictPair,
     resolution: S.Struct({
+      resolvedBy: S.NonEmptyString,
+      resolvedAt: S.DateTimeUtcFromString,
       notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     }),
   },
@@ -527,7 +668,8 @@ const ClaimConflictDefinition = S.TaggedUnion({
     ...ConflictPair,
     resolution: S.Struct({
       strategy: S.NonEmptyString,
-      acceptedClaimId: ClaimId,
+      acceptedClaimId: PersistedClaimId,
+      resolvedBy: S.NonEmptyString,
       resolvedAt: S.DateTimeUtcFromString,
       notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     }),
@@ -537,20 +679,21 @@ const ClaimConflictDefinition = S.TaggedUnion({
 /**
  * Claim conflict discriminated by resolution status.
  *
- * @remarks
- * Pending conflicts cannot carry resolution data. Resolved conflicts must carry
+ * **Details**
+ *
+ * * Pending conflicts cannot carry resolution data. Resolved conflicts must carry
  * strategy, accepted assertion, resolution instant, and optional notes.
  *
- * @example
+ * **Example** (Use ClaimConflict)
  * ```ts
- * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline"
  *
  * const status = (conflict: ClaimConflict) => conflict._tag
  * console.log(status)
  * ```
  *
  * @invariant The `_tag` determines whether and which resolution data exists.
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
 export const ClaimConflict = ClaimConflictDefinition.pipe(
@@ -563,9 +706,9 @@ export const ClaimConflict = ClaimConflictDefinition.pipe(
 /**
  * Runtime value decoded by {@link ClaimConflict}.
  *
- * @example
+ * **Example** (Use ClaimConflict)
  * ```ts
- * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline"
  *
  * const conflictType = (conflict: ClaimConflict) => conflict.conflictType
  * console.log(conflictType)
@@ -576,23 +719,66 @@ export const ClaimConflict = ClaimConflictDefinition.pipe(
  */
 export type ClaimConflict = typeof ClaimConflict.Type;
 
+const ConflictTransitionDefinition = S.TaggedUnion({
+  ignore: {
+    notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
+  resolve: {
+    acceptedClaim: LiteralKit(["claimA", "claimB"]),
+    strategy: S.NonEmptyString,
+    notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
+});
+
+/**
+ * Tagged command accepted by the conflict transition endpoint.
+ *
+ * **Example** (Ignore a conflict)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ConflictTransition } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * const action = ConflictTransition.cases.ignore.make({ notes: O.none() })
+ * console.log(action._tag) // "ignore"
+ * ```
+ *
+ * @category dtos
+ * @since 0.0.0
+ */
+export const ConflictTransition = ConflictTransitionDefinition.pipe(
+  $I.annoteSchema("ConflictTransition", {
+    description: "One legal pending-to-terminal claim-conflict transition.",
+    toArbitrary: () => S.toArbitrary(ConflictTransitionDefinition),
+  })
+);
+
+/**
+ * Runtime value decoded by {@link ConflictTransition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConflictTransition = typeof ConflictTransition.Type;
+
 /**
  * Response containing detected claim conflicts and aggregate counts.
  *
- * @example
+ * **Example** (Use ConflictsResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ConflictsResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import { ConflictsResponse } from "@effect-ontology/Schema/Timeline"
  *
- * const response = S.decodeUnknownSync(ConflictsResponse)({
+ * const response = S.decodeUnknownOption(ConflictsResponse)({
  *   total: 0,
  *   pendingCount: 0
  * })
- * console.log(response.conflicts.length) // 0
+ * console.log(O.map(response, (value) => value.conflicts.length)) // 0
  * ```
  *
  * @invariant Counts are non-negative.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ConflictsResponse extends S.Class<ConflictsResponse>($I`ConflictsResponse`)(

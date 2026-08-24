@@ -8,15 +8,15 @@ import {
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory } from "./support/CommandTest.ts";
 
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const removalLayer = Layer.mergeAll(
   NodeServices.layer,

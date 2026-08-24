@@ -1,23 +1,30 @@
 /**
  * Quad Delta Computation Utility
  *
+ * **Details**
+ *
  * Computes the delta (new triples) between an original RDF store
  * and an enriched store after reasoning/inference operations.
  *
- * @since 2.0.0
- * @module Utils/QuadDelta
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import type { Quad } from "@beep/rdf/Rdf";
+import { $ScratchpadId } from "@beep/identity";
+import { Quad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { Effect } from "effect";
+import { NonNegativeInt } from "@beep/schema";
+import { Effect, HashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { RdfError } from "../Domain/Error/Rdf.ts";
 import type { RdfStore } from "../Service/Rdf.ts";
 import { rdfStoreAllQuads } from "../Service/Rdf.ts";
 import { dual2 } from "./Dual.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Utils/QuadDelta");
 
 /**
  * Serializes a quad to a canonical string form for comparison.
@@ -45,40 +52,68 @@ const serializeQuad = (quad: Quad): string => {
 /**
  * Delta result containing new quads and statistics
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Construct an empty delta)
+ *
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { QuadDelta } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * const delta = QuadDelta.make({
+ *   newQuads: [],
+ *   originalCount: NonNegativeInt.make(0),
+ *   enrichedCount: NonNegativeInt.make(0),
+ *   deltaCount: NonNegativeInt.make(0)
+ * })
+ * console.log(delta.deltaCount) // 0
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface QuadDelta {
-  /** Quads present in enriched but not in original */
-  readonly newQuads: ReadonlyArray<Quad>;
-  /** Count of original quads */
-  readonly originalCount: number;
-  /** Count of enriched quads */
-  readonly enrichedCount: number;
-  /** Count of new quads (enrichedCount - originalCount if no duplicates removed) */
-  readonly deltaCount: number;
-}
+export class QuadDelta extends S.Class<QuadDelta>($I`QuadDelta`)(
+  {
+    newQuads: S.Array(Quad).annotateKey({ description: "Quads present in the enriched graph only." }),
+    originalCount: NonNegativeInt.annotateKey({ description: "Number of quads in the original graph." }),
+    enrichedCount: NonNegativeInt.annotateKey({ description: "Number of quads in the enriched graph." }),
+    deltaCount: NonNegativeInt.annotateKey({ description: "Number of newly inferred quads." }),
+  },
+  $I.annote("QuadDelta", {
+    description: "New RDF quads and non-negative graph-size statistics for one enrichment delta.",
+  })
+) {}
 
 /**
  * Computes the delta between two RDF stores.
  *
+ * **Details**
+ *
  * Returns quads that exist in the enriched store but not in the original.
  * Uses set difference on serialized quad strings for efficiency.
  *
- * @example
- * ```typescript
- * const delta = yield* computeQuadDelta(originalStore, enrichedStore)
- * console.log(`Inferred ${delta.deltaCount} new triples`)
+ * **Example** (Use computeQuadDelta)
+ *
+ * ```ts
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import { Effect } from "effect"
+ * import { rdfStoreFromDataset } from "@effect-ontology/Service/Rdf"
+ * import { computeQuadDelta } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * const store = rdfStoreFromDataset(makeDataset([]))
+ * const delta = computeQuadDelta(store, store)
+ * console.log(Effect.isEffect(delta)) // true
  * ```
  *
- * @since 2.0.0
- * @category Functions
+ * @category utilities
+ * @since 0.0.0
  */
-export const computeQuadDelta = dual2(
-  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
-    Effect.sync(() => {
-      const originalQuads = rdfStoreAllQuads(original);
-      const enrichedQuads = rdfStoreAllQuads(enriched);
+export const computeQuadDelta: {
+  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta, RdfError>;
+  (enriched: RdfStore): (original: RdfStore) => Effect.Effect<QuadDelta, RdfError>;
+} = dual2(
+  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta, RdfError> =>
+    Effect.gen(function* () {
+      const originalQuads = yield* rdfStoreAllQuads(original);
+      const enrichedQuads = yield* rdfStoreAllQuads(enriched);
 
       // Build set of serialized original quads for O(1) lookup
       const originalSet = MutableHashSet.empty<string>();
@@ -95,23 +130,36 @@ export const computeQuadDelta = dual2(
         }
       }
 
-      return {
+      return QuadDelta.make({
         newQuads,
-        originalCount: originalQuads.length,
-        enrichedCount: enrichedQuads.length,
-        deltaCount: newQuads.length,
-      };
+        originalCount: NonNegativeInt.make(originalQuads.length),
+        enrichedCount: NonNegativeInt.make(enrichedQuads.length),
+        deltaCount: NonNegativeInt.make(newQuads.length),
+      });
     })
 );
 
 /**
  * Groups delta quads by the predicate that produced them.
  *
+ * **Details**
+ *
  * Useful for understanding which reasoning rules contributed
  * to the inferred triples.
  *
- * @since 2.0.0
- * @category Functions
+ * **Example** (Group an empty delta)
+ *
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import * as HashMap from "effect/HashMap"
+ * import { groupDeltaByPredicate, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * const zero = NonNegativeInt.make(0)
+ * console.log(HashMap.size(groupDeltaByPredicate(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })))) // 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string, ReadonlyArray<Quad>> => {
   let grouped = HashMap.empty<string, ReadonlyArray<Quad>>();
@@ -128,8 +176,18 @@ export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string,
 /**
  * Filters delta to only include type inferences (rdf:type triples).
  *
- * @since 2.0.0
- * @category Functions
+ * **Example** (Filter an empty delta)
+ *
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { filterTypeInferences, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * const zero = NonNegativeInt.make(0)
+ * console.log(filterTypeInferences(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })).length) // 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
   A.filter(delta.newQuads, (quad) => quad.predicate.value === RDF_TYPE.value);
@@ -137,8 +195,18 @@ export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
 /**
  * Creates a summary of the delta for logging/telemetry.
  *
- * @since 2.0.0
- * @category Functions
+ * **Example** (Summarize an empty delta)
+ *
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { summarizeDelta, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * const zero = NonNegativeInt.make(0)
+ * console.log(summarizeDelta(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })).inferenceRatio) // 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const summarizeDelta = (
   delta: QuadDelta
@@ -154,7 +222,10 @@ export const summarizeDelta = (
 
   for (const [predicate, quads] of grouped) {
     // Extract local name from IRI for readable keys
-    const localName = predicate.split("#").pop() ?? predicate.split("/").pop() ?? predicate;
+    const localName = O.getOrElse(
+      O.orElse(A.last(Str.split("#")(predicate)), () => A.last(Str.split("/")(predicate))),
+      () => predicate
+    );
     predicateBreakdown[localName] = quads.length;
   }
 

@@ -1,6 +1,8 @@
 /**
  * Workflow Orchestrator Service
  *
+ * **Details**
+ *
  * Provides a high-level API for executing batch extraction workflows
  * with durable persistence via @effect/workflow's WorkflowEngine.
  *
@@ -10,20 +12,22 @@
  * - ClusterWorkflowEngine provides PostgreSQL-backed persistence
  * - Supports both synchronous (blocking) and fire-and-forget execution
  *
- * @since 2.0.0
- * @module Service/WorkflowOrchestrator
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import {$ScratchpadId} from "@beep/identity";
-import {NonNegativeInt} from "@beep/schema/Int";
-import {UnitInterval} from "@beep/schema/UnitInterval";
+import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema/Int";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   Cause,
+  Clock,
   Context,
   DateTime,
   Effect,
   Exit,
   Hash,
+  Inspectable,
   Layer,
   Match,
   Order,
@@ -31,23 +35,22 @@ import {
   Schedule,
 } from "effect";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {Workflow, WorkflowEngine} from "effect/unstable/workflow";
+import { Workflow, WorkflowEngine } from "effect/unstable/workflow";
 import {
+  AnyWorkflowError,
   WorkflowError,
   WorkflowNotFoundError,
-  WorkflowSuspendedError
+  WorkflowSuspendedError,
 } from "../Domain/Error/Workflow.ts";
-import type {BatchId} from "../Domain/Identity.ts";
-import {DocumentId, GcsUri} from "../Domain/Identity.ts";
-import type {DocumentStatus} from "../Domain/Model/BatchWorkflow.ts";
-import {BatchState} from "../Domain/Model/BatchWorkflow.ts";
-import {BatchManifest, BatchWorkflowPayload} from "../Domain/Schema/Batch.ts";
-import {EnrichedManifest} from "../Domain/Schema/DocumentMetadata.ts";
+import { BatchId, DocumentId, GcsUri } from "../Domain/Identity.ts";
+import type { DocumentStatus } from "../Domain/Model/BatchWorkflow.ts";
+import { BatchState } from "../Domain/Model/BatchWorkflow.ts";
+import { BatchManifest, BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
+import { ChunkingParams, defaultChunkingParams, EnrichedManifest } from "../Domain/Schema/DocumentMetadata.ts";
 import {
   makeClaimPersistenceActivity,
   makeCrossBatchResolutionActivity,
@@ -57,13 +60,11 @@ import {
   makeResolutionActivity,
   makeValidationActivity,
 } from "../Workflow/DurableActivities.ts";
-import {
-  makeStreamingExtractionActivity
-} from "../Workflow/StreamingExtractionActivity.ts";
-import {getBatchStateFromStore, publishState} from "./BatchState.ts";
-import {ConfigService} from "./Config.ts";
-import {EventBusService} from "./EventBus.ts";
-import {StorageService} from "./Storage.ts";
+import { makeStreamingExtractionActivity } from "../Workflow/StreamingExtractionActivity.ts";
+import { getBatchStateFromStore, publishState } from "./BatchState.ts";
+import { ConfigService } from "./Config.ts";
+import { EventBusService } from "./EventBus.ts";
+import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/WorkflowOrchestrator");
 
@@ -75,35 +76,33 @@ const $I = $ScratchpadId.create("effect-ontology/Service/WorkflowOrchestrator");
  * - Schema ParseError (uses _message property)
  * - Effect Cause objects (uses pretty format)
  * - Objects with message property
- * - Falls back to Schema JSON encoding for other objects
+ * - Falls back to Effect's unknown-value inspection for other objects
  */
-const encodeUnknownJson = S.encodeSync(S.fromJsonString(S.Unknown));
-
 const serializeError = (error: unknown): string => {
-  if (error instanceof Error) {
+  if (P.isError(error)) {
     return error.message;
   }
   // Schema ParseError has _message property
-  if (typeof error === "object" && error !== null) {
-    if ("_message" in error && typeof (error as {
-      _message: unknown
-    })._message === "string") {
-      return (error as { _message: string })._message;
+  if (P.isObject(error)) {
+    if (P.hasProperty(error, "_message") && P.isString(error._message)) {
+      return error._message;
     }
-    if ("message" in error && typeof (error as {
-      message: unknown
-    }).message === "string") {
-      return (error as { message: string }).message;
-    }
-    // Try Schema JSON encoding for other objects
-    try {
-      return encodeUnknownJson(error);
-    } catch {
-      return String(error);
+    if (P.hasProperty(error, "message") && P.isString(error.message)) {
+      return error.message;
     }
   }
-  return String(error);
+  return Inspectable.toStringUnknown(error);
 };
+
+const isWorkflowError = S.is(WorkflowError);
+
+const toWorkflowError = (error: unknown): WorkflowError =>
+  isWorkflowError(error)
+    ? error
+    : WorkflowError.make({
+        message: serializeError(error),
+        cause: O.some(error),
+      });
 
 /**
  * Extract filename from a path (local or GCS URI)
@@ -145,19 +144,13 @@ const validateOntologyConsistency = Effect.fn("validateOntologyConsistency")(fun
     yield* Effect.logWarning(message, {
       batchId,
       manifestOntologyUri,
-      configOntologyPath
+      configOntologyPath,
     });
   }
 });
 
 type BatchWorkflowPayloadType = BatchWorkflowPayload;
-type PipelineStage =
-  "pending"
-  | "preprocessing"
-  | "extracting"
-  | "resolving"
-  | "validating"
-  | "ingesting";
+type PipelineStage = "pending" | "preprocessing" | "extracting" | "resolving" | "validating" | "ingesting";
 
 // -----------------------------------------------------------------------------
 // Workflow Definition
@@ -165,6 +158,8 @@ type PipelineStage =
 
 /**
  * Batch Extraction Workflow
+ *
+ * **Details**
  *
  * Orchestrates the 5-stage pipeline:
  * 1. Preprocessing: Classify documents, compute metadata, determine chunking strategies
@@ -176,14 +171,25 @@ type PipelineStage =
  * The workflow is durable - if it crashes, it will resume from the last
  * completed activity on restart. Preprocessing has graceful fallback -
  * if classification fails, the workflow continues with default metadata.
+ *
+ * **Example** (Inspect batch extraction workflow)
+ *
+ * ```ts
+ * import { BatchExtractionWorkflow } from "@effect-ontology/Service/WorkflowOrchestrator"
+ *
+ * console.log(BatchExtractionWorkflow)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const BatchExtractionWorkflow = Workflow.make("batch-extraction", {
   payload: BatchWorkflowPayload,
   success: BatchState,
-  error: S.String,
+  error: AnyWorkflowError,
   idempotencyKey: (payload: BatchWorkflowPayloadType) => {
     const hash = Hash.string(
-      encodeUnknownJson({
+      Inspectable.toStringUnknown({
         ontologyVersion: payload.ontologyVersion,
         ontologyUri: payload.ontologyUri,
         targetNamespace: payload.targetNamespace,
@@ -202,35 +208,34 @@ export const BatchExtractionWorkflow = Workflow.make("batch-extraction", {
 // Helper Functions
 // -----------------------------------------------------------------------------
 
-const stripGsPrefix = (uri: string): string => (Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri);
+const stripGsPrefix = (uri: string): string =>
+  Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri;
 
 const parseManifest = S.decodeEffect(S.fromJsonString(BatchManifest));
 
 const expectValue = <A>(opt: O.Option<A>, key: string) =>
   O.match(opt, {
-    onNone: () => Effect.fail(WorkflowError.make({message: `Missing object at ${key}`})),
+    onNone: () => Effect.fail(WorkflowError.make({ message: `Missing object at ${key}` })),
     onSome: (value) => Effect.succeed(value),
   });
 
-const stageFromState = (state: BatchState): PipelineStage =>
-  Match.value(state).pipe(
-    Match.tag("Pending", () => "pending" as const),
-    Match.tag("Preprocessing", () => "preprocessing" as const),
-    Match.tag("Extracting", () => "extracting" as const),
-    Match.tag("Resolving", () => "resolving" as const),
-    Match.tag("Validating", () => "validating" as const),
-    Match.tag("Ingesting", () => "ingesting" as const),
-    Match.tag("Complete", () => "ingesting" as const),
-    Match.tag("Failed", (s) => s.failedInStage),
-    Match.exhaustive
-  );
+const stageFromState = Match.type<BatchState>().pipe(
+  Match.tag("Pending", (): PipelineStage => "pending"),
+  Match.tag("Preprocessing", (): PipelineStage => "preprocessing"),
+  Match.tag("Extracting", (): PipelineStage => "extracting"),
+  Match.tag("Resolving", (): PipelineStage => "resolving"),
+  Match.tag("Validating", (): PipelineStage => "validating"),
+  Match.tag("Ingesting", (): PipelineStage => "ingesting"),
+  Match.tag("Complete", (): PipelineStage => "ingesting"),
+  Match.tag("Failed", (s) => s.failedInStage),
+  Match.exhaustive
+);
 
-const toFailedState = (state: BatchState, cause: Cause.Cause<unknown>): BatchState => {
+const toFailedState = (state: BatchState, cause: Cause.Cause<unknown>, failedAt: DateTime.Utc): BatchState => {
   if (P.isTagged(state, "Failed")) {
     return state;
   }
 
-  const failedAt = DateTime.nowUnsafe();
   const failedStage = stageFromState(state);
 
   return BatchState.cases.Failed.make({
@@ -251,36 +256,65 @@ const toFailedState = (state: BatchState, cause: Cause.Cause<unknown>): BatchSta
   });
 };
 
-export const handleWorkflowResult = Effect.fn("WorkflowOrchestrator.handleWorkflowResult")(function* <A, E>(
-  executionId: string,
-  result: Workflow.Result<A, E>
-): Effect.fn.Return<A, E | WorkflowError | WorkflowSuspendedError> {
-  return yield* Match.value(result).pipe(
-    Match.tag("Complete", (complete) =>
+type PollContext = {
+  readonly batchId: BatchId;
+  readonly executionId: string;
+};
+
+const pollResultToBatchState = Match.type<Workflow.Result<BatchState, AnyWorkflowError>>().pipe(
+  Match.tag(
+    "Complete",
+    (complete) => (context: PollContext) =>
       Exit.match(complete.exit, {
         onSuccess: Effect.succeed,
-        onFailure: Effect.failCause,
+        onFailure: Effect.fn("WorkflowOrchestrator.pollToBatchState.onFailure")(function* (cause) {
+          const stored = yield* getBatchStateFromStore(context.batchId);
+          const fallback = O.getOrUndefined(stored);
+          if (P.isNotUndefined(fallback)) {
+            return toFailedState(fallback, cause, yield* DateTime.now);
+          }
+          return yield* WorkflowError.make({
+            message: `Workflow ${context.executionId} failed`,
+            cause: O.some(Cause.squash(cause)),
+          });
+        }),
       })
-    ),
-    Match.tag("Suspended", (suspended) =>
-      Effect.fail(
-        WorkflowSuspendedError.make({
-          message: `Workflow ${executionId} suspended`,
-          cause: O.map(O.fromNullishOr(suspended.cause), Cause.pretty),
-          isResumable: true,
-        })
-      )
-    ),
-    Match.exhaustive
-  );
-});
+  ),
+  Match.tag(
+    "Suspended",
+    (suspended) => (context: PollContext) =>
+      WorkflowSuspendedError.make({
+        message: `Workflow ${context.executionId} suspended`,
+        cause: O.map(O.fromNullishOr(suspended.cause), Cause.pretty),
+        isResumable: true,
+      })
+  ),
+  Match.exhaustive
+);
 
+/**
+ * Validates and represents poll to batch state values at runtime.
+ *
+ * **Example** (Inspect poll to batch state)
+ *
+ * ```ts
+ * import { pollToBatchState } from "@effect-ontology/Service/WorkflowOrchestrator"
+ *
+ * console.log(pollToBatchState)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState")(function* (executionId: string) {
   const engine = yield* WorkflowEngine.WorkflowEngine;
+  const batchId = yield* BatchId.decodeEffect(executionId).pipe(
+    Effect.mapError(() => WorkflowError.make({ message: `Invalid batch workflow execution ID: ${executionId}` }))
+  );
   const result = yield* engine.poll(BatchExtractionWorkflow, executionId);
 
   if (O.isNone(result)) {
-    const stored = yield* getBatchStateFromStore(executionId as BatchId);
+    const stored = yield* getBatchStateFromStore(batchId);
     return yield* O.match(stored, {
       onSome: Effect.succeed,
       onNone: () =>
@@ -291,32 +325,7 @@ export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState
     });
   }
 
-  return yield* Match.value(result.value).pipe(
-    Match.tag("Complete", (complete) =>
-      Exit.match(complete.exit, {
-        onSuccess: Effect.succeed,
-        onFailure: Effect.fn("WorkflowOrchestrator.pollToBatchState.onFailure")(function* (cause: Cause.Cause<string>) {
-          const stored = yield* getBatchStateFromStore(executionId as BatchId);
-          const fallback = O.getOrUndefined(stored);
-          if (P.isNotUndefined(fallback)) {
-            return toFailedState(fallback, cause);
-          }
-          return yield* WorkflowError.make({
-            message: `Workflow ${executionId} failed`,
-            cause: O.some(Cause.squash(cause)),
-          });
-        }),
-      })
-    ),
-    Match.tag("Suspended", (suspended) =>
-      WorkflowSuspendedError.make({
-        message: `Workflow ${executionId} suspended`,
-        cause: O.map(O.fromNullishOr(suspended.cause), Cause.pretty),
-        isResumable: true,
-      })
-    ),
-    Match.exhaustive
-  );
+  return yield* pollResultToBatchState(result.value)({ batchId, executionId });
 });
 
 // -----------------------------------------------------------------------------
@@ -325,10 +334,21 @@ export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState
 
 /**
  * Layer that registers the batch extraction workflow with WorkflowEngine
+ *
+ * **Example** (Inspect batch extraction workflow layer)
+ *
+ * ```ts
+ * import { BatchExtractionWorkflowLayer } from "@effect-ontology/Service/WorkflowOrchestrator"
+ *
+ * console.log(BatchExtractionWorkflowLayer)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((payload) =>
   Effect.gen(function* () {
-    const {batchId, manifestUri, ontologyVersion} = payload;
+    const { batchId, manifestUri, ontologyVersion } = payload;
     const storage = yield* StorageService;
     const config = yield* ConfigService;
     const eventBus = yield* EventBusService;
@@ -339,8 +359,8 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 
     const manifestKey = stripGsPrefix(manifestUri);
     const manifestRaw = yield* storage
-      .get(manifestKey)
-      .pipe(Effect.flatMap((opt) => expectValue(O.fromNullishOr(opt), manifestKey)));
+      .getOption(manifestKey)
+      .pipe(Effect.flatMap((content) => expectValue(content, manifestKey)));
     const manifest = yield* parseManifest(manifestRaw);
 
     // Validate ontology consistency between manifest and config
@@ -368,10 +388,12 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           });
         }
       },
-      Effect.catch((error) => Effect.logWarning("Failed to publish batch state", {
-        batchId,
-        error
-      }))
+      Effect.catch((error) =>
+        Effect.logWarning("Failed to publish batch state", {
+          batchId,
+          error,
+        })
+      )
     );
 
     const runWorkflow = Effect.gen(function* () {
@@ -416,22 +438,22 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       const preprocessingResult = yield* (
         preprocessingEnabled
           ? makePreprocessingActivity({
-            batchId,
-            manifestUri,
-            preprocessing: payload.preprocessing,
-          }).execute
+              batchId,
+              manifestUri,
+              preprocessing: payload.preprocessing,
+            }).execute
           : Effect.succeed({
-            enrichedManifestUri: GcsUri.fromUnknown(manifestUri),
-            totalDocuments: NonNegativeInt.make(manifest.documents.length),
-            classifiedCount: NonNegativeInt.make(0),
-            failedCount: NonNegativeInt.make(0),
-            totalEstimatedTokens: NonNegativeInt.make(0),
-            averageComplexity: UnitInterval.make(0.5),
-            durationMs: 0,
-          })
+              enrichedManifestUri: GcsUri.fromUnknown(manifestUri),
+              totalDocuments: NonNegativeInt.make(manifest.documents.length),
+              classifiedCount: NonNegativeInt.make(0),
+              failedCount: NonNegativeInt.make(0),
+              totalEstimatedTokens: NonNegativeInt.make(0),
+              averageComplexity: UnitInterval.make(0.5),
+              durationMs: 0,
+            })
       ).pipe(
         Effect.tap(
-          Effect.fn(function* (result) {
+          Effect.fnUntraced(function* (result) {
             const updatedPreprocessingState = BatchState.cases.Preprocessing.make({
               batchId,
               ontologyId: manifest.ontologyId,
@@ -452,7 +474,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           Effect.fnUntraced(function* (error) {
             yield* Effect.logWarning("Preprocessing failed, continuing with original manifest", {
               batchId,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             });
             return {
               enrichedManifestUri: GcsUri.fromUnknown(manifestUri),
@@ -482,30 +504,29 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 
       // Load enriched manifest to get DocumentMetadata with provenance fields
       const enrichedManifestKey = stripGsPrefix(preprocessingResult.enrichedManifestUri);
-      const enrichedManifestRaw = yield* storage.get(enrichedManifestKey).pipe(
-        Effect.flatMap((opt) => expectValue(O.fromNullishOr(opt), enrichedManifestKey)),
+      const enrichedManifest = yield* storage.getOption(enrichedManifestKey).pipe(
+        Effect.flatMap(
+          O.match({
+            onNone: () => Effect.succeed(O.none()),
+            onSome: (content) => EnrichedManifest.decodeFromString(content).pipe(Effect.map(O.some)),
+          })
+        ),
         Effect.catch(
-          Effect.fn(function* (error) {
-            yield* Effect.logWarning("Failed to load enriched manifest, falling back to basic manifest", {
+          Effect.fnUntraced(function* (error) {
+            yield* Effect.logWarning("Failed to load or decode enriched manifest, falling back to basic manifest", {
               batchId,
               enrichedManifestUri: preprocessingResult.enrichedManifestUri,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             });
-            // Return null to signal fallback
-            return null as string | null;
+            return O.none();
           })
         )
       );
 
-      // Parse enriched manifest or use basic manifest as fallback
-      const enrichedManifest = P.isNotNull(enrichedManifestRaw)
-        ? yield* EnrichedManifest.decodeFromString(enrichedManifestRaw)
-        : null;
-
       yield* Effect.logInfo("Starting extraction stage", {
         batchId,
         documentCount: manifest.documents.length,
-        usingEnrichedManifest: enrichedManifest !== null,
+        usingEnrichedManifest: O.isSome(enrichedManifest),
       });
 
       currentStage = "extracting";
@@ -514,7 +535,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       const documentStatusesRef = yield* Ref.make<Array<DocumentStatus>>(
         A.map(manifest.documents, (doc) => ({
           documentId: DocumentId.fromUnknown(doc.documentId),
-          status: "pending" as const,
+          status: "pending",
         }))
       );
 
@@ -525,7 +546,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       // Continues processing remaining documents even when some fail
       const extractionResults = yield* Effect.forEach(
         manifest.documents,
-        Effect.fn(function* (doc) {
+        Effect.fnUntraced(function* (doc) {
           const startedAt = yield* DateTime.now;
 
           // Mark document as processing
@@ -533,16 +554,18 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             A.map(statuses, (s) =>
               s.documentId === doc.documentId
                 ? {
-                  documentId: s.documentId,
-                  status: "processing" as const,
-                  startedAt
-                }
+                    documentId: s.documentId,
+                    status: "processing",
+                    startedAt,
+                  }
                 : s
             )
           );
 
           // Look up DocumentMetadata from enriched manifest if available
-          const docMetadata = enrichedManifest?.documents.find((d) => d.documentId === doc.documentId);
+          const docMetadata = O.flatMap(enrichedManifest, (metadata) =>
+            A.findFirst(metadata.documents, (candidate) => candidate.documentId === doc.documentId)
+          );
 
           // Execute extraction with error handling per document
           const result = yield* makeStreamingExtractionActivity({
@@ -553,18 +576,31 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             ontologyId: manifest.ontologyId,
             targetNamespace: manifest.targetNamespace,
             ontologyEmbeddingsUri: payload.ontologyEmbeddingsUri,
-            eventTime: O.flatMap(O.fromNullishOr(docMetadata), (metadata) => metadata.eventTime),
-            publishedAt: O.flatMap(O.fromNullishOr(docMetadata), (metadata) => metadata.publishedAt),
-            title: O.flatMap(O.fromNullishOr(docMetadata), (metadata) => metadata.title),
-            language: O.map(O.fromNullishOr(docMetadata), (metadata) => metadata.language),
+            chunking: O.match(docMetadata, {
+              onNone: () => defaultChunkingParams.standard,
+              onSome: (metadata) =>
+                ChunkingParams.make({
+                  chunkSize: metadata.suggestedChunkSize,
+                  overlapSentences: metadata.suggestedOverlap,
+                  preserveSentences: defaultChunkingParams[metadata.chunkingStrategy].preserveSentences,
+                }),
+            }),
+            eventTime: O.flatMap(docMetadata, (metadata) => metadata.eventTime),
+            publishedAt: O.flatMap(docMetadata, (metadata) => metadata.publishedAt),
+            title: O.flatMap(docMetadata, (metadata) => metadata.title),
+            language: O.map(docMetadata, (metadata) => metadata.language),
           }).execute.pipe(
-            Effect.map((output) => ({
-              success: true as const,
-              output,
-              documentId: doc.documentId
-            })),
+            Effect.map(
+              (
+                output
+              ): { readonly success: true; readonly output: typeof output; readonly documentId: DocumentId } => ({
+                success: true,
+                output,
+                documentId: doc.documentId,
+              })
+            ),
             Effect.catch(
-              Effect.fn(function* (error) {
+              Effect.fnUntraced(function* (error) {
                 const completedAt = yield* DateTime.now;
                 const errorMessage = serializeError(error);
 
@@ -579,24 +615,24 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
                   A.map(statuses, (s) =>
                     s.documentId === doc.documentId
                       ? {
-                        documentId: s.documentId,
-                        status: "failed" as const,
-                        startedAt: O.some(startedAt),
-                        completedAt,
-                        error: {
-                          code: "EXTRACTION_FAILED",
-                          message: errorMessage
-                        },
-                      }
+                          documentId: s.documentId,
+                          status: "failed",
+                          startedAt: O.some(startedAt),
+                          completedAt,
+                          error: {
+                            code: "EXTRACTION_FAILED",
+                            message: errorMessage,
+                          },
+                        }
                       : s
                   )
                 );
 
                 return {
-                  success: false as const,
+                  success: false,
                   documentId: doc.documentId,
-                  error: errorMessage
-                };
+                  error: errorMessage,
+                } satisfies { readonly success: false; readonly documentId: DocumentId; readonly error: string };
               })
             )
           );
@@ -608,15 +644,15 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
               A.map(statuses, (s) =>
                 s.documentId === doc.documentId
                   ? {
-                    documentId: s.documentId,
-                    status: "success" as const,
-                    startedAt,
-                    completedAt,
-                    graphUri: GcsUri.fromUnknown(result.output.graphUri),
-                    entityCount: NonNegativeInt.make(result.output.entityCount),
-                    relationCount: NonNegativeInt.make(result.output.relationCount),
-                    claimCount: NonNegativeInt.make(result.output.claimCount),
-                  }
+                      documentId: s.documentId,
+                      status: "success",
+                      startedAt,
+                      completedAt,
+                      graphUri: GcsUri.fromUnknown(result.output.graphUri),
+                      entityCount: NonNegativeInt.make(result.output.entityCount),
+                      relationCount: NonNegativeInt.make(result.output.relationCount),
+                      claimCount: NonNegativeInt.make(result.output.claimCount),
+                    }
                   : s
               )
             );
@@ -644,13 +680,13 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 
           return result;
         }),
-        {concurrency: 5}
+        { concurrency: 5 }
       );
 
       // Separate successful and failed results
       const successfulResults = A.flatMap(extractionResults, (r) => (r.success ? [r.output] : []));
       const failedResults = A.flatMap(extractionResults, (r) =>
-        !r.success ? [{documentId: r.documentId, error: r.error}] : []
+        !r.success ? [{ documentId: r.documentId, error: r.error }] : []
       );
 
       // Store for use in Complete state
@@ -667,7 +703,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       if (!A.isReadonlyArrayNonEmpty(successfulResults)) {
         return yield* Effect.fail(
           `All ${failedResults.length} documents failed extraction. ` +
-          `First error: ${failedResults[0]?.error ?? "unknown"}`
+            `First error: ${failedResults[0]?.error ?? "unknown"}`
         );
       }
 
@@ -718,7 +754,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           entitiesTotal: crossBatchResult.entitiesTotal,
         });
       } else {
-        yield* Effect.logDebug("Cross-batch resolution skipped (not configured)", {batchId});
+        yield* Effect.logDebug("Cross-batch resolution skipped (not configured)", { batchId });
       }
 
       // RDFS Inference stage (optional)
@@ -744,7 +780,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           rulesApplied: inferenceResult.rulesApplied,
         });
       } else {
-        yield* Effect.logDebug("Inference skipped (not configured)", {batchId});
+        yield* Effect.logDebug("Inference skipped (not configured)", { batchId });
       }
 
       currentStage = "validating";
@@ -776,7 +812,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         violations: validationResult.violations,
         policyApplied: manifest.validationPolicy ?? {
           failOnViolation: true,
-          failOnWarning: false
+          failOnWarning: false,
         },
       });
 
@@ -796,7 +832,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             Effect.catch((error) =>
               Effect.logWarning("Failed to publish ValidationFailed event", {
                 batchId,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               })
             )
           );
@@ -809,7 +845,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       lastSuccessfulStage = "validating";
 
       // Persist validated claims to PostgreSQL
-      yield* Effect.logInfo("Persisting validated claims to database", {batchId});
+      yield* Effect.logInfo("Persisting validated claims to database", { batchId });
 
       const claimPersistenceResult = yield* makeClaimPersistenceActivity({
         batchId,
@@ -833,7 +869,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         documentsFailed: claimPersistenceResult.documentsFailed,
       });
 
-      yield* Effect.logInfo("Starting ingestion stage", {batchId});
+      yield* Effect.logInfo("Starting ingestion stage", { batchId });
 
       currentStage = "ingesting";
 
@@ -911,7 +947,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           Effect.catch((error) =>
             Effect.logWarning("Failed to publish ExtractionCompleted event", {
               batchId,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             })
           )
         );
@@ -919,32 +955,32 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       return complete;
     });
 
-    return yield* Effect.catchCause(runWorkflow,
-      Effect.fnUntraced(function* (cause) {
-        const failedAt = yield* DateTime.now;
-        const failedState = BatchState.cases.Failed.make({
-          batchId,
-          ontologyId: manifest.ontologyId,
-          manifestUri,
-          ontologyVersion,
-          createdAt: workflowStart,
-          updatedAt: failedAt,
-          failedAt,
-          failedInStage: currentStage,
-          error: {
-            code: "WORKFLOW_FAILED",
-            message: Cause.pretty(cause),
-            cause: O.some(Cause.squash(cause)),
-          },
-          lastSuccessfulStage: O.fromNullishOr(lastSuccessfulStage),
-        });
+    return yield* runWorkflow.pipe(
+      Effect.onError(
+        Effect.fnUntraced(function* (cause) {
+          const failedAt = yield* DateTime.now;
+          const failedState = BatchState.cases.Failed.make({
+            batchId,
+            ontologyId: manifest.ontologyId,
+            manifestUri,
+            ontologyVersion,
+            createdAt: workflowStart,
+            updatedAt: failedAt,
+            failedAt,
+            failedInStage: currentStage,
+            error: {
+              code: "WORKFLOW_FAILED",
+              message: Cause.pretty(cause),
+              cause: O.some(Cause.squash(cause)),
+            },
+            lastSuccessfulStage: O.fromNullishOr(lastSuccessfulStage),
+          });
 
-        yield* emitState(failedState);
-
-        return yield* Effect.fail(Cause.pretty(cause));
-      })
+          yield* emitState(failedState);
+        })
+      )
     );
-  }).pipe(Effect.mapError(String))
+  }).pipe(Effect.mapError(toWorkflowError))
 );
 
 // -----------------------------------------------------------------------------
@@ -954,7 +990,13 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 /**
  * WorkflowOrchestrator Service Interface
  *
+ * **Details**
+ *
  * High-level API for batch workflow operations.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface WorkflowOrchestratorMethods {
   /**
@@ -963,7 +1005,7 @@ export interface WorkflowOrchestratorMethods {
    * @param payload - Workflow payload containing batchId, manifestUri, ontologyVersion
    * @returns The execution ID (same as batchId for idempotency)
    */
-  readonly start: (payload: BatchWorkflowPayloadType) => Effect.Effect<string, string>;
+  readonly start: (payload: BatchWorkflowPayloadType) => Effect.Effect<string, AnyWorkflowError>;
 
   /**
    * Start and wait for workflow completion
@@ -971,7 +1013,7 @@ export interface WorkflowOrchestratorMethods {
    * @param payload - Workflow payload
    * @returns The final BatchState on success
    */
-  readonly startAndWait: (payload: BatchWorkflowPayloadType) => Effect.Effect<BatchState, string>;
+  readonly startAndWait: (payload: BatchWorkflowPayloadType) => Effect.Effect<BatchState, AnyWorkflowError>;
 
   /**
    * Poll for workflow result
@@ -979,7 +1021,7 @@ export interface WorkflowOrchestratorMethods {
    * @param executionId - The workflow execution ID (batchId)
    * @returns The workflow result if complete, undefined if still running
    */
-  readonly poll: (executionId: string) => Effect.Effect<O.Option<Workflow.Result<BatchState, string>>>;
+  readonly poll: (executionId: string) => Effect.Effect<O.Option<Workflow.Result<BatchState, AnyWorkflowError>>>;
 
   /**
    * Interrupt a running workflow
@@ -996,10 +1038,23 @@ export interface WorkflowOrchestratorMethods {
   readonly resume: (executionId: string) => Effect.Effect<void>;
 }
 
+/**
+ * Provides the workflow orchestrator service capability.
+ *
+ * **Example** (Inspect workflow orchestrator)
+ *
+ * ```ts
+ * import { WorkflowOrchestrator } from "@effect-ontology/Service/WorkflowOrchestrator"
+ *
+ * console.log(WorkflowOrchestrator)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export class WorkflowOrchestrator extends Context.Service<WorkflowOrchestrator, WorkflowOrchestratorMethods>()(
   $I`WorkflowOrchestrator`
-) {
-}
+) {}
 
 // -----------------------------------------------------------------------------
 // WorkflowOrchestrator Implementation
@@ -1008,7 +1063,20 @@ export class WorkflowOrchestrator extends Context.Service<WorkflowOrchestrator, 
 /**
  * Create the WorkflowOrchestrator service
  *
+ * **Details**
+ *
  * Requires WorkflowEngine to be provided (via ClusterWorkflowEngine or memory layer)
+ *
+ * **Example** (Inspect make workflow orchestrator)
+ *
+ * ```ts
+ * import { makeWorkflowOrchestrator } from "@effect-ontology/Service/WorkflowOrchestrator"
+ *
+ * console.log(makeWorkflowOrchestrator)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeWorkflowOrchestrator = Effect.fn("WorkflowOrchestrator.make")(function* () {
   const engine = yield* WorkflowEngine.WorkflowEngine;
@@ -1045,13 +1113,28 @@ export const makeWorkflowOrchestrator = Effect.fn("WorkflowOrchestrator.make")(f
 /**
  * WorkflowOrchestrator layer
  *
+ * **Details**
+ *
  * Requires:
  * - WorkflowEngine (from ClusterWorkflowEngine or memory)
+ *
+ * **Example** (Inspect workflow orchestrator live)
+ *
+ * ```ts
+ * import { WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
+ *
+ * console.log(WorkflowOrchestratorLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const WorkflowOrchestratorLive = Layer.effect(WorkflowOrchestrator, makeWorkflowOrchestrator());
 
 /**
  * Full workflow layer with orchestrator and workflow registration
+ *
+ * **Details**
  *
  * Requires:
  * - StorageService
@@ -1061,7 +1144,18 @@ export const WorkflowOrchestratorLive = Layer.effect(WorkflowOrchestrator, makeW
  * - EntityExtractor (for Activities.ts extraction)
  * - RelationExtractor (for Activities.ts extraction)
  * - OntologyService (for Activities.ts ontology lookup)
+ *
+ * **Example** (Inspect workflow orchestrator full live)
+ *
+ * ```ts
+ * import { WorkflowOrchestratorFullLive } from "@effect-ontology/Service/WorkflowOrchestrator"
+ *
+ * console.log(WorkflowOrchestratorFullLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const WorkflowOrchestratorFullLive = Layer.mergeAll(WorkflowOrchestratorLive, BatchExtractionWorkflowLayer);
 
-export {BatchWorkflowPayload};
+export { BatchWorkflowPayload };

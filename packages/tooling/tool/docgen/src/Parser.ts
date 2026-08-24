@@ -648,16 +648,45 @@ const parseProperty = Effect.fn("parseProperty")(function* (pd: ast.PropertyDecl
   ];
 });
 
+const parseGetAccessor = Effect.fn("parseGetAccessor")(function* (accessor: ast.GetAccessorDeclaration) {
+  const doc = parseDoc(getJSDocText(accessor.getJsDocs()));
+  if (shouldIgnore(doc)) {
+    return [];
+  }
+
+  const position = yield* parsePosition(accessor);
+  return [
+    Domain.DocEntry.new(accessor.getName(), doc, {
+      signature: `readonly ${accessor.getName()}: ${parseType(accessor)}`,
+      position,
+    }),
+  ];
+});
+
 const parseProperties = (c: ast.ClassDeclaration) =>
-  Effect.forEach(
-    A.filter(
-      c.getProperties(),
-      (property) =>
-        !property.isStatic() &&
-        pipe(property.getFirstModifierByKind(ast.ts.SyntaxKind.PrivateKeyword), O.fromNullishOr, O.isNone)
-    ),
-    parseProperty
-  ).pipe(Effect.map(A.flatten));
+  Effect.all(
+    [
+      Effect.forEach(
+        A.filter(
+          c.getProperties(),
+          (property) =>
+            !property.isStatic() &&
+            pipe(property.getFirstModifierByKind(ast.ts.SyntaxKind.PrivateKeyword), O.fromNullishOr, O.isNone)
+        ),
+        parseProperty
+      ),
+      Effect.forEach(
+        A.filter(
+          c.getGetAccessors(),
+          (accessor) =>
+            !accessor.isStatic() &&
+            pipe(accessor.getFirstModifierByKind(ast.ts.SyntaxKind.PrivateKeyword), O.fromNullishOr, O.isNone)
+        ),
+        parseGetAccessor
+      ),
+    ],
+    { concurrency: 2 }
+  ).pipe(Effect.map(A.flatten), Effect.map(A.flatten));
 
 /**
  * Computes a printable constructor signature without including the implementation body.

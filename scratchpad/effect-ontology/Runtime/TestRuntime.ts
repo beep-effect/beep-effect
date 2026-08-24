@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 /**
- * Runtime: Test Runtime
+ * Composes a test runtime with mock extraction and language-model layers.
  *
- * Layer composition for testing with mocks.
- * Uses test layers for EntityExtractor and RelationExtractor,
- * and provides a mock LanguageModel for LLM operations.
+ * **Details**
+ *
+ * Uses test layers for EntityExtractor and RelationExtractor and provides a
+ * mock LanguageModel for LLM operations.
  *
  * Includes LLM Control test layers for:
  * - TokenBudgetService
@@ -12,21 +12,20 @@
  * - CentralRateLimiterService
  * - Grounder
  *
- * @since 2.0.0
- * @module Runtime/TestRuntime
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import * as Rdf from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { BunServices } from "@effect/platform-bun";
 import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
+import * as A from "effect/Array";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import type { Response } from "effect/unstable/ai";
-import { LanguageModel } from "effect/unstable/ai";
+import { LanguageModel, Response } from "effect/unstable/ai";
 import { ConfigServiceDefault } from "../Service/Config.ts";
 import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
-import type { EmbeddingProviderMethods } from "../Service/EmbeddingProvider.ts";
 import { EmbeddingProvider } from "../Service/EmbeddingProvider.ts";
 import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts";
 import { Grounder } from "../Service/Grounder.ts";
@@ -50,23 +49,19 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
  * Provides a stub implementation that returns empty responses.
  * Used by EntityExtractor and RelationExtractor test layers.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
-const MockLanguageModel = Layer.succeed(
+const MockLanguageModel = Layer.effect(
   LanguageModel.LanguageModel,
-  LanguageModel.LanguageModel.of({
-    generateText: Effect.fn("LanguageModel.LanguageModel.generateText")(() =>
-      Effect.succeed(new LanguageModel.GenerateTextResponse<{}>([]))
-    ),
-    streamText: () => Stream.fromIterable<Response.StreamPart<{}>>([]),
-    generateObject: Effect.fn("LanguageModel.LanguageModel.generateObject")(() =>
+  LanguageModel.make({
+    generateText: Effect.fn("MockLanguageModel.generateText")((options) =>
       Effect.succeed(
-        new LanguageModel.GenerateObjectResponse<{}, any>(
-          { entities: [], relations: [] },
-          []
-        ) as LanguageModel.GenerateObjectResponse<any, any>
+        options.responseFormat.type === "json"
+          ? [Response.makePart("text", { text: '{"entities":[],"relations":[]}' })]
+          : []
       )
     ),
+    streamText: () => Stream.empty,
   })
 );
 
@@ -78,7 +73,7 @@ const MockLanguageModel = Layer.succeed(
  * - StageTimeoutServiceTest: Default timeouts (can be overridden)
  * - CentralRateLimiterServiceTest: High limits for testing
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const LlmControlTestLayers = Layer.mergeAll(
   TokenBudgetServiceTest(4096),
@@ -93,8 +88,21 @@ const LlmControlTestLayers = Layer.mergeAll(
 /**
  * Test ConfigProvider with required values
  *
+ * **Details**
+ *
  * Provides default config values for all tests so they don't need
  * environment variables to be set.
+ *
+ * **Example** (Inspect test config provider)
+ *
+ * ```ts
+ * import { TestConfigProvider } from "@effect-ontology/Runtime/TestRuntime"
+ *
+ * console.log(TestConfigProvider)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const TestConfigProvider = ConfigProvider.fromUnknown({
   ONTOLOGY_PATH: "/tmp/test-ontology.ttl",
@@ -110,7 +118,20 @@ export const TestConfigProvider = ConfigProvider.fromUnknown({
 /**
  * Mock SHACL Service for testing
  *
+ * **Details**
+ *
  * Provides deterministic SHACL validation behaviour for unit/integration tests.
+ *
+ * **Example** (Inspect mock shacl service)
+ *
+ * ```ts
+ * import { MockShaclService } from "@effect-ontology/Runtime/TestRuntime"
+ *
+ * console.log(MockShaclService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const MockShaclService = (options?: {
   readonly conforms?: boolean;
@@ -123,6 +144,17 @@ export const MockShaclService = (options?: {
     readonly sourceShape?: string;
   }>;
 }) => {
+  const makeEncodedLiteral = (
+    value: string
+  ): {
+    readonly termType: "Literal";
+    readonly value: string;
+    readonly datatype: { readonly termType: "NamedNode"; readonly value: string };
+  } => ({
+    termType: "Literal",
+    value,
+    datatype: Rdf.makeNamedNode(XSD_STRING.value),
+  });
   const makeReport = Effect.fn("ShaclService.makeTestReport")(function* (dataStore: RdfStore, shapesStore: RdfStore) {
     const violations = (options?.violations ?? []).map((violation) => ({
       focusNode: violation.focusNode ?? "test:node",
@@ -132,18 +164,25 @@ export const MockShaclService = (options?: {
       sourceConstraintComponent: Rdf.makeNamedNode("urn:beep:shacl:constraint:test"),
       ...(P.isNotUndefined(violation.value)
         ? {
-            value: S.encodeSync(Rdf.Literal)(Rdf.makeLiteral(violation.value, XSD_STRING.value)),
+            value: makeEncodedLiteral(violation.value),
           }
         : {}),
       ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),
     }));
-    return yield* S.decodeEffect(ShaclValidationReport)({
-      validation: { conforms: violations.length === 0, violations, truncated: false },
+    return yield* ShaclValidationReport.decodeEffect({
+      validation: { conforms: A.isReadonlyArrayEmpty(violations), violations, truncated: false },
       validatedAt: DateTime.formatIso(yield* DateTime.now),
       dataGraphTripleCount: rdfStoreSize(dataStore),
       shapesGraphTripleCount: rdfStoreSize(shapesStore),
       durationMs: 0,
-    }).pipe(Effect.orDie);
+    }).pipe(
+      Effect.mapError((cause) =>
+        ShaclValidationError.make({
+          reason: "engineFailure",
+          message: `Invalid mock SHACL report: ${cause.message}`,
+        })
+      )
+    );
   });
 
   return Layer.succeed(ShaclWorkflowService, {
@@ -154,7 +193,7 @@ export const MockShaclService = (options?: {
       Effect.succeed(emptyRdfStore())
     ),
     clearShapesCache: Effect.void,
-    getShapesCacheStats: Effect.succeed({ size: 0, keys: [] as ReadonlyArray<string> }),
+    getShapesCacheStats: Effect.succeed({ size: 0, keys: [] }),
     validateWithPolicy: Effect.fn("ShaclService.validateWithPolicy")(function* (
       dataStore: RdfStore,
       shapesStore: RdfStore,
@@ -170,7 +209,7 @@ export const MockShaclService = (options?: {
  *
  * Returns deterministic zero vectors for all embedding requests.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
   metadata: {
@@ -178,9 +217,11 @@ const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
     modelId: "test-model",
     dimension: 768,
   },
-  embedBatch: (_requests) => Effect.succeed(_requests.map(() => new Array(768).fill(0))),
+  embedBatch: Effect.fn("EmbeddingProvider.embedBatch")((_requests) =>
+    Effect.succeed(A.map(_requests, () => A.replicate(0, 768)))
+  ),
   cosineSimilarity: (_a, _b) => 0,
-} as EmbeddingProviderMethods);
+});
 
 /**
  * Test Layers
@@ -194,7 +235,7 @@ const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
  * - LLM Control: Test layers with high limits
  * - Other services use Default layers (can be mocked per test)
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 // Embedding infrastructure for NlpService.Default
 const EmbeddingInfraLayer = Layer.mergeAll(MockEmbeddingProvider, EmbeddingCache.Default, MetricsService.Default);
@@ -209,6 +250,20 @@ const ontologyLayer = OntologyService.Default.pipe(
 // NlpService bundle with embedding infrastructure provided
 const NlpBundle = NlpService.Default.pipe(Layer.provide(EmbeddingInfraLayer));
 
+/**
+ * Exposes test layers for composition by callers of this module.
+ *
+ * **Example** (Inspect test layers)
+ *
+ * ```ts
+ * import { TestLayers } from "@effect-ontology/Runtime/TestRuntime"
+ *
+ * console.log(TestLayers)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const TestLayers = Layer.mergeAll(
   NlpBundle,
   RdfBuilder.Default,
@@ -226,8 +281,19 @@ export const TestLayers = Layer.mergeAll(
 /**
  * Test Runtime
  *
+ * **Details**
+ *
  * Managed runtime for testing with all test layers provided.
  *
- * @since 2.0.0
+ * **Example** (Inspect test runtime)
+ *
+ * ```ts
+ * import { TestRuntime } from "@effect-ontology/Runtime/TestRuntime"
+ *
+ * console.log(TestRuntime)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const TestRuntime = ManagedRuntime.make(TestLayers);

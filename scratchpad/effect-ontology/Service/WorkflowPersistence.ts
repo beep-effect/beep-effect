@@ -1,10 +1,13 @@
 /**
  * Workflow Persistence Layer
  *
+ * **Details**
+ *
  * Bridges our existing GCS-backed StorageService to @effect/experimental Persistence.
  * This reuses our existing infrastructure for workflow state durability.
  *
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect, Layer } from "effect";
@@ -19,9 +22,22 @@ import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storag
  * Adapts our StorageService (which extends KeyValueStore) to the standard
  * KeyValueStore.KeyValueStore tag that Persistence.layerKeyValueStore expects.
  *
+ * **Details**
+ *
  * The prefix "workflow-state/" isolates workflow persistence from other storage.
+ *
+ * **Example** (Inspect the storage adapter)
+ *
+ * ```ts
+ * import { StorageKeyValueStoreLive } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * console.log(StorageKeyValueStoreLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
-const StorageKeyValueStoreLive = Layer.effect(
+export const StorageKeyValueStoreLive = Layer.effect(
   KeyValueStore.KeyValueStore,
   Effect.gen(function* () {
     const storage = yield* StorageService;
@@ -30,10 +46,9 @@ const StorageKeyValueStoreLive = Layer.effect(
     const prefixKey = (key: string) => `${prefix}${key}`;
 
     return KeyValueStore.make({
-      get: (key) => storage.get(prefixKey(key)).pipe(Effect.orElseSucceed(() => undefined)),
+      get: (key) => storage.get(prefixKey(key)),
 
-      getUint8Array: (key) =>
-        storage.getUint8Array(prefixKey(key)).pipe(Effect.orElseSucceed(() => undefined)),
+      getUint8Array: (key) => storage.getUint8Array(prefixKey(key)),
 
       set: (key, value) => storage.set(prefixKey(key), value).pipe(Effect.asVoid),
 
@@ -53,19 +68,21 @@ const StorageKeyValueStoreLive = Layer.effect(
 /**
  * Production persistence layer backed by GCS.
  *
+ * **Details**
+ *
  * Layer composition:
  *   BackingPersistence <- KeyValueStore <- StorageService <- ConfigService
  *
- * Usage:
- *   ```ts
- *   import { WorkflowPersistenceLive } from "./WorkflowPersistence.ts"
+ * **Example** (Inspect workflow persistence live)
  *
- *   const program = Effect.gen(function*() {
- *     // Activities and workflows will automatically use GCS for durability
- *   }).pipe(
- *     Effect.provide(WorkflowPersistenceLive)
- *   )
- *   ```
+ * ```ts
+ * import { WorkflowPersistenceLive } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * console.log(WorkflowPersistenceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const WorkflowPersistenceLive = Persistence.layerKvs.pipe(
   Layer.provide(StorageKeyValueStoreLive),
@@ -75,8 +92,21 @@ export const WorkflowPersistenceLive = Persistence.layerKvs.pipe(
 /**
  * Test persistence layer (in-memory).
  *
+ * **Details**
+ *
  * Uses memory-backed storage - no GCS credentials required.
  * Fast and deterministic for unit tests.
+ *
+ * **Example** (Inspect workflow persistence test)
+ *
+ * ```ts
+ * import { WorkflowPersistenceTest } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * console.log(WorkflowPersistenceTest)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const WorkflowPersistenceTest = Persistence.layerKvs.pipe(
   Layer.provide(StorageKeyValueStoreLive),
@@ -86,7 +116,20 @@ export const WorkflowPersistenceTest = Persistence.layerKvs.pipe(
 /**
  * Pure in-memory persistence (no StorageService dependency).
  *
+ * **Details**
+ *
  * The simplest option for isolated unit tests.
+ *
+ * **Example** (Inspect workflow persistence memory)
+ *
+ * ```ts
+ * import { WorkflowPersistenceMemory } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * console.log(WorkflowPersistenceMemory)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const WorkflowPersistenceMemory = Persistence.layerMemory;
 

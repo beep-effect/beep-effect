@@ -1,14 +1,16 @@
 /**
  * Entity Schema Factory (Stage 1)
  *
+ * **Details**
+ *
  * Creates Effect Schemas for entity extraction in the two-stage ODKE pipeline.
  * Stage 1: Extract all named entities and map them to ontology classes.
  *
  * This schema ensures entity consistency by requiring unique IDs that will
  * be used in Stage 2 for relation extraction.
  *
- * @module Schema/EntityFactory
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { IRI } from "@beep/rdf";
@@ -16,16 +18,13 @@ import { SchemaUtils } from "@beep/schema";
 import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { buildLocalNameToIriMapSafe, expandLocalNameToIri, extractLocalNameFromIri } from "../Utils/Iri.ts";
-import { EmptyVocabularyError } from "./Errors.ts";
-
-// Re-export for convenience
-export { EmptyVocabularyError };
 
 /**
  * Helper: Creates a local name schema with case-insensitive validation
@@ -41,20 +40,10 @@ export { EmptyVocabularyError };
  *
  * @internal
  */
-const localNameSchema = (
-  classIris: ReadonlyArray<IRI>,
-  errorType: "classes" | "properties"
-): S.Codec<string, string, never, never> => {
-  if (A.isReadonlyArrayEmpty(classIris)) {
-    throw EmptyVocabularyError.make({
-      message: `Cannot create schema with zero ${errorType} IRIs`,
-      type: errorType,
-    });
-  }
-
+const localNameSchema = (classIris: ReadonlyArray<IRI>): S.Codec<string, string, never, never> => {
   // Build case-insensitive local name to IRI map for validation
   const { map: localNameMap } = buildLocalNameToIriMapSafe(classIris);
-  const localNames = classIris.map(extractLocalNameFromIri);
+  const localNames = A.map(classIris, extractLocalNameFromIri);
 
   // Schema that validates local names (case-insensitive) and normalizes to canonical form
   return S.String.pipe(
@@ -70,12 +59,12 @@ const localNameSchema = (
       }),
     }),
     S.check(
-      S.makeFilter((name) => MutableHashMap.has(localNameMap, name.toLowerCase()), {
-        message: `Type must be one of: ${localNames.slice(0, 10).join(", ")}${localNames.length > 10 ? "..." : ""}`,
+      S.makeFilter((name) => MutableHashMap.has(localNameMap, Str.toLowerCase(name)), {
+        message: `Type must be one of: ${A.join(A.take(localNames, 10), ", ")}${A.length(localNames) > 10 ? "..." : ""}`,
       })
     ),
     S.annotate({
-      description: `Class name (one of: ${localNames.join(", ")})`,
+      description: `Class name (one of: ${A.join(localNames, ", ")})`,
     })
   );
 };
@@ -83,104 +72,103 @@ const localNameSchema = (
 /**
  * Creates Effect Schema for entity extraction (Stage 1)
  *
+ * **Details**
+ *
  * This is the first stage of the two-stage ODKE pipeline:
  * 1. Extract all named entities from text
  * 2. Map them to ontology classes
  * 3. Assign unique IDs for Stage 2 linking
  *
+ * **Example** (Use makeEntitySchema)
+ *
+ * ```ts
+ * import { ClassDefinition, PropertyDefinition } from "@effect-ontology/Model/Ontology"
+ * import { makeEntitySchema } from "@effect-ontology/Schema/EntityFactory"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const ontology = S.decodeUnknownOption(S.Struct({
+ *   classes: S.Array(ClassDefinition),
+ *   properties: S.Array(PropertyDefinition)
+ * }))({
+ *   classes: [{ id: "https://schema.org/Person", label: "Person" }],
+ *   properties: [{
+ *     id: "https://schema.org/age",
+ *     label: "age",
+ *     rangeType: "datatype"
+ *   }]
+ * })
+ * const decoded = O.flatMap(ontology, ({ classes, properties }) =>
+ *   S.decodeUnknownOption(makeEntitySchema(classes, properties))({
+ *     entities: [
+ *       {
+ *         mention: "Cristiano Ronaldo",
+ *         id: "cristiano_ronaldo",
+ *         types: ["Person"],
+ *         attributes: { age: 39 }
+ *       }
+ *     ]
+ *   })
+ * )
+ * console.log(O.isSome(decoded)) // true
+ * ```
+ *
  * @param classes - Array of ClassDefinition objects from ontology context
  * @param datatypeProperties - Optional array of datatype properties to constrain attribute keys
  * @returns Entity schema for LLM structured output
- *
- * @example
- * ```typescript
- * const schema = makeEntitySchema([
- *   new ClassDefinition({ id: "http://schema.org/Person", label: "Person", ... }),
- *   new ClassDefinition({ id: "http://schema.org/Organization", label: "Organization", ... })
- * ], [
- *   new PropertyDefinition({ id: "http://schema.org/age", rangeType: "datatype", ... })
- * ])
- *
- * // Valid output:
- * {
- *   entities: [
- *     {
- *       mention: "Cristiano Ronaldo",
- *       id: "cristiano_ronaldo",
- *       types: ["http://schema.org/Person"],
- *       attributes: { "http://schema.org/age": 39 }
- *     }
- *   ]
- * }
- * ```
- *
  * @category constructors
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeEntitySchema = dual2(
   (classes: ReadonlyArray<ClassDefinition>, datatypeProperties: ReadonlyArray<PropertyDefinition>) => {
     // Extract class IRIs from ClassDefinition objects
-    const classIris = classes.map((c) => c.id);
+    const classIris = A.map(classes, (classDefinition) => classDefinition.id);
 
     // Create local name schema for types array elements
     // LLM outputs local names (e.g., "Player") which are validated and later expanded to full IRIs
-    const ClassLocalName = localNameSchema(classIris, "classes");
+    const ClassLocalName = localNameSchema(classIris);
 
     // Determine available property names for description
-    const availableProps = datatypeProperties?.map((p) => extractLocalNameFromIri(p.id)) || [];
-    const propList =
-      availableProps.length > 0
-        ? ` (allowed: ${availableProps.slice(0, 10).join(", ")}${availableProps.length > 10 ? "..." : ""})`
-        : "";
+    const availableProps = A.map(datatypeProperties, (property) => extractLocalNameFromIri(property.id));
+    const propList = A.match(availableProps, {
+      onEmpty: () => "",
+      onNonEmpty: (properties) =>
+        ` (allowed: ${A.join(A.take(properties, 10), ", ")}${A.length(properties) > 10 ? "..." : ""})`,
+    });
 
     // Dynamic Attributes Schema
     // If properties are provided, build a specific Struct to enforce cardinality and valid keys
-    let AttributesSchema: S.Codec<Record<string, unknown>, unknown, never, never>;
-
-    if (P.isNotUndefined(datatypeProperties) && datatypeProperties.length > 0) {
-      const fields: Record<string, S.Codec<unknown, unknown, never, never>> = {};
-
-      // Build case-insensitive local name map for key normalization
-      // const propMap = buildLocalNameToIriMap(datatypeProperties.map((p) => p.id))
-
-      for (const prop of datatypeProperties) {
-        const localName = extractLocalNameFromIri(prop.id);
-
-        // Value schema: String, Number, or Boolean
-        const valueSchema = S.Union([S.String, S.Finite, S.Boolean]);
-
-        // If functional, use single value. If not functional (or unspecified), allow arrays.
-        // Note: We use S.optional for all fields as entities only have a subset of attributes
-        fields[localName] = (prop.isFunctional ? valueSchema : S.Union([valueSchema, S.Array(valueSchema)])).pipe(
-          S.OptionFromOptionalKey,
-          SchemaUtils.withNoneDefault
-        );
-      }
-
-      AttributesSchema = S.Struct(fields).pipe(
-        // We want to handle case-insensitive keys if possible, but Struct expects exact keys.
-        // LLMs are usually good with the specified keys.
-        // To be safe, we can leave it strict or just allow excess (but we want to guide them).
-        // For now, strict Struct with local names is best for token efficiency and enforcement.
-        S.annotate({
+    const valueSchema = S.Union([S.String, S.Finite, S.Boolean]);
+    const AttributesSchema: S.Codec<Record<string, unknown>, unknown, never, never> = A.match(datatypeProperties, {
+      onEmpty: () =>
+        S.Record(S.String, S.Union([valueSchema, S.Array(valueSchema)])).annotate({
+          description: "Entity attributes as property-value pairs",
+        }),
+      onNonEmpty: (properties) =>
+        S.Struct(
+          R.fromEntries(
+            A.map(properties, (property) => [
+              extractLocalNameFromIri(property.id),
+              (property.isFunctional ? valueSchema : S.Union([valueSchema, S.Array(valueSchema)])).pipe(
+                S.OptionFromOptionalKey,
+                SchemaUtils.withNoneDefault
+              ),
+            ])
+          )
+        ).annotate({
           title: "Attributes",
           description: `Entity attributes. Use these exact property names:${propList}`,
-        })
-      );
-    } else {
-      // Fallback if no properties provided (permissive mode)
-      AttributesSchema = S.Record(
-        S.String,
-        S.Union([S.String, S.Finite, S.Boolean, S.Array(S.Union([S.String, S.Finite, S.Boolean]))])
-      ).annotate({
-        description: "Entity attributes as property-value pairs",
-      });
-    }
+        }),
+    });
 
     // Single entity schema matching Entity domain model
     const EntitySchema = S.Struct({
       id: S.String.pipe(
-        S.check(S.isPattern(/^[a-z][a-z0-9_]*$/)),
+        S.check(
+          S.isPattern(/^[a-z][a-z0-9_]*$/, {
+            message: "Expected a snake_case entity identifier beginning with a lowercase letter",
+          })
+        ),
         S.annotate({
           description:
             "Snake_case unique identifier for this entity - use this exact ID when referring to this entity in relations (e.g., 'cristiano_ronaldo')",
@@ -234,9 +222,36 @@ CRITICAL RULES:
 /**
  * Type helpers
  *
- * @category type utilities
- * @since 2.0.0
+ * **Example** (Reference the entity graph schema factory result)
+ *
+ * ```ts
+ * import { makeEntitySchema, type EntityGraphSchema } from "@effect-ontology/Schema/EntityFactory"
+ *
+ * const entityGraphSchemaFactory: typeof makeEntitySchema = makeEntitySchema
+ * const describeEntityGraphSchema = (_schema: EntityGraphSchema): string => "entity graph schema"
+ *
+ * console.log(entityGraphSchemaFactory.length, describeEntityGraphSchema.length)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type EntityGraphSchema = ReturnType<typeof makeEntitySchema>;
 
-export type EntityGraphType = S.Schema.Type<EntityGraphSchema>;
+/**
+ * Describes the entity graph type data exposed by this module.
+ *
+ * **Example** (Reference EntityGraph fields)
+ *
+ * ```ts
+ * import type { EntityGraph } from "@effect-ontology/Schema/EntityFactory"
+ *
+ * const entityGraphFields: ReadonlyArray<keyof EntityGraph> = ["entities"]
+ *
+ * console.log(entityGraphFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EntityGraph = S.Schema.Type<EntityGraphSchema>;

@@ -1,45 +1,57 @@
 /**
  * IRI Utilities
  *
+ * **Details**
+ *
  * Provides case-insensitive IRI matching and normalization utilities.
  * Used to handle casing mismatches between ontology IRI local names (PascalCase)
  * and rdfs:label values (camelCase) that cause LLM extraction failures.
  *
+ * @packageDocumentation
  * @since 0.0.0
- * @module Utils/Iri
  */
 
-import { SafePnLocal } from "@beep/identity";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
+import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
+import { MutableHashMap, MutableHashSet, Number as N } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const $I = $ScratchpadId.create("effect-ontology/Utils/Iri");
 
 /**
  * Build a case-insensitive lookup map from IRIs.
  *
+ * **Details**
+ *
  * Creates a Map where keys are lowercase IRIs and values are the original canonical IRIs.
  * This allows case-insensitive matching while preserving the canonical form.
  *
- * @param iris - Array of canonical IRIs
- * @returns Map from lowercase IRI to canonical IRI
- *
- * **Example**
+ * **Example** (Inspect build case insensitive iri map)
  *
  * ```ts
- * const map = buildCaseInsensitiveIriMap([
- *   "http://ontology/TeamRanking",
- *   "http://ontology/PlayerName"
- * ] as IRI[])
- * // map.get("http://ontology/teamranking") => "http://ontology/TeamRanking"
+ * import { IRI } from "@beep/rdf"
+ * import { buildCaseInsensitiveIriMap } from "@effect-ontology/Utils/Iri"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const iris = S.decodeUnknownOption(S.Array(IRI))([
+ *   "https://ontology/TeamRanking",
+ *   "https://ontology/PlayerName"
+ * ])
+ * console.log(O.flatMap(iris, (values) =>
+ *   MutableHashMap.get(buildCaseInsensitiveIriMap(values), "https://ontology/teamranking")
+ * ))
  * ```
  *
+ * @param iris - Array of canonical IRIs
+ * @returns Map from lowercase IRI to canonical IRI
+ * @category factories
  * @since 0.0.0
  */
 export const buildCaseInsensitiveIriMap = (iris: ReadonlyArray<IRI>): MutableHashMap.MutableHashMap<string, IRI> =>
@@ -48,57 +60,88 @@ export const buildCaseInsensitiveIriMap = (iris: ReadonlyArray<IRI>): MutableHas
 /**
  * Normalize an IRI to its canonical form using case-insensitive matching.
  *
+ * **Details**
+ *
  * If the input IRI matches a canonical IRI (case-insensitively), returns the canonical form.
  * Otherwise, returns the input unchanged (cast as IRI).
+ *
+ * **Example** (Inspect normalize iri)
+ *
+ * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { buildCaseInsensitiveIriMap, normalizeIri } from "@effect-ontology/Utils/Iri"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const iris = S.decodeUnknownOption(S.Tuple([IRI, IRI, IRI]))([
+ *   "https://ontology/TeamRanking",
+ *   "https://ontology/teamranking",
+ *   "https://ontology/Unknown"
+ * ])
+ * console.log(O.map(iris, ([canonical, lowerCase, unknown]) => {
+ *   const map = buildCaseInsensitiveIriMap([canonical])
+ *   return [normalizeIri(lowerCase, map), normalizeIri(unknown, map)]
+ * }))
+ * ```
  *
  * @param input - IRI to normalize (potentially with wrong casing)
  * @param iriMap - Case-insensitive lookup map from buildCaseInsensitiveIriMap
  * @returns Canonical IRI if found, otherwise the input unchanged
- *
- * **Example**
- *
- * ```ts
- * const map = buildCaseInsensitiveIriMap(["http://ontology/TeamRanking" as IRI])
- * normalizeIri("http://ontology/teamranking", map) // => "http://ontology/TeamRanking"
- * normalizeIri("http://ontology/Unknown", map) // => "http://ontology/Unknown"
- * ```
- *
+ * @category normalization
  * @since 0.0.0
  */
 export const normalizeIri: {
-  (input: string, iriMap: MutableHashMap.MutableHashMap<string, IRI>): IRI;
-  (iriMap: MutableHashMap.MutableHashMap<string, IRI>): (input: string) => IRI;
+  (input: IRI, iriMap: MutableHashMap.MutableHashMap<string, IRI>): IRI;
+  (iriMap: MutableHashMap.MutableHashMap<string, IRI>): (input: IRI) => IRI;
 } = dual(
   2,
-  (input: string, iriMap: MutableHashMap.MutableHashMap<string, IRI>): IRI =>
-    MutableHashMap.get(iriMap, Str.toLowerCase(input)).pipe(O.getOrElse(() => S.decodeSync(IRI)(input)))
+  (input: IRI, iriMap: MutableHashMap.MutableHashMap<string, IRI>): IRI =>
+    MutableHashMap.get(iriMap, Str.toLowerCase(input)).pipe(O.getOrElse(() => input))
 );
 
 /**
  * Normalize an array of IRIs to their canonical forms.
  *
+ * **Example** (Normalize an empty collection)
+ *
+ * ```ts
+ * import { normalizeIris } from "@effect-ontology/Utils/Iri"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ *
+ * console.log(normalizeIris([], MutableHashMap.empty()).length) // 0
+ * ```
+ *
  * @param inputs - Array of IRIs to normalize
  * @param iriMap - Case-insensitive lookup map from buildCaseInsensitiveIriMap
  * @returns Array of normalized IRIs
- *
+ * @category normalization
  * @since 0.0.0
  */
 export const normalizeIris: {
-  (inputs: ReadonlyArray<string>, iriMap: MutableHashMap.MutableHashMap<string, IRI>): ReadonlyArray<IRI>;
-  (iriMap: MutableHashMap.MutableHashMap<string, IRI>): (inputs: ReadonlyArray<string>) => ReadonlyArray<IRI>;
+  (inputs: ReadonlyArray<IRI>, iriMap: MutableHashMap.MutableHashMap<string, IRI>): ReadonlyArray<IRI>;
+  (iriMap: MutableHashMap.MutableHashMap<string, IRI>): (inputs: ReadonlyArray<IRI>) => ReadonlyArray<IRI>;
 } = dual(
   2,
-  (iriMap: MutableHashMap.MutableHashMap<string, IRI>, inputs: ReadonlyArray<string>): ReadonlyArray<IRI> =>
+  (inputs: ReadonlyArray<IRI>, iriMap: MutableHashMap.MutableHashMap<string, IRI>): ReadonlyArray<IRI> =>
     A.map(inputs, normalizeIri(iriMap))
 );
 
 /**
  * Check if an IRI exists in the canonical set (case-insensitively).
  *
- * @category combinators
+ * **Example** (Check an empty canonical map)
+ *
+ * ```ts
+ * import { iriExistsCaseInsensitive } from "@effect-ontology/Utils/Iri"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ *
+ * console.log(iriExistsCaseInsensitive("https://example.com/A", MutableHashMap.empty())) // false
+ * ```
+ *
  * @param input - IRI to check
  * @param iriMap - Case-insensitive lookup map from buildCaseInsensitiveIriMap
  * @returns true if the IRI exists (case-insensitively)
+ * @category utilities
  * @since 0.0.0
  */
 export const iriExistsCaseInsensitive: {
@@ -115,55 +158,65 @@ export const iriExistsCaseInsensitive: {
 /**
  * Extract local name from an IRI (part after last / or #)
  *
- * **Example**
+ * **Example** (Inspect extract local name from iri)
  *
  * ```ts
- * extractLocalNameFromIri("http://ontology/Player") // => "Player"
- * extractLocalNameFromIri("http://www.w3.org/2001/XMLSchema#string") // => "string"
+ * import { extractLocalNameFromIri } from "@effect-ontology/Utils/Iri"
+ *
+ * extractLocalNameFromIri("https://ontology/Player") // => "Player"
+ * extractLocalNameFromIri("https://www.w3.org/2001/XMLSchema#string") // => "string"
  * ```
  *
- * @category combinators
  * @param iri - Full IRI string
  * @returns Local name portion
+ * @category schemas
  * @since 0.0.0
  */
-export const extractLocalNameFromIri = (iri: string): SafePnLocal => {
+export const extractLocalNameFromIri = (iri: string): string => {
   const lastSlashOpt = Str.lastIndexOf("/")(iri);
   const lastHashOpt = Str.lastIndexOf("#")(iri);
-  return pipe(
-    [lastSlashOpt, lastHashOpt] as const,
-    O.liftPredicate(
-      P.Tuple([
-        (v): v is O.Some<number> => O.isSome(v) && P.isNumber(v.value),
-        (v): v is O.Some<number> => O.isSome(v) && P.isNumber(v.value),
-      ])
-    ),
-    O.map(([{ value: lastSlash }, { value: lastHash }]) => {
-      const splitIndex = Math.max(lastSlash, lastHash);
-      return N.isGreaterThanOrEqualTo(splitIndex, 0)
-        ? S.decodeSync(SafePnLocal)(Str.slice(splitIndex + 1)(iri))
-        : S.decodeSync(SafePnLocal)(iri);
-    }),
-    O.getOrElse(() => S.decodeSync(SafePnLocal)(iri))
+  const splitIndex = N.max(
+    O.getOrElse(lastSlashOpt, () => -1),
+    O.getOrElse(lastHashOpt, () => -1)
   );
+  return N.isGreaterThanOrEqualTo(splitIndex, 0) ? Str.slice(splitIndex + 1)(iri) : iri;
 };
 
 /**
  * Result of building a local name to IRI map, including collision info
  *
+ * **Example** (Build a collision-aware local-name map)
+ *
+ * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { buildLocalNameToIriMapSafe } from "@effect-ontology/Utils/Iri"
+ *
+ * const result = buildLocalNameToIriMapSafe([IRI.make("https://example.com/Person")])
+ * console.log(result.hasCollisions) // false
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
-export interface LocalNameMapResult {
-  /** The local name to IRI mapping (last IRI wins for collisions) */
-  readonly map: MutableHashMap.MutableHashMap<string, IRI>;
-  /** Map of local names that had collisions to all their IRIs */
-  readonly collisions: MutableHashMap.MutableHashMap<string, ReadonlyArray<IRI>>;
-  /** Whether any collisions were detected */
-  readonly hasCollisions: boolean;
-}
+export class LocalNameMapResult extends S.Class<LocalNameMapResult>($I`LocalNameMapResult`)(
+  {
+    map: MutableHashMapFromSelf({ key: S.String, value: IRI }).annotateKey({
+      description: "Case-insensitive local-name mapping; the last IRI wins when names collide.",
+    }),
+    collisions: MutableHashMapFromSelf({ key: S.String, value: S.Array(IRI) }).annotateKey({
+      description: "All IRIs associated with each colliding local name.",
+    }),
+    hasCollisions: S.Boolean.annotateKey({ description: "Whether any local-name collision was detected." }),
+  },
+  $I.annote("LocalNameMapResult", {
+    description: "Mutable local-name lookup state and its collision inventory.",
+  })
+) {}
 
 /**
  * Build a case-insensitive local name to IRI map with collision detection.
+ *
+ * **Details**
  *
  * Creates a Map where keys are lowercase local names and values are the full canonical IRIs.
  * This allows case-insensitive local name matching while providing the full IRI.
@@ -172,22 +225,32 @@ export interface LocalNameMapResult {
  * `foaf:member`), this is a collision. The function tracks all collisions and returns
  * them in the result. The map will contain the LAST IRI for each colliding local name.
  *
- * **Example**
+ * **Example** (Inspect build local name to iri map safe)
  *
  * ```ts
- * const result = buildLocalNameToIriMapSafe([
- *   "http://ontology/Player",
- *   "http://xmlns.com/foaf/0.1/member",
- *   "http://www.w3.org/ns/org#member"
- * ] as IRI[])
- * // result.map.get("member") => "http://www.w3.org/ns/org#member" (last wins)
- * // result.collisions.get("member") => ["http://xmlns.com/foaf/0.1/member", "http://www.w3.org/ns/org#member"]
- * // result.hasCollisions => true
+ * import { IRI } from "@beep/rdf"
+ * import { buildLocalNameToIriMapSafe } from "@effect-ontology/Utils/Iri"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const iris = S.decodeUnknownOption(S.Array(IRI))([
+ *   "https://ontology/Player",
+ *   "https://xmlns.com/foaf/0.1/member",
+ *   "https://www.w3.org/ns/org#member"
+ * ])
+ * console.log(O.map(iris, (values) => {
+ *   const result = buildLocalNameToIriMapSafe(values)
+ *   return {
+ *     member: O.getOrNull(MutableHashMap.get(result.map, "member")),
+ *     hasCollisions: result.hasCollisions
+ *   }
+ * }))
  * ```
  *
- * @category combinators
  * @param iris - Array of canonical IRIs
  * @returns LocalNameMapResult with map, collisions, and hasCollisions flag
+ * @category factories
  * @since 0.0.0
  */
 export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameMapResult => {
@@ -224,19 +287,24 @@ export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameM
 /**
  * Expand a local name to its full IRI using case-insensitive matching.
  *
- * **Example**
+ * **Example** (Inspect expand local name to iri)
  *
  * ```ts
- * const map = buildLocalNameToIriMap(["http://ontology/Player" as IRI])
- * expandLocalNameToIri("player", map) // => "http://ontology/Player"
- * expandLocalNameToIri("Player", map) // => "http://ontology/Player"
- * expandLocalNameToIri("Unknown", map) // => undefined
+ * import { IRI } from "@beep/rdf"
+ * import { buildLocalNameToIriMapSafe, expandLocalNameToIri } from "@effect-ontology/Utils/Iri"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const iri = S.decodeUnknownOption(IRI)("https://ontology/Player")
+ * const map = O.map(iri, (value) => buildLocalNameToIriMapSafe([value]).map)
+ * console.log(O.flatMap(map, (value) => expandLocalNameToIri("player", value)))
+ * console.log(O.map(map, (value) => O.isNone(expandLocalNameToIri("Unknown", value))))
  * ```
  *
- * @category combinators
  * @param localName - Local name (e.g., "Player")
  * @param localNameMap - Case-insensitive local name to IRI map from buildLocalNameToIriMap
  * @returns Full IRI if found, undefined otherwise
+ * @category utilities
  * @since 0.0.0
  */
 export const expandLocalNameToIri: {
@@ -251,23 +319,31 @@ export const expandLocalNameToIri: {
 /**
  * Expand an array of local names to full IRIs.
  *
+ * **Details**
+ *
  * Filters out any local names that don't match known IRIs.
+ *
+ * **Example** (Inspect expand types to iris)
+ *
+ * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { buildLocalNameToIriMapSafe, expandTypesToIris } from "@effect-ontology/Utils/Iri"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const iris = S.decodeUnknownOption(S.Array(IRI))([
+ *   "https://ontology/Player",
+ *   "https://ontology/Team"
+ * ])
+ * console.log(O.map(iris, (values) =>
+ *   expandTypesToIris(["player", "Team", "Unknown"], buildLocalNameToIriMapSafe(values).map)
+ * ))
+ * ```
  *
  * @param localNames - Array of local names
  * @param localNameMap - Case-insensitive local name to IRI map
  * @returns Array of full IRIs (only valid expansions)
- *
- * **Example**
- *
- * ```ts
- * const map = buildLocalNameToIriMap([
- *   "http://ontology/Player",
- *   "http://ontology/Team"
- * ] as IRI[])
- * expandTypesToIris(["player", "Team", "Unknown"], map)
- * // => ["http://ontology/Player", "http://ontology/Team"]
- * ```
- *
+ * @category utilities
  * @since 0.0.0
  */
 export const expandTypesToIris: {
@@ -282,9 +358,18 @@ export const expandTypesToIris: {
 /**
  * Get all valid local names from a set of IRIs.
  *
+ * **Example** (Collect no local names)
+ *
+ * ```ts
+ * import { getLocalNameSet } from "@effect-ontology/Utils/Iri"
+ * import * as MutableHashSet from "effect/MutableHashSet"
+ *
+ * console.log(MutableHashSet.size(getLocalNameSet([]))) // 0
+ * ```
+ *
  * @param iris - Array of canonical IRIs
  * @returns Set of lowercase local names
- *
+ * @category utilities
  * @since 0.0.0
  */
 export const getLocalNameSet = (iris: ReadonlyArray<IRI>): MutableHashSet.MutableHashSet<string> =>

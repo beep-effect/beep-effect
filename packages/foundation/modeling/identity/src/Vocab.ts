@@ -338,6 +338,24 @@ export const CoreVocab = {
       "valid",
     ] as const,
   },
+  schema: {
+    iri: "https://schema.org/",
+    terms: [
+      "Athlete",
+      "CreativeWork",
+      "Event",
+      "Organization",
+      "Person",
+      "SportsTeam",
+      "Thing",
+      "URL",
+      "birthDate",
+      "knows",
+      "memberOf",
+      "name",
+      "url",
+    ] as const,
+  },
 } as const satisfies VocabShape;
 
 /**

@@ -11,7 +11,7 @@ import {
   threadTimelineAtoms,
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
-import { A, Eq, N, O, P, thunkEffectVoid } from "@beep/utils";
+import { A, dual, Eq, N, O, P, thunkEffectVoid } from "@beep/utils";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { Effect, HashSet } from "effect";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
@@ -168,31 +168,45 @@ export const reconcileThreadTimelineAtoms = Atom.family((threadId: WorkspaceIden
 // Only an existing, earlier parent describes an edit edge. Self, forward,
 // equal-index, and missing parents are corrupt and mirror activeBranchTurns by
 // leaving the linear conversation untouched.
-const resolvableParentTurnId = (
-  allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>,
-  turn: ThreadUseCases.TimelineTurn
-): O.Option<WorkspaceIdentity.TurnId> =>
-  turn.parentTurnId.pipe(
-    O.filter(P.not(Eq.equals(turn.turnId))),
-    O.filter((parentTurnId) =>
-      A.some(
-        allTurns,
-        P.Struct({
-          turnId: Eq.equals(parentTurnId),
-          turnIndex: N.isLessThan(turn.turnIndex),
-        })
+const resolvableParentTurnId: {
+  (
+    allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>,
+    turn: ThreadUseCases.TimelineTurn
+  ): O.Option<WorkspaceIdentity.TurnId>;
+  (
+    turn: ThreadUseCases.TimelineTurn
+  ): (allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>) => O.Option<WorkspaceIdentity.TurnId>;
+} = dual(
+  2,
+  (
+    allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>,
+    turn: ThreadUseCases.TimelineTurn
+  ): O.Option<WorkspaceIdentity.TurnId> =>
+    turn.parentTurnId.pipe(
+      O.filter(P.not(Eq.equals(turn.turnId))),
+      O.filter((parentTurnId) =>
+        A.some(
+          allTurns,
+          P.Struct({
+            turnId: Eq.equals(parentTurnId),
+            turnIndex: N.isLessThan(turn.turnIndex),
+          })
+        )
       )
     )
-  );
+);
 
 // A resolvable parent covers both replacements and same-parent siblings.
 // Looking for a turn that validly points here also marks the turn it replaced.
-const turnHasSiblings = (
-  allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>,
-  turn: ThreadUseCases.TimelineTurn
-): boolean =>
-  O.isSome(resolvableParentTurnId(allTurns, turn)) ||
-  A.some(allTurns, (candidate) => O.contains(resolvableParentTurnId(allTurns, candidate), turn.turnId));
+const turnHasSiblings: {
+  (allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>, turn: ThreadUseCases.TimelineTurn): boolean;
+  (turn: ThreadUseCases.TimelineTurn): (allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>) => boolean;
+} = dual(
+  2,
+  (allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>, turn: ThreadUseCases.TimelineTurn): boolean =>
+    O.isSome(resolvableParentTurnId(allTurns, turn)) ||
+    A.some(allTurns, (candidate) => O.contains(resolvableParentTurnId(allTurns, candidate), turn.turnId))
+);
 
 // The sibling scan is quadratic in the timeline and depends on nothing else,
 // so it owns its own atom: streaming writes land once per block and must not

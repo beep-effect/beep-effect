@@ -1,8 +1,9 @@
 /**
  * Shared value schemas for the effect-ontology experiment.
  *
- * @remarks
- * These schemas centralize the small invariants reused by extraction,
+ * **Details**
+ *
+ * * These schemas centralize the small invariants reused by extraction,
  * resolution, and ontology models. Domain code receives finite attribute
  * values, `Option`-modeled confidence, and validated entity identifiers rather
  * than repairing weak input at each call site.
@@ -21,13 +22,14 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
 /**
  * JSON-safe scalar accepted as an entity or mention attribute value.
  *
- * @remarks
- * Numbers are finite so attribute records remain serializable without the
+ * **Details**
+ *
+ * * Numbers are finite so attribute records remain serializable without the
  * non-standard `NaN` and infinity cases admitted by JavaScript numbers.
  *
- * @example
+ * **Example** (Use AttributeValue)
  * ```ts
- * import { AttributeValue } from "@effect-ontology/Model/shared.ts"
+ * import { AttributeValue } from "@effect-ontology/Model/shared"
  *
  * console.log(AttributeValue.is("Seattle")) // true
  * console.log(AttributeValue.is(Number.POSITIVE_INFINITY)) // false
@@ -52,9 +54,9 @@ export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean])
 /**
  * Runtime value decoded by {@link AttributeValue}. {@inheritDoc AttributeValue}
  *
- * @example
+ * **Example** (Use AttributeValue)
  * ```ts
- * import { type AttributeValue } from "@effect-ontology/Model/shared.ts"
+ * import { type AttributeValue } from "@effect-ontology/Model/shared"
  *
  * const value: AttributeValue = 0.95
  * console.log(value)
@@ -68,20 +70,21 @@ export type AttributeValue = typeof AttributeValue.Type;
 /**
  * Open attribute record used by extracted mentions and entities.
  *
- * @remarks
- * Attribute keys commonly contain property IRIs, but the source contract also
+ * **Details**
+ *
+ * * Attribute keys commonly contain property IRIs, but the source contract also
  * permits application-defined keys. Values are deliberately restricted by
  * {@link AttributeValue}.
  *
- * @example
+ * **Example** (Use Attributes)
  * ```ts
- * import { Attributes } from "@effect-ontology/Model/shared.ts"
+ * import { Attributes } from "@effect-ontology/Model/shared"
  *
  * const attributes = Attributes.make({
- *   "http://schema.org/age": 39,
- *   "http://schema.org/active": true
+ *   "https://schema.org/age": 39,
+ *   "https://schema.org/active": true
  * })
- * console.log(attributes["http://schema.org/age"]) // 39
+ * console.log(attributes["https://schema.org/age"]) // 39
  * ```
  *
  * @invariant Every property value is a JSON-safe scalar.
@@ -105,9 +108,9 @@ export const Attributes = S.Record(S.String, AttributeValue)
 /**
  * Runtime value decoded by {@link Attributes}. {@inheritDoc Attributes}
  *
- * @example
+ * **Example** (Use Attributes)
  * ```ts
- * import { type Attributes } from "@effect-ontology/Model/shared.ts"
+ * import { type Attributes } from "@effect-ontology/Model/shared"
  *
  * const attributes: Attributes = { active: true }
  * console.log(attributes.active) // true
@@ -121,19 +124,21 @@ export type Attributes = typeof Attributes.Type;
 /**
  * Nullish-compatible optional confidence value.
  *
- * @remarks
- * Decoding accepts an omitted, `undefined`, or `null` value and normalizes it
+ * **Details**
+ *
+ * * Decoding accepts an omitted, `undefined`, or `null` value and normalizes it
  * immediately to `Option.none`. Construction also defaults to `Option.none`,
  * so downstream behavior never branches on nullish values.
  *
- * @example
+ * **Example** (Use OptionalConfidence)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalConfidence } from "@effect-ontology/Model/shared.ts"
+ * import * as S from "effect/Schema"
+ * import { OptionalConfidence } from "@effect-ontology/Model/shared"
  *
- * const missing = OptionalConfidence.fromUnknown(undefined)
- * const present = OptionalConfidence.fromUnknown(0.8)
- * console.log(O.isNone(missing), O.isSome(present)) // true true
+ * const missing = S.decodeUnknownOption(OptionalConfidence)(undefined)
+ * const present = S.decodeUnknownOption(OptionalConfidence)(0.8)
+ * console.log(O.exists(missing, O.isNone), O.exists(present, O.isSome)) // true true
  * ```
  *
  * @invariant Contains either no value or one valid {@link Confidence}.
@@ -155,13 +160,14 @@ export const OptionalConfidence = S.OptionFromNullishOr(Confidence)
 /**
  * Runtime value decoded by {@link OptionalConfidence}. {@inheritDoc OptionalConfidence}
  *
- * @example
+ * **Example** (Use OptionalConfidence)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalConfidence, type OptionalConfidence as OptionalConfidenceValue } from "@effect-ontology/Model/shared.ts"
+ * import * as S from "effect/Schema"
+ * import { OptionalConfidence, type OptionalConfidence as OptionalConfidenceValue } from "@effect-ontology/Model/shared"
  *
- * const confidence: OptionalConfidenceValue = OptionalConfidence.fromUnknown(null)
- * console.log(O.isNone(confidence)) // true
+ * const confidence = S.decodeUnknownOption(OptionalConfidence)(null)
+ * console.log(O.exists(confidence, (value: OptionalConfidenceValue) => O.isNone(value))) // true
  * ```
  *
  * @category type-level
@@ -172,9 +178,9 @@ export type OptionalConfidence = typeof OptionalConfidence.Type;
 /**
  * Canonical source pattern for local entity identifiers.
  *
- * @example
+ * **Example** (Use ENTITY_ID_PATTERN)
  * ```ts
- * import { ENTITY_ID_PATTERN } from "@effect-ontology/Model/shared.ts"
+ * import { ENTITY_ID_PATTERN } from "@effect-ontology/Model/shared"
  *
  * console.log(ENTITY_ID_PATTERN.test("cristiano_ronaldo")) // true
  * console.log(ENTITY_ID_PATTERN.test("_private")) // false
@@ -190,14 +196,15 @@ export const ENTITY_ID_PATTERN = /^[a-z][a-z0-9_]*$/;
 /**
  * Validated local identifier for an extracted or resolved entity.
  *
- * @remarks
- * The upstream assertion-based constructor has intentionally been removed.
+ * **Details**
+ *
+ * * The upstream assertion-based constructor has intentionally been removed.
  * Use the schema's `make`, `fromUnknown`, or `decodeOption` statics so invalid
  * identifiers cannot acquire the brand without validation.
  *
- * @example
+ * **Example** (Use EntityId)
  * ```ts
- * import { EntityId } from "@effect-ontology/Model/shared.ts"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  *
  * const id = EntityId.make("cristiano_ronaldo")
  * console.log(EntityId.is(id)) // true
@@ -233,9 +240,9 @@ export const EntityId = S.String.check(
 /**
  * Runtime value decoded by {@link EntityId}. {@inheritDoc EntityId}
  *
- * @example
+ * **Example** (Use EntityId)
  * ```ts
- * import { EntityId, type EntityId as EntityIdValue } from "@effect-ontology/Model/shared.ts"
+ * import { EntityId, type EntityId as EntityIdValue } from "@effect-ontology/Model/shared"
  *
  * const id: EntityIdValue = EntityId.make("al_nassr_fc")
  * console.log(id)

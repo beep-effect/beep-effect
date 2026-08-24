@@ -1,22 +1,26 @@
 /**
  * Service: SHACL Validation
  *
+ * **Details**
+ *
  * Workflow-specific SHACL shape loading, generation, policy, and execution
  * metadata. Validation execution is owned by the canonical semantic-web
  * contract and the `@beep/shacl` driver.
  *
- * @since 2.0.0
- * @module Service/Shacl
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema/Int";
-import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import {
+  ShaclValidationError,
   ShaclValidationRequest,
   ShaclValidationResult,
   ShaclValidationService,
@@ -25,7 +29,6 @@ import { ShaclValidationServiceLive } from "@beep/shacl";
 import { Context, DateTime, Duration, Effect, HashMap, Layer, MutableHashMap, Order, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";
 import { ShapesLoadError, ValidationPolicyError, ValidationReportError } from "../Domain/Error/Shacl.ts";
@@ -36,7 +39,7 @@ import { emptyRdfStore, RdfBuilder, rdfStoreSize, rdfStoreToDataset } from "./Rd
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Shacl");
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#";
+const SHACL_NAMESPACE = "https://www.w3.org/ns/shacl#";
 
 export { ShaclValidationReport, ValidationPolicy };
 
@@ -67,6 +70,13 @@ const serializeN3Store = (store: N3.Store): string => {
   return source;
 };
 
+/**
+ * Describes the shacl workflow service methods data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ShaclWorkflowServiceMethods {
   readonly validateWithReport: (
     dataStore: RdfStore,
@@ -82,14 +92,14 @@ export interface ShaclWorkflowServiceMethods {
   /**
    * Clear the shapes cache. Useful for testing or when ontology has changed.
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly clearShapesCache: Effect.Effect<void>;
 
   /**
    * Get cache statistics for monitoring
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly getShapesCacheStats: Effect.Effect<{ size: number; keys: ReadonlyArray<string> }>;
 
@@ -104,7 +114,7 @@ export interface ShaclWorkflowServiceMethods {
    * @param policy - Policy controlling which severities cause failure
    * @returns The validation report on success, or ValidationPolicyError if policy violated
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly validateWithPolicy: (
     dataStore: RdfStore,
@@ -116,8 +126,19 @@ export interface ShaclWorkflowServiceMethods {
 /**
  * Configuration for ShaclWorkflowService.Test layer
  *
- * @since 2.0.0
- * @category Test
+ *
+ * **Example** (Use the ShaclWorkflowServiceTestConfig contract)
+ *
+ * ```ts
+ * import type { ShaclWorkflowServiceTestConfig } from "@effect-ontology/Service/Shacl"
+ *
+ * const acceptsShaclWorkflowServiceTestConfig = (_value: ShaclWorkflowServiceTestConfig): void => undefined
+ *
+ * console.log(acceptsShaclWorkflowServiceTestConfig)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ShaclWorkflowServiceTestConfig {
   /** Whether validation should report conformance (default: true) */
@@ -129,14 +150,36 @@ export interface ShaclWorkflowServiceTestConfig {
 /**
  * Default test configuration - always conforms with no violations
  *
- * @since 2.0.0
- * @category Test
+ * **Example** (Inspect default test config)
+ *
+ * ```ts
+ * import { defaultTestConfig } from "@effect-ontology/Service/Shacl"
+ *
+ * console.log(defaultTestConfig)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const defaultTestConfig: ShaclWorkflowServiceTestConfig = {
   conforms: true,
   violations: [],
 };
 
+/**
+ * Validates and represents shacl workflow service values at runtime.
+ *
+ * **Example** (Inspect shacl workflow service)
+ *
+ * ```ts
+ * import { ShaclWorkflowService } from "@effect-ontology/Service/Shacl"
+ *
+ * console.log(ShaclWorkflowService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, ShaclWorkflowServiceMethods>()(
   $I`ShaclWorkflowService`
 ) {
@@ -150,8 +193,8 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
    * @param config - Optional configuration for mock behavior
    * @returns Layer providing mock ShaclWorkflowService
    *
-   * @example
-   * ```typescript
+   * **Example** (Use Test)
+   * ```ts
    * // Default - always conforms
    * const layer = ShaclWorkflowService.Test()
    *
@@ -159,15 +202,15 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
    * const layerWithViolations = ShaclWorkflowService.Test({
    *   conforms: false,
    *   violations: [{
-   *     focusNode: "http://example.org/entity1",
+   *     focusNode: "https://example.org/entity1",
    *     message: "Missing required property",
    *     severity: "violation"
    *   }]
    * })
    * ```
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Test = (
     config: ShaclWorkflowServiceTestConfig = defaultTestConfig
@@ -181,17 +224,19 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
         // Track shapes cache for getShapesCacheStats
         const shapesCache = yield* Ref.make(HashMap.empty<string, N3.Store>());
 
-        const makeReport = (dataStore: RdfStore, shapesStore: RdfStore): Effect.Effect<ShaclValidationReport> =>
-          Effect.gen(function* () {
-            const now = yield* DateTime.now;
-            return ShaclValidationReport.make({
-              validation: ShaclValidationResult.make({ conforms, violations, truncated: false }),
-              validatedAt: now,
-              dataGraphTripleCount: NonNegativeInt.make(rdfStoreSize(dataStore)),
-              shapesGraphTripleCount: NonNegativeInt.make(rdfStoreSize(shapesStore)),
-              durationMs: Duration.zero,
-            });
+        const makeReport = Effect.fn("ShaclWorkflow.makeReport")(function* (
+          dataStore: RdfStore,
+          shapesStore: RdfStore
+        ): Effect.fn.Return<ShaclValidationReport> {
+          const now = yield* DateTime.now;
+          return ShaclValidationReport.make({
+            validation: ShaclValidationResult.make({ conforms, violations, truncated: false }),
+            validatedAt: now,
+            dataGraphTripleCount: NonNegativeInt.make(rdfStoreSize(dataStore)),
+            shapesGraphTripleCount: NonNegativeInt.make(rdfStoreSize(shapesStore)),
+            durationMs: Duration.zero,
           });
+        });
 
         return {
           validateWithReport: Effect.fn("ShaclWorkflowService.validateWithReport")((dataStore, shapesStore) =>
@@ -273,11 +318,27 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
         shapesStore: RdfStore
       ) {
         const start = yield* DateTime.now;
+        const dataset = yield* rdfStoreToDataset(dataStore).pipe(
+          Effect.mapError((cause) =>
+            ShaclValidationError.make({
+              message: `Failed to convert data graph: ${cause.message}`,
+              reason: "engineFailure",
+            })
+          )
+        );
+        const shapesDataset = yield* rdfStoreToDataset(shapesStore).pipe(
+          Effect.mapError((cause) =>
+            ShaclValidationError.make({
+              message: `Failed to convert shapes graph: ${cause.message}`,
+              reason: "engineFailure",
+            })
+          )
+        );
         const report = yield* validationService.validate(
           ShaclValidationRequest.make({
-            dataset: rdfStoreToDataset(dataStore),
+            dataset,
             shapes: [],
-            shapesDataset: O.some(rdfStoreToDataset(shapesStore)),
+            shapesDataset: O.some(shapesDataset),
           })
         );
         const end = yield* DateTime.now;
@@ -294,26 +355,26 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
         validateWithReport,
         loadShapes,
         loadShapesFromUri: Effect.fn("ShaclService.loadShapesFromUri")((shapesUri: string) =>
-          storage.get(stripGsPrefix(shapesUri)).pipe(
+          storage.getOption(stripGsPrefix(shapesUri)).pipe(
             Effect.flatMap((maybeContent) =>
-              O.match(O.fromNullishOr(maybeContent), {
+              O.match(maybeContent, {
                 onNone: () =>
                   Effect.fail(
-                    ShapesLoadError.fromUnknown({
+                    ShapesLoadError.make({
                       message: `Shapes not found at ${shapesUri}`,
-                      shapesUri,
+                      shapesUri: O.some(IRI.make(shapesUri)),
                     })
                   ),
                 onSome: loadShapes,
               })
             ),
             Effect.mapError((cause) =>
-              S.is(ShapesLoadError)(cause)
+              ShapesLoadError.is(cause)
                 ? cause
-                : ShapesLoadError.fromUnknown({
+                : ShapesLoadError.make({
                     message: `Failed to load SHACL shapes from ${shapesUri}: ${cause}`,
-                    shapesUri,
-                    cause,
+                    shapesUri: O.some(IRI.make(shapesUri)),
+                    cause: O.some(cause),
                   })
             )
           )
@@ -428,15 +489,13 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
                   if (onPropertyQuads.length === 0) continue;
                   const restrictedPropIri = onPropertyQuads[0].object;
                   const key = makeKey(classIri.value, restrictedPropIri.value);
-                  let propertyShape = MutableHashMap.get(propertyShapeMap, key);
-                  if (O.isNone(propertyShape)) {
-                    const created = N3.DataFactory.blankNode();
-                    MutableHashMap.set(propertyShapeMap, key, created);
-                    propertyShape = O.some(created);
-                    store.addQuad(shapeIri, SH.property, created);
-                    store.addQuad(created, SH.path, restrictedPropIri);
-                  }
-                  const propertyShapeNode = O.getOrThrow(propertyShape);
+                  const propertyShapeNode = O.getOrElse(MutableHashMap.get(propertyShapeMap, key), () => {
+                    const propertyShape = N3.DataFactory.blankNode();
+                    MutableHashMap.set(propertyShapeMap, key, propertyShape);
+                    store.addQuad(shapeIri, SH.property, propertyShape);
+                    store.addQuad(propertyShape, SH.path, restrictedPropIri);
+                    return propertyShape;
+                  });
                   const minCardQuads = ontologyN3.getQuads(restrictionNode, owlMinCardinality, null, null);
                   if (minCardQuads.length > 0) {
                     const minValue = minCardQuads[0].object.value;

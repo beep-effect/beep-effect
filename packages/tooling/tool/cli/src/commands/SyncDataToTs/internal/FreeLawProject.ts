@@ -56,7 +56,10 @@ export const extractArchiveTextEntries = (options: {
     let parserEnded = false;
     let completed = false;
     const matchingSuffix = (path: string) =>
-      A.findFirst(options.pathSuffixes, (suffix) => path === suffix || Str.endsWith(`/${suffix}`)(path));
+      A.findFirst(options.pathSuffixes, (suffix) => {
+        const rootRelativeSuffix = Str.startsWith("/")(suffix) ? Str.slice(1)(suffix) : suffix;
+        return path === rootRelativeSuffix || Str.endsWith(`/${rootRelativeSuffix}`)(path);
+      });
     const parser = new Parser({
       strict: true,
       filter: (path) => matchingSuffix(path)._tag === "Some",
@@ -156,9 +159,9 @@ export const renderUnknownJsonModule = (options: {
  */
 
 import { Result } from "effect";
-import * as S from "effect/Schema";
+import { Unknown } from "@beep/schema/Unknown";
 
-const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
+const decodeJson = Unknown.decodeUnknownResultFromJsonString;
 
 /**
  * Schema-decoded generated data.

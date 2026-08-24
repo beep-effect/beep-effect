@@ -3,10 +3,10 @@
  *
  * @since 0.1.0
  */
+import { Unknown } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 
 import * as ConfigChange from "../../../../claudecode/Hook/Events/ConfigChange.ts";
 import * as CwdChanged from "../../../../claudecode/Hook/Events/CwdChanged.ts";
@@ -31,7 +31,7 @@ const envelopeWithMode = {
   permission_mode: "default",
 } as const;
 
-const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeSyncFromJsonString;
 
 // ---------------------------------------------------------------------------
 // PostCompact

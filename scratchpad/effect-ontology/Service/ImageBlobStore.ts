@@ -1,19 +1,23 @@
 /**
  * ImageBlobStore Service
  *
+ * **Details**
+ *
  * Low-level storage operations for image bytes and metadata.
  * Wraps StorageService with image-specific path management.
  *
- * @since 2.0.0
- * @module Service/ImageBlobStore
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { getSomesStruct } from "@beep/utils/Option";
+import type { Duration } from "effect";
 import { Context, DateTime, Effect, Layer, MutableHashSet } from "effect";
-import * as S from "effect/Schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
+import type * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
 import { ContentHash } from "../Domain/Identity.ts";
@@ -30,10 +34,13 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageBlobStore");
 /**
  * ImageBlobStore service interface
  *
+ * **Details**
+ *
  * Low-level image storage operations for bytes and metadata.
  *
- * @since 2.0.0
- * @category Service
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ImageBlobStoreService {
   /**
@@ -59,9 +66,7 @@ export interface ImageBlobStoreService {
   /**
    * Retrieve image metadata by hash
    */
-  readonly getMetadata: (
-    hash: string
-  ) => Effect.Effect<O.Option<ImageAsset>, KeyValueStoreError | S.SchemaError>;
+  readonly getMetadata: (hash: string) => Effect.Effect<O.Option<ImageAsset>, KeyValueStoreError | S.SchemaError>;
 
   /**
    * Store both bytes and metadata atomically
@@ -89,7 +94,7 @@ export interface ImageBlobStoreService {
    */
   readonly getSignedUrl: (
     hash: string,
-    expiresInSeconds?: number
+    expiresIn?: Duration.Duration
   ) => Effect.Effect<O.Option<string>, SystemError | PlatformError>;
 
   /**
@@ -105,15 +110,23 @@ export interface ImageBlobStoreService {
 /**
  * ImageBlobStore service tag
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Inspect image blob store)
+ *
+ * ```ts
+ * import { ImageBlobStore } from "@effect-ontology/Service/ImageBlobStore"
+ *
+ * console.log(ImageBlobStore)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobStoreService>()($I`ImageBlobStore`) {
   /**
    * Live implementation using StorageService
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.effect(
     ImageBlobStore,
@@ -129,25 +142,22 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
         getBytes: (hash: string) =>
           storage.getUint8Array(PathLayout.image.original(imagePathHash(hash))).pipe(Effect.map(O.fromUndefinedOr)),
 
-        hasBytes: (hash: string) =>
-          storage
-            .getUint8Array(PathLayout.image.original(imagePathHash(hash)))
-            .pipe(Effect.map((bytes) => bytes !== undefined)),
+        hasBytes: (hash: string) => storage.has(PathLayout.image.original(imagePathHash(hash))),
 
-        putMetadata: Effect.fn(function* (asset: ImageAsset) {
+        putMetadata: Effect.fn("ImageBlobStore.putMetadata")(function* (asset: ImageAsset) {
           const json = yield* ImageAsset.encodeJsonStringEffect(asset);
           yield* storage.set(PathLayout.image.metadata(imagePathHash(asset.hash)), json);
         }),
 
-        getMetadata: Effect.fn(function* (hash: string) {
-          const content = yield* storage.get(PathLayout.image.metadata(imagePathHash(hash)));
-          if (content === undefined) return O.none();
+        getMetadata: Effect.fn("ImageBlobStore.getMetadata")(function* (hash: string) {
+          const content = yield* storage.getOption(PathLayout.image.metadata(imagePathHash(hash)));
+          if (O.isNone(content)) return O.none();
 
-          const asset = yield* ImageAsset.decodeJsonStringEffect(content);
+          const asset = yield* ImageAsset.decodeJsonStringEffect(content.value);
           return O.some(asset);
         }),
 
-        putBytesWithMetadata: Effect.fn(function* (
+        putBytesWithMetadata: Effect.fn("ImageBlobStore.putBytesWithMetadata")(function* (
           hash: string,
           bytes: Uint8Array,
           contentType: string,
@@ -163,7 +173,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
             contentType,
             sizeBytes: bytes.length,
             storagePath: PathLayout.image.original(pathHash),
-            ...(sourceUrl === undefined ? {} : { sourceUrl }),
+            ...getSomesStruct({ sourceUrl: O.fromUndefinedOr(sourceUrl) }),
             createdAt: DateTime.formatIso(yield* DateTime.now),
           });
 
@@ -188,16 +198,16 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
           const paths = yield* storage.list("assets/images/");
           const hashes = MutableHashSet.empty<string>();
           for (const path of paths) {
-            const match = Str.match(/^assets\/images\/([^/]+)\//)(path);
-            if (O.isSome(match) && match.value[1] !== undefined) {
-              MutableHashSet.add(hashes, match.value[1]);
+            const hash = O.flatMap(Str.match(/^assets\/images\/([^/]+)\//)(path), (match) => A.get(match, 1));
+            if (O.isSome(hash)) {
+              MutableHashSet.add(hashes, hash.value);
             }
           }
           return A.fromIterable(hashes);
         }),
 
-        getSignedUrl: (hash: string, expiresInSeconds?: number) =>
-          storage.getSignedUrl(PathLayout.image.original(imagePathHash(hash)), expiresInSeconds),
+        getSignedUrl: (hash: string, expiresIn?: Duration.Duration) =>
+          storage.getSignedUrl(PathLayout.image.original(imagePathHash(hash)), expiresIn),
 
         supportsSignedUrls: storage.supportsSignedUrls,
       };
@@ -207,8 +217,8 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
   /**
    * Default layer with StorageService dependency
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImageBlobStore.Live.pipe(Layer.provide(StorageServiceLive));
 }

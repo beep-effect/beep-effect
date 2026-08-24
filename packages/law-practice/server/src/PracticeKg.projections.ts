@@ -517,7 +517,7 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
   const candidates = yield* Effect.forEach(roots, (root) => {
     const sourcesPath = path.join(corpusRoot, root, "sources.jsonl");
     const textDir = path.join(corpusRoot, root, "text");
-    return Effect.all([fs.exists(sourcesPath), fs.exists(textDir)]).pipe(
+    return Effect.all([fs.exists(sourcesPath), fs.exists(textDir)], { concurrency: 2 }).pipe(
       Effect.orElseSucceed(() => [false, false]),
       Effect.map(([sourcesExist, textExists]) =>
         sourcesExist && textExists

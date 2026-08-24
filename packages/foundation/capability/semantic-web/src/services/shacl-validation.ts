@@ -9,7 +9,7 @@ import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset, NamedNode, ObjectTerm } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { Context, Tuple } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
 
@@ -154,6 +154,17 @@ export class ShaclNodeShape extends S.Class<ShaclNodeShape>($I`ShaclNodeShape`)(
   })
 ) {}
 
+const makeShaclValidationViolationMember = <Severity extends ShaclSeverity>(severity: S.Literal<Severity>) =>
+  S.Struct({
+    focusNode: S.String,
+    path: NamedNode,
+    message: S.String,
+    severity: S.tag(severity.literal),
+    sourceShape: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    sourceConstraintComponent: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(ObjectTerm).pipe(SchemaUtils.withNoneDefault),
+  });
+
 /**
  * SHACL validation violation.
  *
@@ -161,18 +172,13 @@ export class ShaclNodeShape extends S.Class<ShaclNodeShape>($I`ShaclNodeShape`)(
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import * as S from "effect/Schema"
+ * import { makeNamedNode } from "@beep/rdf/Rdf"
  * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
  *
- * const violation = S.decodeUnknownSync(ShaclValidationViolation)({
+ * const violation = ShaclValidationViolation.cases.violation.make({
  *   focusNode: "https://example.com/alice",
- *   path: { termType: "NamedNode", value: "https://example.com/name" },
- *   message: "Expected at least one value.",
- *   severity: "violation",
- *   sourceConstraintComponent: {
- *     termType: "NamedNode",
- *     value: "http://www.w3.org/ns/shacl#MinCountConstraintComponent"
- *   }
+ *   path: makeNamedNode("https://example.com/name"),
+ *   message: "Expected at least one value."
  * })
  * strictEqual(violation.severity, "violation")
  * ```
@@ -180,21 +186,44 @@ export class ShaclNodeShape extends S.Class<ShaclNodeShape>($I`ShaclNodeShape`)(
  * @category models
  * @since 0.0.0
  */
-export class ShaclValidationViolation extends S.Class<ShaclValidationViolation>($I`ShaclValidationViolation`)(
-  {
-    focusNode: S.String,
-    path: NamedNode,
-    message: S.String,
-    severity: ShaclSeverity,
-    sourceShape: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
-    sourceConstraintComponent: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(ObjectTerm).pipe(SchemaUtils.withNoneDefault),
-  },
-  $I.annote("ShaclValidationViolation", {
-    description: "SHACL validation violation.",
-    semanticSchemaMetadata: serviceContractMetadata("ShaclValidationViolation", "SHACL validation violation."),
+export const ShaclValidationViolation = ShaclSeverityDefinition.mapMembers(
+  Tuple.evolve([
+    makeShaclValidationViolationMember,
+    makeShaclValidationViolationMember,
+    makeShaclValidationViolationMember,
+  ])
+).pipe(
+  S.toTaggedUnion("severity"),
+  $I.annoteSchema("ShaclValidationViolation", {
+    description: "SHACL validation finding classified by report severity.",
+    semanticSchemaMetadata: serviceContractMetadata(
+      "ShaclValidationViolation",
+      "SHACL validation finding classified by report severity."
+    ),
   })
-) {}
+);
+
+/**
+ * Type for {@link ShaclValidationViolation}.
+ *
+ * **Example** (Construct an informational finding)
+ *
+ * ```ts
+ * import { makeNamedNode } from "@beep/rdf/Rdf"
+ * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
+ *
+ * const finding: ShaclValidationViolation = ShaclValidationViolation.cases.info.make({
+ *   focusNode: "https://example.com/alice",
+ *   path: makeNamedNode("https://example.com/name"),
+ *   message: "A name is recommended."
+ * })
+ * console.log(finding.severity)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ShaclValidationViolation = typeof ShaclValidationViolation.Type;
 
 /**
  * SHACL validation request.

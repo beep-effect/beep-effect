@@ -54,6 +54,7 @@ import {
   String as StringSchema,
 } from "effect/Schema";
 import { toType } from "effect/SchemaAST";
+import { toLowerCase } from "effect/String";
 import { VariantSchema } from "effect/unstable/schema";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
@@ -1659,13 +1660,13 @@ export const columnName =
   };
 
 /**
- * Foreign key to another entity, read from its EntityId statics — the
- * reference target needs zero extra spelling beyond the action policy.
+ * Foreign key to another entity, read from its EntityId statics.
  *
  * **Details**
  *
  * The target table comes from `tableName`, the target column is `id`, and
- * delete/update actions remain optional policy.
+ * delete/update actions remain optional policy. A deterministic constraint
+ * name can be supplied when preserving an existing database contract.
  *
  * **Gotchas**
  *
@@ -1685,16 +1686,25 @@ export const columnName =
  *   static readonly tableName = "user"
  *   static readonly entityType = "User"
  * }
- * Int.pipe(references(UserId)).meta.references?.tableName // => "user"
+ * const reference = Int.pipe(
+ *   references(UserId, { name: "membership_user_id_user_id_fkey" })
+ * ).meta.references
+ *
+ * console.log(reference?.tableName) // "user"
+ * console.log(reference?.name) // "membership_user_id_user_id_fkey"
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
 type ReferenceOptions = {
+  readonly name?: string;
   readonly onDelete?: Meta.FkAction;
   readonly onUpdate?: Meta.FkAction;
 };
+type ValidateReferenceName<Options> = Options extends { readonly name: infer Name extends string }
+  ? ValidateSqlName<Lowercase<Name>, "pg.references constraint name must be a valid PostgreSQL identifier">
+  : unknown;
 type HasReferenceAction<Options, Action extends Meta.FkAction> = Options extends
   | { readonly onDelete: Action }
   | { readonly onUpdate: Action }
@@ -1722,16 +1732,28 @@ type ValidateReferenceActions<I extends Field.Input, Options> =
 export const references =
   <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(
     id: Id,
-    options?: Options
+    options?: Options & ValidateReferenceName<Options>
   ) =>
   <I extends Field.Input>(
     input: I & ValidateReferenceActions<NoInfer<I>, Options>
   ): Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }> => {
-    const ref: Meta.References<Id["tableName"], "id"> = {
-      tableName: id.tableName,
-      columnName: "id",
-      onDelete: options?.onDelete,
-      onUpdate: options?.onUpdate,
-    };
+    const ref: Meta.References<Id["tableName"], "id"> = matchOption(fromUndefinedOr(options?.name), {
+      onNone: () => ({
+        tableName: id.tableName,
+        columnName: "id",
+        onDelete: options?.onDelete,
+        onUpdate: options?.onUpdate,
+      }),
+      onSome: (name) => ({
+        tableName: id.tableName,
+        columnName: "id",
+        name,
+        onDelete: options?.onDelete,
+        onUpdate: options?.onUpdate,
+      }),
+    });
+    if (!isUndefined(ref.name)) {
+      assertSqlName(toLowerCase(ref.name), "pg", "PostgreSQL foreign-key constraint name");
+    }
     return Field.patch(input, { references: ref });
   };

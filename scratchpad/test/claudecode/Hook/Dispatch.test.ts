@@ -4,11 +4,11 @@
  *
  * @since 0.1.0
  */
+import { Unknown } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as S from "effect/Schema";
 
 import * as PreToolUse from "../../../claudecode/Hook/Events/PreToolUse.ts";
 import * as SessionStart from "../../../claudecode/Hook/Events/SessionStart.ts";
@@ -26,8 +26,8 @@ interface DispatchResult {
   readonly succeeded: boolean;
 }
 
-const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
-const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
+const decodeJson = Unknown.decodeUnknownEffectFromJsonString;
+const encodeJson = Unknown.encodeSyncFromJsonString;
 
 const runDispatchWithMockStdin = (
   hooks: DispatchMap<never, never>,

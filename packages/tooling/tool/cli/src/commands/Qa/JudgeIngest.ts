@@ -12,10 +12,10 @@
  */
 
 import { SessionStore } from "@beep/qa-capture";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, O } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import { dual } from "effect/Function";
-import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { decodeQaInventory, encodeQaInventory } from "./Inventory.schemas.ts";
 import { crossCheckAgainstRound, extractLastJsonBlock, raiseCrossCheckFailure } from "./JudgeCheck.ts";
@@ -121,7 +121,7 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
       ),
     onSome: Effect.succeed,
   });
-  const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(block).pipe(
+  const parsed = yield* Unknown.decodeEffectFromJsonString(block).pipe(
     QaCommandError.mapError("qa judge-ingest could not parse the judge's final JSON block.")
   );
   return yield* decodeQaInventory(parsed).pipe(
@@ -178,7 +178,7 @@ export const runQaJudgeIngest = Effect.fn("QaJudgeIngest.run")(function* (
   const encoded = yield* encodeQaInventory(inventory).pipe(
     QaCommandError.mapError("qa judge-ingest could not encode the inventory.")
   );
-  const json = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(encoded).pipe(
+  const json = yield* Unknown.encodeEffectFromJsonString(encoded).pipe(
     QaCommandError.mapError("qa judge-ingest could not serialize the inventory.")
   );
 

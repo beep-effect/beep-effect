@@ -1,58 +1,290 @@
 /**
  * Claim Repository
  *
+ * **Details**
+ *
  * Effect-native repository for claims metadata using Drizzle ORM.
  * Provides typed access to the claims table with support for
  * querying, deprecation, and conflict detection.
  *
- * @since 2.0.0
- * @module Repository/Claim
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { UUID } from "@beep/schema/String";
+import { Context, Equal, Layer } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Claim");
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
-import { DateTime, Effect, Option } from "effect";
-import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow } from "./schema.ts";
-import { claims, correctionClaims, corrections } from "./schema.ts";
+import { and, count, desc, eq, isNull, or } from "drizzle-orm";
+import { DateTime, Effect } from "effect";
+import { canonicalConflictPair, detectConflictKind } from "./Conflict.ts";
+import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow, CorrectionRow } from "./schema.ts";
+import { Claims, Corrections, claims, conflicts, correctionClaims, corrections } from "./schema.ts";
+
+const ClaimCountDatabaseRow = S.Struct({ count: NonNegativeInt }).pipe(
+  $I.annoteSchema("ClaimCountDatabaseRow", {
+    description: "Claim count projection decoded at the Drizzle database boundary.",
+  })
+);
+
+const decodeClaimRows = (rows: unknown) =>
+  S.decodeUnknownEffect(Claims.select.pipe(S.Array, S.mutable))(rows).pipe(
+    Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+  );
+
+const decodeCorrectionRows = (rows: unknown) =>
+  S.decodeUnknownEffect(Corrections.select.pipe(S.Array, S.mutable))(rows).pipe(
+    Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+  );
+
+const decodeClaimCountRows = (rows: unknown) =>
+  S.decodeUnknownEffect(S.Tuple([ClaimCountDatabaseRow]))(rows).pipe(
+    Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+  );
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type ClaimId = string;
-export type ArticleId = string;
-export type CorrectionId = string;
+/**
+ * Describes the database UUID used to identify a persisted claim row.
+ *
+ * **Example** (Reference a persisted claim identifier)
+ *
+ * ```ts
+ * import type { PersistedClaimId } from "@effect-ontology/Repository/Claim"
+ *
+ * const printClaimId = (claimId: PersistedClaimId) => console.log(claimId)
+ *
+ * console.log(printClaimId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersistedClaimId = ClaimRow["id"];
+/**
+ * Describes the article id data exposed by this module.
+ *
+ * **Example** (Create ArticleId)
+ *
+ * ```ts
+ * import type { ArticleId } from "@effect-ontology/Repository/Claim"
+ *
+ * const articleId: ArticleId = "article-id-1"
+ *
+ * console.log(articleId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ArticleId = ClaimRow["articleId"];
+/**
+ * Describes the database UUID used to identify a persisted correction row.
+ *
+ * **Example** (Reference a persisted correction identifier)
+ *
+ * ```ts
+ * import type { PersistedCorrectionId } from "@effect-ontology/Repository/Claim"
+ *
+ * const printCorrectionId = (correctionId: PersistedCorrectionId) => console.log(correctionId)
+ *
+ * console.log(printCorrectionId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersistedCorrectionId = CorrectionRow["id"];
 
-export interface ClaimFilter {
-  readonly ontologyId?: string;
-  readonly articleId?: ArticleId;
-  readonly subjectIri?: string;
-  readonly predicateIri?: string;
-  readonly rank?: "preferred" | "normal" | "deprecated";
-  readonly includeDeprecated?: boolean;
-  readonly limit?: number;
-  readonly offset?: number;
-}
+/**
+ * Describes the claim filter data exposed by this module.
+ *
+ * **Example** (Create an ontology-scoped filter)
+ *
+ * ```ts
+ * import { ClaimFilter } from "@effect-ontology/Repository/Claim"
+ *
+ * const filter = ClaimFilter.make({ ontologyId: "claims" })
+ * console.log(filter.ontologyId) // "claims"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ClaimFilter extends S.Class<ClaimFilter>($I`ClaimFilter`)(
+  {
+    ontologyId: S.NonEmptyString,
+    articleId: S.optionalKey(S.NonEmptyString),
+    subjectIri: S.optionalKey(S.NonEmptyString),
+    predicateIri: S.optionalKey(S.NonEmptyString),
+    rank: S.optionalKey(S.Literals(["preferred", "normal", "deprecated"])),
+    includeDeprecated: S.optionalKey(S.Boolean),
+    limit: S.optionalKey(PosInt),
+    offset: S.optionalKey(NonNegativeInt),
+  },
+  $I.annote("ClaimFilter", {
+    description: "Ontology-scoped persisted-claim filters with bounded pagination fields.",
+  })
+) {}
 
-export interface ConflictCandidate {
-  readonly existingClaim: ClaimRow;
-  readonly conflictType: "position" | "temporal" | "contradictory";
-}
+/**
+ * Describes the conflict candidate data exposed by this module.
+ *
+ * **Example** (Reject an incomplete conflict candidate)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ConflictCandidate } from "@effect-ontology/Repository/Claim"
+ *
+ * console.log(S.is(ConflictCandidate)({ conflictType: "position" })) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ConflictCandidate extends S.Class<ConflictCandidate>($I`ConflictCandidate`)(
+  {
+    existingClaim: Claims.select,
+    conflictType: S.Literals(["position", "temporal"]),
+  },
+  $I.annote("ConflictCandidate", {
+    description: "Persisted claim paired with the authoritative detected conflict kind.",
+  })
+) {}
+
+/**
+ * Joined correction record and the persisted claim identifiers it links.
+ *
+ * **Example** (Reject an incomplete correction-chain entry)
+ *
+ * ```ts
+ * import { CorrectionChainEntry } from "@effect-ontology/Repository/Claim"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CorrectionChainEntry)({})) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CorrectionChainEntry extends S.Class<CorrectionChainEntry>($I`CorrectionChainEntry`)(
+  {
+    correction: Corrections.select,
+    originalClaimId: UUID,
+    newClaimId: S.OptionFromNullishOr(UUID).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("CorrectionChainEntry", {
+    description: "Correction metadata joined to its original and optional replacement persisted claim identifiers.",
+  })
+) {}
+
+const decodeCorrectionChainEntries = (rows: unknown) =>
+  S.decodeUnknownEffect(CorrectionChainEntry.pipe(S.Array, S.mutable))(rows).pipe(
+    Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+  );
 
 // =============================================================================
 // Service
 // =============================================================================
 
+/**
+ * Provides repository access for claim repository.
+ *
+ * **Example** (Inspect the default claim repository layer)
+ *
+ * ```ts
+ * import { Layer } from "effect"
+ * import { ClaimRepository } from "@effect-ontology/Repository/Claim"
+ *
+ * console.log(Layer.isLayer(ClaimRepository.Default)) // true
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export class ClaimRepository extends Context.Service<ClaimRepository>()($I`ClaimRepository`, {
   make: Effect.gen(function* () {
     const drizzle = yield* PostgresDrizzle;
+    const normalizeQueryError = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
+      effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+
+    const persistClaimsWithConflicts = Effect.fn("ClaimRepository.persistClaimsWithConflicts")(function* (
+      claimList: Array<ClaimInsertRow>,
+      idempotent: boolean
+    ): Effect.fn.Return<Array<ClaimRow>, DrizzleError> {
+      if (A.isReadonlyArrayEmpty(claimList)) return [];
+
+      return yield* normalizeQueryError(
+        drizzle.transaction(
+          Effect.fnUntraced(function* (tx) {
+            const insertedRows = idempotent
+              ? yield* tx
+                  .insert(claims)
+                  .values(claimList)
+                  .onConflictDoNothing({
+                    target: [claims.articleId, claims.subjectIri, claims.predicateIri, claims.objectValue],
+                  })
+                  .returning()
+              : yield* tx.insert(claims).values(claimList).returning();
+            const inserted = yield* decodeClaimRows(insertedRows);
+
+            yield* Effect.forEach(
+              inserted,
+              Effect.fnUntraced(function* (claim) {
+                const candidateRows = yield* tx
+                  .select()
+                  .from(claims)
+                  .where(
+                    and(
+                      eq(claims.ontologyId, claim.ontologyId),
+                      eq(claims.subjectIri, claim.subjectIri),
+                      eq(claims.predicateIri, claim.predicateIri),
+                      isNull(claims.deprecatedAt)
+                    )
+                  );
+                const candidates = yield* decodeClaimRows(candidateRows);
+
+                yield* Effect.forEach(
+                  candidates,
+                  Effect.fnUntraced(function* (candidate) {
+                    if (Equal.equals(candidate.id, claim.id)) return;
+                    const kind = detectConflictKind(claim, candidate);
+                    if (O.isNone(kind)) return;
+                    const [claimAId, claimBId] = yield* canonicalConflictPair(claim.id, candidate.id);
+                    yield* tx
+                      .insert(conflicts)
+                      .values({
+                        ontologyId: claim.ontologyId,
+                        conflictType: kind.value,
+                        claimAId,
+                        claimBId,
+                      })
+                      .onConflictDoNothing({
+                        target: [conflicts.ontologyId, conflicts.claimAId, conflicts.claimBId],
+                      });
+                  }),
+                  { concurrency: 1, discard: true }
+                );
+              }),
+              { concurrency: 1, discard: true }
+            );
+
+            return inserted;
+          })
+        )
+      );
+    });
 
     // -------------------------------------------------------------------------
     // CRUD Operations
@@ -63,8 +295,10 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const insertClaim = Effect.fn("insertClaim")(
       function* (claim: ClaimInsertRow) {
-        const [result] = yield* drizzle.insert(claims).values(claim).returning();
-        return result;
+        const rows = yield* persistClaimsWithConflicts([claim], false);
+        return yield* Effect.fromOption(A.head(rows), () =>
+          DrizzleError.fromUnknown("decodeRows", { operation: "insertClaim", reason: "missing returning row" })
+        );
       },
       Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause))
     );
@@ -72,9 +306,15 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Get claim by ID
      */
-    const getClaim = Effect.fn("getClaim")(function* (id: ClaimId) {
-      const [result] = yield* drizzle.select().from(claims).where(eq(claims.id, id)).limit(1);
-      return Option.fromNullishOr(result);
+    const getClaim = Effect.fn("getClaim")(function* (id: PersistedClaimId, ontologyId: string) {
+      const [result] = yield* decodeClaimRows(
+        yield* drizzle
+          .select()
+          .from(claims)
+          .where(and(eq(claims.id, id), eq(claims.ontologyId, ontologyId)))
+          .limit(1)
+      );
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -110,17 +350,17 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const getClaims = Effect.fn("getClaims")(function* (filter: ClaimFilter) {
       const conditions = buildWhereConditions(filter);
-      let query = drizzle.select().from(claims).orderBy(desc(claims.assertedAt));
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as typeof query;
+      let query = drizzle.select().from(claims).orderBy(desc(claims.assertedAt)).$dynamic();
+      if (A.isReadonlyArrayNonEmpty(conditions)) {
+        query = query.where(and(...conditions));
       }
       if (P.isNotUndefined(filter.limit)) {
-        query = query.limit(filter.limit) as typeof query;
+        query = query.limit(filter.limit);
       }
       if (P.isNotUndefined(filter.offset)) {
-        query = query.offset(filter.offset) as typeof query;
+        query = query.offset(filter.offset);
       }
-      return yield* query;
+      return yield* decodeClaimRows(yield* query);
     });
 
     // -------------------------------------------------------------------------
@@ -130,24 +370,26 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Get claims by article
      */
-    const getClaimsByArticle = (articleId: ArticleId) => getClaims({ articleId, includeDeprecated: false });
+    const getClaimsByArticle = (articleId: ArticleId, ontologyId: string) =>
+      getClaims({ articleId, ontologyId, includeDeprecated: false });
 
     /**
      * Get claims by subject IRI
      */
-    const getClaimsBySubject = (subjectIri: string) => getClaims({ subjectIri, includeDeprecated: false });
+    const getClaimsBySubject = (subjectIri: string, ontologyId: string) =>
+      getClaims({ subjectIri, ontologyId, includeDeprecated: false });
 
     /**
      * Get preferred claims for a subject + predicate
      */
-    const getPreferredClaims = (subjectIri: string, predicateIri: string) =>
-      getClaims({ subjectIri, predicateIri, rank: "preferred" });
+    const getPreferredClaims = (subjectIri: string, predicateIri: string, ontologyId: string) =>
+      getClaims({ subjectIri, predicateIri, ontologyId, rank: "preferred" });
 
     /**
      * Get all claims for a subject + predicate (including deprecated)
      */
-    const getClaimHistory = (subjectIri: string, predicateIri: string) =>
-      getClaims({ subjectIri, predicateIri, includeDeprecated: true });
+    const getClaimHistory = (subjectIri: string, predicateIri: string, ontologyId: string) =>
+      getClaims({ subjectIri, predicateIri, ontologyId, includeDeprecated: true });
 
     // -------------------------------------------------------------------------
     // Deprecation & Corrections
@@ -156,7 +398,11 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Deprecate a claim due to a correction
      */
-    const deprecateClaim = Effect.fn("deprecateClaim")(function* (claimId: ClaimId, correctionId: CorrectionId) {
+    const deprecateClaim = Effect.fn("deprecateClaim")(function* (
+      claimId: PersistedClaimId,
+      correctionId: PersistedCorrectionId,
+      ontologyId: string
+    ) {
       const now = yield* DateTime.now;
       yield* drizzle
         .update(claims)
@@ -165,35 +411,44 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
           deprecatedBy: correctionId,
           rank: "deprecated",
         })
-        .where(eq(claims.id, claimId));
+        .where(and(eq(claims.id, claimId), eq(claims.ontologyId, ontologyId)));
     });
 
     /**
      * Promote a claim to preferred rank
      */
-    const promoteToPreferred = (claimId: ClaimId) =>
-      drizzle.update(claims).set({ rank: "preferred" }).where(eq(claims.id, claimId));
+    const promoteToPreferred = (claimId: PersistedClaimId, ontologyId: string) =>
+      drizzle
+        .update(claims)
+        .set({ rank: "preferred" })
+        .where(and(eq(claims.id, claimId), eq(claims.ontologyId, ontologyId)));
 
     /**
      * Insert a correction
      */
     const insertCorrection = Effect.fn("insertCorrection")(function* (correction: CorrectionInsertRow) {
-      const [result] = yield* drizzle.insert(corrections).values(correction).returning();
+      const [result] = yield* decodeCorrectionRows(yield* drizzle.insert(corrections).values(correction).returning());
       return result;
     });
 
     /**
      * Get correction by ID
      */
-    const getCorrection = Effect.fn("getCorrection")(function* (id: CorrectionId) {
-      const [result] = yield* drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1);
-      return Option.fromNullishOr(result);
+    const getCorrection = Effect.fn("getCorrection")(function* (id: PersistedCorrectionId) {
+      const [result] = yield* decodeCorrectionRows(
+        yield* drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1)
+      );
+      return O.fromNullishOr(result);
     });
 
     /**
      * Link claims to a correction
      */
-    const linkClaimsToCorrection = (correctionId: CorrectionId, originalClaimId: ClaimId, newClaimId?: ClaimId) =>
+    const linkClaimsToCorrection = (
+      correctionId: PersistedCorrectionId,
+      originalClaimId: PersistedClaimId,
+      newClaimId?: PersistedClaimId
+    ) =>
       drizzle.insert(correctionClaims).values({
         correctionId,
         originalClaimId,
@@ -203,16 +458,18 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Get correction chain for a claim (all corrections that affected it)
      */
-    const getCorrectionChain = Effect.fn("getCorrectionChain")(function* (claimId: ClaimId) {
+    const getCorrectionChain = Effect.fn("getCorrectionChain")(function* (claimId: PersistedClaimId) {
       const result = yield* drizzle
         .select({
           correction: corrections,
+          originalClaimId: correctionClaims.originalClaimId,
+          newClaimId: correctionClaims.newClaimId,
         })
         .from(correctionClaims)
         .innerJoin(corrections, eq(correctionClaims.correctionId, corrections.id))
         .where(or(eq(correctionClaims.originalClaimId, claimId), eq(correctionClaims.newClaimId, claimId)))
         .orderBy(desc(corrections.correctionDate));
-      return result.map((r) => r.correction);
+      return yield* decodeCorrectionChainEntries(result);
     });
 
     // -------------------------------------------------------------------------
@@ -238,48 +495,23 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
             and(
               eq(claims.subjectIri, claim.subjectIri),
               eq(claims.predicateIri, claim.predicateIri),
+              eq(claims.ontologyId, claim.ontologyId),
               isNull(claims.deprecatedAt) // Only active claims
             )
           );
 
-        const conflicts: Array<ConflictCandidate> = [];
+        const detected: Array<ConflictCandidate> = [];
 
-        for (const existing of candidates) {
+        for (const existing of yield* decodeClaimRows(candidates)) {
           // Skip if same claim or same value
-          if ("id" in claim && existing.id === claim.id) continue;
-          if (existing.objectValue === claim.objectValue) continue;
-
-          // Check for temporal overlap if both have validity periods
-          if (
-            P.isNotNullish(claim.validFrom) &&
-            P.isNotNullish(claim.validTo) &&
-            P.isNotNull(existing.validFrom) &&
-            P.isNotNull(existing.validTo)
-          ) {
-            const claimStart =
-              claim.validFrom instanceof Date
-                ? claim.validFrom
-                : DateTime.toDateUtc(DateTime.makeUnsafe(claim.validFrom as string));
-            const claimEnd =
-              claim.validTo instanceof Date
-                ? claim.validTo
-                : DateTime.toDateUtc(DateTime.makeUnsafe(claim.validTo as string));
-            const existingStart = existing.validFrom;
-            const existingEnd = existing.validTo;
-
-            // Check overlap: (StartA <= EndB) and (EndA >= StartB)
-            if (claimStart <= existingEnd && claimEnd >= existingStart) {
-              conflicts.push({ existingClaim: existing, conflictType: "temporal" });
-              continue;
-            }
+          if ("id" in claim && Equal.equals(existing.id, claim.id)) continue;
+          const kind = detectConflictKind(claim, existing);
+          if (O.isSome(kind)) {
+            detected.push(ConflictCandidate.make({ existingClaim: existing, conflictType: kind.value }));
           }
-
-          // Position conflict: same subject+predicate, different value, no temporal qualifier
-          // This indicates potentially contradictory information
-          conflicts.push({ existingClaim: existing, conflictType: "position" });
         }
 
-        return conflicts;
+        return detected;
       }).pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
 
     // -------------------------------------------------------------------------
@@ -290,8 +522,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      * Insert multiple claims in a batch
      */
     const insertClaimsBatch = Effect.fn("insertClaimsBatch")(function* (claimList: Array<ClaimInsertRow>) {
-      if (claimList.length === 0) return [];
-      return yield* drizzle.insert(claims).values(claimList).returning();
+      return yield* persistClaimsWithConflicts(claimList, false);
     });
 
     /**
@@ -302,14 +533,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      * Returns only the newly inserted claims.
      */
     const upsertClaimsBatch = Effect.fn("upsertClaimsBatch")(function* (claimList: Array<ClaimInsertRow>) {
-      if (claimList.length === 0) return [];
-      return yield* drizzle
-        .insert(claims)
-        .values(claimList)
-        .onConflictDoNothing({
-          target: [claims.articleId, claims.subjectIri, claims.predicateIri, claims.objectValue],
-        })
-        .returning();
+      return yield* persistClaimsWithConflicts(claimList, true);
     });
 
     /**
@@ -317,41 +541,79 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const countClaims = Effect.fn("countClaims")(function* (filter: ClaimFilter) {
       const conditions = buildWhereConditions(filter);
-      let query = drizzle.select({ count: sql<number>`count(*)::int` }).from(claims);
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as typeof query;
+      let query = drizzle.select({ count: count() }).from(claims).$dynamic();
+      if (A.isReadonlyArrayNonEmpty(conditions)) {
+        query = query.where(and(...conditions));
       }
-      const result = yield* query;
-      return result[0]?.count ?? 0;
+      const [result] = yield* decodeClaimCountRows(yield* query);
+      return result.count;
     });
 
     return {
       // CRUD
-      insertClaim,
-      getClaim,
-      getClaims,
+      insertClaim: Effect.fn("ClaimRepository.insertClaim")((claim: ClaimInsertRow) =>
+        normalizeQueryError(insertClaim(claim))
+      ),
+      getClaim: Effect.fn("ClaimRepository.getClaim")((id: PersistedClaimId, ontologyId: string) =>
+        normalizeQueryError(getClaim(id, ontologyId))
+      ),
+      getClaims: Effect.fn("ClaimRepository.getClaims")((filter: ClaimFilter) =>
+        normalizeQueryError(getClaims(filter))
+      ),
 
       // Queries
-      getClaimsByArticle,
-      getClaimsBySubject,
-      getPreferredClaims,
-      getClaimHistory,
+      getClaimsByArticle: Effect.fn("ClaimRepository.getClaimsByArticle")((articleId: ArticleId, ontologyId: string) =>
+        normalizeQueryError(getClaimsByArticle(articleId, ontologyId))
+      ),
+      getClaimsBySubject: Effect.fn("ClaimRepository.getClaimsBySubject")((subjectIri: string, ontologyId: string) =>
+        normalizeQueryError(getClaimsBySubject(subjectIri, ontologyId))
+      ),
+      getPreferredClaims: Effect.fn("ClaimRepository.getPreferredClaims")(
+        (subjectIri: string, predicateIri: string, ontologyId: string) =>
+          normalizeQueryError(getPreferredClaims(subjectIri, predicateIri, ontologyId))
+      ),
+      getClaimHistory: Effect.fn("ClaimRepository.getClaimHistory")(
+        (subjectIri: string, predicateIri: string, ontologyId: string) =>
+          normalizeQueryError(getClaimHistory(subjectIri, predicateIri, ontologyId))
+      ),
 
       // Deprecation & Corrections
-      deprecateClaim,
-      promoteToPreferred,
-      insertCorrection,
-      getCorrection,
-      linkClaimsToCorrection,
-      getCorrectionChain,
+      deprecateClaim: Effect.fn("ClaimRepository.deprecateClaim")(
+        (claimId: PersistedClaimId, correctionId: PersistedCorrectionId, ontologyId: string) =>
+          normalizeQueryError(deprecateClaim(claimId, correctionId, ontologyId))
+      ),
+      promoteToPreferred: Effect.fn("ClaimRepository.promoteToPreferred")(
+        (claimId: PersistedClaimId, ontologyId: string) => normalizeQueryError(promoteToPreferred(claimId, ontologyId))
+      ),
+      insertCorrection: Effect.fn("ClaimRepository.insertCorrection")((correction: CorrectionInsertRow) =>
+        normalizeQueryError(insertCorrection(correction))
+      ),
+      getCorrection: Effect.fn("ClaimRepository.getCorrection")((id: PersistedCorrectionId) =>
+        normalizeQueryError(getCorrection(id))
+      ),
+      linkClaimsToCorrection: Effect.fn("ClaimRepository.linkClaimsToCorrection")(
+        (correctionId: PersistedCorrectionId, originalClaimId: PersistedClaimId, newClaimId?: PersistedClaimId) =>
+          normalizeQueryError(linkClaimsToCorrection(correctionId, originalClaimId, newClaimId))
+      ),
+      getCorrectionChain: Effect.fn("ClaimRepository.getCorrectionChain")((claimId: PersistedClaimId) =>
+        normalizeQueryError(getCorrectionChain(claimId))
+      ),
 
       // Conflict Detection
-      findConflictingClaims,
+      findConflictingClaims: Effect.fn("ClaimRepository.findConflictingClaims")((claim: ClaimInsertRow | ClaimRow) =>
+        normalizeQueryError(findConflictingClaims(claim))
+      ),
 
       // Bulk
-      insertClaimsBatch,
-      upsertClaimsBatch,
-      countClaims,
+      insertClaimsBatch: Effect.fn("ClaimRepository.insertClaimsBatch")((claimList: Array<ClaimInsertRow>) =>
+        normalizeQueryError(insertClaimsBatch(claimList))
+      ),
+      upsertClaimsBatch: Effect.fn("ClaimRepository.upsertClaimsBatch")((claimList: Array<ClaimInsertRow>) =>
+        normalizeQueryError(upsertClaimsBatch(claimList))
+      ),
+      countClaims: Effect.fn("ClaimRepository.countClaims")((filter: ClaimFilter) =>
+        normalizeQueryError(countClaims(filter))
+      ),
     };
   }),
 }) {

@@ -10,6 +10,7 @@ import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { SCHEMA_ORG_NAMESPACE } from "./Vocab/generated/SchemaOrg.terms.ts";
 
 // cspell:words ireg ucschar iprivate Ucschar Iprivate Iunreserved Isegment irelative Abempty Hier hier
 
@@ -785,6 +786,55 @@ const isRelativeIriReference = (input: string): boolean => parseRelativeIriRefer
 
 const isIriReference = (input: string): boolean => isIri(input) || isRelativeIriReference(input);
 
+const SCHEMA_ORG_CANONICAL_ORIGIN = slice(SCHEMA_ORG_NAMESPACE, 0, Str.length(SCHEMA_ORG_NAMESPACE) - 1);
+
+const nonCanonicalSchemaOrgOrigins = ["http://schema.org", "http://www.schema.org", "https://www.schema.org"] as const;
+
+const schemaOrgOriginDelimiters = ["/", "?", "#"] as const;
+
+const startsWithinOrigin = (value: string, origin: string): boolean =>
+  value === origin ||
+  pipe(
+    schemaOrgOriginDelimiters,
+    A.some((delimiter) => pipe(value, Str.startsWith(`${origin}${delimiter}`)))
+  );
+
+/**
+ * Rewrite legacy schema.org namespace spellings to the canonical
+ * `https://schema.org/` form, leaving every other IRI untouched.
+ *
+ * **Details**
+ *
+ * Schema.org treats `http://schema.org/…` and `https://schema.org/…` as the
+ * same vocabulary, but RDF IRI equality is codepoint-strict, so mixed forms
+ * silently break joins, SPARQL matches, and SHACL paths. The consumer owns
+ * canonicalization: this helper implements the lossless `http -> https`
+ * rewrite (including the stray `www.schema.org` host) at schema.org-aware
+ * boundaries. Generic IRI codecs preserve codepoint identity; other
+ * vocabularies are never scheme-rewritten.
+ *
+ * **Example** (Canonicalize a legacy schema.org IRI)
+ *
+ * ```ts
+ * import { canonicalizeSchemaOrgIri } from "@beep/rdf/Iri"
+ *
+ * console.log(canonicalizeSchemaOrgIri("http://schema.org/name")) // "https://schema.org/name"
+ * console.log(canonicalizeSchemaOrgIri("http://purl.org/dc/terms/creator")) // "http://purl.org/dc/terms/creator"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const canonicalizeSchemaOrgIri = (value: string): string =>
+  pipe(
+    nonCanonicalSchemaOrgOrigins,
+    A.findFirst((origin) => startsWithinOrigin(value, origin)),
+    O.match({
+      onNone: () => value,
+      onSome: (origin) => `${SCHEMA_ORG_CANONICAL_ORIGIN}${slice(value, Str.length(origin))}`,
+    })
+  );
+
 const makeTrimmedSyntaxChecks = (
   identifier: string,
   title: string,
@@ -886,20 +936,20 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
  * @category validation
  * @since 0.0.0
  */
-export const IRIReference = S.String.check(iriReferenceChecks)
-  .annotate({
+export const IRIReference = S.String.pipe(
+  S.check(iriReferenceChecks),
+  S.annotate({
     toArbitrary: () => (fc) => fc.constantFrom(...IriReferenceArbitraryValues),
-  })
-  .pipe(
-    S.brand("IRIReference"),
-    SchemaUtils.withStatics((schema) => ({
-      equivalence: SchemaUtils.toEquivalence(schema),
-    })),
-    $I.annoteSchema("IRIReference", {
-      description: "RFC 3987 IRI reference syntax, including both absolute and relative forms.",
-    }),
-    SchemaUtils.withCodecStatics
-  );
+  }),
+  S.brand("IRIReference"),
+  SchemaUtils.withStatics((schema) => ({
+    equivalence: SchemaUtils.toEquivalence(schema),
+  })),
+  $I.annoteSchema("IRIReference", {
+    description: "RFC 3987 IRI reference syntax, including both absolute and relative forms.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * RFC 3987 `IRI-reference` syntax, including absolute and relative forms.
@@ -979,17 +1029,17 @@ export type RelativeIRIReference = typeof RelativeIRIReference.Type;
  * @category validation
  * @since 0.0.0
  */
-export const AbsoluteIRI = S.String.check(absoluteIriChecks)
-  .annotate({
+export const AbsoluteIRI = S.String.pipe(
+  S.check(absoluteIriChecks),
+  S.annotate({
     toArbitrary: () => (fc) => fc.constantFrom(...AbsoluteIriArbitraryValues),
-  })
-  .pipe(
-    S.brand("AbsoluteIRI"),
-    $I.annoteSchema("AbsoluteIRI", {
-      description: "RFC 3987 absolute IRI syntax without a fragment component.",
-    }),
-    SchemaUtils.withCodecStatics
-  );
+  }),
+  S.brand("AbsoluteIRI"),
+  $I.annoteSchema("AbsoluteIRI", {
+    description: "RFC 3987 absolute IRI syntax without a fragment component.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * RFC 3987 `absolute-IRI` syntax without a fragment component.
@@ -1024,17 +1074,19 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  * @category validation
  * @since 0.0.0
  */
-export const IRI = S.String.check(iriChecks)
-  .annotate({
+export const IRI = S.String.pipe(
+  S.check(iriChecks),
+  S.annotate({
     toArbitrary: () => (fc) => fc.constantFrom(...IriArbitraryValues),
-  })
-  .pipe(
-    S.brand("IRI"),
-    $I.annoteSchema("IRI", {
-      description: "RFC 3987 IRI syntax.",
-    }),
-    SchemaUtils.withCodecStatics
-  );
+  }),
+  S.brand("IRI"),
+  $I.annoteSchema("IRI", {
+    description: "RFC 3987 IRI syntax.",
+  }),
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withResultCodecStatics,
+  SchemaUtils.withEffectCodecStatics
+);
 
 /**
  * RFC 3987 `IRI` syntax.

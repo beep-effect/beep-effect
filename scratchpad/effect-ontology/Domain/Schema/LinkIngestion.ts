@@ -26,35 +26,67 @@ const SourceType = LiteralKit(["news", "blog", "press_release", "official", "aca
     })
   );
 
-const LinkStatus = LiteralKit(["pending", "enriched", "processed", "failed"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("pending", "enriched", "processed", "failed"),
+/**
+ * Canonical lifecycle status shared by link contracts and persistence.
+ *
+ * **Example** (Validate a processing status)
+ *
+ * ```ts
+ * import { LinkStatus } from "@effect-ontology/Domain/Schema/LinkIngestion"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(LinkStatus)("processing"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LinkStatus = LiteralKit(["pending", "enriched", "processing", "processed", "failed", "skipped"]).pipe(
+  $I.annoteSchema("LinkStatus", {
+    toArbitrary: () => (fc) => fc.constantFrom("pending", "enriched", "processing", "processed", "failed", "skipped"),
+    description: "Lifecycle statuses used when listing ingested links.",
   })
-  .annotate(
-    $I.annote("LinkStatus", {
-      description: "Lifecycle statuses used when listing ingested links.",
-    })
-  );
+);
+
+/**
+ * Decoded link lifecycle status.
+ *
+ * **Example** (Use a link lifecycle status)
+ *
+ * ```ts
+ * import type { LinkStatus } from "@effect-ontology/Domain/Schema/LinkIngestion"
+ *
+ * const status: LinkStatus = "processing"
+ * console.log(status)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LinkStatus = typeof LinkStatus.Type;
 
 /**
  * Request to ingest and optionally enrich one HTTP(S) resource.
  *
- * @remarks
- * Boolean controls have schema-owned defaults. Source classification is an
+ * **Details**
+ *
+ * * Boolean controls have schema-owned defaults. Source classification is an
  * `Option`, eliminating undefined checks from ingestion behavior.
  *
- * @example
+ * **Example** (Use IngestLinkRequest)
  * ```ts
- * import { IngestLinkRequest } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { IngestLinkRequest } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const request = IngestLinkRequest.fromUnknown({
+ * const request = S.decodeUnknownOption(IngestLinkRequest)({
  *   url: "https://example.com/article",
  *   ontologyId: "claims"
  * })
- * console.log(request.skipEnrich) // false
+ * console.log(O.map(request, (value) => value.skipEnrich))
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class IngestLinkRequest extends S.Class<IngestLinkRequest>($I`IngestLinkRequest`)(
@@ -89,26 +121,27 @@ export class IngestLinkRequest extends S.Class<IngestLinkRequest>($I`IngestLinkR
   })
 ) {
   static readonly is = S.is(IngestLinkRequest);
-  static readonly fromUnknown = S.decodeUnknownSync(IngestLinkRequest);
 }
 
 /**
  * Successful result of ingesting one link.
  *
- * @example
+ * **Example** (Use IngestLinkResponse)
  * ```ts
- * import { IngestLinkResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { IngestLinkResponse } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const response = IngestLinkResponse.fromUnknown({
+ * const response = S.decodeUnknownOption(IngestLinkResponse)({
  *   id: "link-42",
  *   contentHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   storageUri: "gs://beep-ontology-state/links/link-42.json",
  *   duplicate: false
  * })
- * console.log(response.duplicate) // false
+ * console.log(O.map(response, (value) => value.duplicate))
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLinkResponse`)(
@@ -143,26 +176,27 @@ export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLin
   })
 ) {
   static readonly is = S.is(IngestLinkResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(IngestLinkResponse);
 }
 
 /**
  * Request to ingest a non-empty batch of HTTP(S) resources.
  *
- * @example
+ * **Example** (Use BatchIngestRequest)
  * ```ts
- * import { BatchIngestRequest } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { BatchIngestRequest } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const request = BatchIngestRequest.fromUnknown({
+ * const request = S.decodeUnknownOption(BatchIngestRequest)({
  *   urls: ["https://example.com/a"],
  *   ontologyId: "claims"
  * })
- * console.log(request.concurrency) // 5
+ * console.log(O.map(request, (value) => value.concurrency))
  * ```
  *
  * @invariant At least one valid HTTP(S) URL is present and concurrency is a
  * positive integer.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class BatchIngestRequest extends S.Class<BatchIngestRequest>($I`BatchIngestRequest`)(
@@ -197,7 +231,6 @@ export class BatchIngestRequest extends S.Class<BatchIngestRequest>($I`BatchInge
   })
 ) {
   static readonly is = S.is(BatchIngestRequest);
-  static readonly fromUnknown = S.decodeUnknownSync(BatchIngestRequest);
 }
 
 const BatchIngestResultDefinition = S.TaggedUnion({
@@ -244,26 +277,28 @@ const BatchIngestResultDefinition = S.TaggedUnion({
 /**
  * Per-link batch outcome discriminated by status.
  *
- * @remarks
- * Success and duplicate outcomes nest their identifiers under `value`; error
+ * **Details**
+ *
+ * * Success and duplicate outcomes nest their identifiers under `value`; error
  * outcomes carry a mandatory diagnostic. Impossible combinations of nullable
  * identifiers and errors are therefore unrepresentable.
  *
- * @example
+ * **Example** (Use BatchIngestResult)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const result = S.decodeUnknownSync(BatchIngestResult)({
+ * const result = S.decodeUnknownOption(BatchIngestResult)({
  *   _tag: "error",
  *   url: "https://example.com/missing",
  *   error: "Resource was not found."
  * })
- * console.log(result._tag) // "error"
+ * console.log(O.map(result, (value) => value._tag)) // "error"
  * ```
  *
  * @invariant The `_tag` discriminator determines the complete payload shape.
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
 export const BatchIngestResult = BatchIngestResultDefinition.pipe(
@@ -276,9 +311,9 @@ export const BatchIngestResult = BatchIngestResultDefinition.pipe(
 /**
  * Runtime value decoded by {@link BatchIngestResult}.
  *
- * @example
+ * **Example** (Use BatchIngestResult)
  * ```ts
- * import type { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import type { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion"
  *
  * const readStatus = (result: BatchIngestResult) => result._tag
  * console.log(readStatus)
@@ -322,7 +357,7 @@ const summarizeBatchResults = (results: ReadonlyArray<BatchIngestResult>): Batch
   });
 };
 
-const BatchIngestResponseFields = S.Struct({
+const BatchIngestResponseDefinition = S.Struct({
   results: S.Array(BatchIngestResult).pipe(
     SchemaUtils.withEmptyArrayDefaults<BatchIngestResult>(),
     S.annotateKey({
@@ -332,25 +367,13 @@ const BatchIngestResponseFields = S.Struct({
   summary: BatchIngestSummary.annotateKey({
     description: "Counts that must exactly summarize the result collection.",
   }),
-});
-
-const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
+}).check(
   S.makeFilter(
     ({ results, summary }) =>
-      Match.value(summarizeBatchResults(results)).pipe(
-        Match.when(
-          (expected) =>
-            expected.total === summary.total &&
-            expected.success === summary.success &&
-            expected.duplicate === summary.duplicate &&
-            expected.error === summary.error,
-          () => undefined
-        ),
-        Match.orElse(() => ({
-          path: ["summary"],
-          issue: "Batch summary counts must exactly match the tagged result collection.",
-        }))
-      ),
+      matchBatchSummaryConsistency({
+        actual: summary,
+        expected: summarizeBatchResults(results),
+      }),
     {
       identifier: $I`BatchIngestSummaryConsistencyCheck`,
       title: "Batch Ingest Summary Consistency",
@@ -369,19 +392,39 @@ const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
   )
 );
 
+const BatchSummaryComparison = S.Struct({
+  actual: BatchIngestSummary,
+  expected: BatchIngestSummary,
+});
+
+const matchBatchSummaryConsistency = Match.type<typeof BatchSummaryComparison.Type>().pipe(
+  Match.when(
+    ({ actual, expected }) =>
+      expected.total === actual.total &&
+      expected.success === actual.success &&
+      expected.duplicate === actual.duplicate &&
+      expected.error === actual.error,
+    () => undefined
+  ),
+  Match.orElse(() => ({
+    path: ["summary"],
+    issue: "Batch summary counts must exactly match the tagged result collection.",
+  }))
+);
+
 /**
  * Batch-ingestion response with a summary proven from tagged results.
  *
- * @example
+ * **Example** (Use BatchIngestResponse)
  * ```ts
- * import { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion"
  *
  * const response = BatchIngestResponse.fromResults([])
  * console.log(response.summary.total) // 0
  * ```
  *
  * @invariant Summary counts exactly equal the result count grouped by `_tag`.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
@@ -407,9 +450,9 @@ export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
 /**
  * Runtime value decoded by {@link BatchIngestResponse}.
  *
- * @example
+ * **Example** (Use BatchIngestResponse)
  * ```ts
- * import type { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import type { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion"
  *
  * const total = (response: BatchIngestResponse) => response.summary.total
  * console.log(total)
@@ -423,16 +466,18 @@ export type BatchIngestResponse = typeof BatchIngestResponse.Type;
 /**
  * Normalized query for listing ingested links.
  *
- * @example
+ * **Example** (Use ListLinksQuery)
  * ```ts
- * import { ListLinksQuery } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ListLinksQuery } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const query = ListLinksQuery.fromUnknown({})
- * console.log(query.limit) // 20
- * console.log(query.offset) // 0
+ * const query = S.decodeUnknownOption(ListLinksQuery)({})
+ * console.log(O.map(query, (value) => value.limit))
+ * console.log(O.map(query, (value) => value.offset))
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
@@ -471,23 +516,23 @@ export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
   $I.annote("ListLinksQuery", {
     description: "Link-list query with Option-normalized filters and schema-owned pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(ListLinksQuery);
-}
+) {}
 
 /**
  * Compact projection of one ingested link.
  *
- * @example
+ * **Example** (Use LinkSummary)
  * ```ts
- * import { LinkSummary } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { LinkSummary } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const summary = LinkSummary.fromUnknown({
+ * const summary = S.decodeUnknownOption(LinkSummary)({
  *   id: "link-42",
  *   contentHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   status: "pending"
  * })
- * console.log(summary.status) // "pending"
+ * console.log(O.map(summary, (value) => value.status))
  * ```
  *
  * @category models
@@ -536,28 +581,27 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
   $I.annote("LinkSummary", {
     description: "Compact ingested-link projection with canonical content identity and normalized optional metadata.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(LinkSummary);
-}
+) {}
 
 /**
  * Paginated response listing ingested links.
  *
- * @example
+ * **Example** (Use ListLinksResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ListLinksResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import { ListLinksResponse } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const response = S.decodeUnknownSync(ListLinksResponse)({
+ * const response = S.decodeUnknownOption(ListLinksResponse)({
  *   total: 0,
  *   limit: 20,
  *   offset: 0,
  *   hasMore: false
  * })
- * console.log(response.links.length) // 0
+ * console.log(O.map(response, (value) => value.links.length)) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksResponse`)(
@@ -579,24 +623,27 @@ export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksRe
 /**
  * Detailed projection of one ingested link and its processing metadata.
  *
- * @remarks
- * All nullable source metadata decodes to `Option`; topics and entity keys
+ * **Details**
+ *
+ * * All nullable source metadata decodes to `Option`; topics and entity keys
  * always decode to readonly arrays.
  *
- * @example
+ * **Example** (Use LinkDetail)
  * ```ts
- * import { LinkDetail } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { LinkDetail } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const detail = LinkDetail.fromUnknown({
+ * const detail = S.decodeUnknownOption(LinkDetail)({
  *   id: "link-42",
  *   contentHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   storageUri: "gs://beep-ontology-state/links/link-42.json",
  *   status: "pending"
  * })
- * console.log(detail.topics.length) // 0
+ * console.log(O.map(detail, (value) => value.topics.length))
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class LinkDetail extends S.Class<LinkDetail>($I`LinkDetail`)(
@@ -626,5 +673,4 @@ export class LinkDetail extends S.Class<LinkDetail>($I`LinkDetail`)(
   })
 ) {
   static readonly is = S.is(LinkDetail);
-  static readonly fromUnknown = S.decodeUnknownSync(LinkDetail);
 }

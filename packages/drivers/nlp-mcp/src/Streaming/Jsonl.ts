@@ -13,6 +13,7 @@
 
 import { $NlpMcpId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { Effect, Order, pipe, Random, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -144,7 +145,7 @@ export class JsonlValidationResult extends S.Class<JsonlValidationResult>($I`Jso
   })
 ) {}
 
-const decodeJsonLine = S.decodeResult(S.fromJsonString(S.Unknown));
+const decodeJsonLine = Unknown.decodeResultFromJsonString;
 
 const parseLine = (line: string, lineNumber: number): Result.Result<unknown, JsonlLineError> =>
   Result.mapError(

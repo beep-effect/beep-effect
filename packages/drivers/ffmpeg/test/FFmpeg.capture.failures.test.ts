@@ -7,12 +7,12 @@ import {
   ProbeVideoRequest,
   RenderContactSheetRequest,
 } from "@beep/ffmpeg";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const provideScopedLayer =
@@ -21,7 +21,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const encoder = new TextEncoder();
-const encodeProbeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeProbeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const healthyProbeJson = encodeProbeJson({
   format: { duration: "2.0" },

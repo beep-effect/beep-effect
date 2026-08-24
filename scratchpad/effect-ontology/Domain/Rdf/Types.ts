@@ -1,6 +1,8 @@
 /**
  * Canonical RDF value types used by the effect-ontology experiment.
  *
+ * **Details**
+ *
  * Standard RDF terms remain owned by `@beep/rdf`. The only local model is
  * {@link Triple}, a graph-free adapter that converts explicitly to and from a
  * canonical RDF/JS {@link Quad}.
@@ -22,12 +24,12 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Types");
  *
  * ```ts
  * import { makeLiteral, makeNamedNode } from "@beep/rdf"
- * import { Triple } from "@effect-ontology/Rdf/Types.ts"
+ * import { Triple } from "@effect-ontology/Rdf/Types"
  *
  * const triple = Triple.make({
  *   subject: makeNamedNode("https://example.org/ada"),
  *   predicate: makeNamedNode("https://schema.org/name"),
- *   object: makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+ *   object: makeLiteral("Ada", "https://www.w3.org/2001/XMLSchema#string")
  * })
  * console.log(triple.toQuad().graph.termType) // "DefaultGraph"
  * ```
@@ -52,12 +54,12 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
    *
    * ```ts
    * import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf"
-   * import { Triple } from "@effect-ontology/Rdf/Types.ts"
+   * import { Triple } from "@effect-ontology/Rdf/Types"
    *
    * const quad = makeQuad(
    *   makeNamedNode("https://example.org/ada"),
    *   makeNamedNode("https://schema.org/name"),
-   *   makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+   *   makeLiteral("Ada", "https://www.w3.org/2001/XMLSchema#string")
    * )
    * console.log(Triple.fromQuad(quad).predicate.value)
    * ```
@@ -80,12 +82,12 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
    *
    * ```ts
    * import { makeLiteral, makeNamedNode } from "@beep/rdf"
-   * import { Triple } from "@effect-ontology/Rdf/Types.ts"
+   * import { Triple } from "@effect-ontology/Rdf/Types"
    *
    * const triple = Triple.make({
    *   subject: makeNamedNode("https://example.org/ada"),
    *   predicate: makeNamedNode("https://schema.org/name"),
-   *   object: makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+   *   object: makeLiteral("Ada", "https://www.w3.org/2001/XMLSchema#string")
    * })
    * console.log(triple.toQuad(makeNamedNode("https://example.org/people")).graph.termType)
    * ```

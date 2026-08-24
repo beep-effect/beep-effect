@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 
+import { Unknown } from "@beep/schema/Unknown";
 import { Result } from "effect";
 import * as A from "effect/Array";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as jsonc from "jsonc-parser";
 import type { SkillProvenanceReport } from "./Skills.schemas.ts";
 
-const encodeUnknownJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeUnknownJson = Unknown.encodeUnknownResultFromJsonString;
 
 /**
  * Renders the would-be `skills-lock/v2` entry of a report as stable, formatted JSON.

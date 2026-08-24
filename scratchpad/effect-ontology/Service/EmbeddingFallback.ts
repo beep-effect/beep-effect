@@ -1,39 +1,36 @@
 /**
  * Embedding Fallback Service
  *
+ * **Details**
+ *
  * Provides circuit breaker protection and automatic provider fallback.
  * When the primary provider (Voyage) fails, automatically falls back to
  * secondary provider (Nomic).
  *
- * @since 2.0.0
- * @module Service/EmbeddingFallback
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import {Effect, Layer, Option, Redacted, Ref} from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
+import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import {FetchHttpClient, HttpClient} from "effect/unstable/http";
-import type {AnyEmbeddingError} from "../Domain/Error/Embedding.ts";
-import {EmbeddingError} from "../Domain/Error/Embedding.ts";
-import {CircuitOpenError} from "../Runtime/CircuitBreaker.ts";
-import {ConfigService} from "./Config.ts";
-import type {
-  EmbeddingCircuitBreakerService,
-  EmbeddingProviderId
-} from "./EmbeddingCircuitBreaker.ts";
-import {EmbeddingCircuitBreaker} from "./EmbeddingCircuitBreaker.ts";
-import type {
-  Embedding,
-  EmbeddingProviderMethods,
-  EmbeddingRequest
-} from "./EmbeddingProvider.ts";
-import {cosineSimilarity, EmbeddingProvider} from "./EmbeddingProvider.ts";
-import {
-  EmbeddingRateLimiter,
-  EmbeddingRateLimiterVoyage
-} from "./EmbeddingRateLimiter.ts";
-import {NomicNlpService} from "./NomicNlp.ts";
-import {makeVoyageProvider} from "./VoyageEmbeddingProvider.ts";
+import * as S from "effect/Schema";
+import { FetchHttpClient, HttpClient } from "effect/unstable/http";
+import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
+import { EmbeddingError } from "../Domain/Error/Embedding.ts";
+import { CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
+import { ConfigService } from "./Config.ts";
+import type { EmbeddingCircuitBreakerService } from "./EmbeddingCircuitBreaker.ts";
+import { EmbeddingCircuitBreaker, EmbeddingProviderId } from "./EmbeddingCircuitBreaker.ts";
+import type { Embedding, EmbeddingProviderMethods, EmbeddingRequest } from "./EmbeddingProvider.ts";
+import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
+import { EmbeddingRateLimiter, EmbeddingRateLimiterVoyage } from "./EmbeddingRateLimiter.ts";
+import { NomicNlpService } from "./NomicNlp.ts";
+import { makeVoyageProvider, VoyageModel } from "./VoyageEmbeddingProvider.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingFallback");
 
 // =============================================================================
 // Types
@@ -42,27 +39,55 @@ import {makeVoyageProvider} from "./VoyageEmbeddingProvider.ts";
 /**
  * Fallback chain configuration
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Create a fallback chain)
+ *
+ * ```ts
+ * import { FallbackChainConfig } from "@effect-ontology/Service/EmbeddingFallback"
+ *
+ * console.log(FallbackChainConfig.make({ providers: ["voyage", "nomic"], logFallbacks: true }).providers.length) // 2
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface FallbackChainConfig {
-  /** Order of providers to try */
-  readonly providers: ReadonlyArray<EmbeddingProviderId>;
-  /** Whether to log provider switches */
-  readonly logFallbacks: boolean;
-}
+export class FallbackChainConfig extends S.Class<FallbackChainConfig>($I`FallbackChainConfig`)(
+  {
+    providers: S.Array(EmbeddingProviderId),
+    logFallbacks: S.Boolean,
+  },
+  $I.annote("FallbackChainConfig", {
+    description: "Ordered embedding providers and fallback-switch logging policy.",
+  })
+) {}
 
 /**
  * Active provider tracking for observability
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Create active-provider state)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ActiveProviderInfo } from "@effect-ontology/Service/EmbeddingFallback"
+ *
+ * const info = ActiveProviderInfo.make({ currentProvider: "voyage", fallbackCount: 0 })
+ * console.log(O.isNone(info.lastFallbackReason)) // true
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface ActiveProviderInfo {
-  readonly currentProvider: EmbeddingProviderId;
-  readonly fallbackCount: number;
-  readonly lastFallbackReason: string | null;
-}
+export class ActiveProviderInfo extends S.Class<ActiveProviderInfo>($I`ActiveProviderInfo`)(
+  {
+    currentProvider: EmbeddingProviderId,
+    fallbackCount: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Fallback count must be non-negative." })),
+    lastFallbackReason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("ActiveProviderInfo", {
+    description: "Current embedding provider, fallback count, and optional last fallback reason.",
+  })
+) {}
 
 // =============================================================================
 // Default Configuration
@@ -71,13 +96,21 @@ export interface ActiveProviderInfo {
 /**
  * Default fallback chain: Voyage -> Nomic
  *
- * @since 2.0.0
- * @category Constants
+ * **Example** (Inspect default fallback chain)
+ *
+ * ```ts
+ * import { DEFAULT_FALLBACK_CHAIN } from "@effect-ontology/Service/EmbeddingFallback"
+ *
+ * console.log(DEFAULT_FALLBACK_CHAIN)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
-export const DEFAULT_FALLBACK_CHAIN: FallbackChainConfig = {
+export const DEFAULT_FALLBACK_CHAIN = FallbackChainConfig.make({
   providers: ["voyage", "nomic"],
   logFallbacks: true,
-};
+});
 
 // =============================================================================
 // Service
@@ -113,14 +146,24 @@ const makeProtectedProvider = (
 /**
  * Create fallback embedding provider layer
  *
+ * **Details**
+ *
  * Wraps providers with circuit breaker protection and fallback logic.
  *
- * @since 2.0.0
- * @category Layers
+ * **Example** (Inspect embedding provider fallback live)
+ *
+ * ```ts
+ * import { EmbeddingProviderFallbackLive } from "@effect-ontology/Service/EmbeddingFallback"
+ *
+ * console.log(EmbeddingProviderFallbackLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingProviderFallbackLive: Layer.Layer<
   EmbeddingProvider,
-  never,
+  AnyEmbeddingError,
   ConfigService | EmbeddingCircuitBreaker | EmbeddingRateLimiter | HttpClient.HttpClient | NomicNlpService
 > = Layer.effect(
   EmbeddingProvider,
@@ -132,24 +175,34 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
     const nomicNlp = yield* NomicNlpService;
 
     // Track which provider is currently active
-    const activeProviderRef = yield* Ref.make<ActiveProviderInfo>({
-      currentProvider: "voyage",
-      fallbackCount: 0,
-      lastFallbackReason: null,
-    });
+    const activeProviderRef = yield* Ref.make(
+      ActiveProviderInfo.make({
+        currentProvider: "voyage",
+        fallbackCount: 0,
+      })
+    );
 
     // Create Voyage provider if API key is configured
-    const voyageApiKeyStr = Option.map(config.embedding.voyageApiKey, Redacted.value).pipe(Option.getOrNull);
-
-    const voyageProvider: EmbeddingProviderMethods | null = P.isNotNull(voyageApiKeyStr)
-      ? yield* makeVoyageProvider({
-        apiKey: voyageApiKeyStr,
-        model: config.embedding.voyageModel ?? "voyage-3.5-lite",
-        timeoutMs: config.embedding.timeoutMs ?? 30_000,
-      }).pipe(
-        Effect.provideService(HttpClient.HttpClient, httpClient),
-        Effect.provideService(EmbeddingRateLimiter, rateLimiter)
+    const voyageApiKey = O.getOrNull(config.embedding.voyageApiKey);
+    const voyageModel = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
+      Effect.mapError((cause) =>
+        EmbeddingError.make({
+          message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,
+          provider: "voyage",
+          cause: O.some(cause),
+        })
       )
+    );
+
+    const voyageProvider: EmbeddingProviderMethods | null = P.isNotNull(voyageApiKey)
+      ? yield* makeVoyageProvider({
+          apiKey: voyageApiKey,
+          model: voyageModel,
+          timeout: config.embedding.timeout,
+        }).pipe(
+          Effect.provideService(HttpClient.HttpClient, httpClient),
+          Effect.provideService(EmbeddingRateLimiter, rateLimiter)
+        )
       : null;
 
     // Create Nomic provider (wraps NomicNlpService)
@@ -172,7 +225,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
                 })
               )
             ),
-          {concurrency: 1}
+          { concurrency: 1 }
         ),
       cosineSimilarity,
     };
@@ -209,15 +262,19 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
           const reason = getErrorReason(primaryError);
 
           // Log fallback and update tracking
-          return Ref.update(activeProviderRef, (info) => ({
-            currentProvider: "nomic" as const,
-            fallbackCount: info.fallbackCount + 1,
-            lastFallbackReason: reason,
-          })).pipe(
+          return Ref.update(
+            activeProviderRef,
+            (info): ActiveProviderInfo =>
+              ActiveProviderInfo.make({
+                currentProvider: "nomic",
+                fallbackCount: info.fallbackCount + 1,
+                lastFallbackReason: O.some(reason),
+              })
+          ).pipe(
             Effect.tap(() =>
               Effect.logWarning(
                 `Embedding provider fallback triggered: ${primaryProvider.metadata.providerId} -> nomic`,
-                {reason, requestCount: requests.length}
+                { reason, requestCount: requests.length }
               )
             ),
             Effect.flatMap(() =>
@@ -251,14 +308,27 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
 /**
  * Complete fallback provider with all dependencies
  *
+ * **Details**
+ *
  * Includes HTTP client, Nomic NLP, circuit breaker, and rate limiter.
  *
- * @since 2.0.0
- * @category Layers
+ * **Example** (Inspect embedding provider fallback default)
+ *
+ * ```ts
+ * import { EmbeddingProviderFallbackDefault } from "@effect-ontology/Service/EmbeddingFallback"
+ *
+ * console.log(EmbeddingProviderFallbackDefault)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
-export const EmbeddingProviderFallbackDefault: Layer.Layer<EmbeddingProvider, never, ConfigService | NomicNlpService> =
-  EmbeddingProviderFallbackLive.pipe(
-    Layer.provide(EmbeddingCircuitBreaker.Default),
-    Layer.provide(EmbeddingRateLimiterVoyage),
-    Layer.provide(FetchHttpClient.layer)
-  );
+export const EmbeddingProviderFallbackDefault: Layer.Layer<
+  EmbeddingProvider,
+  AnyEmbeddingError,
+  ConfigService | NomicNlpService
+> = EmbeddingProviderFallbackLive.pipe(
+  Layer.provide(EmbeddingCircuitBreaker.Default),
+  Layer.provide(EmbeddingRateLimiterVoyage),
+  Layer.provide(FetchHttpClient.layer)
+);

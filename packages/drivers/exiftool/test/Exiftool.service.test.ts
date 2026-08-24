@@ -7,12 +7,12 @@ import {
   WriteTagsRequest,
   WriteXmpPacketRequest,
 } from "@beep/exiftool";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const provideScopedLayer =
@@ -23,7 +23,7 @@ const provideScopedLayer =
 const encoder = new TextEncoder();
 
 // TODO(effect-native-migration): model schema
-const exiftoolJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown))([
+const exiftoolJson = Unknown.encodeUnknownSyncFromJsonString([
   {
     SourceFile: "frame.png",
     "System:FileName": "frame.png",

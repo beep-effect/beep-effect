@@ -1,8 +1,9 @@
 /**
  * Public effect-ontology domain models.
  *
- * @remarks
- * Unlike the incomplete upstream barrel, this experiment exposes every ported
+ * **Details**
+ *
+ * * Unlike the incomplete upstream barrel, this experiment exposes every ported
  * model module. Canonical foundation concepts still resolve to their
  * `@beep/*` owners inside those modules.
  *
@@ -12,9 +13,9 @@
 /**
  * Agent identities, configuration, pipeline state, and lifecycle events.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { AgentId } from "@effect-ontology/Model/index.ts"
+ * import { AgentId } from "@effect-ontology/Model/index"
  * console.log(AgentId.is("validator")) // true
  * ```
  *
@@ -25,9 +26,9 @@ export * from "./Agent.ts";
 /**
  * Batch-ingestion states and transition policy.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { BatchState } from "@effect-ontology/Model/index.ts"
+ * import { BatchState } from "@effect-ontology/Model/index"
  * console.log(BatchState.isValidTransition("Pending", "Preprocessing")) // true
  * ```
  *
@@ -38,12 +39,12 @@ export * from "./BatchWorkflow.ts";
 /**
  * Core tracked entities, mentions, participants, and events.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { CoreClass } from "@effect-ontology/Model/index.ts"
+ * import { CoreClass } from "@effect-ontology/Model/index"
  * console.log(
- *   CoreClass.is["http://effect-ontology.dev/core#TrackedEntity"](
- *     "http://effect-ontology.dev/core#TrackedEntity"
+ *   CoreClass.is["https://effect-ontology.dev/core#TrackedEntity"](
+ *     "https://effect-ontology.dev/core#TrackedEntity"
  *   )
  * ) // true
  * ```
@@ -55,9 +56,9 @@ export * from "./CoreOntology.ts";
 /**
  * Extracted document content enriched with source metadata.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { SourceType } from "@effect-ontology/Model/index.ts"
+ * import { SourceType } from "@effect-ontology/Model/index"
  * console.log(SourceType.is.news("news")) // true
  * ```
  *
@@ -68,9 +69,9 @@ export * from "./EnrichedContent.ts";
 /**
  * Ontology-typed entities, relations, evidence, and knowledge graphs.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { RelationObject } from "@effect-ontology/Model/index.ts"
+ * import { RelationObject } from "@effect-ontology/Model/index"
  * console.log(RelationObject.cases.Text.make({ value: "Alice" }))
  * ```
  *
@@ -81,9 +82,9 @@ export * from "./Entity.ts";
 /**
  * Mention resolution nodes, edges, and complete default policy.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { EntityResolutionConfig } from "@effect-ontology/Model/index.ts"
+ * import { EntityResolutionConfig } from "@effect-ontology/Model/index"
  * console.log(EntityResolutionConfig.default().similarityThreshold)
  * ```
  *
@@ -94,9 +95,9 @@ export * from "./EntityResolution.ts";
 /**
  * Entity clusters, similarity edges, graph lookup, and resolution statistics.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { EntityResolutionGraph } from "@effect-ontology/Model/index.ts"
+ * import { EntityResolutionGraph } from "@effect-ontology/Model/index"
  * console.log(EntityResolutionGraph)
  * ```
  *
@@ -107,9 +108,9 @@ export * from "./EntityResolutionGraph.ts";
 /**
  * Extraction run status, configuration, audit, output, and statistics.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { ExtractionRun } from "@effect-ontology/Model/index.ts"
+ * import { ExtractionRun } from "@effect-ontology/Model/index"
  * console.log(ExtractionRun.chunkId)
  * ```
  *
@@ -118,11 +119,24 @@ export * from "./EntityResolutionGraph.ts";
  */
 export * from "./ExtractionRun.ts";
 /**
+ * Extraction workflow telemetry and successful outcome values.
+ *
+ * **Example** (Inspect extraction telemetry)
+ * ```ts
+ * import { ExtractionTelemetry } from "@effect-ontology/Model/index"
+ * console.log(ExtractionTelemetry)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./ExtractionTelemetry.ts";
+/**
  * Validated image candidates, assets, references, and manifests.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { ImageAsset } from "@effect-ontology/Model/index.ts"
+ * import { ImageAsset } from "@effect-ontology/Model/index"
  * console.log(ImageAsset)
  * ```
  *
@@ -133,10 +147,13 @@ export * from "./Image.ts";
 /**
  * Versioned ontology definitions, references, context, and hierarchy behavior.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { OntologyContext } from "@effect-ontology/Model/index.ts"
- * console.log(OntologyContext.fromUnknown({}).classes.length) // 0
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologyContext } from "@effect-ontology/Model/index"
+ * const context = S.decodeUnknownOption(OntologyContext)({})
+ * console.log(O.map(context, (value) => value.classes.length)) // Some(0)
  * ```
  *
  * @category models
@@ -146,9 +163,9 @@ export * from "./Ontology.ts";
 /**
  * Ontology-agent extraction, validation, query, and reasoning contracts.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { OntologyAgentConfig } from "@effect-ontology/Model/index.ts"
+ * import { OntologyAgentConfig } from "@effect-ontology/Model/index"
  * console.log(OntologyAgentConfig.default().concurrency) // 4
  * ```
  *
@@ -159,9 +176,9 @@ export * from "./OntologyAgent.ts";
 /**
  * Ontology element embeddings and dimension-consistent artifacts.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { OntologyEmbeddings } from "@effect-ontology/Model/index.ts"
+ * import { OntologyEmbeddings } from "@effect-ontology/Model/index"
  * console.log(OntologyEmbeddings.computeVersion)
  * ```
  *
@@ -172,9 +189,9 @@ export * from "./OntologyEmbeddings.ts";
 /**
  * Closed output artifact types, filenames, and metadata lookup.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { OutputType } from "@effect-ontology/Model/index.ts"
+ * import { OutputType } from "@effect-ontology/Model/index"
  * console.log(OutputType.filename("rdf-jsonld")) // "graph.jsonld"
  * ```
  *
@@ -185,9 +202,9 @@ export * from "./OutputType.ts";
 /**
  * Shared confidence, attribute, IRI, URL, and entity-identity schemas.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { Confidence } from "@effect-ontology/Model/index.ts"
+ * import { Confidence } from "@effect-ontology/Model/index"
  * console.log(Confidence.is(0.8)) // true
  * ```
  *

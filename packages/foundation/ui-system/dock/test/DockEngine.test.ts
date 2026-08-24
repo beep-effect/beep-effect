@@ -27,6 +27,7 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -145,7 +146,7 @@ describe("DockEngine", () => {
       "rejects snapshots with an unsupported version",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const wrongVersion = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+        const wrongVersion = yield* Unknown.encodeEffectFromJsonString({
           version: 2,
           workspace: DockWorkspace.empty,
         });

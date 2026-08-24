@@ -1,8 +1,9 @@
 /**
  * Schema-backed image fetching and validation failures.
  *
- * @remarks
- * URLs use the repository's canonical `URLStr`, byte counts and durations are
+ * **Details**
+ *
+ * * URLs use the repository's canonical `URLStr`, byte counts and durations are
  * non-negative integers, and safe messages default at schema construction.
  *
  * @packageDocumentation
@@ -10,37 +11,33 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
-import * as Duration from "effect/Duration";
+import { Duration } from "effect";
 import * as S from "effect/Schema";
-import {
-  ErrorMessage,
-  Milliseconds,
-  makeOntologyErrorClass,
-  OptionalErrorCause,
-  OptionalHttpStatusCode,
-} from "./Base.ts";
+import { ErrorMessage, Milliseconds, OptionalErrorCause, OptionalHttpStatusCode } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Image");
 
 /**
  * Failure to download an image from a URL.
  *
- * @example
+ * **Example** (Use ImageFetchError)
  * ```ts
- * import { ImageFetchError } from "@effect-ontology/Error/Image.ts"
+ * import { ImageFetchError } from "@effect-ontology/Error/Image"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ImageFetchError.fromUnknown({
+ * const error = S.decodeUnknownOption(ImageFetchError)({
+ *   _tag: "ImageFetchError",
  *   message: "Image request failed.",
  *   url: "https://example.com/image.png"
  * })
- * console.log(error.url)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const ImageFetchError = makeOntologyErrorClass.make(
-  $I`ImageFetchError`,
+export class ImageFetchError extends S.TaggedError<ImageFetchError>($I`ImageFetchError`)(
   "ImageFetchError",
   {
     message: ErrorMessage.annotateKey({
@@ -59,18 +56,7 @@ export const ImageFetchError = makeOntologyErrorClass.make(
   $I.annote("ImageFetchError", {
     description: "Failure to download an image because of transport or HTTP response errors.",
   })
-);
-
-/** Runtime value decoded by {@link ImageFetchError}.
- * @example
- * ```ts
- * import { ImageFetchError, type ImageFetchError as Failure } from "@effect-ontology/Error/Image.ts"
- * const error: Failure = ImageFetchError.fromUnknown({ message: "Failed.", url: "https://example.com/a.png" })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type ImageFetchError = typeof ImageFetchError.Type;
+) {}
 
 const ImageTimeoutErrorFields = {
   url: URLStr.annotateKey({
@@ -86,7 +72,7 @@ const ImageTimeoutErrorFields = {
 
 const makeImageTimeoutError = (
   input: S.Schema.Type<S.TaggedStruct<"ImageTimeoutError", typeof ImageTimeoutErrorFields>>
-): ImageTimeoutError => ImageTimeoutError.make(input as never);
+): ImageTimeoutError => ImageTimeoutError.make(input);
 
 const ImageTimeoutErrorBase = S.TaggedError<ImageTimeoutError>($I`ImageTimeoutError`)(
   "ImageTimeoutError",
@@ -107,16 +93,20 @@ const ImageTimeoutErrorBase = S.TaggedError<ImageTimeoutError>($I`ImageTimeoutEr
 /**
  * Image download that exceeded its configured deadline.
  *
- * @example
+ * **Example** (Use ImageTimeoutError)
  * ```ts
+ * import { URLStr } from "@beep/schema"
+ * import { Milliseconds } from "@effect-ontology/Error/Base"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageTimeoutError } from "@effect-ontology/Error/Image.ts"
+ * import { ImageTimeoutError } from "@effect-ontology/Error/Image"
  *
- * const error = S.decodeUnknownSync(ImageTimeoutError)({
- *   url: "https://example.com/image.png",
- *   timeoutMs: 5_000
+ * const error = S.decodeUnknownOption(ImageTimeoutError)({
+ *   _tag: "ImageTimeoutError",
+ *   url: URLStr.make("https://example.com/image.png"),
+ *   timeoutMs: Milliseconds.make(5_000)
  * })
- * console.log(error.timeout)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
@@ -126,14 +116,15 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
   /**
    * Configured deadline represented as an Effect `Duration`.
    *
-   * @example
+   * **Example** (Use ImageTooLargeError)
    * ```ts
-   * import * as S from "effect/Schema"
-   * import { ImageTimeoutError } from "@effect-ontology/Error/Image.ts"
+   * import { URLStr } from "@beep/schema"
+   * import { Milliseconds } from "@effect-ontology/Error/Base"
+   * import { ImageTimeoutError } from "@effect-ontology/Error/Image"
    *
-   * const timeout = S.decodeUnknownSync(ImageTimeoutError)({
-   *   url: "https://example.com/image.png",
-   *   timeoutMs: 250
+   * const timeout = ImageTimeoutError.make({
+   *   url: URLStr.make("https://example.com/image.png"),
+   *   timeoutMs: Milliseconds.make(250)
    * }).timeout
    * console.log(timeout)
    * ```
@@ -152,24 +143,26 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
 /**
  * Downloaded image whose size exceeds the configured maximum.
  *
- * @example
+ * **Example** (Use ImageTooLargeError)
  * ```ts
- * import { ImageTooLargeError } from "@effect-ontology/Error/Image.ts"
+ * import { ImageTooLargeError } from "@effect-ontology/Error/Image"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ImageTooLargeError.fromUnknown({
+ * const error = S.decodeUnknownOption(ImageTooLargeError)({
+ *   _tag: "ImageTooLargeError",
  *   url: "https://example.com/image.png",
  *   sizeBytes: 2_000,
  *   maxBytes: 1_000
  * })
- * console.log(error.message)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @invariant Byte counts are finite non-negative integers.
  * @category errors
  * @since 0.0.0
  */
-export const ImageTooLargeError = makeOntologyErrorClass.make(
-  $I`ImageTooLargeError`,
+export class ImageTooLargeError extends S.TaggedError<ImageTooLargeError>($I`ImageTooLargeError`)(
   "ImageTooLargeError",
   {
     url: URLStr.annotateKey({
@@ -188,40 +181,33 @@ export const ImageTooLargeError = makeOntologyErrorClass.make(
   $I.annote("ImageTooLargeError", {
     description: "Downloaded image whose size exceeds the configured maximum.",
   })
-);
-
-/** Runtime value decoded by {@link ImageTooLargeError}.
- * @example
- * ```ts
- * import { ImageTooLargeError, type ImageTooLargeError as Failure } from "@effect-ontology/Error/Image.ts"
- * const error: Failure = ImageTooLargeError.fromUnknown({ url: "https://example.com/a", sizeBytes: 2, maxBytes: 1 })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type ImageTooLargeError = typeof ImageTooLargeError.Type;
+) {
+  static readonly is = S.is(this);
+}
 
 /**
  * Image response with an unsupported media type.
  *
- * @example
+ * **Example** (Use ImageInvalidTypeError)
  * ```ts
- * import { ImageInvalidTypeError } from "@effect-ontology/Error/Image.ts"
+ * import { ImageInvalidTypeError } from "@effect-ontology/Error/Image"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ImageInvalidTypeError.fromUnknown({
+ * const error = S.decodeUnknownOption(ImageInvalidTypeError)({
+ *   _tag: "ImageInvalidTypeError",
  *   url: "https://example.com/image.svg",
  *   contentType: "image/svg+xml",
  *   allowedTypes: ["image/png", "image/jpeg"]
  * })
- * console.log(error.message)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @invariant `allowedTypes` contains at least one non-empty media type.
  * @category errors
  * @since 0.0.0
  */
-export const ImageInvalidTypeError = makeOntologyErrorClass.make(
-  $I`ImageInvalidTypeError`,
+export class ImageInvalidTypeError extends S.TaggedError<ImageInvalidTypeError>($I`ImageInvalidTypeError`)(
   "ImageInvalidTypeError",
   {
     url: URLStr.annotateKey({
@@ -240,22 +226,7 @@ export const ImageInvalidTypeError = makeOntologyErrorClass.make(
   $I.annote("ImageInvalidTypeError", {
     description: "Image response with a media type outside the accepted set.",
   })
-);
-
-/** Runtime value decoded by {@link ImageInvalidTypeError}.
- * @example
- * ```ts
- * import { ImageInvalidTypeError, type ImageInvalidTypeError as Failure } from "@effect-ontology/Error/Image.ts"
- * const error: Failure = ImageInvalidTypeError.fromUnknown({
- *   url: "https://example.com/a",
- *   contentType: "text/plain",
- *   allowedTypes: ["image/png"]
- * })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type ImageInvalidTypeError = typeof ImageInvalidTypeError.Type;
+) {}
 
 const ImageErrorDefinition = S.Union([
   ImageFetchError,
@@ -267,14 +238,18 @@ const ImageErrorDefinition = S.Union([
 /**
  * Exhaustive tagged union of image-operation failures.
  *
- * @example
+ * **Example** (Use ImageError)
  * ```ts
+ * import { URLStr } from "@beep/schema"
+ * import { Milliseconds } from "@effect-ontology/Error/Base"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageError, ImageTimeoutError } from "@effect-ontology/Error/Image.ts"
+ * import { ImageError, ImageTimeoutError } from "@effect-ontology/Error/Image"
  *
- * const error = S.decodeUnknownSync(ImageTimeoutError)({
- *   url: "https://example.com/a",
- *   timeoutMs: 10
+ * const error = S.decodeUnknownOption(ImageTimeoutError)({
+ *   _tag: "ImageTimeoutError",
+ *   url: URLStr.make("https://example.com/a"),
+ *   timeoutMs: Milliseconds.make(10)
  * })
  * console.log(ImageError.guards.ImageTimeoutError(error)) // true
  * ```
@@ -292,14 +267,15 @@ export const ImageError = ImageErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link ImageError}.
  *
- * @example
+ * **Example** (Use ImageError)
  * ```ts
- * import * as S from "effect/Schema"
- * import { ImageTimeoutError, type ImageError } from "@effect-ontology/Error/Image.ts"
+ * import { URLStr } from "@beep/schema"
+ * import { Milliseconds } from "@effect-ontology/Error/Base"
+ * import { ImageTimeoutError, type ImageError } from "@effect-ontology/Error/Image"
  *
- * const error: ImageError = S.decodeUnknownSync(ImageTimeoutError)({
- *   url: "https://example.com/a",
- *   timeoutMs: 10
+ * const error: ImageError = ImageTimeoutError.make({
+ *   url: URLStr.make("https://example.com/a"),
+ *   timeoutMs: Milliseconds.make(10)
  * })
  * console.log(error._tag)
  * ```

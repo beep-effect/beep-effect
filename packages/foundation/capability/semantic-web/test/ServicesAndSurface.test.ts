@@ -17,6 +17,7 @@ import {
   ShaclPropertyShape,
   ShaclSeverity,
   ShaclValidationRequest,
+  ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import {
   SparqlQueryRequest,
@@ -28,17 +29,10 @@ import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { FastCheck as fc } from "effect/testing";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const decodeUnknownSync = <Schema extends S.ConstraintDecoder<unknown, never>>(schema: Schema) =>
-  S.decodeUnknownSync(schema);
 
 const dataset = makeDataset([
   makeQuad(
@@ -67,11 +61,7 @@ const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetReque
   })
 );
 
-const runCanonicalization = <A, E>(effect: Effect.Effect<A, E, CanonicalizationService>) =>
-  Effect.runPromise(effect.pipe(provideScopedLayer(CanonicalizationServiceLive), Effect.orDie));
-
-const runSparql = <A, E>(effect: Effect.Effect<A, E, SparqlQueryService>) =>
-  Effect.runPromise(effect.pipe(provideScopedLayer(UnsupportedSparqlQueryServiceLive), Effect.orDie));
+const ServiceTestLayer = Layer.merge(CanonicalizationServiceLive, UnsupportedSparqlQueryServiceLive);
 
 describe("Services and Surface", () => {
   it("publishes a canonical arbitrary for SHACL severity", () => {
@@ -79,6 +69,17 @@ describe("Services and Surface", () => {
     expect(fc.sample(S.toArbitrary(ShaclSeverity)(fc), { numRuns: 20, seed: 0x5eed }).every(S.is(ShaclSeverity))).toBe(
       true
     );
+  });
+
+  it("models validation findings as a severity tagged union", () => {
+    const finding = ShaclValidationViolation.cases.warning.make({
+      focusNode: "https://example.com/people/alice",
+      message: "A name is recommended.",
+      path: makeNamedNode("https://schema.org/name"),
+    });
+
+    expect(ShaclValidationViolation.guards.warning(finding)).toBe(true);
+    expect(ShaclValidationViolation.guards.violation(finding)).toBe(false);
   });
 
   it("keeps the package root surface curated to the service contracts", () => {
@@ -137,28 +138,25 @@ describe("Services and Surface", () => {
           CanonicalizeDatasetRequestArbitrary,
           FingerprintDatasetRequestArbitrary,
           (generatedDataset, canonicalizeRequest, fingerprintRequest) => {
-            const encodedDataset = Effect.runSync(S.encodeEffect(Dataset)(generatedDataset));
-            const decodedDataset = Effect.runSync(S.decodeEffect(Dataset)(encodedDataset));
-            const reencodedDataset = Effect.runSync(S.encodeEffect(Dataset)(decodedDataset));
-
-            const encodedCanonicalizeRequest = Effect.runSync(
-              S.encodeEffect(CanonicalizeDatasetRequest)(canonicalizeRequest)
-            );
-            const decodedCanonicalizeRequest = Effect.runSync(
-              S.decodeEffect(CanonicalizeDatasetRequest)(encodedCanonicalizeRequest)
-            );
-            const reencodedCanonicalizeRequest = Effect.runSync(
-              S.encodeEffect(CanonicalizeDatasetRequest)(decodedCanonicalizeRequest)
+            const encodedDataset = S.encodeResult(Dataset)(generatedDataset);
+            const reencodedDataset = pipe(
+              encodedDataset,
+              Result.flatMap(S.decodeResult(Dataset)),
+              Result.flatMap(S.encodeResult(Dataset))
             );
 
-            const encodedFingerprintRequest = Effect.runSync(
-              S.encodeEffect(FingerprintDatasetRequest)(fingerprintRequest)
+            const encodedCanonicalizeRequest = S.encodeResult(CanonicalizeDatasetRequest)(canonicalizeRequest);
+            const reencodedCanonicalizeRequest = pipe(
+              encodedCanonicalizeRequest,
+              Result.flatMap(S.decodeResult(CanonicalizeDatasetRequest)),
+              Result.flatMap(S.encodeResult(CanonicalizeDatasetRequest))
             );
-            const decodedFingerprintRequest = Effect.runSync(
-              S.decodeEffect(FingerprintDatasetRequest)(encodedFingerprintRequest)
-            );
-            const reencodedFingerprintRequest = Effect.runSync(
-              S.encodeEffect(FingerprintDatasetRequest)(decodedFingerprintRequest)
+
+            const encodedFingerprintRequest = S.encodeResult(FingerprintDatasetRequest)(fingerprintRequest);
+            const reencodedFingerprintRequest = pipe(
+              encodedFingerprintRequest,
+              Result.flatMap(S.decodeResult(FingerprintDatasetRequest)),
+              Result.flatMap(S.encodeResult(FingerprintDatasetRequest))
             );
 
             expect(reencodedDataset).toEqual(encodedDataset);
@@ -170,188 +168,172 @@ describe("Services and Surface", () => {
       )
   );
 
-  it("keeps optional service control fields absent in encoded wire shapes when omitted", () => {
-    const emptyDataset = decodeUnknownSync(Dataset)({ quads: [] });
-    const namedNode = makeNamedNode("https://schema.org/name");
+  it.effect(
+    "keeps optional service control fields absent in encoded wire shapes when omitted",
+    Effect.fnUntraced(function* () {
+      const emptyDataset = yield* S.decodeEffect(Dataset)({ quads: [] });
+      const namedNode = makeNamedNode("https://schema.org/name");
 
-    const encodedCanonicalizeRequest = S.encodeSync(CanonicalizeDatasetRequest)(
-      CanonicalizeDatasetRequest.make({
-        algorithm: "rdfc-1.0",
-        dataset: emptyDataset,
-      })
-    );
-    const encodedFingerprintRequest = S.encodeSync(FingerprintDatasetRequest)(
-      FingerprintDatasetRequest.make({
-        algorithm: "rdfc-1.0",
-        dataset: emptyDataset,
-      })
-    );
-    const encodedPropertyShape = S.encodeSync(ShaclPropertyShape)(
-      ShaclPropertyShape.make({
-        path: namedNode,
-      })
-    );
-    const encodedNodeShape = S.encodeSync(ShaclNodeShape)(
-      ShaclNodeShape.make({
-        properties: [],
-      })
-    );
-    const encodedValidationRequest = S.encodeSync(ShaclValidationRequest)(
-      ShaclValidationRequest.make({
-        dataset: emptyDataset,
-        shapes: [],
-      })
-    );
-    const encodedSparqlRequest = S.encodeSync(SparqlQueryRequest)(
-      SparqlQueryRequest.make({
-        dataset: emptyDataset,
-        profile: "ask",
-        query: "ASK { ?s ?p ?o }",
-      })
-    );
-
-    expect(encodedCanonicalizeRequest).not.toHaveProperty("workLimit");
-    expect(encodedFingerprintRequest).not.toHaveProperty("workLimit");
-    expect(encodedPropertyShape).not.toHaveProperty("minCount");
-    expect(encodedPropertyShape).not.toHaveProperty("maxCount");
-    expect(encodedPropertyShape).not.toHaveProperty("datatype");
-    expect(encodedPropertyShape).not.toHaveProperty("class");
-    expect(encodedPropertyShape).not.toHaveProperty("hasValue");
-    expect(encodedNodeShape).not.toHaveProperty("id");
-    expect(encodedNodeShape).not.toHaveProperty("targetNode");
-    expect(encodedNodeShape).not.toHaveProperty("targetClass");
-    expect(encodedValidationRequest).not.toHaveProperty("maxResults");
-    expect(encodedValidationRequest).not.toHaveProperty("shapesDataset");
-    expect(encodedSparqlRequest).not.toHaveProperty("timeoutMs");
-  });
-
-  it.effect("canonicalizes and fingerprints datasets deterministically", () =>
-    Effect.gen(function* () {
-      const canonicalized = yield* Effect.promise(() =>
-        Promise.resolve(
-          runCanonicalization(
-            Effect.gen(function* () {
-              const service = yield* CanonicalizationService;
-              return yield* service.canonicalize(
-                decodeUnknownSync(CanonicalizeDatasetRequest)({
-                  algorithm: "rdfc-1.0",
-                  dataset: yield* S.encodeEffect(Dataset)(dataset),
-                })
-              );
-            })
-          )
-        )
+      const encodedCanonicalizeRequest = yield* S.encodeEffect(CanonicalizeDatasetRequest)(
+        CanonicalizeDatasetRequest.make({
+          algorithm: "rdfc-1.0",
+          dataset: emptyDataset,
+        })
+      );
+      const encodedFingerprintRequest = yield* S.encodeEffect(FingerprintDatasetRequest)(
+        FingerprintDatasetRequest.make({
+          algorithm: "rdfc-1.0",
+          dataset: emptyDataset,
+        })
+      );
+      const encodedPropertyShape = yield* S.encodeEffect(ShaclPropertyShape)(
+        ShaclPropertyShape.make({
+          path: namedNode,
+        })
+      );
+      const encodedNodeShape = yield* S.encodeEffect(ShaclNodeShape)(
+        ShaclNodeShape.make({
+          properties: [],
+        })
+      );
+      const encodedValidationRequest = yield* S.encodeEffect(ShaclValidationRequest)(
+        ShaclValidationRequest.make({
+          dataset: emptyDataset,
+          shapes: [],
+        })
+      );
+      const encodedSparqlRequest = yield* S.encodeEffect(SparqlQueryRequest)(
+        SparqlQueryRequest.make({
+          dataset: emptyDataset,
+          profile: "ask",
+          query: "ASK { ?s ?p ?o }",
+        })
       );
 
-      expect(pipe(canonicalized.canonicalText, Str.split("\n"))).toHaveLength(2);
-
-      const fingerprint = yield* Effect.promise(() =>
-        Promise.resolve(
-          runCanonicalization(
-            Effect.gen(function* () {
-              const service = yield* CanonicalizationService;
-              return yield* service.fingerprint(
-                decodeUnknownSync(FingerprintDatasetRequest)({
-                  algorithm: "rdfc-1.0",
-                  dataset: yield* S.encodeEffect(Dataset)(dataset),
-                })
-              );
-            })
-          )
-        )
-      );
-
-      expect(fingerprint.fingerprint).toMatch(/^[0-9a-f]{64}$/);
-      expect(fingerprint.canonicalText).toBe(canonicalized.canonicalText);
+      expect(encodedCanonicalizeRequest).not.toHaveProperty("workLimit");
+      expect(encodedFingerprintRequest).not.toHaveProperty("workLimit");
+      expect(encodedPropertyShape).not.toHaveProperty("minCount");
+      expect(encodedPropertyShape).not.toHaveProperty("maxCount");
+      expect(encodedPropertyShape).not.toHaveProperty("datatype");
+      expect(encodedPropertyShape).not.toHaveProperty("class");
+      expect(encodedPropertyShape).not.toHaveProperty("hasValue");
+      expect(encodedNodeShape).not.toHaveProperty("id");
+      expect(encodedNodeShape).not.toHaveProperty("targetNode");
+      expect(encodedNodeShape).not.toHaveProperty("targetClass");
+      expect(encodedValidationRequest).not.toHaveProperty("maxResults");
+      expect(encodedValidationRequest).not.toHaveProperty("shapesDataset");
+      expect(encodedSparqlRequest).not.toHaveProperty("timeoutMs");
     })
   );
 
-  it.effect("produces the same semantic fingerprint for isomorphic blank-node datasets", () =>
-    Effect.gen(function* () {
-      const knows = makeNamedNode("https://schema.org/knows");
-      const name = makeNamedNode("https://schema.org/name");
+  it.layer(ServiceTestLayer)("with canonical service layers", (it) => {
+    it.effect(
+      "canonicalizes and fingerprints datasets deterministically",
+      Effect.fnUntraced(function* () {
+        const service = yield* CanonicalizationService;
+        const encodedDataset = yield* S.encodeEffect(Dataset)(dataset);
+        const canonicalized = yield* service.canonicalize(
+          yield* S.decodeEffect(CanonicalizeDatasetRequest)({
+            algorithm: "rdfc-1.0",
+            dataset: encodedDataset,
+          })
+        );
 
-      const left = makeDataset([
-        makeQuad(makeBlankNode("a"), knows, makeBlankNode("b")),
-        makeQuad(makeBlankNode("a"), name, makeLiteral("Alice", XSD_STRING.value)),
-        makeQuad(makeBlankNode("b"), name, makeLiteral("Bob", XSD_STRING.value)),
-      ]);
+        expect(pipe(canonicalized.canonicalText, Str.split("\n"))).toHaveLength(2);
 
-      const right = makeDataset([
-        makeQuad(makeBlankNode("x"), knows, makeBlankNode("y")),
-        makeQuad(makeBlankNode("x"), name, makeLiteral("Alice", XSD_STRING.value)),
-        makeQuad(makeBlankNode("y"), name, makeLiteral("Bob", XSD_STRING.value)),
-      ]);
+        const fingerprint = yield* service.fingerprint(
+          yield* S.decodeEffect(FingerprintDatasetRequest)({
+            algorithm: "rdfc-1.0",
+            dataset: encodedDataset,
+          })
+        );
 
-      const [leftFingerprint, rightFingerprint] = yield* Effect.promise(() =>
-        Promise.resolve(
-          Promise.all([
-            runCanonicalization(
-              Effect.gen(function* () {
-                const service = yield* CanonicalizationService;
-                return yield* service.fingerprint(
-                  decodeUnknownSync(FingerprintDatasetRequest)({
-                    algorithm: "rdfc-1.0",
-                    dataset: yield* S.encodeEffect(Dataset)(left),
-                  })
-                );
-              })
+        expect(fingerprint.fingerprint).toMatch(/^[0-9a-f]{64}$/);
+        expect(fingerprint.canonicalText).toBe(canonicalized.canonicalText);
+      })
+    );
+
+    it.effect(
+      "produces the same semantic fingerprint for isomorphic blank-node datasets",
+      Effect.fnUntraced(function* () {
+        const service = yield* CanonicalizationService;
+        const knows = makeNamedNode("https://schema.org/knows");
+        const name = makeNamedNode("https://schema.org/name");
+
+        const left = makeDataset([
+          makeQuad(makeBlankNode("a"), knows, makeBlankNode("b")),
+          makeQuad(makeBlankNode("a"), name, makeLiteral("Alice", XSD_STRING.value)),
+          makeQuad(makeBlankNode("b"), name, makeLiteral("Bob", XSD_STRING.value)),
+        ]);
+
+        const right = makeDataset([
+          makeQuad(makeBlankNode("x"), knows, makeBlankNode("y")),
+          makeQuad(makeBlankNode("x"), name, makeLiteral("Alice", XSD_STRING.value)),
+          makeQuad(makeBlankNode("y"), name, makeLiteral("Bob", XSD_STRING.value)),
+        ]);
+
+        const [leftRequest, rightRequest] = yield* Effect.all(
+          [
+            S.encodeEffect(Dataset)(left).pipe(
+              Effect.flatMap((encoded) =>
+                S.decodeEffect(FingerprintDatasetRequest)({
+                  algorithm: "rdfc-1.0",
+                  dataset: encoded,
+                })
+              )
             ),
-            runCanonicalization(
-              Effect.gen(function* () {
-                const service = yield* CanonicalizationService;
-                return yield* service.fingerprint(
-                  decodeUnknownSync(FingerprintDatasetRequest)({
-                    algorithm: "rdfc-1.0",
-                    dataset: yield* S.encodeEffect(Dataset)(right),
-                  })
-                );
-              })
+            S.encodeEffect(Dataset)(right).pipe(
+              Effect.flatMap((encoded) =>
+                S.decodeEffect(FingerprintDatasetRequest)({
+                  algorithm: "rdfc-1.0",
+                  dataset: encoded,
+                })
+              )
             ),
-          ])
-        )
-      );
+          ],
+          { concurrency: "unbounded" }
+        );
+        const [leftFingerprint, rightFingerprint] = yield* Effect.all(
+          [service.fingerprint(leftRequest), service.fingerprint(rightRequest)],
+          { concurrency: "unbounded" }
+        );
 
-      expect(leftFingerprint.fingerprint).toBe(rightFingerprint.fingerprint);
-      expect(leftFingerprint.canonicalText).toBe(rightFingerprint.canonicalText);
-    })
-  );
+        expect(leftFingerprint.fingerprint).toBe(rightFingerprint.fingerprint);
+        expect(leftFingerprint.canonicalText).toBe(rightFingerprint.canonicalText);
+      })
+    );
 
-  it.effect("exposes the unsupported SPARQL fallback and the web-annotation seam DTOs", () =>
-    Effect.gen(function* () {
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(
-            runSparql(
-              Effect.gen(function* () {
-                const service = yield* SparqlQueryService;
-                return yield* service.execute(
-                  decodeUnknownSync(SparqlQueryRequest)({
-                    dataset: yield* S.encodeEffect(Dataset)(dataset),
-                    profile: "select",
-                    query: "SELECT * WHERE { ?s ?p ?o }",
-                  })
-                );
-              })
-            )
-          ).rejects.toThrow("No SPARQL engine is wired into the v1 semantic-web package.")
-        )
-      );
+    it.effect(
+      "exposes the unsupported SPARQL fallback and the web-annotation seam DTOs",
+      Effect.fnUntraced(function* () {
+        const service = yield* SparqlQueryService;
+        const error = yield* service
+          .execute(
+            yield* S.decodeEffect(SparqlQueryRequest)({
+              dataset: yield* S.encodeEffect(Dataset)(dataset),
+              profile: "select",
+              query: "SELECT * WHERE { ?s ?p ?o }",
+            })
+          )
+          .pipe(Effect.flip);
 
-      const annotation = decodeUnknownSync(WebAnnotation)({
-        id: "https://example.com/annotations/1",
-        target: {
-          selector: {
-            exact: "Alice",
-            type: "TextQuoteSelector",
+        expect(error.message).toBe("No SPARQL engine is wired into the v1 semantic-web package.");
+
+        const annotation = yield* S.decodeEffect(WebAnnotation)({
+          id: "https://example.com/annotations/1",
+          target: {
+            selector: {
+              exact: "Alice",
+              type: "TextQuoteSelector",
+            },
+            source: "https://example.com/documents/1",
           },
-          source: "https://example.com/documents/1",
-        },
-        type: "Annotation",
-      });
+          type: "Annotation",
+        });
 
-      expect(annotation.type).toBe("Annotation");
-      expect(annotation.target.selector.type).toBe("TextQuoteSelector");
-    })
-  );
+        expect(annotation.type).toBe("Annotation");
+        expect(annotation.target.selector.type).toBe("TextQuoteSelector");
+      })
+    );
+  });
 });

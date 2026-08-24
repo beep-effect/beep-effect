@@ -15,6 +15,7 @@
 
 import { $NlpMcpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -380,7 +381,7 @@ const LinesDatasetResult = DatasetResult(S.String.pipe(S.Array));
 const JsonDatasetResult = DatasetResult(S.Unknown);
 const JsonlDatasetResult = DatasetResult(S.Unknown.pipe(S.Array));
 
-const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeJson = Unknown.decodeEffectFromJsonString;
 
 const byteLength = (value: string): number => new TextEncoder().encode(value).length;
 

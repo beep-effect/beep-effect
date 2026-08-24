@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Unknown } from "@beep/schema/Unknown";
 import { $ScratchpadId } from "@beep/identity";
 import { JSONSchema, SchemaUtils } from "@beep/schema";
 import { A, O, P, R, Str, thunkFalse, pipe } from "@beep/utils";
@@ -19,7 +20,7 @@ type SubSchema = JSONSchema.SubSchema.Type;
 type Definitions = Readonly<Record<string, SubSchema>>;
 
 const decodeNode = S.decodeUnknownResult(JSONSchema.NodeCodec);
-const encodeJsonString = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeJsonString = Unknown.encodeUnknownResultFromJsonString;
 
 const renderLiteral = (value: unknown): string =>
   pipe(

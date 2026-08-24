@@ -1,18 +1,21 @@
 /**
  * Event Bridge Service
  *
+ * **Details**
+ *
  * Bridges EventBusService events to EventBroadcastHub for WebSocket streaming.
  * Runs as a background fiber that subscribes to EventBusService and broadcasts
  * events to connected WebSocket clients.
  *
- * @since 2.0.0
- * @module Runtime/EventBridge
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
-import { Context, Effect, Fiber, Layer, Stream } from "effect";
-import * as P from "effect/Predicate";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { Context, Duration, Effect, Fiber, Layer, Schedule, Stream } from "effect";
+import * as S from "effect/Schema";
+import type * as Scope from "effect/Scope";
 import { EventBusService } from "../Service/EventBus.ts";
 import type { BroadcastEvent } from "./EventBroadcastRouter.ts";
 import { EventBroadcastHub } from "./EventBroadcastRouter.ts";
@@ -24,34 +27,84 @@ import { EventBroadcastHub } from "./EventBroadcastRouter.ts";
 /**
  * EventBridge service interface
  *
+ * **Details**
+ *
  * Provides methods to start/stop the bridge between EventBusService and EventBroadcastHub
  *
- * @since 2.0.0
+ *
+ * **Example** (Use the EventBridgeServiceMethods contract)
+ *
+ * ```ts
+ * import type { EventBridgeServiceMethods } from "@effect-ontology/Runtime/EventBridge"
+ *
+ * const acceptsEventBridgeServiceMethods = (_value: EventBridgeServiceMethods): void => undefined
+ *
+ * console.log(acceptsEventBridgeServiceMethods)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface EventBridgeServiceMethods {
   /**
    * Start the bridge (runs as background fiber)
    * Returns a handle to stop the bridge
    */
-  readonly start: Effect.Effect<{ stop: Effect.Effect<void> }>;
+  readonly start: Effect.Effect<
+    {
+      readonly await: Effect.Effect<void, EventBridgeError>;
+      readonly stop: Effect.Effect<void>;
+    },
+    EventBridgeError,
+    Scope.Scope
+  >;
 }
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBridge");
 
+/**
+ * Provides the event bridge service service capability.
+ *
+ * **Example** (Inspect event bridge service)
+ *
+ * ```ts
+ * import { EventBridgeService } from "@effect-ontology/Runtime/EventBridge"
+ *
+ * console.log(EventBridgeService)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export class EventBridgeService extends Context.Service<EventBridgeService, EventBridgeServiceMethods>()(
   $I`EventBridgeService`
 ) {}
 
 /**
- * Extract ontologyId from event payload
+ * Typed setup or runtime failure from the EventBus-to-websocket bridge.
+ *
+ * **Example** (Inspect the typed event bridge failure)
+ * ```ts
+ * import { EventBridgeError } from "@effect-ontology/Runtime/EventBridge"
+ * console.log(EventBridgeError.make)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-const extractOntologyId = (payload: unknown): string | null => {
-  if (P.isNotNullish(payload) && typeof payload === "object" && "ontologyId" in payload) {
-    const val = (payload as { ontologyId: unknown }).ontologyId;
-    return typeof val === "string" ? val : null;
-  }
-  return null;
-};
+export class EventBridgeError extends S.TaggedError<EventBridgeError>($I`EventBridgeError`)(
+  "EventBridgeError",
+  {
+    phase: LiteralKit(["setup", "runtime"]),
+    message: S.NonEmptyString,
+    cause: S.Defect({ includeStack: true }),
+  },
+  $I.annote("EventBridgeError", {
+    description: "Typed event-bridge failure preserving whether setup or stream execution failed.",
+  })
+) {}
+
+const bridgeRetrySchedule = Schedule.max([Schedule.exponential(Duration.millis(100)), Schedule.recurs(3)]);
 
 /**
  * Create the EventBridge service
@@ -62,21 +115,18 @@ const makeEventBridge = Effect.gen(function* () {
 
   const start = Effect.gen(function* () {
     yield* Effect.logInfo("EventBridge starting");
-    const eventStream = yield* eventBus.subscribeEvents.pipe(Effect.orDie);
-    const fiber = yield* eventStream.pipe(
-      Stream.tap((entry) =>
-        Effect.gen(function* () {
-          const ontologyId = extractOntologyId(entry.payload);
-          if (P.isNull(ontologyId)) {
-            yield* Effect.logDebug("Event skipped: no ontologyId", { event: entry.event });
-            return;
-          }
+    const eventStream = yield* eventBus.subscribeEvents.pipe(
+      Effect.mapError((cause) =>
+        EventBridgeError.make({ phase: "setup", message: "Failed to subscribe to ontology events.", cause })
+      )
+    );
+    const run = eventStream.pipe(
+      Stream.runForEach(
+        Effect.fnUntraced(function* (entry) {
+          const ontologyId = entry.payload.ontologyId;
           const broadcastEvent: BroadcastEvent = {
             type: "event",
-            id: entry.id,
-            event: entry.event,
-            primaryKey: entry.primaryKey,
-            payload: entry.payload,
+            entry,
             ontologyId,
             timestamp: NonNegativeInt.make(entry.createdAt.epochMilliseconds),
           };
@@ -88,12 +138,20 @@ const makeEventBridge = Effect.gen(function* () {
           });
         })
       ),
-      Stream.runDrain,
-      Effect.catch((error) => Effect.logError("EventBridge stream error", { error: String(error) })),
-      Effect.forkChild
+      Effect.mapError((cause) =>
+        EventBridgeError.make({
+          phase: "runtime",
+          message: "Ontology event stream terminated.",
+          cause,
+        })
+      ),
+      Effect.tapError((error) => Effect.logError("EventBridge stream failed", { error })),
+      Effect.retry(bridgeRetrySchedule)
     );
+    const fiber = yield* Effect.forkScoped(run);
     yield* Effect.logInfo("EventBridge started");
     return {
+      await: Fiber.join(fiber),
       stop: Effect.gen(function* () {
         yield* Fiber.interrupt(fiber);
         yield* Effect.logInfo("EventBridge stopped");
@@ -109,19 +167,41 @@ const makeEventBridge = Effect.gen(function* () {
 /**
  * EventBridge layer
  *
+ * **Details**
+ *
  * Requires EventBusService and EventBroadcastHub
  *
- * @since 2.0.0
+ * **Example** (Inspect event bridge live)
+ *
+ * ```ts
+ * import { EventBridgeLive } from "@effect-ontology/Runtime/EventBridge"
+ *
+ * console.log(EventBridgeLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EventBridgeLive = Layer.effect(EventBridgeService, makeEventBridge);
 
 /**
  * Auto-starting EventBridge layer
  *
+ * **Details**
+ *
  * Automatically starts the bridge when the layer is acquired.
  * Stops when the layer scope closes.
  *
- * @since 2.0.0
+ * **Example** (Inspect event bridge auto start)
+ *
+ * ```ts
+ * import { EventBridgeAutoStart } from "@effect-ontology/Runtime/EventBridge"
+ *
+ * console.log(EventBridgeAutoStart)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EventBridgeAutoStart = Layer.effect(
   EventBridgeService,
@@ -129,8 +209,7 @@ export const EventBridgeAutoStart = Layer.effect(
     const bridge = yield* makeEventBridge;
     const handle = yield* bridge.start;
 
-    // Stop on scope finalization
-    yield* Effect.addFinalizer(() => handle.stop.pipe(Effect.ignore));
+    yield* Effect.addFinalizer(() => handle.stop);
 
     return bridge;
   })

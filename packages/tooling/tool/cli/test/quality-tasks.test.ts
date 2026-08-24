@@ -79,9 +79,11 @@ import {
   turboCachePlanArgs,
 } from "@beep/repo-cli/test/SharedInternals";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
+import { PosInt } from "@beep/schema/Int";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -104,13 +106,19 @@ const PlatformLayer = Layer.mergeAll(
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   TestConsole.layer
 );
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
 const decodeCoverageRegressionBaselineJsoncForTesting = decodeJsoncTextAs(CoverageRegressionBaseline);
 const isDomainError = S.is(DomainError);
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 const isString = (value: unknown): value is string => typeof value === "string";
+const repoCliEntryArgs = (...args: ReadonlyArray<string>): ReadonlyArray<string> => [
+  "run",
+  "packages/tooling/tool/cli/src/bin.ts",
+  "--",
+  ...args,
+];
 const qualityLaneArgs = (lanes: ReadonlyArray<GithubCheckLaneSpec>, laneId: string): ReadonlyArray<string> =>
   pipe(
     lanes,
@@ -457,13 +465,13 @@ describe("quality task adapter", () => {
     expect(explicitSteps[0]).toMatchObject({
       label: "audit:repo-sanity",
       command: "bun",
-      args: ["run", "beep", "quality", "github-checks", "repo-sanity"],
+      args: repoCliEntryArgs("quality", "github-checks", "repo-sanity"),
       cwd: "/repo",
     });
     expect(legacySteps[0]).toMatchObject({
       label: "audit:repo-sanity",
       command: "bun",
-      args: ["run", "beep", "quality", "github-checks", "repo-sanity"],
+      args: repoCliEntryArgs("quality", "github-checks", "repo-sanity"),
       cwd: "/repo",
     });
   });
@@ -1033,17 +1041,17 @@ describe("quality task adapter", () => {
       expect.objectContaining({
         label: "check:tsgo:rules",
         command: "bun",
-        args: ["run", "beep", "quality", "tsgo-rules"],
+        args: repoCliEntryArgs("quality", "tsgo-rules"),
       }),
       expect.objectContaining({
         label: "check:tsgo:tests",
         command: "bun",
-        args: ["run", "beep", "quality", "test-tsgo"],
+        args: repoCliEntryArgs("quality", "test-tsgo"),
       }),
       expect.objectContaining({
         label: "check:tsgo:smoke",
         command: "bun",
-        args: ["run", "beep", "quality", "tsgo-smoke"],
+        args: repoCliEntryArgs("quality", "tsgo-smoke"),
       }),
     ]);
   });
@@ -1227,6 +1235,8 @@ describe("quality task adapter", () => {
       "lint:typos",
     ]);
     expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", []));
+    expect(steps[0]?.captureTimeoutMillis).toBeUndefined();
+    expect(steps.slice(1).every((step) => step.captureTimeoutMillis === 15 * 60 * 1_000)).toBe(true);
   });
 
   it("plans repo-wide root lint policy without the aggregate lint lane", () => {
@@ -1262,6 +1272,10 @@ describe("quality task adapter", () => {
     ]);
     expect(steps.find((step) => step.label === "lint:jsdoc")?.args).toEqual(["eslint", ".", "--max-warnings=0"]);
     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
+    expect(steps.find((step) => step.label === "lint:native-runtime")?.args).toEqual(
+      repoCliEntryArgs("laws", "native-runtime", "--check")
+    );
+    expect(steps.every((step) => step.captureTimeoutMillis === 15 * 60 * 1_000)).toBe(true);
   });
 
   it("passes changed TypeScript files to file-oriented policy laws", () => {
@@ -1273,33 +1287,25 @@ describe("quality task adapter", () => {
     ];
     const steps = rootLintPolicyStepsForTesting("/repo", files);
 
-    expect(steps.find((step) => step.label === "lint:effect-fn")?.args).toEqual([
-      "run",
-      "beep",
-      "laws",
-      "effect-fn",
-      "--check",
-      "--include",
-      "packages/demo/src/index.ts,packages/demo/test/Example.test.ts,packages/ecosystem/demo/src/index.ts",
-    ]);
+    expect(steps.find((step) => step.label === "lint:effect-fn")?.args).toEqual(
+      repoCliEntryArgs(
+        "laws",
+        "effect-fn",
+        "--check",
+        "--include",
+        "packages/demo/src/index.ts,packages/demo/test/Example.test.ts,packages/ecosystem/demo/src/index.ts"
+      )
+    );
     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
-    expect(steps.find((step) => step.label === "lint:allowlist")?.args).toEqual([
-      "run",
-      "beep",
-      "laws",
-      "allowlist-check",
-    ]);
+    expect(steps.find((step) => step.label === "lint:allowlist")?.args).toEqual(
+      repoCliEntryArgs("laws", "allowlist-check")
+    );
     expect(steps.find((step) => step.label === "lint:package-test-imports")?.args).toContain(
       "packages/demo/test/Example.test.ts"
     );
-    expect(steps.find((step) => step.label === "lint:ecosystem-polarity")?.args).toEqual([
-      "run",
-      "beep",
-      "lint",
-      "ecosystem-polarity",
-      "--include",
-      "packages/ecosystem/demo/src/index.ts",
-    ]);
+    expect(steps.find((step) => step.label === "lint:ecosystem-polarity")?.args).toEqual(
+      repoCliEntryArgs("lint", "ecosystem-polarity", "--include", "packages/ecosystem/demo/src/index.ts")
+    );
   });
 
   it("omits empty changed-scope policy steps instead of constructing empty includes", () => {
@@ -2994,9 +3000,11 @@ describe("quality task adapter", () => {
           // guaranteed — the resilience property is that every policy check
           // still executes after the aggregate lint step fails.
           expect(commandLog).toContain("bunx turbo run lint");
-          expect(commandLog).toContain("bun run beep laws effect-imports --check");
-          expect(commandLog).toContain("bun run beep lint roadmap-refs");
-          expect(commandLog).toContain("bun run beep docgen check --reuse-proof-manifest");
+          expect(commandLog).toContain("bun run packages/tooling/tool/cli/src/bin.ts -- laws effect-imports --check");
+          expect(commandLog).toContain("bun run packages/tooling/tool/cli/src/bin.ts -- lint roadmap-refs");
+          expect(commandLog).toContain(
+            "bun run packages/tooling/tool/cli/src/bin.ts -- docgen check --reuse-proof-manifest"
+          );
           expect(commandLog).toContain("bunx typos");
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
@@ -3285,12 +3293,14 @@ describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
       cwd: "/repo",
       env: { CI: "true", BEEP_TEST_DATABASE_URL: "postgres://localhost/beep" },
       flakeQuarantine: "ts2589-no-location",
+      captureTimeoutMillis: PosInt.make(900_000),
     });
     const rewritten = withoutUnusableRemoteCacheForTesting(step, true);
 
     expect(rewritten.args).toEqual(["turbo", "run", "coverage", "--cache=local:rw"]);
     expect(rewritten.env).toEqual(step.env);
     expect(rewritten.flakeQuarantine).toBe("ts2589-no-location");
+    expect(rewritten.captureTimeoutMillis).toBe(900_000);
     expect(rewritten.label).toBe(step.label);
   });
 });

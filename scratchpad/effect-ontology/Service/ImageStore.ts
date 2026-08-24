@@ -1,15 +1,18 @@
 /**
  * ImageStore Service
  *
+ * **Details**
+ *
  * High-level image storage orchestration with deduplication and manifest management.
  * Uses ImageBlobStore for low-level storage and manages owner-image relationships.
  *
- * @since 2.0.0
- * @module Service/ImageStore
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, DateTime, Effect, Layer } from "effect";
+import { Context, DateTime, Effect, Layer, Order } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -22,6 +25,7 @@ import type { GenerationMismatchError } from "./Storage.ts";
 import { StorageService, StorageServiceLive } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ImageStore");
+const ImageRefOrder = Order.mapInput(Order.Number, (ref: ImageRef) => ref.position);
 
 // =============================================================================
 // Service Interface
@@ -30,11 +34,14 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageStore");
 /**
  * ImageStore service interface
  *
+ * **Details**
+ *
  * High-level operations for storing, retrieving, and managing images
  * with deduplication and owner manifests.
  *
- * @since 2.0.0
- * @category Service
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ImageStoreService {
   /**
@@ -144,15 +151,23 @@ export interface ImageStoreService {
 /**
  * ImageStore service tag
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Inspect image store)
+ *
+ * ```ts
+ * import { ImageStore } from "@effect-ontology/Service/ImageStore"
+ *
+ * console.log(ImageStore)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()($I`ImageStore`) {
   /**
    * Live implementation
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.effect(
     ImageStore,
@@ -163,7 +178,10 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
       /**
        * Load manifest with generation for optimistic locking
        */
-      const loadManifestWithGeneration = Effect.fn(function* (ownerType: ImageOwnerType, ownerId: string) {
+      const loadManifestWithGeneration = Effect.fn("ImageStore.loadManifestWithGeneration")(function* (
+        ownerType: ImageOwnerType,
+        ownerId: string
+      ) {
         const path = PathLayout.image.manifest(ownerType, StoragePathSegment.make(ownerId));
         const result = yield* storage.getWithGeneration(path);
 
@@ -181,14 +199,17 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
       /**
        * Save manifest with optimistic locking
        */
-      const saveManifest = Effect.fn(function* (manifest: ImageManifest, generation: string) {
+      const saveManifest = Effect.fn("ImageStore.saveManifest")(function* (
+        manifest: ImageManifest,
+        generation: string
+      ) {
         const path = PathLayout.image.manifest(manifest.ownerType, StoragePathSegment.make(manifest.ownerId));
         const json = yield* ImageManifest.encodeEffect(manifest);
         yield* storage.setIfGenerationMatch(path, json, generation);
       });
 
       return {
-        storeImage: Effect.fn(function* (hash, bytes, contentType, sourceUrl) {
+        storeImage: Effect.fn("ImageStore.storeImage")(function* (hash, bytes, contentType, sourceUrl) {
           const existing = yield* blobStore.getMetadata(hash);
           if (O.isSome(existing)) {
             return existing.value;
@@ -197,7 +218,7 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
         }),
         getAsset: Effect.fn("ImageStore.getAsset")((hash) => blobStore.getMetadata(hash)),
         getBytes: Effect.fn("ImageStore.getBytes")((hash) => blobStore.getBytes(hash)),
-        addImageRef: Effect.fn(function* (ref) {
+        addImageRef: Effect.fn("ImageStore.addImageRef")(function* (ref) {
           const manifestPath = PathLayout.image.manifest(ref.ownerType, StoragePathSegment.make(ref.ownerId));
           const existing = yield* loadManifestWithGeneration(ref.ownerType, ref.ownerId);
           if (O.isSome(existing)) {
@@ -206,53 +227,56 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
               (img) => img.assetHash === ref.assetHash && img.position === ref.position
             );
             if (!alreadyExists) {
+              const updatedAt = yield* DateTime.now;
               const updatedManifest: ImageManifest = {
                 ...manifest,
-                images: [...manifest.images, ref].sort((a, b) => a.position - b.position),
+                images: A.sort([...manifest.images, ref], ImageRefOrder),
                 totalCount: manifest.totalCount + 1,
-                updatedAt: DateTime.nowUnsafe(),
+                updatedAt,
               };
               yield* saveManifest(updatedManifest, generation);
             }
           } else {
+            const updatedAt = yield* DateTime.now;
             const newManifest: ImageManifest = {
               ownerType: ref.ownerType,
               ownerId: ref.ownerId,
               images: [ref],
               totalCount: 1,
-              updatedAt: DateTime.nowUnsafe(),
+              updatedAt,
             };
             const json = yield* S.encodeEffect(S.fromJsonString(ImageManifest, { space: 2 }))(newManifest);
             yield* storage.setIfGenerationMatch(manifestPath, json, "0");
           }
         }),
-        listByOwner: Effect.fn(function* (ownerType, ownerId) {
+        listByOwner: Effect.fn("ImageStore.listByOwner")(function* (ownerType, ownerId) {
           const result = yield* loadManifestWithGeneration(ownerType, ownerId);
           if (O.isNone(result)) return [];
           return result.value.manifest.images;
         }),
-        getManifest: Effect.fn(function* (ownerType, ownerId) {
+        getManifest: Effect.fn("ImageStore.getManifest")(function* (ownerType, ownerId) {
           const result = yield* loadManifestWithGeneration(ownerType, ownerId);
           if (O.isNone(result)) return O.none();
           return O.some(result.value.manifest);
         }),
-        removeImageRef: Effect.fn(function* (ownerType, ownerId, assetHash) {
+        removeImageRef: Effect.fn("ImageStore.removeImageRef")(function* (ownerType, ownerId, assetHash) {
           const existing = yield* loadManifestWithGeneration(ownerType, ownerId);
           if (O.isNone(existing)) return;
           const { generation, manifest } = existing.value;
           const filtered = manifest.images.filter((img) => img.assetHash !== assetHash);
           if (filtered.length !== manifest.images.length) {
+            const updatedAt = yield* DateTime.now;
             const updatedManifest: ImageManifest = {
               ...manifest,
               images: filtered,
               totalCount: filtered.length,
-              updatedAt: DateTime.nowUnsafe(),
+              updatedAt,
             };
             yield* saveManifest(updatedManifest, generation);
           }
         }),
         deleteAsset: Effect.fn("ImageStore.deleteAsset")((hash) => blobStore.delete(hash)),
-        countByOwner: Effect.fn(function* (ownerType, ownerId) {
+        countByOwner: Effect.fn("ImageStore.countByOwner")(function* (ownerType, ownerId) {
           const result = yield* loadManifestWithGeneration(ownerType, ownerId);
           if (O.isNone(result)) return 0;
           return result.value.manifest.totalCount;
@@ -264,8 +288,8 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
   /**
    * Default layer with all dependencies
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImageStore.Live.pipe(Layer.provide(ImageBlobStore.Live), Layer.provide(StorageServiceLive));
 }

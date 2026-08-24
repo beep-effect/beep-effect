@@ -309,8 +309,8 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
  */
 export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>($I`PracticeKgSchemaVersions`)(
   {
-    duckdb: S.Literal("1"),
-    pglite: S.Literal("1"),
+    duckdb: S.tag("1"),
+    pglite: S.tag("1"),
   },
   $I.annote("PracticeKgSchemaVersions", {
     description: "Independent schema versions for the two embedded graph stores.",
@@ -341,7 +341,7 @@ export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>(
  */
 export class PracticeKgSourceRuns extends S.Class<PracticeKgSourceRuns>($I`PracticeKgSourceRuns`)(
   {
-    base: S.Literal("included"),
+    base: S.tag("included"),
     refresh202607: LiteralKit(["included", "excluded"]),
   },
   $I.annote("PracticeKgSourceRuns", {

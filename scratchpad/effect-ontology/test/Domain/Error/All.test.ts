@@ -1,6 +1,7 @@
 import { URLStr } from "@beep/schema";
 import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -122,32 +123,36 @@ describe("effect-ontology domain errors", () => {
     }
   });
 
-  it("normalizes omitted metadata and applies safe schema defaults", () => {
-    const base = Base.BaseError.make({ message: "Unexpected failure." });
-    const nullCause = S.decodeSync(Base.BaseError)({
-      _tag: "BaseError",
-      message: "Nullish failure metadata.",
-      cause: null,
-    });
-    const service = Activity.ActivityServiceError.make({
-      service: "Store",
-      operation: "put",
-      message: "Unavailable.",
-    });
-    const suspended = Workflow.WorkflowSuspendedError.make({
-      message: "Paused.",
-    });
-    const timeout = Image.ImageTimeoutError.make({
-      url: URLStr.fromUnknown("https://example.com/image.png"),
-      timeoutMs: Base.Milliseconds.make(250),
-    });
+  it.effect(
+    "normalizes omitted metadata and applies safe schema defaults",
+    Effect.fnUntraced(function* () {
+      const base = Base.BaseError.make({ message: "Unexpected failure." });
+      const nullCause = yield* S.decodeEffect(Base.BaseError)({
+        _tag: "BaseError",
+        message: "Nullish failure metadata.",
+        cause: null,
+      });
+      const service = Activity.ActivityServiceError.make({
+        service: "Store",
+        operation: "put",
+        message: "Unavailable.",
+      });
+      const suspended = Workflow.WorkflowSuspendedError.make({
+        message: "Paused.",
+      });
+      const imageUrl = yield* S.decodeEffect(URLStr)("https://example.com/image.png");
+      const timeout = Image.ImageTimeoutError.make({
+        url: imageUrl,
+        timeoutMs: Base.Milliseconds.make(250),
+      });
 
-    expect(O.isNone(base.cause)).toBe(true);
-    expect(O.isNone(nullCause.cause)).toBe(true);
-    expect(service.retryable).toBe(false);
-    expect(suspended.isResumable).toBe(false);
-    expect(timeout.message).toBe("Image fetch timed out");
-  });
+      expect(O.isNone(base.cause)).toBe(true);
+      expect(O.isNone(nullCause.cause)).toBe(true);
+      expect(service.retryable).toBe(false);
+      expect(suspended.isResumable).toBe(false);
+      expect(timeout.message).toBe("Image fetch timed out");
+    })
+  );
 
   it("keeps derived timing messages and durations faithful to schema values", () => {
     const circuit = Circuit.CircuitOpenError.make({
@@ -168,8 +173,8 @@ describe("effect-ontology domain errors", () => {
   });
 
   it("centralizes activity conversion and construction on the union schema", () => {
-    const generic = Activity.ActivityError.fromUnknown(new Error("boom"));
-    const service = Activity.ActivityError.serviceFailure("Store", "put", new Error("offline"), true);
+    const generic = Activity.ActivityError.generic("boom");
+    const service = Activity.ActivityError.serviceFailure("Store", "put", "offline", true);
     const missing = Activity.ActivityError.notFound("Document", "doc-42");
 
     expect(Activity.ActivityError.guards.ActivityGeneric(generic)).toBe(true);

@@ -1,24 +1,43 @@
-import * as MutableHashSet from "effect/MutableHashSet";
+/**
+ * Public effect-ontology APIs for utils/similarity.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { MutableHashSet } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import type { Entity, Relation } from "../Domain/Model/Entity.ts";
+import { RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
 import { dual2, dual3, dual6 } from "./Dual.ts";
-import { isEntityReference } from "./Entity.ts";
 import { combinedSimilarity, jaccardSimilarity, overlapRatio } from "./String.ts";
 
 /**
  * Get entity neighbors (incoming and outgoing)
  *
+ * **Details**
+ *
  * Finds neighbors in both directions:
  * - Outgoing: Entities this entity references (subject -> object)
  * - Incoming: Entities referencing this entity (subject -> object)
  *
+ * **Example** (Inspect get neighbors)
+ *
+ * ```ts
+ * import { getNeighbors } from "@effect-ontology/Utils/Similarity"
+ *
+ * console.log(getNeighbors)
+ * ```
+ *
  * @param entityId - Entity ID to find neighbors for
  * @param relations - Array of relations to search
  * @returns Object with Sets of incoming and outgoing neighbor IDs
- *
+ * @category utilities
  * @since 0.0.0
- * @category Similarity
  */
 export const getNeighbors = dual2(
   (
@@ -29,18 +48,23 @@ export const getNeighbors = dual2(
     const outgoing = MutableHashSet.empty<string>();
 
     for (const relation of relations) {
+      const objectEntityId = RelationObject.match(relation.object, {
+        EntityReference: ({ value }) => O.some(value),
+        Text: O.none,
+        Number: O.none,
+        Boolean: O.none,
+      });
+
       // Entity is subject → object is outgoing neighbor (if it's an entity reference)
-      if (relation.subjectId === entityId) {
-        if (typeof relation.object === "string" && isEntityReference(relation.object)) {
-          // Don't include self-references
-          if (relation.object !== entityId) {
-            MutableHashSet.add(outgoing, relation.object);
-          }
+      if (relation.subjectId === entityId && O.isSome(objectEntityId)) {
+        // Don't include self-references
+        if (objectEntityId.value !== entityId) {
+          MutableHashSet.add(outgoing, objectEntityId.value);
         }
       }
 
       // Entity is object → subject is incoming neighbor
-      if (typeof relation.object === "string" && relation.object === entityId) {
+      if (O.isSome(objectEntityId) && objectEntityId.value === entityId) {
         // Don't include self-references
         if (relation.subjectId !== entityId) {
           MutableHashSet.add(incoming, relation.subjectId);
@@ -55,12 +79,22 @@ export const getNeighbors = dual2(
 /**
  * Compute combined similarity score for entity resolution
  *
+ * **Details**
+ *
  * Formula: score = w₁·mentionSim + w₂·typeOverlap + w₃·neighborSim
  *
  * Where:
  * - mentionSim: String similarity between mentions (0.0-1.0)
  * - typeOverlap: Jaccard overlap of type arrays (0.0-1.0), hierarchy-aware if isSubclass provided
  * - neighborSim: Average Jaccard similarity of incoming and outgoing neighbors (0.0-1.0)
+ *
+ * **Example** (Inspect compute entity similarity)
+ *
+ * ```ts
+ * import { computeEntitySimilarity } from "@effect-ontology/Utils/Similarity"
+ *
+ * console.log(computeEntitySimilarity)
+ * ```
  *
  * @param a - First entity
  * @param b - Second entity
@@ -69,9 +103,8 @@ export const getNeighbors = dual2(
  * @param embeddingSimilarity - Optional pre-computed embedding similarity
  * @param isSubclass - Optional callback to check class hierarchy (child, parent) => boolean
  * @returns Combined similarity score (0.0-1.0)
- *
+ * @category utilities
  * @since 0.0.0
- * @category Similarity
  */
 export const computeEntitySimilarity = dual6(
   (
@@ -129,9 +162,9 @@ export const computeEntitySimilarity = dual6(
     const neighborsB = getNeighbors(b.id, relations);
 
     // Jaccard for incoming
-    const incomingSim = jaccardSimilarity(Array.from(neighborsA.incoming), Array.from(neighborsB.incoming));
+    const incomingSim = jaccardSimilarity(A.fromIterable(neighborsA.incoming), A.fromIterable(neighborsB.incoming));
     // Jaccard for outgoing
-    const outgoingSim = jaccardSimilarity(Array.from(neighborsA.outgoing), Array.from(neighborsB.outgoing));
+    const outgoingSim = jaccardSimilarity(A.fromIterable(neighborsA.outgoing), A.fromIterable(neighborsB.outgoing));
 
     // Average, but only if they have neighbors?
     // If both have no neighbors in a direction, sim is 1? No 0 usually.
@@ -168,20 +201,29 @@ export const computeEntitySimilarity = dual6(
 /**
  * Check if two entities should be considered for merging
  *
+ * **Details**
+ *
  * Applies thresholds from config:
  * 1. Overall similarity must exceed threshold
  * 2. If requireTypeOverlap is true, type overlap must exceed typeOverlapRatio
+ *
+ * **Example** (Inspect should consider merge)
+ *
+ * ```ts
+ * import { shouldConsiderMerge } from "@effect-ontology/Utils/Similarity"
+ *
+ * console.log(shouldConsiderMerge)
+ * ```
  *
  * @param a - First entity
  * @param b - Second entity
  * @param relations - Relations for neighbor similarity
  * @param config - Resolution config with thresholds
- * @param embeddingSimilarity
- * @param isSubclass
+ * @param embeddingSimilarity - Input consumed by runs the should consider merge utility against its supplied inputs..
+ * @param isSubclass - Input consumed by runs the should consider merge utility against its supplied inputs..
  * @returns True if entities should be considered for merging
- *
+ * @category utilities
  * @since 0.0.0
- * @category Similarity
  */
 export const shouldConsiderMerge = dual6(
   (
@@ -219,25 +261,32 @@ export const shouldConsiderMerge = dual6(
 /**
  * Determine resolution method based on how similarity was achieved
  *
+ * **Example** (Inspect detect resolution method)
+ *
+ * ```ts
+ * import { detectResolutionMethod } from "@effect-ontology/Utils/Similarity"
+ *
+ * console.log(detectResolutionMethod)
+ * ```
+ *
  * @param a - First entity
  * @param b - Second entity
  * @param relations - Relations for neighbor check
  * @returns Resolution method type
- *
+ * @category utilities
  * @since 0.0.0
- * @category Similarity
  */
 export const detectResolutionMethod = dual3(
   (a: Entity, b: Entity, relations: ReadonlyArray<Relation>): "exact" | "similarity" | "containment" | "neighbor" => {
     // Check exact match first
-    if (a.mention.toLowerCase() === b.mention.toLowerCase()) {
+    if (Str.toLowerCase(a.mention) === Str.toLowerCase(b.mention)) {
       return "exact";
     }
 
     // Check containment
-    const aLower = a.mention.toLowerCase();
-    const bLower = b.mention.toLowerCase();
-    if (aLower.includes(bLower) || bLower.includes(aLower)) {
+    const aLower = Str.toLowerCase(a.mention);
+    const bLower = Str.toLowerCase(b.mention);
+    if (Str.includes(bLower)(aLower) || Str.includes(aLower)(bLower)) {
       return "containment";
     }
 
@@ -253,8 +302,8 @@ export const detectResolutionMethod = dual3(
       MutableHashSet.size(neighborsB.outgoing) > 0;
 
     if (hasNeighbors) {
-      const incomingSim = jaccardSimilarity(Array.from(neighborsA.incoming), Array.from(neighborsB.incoming));
-      const outgoingSim = jaccardSimilarity(Array.from(neighborsA.outgoing), Array.from(neighborsB.outgoing));
+      const incomingSim = jaccardSimilarity(A.fromIterable(neighborsA.incoming), A.fromIterable(neighborsB.incoming));
+      const outgoingSim = jaccardSimilarity(A.fromIterable(neighborsA.outgoing), A.fromIterable(neighborsB.outgoing));
 
       if ((incomingSim + outgoingSim) / 2 > 0.5) {
         return "neighbor";

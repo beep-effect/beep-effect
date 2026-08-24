@@ -6,11 +6,11 @@
  */
 
 import { DomainError } from "@beep/repo-utils";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import { encodeCommandJson, renderPrettyCommandJson } from "../../internal/cli/Json.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import type { Path } from "effect";
@@ -21,7 +21,7 @@ import type {
   DocgenPackageAnalysis,
 } from "./Docgen.schemas.ts";
 
-const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeJsonResult = Unknown.encodeUnknownResultFromJsonString;
 const normalizeSlashes = Str.replace(/\\/g, "/");
 const hasAnalysisIssue = (analysis: DocgenExportAnalysis): boolean =>
   analysis.missingTags.length > 0 || analysis.categoryIssues.length > 0;

@@ -1,6 +1,8 @@
 /**
  * Durable Workflow Activities
  *
+ * **Details**
+ *
  * Effect-native durable activities using @effect/workflow's Activity.make.
  * These activities are journaled by the WorkflowEngine for crash recovery.
  *
@@ -12,11 +14,14 @@
  * Note: These activities require WorkflowEngine and WorkflowInstance context.
  * For standalone execution (e.g., ActivityRunner), use Activities.ts instead.
  *
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { datasetToProvBundle, provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
@@ -25,19 +30,29 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import { NonNegNum } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Chunk, DateTime, Duration, Effect, Schedule } from "effect";
+import {
+  Cause,
+  Chunk,
+  DateTime,
+  Duration,
+  Effect,
+  HashMap,
+  Inspectable,
+  MutableHashMap,
+  MutableHashSet,
+  Order,
+  Schedule,
+} from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
 import { Activity } from "effect/unstable/workflow";
 import { ActivityError, ActivityGenericError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
-import type { BatchId } from "../Domain/Identity.ts";
-import { ContentHash, GcsUri } from "../Domain/Identity.ts";
+import { BatchId, ContentHash, GcsUri, OntologyName } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
 import { ElementEmbedding, OntologyEmbeddings, OntologyEmbeddingsJson } from "../Domain/Model/OntologyEmbeddings.ts";
@@ -62,18 +77,24 @@ import { ConfigService } from "../Service/Config.ts";
 import { CrossBatchEntityResolver, CrossBatchResolverConfig } from "../Service/CrossBatchEntityResolver.ts";
 import { EmbeddingService } from "../Service/Embedding.ts";
 import { EntityResolutionService } from "../Service/EntityResolution.ts";
-import { StageTimeoutService } from "../Service/LlmControl/StageTimeout.ts";
 import { generateObjectWithRetry } from "../Service/LlmWithRetry.ts";
 import { parseOntologyFromStore } from "../Service/Ontology.ts";
 import type { RdfStore } from "../Service/Rdf.ts";
-import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../Service/Rdf.ts";
+import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize, rdfStoreToDataset } from "../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../Service/Reasoner.ts";
 import { ShaclValidationReport, ShaclWorkflowService } from "../Service/Shacl.ts";
 import { GenerationMismatchError, StorageService } from "../Service/Storage.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
-import { knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
+import { claimExtractionArtifactFromQuads, knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
 import { extractLocalNameFromIri } from "../Utils/Iri.ts";
 import { computeQuadDelta } from "../Utils/QuadDelta.ts";
+import { refineKnowledgeGraph } from "../Utils/RefineKG.ts";
+import { mergeGraphs } from "./Merge.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Workflow/DurableActivities");
+const isActivityError = S.is(ActivityError);
+const preserveActivityError = (error: unknown): ActivityError =>
+  isActivityError(error) ? error : toActivityError(error);
 
 const RDF_STATEMENT = makeNamedNode(`${RDF_NAMESPACE}Statement`);
 const RDF_SUBJECT = makeNamedNode(`${RDF_NAMESPACE}subject`);
@@ -85,6 +106,21 @@ const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedAtTime`)
 // Output Schemas (must be serializable for journaling)
 // -----------------------------------------------------------------------------
 
+/**
+ * Validates and represents resolution output values at runtime.
+ *
+ * **Example** (Validate resolution output)
+ *
+ * ```ts
+ * import { ResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ResolutionOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ResolutionOutput = S.Struct({
   resolvedUri: GcsUri,
   /** Total entities before resolution */
@@ -100,14 +136,58 @@ export const ResolutionOutput = S.Struct({
   durationMs: NonNegNum,
 });
 
+/**
+ * Exposes validation output for composition by callers of this module.
+ *
+ * **Example** (Inspect validation output)
+ *
+ * ```ts
+ * import { ValidationOutput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(ValidationOutput)
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
 export const ValidationOutput = ValidationActivityOutput;
 
+/**
+ * Validates and represents ingestion output values at runtime.
+ *
+ * **Example** (Validate ingestion output)
+ *
+ * ```ts
+ * import { IngestionOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IngestionOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const IngestionOutput = S.Struct({
   canonicalUri: GcsUri,
   triplesIngested: NonNegativeInt,
   durationMs: NonNegNum,
 });
 
+/**
+ * Validates and represents claim persistence output values at runtime.
+ *
+ * **Example** (Validate claim persistence output)
+ *
+ * ```ts
+ * import { ClaimPersistenceOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimPersistenceOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ClaimPersistenceOutput = S.Struct({
   /** Total claims persisted across all documents */
   claimsPersisted: NonNegativeInt,
@@ -118,33 +198,71 @@ export const ClaimPersistenceOutput = S.Struct({
   durationMs: NonNegNum,
 });
 
-export const CrossBatchResolutionOutput = S.Struct({
-  /** Total entities processed */
-  entitiesTotal: NonNegativeInt,
-  /** Entities matched to existing canonical entities */
-  matchedToExisting: NonNegativeInt,
-  /** New canonical entities created */
-  newCanonicals: NonNegativeInt,
-  /** Candidates evaluated during blocking */
-  candidatesEvaluated: NonNegativeInt,
-  durationMs: NonNegNum,
-});
+/**
+ * Validates and represents cross batch resolution output values at runtime.
+ *
+ * **Example** (Validate cross batch resolution output)
+ *
+ * ```ts
+ * import { CrossBatchResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CrossBatchResolutionOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CrossBatchResolutionOutput extends S.Class<CrossBatchResolutionOutput>($I`CrossBatchResolutionOutput`)(
+  {
+    entitiesTotal: NonNegativeInt,
+    matchedToExisting: NonNegativeInt,
+    newCanonicals: NonNegativeInt,
+    candidatesEvaluated: NonNegativeInt,
+    duration: S.DurationFromMillis,
+  },
+  $I.annote("CrossBatchResolutionOutput", {
+    description: "Cross-batch resolution counts and an Effect Duration execution measurement.",
+  })
+) {}
 
-export interface CrossBatchResolutionInput {
-  readonly batchId: string;
-  /** Path to the resolved graph from within-batch resolution */
-  readonly resolvedGraphUri: string;
-  /** Whether to enable cross-batch resolution */
-  readonly enabled: boolean;
-  /** Ontology scope for entity resolution */
-  readonly ontologyId: string;
-}
+/**
+ * Describes the cross batch resolution input data exposed by this module.
+ *
+ *
+ * **Example** (Use the CrossBatchResolutionInput contract)
+ *
+ * ```ts
+ * import type { CrossBatchResolutionInput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsCrossBatchResolutionInput = (_value: CrossBatchResolutionInput): void => undefined
+ *
+ * console.log(acceptsCrossBatchResolutionInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export class CrossBatchResolutionInput extends S.Class<CrossBatchResolutionInput>($I`CrossBatchResolutionInput`)(
+  {
+    batchId: BatchId,
+    resolvedGraphUri: GcsUri,
+    enabled: S.Boolean,
+    ontologyId: OntologyName,
+  },
+  $I.annote("CrossBatchResolutionInput", {
+    description: "Validated batch, graph, enablement, and ontology scope for cross-batch entity resolution.",
+  })
+) {}
 
 // -----------------------------------------------------------------------------
 // Shared helpers
 // -----------------------------------------------------------------------------
 
-const stripGsPrefix = (uri: string): string => (uri.startsWith("gs://") ? uri.replace(/^gs:\/\/[^/]+\//, "") : uri);
+const stripGsPrefix = (uri: string): string =>
+  Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri;
+
+const DocumentPriorityOrder = Order.mapInput(Order.Number, (document: DocumentMetadata) => document.priority);
 
 const requireContent = (opt: O.Option<string>, key: string) =>
   O.match(opt, {
@@ -212,6 +330,9 @@ const parseTurtleStats = Effect.fn("parseTurtleStats")(function* (turtle: string
  */
 const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (store: RdfStore) {
   const rdf = yield* RdfBuilder;
+  const provenance = yield* rdfStoreToDataset(store).pipe(
+    Effect.flatMap((dataset) => Effect.fromResult(datasetToProvBundle(dataset)))
+  );
   const typeQuads = yield* rdf.queryStore(store, { predicate: RDF_TYPE });
   const labelQuads = yield* rdf.queryStore(store, { predicate: RDFS_LABEL });
   const entityTypes = MutableHashMap.empty<string, Array<string>>();
@@ -220,9 +341,9 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
     if (quad.subject.termType !== "NamedNode" || quad.object.termType !== "NamedNode") continue;
     const subjectIri = quad.subject.value;
     const typeIri = quad.object.value;
-    if (typeIri.includes("owl#") || typeIri.includes("rdf-schema#")) continue;
-    if (subjectIri.startsWith(CLAIMS.namespace)) continue;
-    if (typeIri.startsWith(CLAIMS.namespace)) continue;
+    if (Str.includes("owl#")(typeIri) || Str.includes("rdf-schema#")(typeIri)) continue;
+    if (Str.startsWith(CLAIMS.namespace)(subjectIri)) continue;
+    if (Str.startsWith(CLAIMS.namespace)(typeIri)) continue;
     MutableHashSet.add(entityIris, subjectIri);
     const types = O.getOrElse(MutableHashMap.get(entityTypes, subjectIri), (): Array<string> => []);
     types.push(typeIri);
@@ -253,17 +374,19 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   }
   const entityIdSet = MutableHashSet.fromIterable(entities.map((e) => e.id));
   const allQuads = yield* rdf.queryStore(store, {});
+  const extractionArtifact = yield* claimExtractionArtifactFromQuads(allQuads);
   const relations: Array<Relation> = [];
   for (const quad of allQuads) {
     if (quad.subject.termType !== "NamedNode") continue;
     const subjectIri = quad.subject.value;
+    if (!MutableHashSet.has(entityIris, subjectIri)) continue;
     const subjectLocalName = extractLocalNameFromIri(subjectIri);
     const subjectId = EntityId.make(subjectLocalName);
-    if (!MutableHashSet.has(entityIdSet, subjectId)) continue;
     const predicate = quad.predicate.value;
     if (predicate === RDF_TYPE.value || predicate === RDFS_LABEL.value) continue;
     const objectValue = quad.object;
     if (objectValue.termType === "NamedNode") {
+      if (!MutableHashSet.has(entityIris, objectValue.value)) continue;
       const objectLocalName = extractLocalNameFromIri(objectValue.value);
       const objectId = EntityId.make(objectLocalName);
       if (MutableHashSet.has(entityIdSet, objectId)) {
@@ -280,6 +403,15 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   return KnowledgeGraph.make({
     entities,
     relations,
+    provenance,
+    entityObservations: O.match(extractionArtifact, {
+      onNone: () => [],
+      onSome: (artifact) => artifact.entityObservations,
+    }),
+    relationObservations: O.match(extractionArtifact, {
+      onNone: () => [],
+      onSome: (artifact) => artifact.relationObservations,
+    }),
   });
 });
 
@@ -294,7 +426,9 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
  * - Jitter to prevent thundering herd
  */
 const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
-  Schedule.jittered
+  Schedule.jittered,
+  Schedule.setInputType<Cause.Cause<unknown>>(),
+  Schedule.while((meta) => Cause.hasInterrupts(meta.input))
 );
 
 // -----------------------------------------------------------------------------
@@ -303,6 +437,8 @@ const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Sche
 
 /**
  * Durable Resolution Activity
+ *
+ * **Details**
  *
  * Merges multiple document graphs and performs entity resolution.
  * Uses EntityResolutionService for proper clustering across documents.
@@ -314,6 +450,17 @@ const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Sche
  * 3. Call EntityResolutionService.resolve() to cluster similar entities
  * 4. Rewrite entity IRIs to use canonical IDs
  * 5. Serialize resolved graph back to Turtle
+ *
+ * **Example** (Inspect make resolution activity)
+ *
+ * ```ts
+ * import { makeResolutionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeResolutionActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeResolutionActivity = (input: ResolutionActivityInput) =>
   Activity.make({
@@ -337,14 +484,14 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
       const graphContents = yield* Effect.forEach(
         input.documentGraphUris,
         (uri) =>
-          storage.get(stripGsPrefix(uri)).pipe(
-            Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), uri)),
+          storage.getOption(stripGsPrefix(uri)).pipe(
+            Effect.flatMap((content) => requireContent(content, uri)),
             Effect.tapCause((cause) =>
               Effect.logError("Resolution: Failed to load document graph", {
                 activity: "resolution",
                 batchId: input.batchId,
                 graphUri: uri,
-                cause: String(cause),
+                cause: Cause.pretty(cause),
               })
             )
           ),
@@ -361,7 +508,9 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
           }).pipe(
             Effect.catch((err) =>
               Effect.gen(function* () {
-                yield* Effect.logWarning("Failed to parse document graph, skipping", { error: String(err) });
+                yield* Effect.logWarning("Failed to parse document graph, skipping", {
+                  error: Inspectable.toStringUnknown(err),
+                });
                 return KnowledgeGraph.make({ entities: [], relations: [] });
               })
             )
@@ -402,54 +551,16 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
         }
       });
 
-      // Merge all graphs and rewrite entity IDs using canonicalMap
-      const mergedEntities = knowledgeGraphs.flatMap((kg) => kg.entities);
-      const mergedRelations = knowledgeGraphs.flatMap((kg) => kg.relations);
-
-      // Rewrite entity IDs to canonical IDs
-      const rewrittenEntities = mergedEntities.map((entity) => {
-        const canonicalId = resolutionGraph.canonicalMap[entity.id] ?? entity.id;
-        return Entity.make({
-          ...entity,
-          id: EntityId.make(canonicalId),
-        });
-      });
-
-      // Deduplicate entities by canonical ID (keep first occurrence)
-      const seenIds = MutableHashSet.empty<string>();
-      const uniqueEntities = rewrittenEntities.filter((entity) => {
-        if (MutableHashSet.has(seenIds, entity.id)) return false;
-        MutableHashSet.add(seenIds, entity.id);
-        return true;
-      });
-
-      // Rewrite relation IDs
-      const rewrittenRelations = mergedRelations.map((rel) => {
-        const canonicalSubject = resolutionGraph.canonicalMap[rel.subjectId] ?? rel.subjectId;
-        const canonicalObject =
-          rel.object._tag === "EntityReference"
-            ? RelationObject.cases.EntityReference.make({
-                value: resolutionGraph.canonicalMap[rel.object.value] ?? rel.object.value,
-              })
-            : rel.object;
-        return Relation.make({
-          subjectId: canonicalSubject,
-          predicate: rel.predicate,
-          object: canonicalObject,
-        });
-      });
-
-      // Create resolved KnowledgeGraph
-      const resolvedGraph = KnowledgeGraph.make({
-        entities: uniqueEntities,
-        relations: rewrittenRelations,
-      });
+      const mergedGraph = A.reduce(knowledgeGraphs, KnowledgeGraph.make({}), mergeGraphs);
+      const resolvedGraph = refineKnowledgeGraph(mergedGraph, resolutionGraph);
 
       // 5. Serialize to Turtle with owl:sameAs links and save
       const store = yield* rdf.createStore;
       yield* rdf.addEntities(store, resolvedGraph.entities);
       yield* rdf.addRelations(store, resolvedGraph.relations);
       yield* rdf.addSameAsLinks(store, resolutionGraph.canonicalMap);
+      const provenanceDataset = yield* Effect.fromResult(provBundleToDataset(resolvedGraph.provenance));
+      A.forEach(provenanceDataset.quads, (quad) => rdfStoreAddQuad(store, quad));
       const resolvedTurtle = yield* rdf.toTurtle(store);
       const resolutionPath = PathLayout.batch.resolution(input.batchId);
       yield* storage.set(resolutionPath, resolvedTurtle);
@@ -459,7 +570,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
 
       // Build provenance map: canonical ID -> source document URIs
       const provenanceMap: Record<string, Array<string>> = {};
-      for (const [entityId, docUri] of Object.entries(entityToDocumentUri)) {
+      for (const [entityId, docUri] of R.toEntries(entityToDocumentUri)) {
         const canonicalId = resolutionGraph.canonicalMap[EntityId.make(entityId)] ?? entityId;
         if (P.not(P.isTruthy)(provenanceMap[canonicalId])) {
           provenanceMap[canonicalId] = [];
@@ -476,7 +587,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
         clustersFormed: NonNegativeInt.make(resolutionGraph.stats.clusterCount),
         relationsTotal: NonNegativeInt.make(totalRelations),
         compressionRatio: UnitInterval.make(compressionRatio),
-        provenanceMapEntries: Object.keys(provenanceMap).length,
+        provenanceMapEntries: R.size(provenanceMap),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       });
 
@@ -489,15 +600,28 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
         provenanceMap,
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
 /**
  * Durable Validation Activity
  *
+ * **Details**
+ *
  * Validates the resolved graph against SHACL shapes (if provided).
  * Journaled by WorkflowEngine for crash recovery.
+ *
+ * **Example** (Inspect make validation activity)
+ *
+ * ```ts
+ * import { makeValidationActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeValidationActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeValidationActivity = (input: ValidationActivityInput) =>
   Activity.make({
@@ -517,13 +641,13 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
         hasShaclUri: input.shaclUri.pipe(O.fromNullishOr, O.isSome),
       });
 
-      const resolvedGraph = yield* storage.get(stripGsPrefix(input.resolvedGraphUri)).pipe(
-        Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), input.resolvedGraphUri)),
+      const resolvedGraph = yield* storage.getOption(stripGsPrefix(input.resolvedGraphUri)).pipe(
+        Effect.flatMap((content) => requireContent(content, input.resolvedGraphUri)),
         Effect.tapCause((cause) =>
           Effect.logError("Validation: Failed to load resolved graph", {
             activity: "validation",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -533,7 +657,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
           Effect.logError("Validation: Failed to parse turtle", {
             activity: "validation",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -545,16 +669,15 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       const shapesStore = Effect.fn("onNone")(
         function* () {
           const shapesPath = input.ontologyUri.replace(/[^/]+\.ttl$/i, "shapes.ttl");
-          const shapesContent = yield* storage.get(stripGsPrefix(shapesPath));
-          if (shapesContent !== undefined) {
+          const shapesContent = yield* storage.getOption(stripGsPrefix(shapesPath));
+          if (O.isSome(shapesContent)) {
             yield* Effect.logInfo("Validation: Found shapes.ttl via auto-discovery", {
               activity: "validation",
               batchId: input.batchId,
               shapesPath,
               ontologyUri: input.ontologyUri,
             });
-            const parsed = yield* rdf.parseTurtle(shapesContent);
-            return parsed;
+            return yield* rdf.parseTurtle(shapesContent.value);
           }
           yield* Effect.logInfo("Validation: Auto-generating SHACL shapes from ontology", {
             activity: "validation",
@@ -562,14 +685,14 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
             ontologyUri: input.ontologyUri,
             triedShapesPath: shapesPath,
           });
-          const ontologyContent = yield* storage.get(stripGsPrefix(input.ontologyUri)).pipe(
-            Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), input.ontologyUri)),
+          const ontologyContent = yield* storage.getOption(stripGsPrefix(input.ontologyUri)).pipe(
+            Effect.flatMap((content) => requireContent(content, input.ontologyUri)),
             Effect.tapCause((cause) =>
               Effect.logError("Validation: Failed to load ontology", {
                 activity: "validation",
                 batchId: input.batchId,
                 ontologyUri: input.ontologyUri,
-                cause: String(cause),
+                cause: Cause.pretty(cause),
               })
             )
           );
@@ -580,7 +703,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
           Effect.logError("Validation: Failed to load or generate shapes", {
             activity: "validation",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -597,7 +720,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
           Effect.logError("Validation: SHACL validation failed", {
             activity: "validation",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -606,7 +729,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       yield* storage.set(validationGraphPath, resolvedGraph);
 
       const reportPath = PathLayout.batch.validationReport(input.batchId);
-      const reportJson = yield* S.encodeEffect(S.fromJsonString(ShaclValidationReport, { space: 2 }))(report);
+      const reportJson = yield* ShaclValidationReport.encodeEffectFromJsonString(report, { space: 2 });
       yield* storage.set(reportPath, reportJson);
 
       const end = yield* DateTime.now;
@@ -629,15 +752,28 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
         reportUri: GcsUri.fromUnknown(`gs://${bucket}/${reportPath}`),
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
 /**
  * Durable Ingestion Activity
  *
+ * **Details**
+ *
  * Ingests the validated graph into the canonical store.
  * Journaled by WorkflowEngine for crash recovery.
+ *
+ * **Example** (Inspect make ingestion activity)
+ *
+ * ```ts
+ * import { makeIngestionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeIngestionActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeIngestionActivity = (input: IngestionActivityInput) =>
   Activity.make({
@@ -656,24 +792,24 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         targetNamespace: input.targetNamespace,
       });
 
-      const validatedGraph = yield* storage.get(stripGsPrefix(input.validatedGraphUri)).pipe(
-        Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), input.validatedGraphUri)),
+      const validatedGraph = yield* storage.getOption(stripGsPrefix(input.validatedGraphUri)).pipe(
+        Effect.flatMap((content) => requireContent(content, input.validatedGraphUri)),
         Effect.tapCause((cause) =>
           Effect.logError("Ingestion: Failed to load validated graph", {
             activity: "ingestion",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
 
       const stats = yield* parseTurtleStats(validatedGraph).pipe(
-        Effect.catch((error) =>
-          Effect.gen(function* () {
+        Effect.catch(
+          Effect.fnUntraced(function* (error) {
             yield* Effect.logError("Ingestion: Failed to parse validated graph for stats", {
               activity: "ingestion",
               batchId: input.batchId,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             });
             // Return zeros but the error is logged - consider making this fail
             return { entityCount: 0, tripleCount: 0 };
@@ -693,7 +829,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         Effect.mapError((error) =>
           ActivityGenericError.make({
             message: `Failed to parse new graph: ${error.message}`,
-            cause: O.some(String(error)),
+            cause: O.some(Inspectable.toStringUnknown(error)),
           })
         )
       );
@@ -706,18 +842,20 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         const existingGraphOpt = yield* storage.getWithGeneration(namespaceCanonicalPath);
 
         let mergedGraph: string;
-        const mergedStats = { existingTriples: 0, newTriples: newTripleCount, addedTriples: 0 };
-        let generation: string | undefined;
+        const mergedStats = {
+          existingTriples: 0,
+          newTriples: newTripleCount,
+          addedTriples: 0,
+        };
+        const generation = O.map(existingGraphOpt, (existing) => existing.generation);
 
         if (O.isSome(existingGraphOpt)) {
-          generation = existingGraphOpt.value.generation;
-
           // Merge with existing graph
           const existingStore = yield* rdf.parseTurtle(existingGraphOpt.value.content).pipe(
             Effect.mapError((error) =>
               ActivityGenericError.make({
                 message: `Failed to parse existing graph: ${error.message}`,
-                cause: O.some(String(error)),
+                cause: O.some(Inspectable.toStringUnknown(error)),
               })
             )
           );
@@ -728,7 +866,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
             Effect.mapError((error) =>
               ActivityGenericError.make({
                 message: `Failed to parse new graph for merge: ${error.message}`,
-                cause: O.some(String(error)),
+                cause: O.some(Inspectable.toStringUnknown(error)),
               })
             )
           );
@@ -803,20 +941,13 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
           });
         }
 
-        // Write with optimistic locking (conditional on generation match)
-        if (generation !== undefined) {
-          yield* storage.setIfGenerationMatch(namespaceCanonicalPath, mergedGraph, generation);
-        } else {
-          const raced = yield* storage.getWithGeneration(namespaceCanonicalPath);
-          if (O.isSome(raced)) {
-            return yield* new GenerationMismatchError({
-              key: namespaceCanonicalPath,
-              expectedGeneration: "missing",
-              actualGeneration: raced.value.generation,
-            });
-          }
-          yield* storage.set(namespaceCanonicalPath, mergedGraph);
-        }
+        // Generation zero is the backend-neutral create-only precondition.
+        // Existing objects retain their exact generation token end-to-end.
+        yield* storage.setIfGenerationMatch(
+          namespaceCanonicalPath,
+          mergedGraph,
+          O.getOrElse(generation, () => "0")
+        );
 
         return mergedStats;
       });
@@ -825,12 +956,12 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
       const maxRetries = 3;
       yield* mergeWithOptimisticLocking.pipe(
         Effect.retry({
-          while: (error) => error instanceof GenerationMismatchError,
+          while: GenerationMismatchError.is,
           times: maxRetries,
           schedule: Schedule.exponential("100 millis").pipe(Schedule.jittered),
         }),
         Effect.tapError((error) => {
-          if (error instanceof GenerationMismatchError) {
+          if (GenerationMismatchError.is(error)) {
             return Effect.logError("Ingestion: Failed after max retries due to concurrent writes", {
               batchId: input.batchId,
               namespace: input.targetNamespace,
@@ -849,7 +980,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         triplesIngested: NonNegativeInt.make(stats.tripleCount),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -859,10 +990,22 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
 
 /**
  * Input for ClaimPersistence activity
+ *
+ * **Example** (Validate claim persistence input)
+ *
+ * ```ts
+ * import { ClaimPersistenceInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimPersistenceInput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ClaimPersistenceInput = S.Struct({
   /** Batch ID for logging */
-  batchId: S.String,
+  batchId: BatchId,
   /** Ontology ID for namespace scoping (e.g., "seattle") */
   ontologyId: S.String,
   /** URIs of document graphs to process */
@@ -879,10 +1022,19 @@ export const ClaimPersistenceInput = S.Struct({
     })
   ).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
+/**
+ * Describes the claim persistence input data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ClaimPersistenceInput = typeof ClaimPersistenceInput.Type;
 
 /**
  * Durable Claim Persistence Activity
+ *
+ * **Details**
  *
  * Persists claims to PostgreSQL AFTER validation passes.
  * This ensures only validated claims are persisted to the database.
@@ -893,7 +1045,16 @@ export type ClaimPersistenceInput = typeof ClaimPersistenceInput.Type;
  * 3. Convert to claims using knowledgeGraphToClaims
  * 4. Persist to PostgreSQL via ClaimPersistenceService
  *
- * @since 2.0.0
+ * **Example** (Inspect make claim persistence activity)
+ *
+ * ```ts
+ * import { makeClaimPersistenceActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeClaimPersistenceActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
   Activity.make({
@@ -950,12 +1111,13 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
         const result = yield* Effect.gen(function* () {
           const graphPath = stripGsPrefix(graphUri);
           const graphContent = yield* storage
-            .get(graphPath)
-            .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), graphPath)));
+            .getOption(graphPath)
+            .pipe(Effect.flatMap((content) => requireContent(content, graphPath)));
 
           // Parse TriG to extract entities and relations (preserves named graphs)
           const store = yield* rdf.parseTriG(graphContent);
           const knowledgeGraph = yield* storeToKnowledgeGraph(store);
+          const extractionArtifact = yield* claimExtractionArtifactFromQuads(yield* rdf.queryStore(store, {}));
 
           // Get metadata for this document
           // Try to find metadata by matching graph URI path to sourceUri
@@ -979,13 +1141,17 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
           // Convert to claims
           // Convert Namespace identifier to full IRI
           const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
-          const baseDomain = P.isNotNull(match) ? match[0] : "http://example.org/";
+          const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
           const baseNamespace = `${baseDomain}${input.targetNamespace}/`;
-          const claims = knowledgeGraphToClaims(knowledgeGraph.entities, knowledgeGraph.relations, {
-            baseNamespace,
-            documentId: docMeta.documentId,
-            ontologyId: input.ontologyId,
-            defaultConfidence: Confidence.make(0.85),
+          const claims = O.match(extractionArtifact, {
+            onNone: () =>
+              knowledgeGraphToClaims(knowledgeGraph.entities, knowledgeGraph.relations, {
+                baseNamespace,
+                documentId: docMeta.documentId,
+                ontologyId: input.ontologyId,
+                defaultConfidence: Confidence.make(0.85),
+              }),
+            onSome: (artifact) => artifact.claims,
           });
 
           if (claims.length === 0) {
@@ -1019,14 +1185,17 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
             claimsTotal: persistResult.claimsTotal,
           });
 
-          return { persisted: persistResult.claimsInserted, documentId: docMeta.documentId };
+          return {
+            persisted: persistResult.claimsInserted,
+            documentId: docMeta.documentId,
+          };
         }).pipe(
-          Effect.catch((error) =>
-            Effect.gen(function* () {
+          Effect.catch(
+            Effect.fnUntraced(function* (error) {
               yield* Effect.logWarning("Failed to persist claims for document", {
                 batchId: input.batchId,
                 graphUri,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
               if (config.extraction.strictPersistence) {
                 return yield* Effect.fail(error);
@@ -1060,7 +1229,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
         documentsFailed: NonNegativeInt.make(documentsFailed),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -1070,6 +1239,8 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
 
 /**
  * Durable Cross-Batch Entity Resolution Activity
+ *
+ * **Details**
  *
  * Links entities from the current batch to the persistent entity registry.
  * Enables building up a knowledge base over time where entities across
@@ -1082,7 +1253,16 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
  * 4. Update registry with new/merged entities
  * 5. Return resolution statistics
  *
- * @since 2.0.0
+ * **Example** (Inspect make cross batch resolution activity)
+ *
+ * ```ts
+ * import { makeCrossBatchResolutionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeCrossBatchResolutionActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInput) =>
   Activity.make({
@@ -1103,28 +1283,25 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
           matchedToExisting: NonNegativeInt.make(0),
           newCanonicals: NonNegativeInt.make(0),
           candidatesEvaluated: NonNegativeInt.make(0),
-          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+          duration: DateTime.distance(start, end),
         };
       }
 
-      // Get cross-batch resolver (optional - may not be configured)
+      // Runtime compositions outside the server may omit the resolver, so the
+      // enabled path must fail explicitly rather than reporting false success.
       const resolverOpt = yield* Effect.serviceOption(CrossBatchEntityResolver);
-
-      if (O.isNone(resolverOpt)) {
-        yield* Effect.logInfo("Cross-batch resolution skipped - resolver not configured", {
-          batchId: input.batchId,
-        });
-        const end = yield* DateTime.now;
-        return {
-          entitiesTotal: NonNegativeInt.make(0),
-          matchedToExisting: NonNegativeInt.make(0),
-          newCanonicals: NonNegativeInt.make(0),
-          candidatesEvaluated: NonNegativeInt.make(0),
-          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
-        };
-      }
-
-      const resolver = resolverOpt.value;
+      const resolver = yield* O.match(resolverOpt, {
+        onNone: () =>
+          Effect.fail(
+            ActivityError.serviceFailure(
+              "CrossBatchEntityResolver",
+              "resolve enabled batch",
+              "Cross-batch resolution is enabled but its resolver service is unavailable.",
+              false
+            )
+          ),
+        onSome: Effect.succeed,
+      });
       const storage = yield* StorageService;
       const rdf = yield* RdfBuilder;
 
@@ -1136,8 +1313,8 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
       // Load resolved graph
       const graphPath = stripGsPrefix(input.resolvedGraphUri);
       const graphContent = yield* storage
-        .get(graphPath)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), graphPath)));
+        .getOption(graphPath)
+        .pipe(Effect.flatMap((content) => requireContent(content, graphPath)));
 
       // Parse graph and extract entities
       const store = yield* rdf.parseTurtle(graphContent);
@@ -1169,9 +1346,9 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
         matchedToExisting: NonNegativeInt.make(result.stats.matchedToExisting),
         newCanonicals: NonNegativeInt.make(result.stats.createdNew),
         candidatesEvaluated: NonNegativeInt.make(result.stats.candidatesEvaluated),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        duration: DateTime.distance(start, end),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -1181,10 +1358,22 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
 
 /**
  * Input for Inference activity
+ *
+ * **Example** (Validate inference input)
+ *
+ * ```ts
+ * import { InferenceInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(InferenceInput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const InferenceInput = S.Struct({
   /** Batch ID for logging and provenance */
-  batchId: S.String,
+  batchId: BatchId,
   /** URI of the resolved graph to reason over */
   resolvedGraphUri: S.String,
   /** Reasoning profile to use (default: rdfs) */
@@ -1195,10 +1384,29 @@ export const InferenceInput = S.Struct({
   /** Whether inference is enabled (default: true) */
   enabled: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
+/**
+ * Describes the inference input data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type InferenceInput = typeof InferenceInput.Type;
 
 /**
  * Output for Inference activity
+ *
+ * **Example** (Validate inference output)
+ *
+ * ```ts
+ * import { InferenceOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(InferenceOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const InferenceOutput = S.Struct({
   /** URI of the enriched graph with inferences */
@@ -1214,10 +1422,19 @@ export const InferenceOutput = S.Struct({
   /** Duration in milliseconds */
   durationMs: NonNegNum,
 });
+/**
+ * Describes the inference output data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type InferenceOutput = typeof InferenceOutput.Type;
 
 /**
  * Durable RDFS Inference Activity
+ *
+ * **Details**
  *
  * Applies RDFS reasoning to the resolved graph to generate new facts
  * through forward-chaining inference. Computes the delta (new triples only)
@@ -1231,7 +1448,16 @@ export type InferenceOutput = typeof InferenceOutput.Type;
  * 5. Save enriched graph
  * 6. Return statistics
  *
- * @since 2.0.0
+ * **Example** (Inspect make inference activity)
+ *
+ * ```ts
+ * import { makeInferenceActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeInferenceActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeInferenceActivity = (input: InferenceInput) =>
   Activity.make({
@@ -1271,12 +1497,12 @@ export const makeInferenceActivity = (input: InferenceInput) =>
       // 1. Load resolved graph
       const graphPath = stripGsPrefix(input.resolvedGraphUri);
       const graphContent = yield* storage
-        .get(graphPath)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), graphPath)));
+        .getOption(graphPath)
+        .pipe(Effect.flatMap((content) => requireContent(content, graphPath)));
       const originalStore = yield* rdf.parseTurtle(graphContent);
 
       // 2. Apply reasoning (creates a copy, doesn't mutate original)
-      const profile = O.getOrElse(input.profile, () => "rdfs" as const);
+      const profile: ReasoningConfig["profile"] = O.getOrElse(input.profile, () => "rdfs");
       const reasoningConfig = ReasoningConfig.make({ profile });
       const { result: reasoningResult, store: enrichedStore } = yield* reasoner.reasonCopy(
         originalStore,
@@ -1304,9 +1530,9 @@ export const makeInferenceActivity = (input: InferenceInput) =>
             makeQuad(
               makeNamedNode(s),
               makeNamedNode(p),
-              o.startsWith("http") || o.startsWith("urn:")
+              Str.startsWith("http")(o) || Str.startsWith("urn:")(o)
                 ? makeNamedNode(o)
-                : makeLiteral(o, "http://www.w3.org/2001/XMLSchema#string")
+                : makeLiteral(o, "https://www.w3.org/2001/XMLSchema#string")
             )
           );
         };
@@ -1348,7 +1574,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
 
       // 5. Save enriched graph
       const enrichedTurtle = yield* rdf.toTurtle(enrichedStore);
-      const enrichedPath = PathLayout.batch.inference(input.batchId as BatchId);
+      const enrichedPath = PathLayout.batch.inference(input.batchId);
       yield* storage.set(enrichedPath, enrichedTurtle);
 
       const end = yield* DateTime.now;
@@ -1369,7 +1595,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         rulesApplied: reasoningResult.rulesApplied,
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -1379,6 +1605,18 @@ export const makeInferenceActivity = (input: InferenceInput) =>
 
 /**
  * Input for ComputeOntologyEmbeddings activity
+ *
+ * **Example** (Validate compute embeddings input)
+ *
+ * ```ts
+ * import { ComputeEmbeddingsInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ComputeEmbeddingsInput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ComputeEmbeddingsInput = S.Struct({
   /** URI of the ontology (e.g., "gs://bucket/ontologies/football/ontology.ttl") */
@@ -1386,10 +1624,29 @@ export const ComputeEmbeddingsInput = S.Struct({
   /** Embedding model to use */
   model: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
+/**
+ * Describes the compute embeddings input data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ComputeEmbeddingsInput = typeof ComputeEmbeddingsInput.Type;
 
 /**
  * Output for ComputeOntologyEmbeddings activity
+ *
+ * **Example** (Validate compute embeddings output)
+ *
+ * ```ts
+ * import { ComputeEmbeddingsOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ComputeEmbeddingsOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ComputeEmbeddingsOutput = S.Struct({
   /** URI of the stored embeddings blob */
@@ -1405,10 +1662,19 @@ export const ComputeEmbeddingsOutput = S.Struct({
   /** Duration in milliseconds */
   durationMs: NonNegNum,
 });
+/**
+ * Describes the compute embeddings output data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ComputeEmbeddingsOutput = typeof ComputeEmbeddingsOutput.Type;
 
 /**
  * Durable Compute Ontology Embeddings Activity
+ *
+ * **Details**
  *
  * Pre-computes embeddings for all classes and properties in an ontology
  * and stores them as a blob alongside the ontology file.
@@ -1422,6 +1688,17 @@ export type ComputeEmbeddingsOutput = typeof ComputeEmbeddingsOutput.Type;
  * 6. Store blob to GCS
  *
  * Idempotent: Same ontology content produces same embeddings blob.
+ *
+ * **Example** (Inspect make compute embeddings activity)
+ *
+ * ```ts
+ * import { makeComputeEmbeddingsActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeComputeEmbeddingsActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
   Activity.make({
@@ -1448,8 +1725,8 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       // 1. Load ontology content
       const ontologyPath = stripGsPrefix(input.ontologyUri);
       const ontologyContent = yield* storage
-        .get(ontologyPath)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), ontologyPath)));
+        .getOption(ontologyPath)
+        .pipe(Effect.flatMap((content) => requireContent(content, ontologyPath)));
 
       // 2. Compute version hash
       const version = yield* OntologyEmbeddings.computeVersion(ontologyContent);
@@ -1472,7 +1749,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
           Effect.gen(function* () {
             const text = ElementEmbedding.buildText(cls.label, cls.definition ?? cls.comment, cls.altLabels ?? []);
             const emb = yield* embedding.embed(text, "search_document");
-            return yield* S.decodeUnknownEffect(ElementEmbedding)({
+            return yield* ElementEmbedding.decodeUnknownEffect({
               iri: cls.id,
               text,
               embedding: A.fromIterable(emb),
@@ -1484,16 +1761,16 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       // 5. Embed all properties (parallelized for ~5x speedup)
       const propertyEmbeddings = yield* Effect.forEach(
         Chunk.toReadonlyArray(properties),
-        (prop) =>
-          Effect.gen(function* () {
-            const text = ElementEmbedding.buildText(prop.label, prop.comment, []);
-            const emb = yield* embedding.embed(text, "search_document");
-            return yield* S.decodeUnknownEffect(ElementEmbedding)({
-              iri: prop.id,
-              text,
-              embedding: A.fromIterable(emb),
-            });
-          }),
+
+        Effect.fnUntraced(function* (prop) {
+          const text = ElementEmbedding.buildText(prop.label, prop.comment, []);
+          const emb = yield* embedding.embed(text, "search_document");
+          return yield* ElementEmbedding.decodeUnknownEffect({
+            iri: prop.id,
+            text,
+            embedding: A.fromIterable(emb),
+          });
+        }),
         { concurrency: 5 }
       );
 
@@ -1503,7 +1780,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       // 7. Build OntologyEmbeddings blob
       // Use actual provider model from metadata, not hardcoded fallback
       const ontologyUri = GcsUri.fromUnknown(input.ontologyUri);
-      const embeddingsBlob = yield* S.decodeUnknownEffect(OntologyEmbeddings)({
+      const embeddingsBlob = yield* OntologyEmbeddings.decodeUnknownEffect({
         ontologyUri,
         version: ContentHash.make(version),
         model: O.getOrElse(input.model, () => providerMetadata.modelId),
@@ -1514,7 +1791,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       });
 
       // 8. Serialize and store
-      const embeddingsJson = yield* S.encodeEffect(OntologyEmbeddingsJson)(embeddingsBlob);
+      const embeddingsJson = yield* OntologyEmbeddingsJson.encodeEffect(embeddingsBlob);
       const embeddingsPath = stripGsPrefix(OntologyEmbeddings.storagePathFor(ontologyUri));
       yield* storage.set(embeddingsPath, embeddingsJson);
 
@@ -1536,7 +1813,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
         dimension: NonNegativeInt.make(dimension),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -1546,6 +1823,18 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
 
 /**
  * Entity pair for LLM verification
+ *
+ * **Example** (Validate entity pair)
+ *
+ * ```ts
+ * import { EntityPair } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(EntityPair)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const EntityPair = S.Struct({
   /** First entity ID */
@@ -1563,23 +1852,61 @@ export const EntityPair = S.Struct({
   /** Initial similarity score from embedding/string matching */
   similarity: UnitInterval,
 });
+/**
+ * Describes the entity pair data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EntityPair = typeof EntityPair.Type;
 
 /**
  * Input for LLM verification activity
+ *
+ * **Example** (Validate llm verification input)
+ *
+ * ```ts
+ * import { LlmVerificationInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(LlmVerificationInput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const LlmVerificationInput = S.Struct({
   /** Batch ID for context */
-  batchId: S.String,
+  batchId: BatchId,
   /** Entity pairs with low confidence to verify */
   entityPairs: S.Array(EntityPair),
   /** Similarity threshold below which to verify (default: 0.7) */
   verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
+/**
+ * Describes the llm verification input data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LlmVerificationInput = typeof LlmVerificationInput.Type;
 
 /**
  * Verified entity pair result
+ *
+ * **Example** (Validate verified pair)
+ *
+ * ```ts
+ * import { VerifiedPair } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(VerifiedPair)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const VerifiedPair = S.Struct({
   /** First entity ID */
@@ -1593,10 +1920,29 @@ export const VerifiedPair = S.Struct({
   /** Original similarity score */
   originalSimilarity: UnitInterval,
 });
+/**
+ * Describes the verified pair data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type VerifiedPair = typeof VerifiedPair.Type;
 
 /**
  * Output for LLM verification activity
+ *
+ * **Example** (Validate llm verification output)
+ *
+ * ```ts
+ * import { LlmVerificationOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(LlmVerificationOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const LlmVerificationOutput = S.Struct({
   /** Pairs verified as same entity */
@@ -1610,6 +1956,13 @@ export const LlmVerificationOutput = S.Struct({
   /** Duration in milliseconds */
   durationMs: NonNegNum,
 });
+/**
+ * Describes the llm verification output data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LlmVerificationOutput = typeof LlmVerificationOutput.Type;
 
 /**
@@ -1721,6 +2074,8 @@ const VERIFICATION_BATCH_SIZE = 5;
 /**
  * Durable LLM Verification Activity
  *
+ * **Details**
+ *
  * Verifies low-confidence entity pairs using LLM to improve resolution accuracy.
  * This is an optional post-clustering step for entity resolution.
  *
@@ -1729,7 +2084,16 @@ const VERIFICATION_BATCH_SIZE = 5;
  * - Catch false negatives from pure string/embedding matching
  * - Improve recall for entities with very different surface forms
  *
- * @since 2.0.0
+ * **Example** (Inspect make llm verification activity)
+ *
+ * ```ts
+ * import { makeLlmVerificationActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeLlmVerificationActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
   Activity.make({
@@ -1739,7 +2103,6 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
     execute: Effect.gen(function* () {
       const start = yield* DateTime.now;
       const config = yield* ConfigService;
-      const timeout = yield* StageTimeoutService;
       const llm = yield* LanguageModel.LanguageModel;
 
       const threshold = O.getOrElse(input.verificationThreshold, () => DEFAULT_VERIFICATION_THRESHOLD);
@@ -1779,33 +2142,19 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           const pair = batch[0];
           const prompt = buildComparisonPrompt(pair);
 
-          const result = yield* timeout.withTimeout(
-            "entity_verification",
-            generateObjectWithRetry({
-              llm,
-              prompt,
-              schema: EntityComparisonSchema,
-              objectName: "EntityComparison",
-              serviceName: "LlmVerification",
-              model: config.llm.model,
-              provider: config.llm.provider,
-              retryConfig: {
-                initialDelayMs: config.runtime.retryInitialDelayMs,
-                maxDelayMs: config.runtime.retryMaxDelayMs,
-                maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs,
-              },
-              spanAttributes: {
-                [LlmAttributes.PROMPT_LENGTH]: prompt.length,
-                "verification.pair_index": i,
-              },
-            }),
-            () =>
-              Effect.logWarning("Entity verification approaching timeout", {
-                batchId: input.batchId,
-                pairIndex: i,
-              })
-          );
+          const result = yield* generateObjectWithRetry({
+            prompt,
+            schema: EntityComparisonSchema,
+            objectName: "EntityComparison",
+            serviceName: "LlmVerification",
+            model: config.llm.model,
+            provider: config.llm.provider,
+            retryPolicy: config.llm.retryPolicy,
+            spanAttributes: {
+              [LlmAttributes.PROMPT_LENGTH]: prompt.length,
+              "verification.pair_index": i,
+            },
+          }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
 
           const verifiedPair: VerifiedPair = {
             entityA: pair.entityA,
@@ -1824,48 +2173,33 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           // Batch verification
           const prompt = buildBatchComparisonPrompt(batch);
 
-          const result = yield* timeout.withTimeout(
-            "entity_verification",
-            generateObjectWithRetry({
-              llm,
-              prompt,
-              schema: BatchComparisonSchema,
-              objectName: "BatchEntityComparison",
-              serviceName: "LlmVerification",
-              model: config.llm.model,
-              provider: config.llm.provider,
-              retryConfig: {
-                initialDelayMs: config.runtime.retryInitialDelayMs,
-                maxDelayMs: config.runtime.retryMaxDelayMs,
-                maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs * 2,
-              },
-              spanAttributes: {
-                [LlmAttributes.PROMPT_LENGTH]: prompt.length,
-                "verification.batch_size": batch.length,
-                "verification.batch_start": i,
-              },
-            }),
-            () =>
-              Effect.logWarning("Batch entity verification approaching timeout", {
-                batchId: input.batchId,
-                batchStart: i,
-                batchSize: batch.length,
-              })
-          );
+          const result = yield* generateObjectWithRetry({
+            prompt,
+            schema: BatchComparisonSchema,
+            objectName: "BatchEntityComparison",
+            serviceName: "LlmVerification",
+            model: config.llm.model,
+            provider: config.llm.provider,
+            retryPolicy: config.llm.retryPolicy,
+            spanAttributes: {
+              [LlmAttributes.PROMPT_LENGTH]: prompt.length,
+              "verification.batch_size": batch.length,
+              "verification.batch_start": i,
+            },
+          }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
 
           // Map results back to pairs
-          type ComparisonResult = { index: number; sameEntity: boolean; confidence: Confidence };
-          const resultsMap = HashMap.fromIterable(
-            (result.value.results as ReadonlyArray<ComparisonResult>).map((r) => [r.index, r])
-          );
+          const resultsMap = HashMap.fromIterable(result.value.results.map((r) => [r.index, r]));
 
           batch.forEach((pair, idx) => {
-            const llmResult = HashMap.get(resultsMap, idx);
+            const llmResult = HashMap.get(resultsMap, NonNegativeInt.make(idx));
             const verifiedPair: VerifiedPair = {
               entityA: pair.entityA,
               entityB: pair.entityB,
-              sameEntity: O.match(llmResult, { onNone: () => false, onSome: (value) => value.sameEntity }),
+              sameEntity: O.match(llmResult, {
+                onNone: () => false,
+                onSome: (value) => value.sameEntity,
+              }),
               confidence: O.match(llmResult, {
                 onNone: () => Confidence.make(0),
                 onSome: (value) => value.confidence,
@@ -1900,7 +2234,7 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
         totalProcessed: NonNegativeInt.make(pairsToVerify.length),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -1966,6 +2300,18 @@ const BatchClassificationResponse = S.Struct({
 
 /**
  * Output schema for preprocessing activity
+ *
+ * **Example** (Validate preprocessing output)
+ *
+ * ```ts
+ * import { PreprocessingOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PreprocessingOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const PreprocessingOutput = S.Struct({
   enrichedManifestUri: GcsUri,
@@ -1976,6 +2322,13 @@ export const PreprocessingOutput = S.Struct({
   averageComplexity: UnitInterval,
   durationMs: NonNegNum,
 });
+/**
+ * Describes the preprocessing output data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PreprocessingOutput = typeof PreprocessingOutput.Type;
 
 /** Preview size in bytes for classification */
@@ -1986,7 +2339,11 @@ const PREVIEW_SIZE = 4096;
  * Build classification prompt for a batch of document previews
  */
 const buildClassificationPrompt = (
-  previews: ReadonlyArray<{ index: number; preview: string; contentType: string }>
+  previews: ReadonlyArray<{
+    index: number;
+    preview: string;
+    contentType: string;
+  }>
 ): string => {
   const docSummaries = previews
     .map(({ contentType, index, preview }) => `Document ${index} (${contentType}):\n"""${preview.slice(0, 1500)}"""`)
@@ -2013,13 +2370,24 @@ Respond with classifications for each document by index.`;
 /**
  * Durable Preprocessing Activity
  *
+ * **Details**
+ *
  * Preprocesses documents in a batch to extract metadata for intelligent batching:
  * - Loads document previews (first ${PREVIEW_SIZE} bytes)
  * - Classifies documents using LLM in batches
  * - Computes chunking strategies and priorities
  * - Creates EnrichedManifest for downstream processing
  *
- * @since 2.3.0
+ * **Example** (Inspect make preprocessing activity)
+ *
+ * ```ts
+ * import { makePreprocessingActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makePreprocessingActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
   Activity.make({
@@ -2040,7 +2408,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         classifyDocuments: shouldClassify,
         adaptiveChunking: input.preprocessing.adaptiveChunking,
         priorityOrdering: input.preprocessing.priorityOrdering,
-        chunkingStrategyOverride: O.getOrUndefined(input.preprocessing.chunkingStrategyOverride),
+        chunkingStrategyOverride: input.preprocessing.chunkingStrategyOverride,
         classificationBatchSize: input.preprocessing.classificationBatchSize,
       };
 
@@ -2053,9 +2421,9 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
       // 1. Load the batch manifest
       const manifestPath = stripGsPrefix(input.manifestUri);
       const manifestContent = yield* storage
-        .get(manifestPath)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), manifestPath)));
-      const manifest = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(manifestContent).pipe(
+        .getOption(manifestPath)
+        .pipe(Effect.flatMap((content) => requireContent(content, manifestPath)));
+      const manifest = yield* BatchManifest.decodeEffectFromJsonString(manifestContent).pipe(
         Effect.mapError((e) => notFoundError("BatchManifest", `Parse error: ${e}`))
       );
 
@@ -2070,16 +2438,25 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         (doc, index) =>
           Effect.gen(function* () {
             const sourcePath = stripGsPrefix(doc.sourceUri);
-            const content = yield* storage.get(sourcePath).pipe(
-              Effect.map((opt) => opt ?? (() => "")()),
+            const content = yield* storage.getOption(sourcePath).pipe(
+              Effect.tap((content) =>
+                O.match(content, {
+                  onNone: () =>
+                    Effect.logWarning("Document is absent while loading preprocessing preview", {
+                      documentId: doc.documentId,
+                      sourcePath,
+                    }),
+                  onSome: () => Effect.void,
+                })
+              ),
               Effect.catch((error) =>
                 Effect.gen(function* () {
                   yield* Effect.logWarning("Failed to load document for preview", {
                     documentId: doc.documentId,
                     sourcePath,
-                    error: String(error),
+                    error: Inspectable.toStringUnknown(error),
                   });
-                  return "";
+                  return O.none<string>();
                 })
               )
             );
@@ -2089,7 +2466,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
               sourceUri: doc.sourceUri,
               contentType: doc.contentType,
               sizeBytes: doc.sizeBytes,
-              preview: content.slice(0, PREVIEW_SIZE),
+              preview: O.map(content, Str.slice(0, PREVIEW_SIZE)),
             };
           }),
         { concurrency: 10 }
@@ -2119,13 +2496,17 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
             sizeBytes: NonNegativeInt.make(p.sizeBytes),
             preprocessedAt,
           });
-          if (overrideStrategy === undefined) return fallback;
-          const params = ChunkingStrategy.parameters(overrideStrategy);
-          return DocumentMetadata.make({
-            ...fallback,
-            chunkingStrategy: overrideStrategy,
-            suggestedChunkSize: params.chunkSize,
-            suggestedOverlap: params.overlapSentences,
+          return O.match(overrideStrategy, {
+            onNone: () => fallback,
+            onSome: (strategy) => {
+              const params = ChunkingStrategy.parameters(strategy);
+              return DocumentMetadata.make({
+                ...fallback,
+                chunkingStrategy: strategy,
+                suggestedChunkSize: params.chunkSize,
+                suggestedOverlap: params.overlapSentences,
+              });
+            },
           });
         });
         failedCount = previews.length;
@@ -2137,11 +2518,15 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         const batchSize = options.classificationBatchSize;
         for (let i = 0; i < previews.length; i += batchSize) {
           const batch = previews.slice(i, i + batchSize);
-          const batchPreviews = batch.map((p) => ({
-            index: p.index,
-            preview: p.preview,
-            contentType: p.contentType,
-          }));
+          const batchPreviews = A.getSomes(
+            A.map(batch, (preview) =>
+              O.map(preview.preview, (text) => ({
+                index: preview.index,
+                preview: text,
+                contentType: preview.contentType,
+              }))
+            )
+          );
 
           yield* Effect.logDebug("Classifying batch", {
             batchId: input.batchId,
@@ -2150,31 +2535,26 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
           });
 
           const result = yield* generateObjectWithRetry({
-            llm,
             prompt: buildClassificationPrompt(batchPreviews),
             schema: BatchClassificationResponse,
             objectName: "batch_classification",
             serviceName: "Preprocessing",
             model: config.llm.model,
             provider: config.llm.provider,
-            retryConfig: {
-              initialDelayMs: 1000,
-              maxDelayMs: 30000,
-              maxAttempts: 3,
-              timeoutMs: 60000,
-            },
+            retryPolicy: config.llm.retryPolicy,
             spanAttributes: {
               "preprocessing.batch_id": input.batchId,
               "preprocessing.batch_start": i,
               "preprocessing.batch_size": batch.length,
             },
           }).pipe(
+            Effect.provideService(LanguageModel.LanguageModel, llm),
             Effect.catch((error) =>
               Effect.gen(function* () {
                 yield* Effect.logWarning("Classification batch failed, using defaults", {
                   batchId: input.batchId,
                   batchStart: i,
-                  error: String(error),
+                  error: Inspectable.toStringUnknown(error),
                 });
                 return { value: { classifications: [] } };
               })
@@ -2196,15 +2576,15 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
             const tokens = DocumentMetadata.estimateTokens(p.sizeBytes);
 
             const complexityScore = UnitInterval.make(classification.value.complexityScore);
-            const strategy =
-              options.chunkingStrategyOverride ??
-              (options.adaptiveChunking
+            const strategy = O.getOrElse(options.chunkingStrategyOverride, () =>
+              options.adaptiveChunking
                 ? ChunkingStrategy.recommend(
                     classification.value.documentType,
                     classification.value.entityDensity,
                     complexityScore
                   )
-                : ChunkingStrategy.Enum.standard);
+                : ChunkingStrategy.Enum.standard
+            );
             const chunkParameters = ChunkingStrategy.parameters(strategy);
 
             const priority = DocumentMetadata.computePriority(
@@ -2251,7 +2631,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
 
       // 5. Sort by priority if enabled (lower = process first)
       if (options.priorityOrdering) {
-        documentMetadata.sort((a, b) => a.priority - b.priority);
+        documentMetadata = A.sort(documentMetadata, DocumentPriorityOrder);
       }
 
       // 6. Compute stats
@@ -2288,9 +2668,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
 
       // 8. Write enriched manifest to storage
       const enrichedManifestPath = PathLayout.batch.enrichedManifest(input.batchId);
-      const enrichedManifestJson = yield* S.encodeEffect(S.fromJsonString(EnrichedManifest, { space: 2 }))(
-        enrichedManifest
-      );
+      const enrichedManifestJson = yield* EnrichedManifest.encodeEffectFromJsonStringFormatted(enrichedManifest);
       yield* storage.set(enrichedManifestPath, enrichedManifestJson);
 
       yield* Effect.logInfo("Preprocessing activity complete", {
@@ -2312,6 +2690,6 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         averageComplexity: UnitInterval.make(avgComplexity),
         durationMs: NonNegNum.make(durationMs),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
