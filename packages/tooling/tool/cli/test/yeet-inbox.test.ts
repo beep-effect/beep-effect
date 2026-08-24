@@ -155,7 +155,7 @@ describe("appendYeetInboxRow", () => {
         let raceInjected = false;
         const racingFileSystem = FileSystem.FileSystem.of({
           ...fs,
-          writeFileString: (target, contents, options) => {
+          writeFileString: Effect.fn("FileSystem.FileSystem.writeFileString")((target, contents, options) => {
             if (!raceInjected && Eq.equals(target, paths.failuresPath) && options?.flag === "ax") {
               raceInjected = true;
               return Effect.gen(function* () {
@@ -164,7 +164,7 @@ describe("appendYeetInboxRow", () => {
               });
             }
             return fs.writeFileString(target, contents, options);
-          },
+          }),
         });
 
         yield* appendYeetInboxRow(root, second).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
