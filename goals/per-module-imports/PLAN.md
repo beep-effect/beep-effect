@@ -40,14 +40,31 @@ Status: `active` — P0 complete; next action is P1.
   `Architecture/internal/PackageShell.ts`, `IdentityExportBlock.ts`.
 - Extend `JSDocDocumentationInventory` example-import detection to banned
   roots (quote-style independent), with ratchet/test coverage.
+- Extend the mapping table beyond effect/utils/schema to every in-scope
+  foundation barrel the pilot imports (`@beep/lexical-schema`,
+  `@beep/identity`, `@beep/dock`, `@beep/dock-react`, `@beep/observability`,
+  `@beep/mcp-kit`, then per-batch), generated from each barrel's
+  root-export→leaf graph and validated against export maps; publish the
+  in-scope census baseline (gross vs in-scope) alongside it.
+- Add a permanent Markdown-fence gate: the inverted law's Markdown `--check`
+  mode runs over the authored guidance corpus (`.patterns/`, `standards/`,
+  `.claude/skills/`, `docs/`, `goals/*/[A-Z]*.md`) as a Lint Policy step, so
+  new fence violations cannot land after the corpus reaches zero — advisory
+  until the P3 error flip, blocking after it. Biome, the source law, and the
+  JSDoc detector do not see standalone Markdown; without this step the
+  doc-fence acceptance criterion has no enforcement once the one-shot ends.
 
 ### P2 Pilot gate
 
 - Enforcement config identical between states; no warn rule yet.
 - Follow `research/pilot-and-measurement.md` "Paste-ready measurement gate"
   literally (7-run medians/MAD/IQR; 5-run build bytes; raw logs under
-  `.beep/research/per-module-imports/measurements/`). Copy the verdict and
-  stats JSON into `history/` when the gate closes.
+  `.beep/research/per-module-imports/measurements/`). When the gate closes,
+  copy a tracked raw-sample bundle into `history/measurements/{before,after}/`
+  — the per-run wall/RSS values, `dev-cold.tsv`, `bundle-bytes.tsv`, and the
+  extendedDiagnostics counters — alongside the verdict and `stats-*.json`
+  summaries, so the decisive-win/noise math is auditable from the packet on
+  any checkout (the `.beep` originals are gitignored and machine-local).
 - Attribute any newly surfaced tsgo diagnostics (direct imports expose Effect
   diagnostics the barrel hid — proven in `research/tooling-autofix-eval.md`).
 

@@ -266,7 +266,9 @@ sum_bytes() {
     case "$codec" in
       raw) stat -c '%s' "$artifact" ;;
       gzip) /usr/bin/gzip -9 -c "$artifact" | wc -c ;;
-      brotli) /usr/bin/brotli -q 11 -c "$artifact" | wc -c ;;
+      # packet-editorial 2026-08-24: node zlib replaces the system brotli CLI,
+      # which is not provisioned on all checkouts (review thread PRRT_kwDOPbO_N86bl-uu).
+      brotli) "$MISE_NODE" -e 'const z=require("node:zlib");const c=[];process.stdin.on("data",(d)=>c.push(d)).on("end",()=>{console.log(z.brotliCompressSync(Buffer.concat(c),{params:{[z.constants.BROTLI_PARAM_QUALITY]:11}}).length)})' < "$artifact" ;;
     esac
   done | awk '{ total += $1 } END { print total + 0 }'
 }

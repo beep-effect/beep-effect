@@ -63,13 +63,25 @@ migration is gated on a measured pilot.
 ## Target Surfaces
 
 - Executable imports: 2,089 `effect`-root + 2,820 foundation-root statements
-  at census (`research/import-census.md` §1); tests and ecosystem members are
-  in scope — the current law's exclusions do not carry over.
+  at census (`research/import-census.md` §1). These are **gross repository
+  totals**: they include excluded corpus (`scratchpad/` 603 statements,
+  `explorations/` assets 14, `goals/*/ops` assets 18 — census §4). P1
+  publishes the in-scope census baseline (gross and in-scope, with the
+  reproduction commands) and acceptance's "zero forbidden specifiers in
+  scope" measures against the in-scope baseline. Tests and ecosystem members
+  are in scope — the current law's exclusions do not carry over.
 - Documentation imports: 3,449 statements in JSDoc `**Example**` fences and
   Markdown/skills fences (docgen compiles the JSDoc ones).
 - The mechanical mapping table (`research/import-census.md` §3) — 84/84 effect
   bindings, 33/33 `@beep/utils`, 60 `@beep/schema` — is the codemod's data
-  spec. Preserve local aliases; never normalize them.
+  spec. It is **not yet complete for the pilot**: `apps/professional-desktop`
+  also imports `@beep/lexical-schema`, `@beep/identity`, `@beep/dock`,
+  `@beep/dock-react`, `@beep/observability`, and `@beep/mcp-kit` roots. P1
+  extends the table to every in-scope foundation barrel a target family
+  imports, generated from each barrel's root-export→leaf graph (census §2
+  readiness data) and validated against package export maps; the pilot
+  dry-run requires zero unmapped bindings. Preserve local aliases; never
+  normalize them.
 - Foundation export surfaces needing new public leaves before their consumers
   migrate: `@beep/schema` (`SafeRemoteHost`, `FileDiff`), `@beep/observability`
   (8 modules + `VERSION`), `@beep/dock` (17 modules), `@beep/dock-react` (2),
