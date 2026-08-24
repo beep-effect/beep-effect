@@ -21,9 +21,9 @@ Read them first, then `AGENTS.md`, `CLAUDE.md`, and the standards named by
 Scope:
 
 - In: captured process lifecycle in `StepExec.ts`; step-group scheduling,
-  deadlines, retry, and the CLI-internal spawn sites in `Tasks.ts`; focused
-  CLI tests; watchdog dumps; one `always()` upload in `check.yml`; the Bun
-  1.4.0 post-bump soak record (pin landed ungated via PR #769).
+  deadlines, retry, and the spawn sites in `Tasks.ts` AND `CiLane.ts`;
+  focused CLI tests; watchdog dumps; one `always()` upload in `check.yml`;
+  the Bun 1.4.0 post-bump soak record (pin landed ungated via PR #769).
 - Out: hosted telemetry, dashboards, a Bun runtime fix, a local repro harness,
   retention machinery, and any other `check.yml` restructuring.
 
@@ -45,10 +45,11 @@ Workflow:
    artifact on a hosted run.
 6. Widen the watchdog to every captured step group. Record deadline
    calibration that clears `lint:deprecated-apis` with margin.
-7. W4: drop the `bun run beep` wrapper in `repoCliStep` and `bunRunStep`.
+7. W4: drop the `bun run beep` wrapper at both spawn sites (`Tasks.ts`
+   `bunRunStep`/`repoCliStep` AND the `CiLane.ts` `bunRunStep` helper).
    The Bun 1.4.0 pin already landed ungated (PR #769, 2026-08-23): record
    the post-bump soak instead — 7 days AND >=30 Lint Policy runs on 1.4.0,
-   noting zero hang signatures or any watchdog-captured recurrence.
+   observational only; clean runs are never confirmation.
 8. Run the `SPEC.md` verification matrix. Publish through `/yeet`, monitor to
    `merge-ready: yes`, resolve every review thread, then complete P7.
 

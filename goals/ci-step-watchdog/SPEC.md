@@ -46,8 +46,12 @@ Higher sources outrank lower sources when they conflict.
 - `packages/tooling/tool/cli/src/internal/process/StepExec.ts` for the split
   process-exit and capture-EOF lifecycle.
 - `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` for the captured
-  step-group watchdog, expected-duration policy, retry, and `repoCliStep`
-  wrapper removal.
+  step-group watchdog, expected-duration policy, retry, and the
+  `bunRunStep`/`repoCliStep` wrapper removal (the victim-step spawn site).
+- `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts` for its own
+  `bunRunStep` helper — the spawn site of the middle
+  `bun run beep lint policy --full` pair; both files must drop the wrapper
+  to reach the promised six-to-four process reduction.
 - `packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts` and focused
   Quality task tests, using the existing fake-spawner pattern.
 - One well-known watchdog-dump directory shared by the CLI and workflow.
@@ -64,7 +68,7 @@ Higher sources outrank lower sources when they conflict.
 | W1 split-await lifecycle events | Emit schema-first lifecycle events — an `S.Class` step-lifecycle event schema in the CLI, encoded as one-line JSON behind a stable `[beep-step]` prefix — for spawned pid/pgid, exit resolution with code and elapsed time, capture EOF, and watchdog deadline armed/fired. Preserve the existing captured-output contract while making exit and EOF independently visible. |
 | W2 per-step watchdog | Bound every captured step group with `max(120 seconds, 2 × expectedSeconds)`, where `expectedSeconds` is a new step field seeded from the measured LPT timing data. On expiry, dump first, group-kill with TERM then KILL escalation, retry exactly once, and fail only if the retry fails. |
 | W3 forensic dump and upload | Record the process tree and Bun process state in a stable directory, add best-effort tracing when the host permits it, and upload the directory from `check.yml` under `always()`. |
-| W4 trigger reduction | Drop the nested `bun run beep` wrapper in both CLI-internal spawn sites (`repoCliStep` and `bunRunStep`); run the Bun 1.4.0 post-bump soak observation — the pin bump already landed ungated via PR #769 (2026-08-23), so required-lane runs on main are the soak: record 7 calendar days AND ≥30 Lint Policy runs on 1.4.0, noting zero hang signatures or any recurrence. |
+| W4 trigger reduction | Drop the nested `bun run beep` wrapper at both CLI-internal spawn sites — `bunRunStep`/`repoCliStep` in `Tasks.ts` (victim steps) and the `bunRunStep` helper in `CiLane.ts` (the middle lane pair) — reaching six-to-four processes; run the Bun 1.4.0 post-bump soak observation — the pin bump already landed ungated via PR #769 (2026-08-23), so required-lane runs on main are the soak: record 7 calendar days AND ≥30 Lint Policy runs on 1.4.0, noting the outcome without treating clean runs as confirmation. |
 
 ## Constraints
 
@@ -72,7 +76,11 @@ Higher sources outrank lower sources when they conflict.
   synthetic hang built from the fake spawner in
   `packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts` must drive
   watchdog fire, dump creation, process-group kill, one retry, and a green
-  lane. A hosted run must expose the dump artifact.
+  lane. The hosted artifact proof must be deterministically reachable: the
+  dump directory always contains a per-run watchdog summary (so the
+  `always()` upload has content on every run, incident or not), and a
+  one-time opt-in synthetic-hang trigger (workflow_dispatch- or env-gated)
+  drives the full incident-dump path end to end on hosted CI.
 - The watchdog ultimately covers every captured step group in every lane, not
   only Lint Policy.
 - The deadline policy is settled: `max(120 seconds, 2 × expectedSeconds)`
@@ -94,10 +102,13 @@ Higher sources outrank lower sources when they conflict.
   the existing workflow structure intact apart from the `always()` upload.
 - The Bun 1.4.0 pin bump landed ungated via PR #769 (2026-08-23) before this
   packet started, so no shadow workflow exists. W4's soak is observational:
-  record 7 calendar days AND at least 30 Lint Policy runs on 1.4.0. Zero hang
-  signatures confirms the trigger-surface claim; a recurrence proves 1.4.0
-  did not fix bun#27766 and its watchdog forensics become the packet's
-  captured evidence.
+  record 7 calendar days AND at least 30 Lint Policy runs on 1.4.0. The soak
+  is strictly observational and asymmetric: at the estimated ~2% incidence,
+  30 clean runs still occur with ~55% probability under an unchanged
+  runtime, so zero hang signatures must never be recorded as confirmation
+  that 1.4.0 reduced the trigger surface; a recurrence, however, is strong
+  evidence that 1.4.0 did not fix the class, and its watchdog forensics
+  become the packet's captured proof.
 - The setup action's baked-versus-checkout Bun comparison stays intact; the
   fleet AMI's baked bun still needs its own 1.4.0 rebake as fleet-ops
   housekeeping outside this packet.
@@ -118,7 +129,7 @@ Higher sources outrank lower sources when they conflict.
 | 2026-08-23 | How is each step's watchdog deadline computed? | `max(120s, 2 × expectedSeconds)`, with `expectedSeconds` a new per-step field seeded from measured LPT data. | One number cannot serve both ~435s and ~10s steps; 2× keeps false positives rare while detecting short-step hangs 24× faster than the job timeout, and the retry policy makes a false positive cheap. Rejected: flat lane-wide cap (slow detection), static duration classes (coarser for no gain). |
 | 2026-08-23 | What format do lifecycle events use? | Schema-first JSON lines: an `S.Class` event schema encoded one-line behind a stable `[beep-step]` prefix. | Greppable by eye, machine-decodable by the same schema in tests and tooling; matches the repo's schema-first law. Rejected: text-only markers (regex parsing), dual text+JSON (marker noise). |
 | 2026-08-23 | What exactly gates the Bun 1.4.0 pin bump? | Nightly-cron shadow workflow; 7 calendar days AND ≥30 green runs with zero hang signatures; operator-approved bump PR. | ~2%/run incidence needs both soak time and run count for confidence; the watchdog ships independently, so the gate buys confidence, not protection. Rejected: ≥60-run count gate (more spend for marginal power), count-only gate (weak soak signal). |
-| 2026-08-23 | Which `bun run beep` wrappers are dropped? | The CLI-internal spawn sites: `repoCliStep` and `bunRunStep`. `check.yml`'s `run_lane` invocation stays. | Six bun processes per hung lane become four entirely within CLI-owned code; check.yml keeps its minimal-touch constraint (artifact step only). Rejected: full-chain drop (extra check.yml ownership), victim-path-only (leaves the orchestrator pair's wrapper in the suspect set). |
+| 2026-08-23 | Which `bun run beep` wrappers are dropped? | The CLI-internal spawn sites: `bunRunStep`/`repoCliStep` in `Tasks.ts` (victim steps) and the separate `bunRunStep` helper in `CiLane.ts` (the middle lane pair). `check.yml`'s `run_lane` invocation stays. | Six bun processes per hung lane become four entirely within CLI-owned code; check.yml keeps its minimal-touch constraint (artifact step only). Rejected: full-chain drop (extra check.yml ownership), victim-path-only (leaves the orchestrator pair's wrapper in the suspect set). (File mapping corrected in review: the two `bunRunStep` helpers live in different files.) |
 | 2026-08-23 | What replaces the canary after PR #769 bumped Bun to 1.4.0 ungated? | Post-bump soak observation: no shadow workflow; main's required-lane runs are the soak, recorded over 7 days AND ≥30 Lint Policy runs. | The gate's premise (repo pinned 1.3.14) was invalidated the same day by the routine deps refresh; observation preserves the gate's confidence intent at zero new infrastructure, and the watchdog — not the bump — is the protection. Rejected: dropping the soak entirely (loses the attribution evidence), inverse 1.3.14 canary (real EC2 cost for marginal science). |
 
 ## Acceptance criteria
@@ -133,13 +144,21 @@ Higher sources outrank lower sources when they conflict.
 - [ ] `.github/workflows/check.yml` uploads the watchdog directory under
       `always()` without other workflow restructuring.
 - [ ] The Lint Policy first slice uses the existing fake-spawner pattern to
-      prove watchdog fire, dump, group-kill, retry, and green completion; a
-      hosted run exposes the dump artifact.
+      prove watchdog fire, dump, group-kill, retry, and green completion.
+- [ ] A real-process Linux integration test spawns a detached group leader
+      with a TERM-ignoring descendant and proves the TERM-to-KILL escalation
+      removes the entire group (negative-PGID signaling), so group cleanup
+      is validated beyond the mocked handle.
+- [ ] Every hosted run uploads a watchdog artifact containing at least the
+      per-run summary; the opt-in synthetic-hang trigger proves the full
+      incident-dump path on hosted CI once.
 - [ ] Deadline calibration clears the slowest expected LPT work, including
       `lint:deprecated-apis`, with recorded margin.
-- [ ] Both CLI-internal spawn sites (`repoCliStep` and `bunRunStep`) call
+- [ ] Both CLI-internal spawn sites — `bunRunStep`/`repoCliStep` in
+      `Tasks.ts` and the `bunRunStep` helper in `CiLane.ts` — call
       `bun packages/tooling/tool/cli/src/bin.ts -- ...` directly instead of
-      nesting the `bun run` script alias.
+      nesting the `bun run` script alias (six processes per hung lane
+      become four).
 - [ ] The Bun 1.4.0 post-bump soak record covers 7 calendar days AND at
       least 30 Lint Policy runs, with the hang-signature outcome noted
       either way (the pin landed ungated via PR #769, 2026-08-23).
@@ -156,7 +175,7 @@ Higher sources outrank lower sources when they conflict.
 | Lifecycle and watchdog tests | `bunx --bun vitest run packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts` | Synthetic hang covers dump, kill, retry-once, and failure paths |
 | CLI typecheck | `bun run --cwd packages/tooling/tool/cli check` | Passes |
 | Lint Policy | `bun run beep lint policy --full` | Passes without a watchdog false positive |
-| Hosted first slice | Lint Policy Actions run plus uploaded watchdog artifact | Green run; artifact is present under `always()` |
+| Hosted first slice | Lint Policy Actions run plus uploaded watchdog artifact | Green run; the always-written per-run summary artifact is present, and one opt-in synthetic-hang run has produced a full incident dump |
 | Bun soak | Post-bump soak record: 7 days AND ≥30 Lint Policy runs on 1.4.0 | Record complete with the hang-signature outcome noted either way |
 | Packet launcher size | `test "$(wc -m < goals/ci-step-watchdog/GOAL.md)" -le 4000` | Passes |
 | Manifest JSON | `jq . goals/ci-step-watchdog/ops/manifest.json` | Passes |

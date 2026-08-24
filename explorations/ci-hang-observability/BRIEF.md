@@ -9,9 +9,10 @@ DECISIONS.md (2026-08-23). -->
 Roughly 2% of hosted `Lint Policy` runs finish 25 of their 26 policy steps in
 ~5 minutes, then sit completely silent until the 50-minute job timeout, fail
 the required check, and block the PR. Four incidents share one proven
-signature: a live, SIGTERM-immune bun child busy-spinning 1-2 cores (the open
-bun#27766 / bun#34069 family on the pinned Bun 1.3.14), struck at a
-schedule-determined step. Each incident costs a 50-minute billable EC2 hang,
+signature: a live bun process tree busy-spinning 1-2 full cores for the
+entire silence window, struck at a schedule-determined step; attribution to
+the open bun#27766 / bun#34069 family (on the then-pinned Bun 1.3.14) is
+the leading inference pending an on-host stack (`RESEARCH.md`). Each incident costs a 50-minute billable EC2 hang,
 a lane rerun, and — until this packet — a diagnosis dead-end, because a
 running policy step is a black box: no live output, no per-step bound, no
 forensics at cancellation. PR #748 bounded the child-exited-but-pipe-held

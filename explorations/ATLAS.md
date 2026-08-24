@@ -240,10 +240,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   2026-08-23 into
   [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md): per-step
   watchdog with dump-kill-retry-once over all captured step groups,
-  split-await lifecycle events, in-job forensic dump artifact, Bun 1.4.0
-  shadow canary + wrapper drop. Root cause proven to class level in one
-  session: SIGTERM-immune bun busy-spin (bun#27766/#34069, open on 1.3.14)
-  at a schedule-determined victim step, ~2% of Lint Policy runs. Hosted
+  split-await lifecycle events, in-job forensic dump artifact, wrapper drop,
+  and the Bun 1.4.0 post-bump soak record (the planned shadow canary was
+  superseded by PR #769's ungated pin bump the same day). Proven in one
+  session: a live bun process tree busy-spinning 1-2 cores at a
+  schedule-determined victim step, ~2% of Lint Policy runs; bun#27766/#34069
+  attribution is the leading inference pending an on-host stack. Hosted
   observability (CW agent / OTel) remains a reopen-at-`decompose` MAP point.
 - [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md)
   — graduated 2026-08-13 into
