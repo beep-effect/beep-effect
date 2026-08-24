@@ -66,7 +66,8 @@ describe("@beep/skill-contract EvidenceReceipt", () => {
       const emptySubject = yield* S.decodeUnknownEffect(Receipt)(emptySubjectInput).pipe(Effect.flip);
       const malformedDigest = yield* S.decodeUnknownEffect(Receipt)(malformedDigestInput).pipe(Effect.flip);
 
-      expect(emptySubject.message).toContain("Missing key");
+      expect(S.is(Receipt)(emptySubjectInput)).toBe(false);
+      expect(emptySubject.message).toContain('["subject"]');
       expect(malformedDigest.message).toContain("SHA-256 digest must be exactly 64 characters long");
     })
   );
