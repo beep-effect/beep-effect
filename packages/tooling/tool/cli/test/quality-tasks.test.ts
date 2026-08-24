@@ -23,11 +23,13 @@ import {
   CoverageRegressionBaseline,
   CoverageScopeOwner,
   CoverageUncoveredCounts,
+  changedCoverageOwners,
   collectEffectTsgoDiagnosticLines,
   compareCoverageRegressionSnapshotsForExpectedPackagesForTesting,
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageBaselineWriteSummary,
   coverageDispositionGapsForTesting,
   coverageFullStepsForTesting,
   coveragePackageBaselineFromSummaryForTesting,
@@ -2286,6 +2288,7 @@ describe("quality task adapter", () => {
         "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
       ])
     ).toMatchObject({ _tag: "full" });
+    expect(changedCoverageOwners(owners, ["package.json", "packages/b/package.json"])).toEqual(["@beep/b"]);
   });
 
   it("skips affected coverage for docs-only and packages without a coverage task", () => {
@@ -2805,31 +2808,51 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("replaces every measured row for a full baseline change set and preserves its reasons", () => {
+  it("keeps full-run reasons diagnostic while adopting only changed owners", () => {
+    const committedHeld = CoveragePackageBaseline.make({
+      path: "packages/held",
+      ...coveragePercentages(61),
+      uncovered: coverageUncovered(7),
+      files: {
+        "packages/held/src/Index.ts": coverageFileBaseline(61, 7),
+      },
+    });
+    const measuredHeld = CoveragePackageBaseline.make({
+      path: "packages/held",
+      ...coveragePercentages(93),
+      uncovered: coverageUncovered(1),
+      files: {
+        "packages/held/src/Index.ts": coverageFileBaseline(93, 1),
+      },
+    });
     const changeSet = CoverageBaselineChangeSet.make({
       baseDescription: "origin/main merge-base a1b2c3d",
-      scope: { _tag: "full", reasons: ["vitest.config.ts: global coverage input changed"] },
+      packageNames: ["@beep/changed"],
+      fullReasons: ["vitest.config.ts: global coverage input changed"],
     });
     const plan = planCoverageBaselineWrite(
-      { "@beep/existing": coveragePackageBaseline("packages/existing", 50) },
+      {
+        "@beep/changed": coveragePackageBaseline("packages/changed", 50),
+        "@beep/held": committedHeld,
+      },
       [
-        { packageName: "@beep/existing", baseline: coveragePackageBaseline("packages/existing", 80) },
-        { packageName: "@beep/new", baseline: coveragePackageBaseline("packages/new", 90) },
+        { packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) },
+        { packageName: "@beep/held", baseline: measuredHeld },
       ],
       changeSet,
       { replaceAll: false }
     );
 
     expect(plan.dispositions).toEqual({
-      "@beep/existing": "replaced",
-      "@beep/new": "replaced",
+      "@beep/changed": "replaced",
+      "@beep/held": "held",
     });
-    expect(plan.packages["@beep/existing"]?.lines).toBe(80);
-    expect(plan.packages["@beep/new"]?.lines).toBe(90);
-    expect(plan.changeSet.scope).toEqual({
-      _tag: "full",
-      reasons: ["vitest.config.ts: global coverage input changed"],
-    });
+    expect(plan.packages["@beep/changed"]?.lines).toBe(80);
+    expect(plan.packages["@beep/held"]).toEqual(committedHeld);
+    expect(plan.changeSet.fullReasons).toEqual(["vitest.config.ts: global coverage input changed"]);
+    expect(coverageBaselineWriteSummary(plan, false)).toBe(
+      "[coverage-ratchet] wrote standards/coverage.regression-baseline.jsonc: replaced 1 changed package(s), added 0, held 1 unchanged package(s) at committed rows, pruned 0 (base: origin/main merge-base a1b2c3d) — global coverage inputs changed (vitest.config.ts: global coverage input changed); pass --replace-all if every floor should be re-measured"
+    );
   });
 
   it("splits selected baseline rows into replaced, held, added, and pruned dispositions", () => {
@@ -2863,7 +2886,8 @@ describe("quality task adapter", () => {
       ],
       CoverageBaselineChangeSet.make({
         baseDescription: "origin/main merge-base a1b2c3d",
-        scope: { _tag: "selected", packageNames: ["@beep/changed"] },
+        packageNames: ["@beep/changed"],
+        fullReasons: [],
       }),
       { replaceAll: false }
     );
@@ -2894,7 +2918,8 @@ describe("quality task adapter", () => {
       ],
       CoverageBaselineChangeSet.make({
         baseDescription: "dirty worktree only",
-        scope: { _tag: "noop" },
+        packageNames: [],
+        fullReasons: [],
       }),
       { replaceAll: false }
     );
@@ -2913,7 +2938,8 @@ describe("quality task adapter", () => {
       ],
       CoverageBaselineChangeSet.make({
         baseDescription: "dirty worktree only",
-        scope: { _tag: "noop" },
+        packageNames: [],
+        fullReasons: [],
       }),
       { replaceAll: true }
     );
@@ -2924,6 +2950,9 @@ describe("quality task adapter", () => {
     });
     expect(plan.packages["@beep/existing"]?.lines).toBe(80);
     expect(plan.packages["@beep/new"]?.lines).toBe(90);
+    expect(coverageBaselineWriteSummary(plan, true)).toBe(
+      "[coverage-ratchet] wrote standards/coverage.regression-baseline.jsonc: replaced all 2 package(s), pruned 0 (--replace-all; base: dirty worktree only)"
+    );
   });
 
   it("merges a scoped snapshot over the committed packages instead of replacing them", () => {

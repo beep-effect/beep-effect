@@ -39,7 +39,7 @@ import { enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import { resolveGitCommit, resolveGitMergeBase } from "../../../internal/repo-run/GitExec.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
-import { CoverageAffectedScope, planWorkspaceCoverageAffectedScope } from "./CoverageScope.ts";
+import { changedCoverageOwners, planCoverageAffectedScope, workspaceCoverageScopeOwners } from "./CoverageScope.ts";
 import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
@@ -485,7 +485,20 @@ export const CoverageBaselineRowDisposition = LiteralKit(["replaced", "held", "a
 export type CoverageBaselineRowDisposition = typeof CoverageBaselineRowDisposition.Type;
 
 /**
- * Affected coverage scope paired with the comparison-base label shown to operators.
+ * Changed-package adoption set, full-run diagnostics, and comparison-base
+ * label for an unscoped baseline write.
+ *
+ * **Details**
+ *
+ * `packageNames` is the sorted set of coverage owners for every changed file.
+ * `fullReasons` comes from the affected-run planner but does not expand that
+ * adoption set.
+ *
+ * **Gotchas**
+ *
+ * A non-empty `fullReasons` array means the run measured the full workspace;
+ * it does not authorize whole-document replacement. Only `--replace-all`
+ * grants that behavior.
  *
  * **Example** (Describe a dirty-only change set)
  *
@@ -494,7 +507,8 @@ export type CoverageBaselineRowDisposition = typeof CoverageBaselineRowDispositi
  *
  * const changeSet = CoverageBaselineChangeSet.make({
  *   baseDescription: "dirty worktree only",
- *   scope: { _tag: "noop" }
+ *   packageNames: [],
+ *   fullReasons: []
  * })
  * console.log(changeSet.baseDescription)
  * ```
@@ -505,15 +519,26 @@ export type CoverageBaselineRowDisposition = typeof CoverageBaselineRowDispositi
 export class CoverageBaselineChangeSet extends S.Class<CoverageBaselineChangeSet>($I`CoverageBaselineChangeSet`)(
   {
     baseDescription: S.NonEmptyString,
-    scope: CoverageAffectedScope,
+    packageNames: S.Array(S.String),
+    fullReasons: S.Array(S.String),
   },
   $I.annote("CoverageBaselineChangeSet", {
-    description: "Coverage-affecting workspace changes and the Git comparison base used to derive them.",
+    description: "Coverage-row adoption owners, full-run diagnostics, and the Git comparison base used to derive them.",
   })
 ) {}
 
 /**
  * Complete package rows and per-package outcomes for one baseline write.
+ *
+ * **Details**
+ *
+ * The nested change set records the exact changed-owner adoption set and any
+ * independent reasons the measurement planner selected the full workspace.
+ *
+ * **Gotchas**
+ *
+ * A `replaced` disposition is driven by a changed owner or `--replace-all`,
+ * never merely by a non-empty full-reason list.
  *
  * **Example** (Represent an empty first-write plan)
  *
@@ -521,7 +546,7 @@ export class CoverageBaselineChangeSet extends S.Class<CoverageBaselineChangeSet
  * import { CoverageBaselineWritePlan } from "@beep/repo-cli/test/Quality"
  *
  * const plan = CoverageBaselineWritePlan.make({
- *   changeSet: { baseDescription: "dirty worktree only", scope: { _tag: "noop" } },
+ *   changeSet: { baseDescription: "dirty worktree only", packageNames: [], fullReasons: [] },
  *   packages: {},
  *   dispositions: {}
  * })
@@ -1002,33 +1027,33 @@ const snapshotPackages = (entries: ReadonlyArray<CoverageSnapshotEntry>): Record
   R.fromEntries(A.map(entries, (entry) => [entry.packageName, entry.baseline] as const));
 
 const replaceMeasuredPackage = (
-  scope: CoverageAffectedScope,
+  packageNames: ReadonlyArray<string>,
   replaceAll: boolean
-): ((packageName: string) => boolean) =>
-  Bool.match(replaceAll, {
+): ((packageName: string) => boolean) => {
+  const changedNames = HashSet.fromIterable(packageNames);
+  return Bool.match(replaceAll, {
     onTrue: () => () => true,
-    onFalse: () =>
-      Match.value(scope).pipe(
-        Match.discriminatorsExhaustive("_tag")({
-          full: () => () => true,
-          selected: ({ packageNames }) => {
-            const selectedNames = HashSet.fromIterable(packageNames);
-            return (packageName: string): boolean => HashSet.has(selectedNames, packageName);
-          },
-          noop: () => thunkFalse,
-        })
-      ),
+    onFalse:
+      () =>
+      (packageName: string): boolean =>
+        HashSet.has(changedNames, packageName),
   });
+};
 
 /**
  * Plan an unscoped coverage baseline write without reading files or running Git.
  *
  * **Details**
  *
- * Full scopes and `replaceAll` adopt every measured row. Selected and no-op
- * scopes preserve committed rows for measured packages outside the change set,
- * while measured packages absent from the committed baseline are added.
- * Committed rows absent from the validated full-workspace snapshot are pruned.
+ * Measured rows owned by changed files are adopted. Other measured packages
+ * hold committed rows when present and are added when absent. Committed rows
+ * absent from the validated full-workspace snapshot are pruned.
+ *
+ * **Gotchas**
+ *
+ * Full-run reasons describe measurement breadth only and never widen adoption.
+ * `replaceAll` is the sole whole-document replacement path and overrides the
+ * changed-owner set.
  *
  * **Example** (Hold an unchanged measured package)
  *
@@ -1049,7 +1074,8 @@ const replaceMeasuredPackage = (
  * const measured = CoveragePackageBaseline.make({ ...committed, lines: 90 })
  * const changeSet = CoverageBaselineChangeSet.make({
  *   baseDescription: "dirty worktree only",
- *   scope: { _tag: "noop" }
+ *   packageNames: [],
+ *   fullReasons: []
  * })
  * const plan = planCoverageBaselineWrite(
  *   { "@beep/example": committed },
@@ -1062,8 +1088,8 @@ const replaceMeasuredPackage = (
  *
  * @param previousPackages - Package rows from the committed schema-v2 baseline.
  * @param entries - Full-workspace package rows measured by the current run.
- * @param changeSet - Affected scope and comparison-base provenance for this write.
- * @param options - Whether to replace every measured row regardless of scope.
+ * @param changeSet - Changed-owner adoption set, full-run reasons, and comparison-base provenance.
+ * @param options - Whether to replace every measured row regardless of changed ownership.
  * @returns Rows to write and one disposition for every measured or pruned package.
  * @category utilities
  * @since 0.0.0
@@ -1089,7 +1115,7 @@ export const planCoverageBaselineWrite: {
     options: { readonly replaceAll: boolean }
   ): CoverageBaselineWritePlan => {
     const measuredNames = HashSet.fromIterable(A.map(entries, (entry) => entry.packageName));
-    const shouldReplace = replaceMeasuredPackage(changeSet.scope, options.replaceAll);
+    const shouldReplace = replaceMeasuredPackage(changeSet.packageNames, options.replaceAll);
     const packages = R.empty<string, CoveragePackageBaseline>();
     const dispositions = R.empty<string, CoverageBaselineRowDisposition>();
 
@@ -1208,6 +1234,30 @@ const coverageBaselineGitAdapter: GitCommandErrorAdapter<QualityTaskConfiguratio
   onTruncated: O.none(),
 };
 
+const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
+  "CoverageRegression.coverageBaselineChangeSetFromChangedFiles"
+)(function* (
+  repoRoot: string,
+  changedFiles: ReadonlyArray<string>,
+  baseDescription: string
+): Effect.fn.Return<CoverageBaselineChangeSet, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
+  const owners = yield* workspaceCoverageScopeOwners(repoRoot);
+  const scope = planCoverageAffectedScope(owners, changedFiles);
+  const fullReasons = Match.value(scope).pipe(
+    Match.discriminatorsExhaustive("_tag")({
+      full: ({ reasons }) => reasons,
+      selected: () => A.empty<string>(),
+      noop: () => A.empty<string>(),
+    })
+  );
+
+  return CoverageBaselineChangeSet.make({
+    baseDescription,
+    packageNames: changedCoverageOwners(owners, changedFiles),
+    fullReasons,
+  });
+});
+
 const coverageBaselineChangeSetFromBase = Effect.fn("CoverageRegression.coverageBaselineChangeSetFromBase")(function* (
   repoRoot: string,
   base: string,
@@ -1220,10 +1270,7 @@ const coverageBaselineChangeSetFromBase = Effect.fn("CoverageRegression.coverage
   const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
     QualityTaskConfigurationError.mapError(`Failed to collect coverage baseline files from ${base}...HEAD.`)
   );
-  return CoverageBaselineChangeSet.make({
-    baseDescription,
-    scope: yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles),
-  });
+  return yield* coverageBaselineChangeSetFromChangedFiles(repoRoot, changedFiles, baseDescription);
 });
 
 const originMainMergeBase = Effect.fn("CoverageRegression.originMainMergeBase")(function* (
@@ -1270,10 +1317,7 @@ const collectCoverageBaselineChangeSet = Effect.fn("CoverageRegression.collectCo
     Effect.map((files) => pipe(files, A.dedupe, A.sort(Order.String))),
     QualityTaskConfigurationError.mapError("Failed to collect dirty-worktree files for coverage baseline planning.")
   );
-  return CoverageBaselineChangeSet.make({
-    baseDescription: "dirty worktree only",
-    scope: yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles),
-  });
+  return yield* coverageBaselineChangeSetFromChangedFiles(repoRoot, changedFiles, "dirty worktree only");
 });
 
 const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocumentFromSnapshot")(function* (
@@ -1448,28 +1492,72 @@ const coverageBaselineDispositionCount = (
   disposition: CoverageBaselineRowDisposition
 ): number => A.length(A.filter(R.values(plan.dispositions), (candidate) => candidate === disposition));
 
-const coverageBaselineWriteSummary = (plan: CoverageBaselineWritePlan, replaceAll: boolean): string => {
+/**
+ * Render the operator-facing disposition summary for an unscoped baseline write.
+ *
+ * **Details**
+ *
+ * Ordinary writes always report the replaced, added, held, and pruned split.
+ * Planner full-run reasons are appended as measurement context without
+ * changing the disposition wording.
+ *
+ * **Gotchas**
+ *
+ * The `--replace-all` form has its own whole-document summary. Full-run reasons
+ * alone retain the changed-owner summary and recommend that explicit escape
+ * hatch when every floor truly should be re-measured.
+ *
+ * **Example** (Summarize a held-row plan)
+ *
+ * ```ts
+ * import {
+ *   CoverageBaselineChangeSet,
+ *   CoverageBaselineWritePlan,
+ *   coverageBaselineWriteSummary
+ * } from "@beep/repo-cli/test/Quality"
+ *
+ * const plan = CoverageBaselineWritePlan.make({
+ *   changeSet: CoverageBaselineChangeSet.make({
+ *     baseDescription: "dirty worktree only",
+ *     packageNames: [],
+ *     fullReasons: []
+ *   }),
+ *   packages: {},
+ *   dispositions: {}
+ * })
+ * console.log(coverageBaselineWriteSummary(plan, false))
+ * ```
+ *
+ * @param plan - Planned package rows, dispositions, and change-set context.
+ * @param replaceAll - Whether the operator explicitly requested whole-document replacement.
+ * @returns One complete coverage-ratchet console line.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageBaselineWriteSummary: {
+  (replaceAll: boolean): (plan: CoverageBaselineWritePlan) => string;
+  (plan: CoverageBaselineWritePlan, replaceAll: boolean): string;
+} = dual(2, (plan: CoverageBaselineWritePlan, replaceAll: boolean): string => {
   const replaced = coverageBaselineDispositionCount(plan, CoverageBaselineRowDisposition.Enum.replaced);
   const added = coverageBaselineDispositionCount(plan, CoverageBaselineRowDisposition.Enum.added);
   const held = coverageBaselineDispositionCount(plan, CoverageBaselineRowDisposition.Enum.held);
   const pruned = coverageBaselineDispositionCount(plan, CoverageBaselineRowDisposition.Enum.pruned);
+  const changedOwnerSummary =
+    `[coverage-ratchet] wrote ${coverageRegressionBaselinePath}: replaced ${replaced} changed package(s), ` +
+    `added ${added}, held ${held} unchanged package(s) at committed rows, pruned ${pruned} ` +
+    `(base: ${plan.changeSet.baseDescription})`;
+  const fullReasonNotice = A.match(plan.changeSet.fullReasons, {
+    onEmpty: () => "",
+    onNonEmpty: (reasons) =>
+      ` — global coverage inputs changed (${A.join(reasons, "; ")}); pass --replace-all if every floor should be re-measured`,
+  });
 
   return Bool.match(replaceAll, {
     onTrue: () =>
       `[coverage-ratchet] wrote ${coverageRegressionBaselinePath}: replaced all ${replaced} package(s), pruned ${pruned} (--replace-all; base: ${plan.changeSet.baseDescription})`,
-    onFalse: () =>
-      Match.value(plan.changeSet.scope).pipe(
-        Match.discriminatorsExhaustive("_tag")({
-          full: ({ reasons }) =>
-            `[coverage-ratchet] wrote ${coverageRegressionBaselinePath}: replaced all ${replaced} package(s), pruned ${pruned} (full: ${A.join(reasons, "; ")}; base: ${plan.changeSet.baseDescription})`,
-          selected: () =>
-            `[coverage-ratchet] wrote ${coverageRegressionBaselinePath}: replaced ${replaced} changed package(s), added ${added}, held ${held} unchanged package(s) at committed rows, pruned ${pruned} (base: ${plan.changeSet.baseDescription})`,
-          noop: () =>
-            `[coverage-ratchet] wrote ${coverageRegressionBaselinePath}: replaced ${replaced} changed package(s), added ${added}, held ${held} unchanged package(s) at committed rows, pruned ${pruned} (base: ${plan.changeSet.baseDescription})`,
-        })
-      ),
+    onFalse: () => `${changedOwnerSummary}${fullReasonNotice}`,
   });
-};
+});
 
 /**
  * Write the committed coverage regression baseline from generated summaries.
@@ -1478,17 +1566,19 @@ const coverageBaselineWriteSummary = (plan: CoverageBaselineWritePlan, replaceAl
  *
  * A scoped run measures only the packages it was filtered to, so its snapshot
  * is merged over the committed document and every unmeasured entry is carried
- * through. An unscoped schema-v2 write derives the same affected scope as
- * `coverage --affected`: changed packages adopt measured rows, unchanged
- * packages hold their committed rows, new packages are added, and deleted
- * workspace packages are pruned. `replaceAll` restores full replacement.
+ * through. An unscoped schema-v2 write adopts measured rows only for workspace
+ * owners of changed files, holds committed rows for every other measured
+ * package, adds new packages, and prunes deleted packages. The affected planner
+ * still determines measurement breadth, while `replaceAll` is the only path
+ * that adopts the whole measured document.
  *
  * **Gotchas**
  *
  * An unscoped run that measured fewer live packages than the committed document
- * is refused rather than planned. Within a changed package the whole measured
- * package row is adopted; environment-dependent file rows inside that package
- * may still need to be pinned to the hosted figure by hand.
+ * is refused rather than planned. A full-run planner verdict never expands the
+ * adoption set. Within a changed package the whole measured row is adopted, so
+ * environment-dependent file rows there may still need manual pinning to the
+ * hosted figure.
  *
  * @param repoRoot - Repository root.
  * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
@@ -1543,7 +1633,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
 
       if (A.isReadonlyArrayNonEmpty(lost)) {
         return yield* QualityTaskConfigurationError.new(
-          `Refusing to write ${coverageRegressionBaselinePath}: an unscoped regeneration replaces the document, and ${A.length(lost)} package(s) it records are still in the workspace but produced no coverage summary in this run, so their entries would be deleted: ${A.join(lost, ", ")}. Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead. Packages that no longer exist are pruned normally and do not trigger this.`
+          `Refusing to write ${coverageRegressionBaselinePath}: an unscoped regeneration requires a complete workspace snapshot, and ${A.length(lost)} package(s) recorded in the baseline are still in the workspace but produced no coverage summary in this run: ${A.join(lost, ", ")}. Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead. Packages that no longer exist are pruned normally and do not trigger this.`
         );
       }
     }

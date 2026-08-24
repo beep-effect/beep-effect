@@ -557,6 +557,54 @@ const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePat
   );
 
 /**
+ * Map changed files to the coverage-owning workspace packages whose measured
+ * baseline rows may be adopted.
+ *
+ * **Details**
+ *
+ * Every changed path is mapped through the same package and repository-fixture
+ * ownership rules used by {@link planCoverageAffectedScope}. The result is
+ * deduplicated and sorted independently of full-run classification.
+ *
+ * **Gotchas**
+ *
+ * A full-run planner verdict changes which packages are measured, never which
+ * rows this owner list permits a baseline write to adopt. Only
+ * `--replace-all` expands adoption to the whole measured document.
+ *
+ * **Example** (Keep a manifest owner in the adoption set)
+ *
+ * ```ts
+ * import { changedCoverageOwners, CoverageScopeOwner } from "@beep/repo-cli/test/Quality"
+ *
+ * const owner = CoverageScopeOwner.make({
+ *   packageName: "@beep/example",
+ *   packagePath: "packages/example",
+ *   hasCoverage: true
+ * })
+ * console.log(changedCoverageOwners([owner], ["packages/example/package.json"])) // ["@beep/example"]
+ * ```
+ *
+ * @param owners - Current workspace packages and whether each defines coverage.
+ * @param changedFiles - Sorted or unsorted repository-relative changed paths.
+ * @returns Sorted unique coverage owners for all changed files.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const changedCoverageOwners: {
+  (changedFiles: ReadonlyArray<string>): (owners: ReadonlyArray<CoverageScopeOwner>) => ReadonlyArray<string>;
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(
+  2,
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): ReadonlyArray<string> =>
+    pipe(
+      A.getSomes(A.map(changedFiles, (filePath) => selectedOwnerForFile(owners, filePath))),
+      A.dedupe,
+      A.sort(Order.String)
+    )
+);
+
+/**
  * Derive a conservative coverage plan from changed files and current workspace owners.
  *
  * **Details**
@@ -564,6 +612,12 @@ const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePat
  * Global coverage inputs, unknown paths, shared test-kit changes, and package
  * manifest changes force a full run. Otherwise only directly changed owners
  * that currently define coverage are selected.
+ *
+ * **Gotchas**
+ *
+ * A full verdict controls measurement breadth only. Baseline adoption remains
+ * the package owners returned by {@link changedCoverageOwners} unless the
+ * operator explicitly passes `--replace-all`.
  *
  * **Example** (Select a directly changed owner)
  *
@@ -598,11 +652,7 @@ export const planCoverageAffectedScope: {
     return CoverageFullScope.make({ reasons });
   }
 
-  const packageNames = pipe(
-    A.getSomes(A.map(changedFiles, (filePath) => selectedOwnerForFile(owners, filePath))),
-    A.dedupe,
-    A.sort(Order.String)
-  );
+  const packageNames = changedCoverageOwners(owners, changedFiles);
   return A.isReadonlyArrayNonEmpty(packageNames)
     ? CoverageSelectedScope.make({ packageNames })
     : CoverageNoopScope.make();
