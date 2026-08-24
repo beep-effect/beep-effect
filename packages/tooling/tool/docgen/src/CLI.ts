@@ -20,6 +20,10 @@ import * as InternalVersion from "./internal/version.ts";
 
 const decodeCompilerOptions = S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)));
 
+const configFile = Flag.file("config-file", { mustExist: true }).pipe(
+  Flag.withDescription("Package-relative path to an alternate docgen configuration file"),
+  Flag.optional
+);
 const parseTsconfigFile = Flag.file("parse-tsconfig-file", { mustExist: true }).pipe(Flag.optional);
 const parseCompilerOptionsText = Flag.string("parse-compiler-options").pipe(Flag.optional);
 const examplesTsconfigFile = Flag.file("examples-tsconfig-file", { mustExist: true }).pipe(Flag.optional);
@@ -115,6 +119,7 @@ const resolveCompilerOptionsInput = (filePath: O.Option<string>, text: O.Option<
   );
 
 const options = {
+  configFile,
   projectHomepage,
   srcLink,
   srcDir,
@@ -168,6 +173,7 @@ export const docgenCommand = Command.make(
       input.examplesCompilerOptionsText
     );
     const config = yield* Configuration.load({
+      configFile: input.configFile,
       projectHomepage: input.projectHomepage,
       srcLink: input.srcLink,
       srcDir: input.srcDir,

@@ -22,6 +22,7 @@ import {
   TextNode,
 } from "@beep/lexical-schema";
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from "@lexical/list";
@@ -526,7 +527,7 @@ describe("Lexical.model", { concurrent: false }, () => {
           children: [node],
         },
       };
-      const source = Effect.runSync(S.encodeEffect(S.fromJsonString(S.Unknown))(state));
+      const source = Effect.runSync(Unknown.encodeEffectFromJsonString(state));
       const canonicalTag = ListType.$match(listType, {
         number: ListTag.thunk.ol,
         bullet: ListTag.thunk.ul,

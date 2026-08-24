@@ -4,8 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $LangExtractId } from "@beep/identity";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Unknown } from "@beep/schema/Unknown";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import { Effect, Match } from "effect";
@@ -33,7 +35,7 @@ const ModelOutputCandidates = S.Array(ExtractionCandidate)
     })
   );
 
-const ModelOutputJson = S.fromJsonString(S.Unknown).pipe(
+const ModelOutputJson = S.fromJsonString(Unknown).pipe(
   $I.annoteSchema("ModelOutputJson", {
     description: "JSON text emitted by a language model before response-shape validation.",
   }),

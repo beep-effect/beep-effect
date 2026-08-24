@@ -1,8 +1,9 @@
 /**
  * Schema-backed failures for ontology lookup, loading, and embeddings.
  *
- * @remarks
- * Class and property identifiers use canonical RDF IRI schemas; filesystem
+ * **Details**
+ *
+ * * Class and property identifiers use canonical RDF IRI schemas; filesystem
  * context uses `FilePath`; version markers and diagnostics are non-empty.
  *
  * @packageDocumentation
@@ -12,7 +13,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI, URI } from "@beep/rdf";
 import { FilePath } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
+import { ErrorMessage, OptionalErrorCause } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Ontology");
 
@@ -28,56 +29,49 @@ const commonFields = {
 /**
  * General ontology-operation failure.
  *
- * @example
+ * **Example** (Use OntologyError)
  * ```ts
- * import { OntologyError } from "@effect-ontology/Error/Ontology.ts"
+ * import { OntologyError } from "@effect-ontology/Error/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = OntologyError.make({ message: "Ontology operation failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(OntologyError)({
+ *   _tag: "OntologyError", message: "Ontology operation failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const OntologyError = makeOntologyErrorClass.make(
-  $I`OntologyError`,
+export class OntologyError extends S.TaggedError<OntologyError>($I`OntologyError`)(
   "OntologyError",
   commonFields,
   $I.annote("OntologyError", {
     description: "General ontology-operation failure.",
   })
-);
-
-/** Runtime value decoded by {@link OntologyError}.
- * @example
- * ```ts
- * import { OntologyError, type OntologyError as Failure } from "@effect-ontology/Error/Ontology.ts"
- * const error: Failure = OntologyError.make({ message: "Failed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type OntologyError = typeof OntologyError.Type;
+) {}
 
 /**
  * Lookup failure for a class IRI absent from an ontology.
  *
- * @example
+ * **Example** (Use ClassNotFound)
  * ```ts
- * import { ClassNotFound } from "@effect-ontology/Error/Ontology.ts"
+ * import { ClassNotFound } from "@effect-ontology/Error/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ClassNotFound.fromUnknown({
+ * const error = S.decodeUnknownOption(ClassNotFound)({
+ *   _tag: "ClassNotFound",
  *   message: "Class was not found.",
  *   classIri: "https://example.com/ontology#Missing"
  * })
- * console.log(error.classIri)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const ClassNotFound = makeOntologyErrorClass.make(
-  $I`ClassNotFound`,
+export class ClassNotFound extends S.TaggedError<ClassNotFound>($I`ClassNotFound`)(
   "ClassNotFound",
   {
     ...commonFields,
@@ -88,38 +82,29 @@ export const ClassNotFound = makeOntologyErrorClass.make(
   $I.annote("ClassNotFound", {
     description: "Lookup failure for a class IRI absent from an ontology.",
   })
-);
-
-/** Runtime value decoded by {@link ClassNotFound}.
- * @example
- * ```ts
- * import { ClassNotFound, type ClassNotFound as Missing } from "@effect-ontology/Error/Ontology.ts"
- * const error: Missing = ClassNotFound.fromUnknown({ message: "Missing.", classIri: "https://example.com/C" })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type ClassNotFound = typeof ClassNotFound.Type;
+) {}
 
 /**
  * Lookup failure for a property IRI absent from an ontology.
  *
- * @example
+ * **Example** (Use PropertyNotFound)
  * ```ts
- * import { PropertyNotFound } from "@effect-ontology/Error/Ontology.ts"
+ * import { PropertyNotFound } from "@effect-ontology/Error/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = PropertyNotFound.fromUnknown({
+ * const error = S.decodeUnknownOption(PropertyNotFound)({
+ *   _tag: "PropertyNotFound",
  *   message: "Property was not found.",
  *   propertyIri: "https://example.com/ontology#missing"
  * })
- * console.log(error.propertyIri)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const PropertyNotFound = makeOntologyErrorClass.make(
-  $I`PropertyNotFound`,
+export class PropertyNotFound extends S.TaggedError<PropertyNotFound>($I`PropertyNotFound`)(
   "PropertyNotFound",
   {
     ...commonFields,
@@ -130,38 +115,29 @@ export const PropertyNotFound = makeOntologyErrorClass.make(
   $I.annote("PropertyNotFound", {
     description: "Lookup failure for a property IRI absent from an ontology.",
   })
-);
-
-/** Runtime value decoded by {@link PropertyNotFound}.
- * @example
- * ```ts
- * import { PropertyNotFound, type PropertyNotFound as Missing } from "@effect-ontology/Error/Ontology.ts"
- * const error: Missing = PropertyNotFound.fromUnknown({ message: "Missing.", propertyIri: "https://example.com/p" })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type PropertyNotFound = typeof PropertyNotFound.Type;
+) {}
 
 /**
  * Failure to locate an ontology file at a canonical path.
  *
- * @example
+ * **Example** (Use OntologyFileNotFound)
  * ```ts
- * import { OntologyFileNotFound } from "@effect-ontology/Error/Ontology.ts"
+ * import { OntologyFileNotFound } from "@effect-ontology/Error/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = OntologyFileNotFound.fromUnknown({
+ * const error = S.decodeUnknownOption(OntologyFileNotFound)({
+ *   _tag: "OntologyFileNotFound",
  *   message: "Ontology file was not found.",
  *   path: "/data/ontology.ttl"
  * })
- * console.log(error.path)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const OntologyFileNotFound = makeOntologyErrorClass.make(
-  $I`OntologyFileNotFound`,
+export class OntologyFileNotFound extends S.TaggedError<OntologyFileNotFound>($I`OntologyFileNotFound`)(
   "OntologyFileNotFound",
   {
     ...commonFields,
@@ -172,38 +148,29 @@ export const OntologyFileNotFound = makeOntologyErrorClass.make(
   $I.annote("OntologyFileNotFound", {
     description: "Failure to locate an ontology file at a canonical path.",
   })
-);
-
-/** Runtime value decoded by {@link OntologyFileNotFound}.
- * @example
- * ```ts
- * import { OntologyFileNotFound, type OntologyFileNotFound as Missing } from "@effect-ontology/Error/Ontology.ts"
- * const error: Missing = OntologyFileNotFound.fromUnknown({ message: "Missing.", path: "/tmp/o.ttl" })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type OntologyFileNotFound = typeof OntologyFileNotFound.Type;
+) {}
 
 /**
  * Failure to parse an ontology file at a canonical path.
  *
- * @example
+ * **Example** (Use OntologyParsingFailed)
  * ```ts
- * import { OntologyParsingFailed } from "@effect-ontology/Error/Ontology.ts"
+ * import { OntologyParsingFailed } from "@effect-ontology/Error/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = OntologyParsingFailed.fromUnknown({
+ * const error = S.decodeUnknownOption(OntologyParsingFailed)({
+ *   _tag: "OntologyParsingFailed",
  *   message: "Ontology syntax is invalid.",
  *   path: "/data/ontology.ttl"
  * })
- * console.log(error.path)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const OntologyParsingFailed = makeOntologyErrorClass.make(
-  $I`OntologyParsingFailed`,
+export class OntologyParsingFailed extends S.TaggedError<OntologyParsingFailed>($I`OntologyParsingFailed`)(
   "OntologyParsingFailed",
   {
     ...commonFields,
@@ -214,39 +181,30 @@ export const OntologyParsingFailed = makeOntologyErrorClass.make(
   $I.annote("OntologyParsingFailed", {
     description: "Failure to parse an ontology file at a canonical path.",
   })
-);
-
-/** Runtime value decoded by {@link OntologyParsingFailed}.
- * @example
- * ```ts
- * import { OntologyParsingFailed, type OntologyParsingFailed as Failure } from "@effect-ontology/Error/Ontology.ts"
- * const error: Failure = OntologyParsingFailed.fromUnknown({ message: "Malformed.", path: "/tmp/o.ttl" })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type OntologyParsingFailed = typeof OntologyParsingFailed.Type;
+) {}
 
 /**
  * Failure to locate precomputed embeddings for an ontology.
  *
- * @example
+ * **Example** (Use EmbeddingsNotFound)
  * ```ts
- * import { EmbeddingsNotFound } from "@effect-ontology/Error/Ontology.ts"
+ * import { EmbeddingsNotFound } from "@effect-ontology/Error/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = EmbeddingsNotFound.fromUnknown({
+ * const error = S.decodeUnknownOption(EmbeddingsNotFound)({
+ *   _tag: "EmbeddingsNotFound",
  *   message: "Embeddings blob was not found.",
  *   ontologyUri: "https://example.com/ontology",
  *   embeddingsPath: "/data/ontology.embeddings"
  * })
- * console.log(error.embeddingsPath)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingsNotFound = makeOntologyErrorClass.make(
-  $I`EmbeddingsNotFound`,
+export class EmbeddingsNotFound extends S.TaggedError<EmbeddingsNotFound>($I`EmbeddingsNotFound`)(
   "EmbeddingsNotFound",
   {
     ...commonFields,
@@ -260,44 +218,31 @@ export const EmbeddingsNotFound = makeOntologyErrorClass.make(
   $I.annote("EmbeddingsNotFound", {
     description: "Failure to locate precomputed embeddings for an ontology.",
   })
-);
-
-/** Runtime value decoded by {@link EmbeddingsNotFound}.
- * @example
- * ```ts
- * import { EmbeddingsNotFound, type EmbeddingsNotFound as Missing } from "@effect-ontology/Error/Ontology.ts"
- * const error: Missing = EmbeddingsNotFound.fromUnknown({
- *   message: "Missing.",
- *   ontologyUri: "https://example.com/o",
- *   embeddingsPath: "/tmp/o.bin"
- * })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type EmbeddingsNotFound = typeof EmbeddingsNotFound.Type;
+) {}
 
 /**
  * Precomputed embeddings whose version does not match ontology content.
  *
- * @example
+ * **Example** (Use EmbeddingsVersionMismatch)
  * ```ts
- * import { EmbeddingsVersionMismatch } from "@effect-ontology/Error/Ontology.ts"
+ * import { EmbeddingsVersionMismatch } from "@effect-ontology/Error/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = EmbeddingsVersionMismatch.fromUnknown({
+ * const error = S.decodeUnknownOption(EmbeddingsVersionMismatch)({
+ *   _tag: "EmbeddingsVersionMismatch",
  *   message: "Embeddings are stale.",
  *   ontologyUri: "https://example.com/ontology",
  *   expectedVersion: "sha256:new",
  *   actualVersion: "sha256:old"
  * })
- * console.log(error.expectedVersion)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingsVersionMismatch = makeOntologyErrorClass.make(
-  $I`EmbeddingsVersionMismatch`,
+export class EmbeddingsVersionMismatch extends S.TaggedError<EmbeddingsVersionMismatch>($I`EmbeddingsVersionMismatch`)(
   "EmbeddingsVersionMismatch",
   {
     ...commonFields,
@@ -314,23 +259,7 @@ export const EmbeddingsVersionMismatch = makeOntologyErrorClass.make(
   $I.annote("EmbeddingsVersionMismatch", {
     description: "Precomputed embeddings whose version does not match ontology content.",
   })
-);
-
-/** Runtime value decoded by {@link EmbeddingsVersionMismatch}.
- * @example
- * ```ts
- * import { EmbeddingsVersionMismatch, type EmbeddingsVersionMismatch as Failure } from "@effect-ontology/Error/Ontology.ts"
- * const error: Failure = EmbeddingsVersionMismatch.fromUnknown({
- *   message: "Stale.",
- *   ontologyUri: "https://example.com/o",
- *   expectedVersion: "new",
- *   actualVersion: "old"
- * })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type EmbeddingsVersionMismatch = typeof EmbeddingsVersionMismatch.Type;
+) {}
 
 const AnyOntologyErrorDefinition = S.Union([
   OntologyError,
@@ -345,11 +274,14 @@ const AnyOntologyErrorDefinition = S.Union([
 /**
  * Exhaustive tagged union of ontology-operation failures.
  *
- * @example
+ * **Example** (Use AnyOntologyError)
  * ```ts
- * import { AnyOntologyError, OntologyError } from "@effect-ontology/Error/Ontology.ts"
+ * import { AnyOntologyError, OntologyError } from "@effect-ontology/Error/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = OntologyError.make({ message: "Failed." })
+ * const error = S.decodeUnknownOption(OntologyError)({
+ *   _tag: "OntologyError", message: "Failed." })
  * console.log(AnyOntologyError.guards.OntologyError(error)) // true
  * ```
  *
@@ -366,9 +298,9 @@ export const AnyOntologyError = AnyOntologyErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link AnyOntologyError}.
  *
- * @example
+ * **Example** (Use AnyOntologyError)
  * ```ts
- * import { OntologyError, type AnyOntologyError } from "@effect-ontology/Error/Ontology.ts"
+ * import { OntologyError, type AnyOntologyError } from "@effect-ontology/Error/Ontology"
  * const error: AnyOntologyError = OntologyError.make({ message: "Failed." })
  * console.log(error._tag)
  * ```

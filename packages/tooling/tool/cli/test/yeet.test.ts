@@ -92,6 +92,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NonNegativeInt } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -110,7 +111,7 @@ import { FastCheck as fc } from "effect/testing";
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const attemptUuid = S.decodeUnknownSync(UUID);
 
 const spawnGit = (cwd: string, args: ReadonlyArray<string>) =>

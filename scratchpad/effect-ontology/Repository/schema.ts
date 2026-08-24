@@ -1,287 +1,534 @@
 /**
  * Drizzle Schema Definition
  *
+ * **Details**
+ *
  * PostgreSQL schema for claims, articles, corrections, conflicts, and batch runs.
- * Matches the SQL migration at `src/Runtime/Persistence/migrations/001_claims_schema.sql`.
+ * Drives the generated baseline under `Runtime/Persistence/migrations`.
  *
- * @since 2.0.0
- * @module Repository/schema
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import {
-  boolean,
-  customType,
-  index,
-  integer,
-  jsonb,
-  numeric,
-  pgEnum,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { Model, VariantField } from "@beep/effect-drizzle";
+import * as pg from "@beep/effect-drizzle/pg";
+import { $ScratchpadId } from "@beep/identity";
+import { Sha256Hex } from "@beep/schema/Sha256";
+import { sql } from "drizzle-orm";
+import { Number as Num, SchemaGetter } from "effect";
+import * as A from "effect/Array";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { ClaimRank } from "../Domain/Schema/KnowledgeModel.ts";
+import { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
+import { ConflictKind, ConflictStatus } from "../Domain/Schema/Timeline.ts";
 
-// =============================================================================
-// Custom Types
-// =============================================================================
+const $I = $ScratchpadId.create("effect-ontology/Repository/schema");
 
-/**
- * Create a pgvector custom type for a specific dimension.
- *
- * @param dimension - Vector dimension (e.g., 512, 768, 1024)
- * @returns Drizzle custom type for pgvector
- *
- * @since 2.0.0
- * @category Custom Types
- */
-export const vectorN = (dimension: number) =>
-  customType<{ data: ReadonlyArray<number>; driverData: string }>({
-    dataType() {
-      return `vector(${dimension})`;
-    },
-    toDriver(value: ReadonlyArray<number>): string {
-      return `[${value.join(",")}]`;
-    },
-    fromDriver(value: string): ReadonlyArray<number> {
-      // Parse "[0.1,0.2,...]" format from PostgreSQL
-      const cleaned = value.replace(/^\[|\]$/g, "");
-      return cleaned.split(",").map(Number);
-    },
+const CorrectionType = S.Literals(["retraction", "clarification", "update", "amendment"]);
+const ClaimObjectType = S.Literals(["iri", "literal"]);
+const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));
+const nullableColumn = <Schema extends S.Top>(schema: Schema) => {
+  const nullable = S.NullOr(schema);
+  const optional = S.optional(nullable);
+  return VariantField({
+    select: nullable,
+    insert: optional,
+    update: optional,
+    json: nullable,
+    jsonCreate: optional,
+    jsonUpdate: optional,
   });
+};
+
+const EmbeddingVectorValues = S.Array(S.Finite).check(
+  S.isLengthBetween(768, 768, {
+    identifier: $I`EmbeddingVector768LengthCheck`,
+    title: "Embedding Vector 768",
+    description: "Exactly 768 finite numeric embedding coordinates.",
+    message: "Expected exactly 768 finite embedding coordinates.",
+  })
+);
+
+const EmbeddingVector768Codec = S.String.pipe(
+  S.decodeTo(EmbeddingVectorValues, {
+    decode: SchemaGetter.transform((value) => A.map(Str.split(",")(Str.replace(/^\[|\]$/g, "")(value)), Num.Number)),
+    encode: SchemaGetter.transform(
+      (value) =>
+        `[${A.join(
+          A.map(value, (entry) => `${entry}`),
+          ","
+        )}]`
+    ),
+  })
+);
 
 /**
- * Custom type for pgvector embedding columns (768-dimensional).
- * Used by Nomic embed text v1.5 (default dimension).
+ * Decodes PostgreSQL `vector(768)` text into a finite 768-coordinate embedding.
  *
- * @since 2.0.0
- * @category Custom Types
+ * **Example** (Inspect the vector column metadata)
+ *
+ * ```ts
+ * import { EmbeddingVector768 } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(EmbeddingVector768.meta.column?.ident)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-const vector768 = vectorN(768);
+export const EmbeddingVector768 = EmbeddingVector768Codec.pipe(pg.unsafeCustom("vector(768)"));
+
+const NullableEmbeddingVector768Codec = EmbeddingVector768Codec.pipe(S.NullOr);
+const OptionalNullableEmbeddingVector768Codec = NullableEmbeddingVector768Codec.pipe(S.optional);
+
+const NullableEmbeddingVector768 = VariantField({
+  select: NullableEmbeddingVector768Codec,
+  insert: OptionalNullableEmbeddingVector768Codec,
+  update: OptionalNullableEmbeddingVector768Codec,
+  json: NullableEmbeddingVector768Codec,
+  jsonCreate: OptionalNullableEmbeddingVector768Codec,
+  jsonUpdate: OptionalNullableEmbeddingVector768Codec,
+}).pipe(pg.unsafeCustom("vector(768)"));
 
 /**
  * Custom type for pgvector embedding columns (512-dimensional).
  * Used by Voyage-3-lite.
  *
- * @since 2.0.0
- * @category Custom Types
+ * @since 0.0.0
+ * @category tables
  */
 
 /**
  * Custom type for pgvector embedding columns (1024-dimensional).
  * Used by Voyage-3, Voyage-code-3, Voyage-law-2.
  *
- * @since 2.0.0
- * @category Custom Types
+ * @since 0.0.0
+ * @category tables
  */
-
-/**
- * Custom type for pgvector embedding columns (256-dimensional).
- * Used for Matryoshka representation learning (truncated embeddings).
- *
- * @since 2.0.0
- * @category Custom Types
- */
-
-// =============================================================================
-// Enums
-// =============================================================================
-
-export const claimRankEnum = pgEnum("claim_rank", ["preferred", "normal", "deprecated"]);
-export const objectTypeEnum = pgEnum("object_type", ["iri", "literal", "typed_literal"]);
-export const correctionTypeEnum = pgEnum("correction_type", ["retraction", "clarification", "update", "amendment"]);
-export const conflictTypeEnum = pgEnum("conflict_type", ["position", "temporal", "contradictory", "duplicate"]);
-export const conflictStatusEnum = pgEnum("conflict_status", ["pending", "resolved", "ignored"]);
-export const resolutionStrategyEnum = pgEnum("resolution_strategy", [
-  "temporal_precedence",
-  "source_authority",
-  "manual",
-]);
-export const batchStatusEnum = pgEnum("batch_status", ["pending", "running", "completed", "failed"]);
 
 // =============================================================================
 // Articles Table
 // =============================================================================
 
-export const articles = pgTable(
-  "articles",
+/**
+ * Provides repository access for articles.
+ *
+ * **Example** (Inspect articles)
+ *
+ * ```ts
+ * import { Articles } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(Articles.fields.ontologyId)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export class Articles extends Model<Articles>("Articles")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    uri: text("uri").notNull(),
-    ontologyId: text("ontology_id").notNull(),
-    sourceName: text("source_name"),
-    headline: text("headline"),
-    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
-    ingestedAt: timestamp("ingested_at", { withTimezone: true }).defaultNow(),
-    graphUri: text("graph_uri"),
-    contentHash: text("content_hash"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    uri: S.NonEmptyString.pipe(pg.text()),
+    ontologyId: S.NonEmptyString.pipe(pg.text(), pg.columnName("ontology_id")),
+    sourceName: nullableColumn(S.String).pipe(pg.text(), pg.columnName("source_name")),
+    headline: nullableColumn(S.String).pipe(pg.text()),
+    publishedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.columnName("published_at")),
+    ingestedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("ingested_at")),
+    graphUri: nullableColumn(S.String).pipe(pg.text(), pg.columnName("graph_uri")),
+    contentHash: nullableColumn(S.String).pipe(pg.text(), pg.columnName("content_hash")),
+    createdAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("created_at")),
+    updatedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("updated_at")),
   },
   (table) => [
-    uniqueIndex("articles_ontology_uri_unique").on(table.ontologyId, table.uri),
-    index("idx_articles_uri").on(table.uri),
-    index("idx_articles_source").on(table.sourceName),
-    index("idx_articles_published").on(table.publishedAt),
-    index("idx_articles_ontology_id").on(table.ontologyId),
-    index("idx_articles_ontology_source").on(table.ontologyId, table.sourceName),
-    index("idx_articles_ontology_published").on(table.ontologyId, table.publishedAt),
+    pg.Table.uniqueIndex("articles_ontology_uri_unique", [table.ontologyId, table.uri]),
+    pg.Table.index("idx_articles_uri", [table.uri]),
+    pg.Table.index("idx_articles_source", [table.sourceName]),
+    pg.Table.index("idx_articles_published", [table.publishedAt]),
+    pg.Table.index("idx_articles_ontology_id", [table.ontologyId]),
+    pg.Table.index("idx_articles_ontology_source", [table.ontologyId, table.sourceName]),
+    pg.Table.index("idx_articles_ontology_published", [table.ontologyId, table.publishedAt]),
   ]
-);
+) {}
+
+/**
+ * Drizzle table projected from the schema-first article model.
+ *
+ * **Example** (Inspect article columns)
+ *
+ * ```ts
+ * import { articles } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(articles.ontologyId.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const articles = pg.toPgTable(Articles);
 
 // =============================================================================
 // Corrections Table (defined before claims due to FK reference)
 // =============================================================================
 
-export const corrections = pgTable(
-  "corrections",
+const ArticlesReference: { readonly tableName: "articles"; readonly entityType: "Articles" } = {
+  tableName: "articles",
+  entityType: "Articles",
+};
+const CorrectionsReference: { readonly tableName: "corrections"; readonly entityType: "Corrections" } = {
+  tableName: "corrections",
+  entityType: "Corrections",
+};
+const ClaimsReference: { readonly tableName: "claims"; readonly entityType: "Claims" } = {
+  tableName: "claims",
+  entityType: "Claims",
+};
+
+/**
+ * Provides repository access for corrections.
+ *
+ * **Example** (Inspect corrections)
+ *
+ * ```ts
+ * import { Corrections } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(Corrections.fields.correctionType)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export class Corrections extends Model<Corrections>("Corrections")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    correctionType: text("correction_type").notNull(),
-    sourceArticleId: uuid("source_article_id").references(() => articles.id),
-    reason: text("reason"),
-    correctionDate: timestamp("correction_date", { withTimezone: true }).notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    processedAt: timestamp("processed_at", { withTimezone: true }),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    correctionType: CorrectionType.pipe(pg.text(), pg.columnName("correction_type")),
+    sourceArticleId: nullableColumn(S.String).pipe(
+      pg.uuid(),
+      pg.references(ArticlesReference),
+      pg.columnName("source_article_id")
+    ),
+    reason: nullableColumn(S.String).pipe(pg.text()),
+    correctionDate: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.columnName("correction_date")),
+    createdAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("created_at")
+    ),
+    processedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("processed_at")),
   },
   (table) => [
-    index("idx_corrections_type").on(table.correctionType),
-    index("idx_corrections_source").on(table.sourceArticleId),
-    index("idx_corrections_date").on(table.correctionDate),
+    pg.Table.check(
+      sql<boolean>`${table.correctionType} IN ('retraction', 'clarification', 'update', 'amendment')`,
+      "corrections_correction_type_check"
+    ),
+    pg.Table.index("idx_corrections_type", [table.correctionType]),
+    pg.Table.index("idx_corrections_source", [table.sourceArticleId]),
+    pg.Table.index("idx_corrections_date", [table.correctionDate]),
   ]
-);
+) {}
 
 // =============================================================================
 // Claims Table
 // =============================================================================
 
-export const claims = pgTable(
-  "claims",
+/**
+ * Provides repository access for claims.
+ *
+ * **Example** (Inspect claims)
+ *
+ * ```ts
+ * import { Claims } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(Claims.fields.ontologyId)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export class Claims extends Model<Claims>("Claims")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    articleId: uuid("article_id")
-      .notNull()
-      .references(() => articles.id, { onDelete: "cascade" }),
-    ontologyId: text("ontology_id").notNull(),
-    subjectIri: text("subject_iri").notNull(),
-    predicateIri: text("predicate_iri").notNull(),
-    objectValue: text("object_value").notNull(),
-    objectType: text("object_type").default("iri"),
-    objectDatatype: text("object_datatype"),
-    objectLanguage: text("object_language"),
-    rank: text("rank").notNull().default("normal"),
-    validFrom: timestamp("valid_from", { withTimezone: true }),
-    validTo: timestamp("valid_to", { withTimezone: true }),
-    assertedAt: timestamp("asserted_at", { withTimezone: true }).defaultNow(),
-    deprecatedAt: timestamp("deprecated_at", { withTimezone: true }),
-    deprecatedBy: uuid("deprecated_by").references(() => corrections.id),
-    confidenceScore: numeric("confidence_score", { precision: 4, scale: 3 }),
-    evidenceText: text("evidence_text"),
-    evidenceStartOffset: integer("evidence_start_offset"),
-    evidenceEndOffset: integer("evidence_end_offset"),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    articleId: S.String.pipe(
+      pg.uuid(),
+      pg.references(ArticlesReference, { onDelete: "cascade" }),
+      pg.columnName("article_id")
+    ),
+    ontologyId: S.String.pipe(pg.text(), pg.columnName("ontology_id")),
+    subjectIri: S.String.pipe(pg.text(), pg.columnName("subject_iri")),
+    predicateIri: S.String.pipe(pg.text(), pg.columnName("predicate_iri")),
+    objectValue: S.String.pipe(pg.text(), pg.columnName("object_value")),
+    objectType: nullableColumn(ClaimObjectType).pipe(pg.text(), pg.default("iri"), pg.columnName("object_type")),
+    objectDatatype: nullableColumn(S.String).pipe(pg.text(), pg.columnName("object_datatype")),
+    objectLanguage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("object_language")),
+    rank: ClaimRank.pipe(pg.text(), pg.default("normal")),
+    validFrom: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("valid_from")),
+    validTo: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("valid_to")),
+    assertedAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("asserted_at")
+    ),
+    derivedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("derived_at")),
+    deprecatedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("deprecated_at")),
+    deprecatedBy: nullableColumn(S.String).pipe(
+      pg.uuid(),
+      pg.references(CorrectionsReference),
+      pg.columnName("deprecated_by")
+    ),
+    confidenceScore: nullableColumn(S.String).pipe(pg.numeric(4, 3), pg.columnName("confidence_score")),
+    evidenceText: nullableColumn(S.String).pipe(pg.text(), pg.columnName("evidence_text")),
+    evidenceStartOffset: nullableColumn(S.Int).pipe(pg.integer(), pg.columnName("evidence_start_offset")),
+    evidenceEndOffset: nullableColumn(S.Int).pipe(pg.integer(), pg.columnName("evidence_end_offset")),
   },
   (table) => [
-    // Unique constraint for claim idempotency - enables ON CONFLICT DO NOTHING
-    uniqueIndex("idx_claims_natural_key").on(table.articleId, table.subjectIri, table.predicateIri, table.objectValue),
-    index("idx_claims_article").on(table.articleId),
-    index("idx_claims_subject").on(table.subjectIri),
-    index("idx_claims_predicate").on(table.predicateIri),
-    index("idx_claims_rank").on(table.rank),
-    index("idx_claims_valid_period").on(table.validFrom, table.validTo),
-    index("idx_claims_deprecated").on(table.deprecatedAt),
-    index("idx_claims_subject_predicate").on(table.subjectIri, table.predicateIri),
-    index("idx_claims_ontology_id").on(table.ontologyId),
-    index("idx_claims_ontology_subject").on(table.ontologyId, table.subjectIri),
-    index("idx_claims_ontology_predicate").on(table.ontologyId, table.predicateIri),
-    index("idx_claims_ontology_subject_predicate").on(table.ontologyId, table.subjectIri, table.predicateIri),
+    pg.Table.uniqueIndex("idx_claims_natural_key", [
+      table.articleId,
+      table.subjectIri,
+      table.predicateIri,
+      table.objectValue,
+    ]),
+    pg.Table.index("idx_claims_article", [table.articleId]),
+    pg.Table.index("idx_claims_subject", [table.subjectIri]),
+    pg.Table.index("idx_claims_predicate", [table.predicateIri]),
+    pg.Table.index("idx_claims_rank", [table.rank]),
+    pg.Table.index("idx_claims_valid_period", [table.validFrom, table.validTo]),
+    pg.Table.index("idx_claims_deprecated", [table.deprecatedAt], {
+      where: sql<boolean>`${table.deprecatedAt} IS NOT NULL`,
+    }),
+    pg.Table.index("idx_claims_derived_at", [table.derivedAt], {
+      where: sql<boolean>`${table.derivedAt} IS NOT NULL`,
+    }),
+    pg.Table.index("idx_claims_subject_predicate", [table.subjectIri, table.predicateIri]),
+    pg.Table.index("idx_claims_ontology_id", [table.ontologyId]),
+    pg.Table.index("idx_claims_ontology_subject", [table.ontologyId, table.subjectIri]),
+    pg.Table.index("idx_claims_ontology_predicate", [table.ontologyId, table.predicateIri]),
+    pg.Table.index("idx_claims_ontology_subject_predicate", [table.ontologyId, table.subjectIri, table.predicateIri]),
+    pg.Table.check(sql<boolean>`${table.rank} IN ('preferred', 'normal', 'deprecated')`, "claims_rank_check"),
   ]
-);
+) {}
 
 // =============================================================================
 // Correction Claims Junction Table
 // =============================================================================
 
-export const correctionClaims = pgTable(
-  "correction_claims",
+/**
+ * Provides repository access for correction claims.
+ *
+ * **Example** (Inspect correction claims)
+ *
+ * ```ts
+ * import { CorrectionClaims } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(CorrectionClaims.fields.originalClaimId)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export class CorrectionClaims extends Model<CorrectionClaims>("CorrectionClaims")(
   {
-    correctionId: uuid("correction_id")
-      .notNull()
-      .references(() => corrections.id, { onDelete: "cascade" }),
-    originalClaimId: uuid("original_claim_id")
-      .notNull()
-      .references(() => claims.id),
-    newClaimId: uuid("new_claim_id").references(() => claims.id),
+    correctionId: S.String.pipe(
+      pg.uuid(),
+      pg.references(CorrectionsReference, { onDelete: "cascade" }),
+      pg.columnName("correction_id")
+    ),
+    originalClaimId: S.String.pipe(pg.uuid(), pg.references(ClaimsReference), pg.columnName("original_claim_id")),
+    newClaimId: nullableColumn(S.String).pipe(pg.uuid(), pg.references(ClaimsReference), pg.columnName("new_claim_id")),
   },
   (table) => [
-    primaryKey({ columns: [table.correctionId, table.originalClaimId] }),
-    index("idx_correction_claims_original").on(table.originalClaimId),
-    index("idx_correction_claims_new").on(table.newClaimId),
+    pg.Table.compositePrimaryKey("correction_claims_pkey", [table.correctionId, table.originalClaimId]),
+    pg.Table.index("idx_correction_claims_original", [table.originalClaimId]),
+    pg.Table.index("idx_correction_claims_new", [table.newClaimId]),
   ]
-);
+) {}
 
 // =============================================================================
 // Conflicts Table
 // =============================================================================
 
-export const conflicts = pgTable(
-  "conflicts",
+/**
+ * Provides repository access for conflicts.
+ *
+ * **Example** (Inspect conflicts)
+ *
+ * ```ts
+ * import { Conflicts } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(Conflicts.fields.status)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export class Conflicts extends Model<Conflicts>("Conflicts")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    conflictType: text("conflict_type").notNull(),
-    claimAId: uuid("claim_a_id")
-      .notNull()
-      .references(() => claims.id),
-    claimBId: uuid("claim_b_id")
-      .notNull()
-      .references(() => claims.id),
-    status: text("status").notNull().default("pending"),
-    resolutionStrategy: text("resolution_strategy"),
-    acceptedClaimId: uuid("accepted_claim_id").references(() => claims.id),
-    resolvedBy: text("resolved_by"),
-    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
-    resolutionNotes: text("resolution_notes"),
-    detectedAt: timestamp("detected_at", { withTimezone: true }).defaultNow(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    ontologyId: S.NonEmptyString.pipe(pg.text(), pg.columnName("ontology_id")),
+    conflictType: ConflictKind.pipe(pg.text(), pg.columnName("conflict_type")),
+    claimAId: S.String.pipe(pg.uuid(), pg.references(ClaimsReference), pg.columnName("claim_a_id")),
+    claimBId: S.String.pipe(pg.uuid(), pg.references(ClaimsReference), pg.columnName("claim_b_id")),
+    status: ConflictStatus.pipe(pg.text(), pg.default("pending")),
+    resolutionStrategy: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolution_strategy")),
+    acceptedClaimId: nullableColumn(S.String).pipe(
+      pg.uuid(),
+      pg.references(ClaimsReference),
+      pg.columnName("accepted_claim_id")
+    ),
+    resolvedBy: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolved_by")),
+    resolvedByFingerprint: nullableColumn(Sha256HexString).pipe(pg.text(), pg.columnName("resolved_by_fingerprint")),
+    resolvedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("resolved_at")),
+    resolutionNotes: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolution_notes")),
+    detectedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("detected_at")),
   },
   (table) => [
-    index("idx_conflicts_status").on(table.status),
-    index("idx_conflicts_claims").on(table.claimAId, table.claimBId),
+    pg.Table.index("idx_conflicts_ontology_status", [table.ontologyId, table.status]),
+    pg.Table.index("idx_conflicts_claims", [table.claimAId, table.claimBId]),
+    pg.Table.uniqueIndex("conflicts_ontology_claim_pair_unique", [table.ontologyId, table.claimAId, table.claimBId]),
+    pg.Table.check(sql<boolean>`${table.conflictType} IN ('position', 'temporal')`, "conflicts_conflict_type_check"),
+    pg.Table.check(sql<boolean>`${table.status} IN ('pending', 'resolved', 'ignored')`, "conflicts_status_check"),
+    pg.Table.check(sql<boolean>`${table.claimAId} < ${table.claimBId}`, "conflicts_canonical_claim_pair_check"),
+    pg.Table.check(
+      sql<boolean>`(
+        (${table.status} = 'pending'
+          AND ${table.resolutionStrategy} IS NULL
+          AND ${table.acceptedClaimId} IS NULL
+          AND ${table.resolvedBy} IS NULL
+          AND ${table.resolvedByFingerprint} IS NULL
+          AND ${table.resolvedAt} IS NULL
+          AND ${table.resolutionNotes} IS NULL)
+        OR (${table.status} = 'ignored'
+          AND ${table.resolutionStrategy} IS NULL
+          AND ${table.acceptedClaimId} IS NULL
+          AND ${table.resolvedBy} IS NOT NULL
+          AND ${table.resolvedAt} IS NOT NULL)
+        OR (${table.status} = 'resolved'
+          AND ${table.resolutionStrategy} IS NOT NULL
+          AND ${table.acceptedClaimId} IS NOT NULL
+          AND ${table.resolvedBy} IS NOT NULL
+          AND ${table.resolvedAt} IS NOT NULL)
+      )`,
+      "conflicts_resolution_state_check"
+    ),
   ]
-);
+) {}
+
+const ClaimFamilySchema = pg.schema({
+  articles: Articles,
+  corrections: Corrections,
+  claims: Claims,
+  correction_claims: CorrectionClaims,
+  conflicts: Conflicts,
+});
+
+/**
+ * Drizzle table projected from {@link Corrections}.
+ *
+ * **Example** (Inspect correction columns)
+ *
+ * ```ts
+ * import { corrections } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(corrections.correctionType.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const corrections = ClaimFamilySchema.tables.corrections;
+
+/**
+ * Drizzle table projected from {@link Claims}.
+ *
+ * **Example** (Inspect claim columns)
+ *
+ * ```ts
+ * import { claims } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(claims.ontologyId.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const claims = ClaimFamilySchema.tables.claims;
+
+/**
+ * Drizzle table projected from {@link CorrectionClaims}.
+ *
+ * **Example** (Inspect correction-claim columns)
+ *
+ * ```ts
+ * import { correctionClaims } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(correctionClaims.originalClaimId.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const correctionClaims = ClaimFamilySchema.tables.correction_claims;
+
+/**
+ * Drizzle table projected from {@link Conflicts}.
+ *
+ * **Example** (Inspect conflict columns)
+ *
+ * ```ts
+ * import { conflicts } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(conflicts.status.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const conflicts = ClaimFamilySchema.tables.conflicts;
 
 // =============================================================================
 // Batch Runs Table
 // =============================================================================
 
-export const batchRuns = pgTable(
-  "batch_runs",
+/**
+ * Provides repository access for batch runs.
+ *
+ * **Example** (Inspect batch runs)
+ *
+ * ```ts
+ * import { BatchRuns } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(BatchRuns.fields.status)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export class BatchRuns extends Model<BatchRuns>("BatchRuns")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    batchId: text("batch_id").unique().notNull(),
-    status: text("status").notNull().default("pending"),
-    documentsTotal: integer("documents_total").default(0),
-    documentsProcessed: integer("documents_processed").default(0),
-    claimsExtracted: integer("claims_extracted").default(0),
-    conflictsDetected: integer("conflicts_detected").default(0),
-    startedAt: timestamp("started_at", { withTimezone: true }),
-    completedAt: timestamp("completed_at", { withTimezone: true }),
-    errorMessage: text("error_message"),
-    errorDetails: jsonb("error_details"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    batchId: S.String.pipe(pg.text(), pg.unique(), pg.columnName("batch_id")),
+    status: S.String.pipe(pg.text(), pg.default("pending")),
+    documentsTotal: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("documents_total")),
+    documentsProcessed: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("documents_processed")),
+    claimsExtracted: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("claims_extracted")),
+    conflictsDetected: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("conflicts_detected")),
+    startedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("started_at")),
+    completedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("completed_at")),
+    errorMessage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("error_message")),
+    errorDetails: nullableColumn(S.Unknown).pipe(pg.unsafeCustom("jsonb"), pg.columnName("error_details")),
+    createdAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("created_at")
+    ),
   },
-  (table) => [index("idx_batch_runs_batch_id").on(table.batchId), index("idx_batch_runs_status").on(table.status)]
-);
-
-// =============================================================================
-// Schema Migrations Table
-// =============================================================================
-
-export const schemaMigrations = pgTable("schema_migrations", {
-  version: integer("version").primaryKey(),
-  name: text("name").notNull(),
-  appliedAt: timestamp("applied_at", { withTimezone: true }).defaultNow(),
-});
+  (table) => [
+    pg.Table.index("idx_batch_runs_batch_id", [table.batchId]),
+    pg.Table.index("idx_batch_runs_status", [table.status]),
+    pg.Table.check(
+      sql<boolean>`${table.status} IN ('pending', 'running', 'completed', 'failed')`,
+      "batch_runs_status_check"
+    ),
+  ]
+) {}
 
 // =============================================================================
 // Entity Registry Tables (Cross-Batch Entity Linking)
@@ -290,377 +537,1105 @@ export const schemaMigrations = pgTable("schema_migrations", {
 /**
  * Canonical Entity Registry
  *
+ * **Details**
+ *
  * The "golden" entity records. Each unique real-world entity has one canonical entry.
  * Enables cross-batch entity linking by persisting resolved entities with embeddings.
+ *
+ * **Example** (Inspect canonical entities)
+ *
+ * ```ts
+ * import { CanonicalEntities } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(CanonicalEntities.fields.ontologyId)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export const canonicalEntities = pgTable(
-  "canonical_entities",
+export class CanonicalEntities extends Model<CanonicalEntities>("CanonicalEntities")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
 
     // Ontology scoping (entities are scoped per ontology)
-    ontologyId: text("ontology_id").notNull().default("default"),
+    ontologyId: S.String.pipe(pg.text(), pg.default("default"), pg.columnName("ontology_id")),
 
     // Identity
-    iri: text("iri").notNull(),
-    canonicalMention: text("canonical_mention").notNull(),
+    iri: S.String.pipe(pg.text()),
+    canonicalMention: S.String.pipe(pg.text(), pg.columnName("canonical_mention")),
 
     // Types (denormalized for fast filtering)
-    types: text("types").array().notNull().default([]),
+    types: S.Array(S.String).pipe(pg.array(S.String.pipe(pg.text())), pg.default([])),
 
     // Embedding for ANN similarity search (Nomic 768-dim)
-    embedding: vector768("embedding").notNull(),
+    embedding: EmbeddingVector768,
 
     // Resolution metadata
-    mergeCount: integer("merge_count").default(1),
-    confidenceAvg: numeric("confidence_avg", { precision: 4, scale: 3 }),
+    mergeCount: nullableColumn(S.Int).pipe(pg.integer(), pg.default(1), pg.columnName("merge_count")),
+    confidenceAvg: nullableColumn(S.String).pipe(pg.numeric(4, 3), pg.columnName("confidence_avg")),
 
     // Temporal tracking
-    firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).defaultNow(),
-    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow(),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    firstSeenAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("first_seen_at")
+    ),
+    lastSeenAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("last_seen_at")
+    ),
+    createdAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("created_at")
+    ),
+    updatedAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("updated_at")
+    ),
   },
   (table) => [
-    uniqueIndex("canonical_entities_ontology_iri_unique").on(table.ontologyId, table.iri),
-    index("idx_canonical_entities_iri").on(table.iri),
-    index("idx_canonical_entities_ontology_id").on(table.ontologyId),
-    index("idx_canonical_entities_ontology_iri").on(table.ontologyId, table.iri),
+    pg.Table.uniqueIndex("canonical_entities_ontology_iri_unique", [table.ontologyId, table.iri]),
+    pg.Table.index("idx_canonical_entities_iri", [table.iri]),
+    pg.Table.index("idx_canonical_entities_ontology_id", [table.ontologyId]),
+    pg.Table.index("idx_canonical_entities_ontology_iri", [table.ontologyId, table.iri]),
     // Note: HNSW, GIN indexes are created in migration SQL as Drizzle doesn't support them natively
   ]
-);
+) {}
+
+const CanonicalEntitiesReference: {
+  readonly tableName: "canonical_entities";
+  readonly entityType: "CanonicalEntities";
+} = {
+  tableName: "canonical_entities",
+  entityType: "CanonicalEntities",
+};
 
 /**
  * Entity Aliases
  *
+ * **Details**
+ *
  * Alternative mentions mapped to canonical entities.
  * Preserves provenance of how each mention was resolved.
+ *
+ * **Example** (Inspect entity aliases)
+ *
+ * ```ts
+ * import { EntityAliases } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(EntityAliases.fields.canonicalEntityId)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export const entityAliases = pgTable(
-  "entity_aliases",
+export class EntityAliases extends Model<EntityAliases>("EntityAliases")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
 
     // Ontology scoping (aliases are scoped per ontology)
-    ontologyId: text("ontology_id").notNull().default("default"),
+    ontologyId: S.String.pipe(pg.text(), pg.default("default"), pg.columnName("ontology_id")),
 
-    canonicalEntityId: uuid("canonical_entity_id")
-      .notNull()
-      .references(() => canonicalEntities.id, {
-        onDelete: "cascade",
-      }),
+    canonicalEntityId: S.String.pipe(
+      pg.uuid(),
+      pg.references(CanonicalEntitiesReference, { onDelete: "cascade" }),
+      pg.columnName("canonical_entity_id")
+    ),
 
     // Alias data
-    mention: text("mention").notNull(),
-    mentionNormalized: text("mention_normalized").notNull(),
-    embedding: vector768("embedding"),
+    mention: S.String.pipe(pg.text()),
+    mentionNormalized: S.String.pipe(pg.text(), pg.columnName("mention_normalized")),
+    embedding: NullableEmbeddingVector768,
 
     // Resolution metadata
-    resolutionMethod: text("resolution_method").notNull(), // 'exact', 'similarity', 'containment', 'neighbor', 'manual'
-    resolutionConfidence: numeric("resolution_confidence", { precision: 4, scale: 3 }).notNull(),
+    resolutionMethod: S.String.pipe(pg.text(), pg.columnName("resolution_method")),
+    resolutionConfidence: S.String.pipe(pg.numeric(4, 3), pg.columnName("resolution_confidence")),
 
     // Source tracking
-    firstBatchId: text("first_batch_id"),
-    sourceArticleId: uuid("source_article_id").references(() => articles.id),
+    firstBatchId: nullableColumn(S.String).pipe(pg.text(), pg.columnName("first_batch_id")),
+    sourceArticleId: nullableColumn(S.String).pipe(
+      pg.uuid(),
+      pg.references(ArticlesReference),
+      pg.columnName("source_article_id")
+    ),
 
     // Temporal
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("created_at")
+    ),
   },
   (table) => [
-    uniqueIndex("idx_entity_aliases_ontology_mention").on(table.ontologyId, table.mentionNormalized),
-    index("idx_entity_aliases_canonical").on(table.canonicalEntityId),
-    index("idx_entity_aliases_ontology").on(table.ontologyId),
+    pg.Table.uniqueIndex("idx_entity_aliases_ontology_mention", [table.ontologyId, table.mentionNormalized]),
+    pg.Table.index("idx_entity_aliases_canonical", [table.canonicalEntityId]),
+    pg.Table.index("idx_entity_aliases_ontology", [table.ontologyId]),
   ]
-);
+) {}
 
 /**
  * Entity Blocking Tokens
  *
+ * **Details**
+ *
  * Inverted index for fast candidate retrieval during entity resolution.
  * Avoids O(n) scan by pre-indexing tokens from entity mentions.
+ *
+ * **Example** (Inspect entity blocking tokens)
+ *
+ * ```ts
+ * import { EntityBlockingTokens } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(EntityBlockingTokens.fields.token)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export const entityBlockingTokens = pgTable(
-  "entity_blocking_tokens",
+export class EntityBlockingTokens extends Model<EntityBlockingTokens>("EntityBlockingTokens")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
 
     // Ontology scoping (tokens are scoped per ontology)
-    ontologyId: text("ontology_id").notNull().default("default"),
+    ontologyId: S.String.pipe(pg.text(), pg.default("default"), pg.columnName("ontology_id")),
 
-    canonicalEntityId: uuid("canonical_entity_id")
-      .notNull()
-      .references(() => canonicalEntities.id, {
+    canonicalEntityId: S.String.pipe(
+      pg.uuid(),
+      pg.references(CanonicalEntitiesReference, {
+        name: "entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
         onDelete: "cascade",
       }),
-    token: text("token").notNull(),
-    tokenType: text("token_type").default("mention"), // 'mention', 'type', 'attribute'
+      pg.columnName("canonical_entity_id")
+    ),
+    token: S.String.pipe(pg.text()),
+    tokenType: nullableColumn(S.String).pipe(pg.text(), pg.default("mention"), pg.columnName("token_type")),
   },
   (table) => [
-    index("idx_blocking_tokens_token").on(table.token),
-    index("idx_blocking_tokens_entity").on(table.canonicalEntityId),
-    index("idx_blocking_tokens_ontology_token").on(table.ontologyId, table.token),
-    index("idx_blocking_tokens_composite").on(table.ontologyId, table.token, table.canonicalEntityId),
+    pg.Table.index("idx_blocking_tokens_token", [table.token]),
+    pg.Table.index("idx_blocking_tokens_entity", [table.canonicalEntityId]),
+    pg.Table.index("idx_blocking_tokens_ontology_token", [table.ontologyId, table.token]),
+    pg.Table.index("idx_blocking_tokens_composite", [table.ontologyId, table.token, table.canonicalEntityId]),
   ]
-);
+) {}
+
+const EntityRegistrySchema = pg.schema({
+  articles: Articles,
+  batch_runs: BatchRuns,
+  canonical_entities: CanonicalEntities,
+  entity_aliases: EntityAliases,
+  entity_blocking_tokens: EntityBlockingTokens,
+});
+
+/**
+ * Drizzle table projected from {@link BatchRuns}.
+ *
+ * **Example** (Inspect the batch identifier column)
+ *
+ * ```ts
+ * import { batchRuns } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(batchRuns.batchId.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const batchRuns = EntityRegistrySchema.tables.batch_runs;
+
+/**
+ * Drizzle table projected from {@link CanonicalEntities}.
+ *
+ * **Example** (Inspect the ontology column)
+ *
+ * ```ts
+ * import { canonicalEntities } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(canonicalEntities.ontologyId.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const canonicalEntities = EntityRegistrySchema.tables.canonical_entities;
+
+/**
+ * Drizzle table projected from {@link EntityAliases}.
+ *
+ * **Example** (Inspect the canonical-entity reference column)
+ *
+ * ```ts
+ * import { entityAliases } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(entityAliases.canonicalEntityId.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const entityAliases = EntityRegistrySchema.tables.entity_aliases;
+
+/**
+ * Drizzle table projected from {@link EntityBlockingTokens}.
+ *
+ * **Example** (Inspect the blocking-token column)
+ *
+ * ```ts
+ * import { entityBlockingTokens } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(entityBlockingTokens.token.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const entityBlockingTokens = EntityRegistrySchema.tables.entity_blocking_tokens;
 
 // =============================================================================
 // Type Exports for Drizzle
 // =============================================================================
 
-export type ArticleRow = typeof articles.$inferSelect;
-export type ArticleInsertRow = typeof articles.$inferInsert;
+/**
+ * Describes the article row data exposed by this module.
+ *
+ * **Example** (Reference ArticleRow columns)
+ *
+ * ```ts
+ * import type { ArticleRow } from "@effect-ontology/Repository/schema"
+ *
+ * const articleRowFields: ReadonlyArray<keyof ArticleRow> = ["id", "uri", "ontologyId"]
+ *
+ * console.log(articleRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ArticleRow = Articles;
+/**
+ * Describes the article insert row data exposed by this module.
+ *
+ * **Example** (Reference ArticleInsertRow columns)
+ *
+ * ```ts
+ * import type { ArticleInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const articleInsertRowFields: ReadonlyArray<keyof ArticleInsertRow> = ["id", "uri", "ontologyId"]
+ *
+ * console.log(articleInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ArticleInsertRow = typeof Articles.insert.Type;
 
-export type ClaimRow = typeof claims.$inferSelect;
-export type ClaimInsertRow = typeof claims.$inferInsert;
+/**
+ * Describes the claim row data exposed by this module.
+ *
+ * **Example** (Reference ClaimRow columns)
+ *
+ * ```ts
+ * import type { ClaimRow } from "@effect-ontology/Repository/schema"
+ *
+ * const claimRowFields: ReadonlyArray<keyof ClaimRow> = ["id", "articleId", "ontologyId"]
+ *
+ * console.log(claimRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimRow = Claims;
+/**
+ * Describes the claim insert row data exposed by this module.
+ *
+ * **Example** (Reference ClaimInsertRow columns)
+ *
+ * ```ts
+ * import type { ClaimInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const claimInsertRowFields: ReadonlyArray<keyof ClaimInsertRow> = ["id", "articleId", "ontologyId"]
+ *
+ * console.log(claimInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimInsertRow = typeof Claims.insert.Type;
 
-export type CorrectionRow = typeof corrections.$inferSelect;
-export type CorrectionInsertRow = typeof corrections.$inferInsert;
+/**
+ * Describes the correction row data exposed by this module.
+ *
+ * **Example** (Reference CorrectionRow columns)
+ *
+ * ```ts
+ * import type { CorrectionRow } from "@effect-ontology/Repository/schema"
+ *
+ * const correctionRowFields: ReadonlyArray<keyof CorrectionRow> = ["id", "correctionType", "sourceArticleId"]
+ *
+ * console.log(correctionRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CorrectionRow = Corrections;
+/**
+ * Describes the correction insert row data exposed by this module.
+ *
+ * **Example** (Reference CorrectionInsertRow columns)
+ *
+ * ```ts
+ * import type { CorrectionInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const correctionInsertRowFields: ReadonlyArray<keyof CorrectionInsertRow> = ["id", "correctionType", "sourceArticleId"]
+ *
+ * console.log(correctionInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CorrectionInsertRow = typeof Corrections.insert.Type;
 
-export type CorrectionClaimRow = typeof correctionClaims.$inferSelect;
-export type CorrectionClaimInsertRow = typeof correctionClaims.$inferInsert;
+/**
+ * Describes the correction claim row data exposed by this module.
+ *
+ * **Example** (Reference CorrectionClaimRow columns)
+ *
+ * ```ts
+ * import type { CorrectionClaimRow } from "@effect-ontology/Repository/schema"
+ *
+ * const correctionClaimRowFields: ReadonlyArray<keyof CorrectionClaimRow> = ["correctionId", "originalClaimId", "newClaimId"]
+ *
+ * console.log(correctionClaimRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CorrectionClaimRow = CorrectionClaims;
+/**
+ * Describes the correction claim insert row data exposed by this module.
+ *
+ * **Example** (Reference CorrectionClaimInsertRow columns)
+ *
+ * ```ts
+ * import type { CorrectionClaimInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const correctionClaimInsertRowFields: ReadonlyArray<keyof CorrectionClaimInsertRow> = ["correctionId", "originalClaimId", "newClaimId"]
+ *
+ * console.log(correctionClaimInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CorrectionClaimInsertRow = typeof CorrectionClaims.insert.Type;
 
-export type ConflictRow = typeof conflicts.$inferSelect;
-export type ConflictInsertRow = typeof conflicts.$inferInsert;
+/**
+ * Describes the conflict row data exposed by this module.
+ *
+ * **Example** (Reference ConflictRow columns)
+ *
+ * ```ts
+ * import type { ConflictRow } from "@effect-ontology/Repository/schema"
+ *
+ * const conflictRowFields: ReadonlyArray<keyof ConflictRow> = ["id", "conflictType", "claimAId"]
+ *
+ * console.log(conflictRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConflictRow = Conflicts;
+/**
+ * Describes the conflict insert row data exposed by this module.
+ *
+ * **Example** (Reference ConflictInsertRow columns)
+ *
+ * ```ts
+ * import type { ConflictInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const conflictInsertRowFields: ReadonlyArray<keyof ConflictInsertRow> = ["id", "conflictType", "claimAId"]
+ *
+ * console.log(conflictInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConflictInsertRow = typeof Conflicts.insert.Type;
 
-export type BatchRunRow = typeof batchRuns.$inferSelect;
-export type BatchRunInsertRow = typeof batchRuns.$inferInsert;
+/**
+ * Describes the batch run row data exposed by this module.
+ *
+ * **Example** (Reference BatchRunRow columns)
+ *
+ * ```ts
+ * import type { BatchRunRow } from "@effect-ontology/Repository/schema"
+ *
+ * const batchRunRowFields: ReadonlyArray<keyof BatchRunRow> = ["id", "batchId", "status"]
+ *
+ * console.log(batchRunRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BatchRunRow = BatchRuns;
+/**
+ * Describes the batch run insert row data exposed by this module.
+ *
+ * **Example** (Reference BatchRunInsertRow columns)
+ *
+ * ```ts
+ * import type { BatchRunInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const batchRunInsertRowFields: ReadonlyArray<keyof BatchRunInsertRow> = ["id", "batchId", "status"]
+ *
+ * console.log(batchRunInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BatchRunInsertRow = typeof BatchRuns.insert.Type;
 
-export type CanonicalEntityRow = typeof canonicalEntities.$inferSelect;
-export type CanonicalEntityInsertRow = typeof canonicalEntities.$inferInsert;
+/**
+ * Describes the canonical entity row data exposed by this module.
+ *
+ * **Example** (Reference CanonicalEntityRow columns)
+ *
+ * ```ts
+ * import type { CanonicalEntityRow } from "@effect-ontology/Repository/schema"
+ *
+ * const canonicalEntityRowFields: ReadonlyArray<keyof CanonicalEntityRow> = ["id", "ontologyId", "iri"]
+ *
+ * console.log(canonicalEntityRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CanonicalEntityRow = CanonicalEntities;
+/**
+ * Describes the canonical entity insert row data exposed by this module.
+ *
+ * **Example** (Reference CanonicalEntityInsertRow columns)
+ *
+ * ```ts
+ * import type { CanonicalEntityInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const canonicalEntityInsertRowFields: ReadonlyArray<keyof CanonicalEntityInsertRow> = ["id", "ontologyId", "iri"]
+ *
+ * console.log(canonicalEntityInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CanonicalEntityInsertRow = typeof CanonicalEntities.insert.Type;
 
-export type EntityAliasRow = typeof entityAliases.$inferSelect;
-export type EntityAliasInsertRow = typeof entityAliases.$inferInsert;
+/**
+ * Describes the entity alias row data exposed by this module.
+ *
+ * **Example** (Reference EntityAliasRow columns)
+ *
+ * ```ts
+ * import type { EntityAliasRow } from "@effect-ontology/Repository/schema"
+ *
+ * const entityAliasRowFields: ReadonlyArray<keyof EntityAliasRow> = ["id", "ontologyId", "canonicalEntityId"]
+ *
+ * console.log(entityAliasRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EntityAliasRow = EntityAliases;
+/**
+ * Describes the entity alias insert row data exposed by this module.
+ *
+ * **Example** (Reference EntityAliasInsertRow columns)
+ *
+ * ```ts
+ * import type { EntityAliasInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const entityAliasInsertRowFields: ReadonlyArray<keyof EntityAliasInsertRow> = ["id", "ontologyId", "canonicalEntityId"]
+ *
+ * console.log(entityAliasInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EntityAliasInsertRow = typeof EntityAliases.insert.Type;
 
-export type EntityBlockingTokenRow = typeof entityBlockingTokens.$inferSelect;
-export type EntityBlockingTokenInsertRow = typeof entityBlockingTokens.$inferInsert;
+/**
+ * Describes the entity blocking token row data exposed by this module.
+ *
+ * **Example** (Reference EntityBlockingTokenRow columns)
+ *
+ * ```ts
+ * import type { EntityBlockingTokenRow } from "@effect-ontology/Repository/schema"
+ *
+ * const entityBlockingTokenRowFields: ReadonlyArray<keyof EntityBlockingTokenRow> = ["id", "ontologyId", "canonicalEntityId"]
+ *
+ * console.log(entityBlockingTokenRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EntityBlockingTokenRow = EntityBlockingTokens;
+/**
+ * Describes the entity blocking token insert row data exposed by this module.
+ *
+ * **Example** (Reference EntityBlockingTokenInsertRow columns)
+ *
+ * ```ts
+ * import type { EntityBlockingTokenInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const entityBlockingTokenInsertRowFields: ReadonlyArray<keyof EntityBlockingTokenInsertRow> = ["id", "ontologyId", "canonicalEntityId"]
+ *
+ * console.log(entityBlockingTokenInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EntityBlockingTokenInsertRow = typeof EntityBlockingTokens.insert.Type;
 
 // =============================================================================
 // Ingested Links Tables (Link Ingestion Pipeline)
 // =============================================================================
 
+const LinkBatchLifecycleStatus = S.Literals(["pending", "running", "completed", "failed"]);
+const LinkBatchItemLifecycleStatus = S.Literals(["pending", "processing", "completed", "failed"]);
+const StringArrayJson = S.Array(S.String);
+const UnknownRecordJson = S.Record(S.String, S.Unknown);
+
 /**
  * Ingested Links
  *
+ * **Details**
+ *
  * Tracks URLs fetched via Jina Reader API for extraction.
  * Content is stored in GCS/local; this table holds metadata.
+ *
+ * **Example** (Inspect ingested links)
+ *
+ * ```ts
+ * import { IngestedLinks } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(IngestedLinks.fields.status)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export const ingestedLinks = pgTable(
-  "ingested_links",
+export class IngestedLinks extends Model<IngestedLinks>("IngestedLinks")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
 
     // Content identification (content-addressed, unique per ontology)
-    contentHash: text("content_hash").notNull(),
+    contentHash: S.String.pipe(pg.varchar(64), pg.columnName("content_hash")),
 
     // Ontology scoping
-    ontologyId: text("ontology_id").notNull(),
+    ontologyId: S.String.pipe(pg.text(), pg.columnName("ontology_id")),
 
     // Source information
-    sourceUri: text("source_uri"),
-    sourceType: text("source_type"),
+    sourceUri: nullableColumn(S.String).pipe(pg.text(), pg.columnName("source_uri")),
+    sourceType: nullableColumn(S.String).pipe(pg.varchar(32), pg.columnName("source_type")),
 
     // Enriched metadata
-    headline: text("headline"),
-    description: text("description"),
-    publishedAt: timestamp("published_at", { withTimezone: true }),
-    author: text("author"),
-    organization: text("organization"),
-    language: text("language").default("en"),
+    headline: nullableColumn(S.String).pipe(pg.text()),
+    description: nullableColumn(S.String).pipe(pg.text()),
+    publishedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("published_at")),
+    author: nullableColumn(S.String).pipe(pg.text()),
+    organization: nullableColumn(S.String).pipe(pg.text()),
+    language: nullableColumn(S.String).pipe(pg.varchar(8), pg.default("en")),
 
     // Topics and entities (JSONB for flexibility)
-    topics: jsonb("topics").$type<Array<string>>().default([]),
-    keyEntities: jsonb("key_entities").$type<Array<string>>().default([]),
+    topics: nullableColumn(StringArrayJson).pipe(pg.jsonb(), pg.default([])),
+    keyEntities: nullableColumn(StringArrayJson).pipe(pg.jsonb(), pg.default([]), pg.columnName("key_entities")),
 
     // Storage location
-    storageUri: text("storage_uri").notNull(),
+    storageUri: S.String.pipe(pg.text(), pg.columnName("storage_uri")),
 
     // Processing status
-    status: text("status").notNull().default("pending"),
+    status: LinkStatus.pipe(pg.varchar(16), pg.default("pending")),
 
     // Timestamps
-    fetchedAt: timestamp("fetched_at", { withTimezone: true }).defaultNow(),
-    enrichedAt: timestamp("enriched_at", { withTimezone: true }),
-    processedAt: timestamp("processed_at", { withTimezone: true }),
+    fetchedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("fetched_at")),
+    enrichedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("enriched_at")),
+    processedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("processed_at")),
 
     // Error tracking
-    errorMessage: text("error_message"),
+    errorMessage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("error_message")),
 
     // Content stats
-    wordCount: integer("word_count"),
+    wordCount: nullableColumn(S.Int).pipe(pg.integer(), pg.columnName("word_count")),
 
     // Metadata
-    metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+    metadata: nullableColumn(UnknownRecordJson).pipe(pg.jsonb(), pg.default({})),
 
     // Lifecycle
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    createdAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("created_at")
+    ),
+    updatedAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("updated_at")
+    ),
   },
   (table) => [
-    index("idx_ingested_links_status").on(table.status),
-    index("idx_ingested_links_source_uri").on(table.sourceUri),
-    index("idx_ingested_links_fetched_at").on(table.fetchedAt),
-    index("idx_ingested_links_source_type").on(table.sourceType),
-    index("idx_ingested_links_organization").on(table.organization),
-    index("idx_ingested_links_ontology_id").on(table.ontologyId),
-    index("idx_ingested_links_ontology_status").on(table.ontologyId, table.status),
+    pg.Table.index("idx_ingested_links_status", [table.status]),
+    pg.Table.index("idx_ingested_links_source_uri", [table.sourceUri]),
+    pg.Table.index("idx_ingested_links_fetched_at", [table.fetchedAt]),
+    pg.Table.index("idx_ingested_links_source_type", [table.sourceType]),
+    pg.Table.index("idx_ingested_links_organization", [table.organization]),
+    pg.Table.index("idx_ingested_links_ontology_id", [table.ontologyId]),
+    pg.Table.index("idx_ingested_links_ontology_status", [table.ontologyId, table.status]),
     // Composite unique: same content can exist in multiple ontologies
-    uniqueIndex("idx_ingested_links_ontology_content_unique").on(table.ontologyId, table.contentHash),
+    pg.Table.uniqueIndex("idx_ingested_links_ontology_content_unique", [table.ontologyId, table.contentHash]),
+    pg.Table.check(
+      sql<boolean>`${table.status} IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped')`,
+      "ingested_links_status_check"
+    ),
   ]
-);
+) {}
 
 /**
  * Link Batches
  *
+ * **Details**
+ *
  * Groups ingested links for batch extraction.
+ *
+ * **Example** (Inspect link batches)
+ *
+ * ```ts
+ * import { LinkBatches } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(LinkBatches.fields.status)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export const linkBatches = pgTable(
-  "link_batches",
+export class LinkBatches extends Model<LinkBatches>("LinkBatches")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    batchId: text("batch_id").unique().notNull(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    batchId: S.String.pipe(pg.text(), pg.unique(), pg.columnName("batch_id")),
 
     // Status
-    status: text("status").notNull().default("pending"),
+    status: LinkBatchLifecycleStatus.pipe(pg.text(), pg.default("pending")),
 
     // Metrics
-    linksTotal: integer("links_total").default(0),
-    linksProcessed: integer("links_processed").default(0),
-    linksFailed: integer("links_failed").default(0),
+    linksTotal: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("links_total")),
+    linksProcessed: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("links_processed")),
+    linksFailed: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("links_failed")),
 
     // Ontology
-    ontologyUri: text("ontology_uri"),
+    ontologyUri: nullableColumn(S.String).pipe(pg.text(), pg.columnName("ontology_uri")),
 
     // Timing
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    startedAt: timestamp("started_at", { withTimezone: true }),
-    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("created_at")
+    ),
+    startedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("started_at")),
+    completedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("completed_at")),
 
     // Error
-    errorMessage: text("error_message"),
+    errorMessage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("error_message")),
   },
-  (table) => [index("idx_link_batches_status").on(table.status)]
-);
+  (table) => [
+    pg.Table.index("idx_link_batches_status", [table.status]),
+    pg.Table.check(
+      sql<boolean>`${table.status} IN ('pending', 'running', 'completed', 'failed')`,
+      "link_batches_status_check"
+    ),
+  ]
+) {}
+
+const LinkBatchesReference: { readonly tableName: "link_batches"; readonly entityType: "LinkBatches" } = {
+  tableName: "link_batches",
+  entityType: "LinkBatches",
+};
+const IngestedLinksReference: { readonly tableName: "ingested_links"; readonly entityType: "IngestedLinks" } = {
+  tableName: "ingested_links",
+  entityType: "IngestedLinks",
+};
 
 /**
  * Link Batch Items Junction
  *
+ * **Details**
+ *
  * Links ingested_links to batches.
+ *
+ * **Example** (Inspect link batch items)
+ *
+ * ```ts
+ * import { LinkBatchItems } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(LinkBatchItems.fields.status)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export const linkBatchItems = pgTable(
-  "link_batch_items",
+export class LinkBatchItems extends Model<LinkBatchItems>("LinkBatchItems")(
   {
-    batchId: uuid("batch_id")
-      .notNull()
-      .references(() => linkBatches.id, { onDelete: "cascade" }),
-    linkId: uuid("link_id")
-      .notNull()
-      .references(() => ingestedLinks.id, { onDelete: "cascade" }),
+    batchId: S.String.pipe(
+      pg.uuid(),
+      pg.references(LinkBatchesReference, {
+        name: "link_batch_items_batch_id_link_batches_id_fkey",
+        onDelete: "cascade",
+      }),
+      pg.columnName("batch_id")
+    ),
+    linkId: S.String.pipe(
+      pg.uuid(),
+      pg.references(IngestedLinksReference, {
+        name: "link_batch_items_link_id_ingested_links_id_fkey",
+        onDelete: "cascade",
+      }),
+      pg.columnName("link_id")
+    ),
 
     // Item status
-    status: text("status").notNull().default("pending"),
+    status: LinkBatchItemLifecycleStatus.pipe(pg.text(), pg.default("pending")),
 
     // Result reference
-    extractionRunId: text("extraction_run_id"),
-    articleId: uuid("article_id"),
+    extractionRunId: nullableColumn(S.String).pipe(pg.text(), pg.columnName("extraction_run_id")),
+    articleId: nullableColumn(S.String).pipe(pg.uuid(), pg.columnName("article_id")),
 
     // Timing
-    startedAt: timestamp("started_at", { withTimezone: true }),
-    completedAt: timestamp("completed_at", { withTimezone: true }),
+    startedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("started_at")),
+    completedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("completed_at")),
 
     // Error
-    errorMessage: text("error_message"),
+    errorMessage: nullableColumn(S.String).pipe(pg.text(), pg.columnName("error_message")),
   },
   (table) => [
-    primaryKey({ columns: [table.batchId, table.linkId] }),
-    index("idx_link_batch_items_link").on(table.linkId),
-    index("idx_link_batch_items_status").on(table.status),
+    pg.Table.compositePrimaryKey("link_batch_items_pkey", [table.batchId, table.linkId]),
+    pg.Table.index("idx_link_batch_items_link", [table.linkId]),
+    pg.Table.index("idx_link_batch_items_status", [table.status]),
+    pg.Table.check(
+      sql<boolean>`${table.status} IN ('pending', 'processing', 'completed', 'failed')`,
+      "link_batch_items_status_check"
+    ),
   ]
-);
+) {}
 
-export type IngestedLinkRow = typeof ingestedLinks.$inferSelect;
-export type IngestedLinkInsertRow = typeof ingestedLinks.$inferInsert;
+const LinkPersistenceSchema = pg.schema({
+  ingested_links: IngestedLinks,
+  link_batches: LinkBatches,
+  link_batch_items: LinkBatchItems,
+});
 
-export type LinkBatchRow = typeof linkBatches.$inferSelect;
-export type LinkBatchInsertRow = typeof linkBatches.$inferInsert;
+/**
+ * Drizzle table projected from {@link IngestedLinks}.
+ *
+ * **Example** (Inspect the content-hash column)
+ *
+ * ```ts
+ * import { ingestedLinks } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(ingestedLinks.contentHash.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const ingestedLinks = LinkPersistenceSchema.tables.ingested_links;
 
-export type LinkBatchItemRow = typeof linkBatchItems.$inferSelect;
-export type LinkBatchItemInsertRow = typeof linkBatchItems.$inferInsert;
+/**
+ * Drizzle table projected from {@link LinkBatches}.
+ *
+ * **Example** (Inspect the batch status column)
+ *
+ * ```ts
+ * import { linkBatches } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(linkBatches.status.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const linkBatches = LinkPersistenceSchema.tables.link_batches;
+
+/**
+ * Drizzle table projected from {@link LinkBatchItems}.
+ *
+ * **Example** (Inspect the link reference column)
+ *
+ * ```ts
+ * import { linkBatchItems } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(linkBatchItems.linkId.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const linkBatchItems = LinkPersistenceSchema.tables.link_batch_items;
+
+/**
+ * Describes the ingested link row data exposed by this module.
+ *
+ * **Example** (Reference IngestedLinkRow columns)
+ *
+ * ```ts
+ * import type { IngestedLinkRow } from "@effect-ontology/Repository/schema"
+ *
+ * const ingestedLinkRowFields: ReadonlyArray<keyof IngestedLinkRow> = ["id", "contentHash", "ontologyId"]
+ *
+ * console.log(ingestedLinkRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IngestedLinkRow = IngestedLinks;
+/**
+ * Describes the ingested link insert row data exposed by this module.
+ *
+ * **Example** (Reference IngestedLinkInsertRow columns)
+ *
+ * ```ts
+ * import type { IngestedLinkInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const ingestedLinkInsertRowFields: ReadonlyArray<keyof IngestedLinkInsertRow> = ["id", "contentHash", "ontologyId"]
+ *
+ * console.log(ingestedLinkInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IngestedLinkInsertRow = typeof IngestedLinks.insert.Type;
+
+/**
+ * Describes the link batch row data exposed by this module.
+ *
+ * **Example** (Reference LinkBatchRow columns)
+ *
+ * ```ts
+ * import type { LinkBatchRow } from "@effect-ontology/Repository/schema"
+ *
+ * const linkBatchRowFields: ReadonlyArray<keyof LinkBatchRow> = ["id", "batchId", "status"]
+ *
+ * console.log(linkBatchRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LinkBatchRow = LinkBatches;
+/**
+ * Describes the link batch insert row data exposed by this module.
+ *
+ * **Example** (Reference LinkBatchInsertRow columns)
+ *
+ * ```ts
+ * import type { LinkBatchInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const linkBatchInsertRowFields: ReadonlyArray<keyof LinkBatchInsertRow> = ["id", "batchId", "status"]
+ *
+ * console.log(linkBatchInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LinkBatchInsertRow = typeof LinkBatches.insert.Type;
+
+/**
+ * Describes the link batch item row data exposed by this module.
+ *
+ * **Example** (Reference LinkBatchItemRow columns)
+ *
+ * ```ts
+ * import type { LinkBatchItemRow } from "@effect-ontology/Repository/schema"
+ *
+ * const linkBatchItemRowFields: ReadonlyArray<keyof LinkBatchItemRow> = ["batchId", "linkId", "status"]
+ *
+ * console.log(linkBatchItemRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LinkBatchItemRow = LinkBatchItems;
+/**
+ * Describes the link batch item insert row data exposed by this module.
+ *
+ * **Example** (Reference LinkBatchItemInsertRow columns)
+ *
+ * ```ts
+ * import type { LinkBatchItemInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const linkBatchItemInsertRowFields: ReadonlyArray<keyof LinkBatchItemInsertRow> = ["batchId", "linkId", "status"]
+ *
+ * console.log(linkBatchItemInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LinkBatchItemInsertRow = typeof LinkBatchItems.insert.Type;
 
 // =============================================================================
 // LLM Examples Table (Few-Shot Learning)
 // =============================================================================
 
+const LlmExampleType = S.Literals(["entity_extraction", "relation_extraction", "entity_linking", "negative"]);
+const LlmExampleSource = S.Literals(["manual", "validated", "auto_generated"]);
+const LlmPromptMessagesJson = S.Struct({ role: S.String, content: S.String }).pipe(S.Array);
+
 /**
  * LLM Examples
+ *
+ * **Details**
  *
  * Stores curated examples for few-shot prompting. Examples are scoped per-ontology
  * and support hybrid retrieval (vector similarity + lexical search).
  *
- * @since 2.0.0
+ * **Example** (Inspect llm examples)
+ *
+ * ```ts
+ * import { LlmExamples } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(LlmExamples.fields.exampleType)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export const llmExamples = pgTable(
-  "llm_examples",
+export class LlmExamples extends Model<LlmExamples>("LlmExamples")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
 
     // Scoping
-    ontologyId: text("ontology_id").notNull(),
-    exampleType: text("example_type").notNull(), // entity_extraction | relation_extraction | entity_linking | negative
-    source: text("source").notNull().default("manual"), // manual | validated | auto_generated
+    ontologyId: S.String.pipe(pg.text(), pg.columnName("ontology_id")),
+    exampleType: LlmExampleType.pipe(pg.text(), pg.columnName("example_type")),
+    source: LlmExampleSource.pipe(pg.text(), pg.default("manual")),
 
     // Structured content
-    inputText: text("input_text").notNull(),
-    targetClass: text("target_class"),
-    targetPredicate: text("target_predicate"),
-    evidenceText: text("evidence_text"),
-    evidenceStartOffset: integer("evidence_start_offset"),
-    evidenceEndOffset: integer("evidence_end_offset"),
+    inputText: S.String.pipe(pg.text(), pg.columnName("input_text")),
+    targetClass: nullableColumn(S.String).pipe(pg.text(), pg.columnName("target_class")),
+    targetPredicate: nullableColumn(S.String).pipe(pg.text(), pg.columnName("target_predicate")),
+    evidenceText: nullableColumn(S.String).pipe(pg.text(), pg.columnName("evidence_text")),
+    evidenceStartOffset: nullableColumn(S.Int).pipe(pg.integer(), pg.columnName("evidence_start_offset")),
+    evidenceEndOffset: nullableColumn(S.Int).pipe(pg.integer(), pg.columnName("evidence_end_offset")),
 
     // Output
-    expectedOutput: jsonb("expected_output").notNull().$type<Record<string, unknown>>(),
-    promptMessages: jsonb("prompt_messages").$type<Array<{ role: string; content: string }>>(), // Pre-formatted for direct inclusion
-    explanation: text("explanation"),
+    expectedOutput: UnknownRecordJson.pipe(pg.jsonb(), pg.columnName("expected_output")),
+    promptMessages: nullableColumn(LlmPromptMessagesJson).pipe(pg.jsonb(), pg.columnName("prompt_messages")),
+    explanation: nullableColumn(S.String).pipe(pg.text()),
 
     // Embedding (768-dim Nomic with ontology prefix)
-    embedding: vector768("embedding").notNull(),
+    embedding: EmbeddingVector768,
 
     // Negative example metadata
-    isNegative: boolean("is_negative").notNull().default(false),
-    negativePattern: text("negative_pattern"),
+    isNegative: S.Boolean.pipe(pg.boolean(), pg.default(false), pg.columnName("is_negative")),
+    negativePattern: nullableColumn(S.String).pipe(pg.text(), pg.columnName("negative_pattern")),
 
     // Quality metrics
-    usageCount: integer("usage_count").default(0),
-    successRate: numeric("success_rate", { precision: 4, scale: 3 }),
+    usageCount: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("usage_count")),
+    successRate: nullableColumn(S.String).pipe(pg.numeric(4, 3), pg.columnName("success_rate")),
 
     // Lifecycle
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    createdBy: text("created_by"),
-    isActive: boolean("is_active").notNull().default(true),
+    createdAt: nullableColumn(S.Date).pipe(
+      pg.timestamp({ mode: "date" }),
+      pg.defaultNow(),
+      pg.columnName("created_at")
+    ),
+    createdBy: nullableColumn(S.String).pipe(pg.text(), pg.columnName("created_by")),
+    isActive: S.Boolean.pipe(pg.boolean(), pg.default(true), pg.columnName("is_active")),
   },
   (table) => [
-    index("idx_llm_examples_ontology_type").on(table.ontologyId, table.exampleType),
-    index("idx_llm_examples_ontology_active").on(table.ontologyId, table.isActive),
-    index("idx_llm_examples_is_negative").on(table.isNegative),
+    pg.Table.index("idx_llm_examples_ontology_type", [table.ontologyId, table.exampleType]),
+    pg.Table.index("idx_llm_examples_ontology_active", [table.ontologyId, table.isActive]),
+    pg.Table.index("idx_llm_examples_is_negative", [table.isNegative]),
     // Note: HNSW and GIN indexes are created in migration SQL
   ]
-);
+) {}
 
-export type LlmExampleRow = typeof llmExamples.$inferSelect;
-export type LlmExampleInsertRow = typeof llmExamples.$inferInsert;
+/**
+ * Drizzle table projected from {@link LlmExamples}.
+ *
+ * **Example** (Inspect the example-type column)
+ *
+ * ```ts
+ * import { llmExamples } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(llmExamples.exampleType.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const llmExamples = pg.toPgTable(LlmExamples);
+
+/**
+ * Describes the llm example row data exposed by this module.
+ *
+ * **Example** (Reference LlmExampleRow columns)
+ *
+ * ```ts
+ * import type { LlmExampleRow } from "@effect-ontology/Repository/schema"
+ *
+ * const llmExampleRowFields: ReadonlyArray<keyof LlmExampleRow> = ["id", "ontologyId", "exampleType"]
+ *
+ * console.log(llmExampleRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LlmExampleRow = LlmExamples;
+/**
+ * Describes the llm example insert row data exposed by this module.
+ *
+ * **Example** (Reference LlmExampleInsertRow columns)
+ *
+ * ```ts
+ * import type { LlmExampleInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const llmExampleInsertRowFields: ReadonlyArray<keyof LlmExampleInsertRow> = ["id", "ontologyId", "exampleType"]
+ *
+ * console.log(llmExampleInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LlmExampleInsertRow = typeof LlmExamples.insert.Type;
 
 // =============================================================================
 // Embeddings Table (Persistent Vector Storage)
 // =============================================================================
 
 /**
- * Entity type enum for embeddings
- *
- * @since 2.0.0
- */
-export const embeddingEntityTypeEnum = pgEnum("embedding_entity_type", ["class", "entity", "claim", "example"]);
-
-/**
  * Embeddings Table
+ *
+ * **Details**
  *
  * Persistent storage for embedding vectors supporting hybrid search.
  * Stores embeddings for ontology classes, extracted entities, claims,
@@ -671,42 +1646,87 @@ export const embeddingEntityTypeEnum = pgEnum("embedding_entity_type", ["class",
  * - tsvector for BM25-like full-text search
  * - RRF fusion via hybrid_search() function
  *
- * @since 2.0.0
+ * **Example** (Inspect embeddings)
+ *
+ * ```ts
+ * import { Embeddings } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(Embeddings.fields.embedding)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export const embeddings = pgTable(
-  "embeddings",
+export class Embeddings extends Model<Embeddings>("Embeddings")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-
-    // What this embedding represents
-    entityType: text("entity_type").notNull(), // class | entity | claim | example
-    entityId: text("entity_id").notNull(),
-
-    // Ontology scoping
-    ontologyId: text("ontology_id").notNull().default("default"),
-
-    // The embedding vector (768-dim for Nomic)
-    embedding: vector768("embedding").notNull(),
-
-    // Text content for hybrid search
-    contentText: text("content_text"),
-    // Note: content_tsv is GENERATED ALWAYS in SQL, not exposed to Drizzle
-
-    // Model provenance
-    model: text("model").notNull().default("nomic-embed-text-v1.5"),
-
-    // Temporal tracking
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    entityType: S.Literals(["class", "entity", "claim", "example"]).pipe(pg.varchar(20), pg.columnName("entity_type")),
+    entityId: S.NonEmptyString.pipe(pg.text(), pg.columnName("entity_id")),
+    ontologyId: S.NonEmptyString.pipe(pg.text(), pg.defaultExpr(sql<string>`'default'`), pg.columnName("ontology_id")),
+    embedding: EmbeddingVector768,
+    contentText: S.NullOr(S.String).pipe(pg.text(), pg.columnName("content_text")),
+    model: S.NonEmptyString.pipe(pg.text(), pg.defaultExpr(sql<string>`'nomic-embed-text-v1.5'`)),
+    createdAt: S.NullOr(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("created_at")),
+    updatedAt: S.NullOr(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("updated_at")),
   },
   (table) => [
-    // Unique per (ontology, type, id) - enables upsert
-    uniqueIndex("idx_embeddings_ontology_entity_unique").on(table.ontologyId, table.entityType, table.entityId),
-    index("idx_embeddings_entity_type_idx").on(table.entityType),
-    index("idx_embeddings_ontology_type_idx").on(table.ontologyId, table.entityType),
-    // Note: IVFFlat and GIN indexes are created in migration SQL
+    pg.Table.uniqueIndex("idx_embeddings_ontology_entity_unique", [table.ontologyId, table.entityType, table.entityId]),
+    pg.Table.index("idx_embeddings_entity_type_idx", [table.entityType]),
+    pg.Table.index("idx_embeddings_ontology_type_idx", [table.ontologyId, table.entityType]),
+    pg.Table.check(
+      sql<boolean>`${table.entityType} IN ('class', 'entity', 'claim', 'example')`,
+      "embeddings_entity_type_check"
+    ),
   ]
-);
+) {}
 
-export type EmbeddingRow = typeof embeddings.$inferSelect;
-export type EmbeddingInsertRow = typeof embeddings.$inferInsert;
+/**
+ * Drizzle table projected from {@link Embeddings}.
+ *
+ * **Example** (Inspect embedding columns)
+ *
+ * ```ts
+ * import { embeddings } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(embeddings.embedding.name)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const embeddings = pg.toPgTable(Embeddings);
+
+/**
+ * Describes the embedding row data exposed by this module.
+ *
+ * **Example** (Reference EmbeddingRow columns)
+ *
+ * ```ts
+ * import type { EmbeddingRow } from "@effect-ontology/Repository/schema"
+ *
+ * const embeddingRowFields: ReadonlyArray<keyof EmbeddingRow> = ["id", "entityType", "entityId"]
+ *
+ * console.log(embeddingRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EmbeddingRow = Embeddings;
+/**
+ * Describes the embedding insert row data exposed by this module.
+ *
+ * **Example** (Reference EmbeddingInsertRow columns)
+ *
+ * ```ts
+ * import type { EmbeddingInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const embeddingInsertRowFields: ReadonlyArray<keyof EmbeddingInsertRow> = ["id", "entityType", "entityId"]
+ *
+ * console.log(embeddingInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EmbeddingInsertRow = typeof Embeddings.insert.Type;

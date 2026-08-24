@@ -1,11 +1,13 @@
 /**
  * ImageExtractor Service
  *
+ * **Details**
+ *
  * Extracts image candidates from Jina reader responses and markdown content.
  * Parses both the structured `image` field and inline markdown images.
  *
- * @since 2.0.0
- * @module Service/ImageExtractor
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -14,6 +16,7 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import type { JinaContent } from "../Domain/Model/EnrichedContent.ts";
 import { ImageCandidate } from "../Domain/Model/Image.ts";
 
@@ -25,6 +28,20 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageExtractor");
 
 /**
  * Input for image extraction - can be JinaContent or raw markdown
+ *
+ *
+ * **Example** (Use the ImageExtractionInput contract)
+ *
+ * ```ts
+ * import type { ImageExtractionInput } from "@effect-ontology/Service/ImageExtractor"
+ *
+ * const acceptsImageExtractionInput = (_value: ImageExtractionInput): void => undefined
+ *
+ * console.log(acceptsImageExtractionInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ImageExtractionInput {
   /** The markdown content to parse for inline images */
@@ -42,10 +59,13 @@ export interface ImageExtractionInput {
 /**
  * ImageExtractor service interface
  *
+ * **Details**
+ *
  * Extracts image candidates from content for downstream fetching and storage.
  *
- * @since 2.0.0
- * @category Service
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ImageExtractorService {
   /**
@@ -97,31 +117,15 @@ const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g;
 /**
  * Normalize image URL (resolve relative URLs, clean up)
  */
-const normalizeImageUrl = (imageUrl: string, sourceUrl: string): URLStr | null => {
-  try {
-    // Handle data URIs - skip them
-    if (imageUrl.startsWith("data:")) {
-      return null;
-    }
-
-    // Handle protocol-relative URLs
-    if (imageUrl.startsWith("//")) {
-      return URLStr.fromUnknown(`https:${imageUrl}`);
-    }
-
-    // Handle absolute URLs
-    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-      return URLStr.fromUnknown(imageUrl);
-    }
-
-    // Handle relative URLs - resolve against source
-    const base = new URL(sourceUrl);
-    const resolved = new URL(imageUrl, base);
-    return URLStr.fromUnknown(resolved.toString());
-  } catch {
-    // Invalid URL
-    return null;
+const normalizeImageUrl = (imageUrl: string, sourceUrl: string): O.Option<URLStr> => {
+  if (Str.startsWith("data:")(imageUrl)) return O.none();
+  if (Str.startsWith("//")(imageUrl)) return URLStr.decodeOption(`https:${imageUrl}`);
+  if (Str.startsWith("https://")(imageUrl) || Str.startsWith("https://")(imageUrl)) {
+    return URLStr.decodeOption(imageUrl);
   }
+  return O.flatMap(O.fromNullishOr(URL.parse(imageUrl, sourceUrl)), (resolved) =>
+    URLStr.decodeOption(resolved.toString())
+  );
 };
 
 /**
@@ -134,23 +138,25 @@ const parseMarkdownImages = (markdown: string, sourceUrl: string, startOrder: nu
   // Reset regex lastIndex
   MARKDOWN_IMAGE_PATTERN.lastIndex = 0;
 
-  let match: RegExpExecArray | null;
-  while ((match = MARKDOWN_IMAGE_PATTERN.exec(markdown)) !== null) {
+  let match = MARKDOWN_IMAGE_PATTERN.exec(markdown);
+  while (match !== null) {
     const [, alt, rawUrl, title] = match;
     const normalizedUrl = normalizeImageUrl(rawUrl, sourceUrl);
 
-    if (P.isNotNull(normalizedUrl)) {
+    const referrerUrl = URLStr.decodeOption(sourceUrl);
+    if (O.isSome(normalizedUrl) && O.isSome(referrerUrl)) {
       candidates.push(
         ImageCandidate.make({
-          sourceUrl: normalizedUrl,
+          sourceUrl: normalizedUrl.value,
           alt: O.fromNullishOr(alt || undefined),
           caption: O.fromNullishOr(title || undefined),
           role: "inline",
           order: NonNegativeInt.make(order++),
-          referrerUrl: URLStr.fromUnknown(sourceUrl),
+          referrerUrl: referrerUrl.value,
         })
       );
     }
+    match = MARKDOWN_IMAGE_PATTERN.exec(markdown);
   }
 
   return candidates;
@@ -163,15 +169,23 @@ const parseMarkdownImages = (markdown: string, sourceUrl: string, startOrder: nu
 /**
  * ImageExtractor service tag
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Inspect image extractor)
+ *
+ * ```ts
+ * import { ImageExtractor } from "@effect-ontology/Service/ImageExtractor"
+ *
+ * console.log(ImageExtractor)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtractorService>()($I`ImageExtractor`) {
   /**
    * Live implementation
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.succeed(ImageExtractor, {
     extractFromJina: (content: JinaContent): ReadonlyArray<ImageCandidate> => {
@@ -180,10 +194,10 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
       // 1. Add featured image as hero (if present)
       if (O.isSome(content.image)) {
         const normalizedUrl = normalizeImageUrl(content.image.value, content.url);
-        if (P.isNotNull(normalizedUrl)) {
+        if (O.isSome(normalizedUrl)) {
           candidates.push(
             ImageCandidate.make({
-              sourceUrl: normalizedUrl,
+              sourceUrl: normalizedUrl.value,
               role: "hero",
               order: NonNegativeInt.make(0),
               referrerUrl: content.url,
@@ -207,13 +221,14 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
       // 1. Add featured image as hero (if present)
       if (P.isNotUndefined(input.featuredImage)) {
         const normalizedUrl = normalizeImageUrl(input.featuredImage, input.sourceUrl);
-        if (P.isNotNull(normalizedUrl)) {
+        const referrerUrl = URLStr.decodeOption(input.sourceUrl);
+        if (O.isSome(normalizedUrl) && O.isSome(referrerUrl)) {
           candidates.push(
             ImageCandidate.make({
-              sourceUrl: normalizedUrl,
+              sourceUrl: normalizedUrl.value,
               role: "hero",
               order: NonNegativeInt.make(0),
-              referrerUrl: URLStr.fromUnknown(input.sourceUrl),
+              referrerUrl: referrerUrl.value,
             })
           );
         }
@@ -235,8 +250,8 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
   /**
    * Default layer (no dependencies)
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImageExtractor.Live;
 }

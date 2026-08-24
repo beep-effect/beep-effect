@@ -33,20 +33,21 @@ const ApiKey = ApiKeyDefinition.annotate({
 /**
  * Request for a single-use WebSocket authentication ticket.
  *
- * @remarks
- * The ontology identifier is required and non-empty so ticket scope cannot
+ * **Details**
+ *
+ * * The ontology identifier is required and non-empty so ticket scope cannot
  * silently widen to an application default.
  *
- * @example
+ * **Example** (Use TicketRequest)
  * ```ts
- * import { TicketRequest } from "@effect-ontology/Schema/Auth.ts"
+ * import { TicketRequest } from "@effect-ontology/Schema/Auth"
  *
  * const request = TicketRequest.make({ ontologyId: "seattle" })
  * console.log(request.ontologyId) // "seattle"
  * ```
  *
  * @invariant `ontologyId` is non-empty.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class TicketRequest extends S.Class<TicketRequest>($I`TicketRequest`)(
@@ -63,26 +64,29 @@ export class TicketRequest extends S.Class<TicketRequest>($I`TicketRequest`)(
 /**
  * Issued single-use WebSocket authentication ticket.
  *
- * @remarks
- * Both the ticket and any API key held by the server are represented as
+ * **Details**
+ *
+ * * Both the ticket and any API key held by the server are represented as
  * `Redacted` values after decoding, preventing accidental logging by ordinary
  * formatting operations.
  *
- * @example
+ * **Example** (Use TicketResponse)
  * ```ts
- * import { TicketResponse } from "@effect-ontology/Schema/Auth.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TicketResponse } from "@effect-ontology/Schema/Auth"
  *
- * const response = TicketResponse.fromUnknown({
+ * const response = S.decodeUnknownOption(TicketResponse)({
  *   ticket: "single-use-ticket",
  *   expiresAt: 1_900_000_000_000,
  *   ttlSeconds: 60
  * })
- * console.log(response.ttlSeconds) // 60
+ * console.log(O.map(response, (value) => value.ttlSeconds)) // Some(60)
  * ```
  *
  * @invariant Expiration is expressed as finite epoch milliseconds and TTL is a
  * positive integer number of seconds.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class TicketResponse extends S.Class<TicketResponse>($I`TicketResponse`)(
@@ -102,34 +106,36 @@ export class TicketResponse extends S.Class<TicketResponse>($I`TicketResponse`)(
   })
 ) {
   static readonly is = S.is(TicketResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(TicketResponse);
 }
 
 /**
  * Internal persistence record for an issued authentication ticket.
  *
- * @remarks
- * Credential-bearing fields remain redacted in memory. The record keeps both
+ * **Details**
+ *
+ * * Credential-bearing fields remain redacted in memory. The record keeps both
  * creation and expiration instants so stores can enforce one-time use and
  * expiry without reconstructing timing from a TTL.
  *
- * @example
+ * **Example** (Use TicketRecord)
  * ```ts
- * import { TicketRecord } from "@effect-ontology/Schema/Auth.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TicketRecord } from "@effect-ontology/Schema/Auth"
  *
- * const record = TicketRecord.fromUnknown({
+ * const record = S.decodeUnknownOption(TicketRecord)({
  *   ticket: "single-use-ticket",
  *   ontologyId: "seattle",
  *   apiKey: "api-key",
  *   createdAt: 1_800_000_000_000,
  *   expiresAt: 1_800_000_060_000
  * })
- * console.log(record.ontologyId) // "seattle"
+ * console.log(O.map(record, (value) => value.ontologyId)) // Some("seattle")
  * ```
  *
  * @invariant Credentials are non-empty and redacted; ontology scope is
  * non-empty; timestamps are valid UTC epoch-millisecond instants.
- * @category persistence
+ * @category models
  * @since 0.0.0
  */
 export class TicketRecord extends S.Class<TicketRecord>($I`TicketRecord`)(
@@ -155,6 +161,5 @@ export class TicketRecord extends S.Class<TicketRecord>($I`TicketRecord`)(
   })
 ) {
   static readonly is = S.is(TicketRecord);
-  static readonly fromUnknown = S.decodeUnknownSync(TicketRecord);
   static readonly decodeOption = S.decodeUnknownOption(TicketRecord);
 }

@@ -1,10 +1,10 @@
+import { Unknown } from "@beep/schema/Unknown";
 import {
   containsOpaqueReference,
   containsRuntimeReference,
   isRuntimeReference,
 } from "../interpreter/Interpreter.references.ts";
 import {MutableHashSet, pipe} from "effect";
-import * as S from "effect/Schema";
 import {A, O, P, R} from "@beep/utils";
 import {copyIn, copyOut} from "../Codemode.tool-runtime.ts";
 import {
@@ -23,7 +23,7 @@ import { ConsoleMethod } from "../Codemode.method-names.ts";
 export { ConsoleMethod };
 
 const MAX_CONSOLE_DEPTH = 32;
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const formatConsoleMessage = (name: ConsoleMethod, args: Array<unknown>): string => {

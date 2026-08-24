@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 /**
  * Code generator for the exhaustive HTML AST.
  *
@@ -65,7 +66,7 @@ class HtmlGenerationError extends S.TaggedError<HtmlGenerationError>($I`HtmlGene
 
 const isHtmlGenerationError = S.is(HtmlGenerationError);
 
-const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeJsonResult = Unknown.encodeUnknownResultFromJsonString;
 const encodeJson = (value: unknown): string =>
   pipe(
     encodeJsonResult(value),

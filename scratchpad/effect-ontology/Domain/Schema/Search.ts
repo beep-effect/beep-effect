@@ -7,20 +7,17 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { SchemaGetter } from "effect";
-import * as DateTime from "effect/DateTime";
+import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { RdfObject } from "./KnowledgeModel.ts";
 import { ArticleSummary, ClaimRank, ClaimWithRank } from "./Timeline.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Search");
 
-const SearchDateRangeFields = S.Struct({
+const SearchDateRangeDefinition = S.Struct({
   from: S.DateTimeUtcFromString.annotateKey({ description: "Inclusive UTC range start." }),
   to: S.DateTimeUtcFromString.annotateKey({ description: "Inclusive UTC range end." }),
-});
-
-const SearchDateRangeDefinition = SearchDateRangeFields.check(
+}).check(
   S.makeFilter(
     (range) =>
       DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)
@@ -45,9 +42,9 @@ const SearchDateRangeFromSelf = S.declare((input: unknown): input is typeof Sear
     fc
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
-        SearchDateRangeFields.make({
-          from: S.decodeSync(S.DateTimeUtcFromMillis)(from),
-          to: S.decodeSync(S.DateTimeUtcFromMillis)(from + duration),
+        SearchDateRangeDefinition.make({
+          from: DateTime.makeUnsafe(from),
+          to: DateTime.makeUnsafe(from + duration),
         })
       ),
 });
@@ -72,21 +69,24 @@ const PositiveLimitFromString = S.FiniteFromString.pipe(
 /**
  * Body for full-text and faceted claim search.
  *
- * @example
+ * **Example** (Use ClaimSearchRequest)
  * ```ts
- * import { ClaimSearchRequest } from "@effect-ontology/Schema/Search.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ClaimSearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = ClaimSearchRequest.fromUnknown({ query: "appointed director" })
- * console.log(request.limit) // 20
+ * const request = S.decodeUnknownOption(ClaimSearchRequest)({ ontologyId: "ontology-a", query: "appointed director" })
+ * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
  * @invariant Query text is non-empty, limit is positive, and offset is
  * non-negative.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSearchRequest`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for claim search." }),
     query: S.NonEmptyString,
     predicates: IRI.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -98,9 +98,7 @@ export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSear
   $I.annote("ClaimSearchRequest", {
     description: "Claim-search body with normalized filters and constrained pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(ClaimSearchRequest);
-}
+) {}
 
 const PredicateFacet = S.Struct({
   iri: IRI,
@@ -121,15 +119,15 @@ const ClaimSearchFacets = S.Struct({
 /**
  * Paginated claim-search response and optional facets.
  *
- * @example
+ * **Example** (Use ClaimSearchResponse)
  * ```ts
- * import type { ClaimSearchResponse } from "@effect-ontology/Schema/Search.ts"
+ * import type { ClaimSearchResponse } from "@effect-ontology/Schema/Search"
  *
  * const count = (response: ClaimSearchResponse) => response.claims.length
  * console.log(count)
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSearchResponse`)(
@@ -150,19 +148,22 @@ export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSe
 /**
  * Body for label-oriented entity search.
  *
- * @example
+ * **Example** (Use EntitySearchRequest)
  * ```ts
- * import { EntitySearchRequest } from "@effect-ontology/Schema/Search.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EntitySearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = EntitySearchRequest.fromUnknown({ query: "Alice" })
- * console.log(request.limit) // 20
+ * const request = S.decodeUnknownOption(EntitySearchRequest)({ ontologyId: "ontology-a", query: "Alice" })
+ * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class EntitySearchRequest extends S.Class<EntitySearchRequest>($I`EntitySearchRequest`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for entity search." }),
     query: S.NonEmptyString,
     types: IRI.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
@@ -170,9 +171,7 @@ export class EntitySearchRequest extends S.Class<EntitySearchRequest>($I`EntityS
   $I.annote("EntitySearchRequest", {
     description: "Entity-search body with optional ontology-type filter and positive result limit.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(EntitySearchRequest);
-}
+) {}
 
 const EntityTopClaim = S.Struct({
   predicate: IRI,
@@ -183,9 +182,9 @@ const EntityTopClaim = S.Struct({
 /**
  * Entity-search hit with semantic type and claim previews.
  *
- * @example
+ * **Example** (Use EntitySearchResult)
  * ```ts
- * import type { EntitySearchResult } from "@effect-ontology/Schema/Search.ts"
+ * import type { EntitySearchResult } from "@effect-ontology/Schema/Search"
  *
  * const claimCount = (result: EntitySearchResult) => result.claimCount
  * console.log(claimCount)
@@ -210,19 +209,20 @@ export class EntitySearchResult extends S.Class<EntitySearchResult>($I`EntitySea
 /**
  * Response containing entity-search hits.
  *
- * @example
+ * **Example** (Use EntitySearchResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { EntitySearchResponse } from "@effect-ontology/Schema/Search.ts"
+ * import { EntitySearchResponse } from "@effect-ontology/Schema/Search"
  *
- * const response = S.decodeUnknownSync(EntitySearchResponse)({
+ * const response = S.decodeUnknownOption(EntitySearchResponse)({
  *   query: "Alice",
  *   total: 0
  * })
- * console.log(response.entities.length) // 0
+ * console.log(O.map(response, (value) => value.entities.length)) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`EntitySearchResponse`)(
@@ -239,35 +239,36 @@ export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`Entit
 /**
  * URL-query parameters for search suggestions.
  *
- * @example
+ * **Example** (Use SuggestionQuery)
  * ```ts
- * import { SuggestionQuery } from "@effect-ontology/Schema/Search.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { SuggestionQuery } from "@effect-ontology/Schema/Search"
  *
- * const query = SuggestionQuery.fromUnknown({ prefix: "Ali" })
- * console.log(query.limit) // 10
+ * const query = S.decodeUnknownOption(SuggestionQuery)({ ontologyId: "ontology-a", prefix: "Ali" })
+ * console.log(O.map(query, (value) => value.limit)) // Some(10)
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class SuggestionQuery extends S.Class<SuggestionQuery>($I`SuggestionQuery`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for suggestions." }),
     prefix: S.NonEmptyString,
     limit: PositiveLimitFromString.pipe(SchemaUtils.withKeyDefaults(PosInt.make(10))),
   },
   $I.annote("SuggestionQuery", {
     description: "Suggestion query with non-empty prefix and a positive limit decoded from URL text.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(SuggestionQuery);
-}
+) {}
 
 /**
  * Individual entity suggestion.
  *
- * @example
+ * **Example** (Use Suggestion)
  * ```ts
- * import type { Suggestion } from "@effect-ontology/Schema/Search.ts"
+ * import type { Suggestion } from "@effect-ontology/Schema/Search"
  *
  * const label = (suggestion: Suggestion) => suggestion.label
  * console.log(label)
@@ -291,15 +292,15 @@ export class Suggestion extends S.Class<Suggestion>($I`Suggestion`)(
 /**
  * Response containing typeahead suggestions.
  *
- * @example
+ * **Example** (Use SuggestionsResponse)
  * ```ts
- * import { SuggestionsResponse } from "@effect-ontology/Schema/Search.ts"
+ * import { SuggestionsResponse } from "@effect-ontology/Schema/Search"
  *
  * const response = SuggestionsResponse.make({ prefix: "Ali" })
  * console.log(response.suggestions.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`SuggestionsResponse`)(
@@ -315,19 +316,22 @@ export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`Suggest
 /**
  * Body for searching source articles.
  *
- * @example
+ * **Example** (Use ArticleSearchRequest)
  * ```ts
- * import { ArticleSearchRequest } from "@effect-ontology/Schema/Search.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ArticleSearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = ArticleSearchRequest.fromUnknown({})
- * console.log(request.limit) // 20
+ * const request = S.decodeUnknownOption(ArticleSearchRequest)({ ontologyId: "ontology-a" })
+ * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`ArticleSearchRequest`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for article search." }),
     query: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     dateRange: S.OptionFromOptionalKey(SearchDateRange).pipe(SchemaUtils.withNoneDefault),
@@ -337,16 +341,14 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
   $I.annote("ArticleSearchRequest", {
     description: "Article-search body with normalized filters and constrained pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(ArticleSearchRequest);
-}
+) {}
 
 /**
  * Source-article search hit and its aggregate knowledge counts.
  *
- * @example
+ * **Example** (Use ArticleSearchResult)
  * ```ts
- * import type { ArticleSearchResult } from "@effect-ontology/Schema/Search.ts"
+ * import type { ArticleSearchResult } from "@effect-ontology/Schema/Search"
  *
  * const conflicts = (result: ArticleSearchResult) => result.conflictCount
  * console.log(conflicts)
@@ -369,21 +371,22 @@ export class ArticleSearchResult extends S.Class<ArticleSearchResult>($I`Article
 /**
  * Paginated article-search response.
  *
- * @example
+ * **Example** (Use ArticleSearchResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ArticleSearchResponse } from "@effect-ontology/Schema/Search.ts"
+ * import { ArticleSearchResponse } from "@effect-ontology/Schema/Search"
  *
- * const response = S.decodeUnknownSync(ArticleSearchResponse)({
+ * const response = S.decodeUnknownOption(ArticleSearchResponse)({
  *   total: 0,
  *   limit: 20,
  *   offset: 0,
  *   hasMore: false
  * })
- * console.log(response.articles.length) // 0
+ * console.log(O.map(response, (value) => value.articles.length)) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ArticleSearchResponse extends S.Class<ArticleSearchResponse>($I`ArticleSearchResponse`)(

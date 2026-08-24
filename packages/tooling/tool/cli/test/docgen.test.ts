@@ -33,6 +33,7 @@ import { Process } from "@beep/repo-docgen/Domain";
 import { verifyDocgenProofManifest, writeDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { Pod, Runpod, Template } from "@beep/runpod";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, currentHostPlatform, O } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -70,8 +71,8 @@ const CommandTestLayer = Layer.mergeAll(
   TestConsole.layer
 );
 const runDocgenCommand = Command.runWith(docgenCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
-const decodeUnknownJson = S.decodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const decodeUnknownJson = Unknown.decodeUnknownSyncFromJsonString;
 const encodeDocgenConfigDocument = S.encodeSync(DocgenConfigDocument);
 const decodeDocgenConfigDocument = S.decodeUnknownSync(DocgenConfigDocument);
 const decodeWorkerEvalReportJson = S.decodeUnknownSync(S.fromJsonString(DocgenQualityWorkerEvalReport));

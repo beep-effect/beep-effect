@@ -20,9 +20,10 @@ import {
   PublishProvenanceTool,
 } from "@beep/ontology-use-cases/tools";
 import { makeDrizzleLayer } from "@beep/postgres";
-import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
+import { Unknown } from "@beep/schema/Unknown";
+import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -31,6 +32,7 @@ import * as Random from "effect/Random";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { migrateOnBoot } from "@/runtime/Migrations";
 import {
@@ -47,7 +49,7 @@ const publishBodyCanary = "EXECUTION_AUTHORITY_PUBLISH_BODY_CANARY_8F4C3E2B";
 const responseBodyCanary = "EXECUTION_AUTHORITY_RESPONSE_BODY_CANARY_9A5D4F3C";
 const refusalGuidance = "This action is not authorized for this session. Resolve the mutation tier and retry.";
 
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const encodeSparqlQueryRequest = S.encodeUnknownEffect(OntologySparqlQueryRequest);
 const decodeSparqlQueryResponse = S.decodeUnknownEffect(OntologySparqlQueryResponse);
 const encodeExportProvenanceRequest = S.encodeUnknownEffect(ExportProvenanceRequest);
@@ -107,6 +109,12 @@ const newOutcomes = (
 const canaryWorkspace = `@prefix ex: <https://example.test/> .
 ex:canary ex:value "${workspaceCanary}" .
 `;
+
+describe("professional desktop execution-authority schema laws", () => {
+  it("generates valid ontology SPARQL query requests", () => {
+    fc.assert(fc.property(S.toArbitrary(OntologySparqlQueryRequest)(fc), S.is(OntologySparqlQueryRequest)), fcRuns(25));
+  });
+});
 
 describe("professional desktop execution authority PgLite acceptance", { concurrent: false }, () => {
   layer(makeAcceptanceLayer(), { timeout: "5 minutes" })((it) => {

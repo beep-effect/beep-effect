@@ -6,18 +6,21 @@ import { toCandorDispositionInsert } from "@beep/law-practice-tables/entities/Ca
 import { toIdsSubmissionFactInsert } from "@beep/law-practice-tables/entities/IdsSubmissionFact";
 import { toPatentCitationEventInsert } from "@beep/law-practice-tables/entities/PatentCitationEvent";
 import { makeDrizzle, migrate } from "@beep/postgres";
+import { Unknown } from "@beep/schema/Unknown";
 import {
+  fcRuns,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
   productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as SqlError from "effect/unstable/sql/SqlError";
 
@@ -131,6 +134,12 @@ const submissionFactInput = {
   statement: { sizeFeeAssertionPresent: true, statementPresent: true, statementType: "e2-no-prior-knowledge" },
   submissionKind: "initial",
 };
+
+describe("law-practice candor migration schema laws", () => {
+  it("generates valid patent citation events", () => {
+    fc.assert(fc.property(S.toArbitrary(PatentCitationEvent)(fc), S.is(PatentCitationEvent)), fcRuns(25));
+  });
+});
 
 const sortedNames = (names: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(names, Order.String);
 
@@ -275,7 +284,7 @@ if (!shouldRunPgliteIntegration) {
                   ? `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, candidate_window, $1::jsonb, content, fees, modeled_from, office_treatment, operative_date, statement, submission_kind, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`
                   : `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, actor, $1::jsonb, discovery, grounding, observed_at, possible_duplicate_of, quarantine, reference, supersedes, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`;
 
-            const conformantIdentity = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+            const conformantIdentity = yield* Unknown.encodeEffectFromJsonString({
               applicationNumber: "102014000345678",
               kind: "WipoSt13",
               officeCode: "EP",
@@ -286,7 +295,7 @@ if (!shouldRunPgliteIntegration) {
             );
             expect(accepted).toEqual([{ officeCode: "EP" }]);
 
-            const encodedIdentity = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(identity);
+            const encodedIdentity = yield* Unknown.encodeEffectFromJsonString(identity);
             const violation = yield* sql.unsafe(recordSql, [encodedIdentity, 200, "-st13-invalid"]).pipe(Effect.flip);
 
             expect(violation).toBeInstanceOf(SqlError.SqlError);

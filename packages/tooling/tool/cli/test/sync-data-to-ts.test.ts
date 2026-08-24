@@ -451,6 +451,20 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
   );
 
   it.effect(
+    "extracts an archive entry by its root-relative suffix",
+    Effect.fnUntraced(function* () {
+      const bytes = yield* makeFixtureTar();
+      const entries = yield* extractArchiveTextEntries({
+        bytes,
+        pathSuffixes: ["/fixture.txt"],
+        targetId: "fixture-target",
+      });
+
+      expect(entries).toEqual({ "/fixture.txt": "fixture" });
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
     "reports required entries missing from a tar archive",
     Effect.fnUntraced(function* () {
       const bytes = yield* makeFixtureTar();
@@ -569,7 +583,8 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       value: { value: "quoted" },
     });
 
-    expect(rendered).toContain("S.fromJsonString(S.Unknown)");
+    expect(rendered).toContain('import { Unknown } from "@beep/schema/Unknown"');
+    expect(rendered).toContain("Unknown.decodeUnknownResultFromJsonString");
     expect(rendered).toContain("Result.getOrThrow");
     expect(rendered).toContain("export const FixtureData: unknown");
     expect(rendered).not.toContain("JSON.parse");

@@ -1,21 +1,26 @@
 /**
  * Service: Extraction Services
  *
+ * **Details**
+ *
  * EntityExtractor and RelationExtractor service contracts.
  * Implements two-stage extraction using LLM with structured output.
  *
- * @since 2.0.0
- * @module Service/Extraction
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { Chunk, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
+import { Unknown } from "@beep/schema/Unknown";
+import { Chunk, Context, Effect, Inspectable, Layer, Match, MutableHashMap } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashMap from "effect/MutableHashMap";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
 import {
   EntityExtractionFailed,
@@ -31,16 +36,14 @@ import {
   generateStructuredRelationPrompt,
 } from "../Prompt/index.ts";
 import { makeEntitySchema } from "../Schema/EntityFactory.ts";
-import type { Mention } from "../Schema/MentionFactory.ts";
-import { MentionGraphSchema } from "../Schema/MentionFactory.ts";
-import type { RelationGraphType } from "../Schema/RelationFactory.ts";
+import { Mention, MentionGraph } from "../Schema/MentionFactory.ts";
+import type { RelationGraph } from "../Schema/RelationFactory.ts";
 import { makeRelationSchema } from "../Schema/RelationFactory.ts";
 import { annotateExtraction, annotateLlmCall, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { sha256Sync } from "../Utils/Hash.ts";
 import { buildLocalNameToIriMapSafe, expandLocalNameToIri, expandTypesToIris } from "../Utils/Iri.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
-import { StageTimeoutService, StageTimeoutServiceLive } from "./LlmControl/StageTimeout.ts";
 import { generateObjectWithRetry } from "./LlmWithRetry.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Extraction");
@@ -52,40 +55,40 @@ export type { Mention };
  *
  * @internal
  */
-const generateEntityId = (mention: string): string =>
-  mention
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "") // Remove special chars
-    .replace(/\s+/g, "_") // Spaces to underscores
-    .replace(/_+/g, "_") // Multiple underscores to single
-    .replace(/^_|_$/g, "") // Trim leading/trailing underscores
-    .replace(/^[0-9]/, "e$&");
+const generateEntityId = flow(
+  Str.toLowerCase,
+  Str.replace(/[^\w\s-]/g, ""),
+  Str.replace(/\s+/g, "_"),
+  Str.replace(/_+/g, "_"),
+  Str.replace(/^_|_$/g, ""),
+  Str.replace(/^[0-9]/, "e$&")
+);
+
+const isAttributeValue = (value: unknown): value is string | number | boolean =>
+  P.isString(value) || P.isNumber(value) || P.isBoolean(value);
 
 /**
  * EntityExtractor - Stage 1 extraction service
  *
+ * **Details**
+ *
  * Extracts entities from text using LLM with structured output.
  *
- * @since 2.0.0
- * @category Services
+ * **Example** (Inspect entity extractor)
+ *
+ * ```ts
+ * import { EntityExtractor } from "@effect-ontology/Service/Extraction"
+ *
+ * console.log(EntityExtractor)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class EntityExtractor extends Context.Service<EntityExtractor>()($I`EntityExtractor`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
-    const timeout = yield* StageTimeoutService;
-
     const llm = yield* LanguageModel.LanguageModel;
-
-    // Create retry schedule from config
-    const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) =>
-        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))
-      ),
-      Schedule.jittered
-    );
-
-    // Note: generateObjectWithFeedback handles its own retry logic internally
-    // keeping this structure aligned with other services
 
     return {
       extract: Effect.fn("EntityExtractor.extract")(function* (
@@ -118,78 +121,66 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(jsonSchema);
+        const jsonSchemaText = yield* Unknown.encodeUnknownEffectFromJsonString(jsonSchema);
         const schemaHash = sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Entity extraction schema", {
           stage: "entity-extraction",
           schemaIdentifier: "EntityGraph",
           allowedClassCount: candidates.length,
         });
-        const response = yield* timeout
-          .withTimeout(
-            "entity_extraction",
-            generateObjectWithFeedback(llm, {
-              prompt: structuredPrompt,
-              schema,
-              objectName: "EntityGraph",
-              maxAttempts: config.runtime.retryMaxAttempts,
-              serviceName: "EntityExtractor",
-              timeoutMs: config.llm.timeoutMs,
-              retrySchedule,
-              enablePromptCaching: config.llm.enablePromptCaching,
-            }),
-            () =>
-              Effect.logWarning("Entity extraction approaching timeout", {
+        const response = yield* generateObjectWithFeedback({
+          prompt: structuredPrompt,
+          schema,
+          objectName: "EntityGraph",
+          serviceName: "EntityExtractor",
+          retryPolicy: config.llm.retryPolicy,
+          enablePromptCaching: config.llm.enablePromptCaching,
+        }).pipe(
+          Effect.provideService(LanguageModel.LanguageModel, llm),
+          Effect.tap((response) =>
+            Effect.all([
+              Effect.logInfo("Entity extraction LLM response", {
                 stage: "entity-extraction",
-                textLength: text.length,
-                candidateClasses: candidates.length,
-              })
+                entityCount: response.value.entities.length,
+                inputTokens: response.usage.inputTokens.total ?? 0,
+                outputTokens: response.usage.outputTokens.total ?? 0,
+              }),
+              annotateLlmCall({
+                model: config.llm.model,
+                provider: config.llm.provider,
+                promptLength,
+                inputTokens: response.usage.inputTokens.total ?? 0,
+                outputTokens: response.usage.outputTokens.total ?? 0,
+                schemaHash,
+              }),
+              annotateExtraction({
+                entityCount: response.value.entities.length,
+                candidateClassCount: candidates.length,
+              }),
+            ])
+          ),
+          Effect.withSpan("entity-extraction-llm", {
+            attributes: {
+              [LlmAttributes.PROMPT_LENGTH]: promptLength,
+              [LlmAttributes.CANDIDATE_CLASS_COUNT]: candidates.length,
+              [LlmAttributes.SCHEMA_HASH]: schemaHash,
+            },
+          }),
+          Effect.mapError((error) =>
+            EntityExtractionFailed.make({
+              message: `LLM entity extraction failed: ${Inspectable.toStringUnknown(error)}`,
+              cause: O.some(error),
+              text: O.some(text),
+            })
           )
-          .pipe(
-            Effect.tap((response) =>
-              Effect.all([
-                Effect.logInfo("Entity extraction LLM response", {
-                  stage: "entity-extraction",
-                  entityCount: response.value.entities.length,
-                  inputTokens: response.usage.inputTokens.total ?? 0,
-                  outputTokens: response.usage.outputTokens.total ?? 0,
-                }),
-                annotateLlmCall({
-                  model: config.llm.model,
-                  provider: config.llm.provider,
-                  promptLength,
-                  inputTokens: response.usage.inputTokens.total ?? 0,
-                  outputTokens: response.usage.outputTokens.total ?? 0,
-                  schemaHash,
-                }),
-                annotateExtraction({
-                  entityCount: response.value.entities.length,
-                  candidateClassCount: candidates.length,
-                }),
-              ])
-            ),
-            Effect.withSpan("entity-extraction-llm", {
-              attributes: {
-                [LlmAttributes.PROMPT_LENGTH]: promptLength,
-                [LlmAttributes.CANDIDATE_CLASS_COUNT]: candidates.length,
-                [LlmAttributes.SCHEMA_HASH]: schemaHash,
-              },
-            }),
-            Effect.mapError((error) =>
-              EntityExtractionFailed.make({
-                message: `LLM entity extraction failed: ${error instanceof Error ? error.message : String(error)}`,
-                cause: O.some(error),
-                text: O.some(text),
-              })
-            )
-          );
+        );
         const propertyIris: ReadonlyArray<IRI> = (datatypeProps ?? []).map((p) => IRI.fromUnknown(p.id));
         const propertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const propertyLocalNameToIriMap = propertyMapResult.map;
         if (propertyMapResult.hasCollisions) {
           yield* Effect.logWarning("Property local name collisions detected - LLM output may map to wrong IRI", {
             collisionCount: MutableHashMap.size(propertyMapResult.collisions),
-            collisions: Object.fromEntries(propertyMapResult.collisions),
+            collisions: R.fromEntries(propertyMapResult.collisions),
           });
         }
         const classIris: ReadonlyArray<IRI> = candidates.map((c) => c.id);
@@ -198,7 +189,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
         if (classMapResult.hasCollisions) {
           yield* Effect.logWarning("Class local name collisions detected - LLM output may map to wrong IRI", {
             collisionCount: MutableHashMap.size(classMapResult.collisions),
-            collisions: Object.fromEntries(classMapResult.collisions),
+            collisions: R.fromEntries(classMapResult.collisions),
           });
         }
         let filteredAttributeCount = 0;
@@ -216,14 +207,14 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           }
           const attributes: Record<string, string | number | boolean> = {};
           if (O.isSome(entityData.attributes)) {
-            for (const [key, value] of Object.entries(entityData.attributes.value)) {
+            for (const [key, value] of R.toEntries(entityData.attributes.value)) {
               const expandedKey = expandLocalNameToIri(key, propertyLocalNameToIriMap);
               if (O.isSome(expandedKey)) {
-                if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+                if (isAttributeValue(value)) {
                   attributes[expandedKey.value] = value;
                 }
               } else if (MutableHashMap.size(propertyLocalNameToIriMap) === 0) {
-                if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+                if (isAttributeValue(value)) {
                   attributes[key] = value;
                 }
               } else {
@@ -274,7 +265,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
   /**
    * Test layer with deterministic fake entities
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   static Test = Layer.succeed(
     EntityExtractor,
@@ -291,7 +282,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
               mention: "Test Entity",
               types: [
                 O.match(A.head(candidates), {
-                  onNone: () => IRI.fromUnknown("http://example.org/TestEntity"),
+                  onNone: () => IRI.fromUnknown("https://example.org/TestEntity"),
                   onSome: (candidate) => candidate.id,
                 }),
               ],
@@ -301,29 +292,31 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
         ),
     })
   );
-  static readonly Default = Layer.effect(this, this.make).pipe(
-    Layer.provide([
-      ConfigServiceDefault,
-      StageTimeoutServiceLive,
-      // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)
-    ])
-  );
+  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide(ConfigServiceDefault));
 }
 
 /**
  * MentionExtractor - Pre-Stage 1 mention detection
  *
+ * **Details**
+ *
  * Extracts entity mentions from text without type assignment.
  * This enables entity-level semantic search for better class retrieval.
  *
- * @since 2.0.0
- * @category Services
+ * **Example** (Inspect mention extractor)
+ *
+ * ```ts
+ * import { MentionExtractor } from "@effect-ontology/Service/Extraction"
+ *
+ * console.log(MentionExtractor)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class MentionExtractor extends Context.Service<MentionExtractor>()($I`MentionExtractor`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
-    const timeout = yield* StageTimeoutService;
-
     const llm = yield* LanguageModel.LanguageModel;
 
     return {
@@ -334,57 +327,43 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
           textLength: text.length,
           textPreview: text.slice(0, 200),
         });
-        const response = yield* timeout
-          .withTimeout(
-            "entity_extraction",
-            generateObjectWithRetry({
-              llm,
-              prompt: structuredPrompt,
-              schema: MentionGraphSchema,
-              enablePromptCaching: config.llm.enablePromptCaching,
-              objectName: "MentionGraph",
-              serviceName: "MentionExtractor",
-              model: config.llm.model,
-              provider: config.llm.provider,
-              retryConfig: {
-                initialDelayMs: config.runtime.retryInitialDelayMs,
-                maxDelayMs: config.runtime.retryMaxDelayMs,
-                maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs,
-              },
-              spanAttributes: {
-                [LlmAttributes.CHUNK_TEXT_LENGTH]: text.length,
-              },
-              annotateSuccess: (response) => ({
-                mentionCount: response.value.mentions.length,
-              }),
-            }),
-            () =>
-              Effect.logWarning("Mention extraction approaching timeout", {
-                stage: "mention-extraction",
-                textLength: text.length,
-              })
+        const response = yield* generateObjectWithRetry({
+          prompt: structuredPrompt,
+          schema: MentionGraph,
+          enablePromptCaching: config.llm.enablePromptCaching,
+          objectName: "MentionGraph",
+          serviceName: "MentionExtractor",
+          model: config.llm.model,
+          provider: config.llm.provider,
+          retryPolicy: config.llm.retryPolicy,
+          spanAttributes: {
+            [LlmAttributes.CHUNK_TEXT_LENGTH]: text.length,
+          },
+          annotateSuccess: (response) => ({
+            mentionCount: response.value.mentions.length,
+          }),
+        }).pipe(
+          Effect.provideService(LanguageModel.LanguageModel, llm),
+          Effect.tap((response) =>
+            annotateExtraction({
+              mentionCount: response.value.mentions.length,
+            })
+          ),
+          Effect.mapError((error) =>
+            MentionExtractionFailed.make({
+              message: `LLM mention extraction failed: ${Inspectable.toStringUnknown(error)}`,
+              cause: O.some(error),
+              text: O.some(text),
+            })
           )
-          .pipe(
-            Effect.tap((response) =>
-              annotateExtraction({
-                mentionCount: response.value.mentions.length,
-              })
-            ),
-            Effect.mapError((error) =>
-              MentionExtractionFailed.make({
-                message: `LLM mention extraction failed: ${error instanceof Error ? error.message : String(error)}`,
-                cause: O.some(error),
-                text: O.some(text),
-              })
-            )
-          );
+        );
         const mentions = response.value.mentions.map(
-          (m): Mention => ({
-            id: P.isTruthy(m.id) && /^[a-z][a-z0-9_]*$/.test(m.id) ? m.id : generateEntityId(m.mention),
-            mention: m.mention,
-            context: O.getOrElse(m.context, () => ""),
-          })
+          (m): Mention =>
+            Mention.make({
+              id: P.isTruthy(m.id) && /^[a-z][a-z0-9_]*$/.test(m.id) ? m.id : generateEntityId(m.mention),
+              mention: m.mention,
+              context: m.context,
+            })
         );
         yield* Effect.logInfo("Mention extraction complete", {
           stage: "mention-extraction",
@@ -399,38 +378,42 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
   /**
    * Test layer with deterministic fake mentions
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   static Test = Layer.succeed(
     MentionExtractor,
     MentionExtractor.of({
       extract: Effect.fn("MentionExtractor.extract")((_text: string) =>
-        Effect.succeed(Chunk.fromIterable([{ id: "test_entity", mention: "Test Entity", context: "A test entity" }]))
+        Effect.succeed(
+          Chunk.of(Mention.make({ id: "test_entity", mention: "Test Entity", context: O.some("A test entity") }))
+        )
       ),
     })
   );
-  static readonly Default = Layer.effect(this, this.make).pipe(
-    Layer.provide([
-      ConfigServiceDefault,
-      StageTimeoutServiceLive,
-      // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)
-    ])
-  );
+  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide(ConfigServiceDefault));
 }
 
 /**
  * RelationExtractor - Stage 2 extraction service
  *
+ * **Details**
+ *
  * Extracts relations between entities using LLM with structured output.
  *
- * @since 2.0.0
- * @category Services
+ * **Example** (Inspect relation extractor)
+ *
+ * ```ts
+ * import { RelationExtractor } from "@effect-ontology/Service/Extraction"
+ *
+ * console.log(RelationExtractor)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class RelationExtractor extends Context.Service<RelationExtractor>()($I`RelationExtractor`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
-    const timeout = yield* StageTimeoutService;
-
     const llm = yield* LanguageModel.LanguageModel;
 
     return {
@@ -485,7 +468,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(jsonSchema);
+        const jsonSchemaText = yield* Unknown.encodeUnknownEffectFromJsonString(jsonSchema);
         const schemaHash = sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Relation extraction schema", {
           stage: "relation-extraction",
@@ -494,60 +477,44 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           validEntityIdCount: validEntityIds.length,
           allowedPropertyCount: properties.length,
         });
-        const response = yield* timeout
-          .withTimeout(
-            "relation_extraction",
-            generateObjectWithRetry({
-              llm,
-              prompt: structuredPrompt,
-              schema,
-              objectName: "RelationGraph",
-              serviceName: "RelationExtractor",
-              model: config.llm.model,
-              provider: config.llm.provider,
-              retryConfig: {
-                initialDelayMs: config.runtime.retryInitialDelayMs,
-                maxDelayMs: config.runtime.retryMaxDelayMs,
-                maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs,
-              },
-              enablePromptCaching: config.llm.enablePromptCaching,
-              spanAttributes: {
-                [LlmAttributes.ENTITY_COUNT]: entityArray.length,
-              },
-              annotateSuccess: (response) => ({
-                relationCount: response.value.relations.length,
-              }),
-            }),
-            () =>
-              Effect.logWarning("Relation extraction approaching timeout", {
-                stage: "relation-extraction",
-                entityCount: entityArray.length,
-                propertyCount: properties.length,
-              })
+        const response = yield* generateObjectWithRetry({
+          prompt: structuredPrompt,
+          schema,
+          objectName: "RelationGraph",
+          serviceName: "RelationExtractor",
+          model: config.llm.model,
+          provider: config.llm.provider,
+          retryPolicy: config.llm.retryPolicy,
+          enablePromptCaching: config.llm.enablePromptCaching,
+          spanAttributes: {
+            [LlmAttributes.ENTITY_COUNT]: entityArray.length,
+          },
+          annotateSuccess: (response) => ({
+            relationCount: response.value.relations.length,
+          }),
+        }).pipe(
+          Effect.provideService(LanguageModel.LanguageModel, llm),
+          Effect.tap((response) =>
+            annotateExtraction({
+              relationCount: response.value.relations.length,
+              entityCount: entityArray.length,
+            })
+          ),
+          Effect.mapError((error) =>
+            RelationExtractionFailed.make({
+              message: `LLM relation extraction failed: ${Inspectable.toStringUnknown(error)}`,
+              cause: O.some(error),
+              text: O.some(text),
+            })
           )
-          .pipe(
-            Effect.tap((response) =>
-              annotateExtraction({
-                relationCount: response.value.relations.length,
-                entityCount: entityArray.length,
-              })
-            ),
-            Effect.mapError((error) =>
-              RelationExtractionFailed.make({
-                message: `LLM relation extraction failed: ${error instanceof Error ? error.message : String(error)}`,
-                cause: O.some(error),
-                text: O.some(text),
-              })
-            )
-          );
+        );
         const propertyIris: ReadonlyArray<IRI> = properties.map((p) => IRI.fromUnknown(p.id));
         const relationPropertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const localNameToIriMap = relationPropertyMapResult.map;
         if (relationPropertyMapResult.hasCollisions) {
           yield* Effect.logWarning("Relation property local name collisions detected", {
             collisionCount: MutableHashMap.size(relationPropertyMapResult.collisions),
-            collisions: Object.fromEntries(relationPropertyMapResult.collisions),
+            collisions: R.fromEntries(relationPropertyMapResult.collisions),
           });
         }
         let skippedRelationCount = 0;
@@ -563,7 +530,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           objectTypes: ReadonlyArray<string>;
           expectedRange: ReadonlyArray<string>;
         }> = [];
-        type RelationData = RelationGraphType["relations"][number];
+        type RelationData = RelationGraph["relations"][number];
         const toLiteralObject = Match.type<string | number | boolean>().pipe(
           Match.when(P.isString, (value) => RelationObject.cases.Text.make({ value })),
           Match.when(P.isNumber, (value) => RelationObject.cases.Number.make({ value })),
@@ -668,12 +635,16 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
         yield* Effect.logInfo("Relation extraction complete", {
           stage: "relation-extraction",
           extractedCount: relationArray.length,
-          relations: relationArray
-            .slice(0, 10)
-            .map(
-              (r: Relation) =>
-                `${r.subjectId} --[${r.predicate}]--> ${typeof r.object === "string" ? r.object : String(r.object)}`
-            ),
+          relations: A.map(
+            A.take(relationArray, 10),
+            (relation: Relation) =>
+              `${relation.subjectId} --[${relation.predicate}]--> ${RelationObject.match(relation.object, {
+                EntityReference: ({ value }) => value,
+                Text: ({ value }) => value,
+                Number: ({ value }) => `${value}`,
+                Boolean: ({ value }) => `${value}`,
+              })}`
+          ),
         });
         return Chunk.fromIterable(relations);
       }),
@@ -683,7 +654,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
   /**
    * Test layer with deterministic fake relations
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   static Test = Layer.succeed(
     RelationExtractor,
@@ -702,7 +673,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           Chunk.fromIterable([
             Relation.make({
               subjectId: entityArray[0].id,
-              predicate: IRI.fromUnknown(_properties.length > 0 ? _properties[0].id : "http://example.org/relatedTo"),
+              predicate: IRI.fromUnknown(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo"),
               object: RelationObject.cases.EntityReference.make({ value: entityArray[1].id }),
             }),
           ])
@@ -710,11 +681,5 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
       },
     })
   );
-  static readonly Default = Layer.effect(this, this.make).pipe(
-    Layer.provide([
-      ConfigServiceDefault,
-      StageTimeoutServiceLive,
-      // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)
-    ])
-  );
+  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide(ConfigServiceDefault));
 }

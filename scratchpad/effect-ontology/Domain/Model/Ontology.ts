@@ -6,14 +6,17 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { PrimaryKey, pipe } from "effect";
+import { IRI } from "@beep/rdf/Iri";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { PrimaryKey, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Eq from "effect/Equal";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ContentHash, Namespace, OntologyName } from "../Identity.ts";
@@ -57,15 +60,21 @@ const semanticLabels = (
   );
 };
 
-const optionalNamesLine = (prefix: string, iris: ReadonlyArray<IRI>): O.Option<string> =>
-  pipe(
-    iris,
-    A.map(localName),
-    A.match({
-      onEmpty: O.none<string>,
-      onNonEmpty: (names) => O.some(`${prefix}: ${A.join(names, ", ")}`),
-    })
-  );
+const optionalNamesLine: {
+  (prefix: string, iris: ReadonlyArray<IRI>): O.Option<string>;
+  (iris: ReadonlyArray<IRI>): (prefix: string) => O.Option<string>;
+} = dual(
+  2,
+  (prefix: string, iris: ReadonlyArray<IRI>): O.Option<string> =>
+    pipe(
+      iris,
+      A.map(localName),
+      A.match({
+        onEmpty: O.none<string>,
+        onNonEmpty: (names) => O.some(`${prefix}: ${A.join(names, ", ")}`),
+      })
+    )
+);
 
 const relatedLine = (
   broader: ReadonlyArray<IRI>,
@@ -129,7 +138,7 @@ const SkosFields = {
     SchemaUtils.withEmptyArrayDefaults<IRI>(),
     S.annotateKey({ description: "Closely aligned SKOS concepts in other vocabularies." })
   ),
-} as const;
+};
 
 /**
  * Whether an ontology property links resources or carries a literal datatype.
@@ -137,7 +146,7 @@ const SkosFields = {
  * **Example** (Check property range kinds)
  *
  * ```ts
- * import { PropertyRangeKind } from "@effect-ontology/Model/Ontology.ts"
+ * import { PropertyRangeKind } from "@effect-ontology/Model/Ontology"
  *
  * console.log(PropertyRangeKind.is.object("object")) // true
  * console.log(PropertyRangeKind.is.datatype("object")) // false
@@ -160,6 +169,18 @@ export const PropertyRangeKind = LiteralKit(["object", "datatype"])
 /**
  * Decoded `object` or `datatype` literal produced by the {@link PropertyRangeKind} schema.
  *
+ * **Example** (Decode PropertyRangeKind)
+ *
+ * ```ts
+ * import { PropertyRangeKind } from "@effect-ontology/Domain/Model/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizePropertyRangeKind = (_value: PropertyRangeKind): string => "valid property range kind"
+ *
+ * console.log(O.map(S.decodeUnknownOption(PropertyRangeKind)({}), summarizePropertyRangeKind))
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -175,7 +196,7 @@ const OntologyRefFields = {
   contentHash: ContentHash.annotateKey({
     description: "Full content digest identifying the exact ontology bytes.",
   }),
-} as const;
+};
 
 /**
  * Content-addressed reference to one immutable ontology version.
@@ -188,14 +209,16 @@ const OntologyRefFields = {
  * **Example** (Create a content-addressed reference)
  *
  * ```ts
- * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologyRef } from "@effect-ontology/Model/Ontology"
  *
- * const ref = OntologyRef.fromUnknown({
+ * const ref = S.decodeUnknownOption(OntologyRef)({
  *   namespace: "legal",
  *   name: "claims",
  *   contentHash: "a".repeat(64)
  * })
- * console.log(ref.shortId) // "legal/claims"
+ * console.log(O.map(ref, (value) => value.shortId))
  * ```
  *
  * @category value-objects
@@ -214,14 +237,16 @@ export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
    *
    * ```ts
    * import { PrimaryKey } from "effect"
-   * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyRef } from "@effect-ontology/Model/Ontology"
    *
-   * const ref = OntologyRef.fromUnknown({
+   * const ref = S.decodeUnknownOption(OntologyRef)({
    *   namespace: "legal",
    *   name: "claims",
    *   contentHash: "a".repeat(64)
    * })
-   * console.log(ref[PrimaryKey.symbol]())
+   * console.log(O.map(ref, (value) => value[PrimaryKey.symbol]()))
    * ```
    *
    * @returns Stable namespace, name, and full-content-hash identity.
@@ -236,14 +261,16 @@ export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
    * **Example** (Encode a storage path)
    *
    * ```ts
-   * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyRef } from "@effect-ontology/Model/Ontology"
    *
-   * const ref = OntologyRef.fromUnknown({
+   * const ref = S.decodeUnknownOption(OntologyRef)({
    *   namespace: "legal",
    *   name: "claims",
    *   contentHash: "a".repeat(64)
    * })
-   * console.log(ref.storagePath)
+   * console.log(O.map(ref, (value) => value.storagePath))
    * ```
    *
    * @returns Reversible path produced by the shared ontology path layout.
@@ -258,14 +285,16 @@ export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
    * **Example** (Read a compact identifier)
    *
    * ```ts
-   * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyRef } from "@effect-ontology/Model/Ontology"
    *
-   * const ref = OntologyRef.fromUnknown({
+   * const ref = S.decodeUnknownOption(OntologyRef)({
    *   namespace: "legal",
    *   name: "claims",
    *   contentHash: "a".repeat(64)
    * })
-   * console.log(ref.shortId) // "legal/claims"
+   * console.log(O.map(ref, (value) => value.shortId))
    * ```
    *
    * @returns Slash-delimited logical ontology identity without its version hash.
@@ -274,14 +303,17 @@ export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
     return `${this.namespace}/${this.name}`;
   }
 
-  /** Decodes an unknown input into a validated ontology reference. */
-  static readonly fromUnknown = S.decodeUnknownSync(OntologyRef);
-
   /** Parses a canonical ontology storage path. */
   static readonly fromPath = (path: unknown) =>
     pipe(
       PathLayout.ontology.decode(path),
-      Result.map(([namespace, name, contentHash]) => OntologyRef.make({ namespace, name, contentHash }))
+      Result.map(([namespace, name, contentHash]) =>
+        OntologyRef.make({
+          namespace,
+          name,
+          contentHash,
+        })
+      )
     );
 }
 
@@ -301,7 +333,7 @@ const ClassDefinitionFields = {
     SchemaUtils.withEmptyArrayDefaults<IRI>(),
     S.annotateKey({ description: "OWL classes declared equivalent to this class." })
   ),
-} as const;
+};
 
 class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinition`)(
   ClassDefinitionFields,
@@ -315,13 +347,15 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
    * **Example** (Render a semantic-search document)
    *
    * ```ts
-   * import { ClassDefinition } from "@effect-ontology/Model/Ontology.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ClassDefinition } from "@effect-ontology/Model/Ontology"
    *
-   * const definition = ClassDefinition.fromUnknown({
+   * const definition = S.decodeUnknownOption(ClassDefinition)({
    *   id: "https://schema.org/Person",
    *   label: "Person"
    * })
-   * console.log(definition.toDocument()) // "Person"
+   * console.log(O.map(definition, (value) => value.toDocument()))
    * ```
    *
    * @returns Newline-delimited labels, description, properties, and related concepts.
@@ -350,17 +384,19 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
  * synonyms and local property names for search without duplicating indexing
  * logic elsewhere.
  *
- * **Example** (Decode a class definition)
+ * **Example** (Decode ClassDefinition)
  *
  * ```ts
- * import { ClassDefinition } from "@effect-ontology/Model/Ontology.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ClassDefinition } from "@effect-ontology/Model/Ontology"
  *
- * const person = ClassDefinition.fromUnknown({
+ * const person = S.decodeUnknownOption(ClassDefinition)({
  *   id: "https://schema.org/Person",
  *   label: "Person",
  *   properties: ["https://schema.org/name"]
  * })
- * console.log(person.toDocument().includes("Properties: name")) // true
+ * console.log(O.map(person, (value) => value.toDocument().includes("Properties: name")))
  * ```
  *
  * @invariant The class has a valid IRI and a non-empty primary label.
@@ -374,11 +410,23 @@ export const ClassDefinition = ClassDefinitionModel.annotate({
   $I.annoteSchema("ClassDefinition", {
     description: "OWL or RDFS class metadata normalized for lookup and semantic search.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**
  * Decoded class metadata produced by {@link ClassDefinition}, including its search-document behavior.
+ *
+ * **Example** (Decode ClassDefinition)
+ *
+ * ```ts
+ * import { ClassDefinition } from "@effect-ontology/Domain/Model/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizeClassDefinition = (_value: ClassDefinition): string => "valid class definition"
+ *
+ * console.log(O.map(S.decodeUnknownOption(ClassDefinition)({}), summarizeClassDefinition))
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -412,7 +460,7 @@ const PropertyDefinitionFields = {
     S.annotateKey({ description: "Whether the property admits at most one value per subject." })
   ),
   ...SkosFields,
-} as const;
+};
 
 class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`PropertyDefinition`)(
   PropertyDefinitionFields,
@@ -426,14 +474,16 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
    * **Example** (Check an object property)
    *
    * ```ts
-   * import { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { PropertyDefinition } from "@effect-ontology/Model/Ontology"
    *
-   * const property = PropertyDefinition.fromUnknown({
+   * const property = S.decodeUnknownOption(PropertyDefinition)({
    *   id: "https://schema.org/memberOf",
    *   label: "member of",
    *   rangeType: "object"
    * })
-   * console.log(property.isObjectProperty) // true
+   * console.log(O.map(property, (value) => value.isObjectProperty))
    * ```
    *
    * @returns `true` only for the closed `object` range kind.
@@ -448,14 +498,16 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
    * **Example** (Check a datatype property)
    *
    * ```ts
-   * import { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { PropertyDefinition } from "@effect-ontology/Model/Ontology"
    *
-   * const property = PropertyDefinition.fromUnknown({
+   * const property = S.decodeUnknownOption(PropertyDefinition)({
    *   id: "https://schema.org/name",
    *   label: "name",
    *   rangeType: "datatype"
    * })
-   * console.log(property.isDatatypeProperty) // true
+   * console.log(O.map(property, (value) => value.isDatatypeProperty))
    * ```
    *
    * @returns `true` only for the closed `datatype` range kind.
@@ -470,14 +522,16 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
    * **Example** (Render a semantic-search document)
    *
    * ```ts
-   * import { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { PropertyDefinition } from "@effect-ontology/Model/Ontology"
    *
-   * const property = PropertyDefinition.fromUnknown({
+   * const property = S.decodeUnknownOption(PropertyDefinition)({
    *   id: "https://schema.org/name",
    *   label: "name",
    *   rangeType: "datatype"
    * })
-   * console.log(property.toDocument().includes("Type: datatype")) // true
+   * console.log(O.map(property, (value) => value.toDocument().includes("Type: datatype")))
    * ```
    *
    * @returns Newline-delimited labels, description, domain, range, and constraints.
@@ -510,19 +564,21 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
  * Domain and range are modeled as IRI collections, range behavior is a closed
  * literal domain, and functional cardinality defaults at construction.
  *
- * **Example** (Decode a property definition)
+ * **Example** (Decode PropertyDefinition)
  *
  * ```ts
- * import { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { PropertyDefinition } from "@effect-ontology/Model/Ontology"
  *
- * const memberOf = PropertyDefinition.fromUnknown({
+ * const memberOf = S.decodeUnknownOption(PropertyDefinition)({
  *   id: "https://schema.org/memberOf",
  *   label: "member of",
  *   domain: ["https://schema.org/Person"],
  *   range: ["https://schema.org/Organization"],
  *   rangeType: "object"
  * })
- * console.log(memberOf.isObjectProperty) // true
+ * console.log(O.map(memberOf, (value) => value.isObjectProperty))
  * ```
  *
  * @invariant The property has a valid IRI, non-empty label, and explicit range kind.
@@ -542,15 +598,36 @@ export const PropertyDefinition = PropertyDefinitionModel.annotate({
 /**
  * Decoded property metadata produced by {@link PropertyDefinition}, including range and search behavior.
  *
+ * **Example** (Decode PropertyDefinition)
+ *
+ * ```ts
+ * import { PropertyDefinition } from "@effect-ontology/Domain/Model/Ontology"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizePropertyDefinition = (_value: PropertyDefinition): string => "valid property definition"
+ *
+ * console.log(O.map(S.decodeUnknownOption(PropertyDefinition)({}), summarizePropertyDefinition))
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
 export type PropertyDefinition = typeof PropertyDefinition.Type;
 
-const directParents = (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, child: string): ReadonlyArray<IRI> =>
-  pipe(R.get(hierarchy, child), O.getOrElse(emptyIris));
+const directParents: {
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, child: string): ReadonlyArray<IRI>;
+  (child: string): (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>) => ReadonlyArray<IRI>;
+} = dual(
+  2,
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, child: string): ReadonlyArray<IRI> =>
+    pipe(R.get(hierarchy, child), O.getOrElse(emptyIris))
+);
 
-const ancestorsFor = (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, source: string): ReadonlyArray<IRI> => {
+const ancestorsFor: {
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, source: string): ReadonlyArray<IRI>;
+  (source: string): (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>) => ReadonlyArray<IRI>;
+} = dual(2, (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, source: string): ReadonlyArray<IRI> => {
   const visit = (frontier: ReadonlyArray<IRI>, visited: ReadonlyArray<IRI>): ReadonlyArray<IRI> =>
     pipe(
       frontier,
@@ -564,14 +641,20 @@ const ancestorsFor = (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, s
     );
 
   return visit(directParents(hierarchy, source), []);
-};
+});
 
-const childrenFor = (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, parent: IRI): ReadonlyArray<IRI> =>
-  pipe(
-    R.toEntries(hierarchy),
-    A.filter(([, parents]) => A.contains(parents, parent)),
-    A.map(([child]) => IRI.fromUnknown(child))
-  );
+const childrenFor: {
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, parent: IRI): ReadonlyArray<IRI>;
+  (parent: IRI): (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>) => ReadonlyArray<IRI>;
+} = dual(
+  2,
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, parent: IRI): ReadonlyArray<IRI> =>
+    pipe(
+      R.toEntries(hierarchy),
+      A.filter(([, parents]) => A.contains(parents, parent)),
+      A.map(([child]) => IRI.fromUnknown(child))
+    )
+);
 
 const IriRecordKey = S.String.check(
   S.makeFilter(IRI.is, {
@@ -617,7 +700,7 @@ const OntologyContextFields = {
     SchemaUtils.withKeyDefaults({}),
     S.annotateKey({ description: "Direct property-parent edges keyed by child IRI." })
   ),
-} as const;
+};
 
 /**
  * Complete immutable snapshot of ontology classes, properties, and hierarchy.
@@ -631,11 +714,13 @@ const OntologyContextFields = {
  * **Example** (Create an empty ontology context)
  *
  * ```ts
- * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologyContext } from "@effect-ontology/Model/Ontology"
  *
- * const context = OntologyContext.fromUnknown({})
- * console.log(context.classes.length) // 0
- * console.log(context.toDocuments().length) // 0
+ * const context = S.decodeUnknownOption(OntologyContext)({})
+ * console.log(O.map(context, (value) => value.classes.length))
+ * console.log(O.map(context, (value) => value.toDocuments().length))
  * ```
  *
  * @invariant Every hierarchy key and edge target is a valid IRI.
@@ -651,9 +736,6 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
   /** Type guard for decoded ontology contexts. @since 0.0.0 */
   static readonly is = S.is(OntologyContext);
 
-  /** Decode an unknown ontology context or throw a parse error. @since 0.0.0 */
-  static readonly fromUnknown = S.decodeUnknownSync(OntologyContext);
-
   /** Decode an unknown ontology context into an `Option`. @since 0.0.0 */
   static readonly decodeOption = S.decodeUnknownOption(OntologyContext);
 
@@ -664,21 +746,22 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    *
    * ```ts
    * import * as O from "effect/Option"
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const person = IRI.fromUnknown("https://schema.org/Person")
-   * const context = OntologyContext.fromUnknown({
-   *   classes: [{ id: person, label: "Person" }]
+   * const input = S.decodeUnknownOption(S.Struct({ iri: IRI, context: OntologyContext }))({
+   *   iri: "https://schema.org/Person",
+   *   context: { classes: [{ id: "https://schema.org/Person", label: "Person" }] }
    * })
-   * console.log(O.isSome(context.getClass(person))) // true
+   * console.log(O.map(input, ({ context, iri }) => O.isSome(context.getClass(iri))))
    * ```
    *
-   * @param iri Full class IRI.
+   * @param iri - Full class IRI.
    * @returns The matching definition, or `Option.none`.
    */
   getClass(iri: IRI): O.Option<ClassDefinition> {
-    return A.findFirst(this.classes, (definition) => definition.id === iri);
+    return A.findFirst(this.classes, P.Struct({ id: Eq.equals(iri) }));
   }
 
   /**
@@ -688,17 +771,18 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    *
    * ```ts
    * import * as O from "effect/Option"
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const name = IRI.fromUnknown("https://schema.org/name")
-   * const context = OntologyContext.fromUnknown({
-   *   properties: [{ id: name, label: "name", rangeType: "datatype" }]
+   * const input = S.decodeUnknownOption(S.Struct({ iri: IRI, context: OntologyContext }))({
+   *   iri: "https://schema.org/name",
+   *   context: { properties: [{ id: "https://schema.org/name", label: "name", rangeType: "datatype" }] }
    * })
-   * console.log(O.isSome(context.getProperty(name))) // true
+   * console.log(O.map(input, ({ context, iri }) => O.isSome(context.getProperty(iri))))
    * ```
    *
-   * @param iri Full property IRI.
+   * @param iri - Full property IRI.
    * @returns The matching definition, or `Option.none`.
    */
   getProperty(iri: IRI): O.Option<PropertyDefinition> {
@@ -711,18 +795,19 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Read direct superclasses)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const employee = IRI.fromUnknown("https://example.org/Employee")
-   * const person = IRI.fromUnknown("https://schema.org/Person")
-   * const context = OntologyContext.fromUnknown({
-   *   hierarchy: { [employee]: [person] }
+   * const input = S.decodeUnknownOption(S.Struct({ employee: IRI, context: OntologyContext }))({
+   *   employee: "https://example.org/Employee",
+   *   context: { hierarchy: { "https://example.org/Employee": ["https://schema.org/Person"] } }
    * })
-   * console.log(context.getSuperClasses(employee)) // [person]
+   * console.log(O.map(input, ({ context, employee }) => context.getSuperClasses(employee)))
    * ```
    *
-   * @param classIri Full class IRI.
+   * @param classIri - Full class IRI.
    * @returns Direct parents in stored order.
    */
   getSuperClasses(classIri: IRI): ReadonlyArray<IRI> {
@@ -735,19 +820,24 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Traverse all superclasses)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const employee = IRI.fromUnknown("https://example.org/Employee")
-   * const person = IRI.fromUnknown("https://schema.org/Person")
-   * const thing = IRI.fromUnknown("https://schema.org/Thing")
-   * const context = OntologyContext.fromUnknown({
-   *   hierarchy: { [employee]: [person], [person]: [thing] }
+   * const input = S.decodeUnknownOption(S.Struct({ employee: IRI, context: OntologyContext }))({
+   *   employee: "https://example.org/Employee",
+   *   context: {
+   *     hierarchy: {
+   *       "https://example.org/Employee": ["https://schema.org/Person"],
+   *       "https://schema.org/Person": ["https://schema.org/Thing"]
+   *     }
+   *   }
    * })
-   * console.log(context.getAllSuperClasses(employee)) // [person, thing]
+   * console.log(O.map(input, ({ context, employee }) => context.getAllSuperClasses(employee)))
    * ```
    *
-   * @param classIri Full class IRI.
+   * @param classIri - Full class IRI.
    * @returns Deduplicated ancestors in breadth-first discovery order.
    */
   getAllSuperClasses(classIri: IRI): ReadonlyArray<IRI> {
@@ -760,18 +850,19 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Read direct subclasses)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const employee = IRI.fromUnknown("https://example.org/Employee")
-   * const person = IRI.fromUnknown("https://schema.org/Person")
-   * const context = OntologyContext.fromUnknown({
-   *   hierarchy: { [employee]: [person] }
+   * const input = S.decodeUnknownOption(S.Struct({ person: IRI, context: OntologyContext }))({
+   *   person: "https://schema.org/Person",
+   *   context: { hierarchy: { "https://example.org/Employee": ["https://schema.org/Person"] } }
    * })
-   * console.log(context.getSubClasses(person)) // [employee]
+   * console.log(O.map(input, ({ context, person }) => context.getSubClasses(person)))
    * ```
    *
-   * @param parentIri Full parent-class IRI.
+   * @param parentIri - Full parent-class IRI.
    * @returns Direct children in hierarchy-record order.
    */
   getSubClasses(parentIri: IRI): ReadonlyArray<IRI> {
@@ -784,19 +875,21 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Test subclass membership)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const employee = IRI.fromUnknown("https://example.org/Employee")
-   * const person = IRI.fromUnknown("https://schema.org/Person")
-   * const context = OntologyContext.fromUnknown({
-   *   hierarchy: { [employee]: [person] }
+   * const input = S.decodeUnknownOption(S.Struct({ employee: IRI, person: IRI, context: OntologyContext }))({
+   *   employee: "https://example.org/Employee",
+   *   person: "https://schema.org/Person",
+   *   context: { hierarchy: { "https://example.org/Employee": ["https://schema.org/Person"] } }
    * })
-   * console.log(context.isSubClassOf(employee, person)) // true
+   * console.log(O.map(input, ({ context, employee, person }) => context.isSubClassOf(employee, person)))
    * ```
    *
-   * @param childIri Candidate child class.
-   * @param parentIri Candidate ancestor class.
+   * @param childIri - Candidate child class.
+   * @param parentIri - Candidate ancestor class.
    * @returns Whether both IRIs are equal or the parent is transitively reachable.
    */
   isSubClassOf(childIri: IRI, parentIri: IRI): boolean {
@@ -809,18 +902,19 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Read direct superproperties)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const givenName = IRI.fromUnknown("https://example.org/givenName")
-   * const name = IRI.fromUnknown("https://schema.org/name")
-   * const context = OntologyContext.fromUnknown({
-   *   propertyHierarchy: { [givenName]: [name] }
+   * const input = S.decodeUnknownOption(S.Struct({ givenName: IRI, context: OntologyContext }))({
+   *   givenName: "https://example.org/givenName",
+   *   context: { propertyHierarchy: { "https://example.org/givenName": ["https://schema.org/name"] } }
    * })
-   * console.log(context.getSuperProperties(givenName)) // [name]
+   * console.log(O.map(input, ({ context, givenName }) => context.getSuperProperties(givenName)))
    * ```
    *
-   * @param propertyIri Full property IRI.
+   * @param propertyIri - Full property IRI.
    * @returns Direct parents in stored order.
    */
   getSuperProperties(propertyIri: IRI): ReadonlyArray<IRI> {
@@ -833,18 +927,19 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Read direct subproperties)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const givenName = IRI.fromUnknown("https://example.org/givenName")
-   * const name = IRI.fromUnknown("https://schema.org/name")
-   * const context = OntologyContext.fromUnknown({
-   *   propertyHierarchy: { [givenName]: [name] }
+   * const input = S.decodeUnknownOption(S.Struct({ name: IRI, context: OntologyContext }))({
+   *   name: "https://schema.org/name",
+   *   context: { propertyHierarchy: { "https://example.org/givenName": ["https://schema.org/name"] } }
    * })
-   * console.log(context.getSubProperties(name)) // [givenName]
+   * console.log(O.map(input, ({ context, name }) => context.getSubProperties(name)))
    * ```
    *
-   * @param parentIri Full parent-property IRI.
+   * @param parentIri - Full parent-property IRI.
    * @returns Direct children in hierarchy-record order.
    */
   getSubProperties(parentIri: IRI): ReadonlyArray<IRI> {
@@ -857,19 +952,21 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Test subproperty membership)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
+   * import { IRI } from "@beep/rdf"
    *
-   * const givenName = IRI.fromUnknown("https://example.org/givenName")
-   * const name = IRI.fromUnknown("https://schema.org/name")
-   * const context = OntologyContext.fromUnknown({
-   *   propertyHierarchy: { [givenName]: [name] }
+   * const input = S.decodeUnknownOption(S.Struct({ givenName: IRI, name: IRI, context: OntologyContext }))({
+   *   givenName: "https://example.org/givenName",
+   *   name: "https://schema.org/name",
+   *   context: { propertyHierarchy: { "https://example.org/givenName": ["https://schema.org/name"] } }
    * })
-   * console.log(context.isSubPropertyOf(givenName, name)) // true
+   * console.log(O.map(input, ({ context, givenName, name }) => context.isSubPropertyOf(givenName, name)))
    * ```
    *
-   * @param childIri Candidate child property.
-   * @param parentIri Candidate ancestor property.
+   * @param childIri - Candidate child property.
+   * @param parentIri - Candidate ancestor property.
    * @returns Whether both IRIs are equal or the parent is transitively reachable.
    */
   isSubPropertyOf(childIri: IRI, parentIri: IRI): boolean {
@@ -887,23 +984,22 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Resolve inherited properties)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
-   * import { IRI } from "@effect-ontology/Model/shared.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
    *
-   * const person = IRI.fromUnknown("https://schema.org/Person")
-   * const name = IRI.fromUnknown("https://schema.org/name")
-   * const context = OntologyContext.fromUnknown({
+   * const context = S.decodeUnknownOption(OntologyContext)({
    *   properties: [{
-   *     id: name,
+   *     id: "https://schema.org/name",
    *     label: "name",
    *     rangeType: "datatype",
-   *     domain: [person]
+   *     domain: ["https://schema.org/Person"]
    *   }]
    * })
-   * console.log(context.getPropertiesForClass("Person").length) // 1
+   * console.log(O.map(context, (value) => value.getPropertiesForClass("Person").length))
    * ```
    *
-   * @param classIri Full IRI or local class name.
+   * @param classIri - Full IRI or local class name.
    * @returns Applicable property definitions in ontology order.
    */
   getPropertiesForClass(classIri: string): ReadonlyArray<PropertyDefinition> {
@@ -930,20 +1026,24 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * **Example** (Render search documents)
    *
    * ```ts
-   * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyContext } from "@effect-ontology/Model/Ontology"
    *
-   * const context = OntologyContext.fromUnknown({
+   * const context = S.decodeUnknownOption(OntologyContext)({
    *   classes: [{ id: "https://schema.org/Person", label: "Person" }]
    * })
-   * console.log(context.toDocuments()[0]?.[1]) // "Person"
+   * console.log(O.map(context, (value) => value.toDocuments()[0]?.[1]))
    * ```
    *
    * @returns Tuples of ontology-element IRI and stable search document.
    */
   toDocuments(): ReadonlyArray<readonly [IRI, string]> {
     return pipe(
-      A.map(this.classes, (definition) => [definition.id, definition.toDocument()] as const),
-      A.appendAll(A.map(this.properties, (definition) => [definition.id, definition.toDocument()] as const))
+      A.map(this.classes, (definition): readonly [IRI, string] => [definition.id, definition.toDocument()]),
+      A.appendAll(
+        A.map(this.properties, (definition): readonly [IRI, string] => [definition.id, definition.toDocument()])
+      )
     );
   }
 }

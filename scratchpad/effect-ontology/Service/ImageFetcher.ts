@@ -1,21 +1,27 @@
 /**
  * ImageFetcher Service
  *
+ * **Details**
+ *
  * Downloads images from URLs with timeout/retry handling,
  * computes content hashes, and validates content types.
  *
- * @since 2.0.0
- * @module Service/ImageFetcher
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { PosInt, SchemaUtils } from "@beep/schema";
+import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
+import { Milliseconds } from "../Domain/Error/Base.ts";
 import type { ImageError } from "../Domain/Error/Image.ts";
 import {
   ImageFetchError,
@@ -36,19 +42,19 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageFetcher");
 /**
  * Default fetch timeout in milliseconds
  */
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT = Duration.seconds(30);
 
 const isBlockedImageHost = (hostname: string): boolean => {
-  const host = hostname.toLowerCase();
-  if (host === "localhost" || host === "0.0.0.0" || host === "::1" || host.endsWith(".local")) {
+  const host = Str.toLowerCase(hostname);
+  if (host === "localhost" || host === "0.0.0.0" || host === "::1" || Str.endsWith(".local")(host)) {
     return true;
   }
   if (
     /^(10\.|127\.|192\.168\.|169\.254\.)/.test(host) ||
     /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-    host.startsWith("fc") ||
-    host.startsWith("fd") ||
-    host.startsWith("fe80:")
+    Str.startsWith("fc")(host) ||
+    Str.startsWith("fd")(host) ||
+    Str.startsWith("fe80:")(host)
   ) {
     return true;
   }
@@ -89,17 +95,49 @@ const isRetryableImageError = (error: ImageError): boolean =>
 
 /**
  * Options for image fetching
+ *
+ *
+ * **Example** (Use the ImageFetchOptions contract)
+ *
+ * ```ts
+ * import type { ImageFetchOptions } from "@effect-ontology/Service/ImageFetcher"
+ *
+ * const acceptsImageFetchOptions = (_value: ImageFetchOptions): void => undefined
+ *
+ * console.log(acceptsImageFetchOptions)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface ImageFetchOptions {
-  /** Timeout in milliseconds (default: 30000) */
-  readonly timeoutMs?: number;
-  /** Maximum image size in bytes (default: 10MB) */
-  readonly maxSizeBytes?: number;
-  /** Custom allowed content types (default: common image types) */
-  readonly allowedTypes?: ReadonlyArray<string>;
-  /** Enable retries for transient failures (default: true) */
-  readonly retry?: boolean;
-}
+export class ImageFetchOptions extends S.Class<ImageFetchOptions>($I`ImageFetchOptions`)(
+  {
+    timeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT)),
+    maxSizeBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(DEFAULT_MAX_SIZE_BYTES))),
+    allowedTypes: S.NonEmptyArray(S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults(ALLOWED_CONTENT_TYPES)),
+    retry: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+  },
+  $I.annote("ImageFetchOptions", {
+    description: "Request timeout, byte ceiling, accepted media types, and retry policy for image fetching.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link ImageFetchOptions}.
+ *
+ * **Example** (Configure image fetching)
+ *
+ * ```ts
+ * import type { ImageFetchOptionsInput } from "@effect-ontology/Service/ImageFetcher"
+ *
+ * const options: ImageFetchOptionsInput = { retry: false }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ImageFetchOptionsInput = (typeof ImageFetchOptions)["~type.make.in"];
 
 // =============================================================================
 // Service Interface
@@ -108,10 +146,13 @@ export interface ImageFetchOptions {
 /**
  * ImageFetcher service interface
  *
+ * **Details**
+ *
  * Downloads images from URLs and prepares them for storage.
  *
- * @since 2.0.0
- * @category Service
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ImageFetcherService {
   /**
@@ -126,7 +167,7 @@ export interface ImageFetcherService {
    */
   readonly fetch: (
     candidate: ImageCandidate,
-    options?: ImageFetchOptions
+    options?: ImageFetchOptionsInput
   ) => Effect.Effect<ImageFetchResult, ImageError>;
 
   /**
@@ -141,7 +182,7 @@ export interface ImageFetcherService {
    */
   readonly fetchAll: (
     candidates: ReadonlyArray<ImageCandidate>,
-    options?: ImageFetchOptions
+    options?: ImageFetchOptionsInput
   ) => Effect.Effect<ReadonlyArray<ImageFetchResult>>;
 
   /**
@@ -164,7 +205,7 @@ const normalizeContentType = (contentType: string | null | undefined): string =>
   if (P.isNullish(contentType)) return "application/octet-stream";
 
   // Extract the base mime type (ignore charset etc.)
-  const base = contentType.split(";")[0].trim().toLowerCase();
+  const base = Str.toLowerCase(Str.trim(O.getOrElse(A.head(Str.split(";")(contentType)), () => contentType)));
 
   // Normalize common variations
   if (base === "image/jpg") return "image/jpeg";
@@ -176,27 +217,27 @@ const normalizeContentType = (contentType: string | null | undefined): string =>
  * Infer content type from URL if headers don't provide it
  */
 const inferContentTypeFromUrl = (url: string): string | undefined => {
-  const lowercaseUrl = url.toLowerCase();
+  const lowercaseUrl = Str.toLowerCase(url);
 
-  if (lowercaseUrl.includes(".jpg") || lowercaseUrl.includes(".jpeg")) {
+  if (Str.includes(".jpg")(lowercaseUrl) || Str.includes(".jpeg")(lowercaseUrl)) {
     return "image/jpeg";
   }
-  if (lowercaseUrl.includes(".png")) {
+  if (Str.includes(".png")(lowercaseUrl)) {
     return "image/png";
   }
-  if (lowercaseUrl.includes(".gif")) {
+  if (Str.includes(".gif")(lowercaseUrl)) {
     return "image/gif";
   }
-  if (lowercaseUrl.includes(".webp")) {
+  if (Str.includes(".webp")(lowercaseUrl)) {
     return "image/webp";
   }
-  if (lowercaseUrl.includes(".svg")) {
+  if (Str.includes(".svg")(lowercaseUrl)) {
     return "image/svg+xml";
   }
-  if (lowercaseUrl.includes(".bmp")) {
+  if (Str.includes(".bmp")(lowercaseUrl)) {
     return "image/bmp";
   }
-  if (lowercaseUrl.includes(".ico")) {
+  if (Str.includes(".ico")(lowercaseUrl)) {
     return "image/x-icon";
   }
 
@@ -210,15 +251,23 @@ const inferContentTypeFromUrl = (url: string): string | undefined => {
 /**
  * ImageFetcher service tag
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Inspect image fetcher)
+ *
+ * ```ts
+ * import { ImageFetcher } from "@effect-ontology/Service/ImageFetcher"
+ *
+ * console.log(ImageFetcher)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherService>()($I`ImageFetcher`) {
   /**
    * Live implementation
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.effect(
     ImageFetcher,
@@ -227,23 +276,22 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
       const fetchAttempt = Effect.fn("ImageFetcher.fetchAttempt")(function* (
         candidate: ImageCandidate,
-        options: ImageFetchOptions = {}
+        input: ImageFetchOptionsInput = {}
       ) {
-        const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-        const maxSizeBytes = options.maxSizeBytes ?? DEFAULT_MAX_SIZE_BYTES;
-        const allowedTypes = options.allowedTypes ?? ALLOWED_CONTENT_TYPES;
+        const options = ImageFetchOptions.make(input);
+        const { allowedTypes, maxSizeBytes, timeout } = options;
 
         const parsedUrl = yield* Effect.try({
           try: () => new URL(candidate.sourceUrl),
           catch: (cause) =>
-            ImageFetchError.fromUnknown({
+            ImageFetchError.make({
               message: "Invalid image URL",
               url: candidate.sourceUrl,
               cause: O.some(cause),
             }),
         });
         if (isBlockedImageHost(parsedUrl.hostname)) {
-          return yield* ImageFetchError.fromUnknown({
+          return yield* ImageFetchError.make({
             message: "Refusing to fetch image from a private or link-local network address",
             url: candidate.sourceUrl,
           });
@@ -265,18 +313,18 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
         // Execute with timeout
         const response = yield* httpClient.execute(requestWithReferrer).pipe(
-          Effect.timeout(Duration.millis(timeoutMs)),
+          Effect.timeout(timeout),
           Effect.catchTag("TimeoutError", () =>
             Effect.fail(
-              S.decodeUnknownSync(ImageTimeoutError)({
+              ImageTimeoutError.make({
                 url: candidate.sourceUrl,
-                timeoutMs,
+                timeoutMs: Milliseconds.make(Duration.toMillis(timeout)),
               })
             )
           ),
           Effect.mapError((error) => {
             if (ImageTimeoutError.is(error)) return error;
-            return ImageFetchError.fromUnknown({
+            return ImageFetchError.make({
               message: `Failed to fetch image: ${error}`,
               url: candidate.sourceUrl,
               cause: O.some(error),
@@ -286,10 +334,10 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
         // Check HTTP status
         if (response.status >= 400) {
-          return yield* ImageFetchError.fromUnknown({
+          return yield* ImageFetchError.make({
             message: `HTTP ${response.status} error`,
             url: candidate.sourceUrl,
-            statusCode: O.some(response.status),
+            statusCode: O.some(HttpStatusCode.make(response.status)),
           });
         }
 
@@ -306,7 +354,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         }
 
         if (!A.contains(allowedTypes, contentType)) {
-          return yield* ImageInvalidTypeError.fromUnknown({
+          return yield* ImageInvalidTypeError.make({
             url: candidate.sourceUrl,
             contentType,
             allowedTypes: O.match(A.head(allowedTypes), {
@@ -321,7 +369,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         if (P.isTruthy(contentLength)) {
           const size = parseInt(contentLength, 10);
           if (!Number.isNaN(size) && size > maxSizeBytes) {
-            return yield* ImageTooLargeError.fromUnknown({
+            return yield* ImageTooLargeError.make({
               url: candidate.sourceUrl,
               sizeBytes: NonNegativeInt.make(size),
               maxBytes: NonNegativeInt.make(maxSizeBytes),
@@ -336,7 +384,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
             const nextSize = acc.reduce((size, part) => size + part.length, 0) + chunk.length;
             if (nextSize > maxSizeBytes) {
               return Effect.fail(
-                ImageTooLargeError.fromUnknown({
+                ImageTooLargeError.make({
                   url: candidate.sourceUrl,
                   sizeBytes: NonNegativeInt.make(nextSize),
                   maxBytes: NonNegativeInt.make(maxSizeBytes),
@@ -349,7 +397,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           Effect.mapError((error) =>
             ImageTooLargeError.is(error)
               ? error
-              : ImageFetchError.fromUnknown({
+              : ImageFetchError.make({
                   message: `Failed to read image body: ${error}`,
                   url: candidate.sourceUrl,
                   cause: O.some(error),
@@ -365,7 +413,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
         // Validate actual size
         if (bytes.length > maxSizeBytes) {
-          return yield* ImageTooLargeError.fromUnknown({
+          return yield* ImageTooLargeError.make({
             url: candidate.sourceUrl,
             sizeBytes: NonNegativeInt.make(bytes.length),
             maxBytes: NonNegativeInt.make(maxSizeBytes),
@@ -373,11 +421,19 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         }
 
         // Compute hash
-        const hash = yield* sha256Bytes(bytes);
+        const hash = yield* sha256Bytes(bytes).pipe(
+          Effect.mapError((cause) =>
+            ImageFetchError.make({
+              message: "Fetched image hashing failed",
+              url: candidate.sourceUrl,
+              cause: O.some(cause),
+            })
+          )
+        );
 
         return yield* S.decodeUnknownEffect(ImageFetchResult)({ bytes, hash, contentType, candidate }).pipe(
           Effect.mapError((cause) =>
-            ImageFetchError.fromUnknown({
+            ImageFetchError.make({
               message: "Fetched image metadata failed validation",
               url: candidate.sourceUrl,
               cause: O.some(cause),
@@ -386,7 +442,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         );
       });
 
-      const fetch: ImageFetcherService["fetch"] = Effect.fn("ImageFetcher.fetch")((candidate, options = {}) => {
+      const fetchImage: ImageFetcherService["fetch"] = Effect.fn("ImageFetcher.fetch")((candidate, options = {}) => {
         const attempt = fetchAttempt(candidate, options);
         return options.retry === false
           ? attempt
@@ -398,7 +454,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         yield* Effect.forEach(
           candidates,
           (candidate) =>
-            fetch(candidate, options).pipe(
+            fetchImage(candidate, options).pipe(
               Effect.tap((result) => Effect.sync(() => results.push(result))),
               Effect.catch((error) =>
                 Effect.logWarning(`Failed to fetch image: ${error.message}`).pipe(Effect.as(undefined))
@@ -428,7 +484,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
       );
 
       return {
-        fetch,
+        fetch: fetchImage,
         fetchAll,
         isImage,
       };
@@ -438,8 +494,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
   /**
    * Default layer with HttpClient
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImageFetcher.Live.pipe(Layer.provide(FetchHttpClient.layer));
 }

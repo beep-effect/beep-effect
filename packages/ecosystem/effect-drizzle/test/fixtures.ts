@@ -744,7 +744,10 @@ class ResolutionDecoy extends Model<ResolutionDecoy>("ResolutionDecoy")({
   id: Int.pipe(pg.integer(), pg.primaryKey()),
 }) {}
 class ResolutionSource extends Model<ResolutionSource>("ResolutionSource")({
-  targetId: Int.pipe(pg.integer(), pg.references(ResolutionTargetId)),
+  targetId: Int.pipe(
+    pg.integer(),
+    pg.references(ResolutionTargetId, { name: "resolution_source_target_id_resolution_target_id_fkey" })
+  ),
 }) {}
 
 export const exactKeyResolutionSchema = schema({

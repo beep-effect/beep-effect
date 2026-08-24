@@ -1,11 +1,13 @@
 /**
  * Cached Article Repository
  *
+ * **Details**
+ *
  * Effect.Cache wrapper around ArticleRepository for frequently accessed queries.
  * Caches single article lookups with TTL.
  *
- * @since 2.0.0
- * @module Repository/CachedArticle
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -14,7 +16,7 @@ import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/CachedArticle");
 
-import { Cache, Duration, Effect } from "effect";
+import { Cache, Data, Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import type { ArticleId } from "./Article.ts";
 import { ArticleRepository } from "./Article.ts";
@@ -30,6 +32,11 @@ const ARTICLE_CACHE_TTL = Duration.hours(1);
 const URI_CACHE_CAPACITY = 5_000;
 const URI_CACHE_TTL = Duration.hours(1);
 
+class ScopedCacheKey extends Data.Class<{
+  readonly ontologyId: string;
+  readonly value: string;
+}> {}
+
 // =============================================================================
 // Service
 // =============================================================================
@@ -37,11 +44,21 @@ const URI_CACHE_TTL = Duration.hours(1);
 /**
  * CachedArticleRepository service
  *
+ * **Details**
+ *
  * Wraps ArticleRepository with Effect.Cache for hot-path queries.
  * Maintains same interface as ArticleRepository.
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Inspect cached article repository)
+ *
+ * ```ts
+ * import { CachedArticleRepository } from "@effect-ontology/Repository/CachedArticle"
+ *
+ * console.log(CachedArticleRepository)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class CachedArticleRepository extends Context.Service<CachedArticleRepository>()($I`CachedArticleRepository`, {
   make: Effect.gen(function* () {
@@ -51,29 +68,24 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
     const articleCache = yield* Cache.make({
       capacity: ARTICLE_CACHE_CAPACITY,
       timeToLive: ARTICLE_CACHE_TTL,
-      lookup: (id: ArticleId) => repo.getArticle(id),
+      lookup: (key: ScopedCacheKey) => repo.getArticle(key.value, key.ontologyId),
     });
 
-    const uriCacheKey = (uri: string, ontologyId?: string): string =>
-      P.isUndefined(ontologyId) ? uri : `${ontologyId}\u0000${uri}`;
+    const scopedCacheKey = (value: string, ontologyId: string): ScopedCacheKey =>
+      new ScopedCacheKey({ ontologyId, value });
 
     // Article lookup by URI cache
     const uriCache = yield* Cache.make({
       capacity: URI_CACHE_CAPACITY,
       timeToLive: URI_CACHE_TTL,
-      lookup: (key: string) => {
-        const separator = key.indexOf("\u0000");
-        return separator === -1
-          ? repo.getArticleByUri(key)
-          : repo.getArticleByUri(key.slice(separator + 1), key.slice(0, separator));
-      },
+      lookup: (key: ScopedCacheKey) => repo.getArticleByUri(key.value, key.ontologyId),
     });
 
     // Cached single article lookup by ID
-    const getArticle = (id: ArticleId) => Cache.get(articleCache, id);
+    const getArticle = (id: ArticleId, ontologyId: string) => Cache.get(articleCache, scopedCacheKey(id, ontologyId));
 
     // Cached article lookup by URI
-    const getArticleByUri = (uri: string, ontologyId?: string) => Cache.get(uriCache, uriCacheKey(uri, ontologyId));
+    const getArticleByUri = (uri: string, ontologyId: string) => Cache.get(uriCache, scopedCacheKey(uri, ontologyId));
 
     // Invalidate caches on insert
     const insertArticle = (article: ArticleInsertRow) =>
@@ -81,21 +93,21 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
         .insertArticle(article)
         .pipe(
           Effect.tap((result) =>
-            Cache.invalidate(articleCache, result.id).pipe(
-              Effect.tap(() => Cache.invalidate(uriCache, uriCacheKey(article.uri, article.ontologyId)))
+            Cache.invalidate(articleCache, scopedCacheKey(result.id, article.ontologyId)).pipe(
+              Effect.tap(() => Cache.invalidate(uriCache, scopedCacheKey(article.uri, article.ontologyId)))
             )
           )
         );
 
     // Invalidate caches on update
-    const updateArticle = (id: ArticleId, updates: Partial<ArticleInsertRow>) =>
-      repo.updateArticle(id, updates).pipe(
+    const updateArticle = (id: ArticleId, ontologyId: string, updates: Omit<Partial<ArticleInsertRow>, "ontologyId">) =>
+      repo.updateArticle(id, ontologyId, updates).pipe(
         Effect.tap(() =>
-          Cache.invalidate(articleCache, id).pipe(
+          Cache.invalidate(articleCache, scopedCacheKey(id, ontologyId)).pipe(
             Effect.tap(() =>
               // If URI was updated, invalidate old and new URI caches
               P.isNotUndefined(updates.uri)
-                ? Cache.invalidate(uriCache, uriCacheKey(updates.uri, updates.ontologyId))
+                ? Cache.invalidate(uriCache, scopedCacheKey(updates.uri, ontologyId))
                 : Effect.void
             )
           )
@@ -108,8 +120,8 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
         .getOrCreateArticle(article)
         .pipe(
           Effect.tap((result) =>
-            Cache.invalidate(articleCache, result.id).pipe(
-              Effect.tap(() => Cache.invalidate(uriCache, uriCacheKey(article.uri, article.ontologyId)))
+            Cache.invalidate(articleCache, scopedCacheKey(result.id, article.ontologyId)).pipe(
+              Effect.tap(() => Cache.invalidate(uriCache, scopedCacheKey(article.uri, article.ontologyId)))
             )
           )
         );
@@ -120,8 +132,10 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
         Effect.tap((results) =>
           Effect.all(
             A.appendAll(
-              A.map(results, (result) => Cache.invalidate(articleCache, result.id)),
-              A.map(articleList, (article) => Cache.invalidate(uriCache, uriCacheKey(article.uri, article.ontologyId)))
+              A.map(results, (result) => Cache.invalidate(articleCache, scopedCacheKey(result.id, result.ontologyId))),
+              A.map(articleList, (article) =>
+                Cache.invalidate(uriCache, scopedCacheKey(article.uri, article.ontologyId))
+              )
             ),
             { concurrency: "unbounded", discard: true }
           )
@@ -160,7 +174,15 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
 /**
  * Layer that provides CachedArticleRepository
  *
- * @since 2.0.0
- * @category Layers
+ * **Example** (Inspect cached article repository layer)
+ *
+ * ```ts
+ * import { CachedArticleRepositoryLayer } from "@effect-ontology/Repository/CachedArticle"
+ *
+ * console.log(CachedArticleRepositoryLayer)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const CachedArticleRepositoryLayer = CachedArticleRepository.Default;

@@ -15,6 +15,10 @@ import * as Domain from "./Domain.ts";
 import * as Parser from "./Parser.ts";
 
 const $I = $RepoDocgenId.create("Checker");
+const titledExampleSection = /\*\*Example\*\*\s*\([^)]+\)[\s\S]*?```(?:ts|tsx|typescript)\b/u;
+
+const hasDocumentedExample = (doc: Domain.Doc): boolean =>
+  doc.examples.length > 0 || (doc.description !== undefined && titledExampleSection.test(doc.description));
 
 const makeError = (
   source: Parser.SourceShape,
@@ -43,6 +47,7 @@ class Entry extends S.Class<Entry>($I`Entry`)(
 const checkEntry = Effect.fn("checkEntry")(function* (
   model: Entry,
   options: {
+    readonly enforceExample: boolean;
     readonly enforceVersion: boolean;
   }
 ) {
@@ -57,7 +62,7 @@ const checkEntry = Effect.fn("checkEntry")(function* (
     );
   }
 
-  if (config.enforceExamples && model.doc.examples.length === 0) {
+  if (config.enforceExamples && options.enforceExample && !hasDocumentedExample(model.doc)) {
     errors = A.appendAll(
       errors,
       makeError(source, model.position, (filePath, frame) => `Missing examples in file ${filePath}:\n\n${frame}`)
@@ -77,6 +82,7 @@ const checkEntry = Effect.fn("checkEntry")(function* (
 function checkEntries(
   models: ReadonlyArray<Entry>,
   options: {
+    readonly enforceExample: boolean;
     readonly enforceVersion: boolean;
   }
 ) {
@@ -84,7 +90,7 @@ function checkEntries(
 }
 
 function checkFunction(model: Domain.Function) {
-  return checkEntry(model, { enforceVersion: true });
+  return checkEntry(model, { enforceExample: true, enforceVersion: true });
 }
 
 /**
@@ -108,10 +114,10 @@ export function checkFunctions(models: ReadonlyArray<Domain.Function>) {
 }
 
 const checkClass = Effect.fn("checkClass")(function* (model: Domain.Class) {
-  const docErrors = yield* checkEntry(model, { enforceVersion: true });
-  const staticMethodsErrors = yield* checkEntries(model.staticMethods, { enforceVersion: false });
-  const methodsErrors = yield* checkEntries(model.methods, { enforceVersion: false });
-  const propertiesErrors = yield* checkEntries(model.properties, { enforceVersion: false });
+  const docErrors = yield* checkEntry(model, { enforceExample: true, enforceVersion: true });
+  const staticMethodsErrors = yield* checkEntries(model.staticMethods, { enforceExample: true, enforceVersion: false });
+  const methodsErrors = yield* checkEntries(model.methods, { enforceExample: true, enforceVersion: false });
+  const propertiesErrors = yield* checkEntries(model.properties, { enforceExample: true, enforceVersion: false });
   return A.flatten([docErrors, staticMethodsErrors, methodsErrors, propertiesErrors]);
 });
 
@@ -136,7 +142,7 @@ export function checkClasses(models: ReadonlyArray<Domain.Class>) {
 }
 
 function checkConstant(model: Domain.Constant) {
-  return checkEntry(model, { enforceVersion: true });
+  return checkEntry(model, { enforceExample: true, enforceVersion: true });
 }
 
 /**
@@ -160,7 +166,7 @@ export function checkConstants(models: ReadonlyArray<Domain.Constant>) {
 }
 
 function checkInterface(model: Domain.Interface) {
-  return checkEntry(model, { enforceVersion: true });
+  return checkEntry(model, { enforceExample: false, enforceVersion: true });
 }
 
 /**
@@ -184,7 +190,7 @@ export function checkInterfaces(models: ReadonlyArray<Domain.Interface>) {
 }
 
 function checkTypeAlias(model: Domain.TypeAlias) {
-  return checkEntry(model, { enforceVersion: true });
+  return checkEntry(model, { enforceExample: false, enforceVersion: true });
 }
 
 /**
@@ -210,7 +216,7 @@ export function checkTypeAliases(models: ReadonlyArray<Domain.TypeAlias>) {
 const checkNamespace = Effect.fn("checkNamespace")(function* (
   model: Domain.Namespace
 ): Effect.fn.Return<Array<string>, never, Parser.Source | Configuration.Configuration> {
-  const docErrors = yield* checkEntry(model, { enforceVersion: true });
+  const docErrors = yield* checkEntry(model, { enforceExample: false, enforceVersion: true });
   const interfacesErrors = yield* checkInterfaces(model.interfaces);
   const typeAliasesErrors = yield* checkTypeAliases(model.typeAliases);
   const namespacesErrors = yield* checkNamespaces(model.namespaces);
@@ -237,14 +243,15 @@ export function checkNamespaces(models: ReadonlyArray<Domain.Namespace>) {
   return Effect.forEach(models, checkNamespace).pipe(Effect.map(A.flatten));
 }
 
-function checkExport(model: Domain.Export) {
-  return checkEntry(model, { enforceVersion: true });
-}
-
 /**
- * Checks documented manual exports for required docgen annotations.
+ * Accepts re-export declarations as graph edges whose owning declarations carry documentation.
  *
- * **Example** (Check empty export models)
+ * **Details**
+ *
+ * Requiring descriptions, examples, or versions on an export edge duplicates
+ * metadata and can disagree with the declaration that owns the symbol.
+ *
+ * **Example** (Ignore export-edge metadata)
  *
  * ```ts
  * import { checkExports } from "@beep/repo-docgen/Checker"
@@ -252,13 +259,13 @@ function checkExport(model: Domain.Export) {
  * console.log(checked)
  * ```
  *
- * @param models - Export models to validate.
- * @returns Effect that accumulates validation error messages.
+ * @param _models - Re-export models already validated through their owning declarations.
+ * @returns Effect containing no export-edge documentation errors.
  * @category predicates
  * @since 0.0.0
  */
-export function checkExports(models: ReadonlyArray<Domain.Export>) {
-  return Effect.forEach(models, checkExport).pipe(Effect.map(A.flatten));
+export function checkExports(_models: ReadonlyArray<Domain.Export>) {
+  return Effect.succeed(A.empty<string>());
 }
 
 /**

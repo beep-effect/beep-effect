@@ -7,6 +7,7 @@
  *
  * @since 0.1.0
  */
+import { Unknown } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -22,7 +23,7 @@ import * as Testing from "../../../claudecode/Testing.ts";
 
 const fsWith = (entries: ReadonlyArray<readonly [string, string]>): ReadonlyMap<string, string> => new Map(entries);
 
-const toJsonString = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const toJsonString = Unknown.encodeUnknownSyncFromJsonString;
 const encodeManifest = S.encodeEffect(Plugin.PluginManifest);
 
 // ---------------------------------------------------------------------------

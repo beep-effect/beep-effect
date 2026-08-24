@@ -5,6 +5,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Unknown } from "@beep/schema/Unknown";
 import { P } from "@beep/utils";
 import { Context, Effect, Result } from "effect";
 import { dual } from "effect/Function";
@@ -12,8 +13,8 @@ import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 
 const $I = $RepoCliId.create("internal/cli/Json");
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const encodeJsonResult = Unknown.encodeUnknownResultFromJsonString;
 
 /**
  * Default `jsonc.format` options shared by repo-cli pretty JSON renderers.

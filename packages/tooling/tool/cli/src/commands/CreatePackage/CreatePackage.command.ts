@@ -20,6 +20,7 @@ import {
 } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { today } from "@beep/schema/LocalDate";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, DateTime, Effect, FileSystem, flow, HashSet, Match, Path, pipe } from "effect";
@@ -786,7 +787,7 @@ const parseJsonDocument: {
 } = dual(
   2,
   Effect.fn(function* (content: string, filePath: string) {
-    return yield* S.decodeEffect(S.fromJsonString(S.Unknown))(content).pipe(
+    return yield* Unknown.decodeEffectFromJsonString(content).pipe(
       Effect.mapError(DomainError.newCause(`Failed to parse JSON in "${filePath}"`))
     );
   })

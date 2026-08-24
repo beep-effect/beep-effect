@@ -124,7 +124,10 @@ export const makePracticeKgHostLayer = (context: PracticeKgBundleContext) =>
         Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(context))
       );
       return makePracticeKgServerLayer(
-        PracticeKgMcpServerConfig.make({ name: "beep-practice-kg", version: "0.0.0" })
+        PracticeKgMcpServerConfig.make({
+          name: "beep-practice-kg",
+          version: "0.0.0",
+        })
       ).pipe(Layer.provide(resources));
     })
   );

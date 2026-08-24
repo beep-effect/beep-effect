@@ -1,10 +1,12 @@
 /**
  * Service: Entity Resolution
  *
+ * **Details**
+ *
  * Service wrapper for entity resolution operations.
  *
- * @since 2.0.0
- * @module Service/EntityResolution
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -20,8 +22,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EntityResolution");
 /**
  * EntityResolutionService - Entity resolution operations
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 const makeEntityResolutionService = Effect.gen(function* () {
   const embedding = yield* EmbeddingService;
@@ -45,6 +47,20 @@ const makeEntityResolutionService = Effect.gen(function* () {
   return { resolve };
 });
 
+/**
+ * Provides the entity resolution service service capability.
+ *
+ * **Example** (Inspect entity resolution service)
+ *
+ * ```ts
+ * import { EntityResolutionService } from "@effect-ontology/Service/EntityResolution"
+ *
+ * console.log(EntityResolutionService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class EntityResolutionService extends Context.Service<EntityResolutionService>()($I`EntityResolutionService`, {
   make: makeEntityResolutionService,
 }) {

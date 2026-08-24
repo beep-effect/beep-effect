@@ -21,10 +21,9 @@ import {
 } from "@beep/law-practice-use-cases/server";
 import { estimateJsonSize, FieldTierName, projectFieldTier, toColumnarEnvelope } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
-import * as OptionUtils from "@beep/utils/Option";
+import * as O from "@beep/utils/Option";
 import { Effect, Path } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
 import { PracticeKgQueries } from "./PracticeKg.queries.ts";
@@ -38,7 +37,7 @@ import {
   toToolRecord,
 } from "./PracticeKg.rows.ts";
 import type { FieldTierSet } from "@beep/mcp-kit";
-import type { Layer } from "effect";
+import type * as Layer from "effect/Layer";
 import type * as S from "effect/Schema";
 import type * as Tool from "effect/unstable/ai/Tool";
 import type * as SqlClient from "effect/unstable/sql/SqlClient";
@@ -63,12 +62,17 @@ const projectRows = (
   const shared = {
     bundle_version: bundleVersion,
     epistemic_status: epistemicStatus,
-    ...OptionUtils.getSomesStruct({ note: O.fromUndefinedOr(note) }),
+    ...O.getSomesStruct({ note: O.fromUndefinedOr(note) }),
     total: NonNegativeInt.make(A.length(rows)),
   };
   return A.findFirst(tierOrder, (tier) => {
     const data = toColumnarEnvelope(A.map(rows, projectFieldTier(tier, tiers)));
-    return estimateJsonSize(data) <= budgetBytes ? O.some({ data, tier }) : O.none();
+    return estimateJsonSize(data) <= budgetBytes
+      ? O.some({
+          data,
+          tier,
+        })
+      : O.none();
   }).pipe(
     O.match({
       onNone: () => {
@@ -84,7 +88,13 @@ const projectRows = (
           truncated: fitting < A.length(rows),
         });
       },
-      onSome: ({ data, tier }) => PracticeKgToolResult.make({ ...shared, data, tier, truncated: false }),
+      onSome: ({ data, tier }) =>
+        PracticeKgToolResult.make({
+          ...shared,
+          data,
+          tier,
+          truncated: false,
+        }),
     })
   );
 };
@@ -92,7 +102,10 @@ const projectRows = (
 const toolFailure =
   (tool: string) =>
   (_cause: unknown): PracticeKgToolError =>
-    PracticeKgToolError.make({ message: "Practice knowledge-graph bundle query failed.", tool });
+    PracticeKgToolError.make({
+      message: "Practice knowledge-graph bundle query failed.",
+      tool,
+    });
 
 const queryPglite = <A>(
   sql: SqlClient.SqlClient,
@@ -172,7 +185,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           .query(PracticeKgQueries.searchText, [request.query, request.family ?? null, request.limit])
           .pipe(
             Effect.flatMap(decodePracticeKgDocumentRows),
-            Effect.map((rows) => addPracticeKgCorpusPointers(rows, bundle.corpusRoot, path)),
+            Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path)),
             Effect.mapError(toolFailure("corpus_search_text"))
           );
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
@@ -187,7 +200,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           ])
           .pipe(
             Effect.flatMap(decodePracticeKgDocumentRows),
-            Effect.map((rows) => addPracticeKgCorpusPointers(rows, bundle.corpusRoot, path)),
+            Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path)),
             Effect.mapError(toolFailure("corpus_get_document"))
           );
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
@@ -257,10 +270,12 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             return projectRows([toToolRecord(statusRow)], practiceKgGraphFieldTiers, request.budgetBytes, version);
           }
           if (request.digest !== undefined) {
-            const documents = yield* duckdb.query(PracticeKgQueries.provenanceDocument, [request.digest]).pipe(
-              Effect.flatMap(decodePracticeKgDocumentRows),
-              Effect.map((rows) => addPracticeKgCorpusPointers(rows, bundle.corpusRoot, path))
-            );
+            const documents = yield* duckdb
+              .query(PracticeKgQueries.provenanceDocument, [request.digest])
+              .pipe(
+                Effect.flatMap(decodePracticeKgDocumentRows),
+                Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path))
+              );
             return projectRows(
               A.map(documents, toToolRecord),
               practiceKgDocumentFieldTiers,

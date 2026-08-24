@@ -403,6 +403,7 @@ const getExampleFiles = Effect.fn("getExampleFiles")(function* (modules: Readonl
         getFiles("class")(c),
         A.flatMap(c.methods, getFiles(`${c.name}-method`)),
         A.flatMap(c.staticMethods, getFiles(`${c.name}-staticmethod`)),
+        A.flatMap(c.properties, getFiles(`${c.name}-property`)),
       ])
     );
     const allPrefixedInterfaces = A.appendAll(

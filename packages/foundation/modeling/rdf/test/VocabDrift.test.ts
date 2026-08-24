@@ -3,6 +3,7 @@ import { DCTERMS_NAMESPACE, DCTERMS_TERMS } from "@beep/rdf/Vocab/Dcterms";
 import { OWL_NAMESPACE, OWL_TERMS } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE, RDF_TERMS } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE, RDFS_TERMS } from "@beep/rdf/Vocab/Rdfs";
+import { SCHEMA_ORG_NAMESPACE, SCHEMA_ORG_TERMS } from "@beep/rdf/Vocab/SchemaOrg";
 import { SKOS_NAMESPACE, SKOS_TERMS } from "@beep/rdf/Vocab/Skos";
 import { describe, expect, it } from "@effect/vitest";
 
@@ -36,6 +37,12 @@ const vocabCases = [
     namespace: DCTERMS_NAMESPACE,
     prefix: "dcterms",
     terms: DCTERMS_TERMS,
+  },
+  {
+    moduleName: "SchemaOrg",
+    namespace: SCHEMA_ORG_NAMESPACE,
+    prefix: "schema",
+    terms: SCHEMA_ORG_TERMS,
   },
 ] as const;
 

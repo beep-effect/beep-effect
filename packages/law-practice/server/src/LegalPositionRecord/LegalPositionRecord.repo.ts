@@ -32,9 +32,11 @@ import {
 } from "@beep/law-practice-use-cases/LegalPositionRecord";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, Order, pipe, Ref } from "effect";
+import { Effect, pipe, Ref } from "effect";
 import * as A from "effect/Array";
-import { makeRowDecoders } from "../internal/RepoSupport.ts";
+import * as Eq from "effect/Equal";
+import * as P from "effect/Predicate";
+import { makeRowDecoders, sortByIdAscending } from "../internal/RepoSupport.ts";
 import type {
   ActFrame,
   CorrectionDelta,
@@ -77,7 +79,11 @@ const repositoryUnavailable =
     effect.pipe(
       Effect.tapError((cause) =>
         Effect.logDebug("Law-practice LegalPositionRecord repository dropped driver failure").pipe(
-          Effect.annotateLogs({ cause, operation, table: tableNameFor[operation] })
+          Effect.annotateLogs({
+            cause,
+            operation,
+            table: tableNameFor[operation],
+          })
         )
       ),
       Effect.mapError((cause) =>
@@ -93,11 +99,6 @@ const repositoryUnavailable =
 // with identical semantics; only the combinator above is this repository's own.
 const { decodeAppended, decodeRows } = makeRowDecoders(repositoryUnavailable);
 
-// The in-memory sibling orders by the same key the Drizzle variant does, so a
-// read proved here cannot pass in memory and fail against the database. The
-// order is the order records were appended; it is never a ranking.
-const byIdAscending = Order.mapInput(Order.Number, (record: { readonly id: number }) => record.id);
-
 // A read is scoped by organization first, always. Two tenants can record
 // positions about the same norm and the same act, so an unscoped read would
 // merge two legal pictures into one.
@@ -107,21 +108,36 @@ const heldBy = <Entity extends { readonly id: number; readonly orgId: number }>(
 ): ReadonlyArray<Entity> =>
   pipe(
     records,
-    A.filter((record) => record.orgId === scope.orgId),
-    A.sort(byIdAscending)
+    A.filter(
+      P.Struct({
+        orgId: Eq.equals(scope.orgId),
+      })
+    ),
+    sortByIdAscending
   );
 
 // The two frame-keyed reads narrow the tenant scope by the frame the records
 // cite, so an exercise attempted under one reading is never returned for
 // another.
-const citingFrame = <Entity extends { readonly frame: number; readonly id: number; readonly orgId: number }>(
+const citingFrame = <
+  Entity extends {
+    readonly frame: number;
+    readonly id: number;
+    readonly orgId: number;
+  },
+>(
   records: ReadonlyArray<Entity>,
   scope: ActFrameRecordScope
 ): ReadonlyArray<Entity> =>
   pipe(
     records,
-    A.filter((record) => record.orgId === scope.orgId && record.frame === scope.frame),
-    A.sort(byIdAscending)
+    A.filter(
+      P.Struct({
+        orgId: Eq.equals(scope.orgId),
+        frame: Eq.equals(scope.frame),
+      })
+    ),
+    sortByIdAscending
   );
 
 /**
@@ -246,24 +262,28 @@ export const makeLegalPositionRecordRepository = Effect.fn("LegalPositionRecord.
   const db = yield* PostgresDrizzle;
 
   return LegalPositionRecordRepositoryShape.make({
-    listCorrections: Effect.fn("LegalPositionRecord.drizzleListCorrections")(function* (scope: ActFrameRecordScope) {
-      const rows = yield* db
-        .select()
-        .from(correctionTable)
-        .where(and(eq(correctionTable.orgId, scope.orgId), eq(correctionTable.frame, scope.frame)))
-        .orderBy(asc(correctionTable.id))
-        .pipe(repositoryUnavailable("listCorrections"));
-      return yield* decodeRows(rows, "listCorrections", fromCorrectionDeltaRow);
-    }),
-    listExercises: Effect.fn("LegalPositionRecord.drizzleListExercises")(function* (scope: ActFrameRecordScope) {
-      const rows = yield* db
-        .select()
-        .from(exerciseTable)
-        .where(and(eq(exerciseTable.orgId, scope.orgId), eq(exerciseTable.frame, scope.frame)))
-        .orderBy(asc(exerciseTable.id))
-        .pipe(repositoryUnavailable("listExercises"));
-      return yield* decodeRows(rows, "listExercises", fromPowerExerciseRow);
-    }),
+    listCorrections: Effect.fn("LegalPositionRecord.drizzleListCorrections")(
+      function* (scope: ActFrameRecordScope) {
+        return yield* db
+          .select()
+          .from(correctionTable)
+          .where(and(eq(correctionTable.orgId, scope.orgId), eq(correctionTable.frame, scope.frame)))
+          .orderBy(asc(correctionTable.id))
+          .pipe(repositoryUnavailable("listCorrections"));
+      },
+      Effect.flatMap(decodeRows("listCorrections", fromCorrectionDeltaRow))
+    ),
+    listExercises: Effect.fn("LegalPositionRecord.drizzleListExercises")(
+      function* (scope: ActFrameRecordScope) {
+        return yield* db
+          .select()
+          .from(exerciseTable)
+          .where(and(eq(exerciseTable.orgId, scope.orgId), eq(exerciseTable.frame, scope.frame)))
+          .orderBy(asc(exerciseTable.id))
+          .pipe(repositoryUnavailable("listExercises"));
+      },
+      Effect.flatMap(decodeRows("listExercises", fromPowerExerciseRow))
+    ),
     listFrames: Effect.fn("LegalPositionRecord.drizzleListFrames")(function* (scope: LegalPositionRecordScope) {
       const rows = yield* db
         .select()

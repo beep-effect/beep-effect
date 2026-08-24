@@ -4,12 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { SchemaUtils } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { PromotionGateRequest, PromotionGateVerdict, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
 import { A } from "@beep/utils";
 import { Effect, flow, HashMap, HashSet } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
 import {
   ProfessionalRuntimePromotionBlocked,
@@ -47,7 +48,7 @@ const sameOrderedStrings = (left: ReadonlyArray<string>, right: ReadonlyArray<st
   left.length === right.length && A.every(left, (value, index) => value === right[index]);
 
 // TODO(effect-native-migration): model schema
-const toPlainJson = (value: unknown): string => S.encodeUnknownSync(S.fromJsonString(S.Unknown))(value);
+const toPlainJson = (value: unknown): string => Unknown.encodeUnknownSyncFromJsonString(value);
 
 const spanIdsFromEvidence = (evidence: RuntimeEvidenceRef): ReadonlyArray<string> => [
   ...O.toArray(evidence.spanId),

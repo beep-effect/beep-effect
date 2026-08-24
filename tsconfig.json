@@ -934,6 +934,9 @@
         "./packages/foundation/modeling/schema/src/Transformations.ts"
       ],
       "@beep/schema/URL": ["./packages/foundation/modeling/schema/src/URL.ts"],
+      "@beep/schema/Unknown": [
+        "./packages/foundation/modeling/schema/src/Unknown.ts"
+      ],
       "@beep/schema/Xml": ["./packages/foundation/modeling/schema/src/Xml.ts"],
       "@beep/schema/Yaml": [
         "./packages/foundation/modeling/schema/src/Yaml.ts"

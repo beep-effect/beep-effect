@@ -1,13 +1,14 @@
 import * as Configuration from "@beep/repo-docgen/Configuration";
 import * as Domain from "@beep/repo-docgen/Domain";
+import { Unknown } from "@beep/schema/Unknown";
 import { Str } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 
-const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeSyncFromJsonString;
 
 const makeLoadArgs = (): Parameters<typeof Configuration.load>[0] => ({
   projectHomepage: O.none(),
@@ -27,7 +28,7 @@ const makeLoadArgs = (): Parameters<typeof Configuration.load>[0] => ({
   examplesCompilerOptions: O.none(),
 });
 
-const makeDocgenJsonLayer = (config: unknown | undefined) =>
+const makeDocgenJsonLayer = (config: unknown | undefined, configFile = "docgen.json") =>
   Layer.effect(
     FileSystem.FileSystem,
     Effect.gen(function* () {
@@ -38,7 +39,7 @@ const makeDocgenJsonLayer = (config: unknown | undefined) =>
         if (fileName === "package.json") {
           return Effect.succeed(encodeJson({ name: "name", homepage: "homepage" }));
         }
-        if (fileName === "docgen.json" && config !== undefined) {
+        if (fileName === configFile && config !== undefined) {
           return Effect.succeed(encodeJson(config));
         }
         return Effect.fail(
@@ -52,7 +53,7 @@ const makeDocgenJsonLayer = (config: unknown | undefined) =>
       };
 
       const exists: FileSystem.FileSystem["exists"] = (filePath) =>
-        Effect.succeed(path.basename(filePath) === "docgen.json" && config !== undefined);
+        Effect.succeed(path.basename(filePath) === configFile && config !== undefined);
 
       return FileSystem.makeNoop({
         exists,
@@ -61,15 +62,15 @@ const makeDocgenJsonLayer = (config: unknown | undefined) =>
     })
   ).pipe(Layer.provide(Path.layer));
 
-const makeTestLayer = (config?: unknown) =>
-  Layer.mergeAll(Path.layer, Domain.Process.layer, makeDocgenJsonLayer(config));
+const makeTestLayer = (config?: unknown, configFile?: string) =>
+  Layer.mergeAll(Path.layer, Domain.Process.layer, makeDocgenJsonLayer(config, configFile));
 
 const expectConfig = (actual: Configuration.ConfigurationShape, expected: Configuration.ConfigurationShape) =>
   Effect.sync(() => expect(actual).toEqual(expected));
 
 describe("Configuration", () => {
   layer(makeTestLayer())((it) =>
-    it.effect("uses defaults when no docgen.json is present", () =>
+    it.effect("uses defaults when configFile is omitted and no docgen.json is present", () =>
       Configuration.load(makeLoadArgs()).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (config) {
@@ -170,5 +171,22 @@ describe("Configuration", () => {
         expect(Str.includes("projectHomepage")(error.message)).toBe(true);
       })
     )
+  );
+
+  it.layer(makeTestLayer({ srcDir: "effect-ontology" }, "docgen.effect-ontology.json"))(
+    "alternate configuration file",
+    (it) => {
+      it.effect(
+        "loads an explicitly selected configuration without replacing docgen.json",
+        Effect.fnUntraced(function* () {
+          const config = yield* Configuration.load({
+            ...makeLoadArgs(),
+            configFile: O.some("docgen.effect-ontology.json"),
+          });
+
+          expect(config.srcDir).toBe("effect-ontology");
+        })
+      );
+    }
   );
 });

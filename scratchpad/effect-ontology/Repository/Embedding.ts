@@ -1,6 +1,8 @@
 /**
  * Embedding Repository
  *
+ * **Details**
+ *
  * Effect-native repository for persistent embedding storage with hybrid search.
  * Uses pgvector for ANN search and PostgreSQL tsvector for BM25-like full-text.
  *
@@ -10,24 +12,27 @@
  * - Hybrid search combining vector + text via RRF fusion
  * - Ontology-scoped storage
  *
- * @since 2.0.0
- * @module Repository/Embedding
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Context, Effect, Layer } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Embedding");
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, eq } from "drizzle-orm";
-import { Effect, Option } from "effect";
-import type { SqlError } from "effect/unstable/sql";
+import { and, sql as drizzleSql, eq } from "drizzle-orm";
 import { SqlClient } from "effect/unstable/sql";
 import type { EmbeddingRow } from "./schema.ts";
-import { embeddings } from "./schema.ts";
+import { Embeddings, embeddings } from "./schema.ts";
 
 // =============================================================================
 // Types
@@ -36,64 +41,283 @@ import { embeddings } from "./schema.ts";
 /**
  * Entity types that can have embeddings
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Inspect embedding entity type)
+ *
+ * ```ts
+ * import { EmbeddingEntityType } from "@effect-ontology/Repository/Embedding"
+ *
+ * console.log(EmbeddingEntityType)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export type EmbeddingEntityType = "class" | "entity" | "claim" | "example";
+export const EmbeddingEntityType = LiteralKit(["class", "entity", "claim", "example"]).pipe(
+  $I.annoteSchema("EmbeddingEntityType", {
+    description: "Closed set of repository entities that can own an embedding.",
+  })
+);
+
+/**
+ * Describes the embedding entity type data exposed by this module.
+ *
+ * **Example** (Decode EmbeddingEntityType)
+ *
+ * ```ts
+ * import { EmbeddingEntityType } from "@effect-ontology/Repository/Embedding"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizeEmbeddingEntityType = (_value: EmbeddingEntityType): string => "valid embedding entity type"
+ *
+ * console.log(O.map(S.decodeUnknownOption(EmbeddingEntityType)({}), summarizeEmbeddingEntityType))
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EmbeddingEntityType = typeof EmbeddingEntityType.Type;
 
 /**
  * Result from vector similarity search
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Reference SimilarityResult fields)
+ *
+ * ```ts
+ * import type { SimilarityResult } from "@effect-ontology/Repository/Embedding"
+ *
+ * const similarityResultFields: ReadonlyArray<keyof SimilarityResult> = ["entityId", "entityType", "similarity"]
+ *
+ * console.log(similarityResultFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface SimilarityResult {
-  readonly entityId: string;
-  readonly entityType: EmbeddingEntityType;
-  readonly similarity: number;
-}
+export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityResult`)(
+  {
+    entityId: S.NonEmptyString,
+    entityType: EmbeddingEntityType,
+    similarity: UnitInterval,
+  },
+  $I.annote("SimilarityResult", {
+    description: "Repository entity and its cosine-similarity score.",
+  })
+) {}
 
 /**
  * Result from hybrid search (vector + text RRF fusion)
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Reference HybridSearchResult fields)
+ *
+ * ```ts
+ * import type { HybridSearchResult } from "@effect-ontology/Repository/Embedding"
+ *
+ * const hybridSearchResultFields: ReadonlyArray<keyof HybridSearchResult> = ["entityId", "entityType", "rrfScore"]
+ *
+ * console.log(hybridSearchResultFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface HybridSearchResult {
-  readonly entityId: string;
-  readonly entityType: EmbeddingEntityType;
-  readonly rrfScore: number;
-  readonly vectorRank: number;
-  readonly textRank: number;
-}
+export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSearchResult`)(
+  {
+    entityId: S.NonEmptyString,
+    entityType: EmbeddingEntityType,
+    rrfScore: UnitInterval,
+    vectorRank: NonNegativeInt,
+    textRank: NonNegativeInt,
+  },
+  $I.annote("HybridSearchResult", {
+    description: "Repository entity and its reciprocal-rank-fusion search scores.",
+  })
+) {}
 
 /**
  * Options for similarity search
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Reference SimilaritySearchOptions fields)
+ *
+ * ```ts
+ * import type { SimilaritySearchOptions } from "@effect-ontology/Repository/Embedding"
+ *
+ * const similaritySearchOptionsFields: ReadonlyArray<keyof SimilaritySearchOptions> = ["limit", "minSimilarity"]
+ *
+ * console.log(similaritySearchOptionsFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface SimilaritySearchOptions {
-  /** Number of results to return (default: 20) */
-  readonly limit?: number;
-  /** Minimum cosine similarity threshold (default: 0.5) */
-  readonly minSimilarity?: number;
-}
+export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I`SimilaritySearchOptions`)(
+  {
+    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
+    minSimilarity: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.5))),
+  },
+  $I.annote("SimilaritySearchOptions", {
+    description: "Bounded result count and cosine-similarity threshold for vector search.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link SimilaritySearchOptions}.
+ *
+ * **Example** (Configure similarity search)
+ *
+ * ```ts
+ * import { PosInt } from "@beep/schema/Int"
+ * import type { SimilaritySearchOptionsInput } from "@effect-ontology/Repository/Embedding"
+ *
+ * const options: SimilaritySearchOptionsInput = { limit: PosInt.make(10) }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SimilaritySearchOptionsInput = (typeof SimilaritySearchOptions)["~type.make.in"];
 
 /**
  * Options for hybrid search
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Reference HybridSearchOptions fields)
+ *
+ * ```ts
+ * import type { HybridSearchOptions } from "@effect-ontology/Repository/Embedding"
+ *
+ * const hybridSearchOptionsFields: ReadonlyArray<keyof HybridSearchOptions> = ["limit", "vectorWeight", "textWeight"]
+ *
+ * console.log(hybridSearchOptionsFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface HybridSearchOptions {
-  /** Number of results to return (default: 20) */
-  readonly limit?: number;
-  /** Weight for vector similarity (default: 0.6) */
-  readonly vectorWeight?: number;
-  /** Weight for text search (default: 0.4) */
-  readonly textWeight?: number;
-}
+export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridSearchOptions`)(
+  {
+    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
+    vectorWeight: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.6))),
+    textWeight: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.4))),
+  },
+  $I.annote("HybridSearchOptions", {
+    description: "Bounded result count and fusion weights for hybrid vector and text search.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link HybridSearchOptions}.
+ *
+ * **Example** (Configure hybrid search)
+ *
+ * ```ts
+ * import { PosInt } from "@beep/schema/Int"
+ * import type { HybridSearchOptionsInput } from "@effect-ontology/Repository/Embedding"
+ *
+ * const options: HybridSearchOptionsInput = { limit: PosInt.make(10) }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HybridSearchOptionsInput = (typeof HybridSearchOptions)["~type.make.in"];
+
+const PgVector = S.Finite.pipe(
+  S.Array,
+  S.fromJsonString,
+  $I.annoteSchema("PgVector", {
+    description: "PostgreSQL pgvector text decoded to a finite numeric vector.",
+  })
+);
+
+const EmbeddingSqlRow = Embeddings.pipe(
+  $I.annoteSchema("EmbeddingSqlRow", {
+    description: "Decoded row returned by raw SQL queries against the embeddings table.",
+  })
+);
+
+const EmbeddingVectorSqlRow = S.Struct({ embedding: PgVector }).pipe(
+  $I.annoteSchema("EmbeddingVectorSqlRow", {
+    description: "Decoded pgvector projection returned by an embedding lookup.",
+  })
+);
+
+const SimilaritySqlRow = SimilarityResult.pipe(
+  $I.annoteSchema("SimilaritySqlRow", {
+    description: "Decoded vector-similarity projection returned by PostgreSQL.",
+  })
+);
+
+const HybridSearchSqlRow = HybridSearchResult.pipe(
+  $I.annoteSchema("HybridSearchSqlRow", {
+    description: "Decoded reciprocal-rank-fusion projection returned by PostgreSQL.",
+  })
+);
+
+const TextSearchSqlRow = S.Struct({
+  entityId: S.String,
+  rank: S.Finite,
+}).pipe(
+  $I.annoteSchema("TextSearchSqlRow", {
+    description: "Decoded full-text ranking projection returned by PostgreSQL.",
+  })
+);
+
+const CountSqlRow = S.Struct({ count: S.Int }).pipe(
+  $I.annoteSchema("CountSqlRow", {
+    description: "Decoded integer count projection returned by PostgreSQL.",
+  })
+);
+
+const EmbeddingTypeCountSqlRow = S.Struct({
+  entityType: EmbeddingEntityType,
+  count: S.Int,
+}).pipe(
+  $I.annoteSchema("EmbeddingTypeCountSqlRow", {
+    description: "Decoded embedding count grouped by entity type.",
+  })
+);
+
+const ModelCountSqlRow = S.Struct({
+  model: S.String,
+  count: S.Int,
+}).pipe(
+  $I.annoteSchema("ModelCountSqlRow", {
+    description: "Decoded embedding count grouped by model.",
+  })
+);
+
+const ExistsSqlRow = S.Struct({ exists: S.Boolean }).pipe(
+  $I.annoteSchema("ExistsSqlRow", {
+    description: "Decoded SQL EXISTS projection.",
+  })
+);
+
+const normalizeDecodedRows = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
+  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause)));
+const normalizeExecution = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
+  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+const decodeEmbeddingSqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingSqlRow))(rows));
+const decodeOneEmbeddingSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([EmbeddingSqlRow]))(rows));
+const decodeEmbeddingVectorSqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingVectorSqlRow))(rows));
+const decodeSimilaritySqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(SimilaritySqlRow))(rows));
+const decodeHybridSearchSqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(HybridSearchSqlRow))(rows));
+const decodeTextSearchSqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(TextSearchSqlRow))(rows));
+const decodeOneCountSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([CountSqlRow]))(rows));
+const decodeEmbeddingTypeCountSqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingTypeCountSqlRow))(rows));
+const decodeModelCountSqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(ModelCountSqlRow))(rows));
+const decodeOneExistsSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([ExistsSqlRow]))(rows));
 
 // =============================================================================
 // Service
@@ -102,10 +326,20 @@ export interface HybridSearchOptions {
 /**
  * Embedding Repository Service
  *
+ * **Details**
+ *
  * Provides persistent vector storage with hybrid search capabilities.
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Inspect embedding repository)
+ *
+ * ```ts
+ * import { EmbeddingRepository } from "@effect-ontology/Repository/Embedding"
+ *
+ * console.log(EmbeddingRepository)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()($I`EmbeddingRepository`, {
   make: Effect.gen(function* () {
@@ -136,32 +370,36 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
     ): Effect.Effect<EmbeddingRow, DrizzleError> =>
       Effect.gen(function* () {
         const vectorStr = formatVector(embedding);
-        const result = yield* sql`
-          INSERT INTO embeddings (ontology_id, entity_type, entity_id,
-                                  embedding, content_text, model)
-          VALUES (${ontologyId},
-                  ${entityType},
-                  ${entityId},
-                  ${vectorStr}::vector,
-                  ${contentText ?? null},
-                  ${model ?? "nomic-embed-text-v1.5"}) ON CONFLICT (ontology_id, entity_type, entity_id) DO
-          UPDATE SET
-            embedding = ${vectorStr}::vector,
-            content_text = COALESCE (${contentText ?? null}, embeddings.content_text),
-            model = ${model ?? "nomic-embed-text-v1.5"},
-            updated_at = NOW()
-            RETURNING
-            id,
-            ontology_id as "ontologyId",
-            entity_type as "entityType",
-            entity_id as "entityId",
-            content_text as "contentText",
-            model,
-            created_at as "createdAt",
-            updated_at as "updatedAt"
-        `;
-        return result[0] as EmbeddingRow;
-      }).pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+        const modelName = O.getOrElse(O.fromUndefinedOr(model), () => "nomic-embed-text-v1.5");
+        const contentTextOption = O.fromUndefinedOr(contentText);
+        const result = yield* normalizeExecution(
+          drizzle
+            .insert(embeddings)
+            .values({
+              ontologyId,
+              entityType,
+              entityId,
+              embedding: vectorStr,
+              contentText: O.getOrNull(contentTextOption),
+              model: modelName,
+            })
+            .onConflictDoUpdate({
+              target: [embeddings.ontologyId, embeddings.entityType, embeddings.entityId],
+              set: {
+                embedding: vectorStr,
+                model: modelName,
+                updatedAt: drizzleSql`NOW()`,
+                ...O.getOrElse(
+                  O.map(contentTextOption, (value) => ({ contentText: value })),
+                  () => ({})
+                ),
+              },
+            })
+            .returning()
+        );
+        const [row] = yield* decodeOneEmbeddingSqlRow(result);
+        return row;
+      });
 
     /**
      * Get embedding by entity identifiers
@@ -170,9 +408,9 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
       ontologyId: string,
       entityType: EmbeddingEntityType,
       entityId: string
-    ): Effect.Effect<Option.Option<EmbeddingRow>, DrizzleError> =>
+    ): Effect.Effect<O.Option<EmbeddingRow>, DrizzleError> =>
       Effect.gen(function* () {
-        const [result] = yield* drizzle
+        const result = yield* drizzle
           .select()
           .from(embeddings)
           .where(
@@ -182,9 +420,10 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
               eq(embeddings.entityId, entityId)
             )
           )
-          .limit(1);
-        return Option.fromNullishOr(result);
-      }).pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+          .limit(1)
+          .pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+        return A.head(yield* decodeEmbeddingSqlRows(result));
+      });
 
     /**
      * Get embedding vector by entity identifiers
@@ -194,24 +433,23 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
       ontologyId: string,
       entityType: EmbeddingEntityType,
       entityId: string
-    ): Effect.Effect<Option.Option<ReadonlyArray<number>>, DrizzleError> =>
+    ): Effect.Effect<O.Option<ReadonlyArray<number>>, DrizzleError> =>
       Effect.gen(function* () {
         const result = yield* sql`
-          SELECT embedding::text
+          SELECT embedding::text as embedding
           FROM embeddings
           WHERE ontology_id = ${ontologyId}
             AND entity_type = ${entityType}
             AND entity_id = ${entityId} LIMIT 1
         `;
-        if (result.length === 0) return Option.none();
-        const vectorStr = (result[0] as { embedding: string }).embedding;
-        return Option.some(parseVector(vectorStr));
+        const rows = yield* decodeEmbeddingVectorSqlRows(result);
+        return O.map(O.fromIterable(rows), (row) => row.embedding);
       }).pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
 
     /**
      * Delete embedding
      */
-    const remove = Effect.fn(function* (
+    const remove = Effect.fn("EmbeddingRepository.remove")(function* (
       ontologyId: string,
       entityType: EmbeddingEntityType,
       entityId: string
@@ -231,7 +469,7 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
     /**
      * Delete all embeddings for an ontology and entity type
      */
-    const removeByType = Effect.fn(function* (
+    const removeByType = Effect.fn("EmbeddingRepository.removeByType")(function* (
       ontologyId: string,
       entityType: EmbeddingEntityType
     ): Effect.fn.Return<void, DrizzleError> {
@@ -268,7 +506,7 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
           ontologyId: item.ontologyId,
           entityType: item.entityType,
           entityId: item.entityId,
-          embedding: formatVector(item.embedding),
+          embedding: item.embedding,
           contentText: item.contentText ?? null,
           model: item.model ?? "nomic-embed-text-v1.5",
         }));
@@ -284,9 +522,9 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
             (item) =>
               upsert(
                 item.ontologyId,
-                item.entityType as EmbeddingEntityType,
+                item.entityType,
                 item.entityId,
-                parseVector(item.embedding),
+                item.embedding,
                 item.contentText ?? undefined,
                 item.model
               ),
@@ -305,24 +543,25 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
       ontologyId: string,
       entityType: EmbeddingEntityType,
       entityIds: ReadonlyArray<string>
-    ): Effect.Effect<ReadonlyArray<EmbeddingRow>, SqlError.SqlError> =>
+    ): Effect.Effect<ReadonlyArray<EmbeddingRow>, DrizzleError> =>
       Effect.gen(function* () {
         if (entityIds.length === 0) return [];
-        const result = yield* sql`
+        const result = yield* normalizeExecution(sql`
           SELECT id,
-                 ontology_id,
-                 entity_type,
-                 entity_id,
-                 content_text,
+                 ontology_id as "ontologyId",
+                 entity_type as "entityType",
+                 entity_id as "entityId",
+                 embedding::text as embedding,
+                 content_text as "contentText",
                  model,
-                 created_at,
-                 updated_at
+                 created_at as "createdAt",
+                 updated_at as "updatedAt"
           FROM embeddings
           WHERE ontology_id = ${ontologyId}
             AND entity_type = ${entityType}
-            AND entity_id = ANY (${entityIds as Array<string>}::text[])
-        `;
-        return result as unknown as ReadonlyArray<EmbeddingRow>;
+            AND entity_id = ANY (${entityIds}::text[])
+        `);
+        return yield* decodeEmbeddingSqlRows(result);
       });
 
     // -------------------------------------------------------------------------
@@ -341,13 +580,13 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
       ontologyId: string,
       entityType: EmbeddingEntityType,
       queryEmbedding: ReadonlyArray<number>,
-      options: SimilaritySearchOptions = {}
-    ): Effect.Effect<ReadonlyArray<SimilarityResult>, SqlError.SqlError> =>
+      options: SimilaritySearchOptionsInput = {}
+    ): Effect.Effect<ReadonlyArray<SimilarityResult>, DrizzleError> =>
       Effect.gen(function* () {
-        const { limit = 20, minSimilarity = 0.5 } = options;
+        const { limit, minSimilarity } = SimilaritySearchOptions.make(options);
         const vectorStr = formatVector(queryEmbedding);
 
-        const results = yield* sql`
+        const results = yield* normalizeExecution(sql`
           SELECT entity_id                                as "entityId",
                  entity_type                              as "entityType",
                  1 - (embedding <=> ${vectorStr}::vector) as similarity
@@ -357,8 +596,8 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
             AND 1 - (embedding <=> ${vectorStr}::vector) >= ${minSimilarity}
           ORDER BY embedding <=> ${vectorStr}::vector
             LIMIT ${limit}
-        `;
-        return results as unknown as ReadonlyArray<SimilarityResult>;
+        `);
+        return yield* decodeSimilaritySqlRows(results);
       });
 
     /**
@@ -376,15 +615,19 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
       entityType: EmbeddingEntityType,
       queryEmbedding: ReadonlyArray<number>,
       queryText: string,
-      options: HybridSearchOptions = {}
-    ): Effect.Effect<ReadonlyArray<HybridSearchResult>, SqlError.SqlError> =>
+      options: HybridSearchOptionsInput = {}
+    ): Effect.Effect<ReadonlyArray<HybridSearchResult>, DrizzleError> =>
       Effect.gen(function* () {
-        const { limit = 20, vectorWeight = 0.6, textWeight = 0.4 } = options;
+        const { limit, vectorWeight, textWeight } = HybridSearchOptions.make(options);
         const vectorStr = formatVector(queryEmbedding);
 
         // Use the PostgreSQL hybrid_search function defined in migration
-        const results = yield* sql`
-          SELECT *
+        const results = yield* normalizeExecution(sql`
+          SELECT entity_id as "entityId",
+                 entity_type as "entityType",
+                 rrf_score as "rrfScore",
+                 vector_rank as "vectorRank",
+                 text_rank as "textRank"
           FROM hybrid_search(
             ${vectorStr}::vector,
             ${queryText},
@@ -394,23 +637,9 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
             ${vectorWeight},
             ${textWeight}
                )
-        `;
+        `);
 
-        return (
-          results as unknown as Array<{
-            entity_id: string;
-            entity_type: string;
-            rrf_score: number;
-            vector_rank: number;
-            text_rank: number;
-          }>
-        ).map((r) => ({
-          entityId: r.entity_id,
-          entityType: r.entity_type as EmbeddingEntityType,
-          rrfScore: r.rrf_score,
-          vectorRank: r.vector_rank,
-          textRank: r.text_rank,
-        }));
+        return yield* decodeHybridSearchSqlRows(results);
       });
 
     /**
@@ -427,10 +656,10 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
         entityId: string;
         rank: number;
       }>,
-      SqlError.SqlError
+      DrizzleError
     > =>
       Effect.gen(function* () {
-        const results = yield* sql`
+        const results = yield* normalizeExecution(sql`
           SELECT entity_id                                         as "entityId",
                  ts_rank(content_tsv,
                          plainto_tsquery('english', ${queryText})) as rank
@@ -441,11 +670,8 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
               , ${queryText})
           ORDER BY rank DESC
             LIMIT ${limit}
-        `;
-        return results as unknown as ReadonlyArray<{
-          entityId: string;
-          rank: number;
-        }>;
+        `);
+        return yield* decodeTextSearchSqlRows(results);
       });
 
     // -------------------------------------------------------------------------
@@ -463,45 +689,56 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
         byType: Record<EmbeddingEntityType, number>;
         models: Record<string, number>;
       },
-      SqlError.SqlError
+      DrizzleError
     > =>
       Effect.gen(function* () {
         // Run all queries in parallel using Effect.all
-        const [totalResult, byTypeResult, modelsResult] = yield* Effect.all(
-          [
-            // Total count query
-            P.isNotUndefined(ontologyId)
-              ? sql`SELECT COUNT(*) ::int as count
+        const [totalResult, byTypeResult, modelsResult] = yield* normalizeExecution(
+          Effect.all(
+            [
+              // Total count query
+              P.isNotUndefined(ontologyId)
+                ? sql`SELECT COUNT(*) ::int as count
                     FROM embeddings
                     WHERE ontology_id = ${ontologyId}`
-              : sql`SELECT COUNT(*) ::int as count
+                : sql`SELECT COUNT(*) ::int as count
                     FROM embeddings`,
-            // By type query
-            P.isNotUndefined(ontologyId)
-              ? sql`
-                SELECT entity_type, COUNT(*) ::int as count
+              // By type query
+              P.isNotUndefined(ontologyId)
+                ? sql`
+                SELECT entity_type as "entityType", COUNT(*) ::int as count
                 FROM embeddings
                 WHERE ontology_id = ${ontologyId}
                 GROUP BY entity_type
               `
-              : sql`
-                SELECT entity_type, COUNT(*) ::int as count
+                : sql`
+                SELECT entity_type as "entityType", COUNT(*) ::int as count
                 FROM embeddings
                 GROUP BY entity_type
               `,
-            // Models query
-            P.isNotUndefined(ontologyId)
-              ? sql`
+              // Models query
+              P.isNotUndefined(ontologyId)
+                ? sql`
                 SELECT model, COUNT(*) ::int as count
                 FROM embeddings
                 WHERE ontology_id = ${ontologyId}
                 GROUP BY model
               `
-              : sql`
+                : sql`
                 SELECT model, COUNT(*) ::int as count
                 FROM embeddings
                 GROUP BY model
               `,
+            ],
+            { concurrency: "unbounded" }
+          )
+        );
+
+        const [[total], byTypeRows, modelRows] = yield* Effect.all(
+          [
+            decodeOneCountSqlRow(totalResult),
+            decodeEmbeddingTypeCountSqlRows(byTypeResult),
+            decodeModelCountSqlRows(modelsResult),
           ],
           { concurrency: "unbounded" }
         );
@@ -512,23 +749,17 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
           claim: 0,
           example: 0,
         };
-        for (const row of byTypeResult as Array<{
-          entity_type: string;
-          count: number;
-        }>) {
-          byType[row.entity_type as EmbeddingEntityType] = row.count;
+        for (const row of byTypeRows) {
+          byType[row.entityType] = row.count;
         }
 
         const models: Record<string, number> = {};
-        for (const row of modelsResult as Array<{
-          model: string;
-          count: number;
-        }>) {
+        for (const row of modelRows) {
           models[row.model] = row.count;
         }
 
         return {
-          totalCount: (totalResult[0] as { count: number }).count,
+          totalCount: total.count,
           byType,
           models,
         };
@@ -537,19 +768,17 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
     /**
      * Check if embeddings exist for a given entity type
      */
-    const hasEmbeddings = (
-      ontologyId: string,
-      entityType: EmbeddingEntityType
-    ): Effect.Effect<boolean, SqlError.SqlError> =>
+    const hasEmbeddings = (ontologyId: string, entityType: EmbeddingEntityType): Effect.Effect<boolean, DrizzleError> =>
       Effect.gen(function* () {
-        const result = yield* sql`
+        const result = yield* normalizeExecution(sql`
           SELECT EXISTS(SELECT 1
                         FROM embeddings
                         WHERE ontology_id = ${ontologyId}
                           AND entity_type = ${entityType}
             LIMIT 1) as exists
-        `;
-        return (result[0] as { exists: boolean }).exists;
+        `);
+        const [row] = yield* decodeOneExistsSqlRow(result);
+        return row.exists;
       });
 
     return {
@@ -586,13 +815,8 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
  * Format a vector array as PostgreSQL vector literal
  */
 function formatVector(vector: ReadonlyArray<number>): string {
-  return `[${vector.join(",")}]`;
-}
-
-/**
- * Parse PostgreSQL vector string to number array
- */
-function parseVector(vectorStr: string): ReadonlyArray<number> {
-  const cleaned = vectorStr.replace(/^\[|\]$/g, "");
-  return cleaned.split(",").map(Number);
+  return `[${A.join(
+    A.map(vector, (entry) => `${entry}`),
+    ","
+  )}]`;
 }

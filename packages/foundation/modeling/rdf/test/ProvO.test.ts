@@ -122,6 +122,7 @@ describe("ProvO", () => {
   it("decodes stable and extension-tier relations with object references", () => {
     expect(
       decodeUsage({
+        provType: "Usage",
         activity: "activity:ingest",
         atTime: "2026-03-08T11:30:00Z",
         entity: "thing:alice",
@@ -130,6 +131,7 @@ describe("ProvO", () => {
 
     expect(
       decodeGeneration({
+        provType: "Generation",
         activity: "activity:ingest",
         atTime: "2026-03-08T12:00:00Z",
         entity: "thing:alice",
@@ -138,26 +140,33 @@ describe("ProvO", () => {
 
     expect(
       decodeAssociation({
+        provType: "Association",
         activity: "activity:ingest",
         agent: "agent:semantic-web",
         hadPlan: "plan:1",
       })
     ).toBeDefined();
 
-    expect(decodeAttribution({ agent: "agent:semantic-web", entity: "thing:alice" })).toBeDefined();
-    expect(decodeDelegation({ delegate: "agent:bot", responsible: "agent:semantic-web" })).toBeDefined();
-    expect(decodeDerivation({ generatedEntity: "thing:alice:v2", usedEntity: "thing:alice:v1" })).toBeDefined();
-    expect(decodePrimarySource({ entity: "thing:alice", source: "source:1" })).toBeDefined();
-    expect(decodeQuotation({ entity: "thing:alice", source: "source:2" })).toBeDefined();
-    expect(decodeRevision({ entity: "thing:alice:v2", source: "thing:alice:v1" })).toBeDefined();
-    expect(decodeStart({ activity: "activity:ingest", trigger: "trigger:start" })).toBeDefined();
-    expect(decodeEnd({ activity: "activity:ingest", trigger: "trigger:end" })).toBeDefined();
+    expect(
+      decodeAttribution({ provType: "Attribution", agent: "agent:semantic-web", entity: "thing:alice" })
+    ).toBeDefined();
+    expect(
+      decodeDelegation({ provType: "Delegation", delegate: "agent:bot", responsible: "agent:semantic-web" })
+    ).toBeDefined();
+    expect(
+      decodeDerivation({ provType: "Derivation", generatedEntity: "thing:alice:v2", usedEntity: "thing:alice:v1" })
+    ).toBeDefined();
+    expect(decodePrimarySource({ provType: "PrimarySource", entity: "thing:alice", source: "source:1" })).toBeDefined();
+    expect(decodeQuotation({ provType: "Quotation", entity: "thing:alice", source: "source:2" })).toBeDefined();
+    expect(decodeRevision({ provType: "Revision", entity: "thing:alice:v2", source: "thing:alice:v1" })).toBeDefined();
+    expect(decodeStart({ provType: "Start", activity: "activity:ingest", trigger: "trigger:start" })).toBeDefined();
+    expect(decodeEnd({ provType: "End", activity: "activity:ingest", trigger: "trigger:end" })).toBeDefined();
   });
 
   it("rejects invalid provenance values for the current schema surface", () => {
     expect(() => decodeProvO({ provType: "Bundle" })).toThrow();
     expect(() => decodeCollection({ id: "collection:1", provType: "Collection" })).toThrow();
-    expect(() => decodeUsage({ activity: "activity:ingest" })).toThrow();
+    expect(() => decodeUsage({ provType: "Usage", activity: "activity:ingest" })).toThrow();
     expect(() => decodeObjectRef("not valid whitespace ref")).toThrow();
   });
 

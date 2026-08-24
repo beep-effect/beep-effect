@@ -18,6 +18,7 @@ import { DbSchema } from "@beep/law-practice-tables";
 import {
   PracticeKgCandidateClaimsNotLoadedResult,
   PracticeKgCandidateClaimsResult,
+  PracticeKgToolError,
   PracticeKgToolResult,
 } from "@beep/law-practice-use-cases/server";
 import * as Pglite from "@beep/pglite";
@@ -82,6 +83,7 @@ const decodeIriRows = S.decodeUnknownEffect(S.Array(IriRow));
 const decodeColumnRows = S.decodeUnknownEffect(S.Array(ColumnRow));
 const decodeManifestJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
 const decodeToolTextResult = S.decodeUnknownEffect(ToolTextResult);
+const decodeToolErrorJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToolError));
 const decodeToolResultJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToolResult));
 const decodeCandidateClaimsJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgCandidateClaimsResult));
 const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: string }>>): ReadonlyArray<string> =>
@@ -554,7 +556,9 @@ describe("practice KG projections", () => {
         DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: path.join(bundleOut, "practice.duckdb") })),
         Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundleContext))
       );
-      const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer).pipe(Layer.provide(resources));
+      const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer).pipe(
+        Layer.provideMerge(resources)
+      );
 
       yield* Effect.gen(function* () {
         const liveCalls = [
@@ -566,11 +570,13 @@ describe("practice KG projections", () => {
           ["corpus_get_document", { digest: fixtureDigests.docket }],
           ["email_search", { query: "fixture" }],
           ["kg_provenance", {}],
+          ["kg_provenance", { iri: "https://ns.beep.sh/practice-kg/application/76543210" }],
+          ["kg_provenance", { natural_key: "76543210" }],
         ] as const;
         const results = yield* Effect.forEach(liveCalls, ([name, args]) =>
           callToolText(name, args).pipe(Effect.flatMap(decodeToolResultJson))
         );
-        expect(A.length(results)).toBe(8);
+        expect(A.length(results)).toBe(10);
         A.forEach(results, (result) => {
           expect(result.bundle_version).toBe(manifest.bundleVersion);
           expect(result.epistemic_status).toBe("derived-from-official-records");
@@ -587,7 +593,6 @@ describe("practice KG projections", () => {
           A.zip(digestProvenance.data.columns, O.getOrThrow(A.head(digestProvenance.data.rows)))
         );
         expect(provenanceRow.sourceOriginChain).toContain("base:fixture-source:alpha-response.txt");
-
         const candidate = yield* callToolText("kg_candidate_claims", { family: "20001" }).pipe(
           Effect.flatMap(decodeCandidateClaimsJson)
         );
@@ -604,6 +609,11 @@ describe("practice KG projections", () => {
         }).pipe(Effect.flatMap(decodeToolResultJson));
         expect(degraded.tier).toBe("minimal");
         expect(degraded.truncated).toBe(true);
+
+        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+        yield* sql.unsafe("DROP TABLE kg_node CASCADE");
+        const failure = yield* callToolText("kg_clients", {}).pipe(Effect.flatMap(decodeToolErrorJson));
+        expect(failure.tool).toBe("kg_clients");
       }).pipe(provideScopedLayer(host));
     }, provideTestLayer),
     { timeout: 120_000 }

@@ -350,6 +350,7 @@ export type CompilerOptionsInput = typeof CompilerOptionsInput.Type;
  * @internal
  */
 type LoadArgs = {
+  readonly configFile?: O.Option<string>;
   readonly enableSearch: O.Option<boolean>;
   readonly enforceDescriptions: O.Option<boolean>;
   readonly enforceExamples: O.Option<boolean>;
@@ -525,6 +526,7 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
  * import * as O from "effect/Option"
  * import { load } from "@beep/repo-docgen/Configuration"
  * const program = load({
+ *   configFile: O.none(),
  *   enableSearch: O.some(false),
  *   enforceDescriptions: O.none(),
  *   enforceExamples: O.some(true),
@@ -557,7 +559,8 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
   const path = yield* Path.Path;
 
   const packageJson = yield* readPackageJson(path.join(cwd, PACKAGE_JSON_FILE_NAME));
-  const maybeConfig = yield* readDocgenConfig(path.join(cwd, CONFIG_FILE_NAME));
+  const configFile = O.getOrElse(args.configFile ?? O.none(), () => CONFIG_FILE_NAME);
+  const maybeConfig = yield* readDocgenConfig(path.resolve(cwd, configFile));
   const docgenConfig = O.getOrElse(maybeConfig, () => ConfigurationSchema.make({}));
 
   const projectName = packageJson.name;

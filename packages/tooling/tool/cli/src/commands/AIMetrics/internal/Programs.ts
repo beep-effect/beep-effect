@@ -93,6 +93,7 @@ import {
   upsertAiMetricsBenchmarkCase,
   withAiMetricsDuckDb,
 } from "@beep/repo-ai-metrics";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import {
@@ -127,7 +128,7 @@ import type {
 
 const $I = $RepoCliId.create("commands/AIMetrics/internal/Programs");
 
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const decodeMirrorManifestJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleManifest));
 const encodeInstallSpecJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallSpec));
 const defaultP7MirrorRemoteRoot = "/srv/data/ai-metrics/p7-derived-mirror";

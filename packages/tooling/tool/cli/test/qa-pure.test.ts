@@ -78,6 +78,7 @@ import {
   writeArtifactBudget,
   writeRecordStartHint,
 } from "@beep/repo-cli/commands/Qa";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { thunk } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -86,7 +87,6 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import type { ActionEvent } from "@beep/qa-capture";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -112,7 +112,7 @@ const layoutFor = (root: string): RoundLayout =>
     videoDir: `${root}/video`,
   });
 
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const clock = ClockSync.make({ confidence: "high", method: "beacon", offsetMs: 0, residualRmsMs: 4, slope: 1 });
 

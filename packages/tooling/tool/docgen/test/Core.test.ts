@@ -63,7 +63,11 @@ describe("Core", () =>
       Effect.fnUntraced(function* () {
         const outDir = `${fixturePath}.tmp-docgen`;
         const markerPath = `${outDir}/tsc-ran`;
-        const removeMarker = Bun.spawn(["rm", "-f", markerPath], { stderr: "pipe", stdout: "pipe" });
+        const exampleFilesPath = `${outDir}/example-files`;
+        const removeMarker = Bun.spawn(["rm", "-f", markerPath, exampleFilesPath], {
+          stderr: "pipe",
+          stdout: "pipe",
+        });
         yield* Effect.promise(() => removeMarker.exited);
         const prepare = Bun.spawn(["mkdir", "-p", outDir], { stderr: "pipe", stdout: "pipe" });
         yield* Effect.promise(() => prepare.exited);
@@ -86,9 +90,11 @@ describe("Core", () =>
           { concurrency: "unbounded" }
         );
         yield* Effect.promise(() => Bun.file(markerPath).text());
-        const result = { exitCode, stderr, stdout, tscRan: true };
+        const exampleFiles = yield* Effect.promise(() => Bun.file(exampleFilesPath).text());
+        const result = { exampleFiles, exitCode, stderr, stdout, tscRan: true };
 
         expect(result.exitCode, result.stderr).toBe(0);
+        expect(result.exampleFiles).toContain("SectionExampleOwner-property-answer");
         expect(result.tscRan).toBe(true);
       })
     );

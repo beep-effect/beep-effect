@@ -1,8 +1,8 @@
 /**
  * Utility Module Exports
  *
- * @since 2.0.0
- * @module Utils
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 export * from "./Datatype.ts";

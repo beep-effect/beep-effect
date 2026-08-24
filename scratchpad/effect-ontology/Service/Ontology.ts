@@ -1,12 +1,14 @@
 /**
  * Service: Ontology Services
  *
+ * **Details**
+ *
  * Production-ready ontology loading using RdfService abstraction.
  * Parses OWL/RDFS ontologies and exposes classes and properties.
  * Backend-agnostic: works with any RDF engine via RdfService.
  *
- * @since 2.0.0
- * @module Service/Ontology
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -15,7 +17,6 @@ import { IRI, makeBlankNode, makeNamedNode } from "@beep/rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_FIRST, RDF_NIL, RDF_REST, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_COMMENT, RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-import { PosInt } from "@beep/schema/Int";
 import {
   SKOS_ALT_LABEL as SKOS_ALTLABEL,
   SKOS_BROADER,
@@ -29,15 +30,29 @@ import {
   SKOS_RELATED,
   SKOS_SCOPE_NOTE as SKOS_SCOPENOTE,
 } from "@beep/rdf/Vocab/Skos";
-import { Chunk, Context, Crypto, Duration, Effect, Encoding, HashMap, Layer, Option, Ref } from "effect";
+import { FilePath } from "@beep/schema";
+import { PosInt } from "@beep/schema/Int";
+import {
+  Encoding,
+   Crypto,
+  Chunk,
+  Clock,
+  Context,
+  Duration,
+  Effect,
+  HashMap,
+  HashSet,
+  Inspectable,
+  Layer,
+  MutableHashMap,
+  MutableHashSet,
+  Ref,
+} from "effect";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
-import * as HashSet from "effect/HashSet";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { OntologyError, OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";
 import type { RdfError } from "../Domain/Error/Rdf.ts";
 import { ContentHash, Namespace, OntologyName, OntologyVersion } from "../Domain/Identity.ts";
@@ -47,7 +62,7 @@ import type { OntologyEntry } from "../Domain/Schema/OntologyRegistry.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { rrfFusion } from "../Utils/Retrieval.ts";
 import { ConfigService } from "./Config.ts";
-import { NlpService } from "./Nlp.ts";
+import { NlpService, OntologySearchResult } from "./Nlp.ts";
 import { OntologyRegistryService } from "./OntologyRegistry.ts";
 import type { RdfBuilderShape, RdfStore } from "./Rdf.ts";
 import { RdfBuilder } from "./Rdf.ts";
@@ -63,6 +78,41 @@ const RDFS_RANGE = makeNamedNode(`${RDFS_NAMESPACE}range`);
 const RDFS_SUBCLASSOF = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);
 const RDFS_SUBPROPERTYOF = makeNamedNode(`${RDFS_NAMESPACE}subPropertyOf`);
 const SKOS_EXAMPLE = makeNamedNode(`${SKOS_NAMESPACE}example`);
+
+const collectSearchResultClasses = (
+  ontology: OntologyContext,
+  results: ReadonlyArray<OntologySearchResult>
+): Chunk.Chunk<ClassDefinition> => {
+  const classes = MutableHashMap.empty<string, ClassDefinition>();
+  const collect = (result: OntologySearchResult): void =>
+    OntologySearchResult.match(result, {
+      class: ({ definition }) => {
+        MutableHashMap.set(classes, definition.id, definition);
+      },
+      property: ({ definition }) => {
+        for (const domainIri of definition.domain) {
+          O.map(
+            A.findFirst(ontology.classes, (candidate) => candidate.id === domainIri),
+            (domainClass: ClassDefinition) => MutableHashMap.set(classes, domainClass.id, domainClass)
+          );
+        }
+      },
+    });
+  A.forEach(results, collect);
+  return Chunk.fromIterable(MutableHashMap.values(classes));
+};
+
+const collectSearchResultProperties = (results: ReadonlyArray<OntologySearchResult>): Chunk.Chunk<PropertyDefinition> =>
+  Chunk.fromIterable(
+    A.getSomes(
+      A.map(results, (result) =>
+        OntologySearchResult.match(result, {
+          class: O.none<PropertyDefinition>,
+          property: ({ definition }) => O.some(definition),
+        })
+      )
+    )
+  );
 const OWL_FUNCTIONAL_PROPERTY = makeNamedNode(`${OWL_NAMESPACE}FunctionalProperty`);
 const OWL_INVERSEOF = makeNamedNode(`${OWL_NAMESPACE}inverseOf`);
 const OWL_EQUIVALENT_CLASS = makeNamedNode(`${OWL_NAMESPACE}equivalentClass`);
@@ -101,7 +151,7 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
           : { path: externalPath };
         yield* Effect.logWarning("Failed to load external vocabularies, continuing with main ontology only", {
           ...logContext,
-          error: String(error),
+          error: Inspectable.toStringUnknown(error),
         });
         return undefined;
       })
@@ -116,7 +166,7 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
             : { path: externalPath };
           yield* Effect.logWarning("Failed to parse external vocabularies, continuing with main ontology only", {
             ...logContext,
-            error: String(error),
+            error: Inspectable.toStringUnknown(error),
           });
           return yield* rdfBuilder.createStore;
         })
@@ -136,13 +186,57 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
   }
 });
 
+/** Minimal RDF query capability consumed by the ontology parser. */
+type OntologyQueryService = {
+  readonly queryStore: (
+    store: RdfStore,
+    pattern: {
+      readonly subject?: IRI | Subject | null;
+      readonly predicate?: IRI | NamedNode | null;
+      readonly object?: IRI | ObjectTerm | null;
+      readonly graph?: IRI | GraphTerm | null;
+    }
+  ) => Effect.Effect<Chunk.Chunk<Quad>, RdfError>;
+};
+
+type ParsedOntology = {
+  readonly classes: Chunk.Chunk<ClassDefinition>;
+  readonly properties: Chunk.Chunk<PropertyDefinition>;
+  readonly hierarchy: Record<string, Array<IRI>>;
+  readonly propertyHierarchy: Record<string, Array<IRI>>;
+};
+
 /**
- * Parse ontology from RDF store using RdfService queries
+ * Extracts ontology classes, properties, and hierarchies from an RDF store.
  *
- * Uses RdfService's queryStore to extract classes and properties.
- * Works with domain types (IRI, Quad) instead of N3 types.
+ * **Details**
+ *
+ * Queries canonical RDF terms through the supplied service and preserves the
+ * parser's typed failure channel. Both data-first and data-last call forms are
+ * supported.
+ *
+ * **Example** (Inspect the parser API)
+ *
+ * ```ts
+ * import { parseOntologyFromStore } from "@effect-ontology/Service/Ontology"
+ *
+ * console.log(typeof parseOntologyFromStore) // "function"
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
-export const parseOntologyFromStore = dual3(
+export const parseOntologyFromStore: {
+  (
+    rdf: OntologyQueryService,
+    store: RdfStore,
+    ontologyPath: string
+  ): Effect.Effect<ParsedOntology, OntologyParsingFailed>;
+  (
+    store: RdfStore,
+    ontologyPath: string
+  ): (rdf: OntologyQueryService) => Effect.Effect<ParsedOntology, OntologyParsingFailed>;
+} = dual3(
   (
     rdf: {
       readonly queryStore: (
@@ -194,7 +288,7 @@ export const parseOntologyFromStore = dual3(
             Effect.gen(function* () {
               yield* Effect.logWarning("Failed to fetch predicate metadata, using empty map", {
                 predicate,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
               return MutableHashMap.empty<string, Array<string>>();
             })
@@ -265,9 +359,7 @@ export const parseOntologyFromStore = dual3(
               return created;
             });
             if (quad.object.termType === "BlankNode") {
-              const unionMembers = yield* resolveBlankNodeUnion(value).pipe(
-                Effect.orElseSucceed(() => [] as Array<string>)
-              );
+              const unionMembers = yield* resolveBlankNodeUnion(value).pipe(Effect.orElseSucceed(() => []));
               values.push(...unionMembers);
             } else {
               values.push(value);
@@ -283,7 +375,7 @@ export const parseOntologyFromStore = dual3(
             Effect.gen(function* () {
               yield* Effect.logWarning("Failed to fetch domain/range metadata, using empty map", {
                 predicate,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
               return MutableHashMap.empty<string, Array<string>>();
             })
@@ -427,10 +519,10 @@ export const parseOntologyFromStore = dual3(
           const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
           if (O.isSome(label)) {
             finalClasses.push(
-              ClassDefinition.fromUnknown({
+              yield* S.decodeUnknownEffect(ClassDefinition)({
                 id: IRI.make(id),
                 label: label.value,
-                comment: O.some(O.getOrElse(getFirst(comments, id), () => "")),
+                comment: getFirst(comments, id),
                 // properties field expects IRI[], coerce from string[]
                 properties: asIriArray(getOrEmpty(classProperties, id)),
                 prefLabels: getOrEmpty(prefLabels, id),
@@ -458,10 +550,10 @@ export const parseOntologyFromStore = dual3(
         const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
         if (O.isSome(label)) {
           finalProperties.push(
-            PropertyDefinition.fromUnknown({
+            yield* S.decodeUnknownEffect(PropertyDefinition)({
               id: IRI.make(id),
               label: label.value,
-              comment: O.some(O.getOrElse(getFirst(comments, id), () => "")),
+              comment: getFirst(comments, id),
               // domain/range expect string[] (full IRIs as strings)
               domain: asIriArray(getOrEmpty(domains, id)),
               range: asIriArray(getOrEmpty(ranges, id)),
@@ -493,10 +585,10 @@ export const parseOntologyFromStore = dual3(
       };
     }).pipe(
       Effect.mapError((error) =>
-        OntologyParsingFailed.fromUnknown({
+        OntologyParsingFailed.make({
           message: `Failed to parse ontology at ${ontologyPath}`,
-          path: ontologyPath,
-          cause: error,
+          path: FilePath.make(ontologyPath),
+          cause: O.some(error),
         })
       )
     )
@@ -505,11 +597,21 @@ export const parseOntologyFromStore = dual3(
 /**
  * OntologyService - Ontology loading using RdfService abstraction
  *
+ * **Details**
+ *
  * Loads ontology from file, parses using RdfService, and extracts classes/properties
  * using RdfService queries. Backend-agnostic: works with any RDF engine.
  *
- * @since 2.0.0
- * @category Services
+ * **Example** (Inspect ontology service)
+ *
+ * ```ts
+ * import { OntologyService } from "@effect-ontology/Service/Ontology"
+ *
+ * console.log(OntologyService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class OntologyService extends Context.Service<OntologyService>()($I`OntologyService`, {
   make: Effect.gen(function* () {
@@ -522,30 +624,30 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const registryOpt = yield* Effect.serviceOption(OntologyRegistryService);
 
     // Cache ontology with configurable TTL to allow refresh without restart
-    const cacheTtl = Duration.seconds(config.ontology.cacheTtlSeconds);
+    const cacheTtl = config.ontology.cacheTtl;
     const getOntology = yield* Effect.cachedWithTTL(cacheTtl)(
       Effect.gen(function* () {
         const ontologyPath = config.ontology.path;
 
         // Load main ontology
-        const contentOpt = yield* storage.get(ontologyPath).pipe(
+        const contentOpt = yield* storage.getOption(ontologyPath).pipe(
           Effect.mapError((error) =>
-            OntologyFileNotFound.fromUnknown({
+            OntologyFileNotFound.make({
               message: `Failed to read ontology from storage at ${ontologyPath}`,
-              path: ontologyPath,
-              cause: error,
+              path: FilePath.make(ontologyPath),
+              cause: O.some(error),
             })
           )
         );
 
-        if (contentOpt === undefined) {
-          return yield* OntologyFileNotFound.fromUnknown({
+        if (O.isNone(contentOpt)) {
+          return yield* OntologyFileNotFound.make({
             message: `Ontology file not found at ${ontologyPath}`,
-            path: ontologyPath,
+            path: FilePath.make(ontologyPath),
           });
         }
 
-        const turtleContent = contentOpt;
+        const turtleContent = contentOpt.value;
         const mainStore = yield* rdf.parseTurtle(turtleContent);
 
         // Load and merge external vocabularies (PROV-O, W3C ORG, etc.)
@@ -560,7 +662,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const getBm25Index = yield* Effect.cachedWithTTL(cacheTtl)(
       Effect.gen(function* () {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
-        const ontology = OntologyContext.make({
+        const ontology = yield* S.decodeUnknownEffect(OntologyContext)({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
           propertyHierarchy,
@@ -574,7 +676,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const getSemanticIndex = yield* Effect.cachedWithTTL(cacheTtl)(
       Effect.gen(function* () {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
-        const ontology = OntologyContext.make({
+        const ontology = yield* S.decodeUnknownEffect(OntologyContext)({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
           propertyHierarchy,
@@ -604,11 +706,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
      * can specify its own ontology (e.g., Seattle, Wikipedia, etc.)
      */
     const loadOntologyFromUri = Effect.fn("loadOntologyFromUri")(function* (uri: string) {
-      const storagePath = uri.startsWith("gs://") ? uri.replace(/^gs:\/\/[^/]+\//, "") : uri;
+      const storagePath = Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri;
       const cache = yield* Ref.get(ontologyCacheRef);
       const cached = HashMap.get(cache, uri);
       const now = yield* Clock.currentTimeMillis;
-      if (Option.isSome(cached) && now - cached.value.loadedAt < cacheTtlMs) {
+      if (O.isSome(cached) && now - cached.value.loadedAt < cacheTtlMs) {
         yield* Effect.logDebug("Using cached ontology", {
           uri,
           age: now - cached.value.loadedAt,
@@ -616,22 +718,22 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         return cached.value.data;
       }
       yield* Effect.logInfo("Loading ontology from URI", { uri, storagePath });
-      const contentOpt = yield* storage.get(storagePath).pipe(
+      const contentOpt = yield* storage.getOption(storagePath).pipe(
         Effect.mapError((error) =>
-          OntologyFileNotFound.fromUnknown({
+          OntologyFileNotFound.make({
             message: `Failed to read ontology from storage at ${uri}`,
-            path: uri,
-            cause: error,
+            path: FilePath.make(uri),
+            cause: O.some(error),
           })
         )
       );
-      if (contentOpt === undefined) {
-        return yield* OntologyFileNotFound.fromUnknown({
+      if (O.isNone(contentOpt)) {
+        return yield* OntologyFileNotFound.make({
           message: `Ontology file not found at ${uri}`,
-          path: uri,
+          path: FilePath.make(uri),
         });
       }
-      const turtleContent = contentOpt;
+      const turtleContent = contentOpt.value;
       const mainStore = yield* rdf.parseTurtle(turtleContent);
       const externalPath = config.ontology.externalVocabsPath;
       yield* loadAndMergeExternalVocabularies(mainStore, externalPath, "uri", uri, storage, rdf);
@@ -658,7 +760,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       const cache = yield* Ref.get(ontologyCacheRef);
       const cached = HashMap.get(cache, cacheKey);
       const now = yield* Clock.currentTimeMillis;
-      if (Option.isSome(cached) && now - cached.value.loadedAt < cacheTtlMs) {
+      if (O.isSome(cached) && now - cached.value.loadedAt < cacheTtlMs) {
         yield* Effect.logDebug("Using cached ontology from registry", {
           id: entry.id,
           iri: entry.iri,
@@ -671,22 +773,22 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         iri: entry.iri,
         storagePath: entry.storagePath,
       });
-      const contentOpt = yield* storage.get(entry.storagePath).pipe(
+      const contentOpt = yield* storage.getOption(entry.storagePath).pipe(
         Effect.mapError((error) =>
-          OntologyFileNotFound.fromUnknown({
+          OntologyFileNotFound.make({
             message: `Failed to read ontology from storage at ${entry.storagePath}`,
-            path: entry.storagePath,
-            cause: error,
+            path: FilePath.make(entry.storagePath),
+            cause: O.some(error),
           })
         )
       );
-      if (contentOpt === undefined) {
-        return yield* OntologyFileNotFound.fromUnknown({
+      if (O.isNone(contentOpt)) {
+        return yield* OntologyFileNotFound.make({
           message: `Ontology file not found at ${entry.storagePath}`,
-          path: entry.storagePath,
+          path: FilePath.make(entry.storagePath),
         });
       }
-      const turtleContent = contentOpt;
+      const turtleContent = contentOpt.value;
       const mainStore = yield* rdf.parseTurtle(turtleContent);
       if (O.isSome(entry.externalVocabsPath)) {
         yield* loadAndMergeExternalVocabularies(
@@ -740,20 +842,20 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         )
       ),
       resolveAndLoad: Effect.fn("OntologyService.resolveAndLoad")(function* (identifier: string) {
-        if (Option.isSome(registryOpt)) {
+        if (O.isSome(registryOpt)) {
           const registry = registryOpt.value;
           const entryOpt = yield* registry.resolveToEntry(identifier).pipe(
             Effect.catch((error) =>
               Effect.gen(function* () {
                 yield* Effect.logDebug("Registry resolution failed, falling back to direct load", {
                   identifier,
-                  error: String(error),
+                  error: Inspectable.toStringUnknown(error),
                 });
-                return Option.none<OntologyEntry>();
+                return O.none<OntologyEntry>();
               })
             )
           );
-          if (Option.isSome(entryOpt)) {
+          if (O.isSome(entryOpt)) {
             const { classes, hierarchy, properties, propertyHierarchy } = yield* loadOntologyFromEntry(entryOpt.value);
             return OntologyContext.make({
               classes: Chunk.toReadonlyArray(classes),
@@ -772,15 +874,13 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         });
       }),
       getRegistryEntry: Effect.fn("OntologyService.getRegistryEntry")(function* (identifier: string) {
-        if (Option.isNone(registryOpt)) {
-          return Option.none<OntologyEntry>();
+        if (O.isNone(registryOpt)) {
+          return O.none<OntologyEntry>();
         }
         const registry = registryOpt.value;
-        return yield* registry
-          .resolveToEntry(identifier)
-          .pipe(Effect.orElseSucceed(() => Option.none<OntologyEntry>()));
+        return yield* registry.resolveToEntry(identifier).pipe(Effect.orElseSucceed(O.none<OntologyEntry>));
       }),
-      hasRegistry: Effect.succeed(Option.isSome(registryOpt)),
+      hasRegistry: Effect.succeed(O.isSome(registryOpt)),
       generateVersion: Effect.fn("OntologyService.generateVersion")(function* (
         ontologyId: string,
         ontologyIri: string
@@ -831,41 +931,17 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           [
             P.isNotNull(semanticIndex)
               ? Effect.gen(function* () {
-                  const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
-                  const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-                  for (const result of results) {
-                    if (P.isNotUndefined(result.class)) {
-                      MutableHashMap.set(classesMap, result.class.id, result.class);
-                    }
-                    if (P.isNotUndefined(result.property)) {
-                      for (const domainIri of result.property.domain) {
-                        const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                        if (P.isNotUndefined(domainClass)) {
-                          MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                        }
-                      }
-                    }
-                  }
-                  return Chunk.fromIterable(MutableHashMap.values(classesMap));
+                  const results = yield* nlp.searchOntologySemanticIndex(
+                    semanticIndex,
+                    query,
+                    PosInt.make(searchLimit)
+                  );
+                  return collectSearchResultClasses(ontology, results);
                 }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
               : Effect.succeed(Chunk.empty<ClassDefinition>()),
             Effect.gen(function* () {
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
-                }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }),
           ],
           { concurrency: 2 }
@@ -891,7 +967,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const results = [
           ...fused.map((r) => {
             const { rrfScore: _, ...cls } = r;
-            return cls as ClassDefinition;
+            return cls;
           }),
           ...remaining,
         ];
@@ -942,40 +1018,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                       query,
                       PosInt.make(searchLimit)
                     );
-                    const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-                    for (const result of results) {
-                      if (P.isNotUndefined(result.class)) {
-                        MutableHashMap.set(classesMap, result.class.id, result.class);
-                      }
-                      if (P.isNotUndefined(result.property)) {
-                        for (const domainIri of result.property.domain) {
-                          const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                          if (P.isNotUndefined(domainClass)) {
-                            MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                          }
-                        }
-                      }
-                    }
-                    return Chunk.fromIterable(MutableHashMap.values(classesMap));
+                    return collectSearchResultClasses(ontology, results);
                   }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
                 : Effect.succeed(Chunk.empty<ClassDefinition>()),
               Effect.gen(function* () {
                 const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-                const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-                for (const result of results) {
-                  if (P.isNotUndefined(result.class)) {
-                    MutableHashMap.set(classesMap, result.class.id, result.class);
-                  }
-                  if (P.isNotUndefined(result.property)) {
-                    for (const domainIri of result.property.domain) {
-                      const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                      if (P.isNotUndefined(domainClass)) {
-                        MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                      }
-                    }
-                  }
-                }
-                return Chunk.fromIterable(MutableHashMap.values(classesMap));
+                return collectSearchResultClasses(ontology, results);
               }),
             ],
             { concurrency: 2 }
@@ -1001,7 +1049,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           const results = [
             ...fused.map((r) => {
               const { rrfScore: _, ...cls } = r;
-              return cls as ClassDefinition;
+              return cls;
             }),
             ...remaining,
           ];
@@ -1027,26 +1075,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         });
         const index = yield* getBm25Index;
         const results = yield* nlp.searchOntologyIndex(index, query, PosInt.make(limit));
-        const validClasses = MutableHashMap.empty<string, ClassDefinition>();
-        for (const result of results) {
-          if (P.isNotUndefined(result.class)) {
-            MutableHashMap.set(validClasses, result.class.id, result.class);
-          }
-          if (P.isNotUndefined(result.property)) {
-            for (const domainIri of result.property.domain) {
-              const domainClass = ontology.classes.find((c) => c.id === domainIri);
-              if (P.isNotUndefined(domainClass)) {
-                MutableHashMap.set(validClasses, domainClass.id, domainClass);
-              }
-            }
-          }
-        }
-        return Chunk.fromIterable(MutableHashMap.values(validClasses));
+        return collectSearchResultClasses(ontology, results);
       }),
       searchProperties: Effect.fn("OntologyService.searchProperties")(function* (query: string, limit: number = 10) {
         const index = yield* getBm25Index;
         const results = yield* nlp.searchOntologyIndex(index, query, PosInt.make(limit));
-        return Chunk.fromIterable(results.filter((r) => r.property !== undefined).map((r) => r.property!));
+        return collectSearchResultProperties(results);
       }),
       getPropertiesFor: Effect.fn("OntologyService.getPropertiesFor")(function* (classIris: ReadonlyArray<string>) {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
@@ -1082,21 +1116,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         });
         const index = yield* getSemanticIndex;
         const results = yield* nlp.searchOntologySemanticIndex(index, query, PosInt.make(limit));
-        const validClasses = MutableHashMap.empty<string, ClassDefinition>();
-        for (const result of results) {
-          if (P.isNotUndefined(result.class)) {
-            MutableHashMap.set(validClasses, result.class.id, result.class);
-          }
-          if (P.isNotUndefined(result.property)) {
-            for (const domainIri of result.property.domain) {
-              const domainClass = ontology.classes.find((c) => c.id === domainIri);
-              if (P.isNotUndefined(domainClass)) {
-                MutableHashMap.set(validClasses, domainClass.id, domainClass);
-              }
-            }
-          }
-        }
-        return Chunk.fromIterable(MutableHashMap.values(validClasses));
+        return collectSearchResultClasses(ontology, results);
       }),
       searchPropertiesSemantic: Effect.fn("OntologyService.searchPropertiesSemantic")(function* (
         query: string,
@@ -1104,14 +1124,14 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       ) {
         const index = yield* getSemanticIndex;
         const results = yield* nlp.searchOntologySemanticIndex(index, query, PosInt.make(limit));
-        return Chunk.fromIterable(results.filter((r) => r.property !== undefined).map((r) => r.property!));
+        return collectSearchResultProperties(results);
       }),
       searchClassesHybrid: Effect.fn("OntologyService.searchClassesHybrid")(function* (
         query: string,
         limit: number = 100
       ) {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
-        const ontology = OntologyContext.make({
+        const ontology = yield* S.decodeUnknownEffect(OntologyContext)({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
           propertyHierarchy,
@@ -1123,26 +1143,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             Effect.gen(function* () {
               const semanticIndex = yield* getSemanticIndex;
               const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
-                }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }).pipe(
               Effect.catch(
-                Effect.fn(function* (error) {
+                Effect.fnUntraced(function* (error) {
                   yield* Effect.logWarning("Semantic search failed, using BM25 fallback", {
-                    error: String(error),
+                    error: Inspectable.toStringUnknown(error),
                     query,
                   });
                   return Chunk.empty<ClassDefinition>();
@@ -1152,21 +1158,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             Effect.gen(function* () {
               const bm25Index = yield* getBm25Index;
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
-                }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }),
           ],
           { concurrency: 2 }
@@ -1189,14 +1181,10 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           ontologySize: ontology.classes.length,
           limit,
         });
-        const results = [
-          ...A.map(fused, (r) => {
-            const { rrfScore: _, ...cls } = r;
-            return cls as ClassDefinition;
-          }),
-          ...remaining,
-        ];
-        return Chunk.fromIterable(results.slice(0, limit));
+        const fusedClasses = A.flatMap(fused, (result) =>
+          O.toArray(A.findFirst(ontology.classes, (candidate) => candidate.id === result.id))
+        );
+        return Chunk.fromIterable(A.take(A.appendAll(fusedClasses, remaining), limit));
       }),
       searchClassesHybridWithEmbeddings: Effect.fn("OntologyService.searchClassesHybridWithEmbeddings")(function* (
         query: string,
@@ -1216,26 +1204,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           [
             Effect.gen(function* () {
               const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
-                }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }).pipe(
               Effect.catch(
-                Effect.fn(function* (error) {
+                Effect.fnUntraced(function* (error) {
                   yield* Effect.logWarning("Semantic search with embeddings failed, using BM25 fallback", {
-                    error: String(error),
+                    error: Inspectable.toStringUnknown(error),
                     query,
                   });
                   return Chunk.empty<ClassDefinition>();
@@ -1245,21 +1219,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             Effect.gen(function* () {
               const bm25Index = yield* getBm25Index;
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
-                }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }),
           ],
           { concurrency: 2 }
@@ -1285,7 +1245,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const results = [
           ...fused.map((r) => {
             const { rrfScore: _, ...cls } = r;
-            return cls as ClassDefinition;
+            return cls;
           }),
           ...remaining,
         ];

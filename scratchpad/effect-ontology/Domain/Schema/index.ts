@@ -1,8 +1,9 @@
 /**
  * Public extraction, ontology, batch, search, and timeline schemas.
  *
- * @remarks
- * This barrel preserves the upstream public surface. Specialized event-log,
+ * **Details**
+ *
+ * * This barrel preserves the upstream public surface. Specialized event-log,
  * curation-job, inference, and persisted-job schemas remain available from
  * their explicit module paths, avoiding collisions between intentionally
  * distinct job and event vocabularies.
@@ -13,143 +14,143 @@
 /**
  * Discriminated job-submission sources, progress, and lifecycle responses.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { SubmitJobRequest } from "@effect-ontology/Schema/index.ts"
+ * import { SubmitJobRequest } from "@effect-ontology/Schema/index"
  * console.log(SubmitJobRequest)
  * ```
  *
- * @category api
+ * @category dtos
  * @since 0.0.0
  */
 export * from "./Api.ts";
 /**
  * Ticket request, response, and persisted authentication records.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { TicketRequest } from "@effect-ontology/Schema/index.ts"
+ * import { TicketRequest } from "@effect-ontology/Schema/index"
  * console.log(TicketRequest)
  * ```
  *
- * @category authentication
+ * @category dtos
  * @since 0.0.0
  */
 export * from "./Auth.ts";
 /**
  * Batch manifests and workflow activity input/output contracts.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { BatchManifest } from "@effect-ontology/Schema/index.ts"
+ * import { BatchManifest } from "@effect-ontology/Schema/index"
  * console.log(BatchManifest)
  * ```
  *
- * @category batches
+ * @category dtos
  * @since 0.0.0
  */
 export * from "./Batch.ts";
 /**
  * Batch submission documents and defaulted preprocessing requests.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { BatchRequest } from "@effect-ontology/Schema/index.ts"
+ * import { BatchRequest } from "@effect-ontology/Schema/index"
  * console.log(BatchRequest)
  * ```
  *
- * @category batches
+ * @category dtos
  * @since 0.0.0
  */
 export * from "./BatchRequest.ts";
 /**
  * Active, suspended, and not-found batch status responses.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { BatchStatusResponse } from "@effect-ontology/Schema/index.ts"
+ * import { BatchStatusResponse } from "@effect-ontology/Schema/index"
  * console.log(BatchStatusResponse)
  * ```
  *
- * @category batches
+ * @category dtos
  * @since 0.0.0
  */
 export * from "./BatchStatusResponse.ts";
 /**
  * Document classification, chunking, preprocessing, and priority metadata.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { DocumentType } from "@effect-ontology/Schema/index.ts"
+ * import { DocumentType } from "@effect-ontology/Schema/index"
  * console.log(DocumentType.is.contract("contract")) // true
  * ```
  *
- * @category documents
+ * @category models
  * @since 0.0.0
  */
 export * from "./DocumentMetadata.ts";
 /**
  * Provenance-aware claims, assertions, derivations, evidence, and events.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { ClaimId } from "@effect-ontology/Schema/index.ts"
+ * import { ClaimId } from "@effect-ontology/Schema/index"
  * console.log(ClaimId.is("claim-abc123def456")) // true
  * ```
  *
- * @category knowledge
+ * @category models
  * @since 0.0.0
  */
 export * from "./KnowledgeModel.ts";
 /**
  * Link-ingestion requests, tagged results, summaries, and detail responses.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { IngestLinkRequest } from "@effect-ontology/Schema/index.ts"
+ * import { IngestLinkRequest } from "@effect-ontology/Schema/index"
  * console.log(IngestLinkRequest)
  * ```
  *
- * @category ingestion
+ * @category dtos
  * @since 0.0.0
  */
 export * from "./LinkIngestion.ts";
 /**
  * Read models for browsing ontology classes, properties, and metadata.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { OntologySummary } from "@effect-ontology/Schema/index.ts"
+ * import { OntologySummary } from "@effect-ontology/Schema/index"
  * console.log(OntologySummary)
  * ```
  *
- * @category ontologies
+ * @category models
  * @since 0.0.0
  */
 export * from "./OntologyBrowser.ts";
 /**
  * Persisted ontology registry entries, resources, lookup, and JSON codecs.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { OntologyRegistry } from "@effect-ontology/Schema/index.ts"
+ * import { OntologyRegistry } from "@effect-ontology/Schema/index"
  * console.log(OntologyRegistry)
  * ```
  *
- * @category ontologies
+ * @category models
  * @since 0.0.0
  */
 export * from "./OntologyRegistry.ts";
 /**
  * Claim, entity, article, and suggestion search contracts.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
- * import { ClaimSearchRequest } from "@effect-ontology/Schema/index.ts"
+ * import { ClaimSearchRequest } from "@effect-ontology/Schema/index"
  * console.log(ClaimSearchRequest)
  * ```
  *
- * @category search
+ * @category queries
  * @since 0.0.0
  */
 export * from "./Search.ts";
@@ -157,9 +158,9 @@ export {
   /**
    * Experiment execution report wrapping the canonical SHACL validation result.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { ShaclValidationReport } from "@effect-ontology/Schema/index.ts"
+   * import { ShaclValidationReport } from "@effect-ontology/Schema/index"
    * console.log(ShaclValidationReport)
    * ```
    *
@@ -172,182 +173,210 @@ export {
   /**
    * Article detail together with timeline-aware claim context.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { ArticleDetailResponse } from "@effect-ontology/Schema/index.ts"
+   * import { ArticleDetailResponse } from "@effect-ontology/Schema/index"
    * console.log(ArticleDetailResponse)
    * ```
    *
-   * @category timeline
+   * @category dtos
    * @since 0.0.0
    */
   ArticleDetailResponse,
   /**
    * Compact article metadata used by timeline responses.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { ArticleSummary } from "@effect-ontology/Schema/index.ts"
+   * import { ArticleSummary } from "@effect-ontology/Schema/index"
    * console.log(ArticleSummary)
    * ```
    *
-   * @category timeline
+   * @category models
    * @since 0.0.0
    */
   ArticleSummary,
   /**
    * Discriminated conflict between competing claims.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { ClaimConflict } from "@effect-ontology/Schema/index.ts"
+   * import { ClaimConflict } from "@effect-ontology/Schema/index"
    * console.log(ClaimConflict)
    * ```
    *
-   * @category timeline
+   * @category schemas
    * @since 0.0.0
    */
   ClaimConflict,
   /**
    * Claim paired with its curation rank.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { ClaimWithRank } from "@effect-ontology/Schema/index.ts"
+   * import { ClaimWithRank } from "@effect-ontology/Schema/index"
    * console.log(ClaimWithRank)
    * ```
    *
-   * @category timeline
+   * @category models
    * @since 0.0.0
    */
   ClaimWithRank,
   /**
+   * Request-local identity recorded for conflict transitions.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  ConflictActor,
+  /**
+   * Authoritative persisted conflict kinds.
+   *
+   * @category schemas
+   * @since 0.0.0
+   */
+  ConflictKind,
+  /**
+   * Conflict lifecycle statuses.
+   *
+   * @category schemas
+   * @since 0.0.0
+   */
+  ConflictStatus,
+  /**
    * Bounded query for claim-conflict discovery.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { ConflictsQuery } from "@effect-ontology/Schema/index.ts"
+   * import { ConflictsQuery } from "@effect-ontology/Schema/index"
    * console.log(ConflictsQuery)
    * ```
    *
-   * @category timeline
+   * @category queries
    * @since 0.0.0
    */
   ConflictsQuery,
   /**
    * Paginated response of claim conflicts.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { ConflictsResponse } from "@effect-ontology/Schema/index.ts"
+   * import { ConflictsResponse } from "@effect-ontology/Schema/index"
    * console.log(ConflictsResponse)
    * ```
    *
-   * @category timeline
+   * @category dtos
    * @since 0.0.0
    */
   ConflictsResponse,
   /**
+   * Tagged pending-to-terminal conflict command.
+   *
+   * @category dtos
+   * @since 0.0.0
+   */
+  ConflictTransition,
+  /**
    * Query parameters for article correction history.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/index.ts"
+   * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/index"
    * console.log(CorrectionHistoryQuery)
    * ```
    *
-   * @category timeline
+   * @category queries
    * @since 0.0.0
    */
   CorrectionHistoryQuery,
   /**
    * Paginated article correction-history response.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/index.ts"
+   * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/index"
    * console.log(CorrectionHistoryResponse)
    * ```
    *
-   * @category timeline
+   * @category dtos
    * @since 0.0.0
    */
   CorrectionHistoryResponse,
   /**
    * Compact correction metadata for history listings.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { CorrectionSummary } from "@effect-ontology/Schema/index.ts"
+   * import { CorrectionSummary } from "@effect-ontology/Schema/index"
    * console.log(CorrectionSummary)
    * ```
    *
-   * @category timeline
+   * @category models
    * @since 0.0.0
    */
   CorrectionSummary,
   /**
    * Correction metadata enriched with affected claims.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { CorrectionWithClaims } from "@effect-ontology/Schema/index.ts"
+   * import { CorrectionWithClaims } from "@effect-ontology/Schema/index"
    * console.log(CorrectionWithClaims)
    * ```
    *
-   * @category timeline
+   * @category models
    * @since 0.0.0
    */
   CorrectionWithClaims,
   /**
    * Bitemporal query for claims in a validity interval.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { TimelineClaimsQuery } from "@effect-ontology/Schema/index.ts"
+   * import { TimelineClaimsQuery } from "@effect-ontology/Schema/index"
    * console.log(TimelineClaimsQuery)
    * ```
    *
-   * @category timeline
+   * @category queries
    * @since 0.0.0
    */
   TimelineClaimsQuery,
   /**
    * Paginated claim timeline response.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { TimelineClaimsResponse } from "@effect-ontology/Schema/index.ts"
+   * import { TimelineClaimsResponse } from "@effect-ontology/Schema/index"
    * console.log(TimelineClaimsResponse)
    * ```
    *
-   * @category timeline
+   * @category dtos
    * @since 0.0.0
    */
   TimelineClaimsResponse,
   /**
    * Bitemporal query for one entity's history.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { TimelineEntityQuery } from "@effect-ontology/Schema/index.ts"
+   * import { TimelineEntityQuery } from "@effect-ontology/Schema/index"
    * console.log(TimelineEntityQuery)
    * ```
    *
-   * @category timeline
+   * @category queries
    * @since 0.0.0
    */
   TimelineEntityQuery,
   /**
    * Entity history with claims and article context.
    *
-   * @example
+   * **Example** (Use index)
    * ```ts
-   * import { TimelineEntityResponse } from "@effect-ontology/Schema/index.ts"
+   * import { TimelineEntityResponse } from "@effect-ontology/Schema/index"
    * console.log(TimelineEntityResponse)
    * ```
    *
-   * @category timeline
+   * @category dtos
    * @since 0.0.0
    */
   TimelineEntityResponse,

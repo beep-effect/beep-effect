@@ -1,29 +1,62 @@
 /**
  * Service: Ticket Service
  *
+ * **Details**
+ *
  * Single-use ticket management for WebSocket authentication.
  * Tickets are stored in shared StorageService so any replica can consume them.
  *
- * @since 2.0.0
- * @module Service/Ticket
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Crypto, Duration, Effect, Encoding, HashSet, Layer, Option, Schedule } from "effect";
-import * as DateTime from "effect/DateTime";
+import { LiteralKit } from "@beep/schema";
+import { Crypto, Encoding, Clock, Context, DateTime, Duration, Effect, HashSet, Layer, Number as N, Schedule } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AuthenticationError, TicketExpiredError, TicketNotFoundError } from "../Domain/Error/Auth.ts";
+import { ErrorMessage, Milliseconds } from "../Domain/Error/Base.ts";
 import { TicketRecord } from "../Domain/Schema/Auth.ts";
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ticket");
 
-/** Default ticket TTL in milliseconds (5 minutes) */
-const DEFAULT_TTL_MS = 5 * 60 * 1000;
+const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"]);
+
+/**
+ * Reports an infrastructure failure while storing or consuming a one-time ticket.
+ *
+ * **Example** (Inspect a ticket storage failure)
+ *
+ * ```ts
+ * import { TicketStorageError } from "@effect-ontology/Service/Ticket"
+ *
+ * console.log(TicketStorageError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class TicketStorageError extends S.TaggedError<TicketStorageError>($I`TicketStorageError`)(
+  "TicketStorageError",
+  {
+    message: ErrorMessage.annotateKey({ description: "Opaque ticket-storage failure summary." }),
+    operation: TicketStorageOperation.annotateKey({ description: "Storage operation that failed." }),
+    cause: S.Defect({ includeStack: true }).annotateKey({ description: "Underlying storage or codec defect." }),
+  },
+  $I.annote("TicketStorageError", {
+    description: "Typed infrastructure failure preserving one-time ticket storage semantics.",
+  })
+) {}
+
+/** Default ticket lifetime. */
+const DEFAULT_TTL = Duration.minutes(5);
 
 /** Cleanup interval for expired tickets */
-const CLEANUP_INTERVAL_MS = 60 * 1000;
+const CLEANUP_INTERVAL = Duration.minutes(1);
 
 const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(function* () {
   const crypto = yield* Crypto.Crypto;
@@ -31,6 +64,13 @@ const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(funct
 });
 
 const ticketStorageKey = (ticket: string) => `ws-tickets/${ticket}`;
+
+const ticketStorageError = (operation: typeof TicketStorageOperation.Type) => (cause: unknown) =>
+  TicketStorageError.make({
+    message: `Ticket ${operation} operation failed.`,
+    operation,
+    cause,
+  });
 
 const makeTicketService = Effect.gen(function* () {
   const storage = yield* StorageService;
@@ -40,22 +80,24 @@ const makeTicketService = Effect.gen(function* () {
   const persistTicket = (ticket: string, record: TicketRecord) =>
     S.encodeEffect(TicketRecordJson)(record).pipe(
       Effect.flatMap((encoded) => storage.set(ticketStorageKey(ticket), encoded)),
-      Effect.ignore
+      Effect.mapError(ticketStorageError("persist"))
     );
 
   const loadStoredTicket = (ticket: string) =>
-    storage.get(ticketStorageKey(ticket)).pipe(
-      Effect.flatMap((content) =>
-        P.isUndefined(content)
-          ? Effect.succeed(Option.none<TicketRecord>())
-          : S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(Option.some))
+    storage.getOption(ticketStorageKey(ticket)).pipe(
+      Effect.flatMap(
+        O.match({
+          onNone: () => Effect.succeed(O.none<TicketRecord>()),
+          onSome: (content) => S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(O.some)),
+        })
       ),
-      Effect.orElseSucceed(() => Option.none<TicketRecord>())
+      Effect.mapError(ticketStorageError("load"))
     );
 
-  const removeStoredTicket = (ticket: string) => storage.remove(ticketStorageKey(ticket)).pipe(Effect.ignore);
+  const removeStoredTicket = (ticket: string) =>
+    storage.remove(ticketStorageKey(ticket)).pipe(Effect.mapError(ticketStorageError("remove")));
 
-  const listTicketKeys = storage.list("ws-tickets/").pipe(Effect.orElseSucceed((): Array<string> => []));
+  const listTicketKeys = storage.list("ws-tickets/").pipe(Effect.mapError(ticketStorageError("list")));
 
   const cleanup = Effect.gen(function* () {
     const keys = yield* listTicketKeys;
@@ -63,53 +105,61 @@ const makeTicketService = Effect.gen(function* () {
     yield* Effect.forEach(
       keys,
       (key) =>
-        storage.get(key).pipe(
-          Effect.flatMap((content) => {
-            if (P.isUndefined(content)) {
-              return Effect.void;
-            }
-            return S.decodeEffect(TicketRecordJson)(content).pipe(
-              Effect.flatMap((record) =>
-                record.expiresAt.epochMilliseconds <= now ? storage.remove(key) : Effect.void
-              )
-            );
-          }),
-          Effect.ignore
+        storage.getOption(key).pipe(
+          Effect.flatMap(
+            O.match({
+              onNone: () => Effect.void,
+              onSome: (content) =>
+                S.decodeEffect(TicketRecordJson)(content).pipe(
+                  Effect.flatMap((record) =>
+                    record.expiresAt.epochMilliseconds <= now ? storage.remove(key) : Effect.void
+                  )
+                ),
+            })
+          ),
+          Effect.mapError(ticketStorageError("load")),
+          Effect.catch((error) => Effect.logWarning("Ticket cleanup entry failed", { operation: error.operation }))
         ),
       { concurrency: 10, discard: true }
     );
   });
 
-  yield* cleanup.pipe(Effect.schedule(Schedule.fixed(Duration.millis(CLEANUP_INTERVAL_MS))), Effect.forkDetach);
+  yield* cleanup.pipe(
+    Effect.catch((error) => Effect.logWarning("Ticket cleanup cycle failed", { operation: error.operation })),
+    Effect.schedule(Schedule.fixed(CLEANUP_INTERVAL)),
+    Effect.forkScoped
+  );
 
   const createTicket = Effect.fn("TicketService.createTicket")(function* (
     ontologyId: string,
     apiKey: string,
-    ttlMs: number = DEFAULT_TTL_MS
+    ttl: Duration.Duration = DEFAULT_TTL
   ) {
     const ticket = yield* generateSecureToken();
     const now = yield* Clock.currentTimeMillis;
-    const expiresAt = now + ttlMs;
-    const record = TicketRecord.fromUnknown({ ticket, ontologyId, apiKey, createdAt: now, expiresAt });
+    const expiresAt = now + Duration.toMillis(ttl);
+    const record = yield* S.decodeEffect(TicketRecord)({ ticket, ontologyId, apiKey, createdAt: now, expiresAt }).pipe(
+      Effect.mapError(() => AuthenticationError.make({ message: "Invalid ticket record", reason: "invalid" }))
+    );
     yield* persistTicket(ticket, record);
     yield* Effect.logDebug(
-      `Created ticket for ontology=${ontologyId} expires=${DateTime.toDateUtc(DateTime.makeUnsafe(expiresAt)).toISOString()}`
+      `Created ticket for ontology=${ontologyId} expires=${DateTime.formatIso(DateTime.makeUnsafe(expiresAt))}`
     );
-    return { ticket, expiresAt, ttlSeconds: Math.floor(ttlMs / 1000) };
+    return { ticket, expiresAt, ttlSeconds: N.round(Duration.toSeconds(ttl)) };
   });
 
   const validateTicket = Effect.fn("TicketService.validateTicket")(function* (ticket: string) {
     const record = yield* loadStoredTicket(ticket);
     yield* removeStoredTicket(ticket);
-    if (Option.isNone(record)) {
-      return yield* TicketNotFoundError.fromUnknown({ message: "Ticket not found or already used", ticket });
+    if (O.isNone(record)) {
+      return yield* TicketNotFoundError.make({ message: "Ticket not found or already used", ticket });
     }
     const now = yield* Clock.currentTimeMillis;
     if (record.value.expiresAt.epochMilliseconds < now) {
-      return yield* TicketExpiredError.fromUnknown({
+      return yield* TicketExpiredError.make({
         message: "Ticket has expired",
         ticket,
-        expiredAt: record.value.expiresAt.epochMilliseconds,
+        expiredAt: Milliseconds.make(record.value.expiresAt.epochMilliseconds),
       });
     }
     yield* Effect.logDebug(`Validated ticket for ontology=${record.value.ontologyId}`);
@@ -118,7 +168,7 @@ const makeTicketService = Effect.gen(function* () {
 
   const hasTicket = Effect.fn("TicketService.hasTicket")(function* (ticket: string) {
     const record = yield* loadStoredTicket(ticket);
-    if (Option.isNone(record)) return false;
+    if (O.isNone(record)) return false;
     return record.value.expiresAt.epochMilliseconds > (yield* Clock.currentTimeMillis);
   });
 
@@ -126,19 +176,20 @@ const makeTicketService = Effect.gen(function* () {
     const keys = yield* listTicketKeys;
     const now = yield* Clock.currentTimeMillis;
     const flags = yield* Effect.forEach(keys, (key) =>
-      storage.get(key).pipe(
-        Effect.flatMap((content) => {
-          if (P.isUndefined(content)) {
-            return Effect.succeed(false);
-          }
-          return S.decodeEffect(TicketRecordJson)(content).pipe(
-            Effect.map((record) => record.expiresAt.epochMilliseconds > now)
-          );
-        }),
-        Effect.orElseSucceed(() => false)
+      storage.getOption(key).pipe(
+        Effect.flatMap(
+          O.match({
+            onNone: () => Effect.succeed(false),
+            onSome: (content) =>
+              S.decodeEffect(TicketRecordJson)(content).pipe(
+                Effect.map((record) => record.expiresAt.epochMilliseconds > now)
+              ),
+          })
+        ),
+        Effect.mapError(ticketStorageError("load"))
       )
     );
-    return flags.filter((active) => active).length;
+    return A.length(A.filter(flags, P.isTruthy));
   });
 
   const validateApiKey = Effect.fn("TicketService.validateApiKey")(function* (
@@ -146,10 +197,10 @@ const makeTicketService = Effect.gen(function* () {
     validKeys: HashSet.HashSet<string>
   ) {
     if (P.isUndefined(apiKey)) {
-      return yield* AuthenticationError.fromUnknown({ message: "Missing API key", reason: "missing" });
+      return yield* AuthenticationError.make({ message: "Missing API key", reason: "missing" });
     }
     if (!HashSet.has(validKeys, apiKey)) {
-      return yield* AuthenticationError.fromUnknown({ message: "Invalid API key", reason: "invalid" });
+      return yield* AuthenticationError.make({ message: "Invalid API key", reason: "invalid" });
     }
     return apiKey;
   });
@@ -163,10 +214,38 @@ const makeTicketService = Effect.gen(function* () {
   };
 });
 
+/**
+ * Provides the ticket service service capability.
+ *
+ * **Example** (Inspect ticket service)
+ *
+ * ```ts
+ * import { TicketService } from "@effect-ontology/Service/Ticket"
+ *
+ * console.log(TicketService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class TicketService extends Context.Service<TicketService>()($I`TicketService`, {
   make: makeTicketService,
 }) {
   static readonly Default = Layer.effect(this, this.make);
 }
 
+/**
+ * Provides the Effect layer for ticket service live dependencies.
+ *
+ * **Example** (Inspect ticket service live)
+ *
+ * ```ts
+ * import { TicketServiceLive } from "@effect-ontology/Service/Ticket"
+ *
+ * console.log(TicketServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const TicketServiceLive = TicketService.Default;

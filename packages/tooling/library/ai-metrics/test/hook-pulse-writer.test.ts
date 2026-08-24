@@ -14,6 +14,7 @@ import {
   hashPrivateIdentifier,
   hookPulseLedgerDir,
 } from "@beep/repo-ai-metrics";
+import { Unknown } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Path, Stream } from "effect";
@@ -94,7 +95,7 @@ const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 // Fixture payloads are raw harness shapes, not a schema this package owns, so the
 // unknown-shaped encoder is the right rung: it renders stdin without pretending the
 // content-bearing keys we deliberately never model are part of the contract.
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 // Exactly the canonical `HookPulseV1` encoded surface. Any other key on a row is
 // a leak or a drift, whichever it turns out to be. Stated by hand so the leak

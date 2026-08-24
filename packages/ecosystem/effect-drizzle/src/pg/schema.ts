@@ -34,6 +34,7 @@ import {
 import { hasProperty, isUndefined } from "effect/Predicate";
 import { empty, get as getRecord, set } from "effect/Record";
 import { String as StringSchema, TaggedError } from "effect/Schema";
+import { toLowerCase } from "effect/String";
 import {
   makeRelationsConfig,
   relationName,
@@ -592,7 +593,7 @@ const collectSchemaNames = (
         (value, index): SchemaName => ({
           owner: `foreign-key:${key}:${index}`,
           kind: "foreign-key constraint",
-          name: value.getName(),
+          name: toLowerCase(value.getName()),
         })
       ),
     ];
@@ -683,9 +684,18 @@ export function schema(models: ModelRecord): unknown {
                   edge.targetKey
                 );
               }
-              const builder = foreignKey({
-                columns: [columns[edge.sourceField]],
-                foreignColumns: [targetColumn],
+              const builder = match(fromUndefinedOr(edge.reference.name), {
+                onNone: () =>
+                  foreignKey({
+                    columns: [columns[edge.sourceField]],
+                    foreignColumns: [targetColumn],
+                  }),
+                onSome: (name) =>
+                  foreignKey({
+                    columns: [columns[edge.sourceField]],
+                    foreignColumns: [targetColumn],
+                    name,
+                  }),
               });
               const withDelete = match(fromUndefinedOr(edge.reference.onDelete), {
                 onNone: () => builder,
