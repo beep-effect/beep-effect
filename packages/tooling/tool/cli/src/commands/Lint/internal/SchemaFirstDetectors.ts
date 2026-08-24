@@ -1068,6 +1068,14 @@ const sourceHasTaggedErrorSignal = (sourceFile: import("ts-morph").SourceFile): 
   );
 };
 
+const isNamespacedTaggedErrorFactory = (factory: Node): boolean =>
+  Node.isPropertyAccessExpression(factory) &&
+  factory.getName() === "TaggedError" &&
+  (factory.getExpression().getText() === "S" || factory.getExpression().getText() === "Schema");
+
+const isNamedImportTaggedErrorFactory = (factory: Node, sourceFile: import("ts-morph").SourceFile): boolean =>
+  Node.isIdentifier(factory) && factory.getText() === "TaggedError" && sourceImportsNamedTaggedError(sourceFile);
+
 const taggedErrorDeclarationCall = (declaration: ClassDeclaration): O.Option<import("ts-morph").CallExpression> => {
   const outerCall = declaration.getExtends()?.getExpression();
   if (!Node.isCallExpression(outerCall)) {
@@ -1080,16 +1088,8 @@ const taggedErrorDeclarationCall = (declaration: ClassDeclaration): O.Option<imp
   }
 
   const factory = factoryCall.getExpression();
-  if (Node.isPropertyAccessExpression(factory)) {
-    const namespace = factory.getExpression().getText();
-    return factory.getName() === "TaggedError" && (namespace === "S" || namespace === "Schema")
-      ? O.some(outerCall)
-      : O.none();
-  }
-
-  return Node.isIdentifier(factory) &&
-    factory.getText() === "TaggedError" &&
-    sourceImportsNamedTaggedError(declaration.getSourceFile())
+  return isNamespacedTaggedErrorFactory(factory) ||
+    isNamedImportTaggedErrorFactory(factory, declaration.getSourceFile())
     ? O.some(outerCall)
     : O.none();
 };
