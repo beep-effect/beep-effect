@@ -187,7 +187,8 @@ const generatedComposers = $I.compose(
   "gov-legal-mcp",
   "epistemic-client",
   "epistemic-ui",
-  "effect-drizzle", "skill-contract"
+  "effect-drizzle",
+  "skill-contract"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.

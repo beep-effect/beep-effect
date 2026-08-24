@@ -1,8 +1,8 @@
 /**
  * Typed QA gate for cited-artifact filesystem evidence.
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
