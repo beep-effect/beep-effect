@@ -71,16 +71,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   browser leases, memory routing, fleet protocols) remain candidates in
   [`MAP.md`](./typed-agent-skill-contracts/MAP.md); decision log in
   [`DECISIONS.md`](./typed-agent-skill-contracts/DECISIONS.md).
-- [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
-  initiative for a configurable full-document substrate and eventual
-  Professional Desktop document Portal. A live Lexical Playground `0.49.0`
-  audit captured 17 screenshots, keybindings, highlighting, inserts, settings,
-  and accessibility gaps; a pinned source audit reconciled the node/plugin
-  registration graph at commit `a933222`. Architecture grill D1-D27 keeps
-  `@beep/md` canonical, Lexical/Pandoc as projections, product profiles
-  app-owned, and collaboration/redlining/DOCX/PDF/Portal work sequenced after
-  single-user parity. First goal graduated:
-  [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
+- [`full-document-editor`](./full-document-editor/README.md) — graduated
+  2026-08-24 with its two promised-now packets:
+  [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md)
+  establishes the versioned atlas/profile contract, and
+  [`configurable-full-document-editor`](../goals/configurable-full-document-editor/README.md)
+  implements production-eligible single-user parity behind that contract. The
+  seven remaining MAP candidates stay gated re-entry points; a fired gate
+  reopens the exploration at `decompose`.
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
   graduated 2026-08-17: MAP ratified with five adversarial amendments
   (restricted fixture; closed chat-arrangement component set with repair and

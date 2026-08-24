@@ -56,3 +56,18 @@ Each atlas entry must cite exact evidence from the live audit, source audit, or
 both. A count without stable IDs is not sufficient. Upstream screenshots are
 reference evidence; local implementation acceptance evidence is captured later
 under this goal's `history/` with `bun run beep qa`.
+
+## 2026-08-24 — Upstream drift observation and baseline decision
+
+**Observation:** the local checkout at `~/YeeBois/dev/text_editor_ui/lexical`
+advanced 43 commits from `a933222` to `fd13a3ca` while remaining on version
+`0.49.0`. Four post-pin commits touch Playground behavior:
+
+- `9d907005c` - date-time import;
+- `e7fd56e61` - collapsible export;
+- `47a3ef26` - mention creation;
+- `610cfd95` - Excalidraw cloning.
+
+**Decision:** the v1 evidence baseline remains `a933222`. The four deltas are
+known post-pin changes and are excluded from the v1 evidence set. A future
+evidence set may deliberately re-pin when the repo bumps Lexical.
