@@ -8,10 +8,10 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Capture, validate, remediate, and close every open Codex Cloud security finding
-for `kriegcloud/beep-effect` in the 19-finding batch captured on 2026-08-24.
-Ship the fixes through one Yeet-driven PR, close the exact captured findings, and
-leave no packet-applicable finding open.
+Capture, validate, and account for every Codex Cloud security finding in the
+19-finding batch captured on 2026-08-24 for `kriegcloud/beep-effect`. Ship the
+bounded fixes through one Yeet-driven PR, close 13 exact IDs, and transfer the
+six runner-boundary IDs to `goals/runner-trust-boundary` with proof gates.
 
 ## Launch
 
@@ -28,7 +28,8 @@ leave no packet-applicable finding open.
 3. [`PLAN.md`](./PLAN.md)
 4. [`ops/manifest.json`](./ops/manifest.json)
 5. [`ops/triage.json`](./ops/triage.json)
-6. [`findings/INDEX.md`](./findings/INDEX.md)
+6. [`ops/closures.json`](./ops/closures.json)
+7. [`findings/INDEX.md`](./findings/INDEX.md)
 
 ## Current Phase
 
@@ -40,6 +41,7 @@ pending the fresh deployment proof in
 CSF-004, CSF-005, and CSF-006 are transferred to that packet for admission and
 workload-identity remediation. This source packet is complete and retained; it
 does not claim the receiving packet's external proof or dashboard closure.
+The 13 exact closures are recorded in [`ops/closures.json`](./ops/closures.json).
 
 ## Findings at a glance
 

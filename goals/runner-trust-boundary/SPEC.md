@@ -43,16 +43,18 @@ The required runner class has all of these properties:
 
 ## Findings transfer
 
-Codex IDs, not packet-local CSF ordinals or titles, define identity. The source
-packets contain sixteen transferred or held records that resolve to nine unique
-Codex IDs. The operator verified exactly six open dashboard findings on
-2026-08-24. Three older identities are therefore recorded only as closed and
-absent from that inventory; this packet does not invent their closure reason.
+Codex IDs, not packet-local CSF ordinals or titles, define identity. The
+ownership inventory has sixteen source-packet records that map to nine unique
+Codex IDs: six open IDs, either transferred or held, and three historically
+closed IDs. The table also records the completed 2026-08-13 CSF-002 recurrence.
+That duplicate is outside the sixteen-record ownership count but keeps the
+occurrence history exact against all three source ledgers. This packet does not
+invent closure reasons for the three IDs absent from the six-open inventory.
 
 | Source packet and CSF ordinal | Codex ID | Finding identity | Lane | Current dashboard state, 2026-08-24 |
 | --- | --- | --- | --- | --- |
 | `2026-08-10` CSF-001; `2026-08-13` CSF-001; `2026-08-24` CSF-001 | `08ee74d0eb18819187fd02f570b4d57c` | PR code now runs on self-hosted EC2 CI lanes | admission | Open; transferred |
-| `2026-08-10` CSF-002 | `382c538bc3c8819195f83b4a36b002fb` | Non-ephemeral CI runners expose PR jobs to trusted push secrets | historical fleet lifecycle | Closed; absent from the exact six-open inventory |
+| `2026-08-10` CSF-002; `2026-08-13` CSF-002 | `382c538bc3c8819195f83b4a36b002fb` | Non-ephemeral CI runners expose PR jobs to trusted push secrets | historical fleet lifecycle | Closed; absent from the exact six-open inventory |
 | `2026-08-10` CSF-003; `2026-08-13` CSF-003; `2026-08-24` CSF-004 | `a3a281b2a3d881919fdcbf68ee2364f0` | PR code now runs on owned EC2 CI runners | admission | Open; transferred |
 | `2026-08-10` CSF-004; `2026-08-13` CSF-004; `2026-08-24` CSF-005 | `c799c2269d748191997ff176ce4bfd48` | Shadow runner exposes AWS role creds to job code | workload identity | Open; transferred |
 | `2026-08-13` CSF-005 | `ca9a4a0353e481919011a7d8380f5068` | CI runner IMDS firewall rollback exposes AWS role creds | historical workload identity | Closed; absent from the exact six-open inventory |
@@ -125,7 +127,7 @@ P0 ends with a grilling session with the operator. Record the questions,
 answers, rejected alternatives, final mechanism, rollback, and approved P1 to
 P4 proof plan under `history/`. P1 may not start until the operator ratifies it.
 
-### P1 CSF-003 and CSF-009 deployment proof
+### P1 08-24 CSF-003/CSF-009 deployment proof
 
 P1 must perform all steps against a fresh deployed image:
 
@@ -140,9 +142,10 @@ P1 must perform all steps against a fresh deployed image:
    a final plain `REDTEAM: PASS`. The AWS-skipped result is not acceptance.
 4. Retain the setup-action log proving `Baked fast path: true` only after the
    Bun binary and sealed cache pass ownership, mode, and digest checks.
-5. Close Codex IDs `9459410104b881919cd820b97c673b67` and
-   `d1f026deb21881919d853e63780734fe` as Already fixed only after steps 1 to 4
-   pass. Record closure date and evidence without copying raw report bodies.
+5. Retain closure-ready evidence for Codex IDs
+   `9459410104b881919cd820b97c673b67` and
+   `d1f026deb21881919d853e63780734fe` after steps 1 to 4 pass. Leave both IDs
+   open until the P5 remediation PR merge gate passes; P6 owns dashboard closure.
 
 ### P2 admission defense in depth
 
@@ -160,20 +163,39 @@ broader alternate path. Prove the boundary from ordinary, sudo, root,
 privileged-container, and host-network contexts. Keep Gate E as a second
 control, not as the claim that a UID rule withstands root.
 
-### P4 boundary verification and closure
+### P4 boundary verification
 
 Run the ratified red-team matrix on the deployed non-privileged runner class.
 Prove sealed-image integrity, one-job-one-VM lifecycle, runner deregistration,
 EC2 teardown, runner-group policy, and absence of usable job credentials.
-Close the remaining four open Codex IDs only after the deployed evidence maps
-to each identity. Reconcile the dashboard against the exact six-ID allowlist.
+Map the deployed evidence to each of the remaining four open Codex IDs and mark
+all six IDs closure-ready. Do not close any dashboard ID before the P5
+remediation PR merge gate passes.
+
+### P5 Yeet publish, review, and merge gate
+
+Publish the remediation through Yeet. Reach `merge-ready: yes`, resolve every
+review thread, and merge the PR only with explicit operator authority. The six
+dashboard IDs remain open throughout this phase. A mergeable but unmerged PR
+does not satisfy the gate.
+
+### P6 dashboard closure
+
+After the P5 merge gate passes, close the six exact Codex IDs as Already fixed
+using their individual deployed evidence. Reconcile the live dashboard against
+the exact allowlist and retain sanitized closure metadata.
+
+### P7 close
+
+Record the final evidence and reflection, then update packet lifecycle, plan,
+manifest, and index state together.
 
 ## Acceptance criteria
 
 - [ ] P0 records current GitHub and AWS facts and ends with a retained operator
       grill ratifying the design and proof plan.
-- [ ] P1 satisfies every deployment-proof requirement and closes the two held
-      exact IDs as Already fixed.
+- [ ] P1 satisfies every deployment-proof requirement and records closure-ready
+      evidence for the two held exact IDs.
 - [ ] Heavy PR lanes remain on EC2, with their placement rationale retained.
 - [ ] Every job uses a fresh VM from a sealed digest-verified AMI.
 - [ ] No ordinary, sudo, root, privileged-container, or host-network path can
@@ -182,11 +204,14 @@ to each identity. Reconcile the dashboard against the exact six-ID allowlist.
       cannot silently fall back to an unrestricted group.
 - [ ] The complete red-team matrix, runner deregistration, and EC2 teardown pass
       against the deployed configuration.
-- [ ] All six open Codex IDs are closed with exact deployed evidence; the three
-      older closed identities are not reopened or reclassified without proof.
+- [ ] The remediation PR is published, reviewed, `merge-ready: yes`, and merged
+      before any of the six dashboard IDs are closed.
+- [ ] After merge, all six open Codex IDs are closed with exact deployed
+      evidence; the three older closed identities are not reopened or
+      reclassified without proof.
 - [ ] Fleet packet ownership remains unchanged.
-- [ ] Yeet reports `merge-ready: yes`, review threads are zero, and the closeout
-      reflection validates.
+- [ ] Yeet reports `merge-ready: yes`, review threads are zero, the PR is merged,
+      and the closeout reflection validates.
 
 ## Verification matrix
 
@@ -201,7 +226,7 @@ to each identity. Reconcile the dashboard against the exact six-ID allowlist.
 | P1 bake | Fresh bake report, pin, deployment, setup log | All integrity checks pass |
 | P1 red team | `redteam-verify.sh <deployed-ref>` | One PASS per required gate, teardown proved |
 | Workload identity | Ordinary plus privileged probes | No usable application role credentials |
-| Dashboard | Signed-in exact-ID reconciliation | All six packet IDs closed |
+| Dashboard | Post-merge signed-in exact-ID reconciliation | All six packet IDs closed after P5 merge |
 | Whitespace | `git diff --check -- goals/runner-trust-boundary` | Pass |
 
 ## Stop conditions

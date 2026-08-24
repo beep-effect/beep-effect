@@ -26,8 +26,8 @@ they are not the primary security boundary.
   two open findings about pull-request code running on owned EC2 capacity.
 - The workload-identity lane owns removal of usable cloud identity from job
   execution and root-resistant proof for the two open IMDS findings.
-- P1 first proves the already-landed AMI and IMDS-hook fixes in a fresh
-  deployment, then closes the two held dashboard findings as Already fixed.
+- P1 proves the already-landed AMI and IMDS-hook fixes in a fresh deployment.
+  P6 closes the two held dashboard findings only after the P5 merge gate.
 
 The complete identity transfer is in [`SPEC.md`](./SPEC.md#findings-transfer).
 

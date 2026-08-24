@@ -19,7 +19,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the deployed runner class has no usable ambient instance-role credentials, every transferred Codex ID is closed with exact proof, and the work ships through Yeet at merge-ready: yes.",
+    "statement": "Not achieved until the deployed runner class has no usable ambient instance-role credentials, the remediation PR is merge-ready and merged, and every transferred Codex ID is then closed with exact proof.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -56,7 +56,7 @@
     },
     {
       "id": "P1",
-      "name": "CSF-003 and CSF-009 deployment proof",
+      "name": "08-24 CSF-003/CSF-009 deployment proof",
       "status": "pending"
     },
     {
@@ -76,11 +76,16 @@
     },
     {
       "id": "P5",
-      "name": "Yeet: PR to mergeable",
+      "name": "Yeet publish, review, and merge gate",
       "status": "pending"
     },
     {
       "id": "P6",
+      "name": "Dashboard closure",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
       "name": "Close",
       "status": "pending"
     }

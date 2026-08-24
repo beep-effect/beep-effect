@@ -11,7 +11,7 @@
   "packetPath": "goals/codex-security-findings-2026-08-24",
   "lifecycle": "completed-retained",
   "statusNote": "19 validated; 15 remediated in PR #783; 13 dashboard IDs closed as Already fixed on 2026-08-24; CSF-003 and CSF-009 remain open pending goals/runner-trust-boundary P1 deployment proof; CSF-001, CSF-004, CSF-005, and CSF-006 transferred to goals/runner-trust-boundary.",
-  "mission": "Remediate and close the 19 Codex Cloud security findings captured on 2026-08-24.",
+  "mission": "Remediate and close the bounded findings from the 2026-08-24 capture, then transfer the six runner-boundary IDs with explicit proof gates.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -29,6 +29,8 @@
     "goals/codex-security-findings-2026-08-24/SPEC.md",
     "goals/codex-security-findings-2026-08-24/PLAN.md",
     "goals/codex-security-findings-2026-08-24/GOAL.md",
+    "goals/codex-security-findings-2026-08-24/ops/triage.json",
+    "goals/codex-security-findings-2026-08-24/ops/closures.json",
     "goals/codex-security-findings-2026-08-24/research/SOURCES.md"
   ],
   "researchReports": ["research/SOURCES.md"],
@@ -149,6 +151,7 @@
     "test \"$(wc -m < goals/codex-security-findings-2026-08-24/GOAL.md)\" -le 4000",
     "jq . goals/codex-security-findings-2026-08-24/ops/manifest.json",
     "jq . goals/codex-security-findings-2026-08-24/ops/triage.json",
+    "jq . goals/codex-security-findings-2026-08-24/ops/closures.json",
     "test \"$(find goals/codex-security-findings-2026-08-24/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 19",
     "git diff --check -- goals/codex-security-findings-2026-08-24",
     "jq -r '.findings[].commit' goals/codex-security-findings-2026-08-24/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",

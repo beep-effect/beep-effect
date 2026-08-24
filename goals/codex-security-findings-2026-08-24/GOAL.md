@@ -2,10 +2,10 @@
 
 Repo root: the current working directory. Do not assume an absolute path.
 
-Outcome: fix and close the 19 Codex Cloud security findings captured on
-2026-08-24 for `kriegcloud/beep-effect`: 5 High, 4 Medium, 5 Low, 5 Informational.
-Ship one Yeet-driven PR to mergeable, merge it, then resolve the exact captured
-Codex IDs until no packet-applicable finding remains open.
+Outcome: account for the 19 Codex Cloud security findings captured on 2026-08-24
+for `kriegcloud/beep-effect`: 5 High, 4 Medium, 5 Low, 5 Informational. Ship PR
+#783, close 13 exact IDs as Already fixed, and transfer the six runner-boundary
+IDs to `goals/runner-trust-boundary` under its explicit proof gates.
 
 Read first:
 
@@ -14,6 +14,7 @@ Read first:
 - `goals/codex-security-findings-2026-08-24/PLAN.md`
 - `goals/codex-security-findings-2026-08-24/ops/manifest.json`
 - `goals/codex-security-findings-2026-08-24/ops/triage.json`
+- `goals/codex-security-findings-2026-08-24/ops/closures.json`
 - `goals/codex-security-findings-2026-08-24/findings/INDEX.md`
 
 Then read `AGENTS.md`, required skills, and standards governing each target.
@@ -23,7 +24,7 @@ Scope:
 
 - In: sanitized packet evidence, current-HEAD validation, minimal root-cause
   remediation, focused regression checks, Yeet proof/publication/monitoring,
-  merge, and post-merge Chrome closure.
+  merge, 13 post-merge dashboard closures, and the six-ID handoff.
 - Out: accepted risk, raw evidence in git, Codex Create PR/patch buttons,
   unrelated cleanup, weakened quality/security gates.
 
@@ -46,8 +47,10 @@ Rules:
    sanitized metadata, summaries, decisions, changed files, and proof.
 5. Treat PR #783 as the repository remediation evidence for this retained
    packet. Do not reopen its source scope for receiving-packet work.
-6. Preserve the 13 exact-ID closures recorded on 2026-08-24. Close CSF-003 and
-   CSF-009 only after `runner-trust-boundary` P1 proves the fresh deployment.
+6. Preserve the 13 exact-ID closures in `ops/closures.json`; that ledger must
+   remain the exact complement of `runner-trust-boundary`'s six-open table.
+   Close CSF-003 and CSF-009 only after that packet's P1 deployment proof and
+   post-merge dashboard-closure gate.
 7. Keep CSF-001, CSF-004, CSF-005, and CSF-006 with
    `goals/runner-trust-boundary` until it records the admission,
    workload-identity, deployment, and dashboard evidence. The handoff is not

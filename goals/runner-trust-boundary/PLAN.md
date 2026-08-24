@@ -9,12 +9,13 @@ Status: `active`. P0 is pending. The operator grill gates every later phase.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Posture validation and grill gate | pending | Validate the ratified posture against live GitHub organization, AWS deployment, AMI, identity, lifecycle, and heavy-lane placement facts. | A sanitized fact record and threat model exist; the operator grill records a ratified design, rollback, and proof plan. |
-| P1 CSF-003/CSF-009 deployment proof | pending | Bake and deploy a fresh sealed image, prove the setup fast path, run all five red-team gates, and prove teardown. | Every P1 requirement in `SPEC.md` passes; the two held exact IDs are closed as Already fixed. |
+| P1 08-24 CSF-003/CSF-009 deployment proof | pending | Bake and deploy a fresh sealed image, prove the setup fast path, run all five red-team gates, and prove teardown. | Every P1 requirement in `SPEC.md` passes; closure-ready evidence exists for the two held exact IDs. |
 | P2 Admission defense in depth | pending | Apply and prove the ratified organization runner-group controls while PR work stays on EC2. | Group membership, repository/workflow access, non-fallback registration, and control ownership match the P0 decision. |
 | P3 Workload identity boundary | pending | Remove usable ambient instance-role credentials from job execution without breaking bootstrap, registration, or teardown. | Ordinary and privileged probes cannot obtain usable application role credentials; the sealed ephemeral runner remains operational. |
-| P4 Boundary verification | pending | Run the complete deployed threat matrix and reconcile every transferred exact ID. | Admission, identity, AMI, lifecycle, red-team, teardown, and dashboard evidence satisfy `SPEC.md`; all six packet-owned open IDs are closed. |
-| P5 Yeet: PR to mergeable | pending | Publish through Yeet and close required checks and review threads. | Yeet reports `merge-ready: yes`; required checks are green and unresolved review threads are zero. |
-| P6 Close | pending | Record final evidence, reflection, lifecycle, and packet relationships. | Closeout reflection validates and the final PR updates README, plan, manifest, and index together. |
+| P4 Boundary verification | pending | Run the complete deployed threat matrix and prepare exact-ID reconciliation. | Admission, identity, AMI, lifecycle, red-team, and teardown evidence satisfy `SPEC.md`; all six packet-owned open IDs are closure-ready. |
+| P5 Yeet publish, review, and merge gate | pending | Publish through Yeet, close required checks and review threads, and merge with explicit operator authority. | Yeet reports `merge-ready: yes`, unresolved review threads are zero, and the remediation PR is merged. |
+| P6 Dashboard closure | pending | Close the six exact Codex IDs only after the P5 merge gate. | All six IDs are closed as Already fixed with sanitized per-ID evidence, and the live dashboard reconciles to the allowlist. |
+| P7 Close | pending | Record final evidence, reflection, lifecycle, and packet relationships. | Closeout reflection validates and README, plan, manifest, and index update together. |
 
 ## P0 checklist
 
@@ -47,8 +48,8 @@ Status: `active`. P0 is pending. The operator grill gates every later phase.
    `REDTEAM: PASS` without the AWS-skipped qualifier.
 4. Retain the setup-action log. `Baked fast path: true` is acceptable only after
    explicit Bun-binary and sealed-cache ownership, mode, and digest checks.
-5. Reconcile and close the two held exact Codex IDs as Already fixed. Record
-   only sanitized closure metadata.
+5. Record closure-ready evidence for the two held exact Codex IDs. Leave them
+   open until P5 confirms the remediation PR is merged.
 
 ## P2 admission checklist
 
@@ -71,7 +72,7 @@ Status: `active`. P0 is pending. The operator grill gates every later phase.
   direct IMDS paths.
 - Keep the per-job IMDS hook as defense in depth and prove it remains armed.
 
-## P4 verification and dashboard closure
+## P4 verification
 
 1. Repeat the approved deployment and red-team matrix on the final exact head.
 2. Prove one-job-one-VM registration, pickup, deregistration, and EC2 teardown.
@@ -79,21 +80,25 @@ Status: `active`. P0 is pending. The operator grill gates every later phase.
    mismatch.
 4. Re-read the live runner-group state and deployed AWS state after rollout.
 5. Map the final evidence to each of the six open Codex IDs in `SPEC.md`.
-6. Close the remaining exact IDs only after their individual evidence passes,
-   then verify none of the six remains open.
+6. Mark each exact ID closure-ready after its individual evidence passes. Do
+   not close any of the six before the P5 merge gate.
 
-## P5 and P6 closeout
+## P5 through P7 closeout
 
 1. Run Yeet repair and verify, publish with an intentional message, and monitor
    exact-head checks and review threads until `merge-ready: yes`.
-2. Write `history/reflections/<YYYY-MM-DD>-<agent>.md` via the `/reflect` skill
+2. With explicit operator authority, merge the remediation PR. Treat merge as a
+   hard gate before every dashboard action.
+3. Close the six exact Codex IDs as Already fixed, then reconcile the live
+   dashboard against the allowlist and retain sanitized per-ID metadata.
+4. Write `history/reflections/<YYYY-MM-DD>-<agent>.md` via the `/reflect` skill
    and validate it with `bun run beep lint reflection-artifacts`.
-3. Store the grill receipt, deployment report, sanitized setup summary,
+5. Store the grill receipt, deployment report, sanitized setup summary,
    red-team gate accounting, teardown proof, runner-group proof, workload
    identity proof, and exact-ID closure record under `history/`.
-4. Update `README.md`, this plan, `ops/manifest.json`, and `goals/INDEX.md` in
+6. Update `README.md`, this plan, `ops/manifest.json`, and `goals/INDEX.md` in
    the same closeout PR.
-5. Leave `ci-fleet-endgame` and `ci-fleet-residue` lifecycle state unchanged.
+7. Leave `ci-fleet-endgame` and `ci-fleet-residue` lifecycle state unchanged.
 
 ## Verification commands
 

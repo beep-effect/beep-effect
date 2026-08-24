@@ -47,18 +47,21 @@ Execution:
    exactly one PASS for Gates A, B, C, D, and `E_RUNNER_IMDS_HOOK`, plus runner
    deregistration, EC2 teardown, and a setup-action log that admits the baked
    fast path only after Bun-binary and sealed-cache ownership, mode, and digest
-   checks. Only then close Codex IDs `9459410104b881919cd820b97c673b67`
-   and `d1f026deb21881919d853e63780734fe` as Already fixed.
+   checks. Retain closure-ready evidence for Codex IDs
+   `9459410104b881919cd820b97c673b67` and
+   `d1f026deb21881919d853e63780734fe`; leave them open until P6.
 3. P2: implement and prove the ratified runner-group admission controls without
    moving PR work off the EC2 fleet or treating workflow YAML as the primary
    trust boundary.
 4. P3: remove usable ambient instance-role credentials from job execution and
    prove ordinary, sudo, root, and privileged-container paths cannot recover
    them. Preserve the sealed AMI and one-job-one-VM boundary.
-5. P4: rerun the complete boundary proof and reconcile every exact Codex ID in
-   `SPEC.md`. Close only identities supported by deployed evidence.
-6. P5 and P6: when authorized, use Yeet to reach `merge-ready: yes`, resolve
-   every review thread, write the closeout reflection, and update packet state.
+5. P4: rerun the complete boundary proof and mark every exact Codex ID in
+   `SPEC.md` closure-ready.
+6. P5: use Yeet to reach `merge-ready: yes`, resolve every review thread, and,
+   with explicit authority, merge the remediation PR.
+7. P6 and P7: after merge, close the six exact IDs, reconcile the dashboard,
+   write the reflection, and update packet state.
 
 Acceptance requires every `SPEC.md` criterion, the P0 operator grill receipt,
 fresh P1 deployment evidence, no usable workload credential path, exact-head
@@ -70,5 +73,5 @@ teardown failure, a credential path reachable by job-controlled privilege, a
 proposal to move the heavy PR lanes to hosted runners, or ownership collision
 with the fleet packets.
 
-Done only after deployed proof, exact-ID closure, required checks, zero review
-threads, a valid reflection, and `merge-ready: yes`.
+Done only after deployed proof, required checks, zero review threads, merge,
+post-merge exact-ID closure, and a valid reflection.

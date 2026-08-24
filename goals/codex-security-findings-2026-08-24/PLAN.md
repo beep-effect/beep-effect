@@ -73,6 +73,7 @@ phase work.
 test "$(wc -m < goals/codex-security-findings-2026-08-24/GOAL.md)" -le 4000
 jq . goals/codex-security-findings-2026-08-24/ops/manifest.json
 jq . goals/codex-security-findings-2026-08-24/ops/triage.json
+jq . goals/codex-security-findings-2026-08-24/ops/closures.json
 test "$(find goals/codex-security-findings-2026-08-24/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 19
 git diff --check -- goals/codex-security-findings-2026-08-24
 ```
