@@ -79,6 +79,7 @@ import {
   turboCachePlanArgs,
 } from "@beep/repo-cli/test/SharedInternals";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
+import { PosInt } from "@beep/schema/Int";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
@@ -3292,7 +3293,7 @@ describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
       cwd: "/repo",
       env: { CI: "true", BEEP_TEST_DATABASE_URL: "postgres://localhost/beep" },
       flakeQuarantine: "ts2589-no-location",
-      captureTimeoutMillis: 900_000,
+      captureTimeoutMillis: PosInt.make(900_000),
     });
     const rewritten = withoutUnusableRemoteCacheForTesting(step, true);
 

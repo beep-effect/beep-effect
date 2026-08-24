@@ -3,6 +3,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Deferred, Effect, Exit, Fiber, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { ChildProcessSpawner } from "effect/unstable/process";
 import type { ChildProcess } from "effect/unstable/process";
@@ -45,7 +46,8 @@ const makeStuckSpawner = Effect.fnUntraced(function* (options: {
   return { spawner, killCount, closed } as const;
 });
 
-const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes = true) {
+const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolean) {
+  const shouldCompleteKill = killCompletes ?? true;
   const closed = yield* Deferred.make<void>();
   const exited = yield* Deferred.make<ChildProcessSpawner.ExitCode>();
   const killCount = yield* Ref.make(0);
@@ -65,7 +67,7 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes = true) 
       Ref.update(killOptions, (values) => A.append(values, options ?? {})).pipe(
         Effect.andThen(Ref.update(killCount, (count) => count + 1)),
         Effect.andThen(
-          killCompletes
+          shouldCompleteKill
             ? Deferred.succeed(closed, void 0).pipe(
                 Effect.andThen(Deferred.succeed(exited, ChildProcessSpawner.ExitCode(143)))
               )
@@ -187,7 +189,9 @@ describe("StepExec capture pipe lifecycle", () => {
 
       const error = yield* Fiber.join(fiber);
       expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
-      expect(error.commandLine).toBe("fake-step --flag");
+      if (S.is(CaptureCommandTimedOutError)(error)) {
+        expect(error.commandLine).toBe("fake-step --flag");
+      }
       expect(yield* Ref.get(killCount)).toBe(1);
       expect(yield* Ref.get(unrefCount)).toBe(1);
     })
