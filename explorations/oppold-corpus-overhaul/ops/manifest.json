@@ -3,18 +3,16 @@
   "exploration": {
     "slug": "oppold-corpus-overhaul",
     "title": "Oppold Corpus Overhaul",
-    "status": "active",
-    "stage": "align",
-    "openQuestions": [
-      "Bound the four open capture bullets (pipeline re-eval scope, capability incorporation, per-step self-improvement, enrichment avenues) with stop conditions, then draft the BRIEF (mail-first restoration slice + bounded pipeline re-eval) for operator review."
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/oppold-corpus-salvage-restoration"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-17",
-    "updated": "2026-08-17"
+    "updated": "2026-08-24"
   }
 }
