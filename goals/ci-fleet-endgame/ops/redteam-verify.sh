@@ -10,9 +10,12 @@ set -euo pipefail
 # always evaluated whenever AWS is reachable; an unreadable pin fails the gate.
 # AWS credentials are required for a PASS: without them AMI_PIN fails, so the
 # only remaining PASS shape is the fully asserted one.
-# When the run log exposes an instance id, teardown waits only for
-# beep-ci-<instance-id>; otherwise it falls back to all controller runners
-# observed during the run.
+# Once the job is assigned, the verifier identifies beep-ci-<instance-id> and
+# samples its AMI and metadata options on every poll while the worker is alive.
+# Terminated instances report metadata state as pending and are not evidence of
+# the applied lock. The run log instance id remains a post-run cross-check and
+# fallback. When an instance id is known, teardown waits only for that runner;
+# otherwise it falls back to all controller runners observed during the run.
 
 readonly repo="beep-effect/beep-effect"
 readonly workflow="fleet-shadow-check.yml"
@@ -90,8 +93,9 @@ describe_instance_field() {
   local result_file="${error_file}.result"
   local attempt
 
-  # Do not filter by instance state. Shutting-down and terminated records retain
-  # the ImageId and MetadataOptions fields needed by the external gates.
+  # Do not filter by instance state. ImageId remains useful after shutdown, and
+  # MetadataOptions can support a fallback only when AWS still reports applied.
+  # A terminated disabled/pending record is never accepted as lock evidence.
   for (( attempt = 1; attempt <= describe_attempt_limit; attempt++ )); do
     : > "${error_file}"
     : > "${result_file}"
@@ -140,10 +144,57 @@ if [[ -z "${run_id}" ]]; then
 fi
 echo "run id: ${run_id}"
 
+instance_id=""
+sampled_image_id=""
+sampled_metadata_endpoint=""
+sampled_metadata_state=""
+sampled_instance_state=""
+last_worker_sample=""
+saw_metadata_applied=0
+aws_available=0
+if command -v aws >/dev/null 2>&1 && aws sts get-caller-identity >/dev/null 2>&1; then
+  aws_available=1
+else
+  ec2_assertion_skipped=1
+  echo "AWS credentials unavailable; EC2 termination assertion skipped"
+fi
+
 run_completed=0
 conclusion=""
 for (( poll = 1; poll <= max_run_polls; poll++ )); do
   record_controller_runners
+  if [[ -z "${instance_id}" ]]; then
+    job_runner_names="$(gh api "repos/${repo}/actions/runs/${run_id}/jobs" --jq '.jobs[].runner_name')"
+    while IFS= read -r assigned_runner; do
+      if print -r -- "${assigned_runner}" | grep -Eq '^beep-ci-(i-[0-9a-f]+)$'; then
+        instance_id="${assigned_runner#beep-ci-}"
+        echo "worker identified during run: ${assigned_runner}"
+        break
+      fi
+    done <<< "${job_runner_names}"
+  fi
+  if (( aws_available == 1 )) && [[ -n "${instance_id}" ]]; then
+    live_sample_error="${work_dir}/ec2-live-sample.error"
+    if worker_sample="$(aws ec2 describe-instances --region us-east-1 \
+      --instance-ids "${instance_id}" \
+      --query 'Reservations[0].Instances[0].[ImageId,MetadataOptions.HttpEndpoint,MetadataOptions.State,State.Name]' \
+      --output text 2>"${live_sample_error}")"; then
+      read -r current_image_id current_metadata_endpoint current_metadata_state current_instance_state \
+        <<< "${worker_sample}"
+      current_worker_sample="${current_image_id} ${current_metadata_endpoint} ${current_metadata_state} ${current_instance_state}"
+      sampled_image_id="${current_image_id}"
+      sampled_metadata_endpoint="${current_metadata_endpoint}"
+      sampled_metadata_state="${current_metadata_state}"
+      sampled_instance_state="${current_instance_state}"
+      if [[ "${current_worker_sample}" != "${last_worker_sample}" ]]; then
+        echo "worker sample: ${current_worker_sample}"
+      fi
+      last_worker_sample="${current_worker_sample}"
+      if [[ "${sampled_metadata_endpoint}" == disabled && "${sampled_metadata_state}" == applied ]]; then
+        saw_metadata_applied=1
+      fi
+    fi
+  fi
   # `status` is a read-only special parameter in zsh; never assign to it.
   run_status="$(gh run view "${run_id}" --json status --jq .status)"
   echo "run ${run_id}: ${run_status} (${poll}/${max_run_polls})"
@@ -180,10 +231,16 @@ else
   gate_failed=1
 fi
 
-instance_id=""
+log_instance_id=""
 if [[ -s "${run_log}" ]]; then
   # CSF-003 denies runner-user IMDS access; the workflow derives identity from RUNNER_NAME.
-  instance_id="$(sed -n 's/.*Runner instance-id: \(i-[0-9a-f][0-9a-f]*\).*/\1/p' "${run_log}" | head -1)"
+  log_instance_id="$(sed -n 's/.*Runner instance-id: \(i-[0-9a-f][0-9a-f]*\).*/\1/p' "${run_log}" | head -1)"
+fi
+if [[ -n "${instance_id}" && -n "${log_instance_id}" && "${instance_id}" != "${log_instance_id}" ]]; then
+  echo "worker instance-id cross-check: FAIL (job runner ${instance_id}, run log ${log_instance_id})"
+  gate_failed=1
+elif [[ -z "${instance_id}" && -n "${log_instance_id}" ]]; then
+  instance_id="${log_instance_id}"
 fi
 deregistration_names="${seen_names}"
 if [[ -n "${instance_id}" ]]; then
@@ -198,15 +255,8 @@ else
 fi
 readonly deregistration_names
 
-aws_available=0
-if command -v aws >/dev/null 2>&1 && aws sts get-caller-identity >/dev/null 2>&1; then
-  aws_available=1
-  if [[ -z "${instance_id}" ]]; then
-    echo "AWS credentials available, but the worker instance id was not recovered"
-  fi
-else
-  ec2_assertion_skipped=1
-  echo "AWS credentials unavailable; EC2 termination assertion skipped"
+if (( aws_available == 1 )) && [[ -z "${instance_id}" ]]; then
+  echo "AWS credentials available, but the worker instance id was not recovered"
 fi
 
 # Without an operator-supplied expectation the gate binds the worker to the
@@ -239,45 +289,60 @@ elif [[ -z "${instance_id}" ]]; then
   echo "GATE AMI_PIN: FAIL (worker instance id was not recovered)"
   gate_failed=1
 else
-  ami_error="${work_dir}/ec2-image-id.error"
-  if actual_ami="$(describe_instance_field "${instance_id}" \
-    'Reservations[0].Instances[0].ImageId' "${ami_error}")"; then
+  ami_read_failed=0
+  if [[ "${sampled_image_id}" == ami-* ]]; then
+    actual_ami="${sampled_image_id}"
+  else
+    ami_error="${work_dir}/ec2-image-id.error"
+    if actual_ami="$(describe_instance_field "${instance_id}" \
+      'Reservations[0].Instances[0].ImageId' "${ami_error}")"; then
+      :
+    else
+      ami_describe_rc=$?
+      if (( ami_describe_rc == 1 )); then
+        echo "GATE AMI_PIN: FAIL (instance already terminated before ImageId could be read)"
+      else
+        echo "GATE AMI_PIN: FAIL (describe-instances failed before ImageId could be read)"
+        sed -n '1,8p' "${ami_error}"
+      fi
+      gate_failed=1
+      ami_read_failed=1
+    fi
+  fi
+  if (( ami_read_failed == 0 )); then
     if [[ "${actual_ami}" == "${expected_ami}" ]]; then
       echo "GATE AMI_PIN: PASS (${actual_ami})"
     else
       echo "GATE AMI_PIN: FAIL (expected ${expected_ami}, got ${actual_ami})"
       gate_failed=1
     fi
-  else
-    ami_describe_rc=$?
-    if (( ami_describe_rc == 1 )); then
-      echo "GATE AMI_PIN: FAIL (instance already terminated before ImageId could be read)"
-    else
-      echo "GATE AMI_PIN: FAIL (describe-instances failed before ImageId could be read)"
-      sed -n '1,8p' "${ami_error}"
-    fi
-    gate_failed=1
   fi
 fi
 
-# Read metadata state while the worker record still exists. The guest poweroff
-# path can race this read, so retry transient not-found responses before teardown.
+# Prefer the applied state observed while the worker was alive. A post-run read
+# is only a fallback; terminated records reporting pending are not evidence.
 if (( aws_available == 0 )); then
   echo "GATE METADATA_DISABLED: FAIL (AWS credentials unavailable; metadata state cannot be read)"
   gate_failed=1
 elif [[ -z "${instance_id}" ]]; then
   echo "GATE METADATA_DISABLED: FAIL (worker instance id was not recovered)"
   gate_failed=1
+elif (( saw_metadata_applied == 1 )); then
+  echo "GATE METADATA_DISABLED: PASS (disabled applied)"
 else
   metadata_error="${work_dir}/ec2-metadata-options.error"
   if metadata_options="$(describe_instance_field "${instance_id}" \
-    'Reservations[0].Instances[0].MetadataOptions.[HttpEndpoint,State]' "${metadata_error}")"; then
-    metadata_endpoint="${metadata_options%%[[:space:]]*}"
-    metadata_state="${metadata_options##*[[:space:]]}"
+    'Reservations[0].Instances[0].[MetadataOptions.HttpEndpoint,MetadataOptions.State,State.Name]' \
+    "${metadata_error}")"; then
+    read -r metadata_endpoint metadata_state instance_state <<< "${metadata_options}"
     if [[ "${metadata_endpoint}" == disabled && "${metadata_state}" == applied ]]; then
       echo "GATE METADATA_DISABLED: PASS (disabled applied)"
+    elif [[ "${metadata_endpoint}" == disabled && "${metadata_state}" == pending \
+      && ( "${instance_state}" == shutting-down || "${instance_state}" == terminated ) ]]; then
+      echo "GATE METADATA_DISABLED: FAIL (live sample was never captured as disabled applied; post-run disabled pending on ${instance_state} is not evidence)"
+      gate_failed=1
     else
-      echo "GATE METADATA_DISABLED: FAIL (expected disabled applied, got ${metadata_endpoint} ${metadata_state})"
+      echo "GATE METADATA_DISABLED: FAIL (expected disabled applied, got ${metadata_endpoint} ${metadata_state} on ${instance_state})"
       gate_failed=1
     fi
   else

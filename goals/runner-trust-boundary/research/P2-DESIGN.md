@@ -284,13 +284,16 @@ its own metadata options after the endpoint is disabled.
 
 The workflow keeps Gates A through E and adds F through J and L only when
 `inputs.redteam` is true. K is informational under the same input. The wrapper
-requires exactly one PASS for A through J plus L, then proves
-`METADATA_DISABLED`, deregistration, and terminal EC2 state. The container
-probe image preflight pulls the digest-pinned reference before Gates D, G, and
-H. Each container writes `PROBE_RAN` before curl and `IMDS_REACHABLE` only after
-a successful token PUT. A gate accepts denial only when captured stdout has the
-first marker and lacks the second, so a Docker launch failure cannot masquerade
-as IMDS denial.
+requires exactly one PASS for A through J plus L. While the assigned worker is
+alive, it samples the executing instance's AMI and metadata state on every run
+poll, then proves deregistration and terminal EC2 state. The run log's instance
+id is a cross-check and fallback, not the primary discovery path. Terminated
+instances report metadata state as `pending`; that state is not evidence that
+the endpoint lock was applied. The container probe image preflight pulls the
+digest-pinned reference before Gates D, G, and H. Each container writes
+`PROBE_RAN` before curl and `IMDS_REACHABLE` only after a successful token PUT.
+A gate accepts denial only when captured stdout has the first marker and lacks
+the second, so a Docker launch failure cannot masquerade as IMDS denial.
 
 | Proof | SPEC properties | Finding mapping | Required result |
 | --- | --- | --- | --- |
@@ -308,8 +311,8 @@ as IMDS denial.
 | Gate J `J_HOOK_STILL_ARMED` | 2 | `33cd94a12d788191afbec1edc25c433f` | `.env`, hook executable, and IPv4/available-IPv6 owner DROP all remain armed. |
 | Informational K `JIT_RESIDUE` | 3 | both IDs, not closure proof | Emit only `visible` or `absent`; P4 replay remains required. |
 | Gate L `L_IAM_EDGES` | 2, 3 | both workload-identity IDs | While current state is enabled, own-disable is authorized and another instance is denied when EC2 checks authorization before existence. After sustained endpoint denial, cached credentials prove both own-enable and own-disable are denied by the one-way lock. Each self edge must PASS exactly once; `InvalidInstanceID.*` remains inconclusive only for the other-instance edge. |
-| External `METADATA_DISABLED` | 2, 3 | both workload-identity IDs | AWS reports `disabled applied` from a record in any lifecycle state. The verifier retries `InvalidInstanceID.NotFound` up to six times at five-second intervals before failing. |
-| `AMI_PIN` and lane fast-path probe | 1, 4 | P1 held image finding, not the two P2 IDs | Worker matches the serving AMI from a record in any lifecycle state, using the same six-attempt describe retry, and the sealed digest/owner/mode checks pass. |
+| External `METADATA_DISABLED` | 2, 3 | both workload-identity IDs | AWS reports `disabled applied` in a sample captured while the worker is alive. If no live applied sample exists, the verifier uses the six-attempt, five-second `InvalidInstanceID.NotFound` retry and accepts only `disabled applied`; `disabled pending` from a shutting-down or terminated record is not evidence. |
+| `AMI_PIN` and lane fast-path probe | 1, 4 | P1 held image finding, not the two P2 IDs | Worker matches the serving AMI sampled while it is alive, falling back to the same six-attempt post-run describe retry, and the sealed digest/owner/mode checks pass. |
 | Scoped deregistration and EC2 teardown | 5 | supporting evidence for both P2 IDs | One registration maps to one VM, deregisters, powers off, and reaches terminal EC2 state. |
 | Heavy-lane routing check | 1 | admission IDs remain P3-owned | Heavy pull-request lanes still use the EC2 label. |
 | P3 organization runner-group proof | 6 | admission IDs, not the P2 IDs | Selected repository and default-branch workflow controls pass without fallback. |
