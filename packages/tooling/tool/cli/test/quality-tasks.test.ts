@@ -57,6 +57,7 @@ import {
   planCoverageAffectedScope,
   planCoverageBaselineWrite,
   planCoverageFullShards,
+  planWorkspaceCoverageAffectedScope,
   promotedFallowGithubCheckLaneIdsForTesting,
   QualityTaskFailed,
   QualityTaskGroupFailed,
@@ -2068,6 +2069,9 @@ describe("quality task adapter", () => {
           yield* runGit(repoRoot, ["config", "user.name", "Coverage Test"]);
           yield* runGit(repoRoot, ["add", "--all"]);
           yield* runGit(repoRoot, ["commit", "-m", "test: seed unchanged coverage fixture"]);
+
+          expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, [])).toMatchObject({ _tag: "noop" });
+          expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["package.json"])).toMatchObject({ _tag: "full" });
 
           yield* writeCoverageRegressionBaseline(repoRoot, false).pipe(
             Effect.provideService(
