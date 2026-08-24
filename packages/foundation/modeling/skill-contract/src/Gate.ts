@@ -357,6 +357,8 @@ export const GateVerdict: {
 /**
  * Total evaluator contract for a typed gate.
  *
+ * **Details**
+ *
  * Denials belong in `Verdict`. `Failure` is reserved for genuine boundary
  * failures such as decoding an external evidence payload.
  *
