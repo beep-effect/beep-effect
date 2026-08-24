@@ -179,6 +179,7 @@
     "@beep/repo-utils": "workspace:^",
     "@beep/runpod": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/skill-contract": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@beep/tika": "workspace:^",
     "@beep/uspto": "workspace:^",

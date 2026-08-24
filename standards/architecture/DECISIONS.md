@@ -1406,6 +1406,35 @@ checklist. Keeping the CI lane non-required prevents a stale lab from blocking
 unrelated upstream work, while requiring the lab's own PR to pass preserves the
 claim that it is a faithful proving ground.
 
+## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
+
+- **Status:** Active
+
+Decision:
+
+Every `S.TaggedError` class declares a fields-only `toEquivalence` annotation
+at the class declaration. The comparator defines diagnostic identity from the
+declared stable fields and excludes opaque `S.Defect(...)` values. Tests and
+consumers use `S.toEquivalence(ErrorClass)` without local overrides.
+
+The schema-first rule `SFV4-tagged-error-equivalence` blocks untracked new or
+changed declarations. Existing declarations enter
+`standards/schema-first.inventory.jsonc` as exceptions through
+`bun run beep lint schema-first --write`, then leave the inventory as the
+burn-down adds declaration-level comparators.
+
+Rationale:
+
+Without a declaration annotation, Effect v4 falls back to `Equal.equals` for
+the error declaration. That comparison includes `Error` runtime metadata such
+as line, column, message, and plain arguments. Issue #677 demonstrated that
+field-equal errors could then compare unequal according to source position and
+property-test seed. A declaration-level comparator gives every consumer the
+same stable diagnostic identity.
+
+This supersedes test-local equivalence overrides and the prior implicit
+acceptance of `S.TaggedError`'s declaration fallback.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

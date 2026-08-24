@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "semantica-lab",
+    "title": "Semantica Port Atlas & Lab",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Shape: BRIEF draft (staged canary C0-C2 as milestone 1; MAP gates from O3/O4), then decompose, graduate, scaffold apps/labs/semantica",
+      "Benjamin reviews draft artifacts before anything posts: research/drafts/repo-issues.md + upstream-contributions.md",
+      "Atlas sub-page template exemplars ratified (one per kind; FileIngestor = Model exemplar)",
+      "Explorer/UI milestone shape (deferred to goal packet per D16)"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-24",
+    "updated": "2026-08-24"
+  }
+}

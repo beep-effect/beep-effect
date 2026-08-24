@@ -21,6 +21,20 @@ const getTextOption = (options: { readonly text?: string | undefined } | string)
 const getEntityNameOption = (options: { readonly entityName?: string | undefined } | string): O.Option<string> =>
   O.fromNullishOr(P.isString(options) ? options : options.entityName);
 
+const WinkEngineErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+  operation: S.String,
+} satisfies S.Struct.Fields;
+const WinkEngineErrorEquivalenceFields = {
+  message: WinkEngineErrorFields.message,
+  operation: WinkEngineErrorFields.operation,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameWinkEngineErrorFields = S.toEquivalence(S.TaggedStruct("WinkEngineError", WinkEngineErrorEquivalenceFields));
+const sameWinkEngineError = (self: WinkEngineError, that: WinkEngineError): boolean =>
+  sameWinkEngineErrorFields(self, that);
+
 /**
  * Typed failure for initializing or reading from the wink runtime.
  *
@@ -38,13 +52,13 @@ const getEntityNameOption = (options: { readonly entityName?: string | undefined
  */
 export class WinkEngineError extends S.TaggedError<WinkEngineError>($I`WinkEngineError`)(
   "WinkEngineError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-    operation: S.String,
-  },
-  $I.annote("WinkEngineError", {
+  WinkEngineErrorFields,
+  $I.annoteClass<
+    S.declare<WinkEngineError>,
+    readonly [S.TaggedStruct<"WinkEngineError", typeof WinkEngineErrorFields>]
+  >("WinkEngineError", {
     description: "Failure raised while creating or accessing the wink-nlp runtime.",
+    toEquivalence: () => sameWinkEngineError,
   })
 ) {
   /**
@@ -68,6 +82,24 @@ export class WinkEngineError extends S.TaggedError<WinkEngineError>($I`WinkEngin
   );
 }
 
+const WinkTokenizationErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+  operation: S.String,
+  text: S.OptionFromOptionalKey(S.String),
+} satisfies S.Struct.Fields;
+const WinkTokenizationErrorEquivalenceFields = {
+  message: WinkTokenizationErrorFields.message,
+  operation: WinkTokenizationErrorFields.operation,
+  text: WinkTokenizationErrorFields.text,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameWinkTokenizationErrorFields = S.toEquivalence(
+  S.TaggedStruct("WinkTokenizationError", WinkTokenizationErrorEquivalenceFields)
+);
+const sameWinkTokenizationError = (self: WinkTokenizationError, that: WinkTokenizationError): boolean =>
+  sameWinkTokenizationErrorFields(self, that);
+
 /**
  * Typed failure for wink document reads, token collection, and token counts.
  *
@@ -88,14 +120,13 @@ export class WinkEngineError extends S.TaggedError<WinkEngineError>($I`WinkEngin
  */
 export class WinkTokenizationError extends S.TaggedError<WinkTokenizationError>($I`WinkTokenizationError`)(
   "WinkTokenizationError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-    operation: S.String,
-    text: S.OptionFromOptionalKey(S.String),
-  },
-  $I.annote("WinkTokenizationError", {
+  WinkTokenizationErrorFields,
+  $I.annoteClass<
+    S.declare<WinkTokenizationError>,
+    readonly [S.TaggedStruct<"WinkTokenizationError", typeof WinkTokenizationErrorFields>]
+  >("WinkTokenizationError", {
     description: "Failure raised while tokenizing text with wink-nlp.",
+    toEquivalence: () => sameWinkTokenizationError,
   })
 ) {
   /**
@@ -122,6 +153,22 @@ export class WinkTokenizationError extends S.TaggedError<WinkTokenizationError>(
   );
 }
 
+const WinkEntityErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  entityName: S.OptionFromOptionalKey(S.String),
+  message: S.String,
+  operation: S.String,
+} satisfies S.Struct.Fields;
+const WinkEntityErrorEquivalenceFields = {
+  entityName: WinkEntityErrorFields.entityName,
+  message: WinkEntityErrorFields.message,
+  operation: WinkEntityErrorFields.operation,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameWinkEntityErrorFields = S.toEquivalence(S.TaggedStruct("WinkEntityError", WinkEntityErrorEquivalenceFields));
+const sameWinkEntityError = (self: WinkEntityError, that: WinkEntityError): boolean =>
+  sameWinkEntityErrorFields(self, that);
+
 /**
  * Typed failure for learning or updating wink custom entity patterns.
  *
@@ -142,14 +189,13 @@ export class WinkTokenizationError extends S.TaggedError<WinkTokenizationError>(
  */
 export class WinkEntityError extends S.TaggedError<WinkEntityError>($I`WinkEntityError`)(
   "WinkEntityError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    entityName: S.OptionFromOptionalKey(S.String),
-    message: S.String,
-    operation: S.String,
-  },
-  $I.annote("WinkEntityError", {
+  WinkEntityErrorFields,
+  $I.annoteClass<
+    S.declare<WinkEntityError>,
+    readonly [S.TaggedStruct<"WinkEntityError", typeof WinkEntityErrorFields>]
+  >("WinkEntityError", {
     description: "Failure raised while learning or managing wink custom entities.",
+    toEquivalence: () => sameWinkEntityError,
   })
 ) {
   /**
