@@ -24,7 +24,18 @@ const predicateTypeEquivalence = S.toEquivalence(EvidencePredicateType);
 const gateIdEquivalence = S.toEquivalence(GateId);
 const gateSeverityEquivalence = S.toEquivalence(GateSeverity);
 const evidenceSubjectEquivalence = S.toEquivalence(EvidenceSubject);
-const evidenceSubjectsEquivalence = S.toEquivalence(S.NonEmptyArray(EvidenceSubject));
+const evidenceSubjectSetEquivalence = (
+  left: A.NonEmptyReadonlyArray<EvidenceSubject>,
+  right: A.NonEmptyReadonlyArray<EvidenceSubject>
+): boolean => {
+  const leftSet = HashSet.fromIterable(left);
+  const rightSet = HashSet.fromIterable(right);
+  return (
+    Eq.equals(HashSet.size(leftSet), A.length(left)) &&
+    Eq.equals(HashSet.size(rightSet), A.length(right)) &&
+    Eq.equals(leftSet, rightSet)
+  );
+};
 
 /**
  * Persistable structural evidence emitted from a live completion proof.
@@ -423,7 +434,7 @@ export const evaluateSkillCompletion = Effect.fn("SkillCompletion.evaluate")(fun
       reason: "gate-summary-registry-mismatch",
     });
   }
-  if (!evidenceSubjectsEquivalence(input.outputSubjects, input.ladder.semanticallyApplied.subjects)) {
+  if (!evidenceSubjectSetEquivalence(input.outputSubjects, input.ladder.semanticallyApplied.subjects)) {
     return yield* CompletionInvariantError.make({
       message: "Output subjects are not covered by the semantic-application evidence.",
       reason: "output-subjects-mismatch",

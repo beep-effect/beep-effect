@@ -297,6 +297,25 @@ describe("@beep/skill-contract SkillCompletion", () => {
     })
   );
 
+  it.effect("accepts exact semantic subject coverage in any order and rejects duplicate coverage", () =>
+    Effect.gen(function* () {
+      const summary = gateSummaryReceipt([gateResult(blockingGate, { applicable: true, outcome: "allowed" })]);
+      const multiSubjectLadder = SemanticallyApplied.make({
+        ...ladder,
+        semanticallyApplied: reference(appliedType, [outputSubject, unrelatedSubject]),
+      });
+      const reordered = yield* evaluateSkillCompletion(
+        evaluationInput(contractFor([blockingGate]), summary, multiSubjectLadder, [unrelatedSubject, outputSubject])
+      );
+      const duplicated = yield* evaluateSkillCompletion(
+        evaluationInput(contractFor([blockingGate]), summary, ladder, [outputSubject, outputSubject])
+      ).pipe(Effect.flip);
+
+      expect(reordered.verdict).toBe("allowed");
+      expect(duplicated.reason).toBe("output-subjects-mismatch");
+    })
+  );
+
   it.effect("fails malformed gate-summary and ladder predicate bindings", () =>
     Effect.gen(function* () {
       const summary = gateSummaryReceipt([gateResult(blockingGate, { applicable: true, outcome: "allowed" })]);
