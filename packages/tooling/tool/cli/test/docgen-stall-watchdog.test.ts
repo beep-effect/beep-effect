@@ -2,10 +2,16 @@ import { runDocgenStepWithStallWatchdogForTesting } from "@beep/repo-cli/test/Do
 import { runToExit } from "@beep/repo-cli/test/Process";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
+import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Duration, Effect } from "effect";
+import { Duration, Effect, Layer } from "effect";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
+import * as TestConsole from "effect/testing/TestConsole";
+import * as ChildProcess from "effect/unstable/process/ChildProcess";
+
+const ProcessDiagnosticTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 
 // The hosted Docgen lane runs turbo to completion and then never sees it exit:
 // 2m8s of real work followed by 56 minutes of silence until the job timed out
@@ -60,6 +66,48 @@ describe("commands/Docgen docgen step stall watchdog", () => {
 
       expect(Result.isFailure(outcome)).toBe(true);
     }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.live(
+    "logs only the watched child tree without raw argument values",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* findRepoRoot();
+      const unrelated = yield* ChildProcess.make("sleep", ["30"], {
+        cwd: repoRoot,
+        stdin: "ignore",
+        stdout: "ignore",
+        stderr: "ignore",
+        forceKillAfter: Duration.seconds(5),
+      });
+      const rawArgumentCanary = "docgen-raw-argv-canary";
+
+      const outcome = yield* Effect.result(
+        runDocgenStepWithStallWatchdogForTesting(
+          "watchdog process fixture",
+          "sh",
+          ["-c", "sleep 30 & wait", rawArgumentCanary],
+          repoRoot,
+          {
+            first: Duration.millis(250),
+            retry: Duration.millis(250),
+          }
+        )
+      );
+
+      expect(Result.isFailure(outcome)).toBe(true);
+      const diagnostics = A.join(
+        A.filter(
+          A.filter(yield* TestConsole.logLines, P.isString),
+          Str.startsWith("docgen:local: after abandoning watchdog process fixture: child process tree:")
+        ),
+        "\n"
+      );
+      expect(diagnostics).toContain("executable=");
+      expect(diagnostics).toContain("state=");
+      expect(diagnostics).not.toContain(`pid=${unrelated.pid} ppid=`);
+      expect(diagnostics).not.toContain(rawArgumentCanary);
+      expect(diagnostics).not.toContain("args=");
+    }, provideScopedLayer(ProcessDiagnosticTestLayer))
   );
 });
 

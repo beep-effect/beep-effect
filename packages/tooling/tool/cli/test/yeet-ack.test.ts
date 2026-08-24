@@ -126,6 +126,47 @@ describe("readYeetAckState", () => {
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
+
+  it.live("rejects a symlinked receipt file instead of accepting its content", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideRoot = `${root}/outside`;
+        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox/acks`, { recursive: true });
+        yield* fs.makeDirectory(outsideRoot);
+        const id = "coverage-abc123";
+        const outsideAck = `${outsideRoot}/${id}`;
+        yield* fs.writeFileString(outsideAck, `${yield* YeetAckReceiptJson.encode(fixReceipt(id))}\n`);
+        yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, id));
+
+        const state = yield* readYeetAckState(repoRoot, id);
+
+        expect(state.acked).toBe(false);
+        expect(state.receipt).toBeNull();
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("rejects a symlinked acks parent instead of accepting its receipt", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideAcks = `${root}/outside-acks`;
+        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
+        yield* fs.makeDirectory(outsideAcks);
+        const id = "coverage-abc123";
+        yield* fs.writeFileString(`${outsideAcks}/${id}`, `${yield* YeetAckReceiptJson.encode(fixReceipt(id))}\n`);
+        yield* fs.symlink(outsideAcks, `${repoRoot}/.beep/inbox/acks`);
+
+        const state = yield* readYeetAckState(repoRoot, id);
+
+        expect(state.acked).toBe(false);
+        expect(state.receipt).toBeNull();
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
 });
 
 describe("writeYeetAckReceipt", () => {
@@ -175,6 +216,50 @@ describe("writeYeetAckReceipt", () => {
         const failure = yield* Effect.flip(writeYeetAckReceipt(root, fixReceipt("coverage-abc123")));
 
         expect(failure.message).toContain("acks");
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("rejects a symlinked receipt target without overwriting its destination", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideRoot = `${root}/outside`;
+        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox/acks`, { recursive: true });
+        yield* fs.makeDirectory(outsideRoot);
+        const id = "coverage-abc123";
+        const outsideAck = `${outsideRoot}/${id}`;
+        const sentinel = "outside target must stay unchanged\n";
+        yield* fs.writeFileString(outsideAck, sentinel);
+        yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, id));
+
+        const failure = yield* writeYeetAckReceipt(repoRoot, fixReceipt(id)).pipe(Effect.flip);
+
+        expect(failure._tag).toBe("YeetCommandError");
+        expect(yield* fs.readFileString(outsideAck)).toBe(sentinel);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("rejects a symlinked acks parent without writing through it", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideAcks = `${root}/outside-acks`;
+        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
+        yield* fs.makeDirectory(outsideAcks);
+        const id = "coverage-abc123";
+        const outsideAck = `${outsideAcks}/${id}`;
+        const sentinel = "outside parent must stay unchanged\n";
+        yield* fs.writeFileString(outsideAck, sentinel);
+        yield* fs.symlink(outsideAcks, `${repoRoot}/.beep/inbox/acks`);
+
+        const failure = yield* writeYeetAckReceipt(repoRoot, fixReceipt(id)).pipe(Effect.flip);
+
+        expect(failure._tag).toBe("YeetCommandError");
+        expect(yield* fs.readFileString(outsideAck)).toBe(sentinel);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );

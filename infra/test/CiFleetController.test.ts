@@ -231,6 +231,11 @@ describe("@beep/infra CiFleetController", () => {
       );
       assert.isTrue(Str.includes('if [ -d "${runner_dir}" ]; then')(rendered));
       assert.isTrue(Str.includes('if [ "${hook_armed}" = false ]; then')(rendered));
+      assert.isTrue(
+        Str.includes('logger -t beep-imds-hook "runner directory not found; per-job IMDS hook NOT armed"\n    exit 1')(
+          rendered
+        )
+      );
     })
   );
 });

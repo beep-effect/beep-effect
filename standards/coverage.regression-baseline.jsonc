@@ -17871,15 +17871,15 @@
     },
     "@beep/pandoc-ast": {
       "path": "packages/foundation/modeling/pandoc-ast",
-      "lines": 85.33,
-      "statements": 85.48,
+      "lines": 85.21,
+      "statements": 85.37,
       "branches": 86.71,
-      "functions": 79.62,
+      "functions": 79.44,
       "uncovered": {
-        "lines": 126,
-        "statements": 136,
+        "lines": 127,
+        "statements": 137,
         "branches": 17,
-        "functions": 118
+        "functions": 119
       },
       "files": {
         "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts": {
@@ -17895,15 +17895,15 @@
           }
         },
         "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts": {
-          "lines": 72.28,
-          "statements": 73.23,
+          "lines": 71.92,
+          "statements": 72.92,
           "branches": 81.48,
-          "functions": 69.26,
+          "functions": 68.83,
           "uncovered": {
-            "lines": 79,
-            "statements": 87,
+            "lines": 80,
+            "statements": 88,
             "branches": 15,
-            "functions": 71
+            "functions": 72
           }
         },
         "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts": {

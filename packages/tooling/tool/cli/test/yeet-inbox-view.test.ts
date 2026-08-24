@@ -5,6 +5,7 @@ import {
   YEET_INBOX_VIEW_SCHEMA_VERSION,
   YeetAckFixResolution,
   YeetAckReceipt,
+  YeetAckReceiptJson,
   YeetCheckFailedRow,
   YeetFailureCapsule,
   YeetInboxRowJson,
@@ -180,6 +181,60 @@ describe("loadYeetInboxView", () => {
         const view = yield* loadYeetInboxView(root);
 
         expect(view.entries[0]?.ack.acked).toBe(true);
+        expect(view.entries[0]?.ack.receipt).toBeNull();
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("does not accept a symlinked receipt file as an acknowledgment", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideRoot = `${root}/outside`;
+        yield* fs.makeDirectory(repoRoot);
+        yield* fs.makeDirectory(outsideRoot);
+        const subject = row(capsule());
+        yield* appendYeetInboxRow(repoRoot, subject);
+        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox/acks`);
+        const outsideAck = `${outsideRoot}/${subject.id}`;
+        const receipt = YeetAckReceipt.make({
+          ackedAt: AT,
+          id: subject.id,
+          resolution: YeetAckFixResolution.make({ sha: "2817f28" }),
+        });
+        yield* fs.writeFileString(outsideAck, `${yield* YeetAckReceiptJson.encode(receipt)}\n`);
+        yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, subject.id));
+
+        const view = yield* loadYeetInboxView(repoRoot);
+
+        expect(view.entries[0]?.ack.acked).toBe(false);
+        expect(view.entries[0]?.ack.receipt).toBeNull();
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("does not accept a receipt beneath a symlinked acks parent", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = `${root}/repo`;
+        const outsideAcks = `${root}/outside-acks`;
+        yield* fs.makeDirectory(repoRoot);
+        yield* fs.makeDirectory(outsideAcks);
+        const subject = row(capsule());
+        yield* appendYeetInboxRow(repoRoot, subject);
+        const receipt = YeetAckReceipt.make({
+          ackedAt: AT,
+          id: subject.id,
+          resolution: YeetAckFixResolution.make({ sha: "2817f28" }),
+        });
+        yield* fs.writeFileString(`${outsideAcks}/${subject.id}`, `${yield* YeetAckReceiptJson.encode(receipt)}\n`);
+        yield* fs.symlink(outsideAcks, `${repoRoot}/.beep/inbox/acks`);
+
+        const view = yield* loadYeetInboxView(repoRoot);
+
+        expect(view.entries[0]?.ack.acked).toBe(false);
         expect(view.entries[0]?.ack.receipt).toBeNull();
       })
     ).pipe(provideScopedLayer(PlatformLayer))

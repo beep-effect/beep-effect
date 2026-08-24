@@ -1,0 +1,613 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=new",
+    "branch": "codex/security-findings-2026-08-24",
+    "expectedCount": 19,
+    "capturedCount": 19,
+    "capturedAt": "2026-08-24",
+    "captureMethod": "signed-in-csv-export",
+    "note": "All 19 findings are validated. Fifteen are remediated repo-side in this PR with focused proof; CSF-001, CSF-004, CSF-005, and CSF-006 remain remediate items deferred to the runner-admission/workload-identity arc for external GitHub organization runner-group and AWS deployment proof."
+  },
+  "lanes": {
+    "L1-ci-runner-admission": {
+      "status": "in-progress",
+      "findings": ["CSF-001", "CSF-004"],
+      "title": "CI runner admission architecture"
+    },
+    "L2-effect-ontology-conflict-auth": {
+      "status": "complete",
+      "findings": ["CSF-002"],
+      "title": "Effect ontology conflict authorization"
+    },
+    "L3-runner-bake-integrity": {
+      "status": "complete",
+      "findings": ["CSF-003"],
+      "title": "Runner AMI bake integrity"
+    },
+    "L4-ci-runner-workload-identity": {
+      "status": "in-progress",
+      "findings": ["CSF-005", "CSF-006", "CSF-009"],
+      "title": "CI runner workload identity"
+    },
+    "L5-repo-cli-safe-writes": {
+      "status": "complete",
+      "findings": ["CSF-007", "CSF-013", "CSF-015"],
+      "title": "Repository CLI safe writes"
+    },
+    "L6-quality-secret-minimization": {
+      "status": "complete",
+      "findings": ["CSF-008"],
+      "title": "Quality-command secret minimization"
+    },
+    "L7-knowledge-reference-policy": {
+      "status": "complete",
+      "findings": ["CSF-010"],
+      "title": "Knowledge-reference policy"
+    },
+    "L8-delete-package-safety": {
+      "status": "complete",
+      "findings": ["CSF-011", "CSF-016", "CSF-019"],
+      "title": "Delete-package safety"
+    },
+    "L9-docgen-process-privacy": {
+      "status": "complete",
+      "findings": ["CSF-012"],
+      "title": "Docgen process diagnostics"
+    },
+    "L10-knowledge-diagnostic-redaction": {
+      "status": "complete",
+      "findings": ["CSF-014"],
+      "title": "Knowledge diagnostic redaction"
+    },
+    "L11-flake-quarantine-scoping": {
+      "status": "complete",
+      "findings": ["CSF-017"],
+      "title": "Flake-quarantine scoping"
+    },
+    "L12-agent-bootstrap-portability": {
+      "status": "complete",
+      "findings": ["CSF-018"],
+      "title": "Agent-memory bootstrap portability"
+    }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "08ee74d0eb18819187fd02f570b4d57c",
+      "title": "PR code now runs on self-hosted EC2 CI lanes",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "7e730d757312e56ccfbbc87b1e2adfe18e562820",
+      "ownerArea": "CI runner admission architecture",
+      "lane": "L1-ci-runner-admission",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Five pull-request lanes still target self-hosted EC2 workers and execute repository-controlled setup and task code. Moving only the standalone JSDoc ratchet to a hosted runner does not close the admission boundary."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: a durable admission boundary must be enforced outside pull-request-editable workflow content, and external GitHub organization runner-group plus AWS deployment proof must verify the result. The finding remains dispositioned remediate with the runner-admission/workload-identity arc.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "1d2e8bb3c81c81919cd12685143ff8a6",
+      "title": "Anonymous conflict-resolution endpoint by default",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "ff2184e6b3c5cef6d00fe196b5e5ea8be95ed408",
+      "ownerArea": "effect-ontology HTTP authorization",
+      "lane": "L2-effect-ontology-conflict-auth",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Authentication defaults off, the no-auth middleware installs a system conflict actor, and the same router exposes conflict discovery and transition endpoints. Anonymous mutation is present at current HEAD."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Authentication defaults on, anonymous requests never receive system authority, and conflict list and transition handlers reject actors without a credential fingerprint before input parsing or repository access.",
+        "changedFiles": [
+          "scratchpad/effect-ontology/Service/Config.ts",
+          "scratchpad/effect-ontology/Runtime/HttpMiddleware.ts",
+          "scratchpad/effect-ontology/Runtime/HttpServer.ts",
+          "scratchpad/effect-ontology/test/Runtime/AuthRouter.test.ts"
+        ],
+        "verificationCommands": [
+          "cd scratchpad && zsh -ic 'bunx --bun vitest run --config effect-ontology/vitest.config.ts --pool=threads --maxWorkers=1 test/Runtime/AuthRouter.test.ts'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "9459410104b881919cd820b97c673b67",
+      "title": "Baked runner trusts mutable Bun binary",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "4b8bd76c2b14f998639a0f5c36525577a0b0a481",
+      "ownerArea": "runner AMI bake integrity",
+      "lane": "L3-runner-bake-integrity",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The bake installs Bun and warms dependencies as the mutable runner user. Fast-path and AMI checks validate version and lock markers but do not authenticate the installed executable or warmed dependency state."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "The bake installs root-owned Bun, records and verifies its installed digest, seals the warmed cache as a root-owned read-only archive, and removes mutable cache and entrypoint state. The setup action verifies ownership, mode, link target, and both digests before restoring the cache. AMI bake, Pulumi pin, and deployed Gates A-E proof remain required for fleet acceptance.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+          ".github/actions/setup-monorepo-ci/action.yml",
+          "packages/tooling/tool/cli/test/runners-bake.test.ts"
+        ],
+        "verificationCommands": [
+          "zsh -ic 'bunx --bun vitest run packages/tooling/tool/cli/test/runners-bake.test.ts --pool=threads --maxWorkers=1 --no-file-parallelism'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "a3a281b2a3d881919fdcbf68ee2364f0",
+      "title": "PR code now runs on owned EC2 CI runners",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "69045830e2c3acca1ec771e23a5e4be3a9fc0e3c",
+      "ownerArea": "CI runner admission architecture",
+      "lane": "L1-ci-runner-admission",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Check, Integration, Coverage, and Docgen remain pull-request jobs on owned EC2 runners and execute the proposed tree through repository-controlled setup and task commands."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: pull-request jobs must move to a non-privileged execution class or be admitted outside repository-editable YAML, then external GitHub organization runner-group plus AWS deployment proof must verify the result. The finding remains dispositioned remediate with the runner-admission/workload-identity arc.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "c799c2269d748191997ff176ce4bfd48",
+      "title": "Shadow runner exposes AWS role creds to job code",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "37f289a025b5072e7099a24d195103ab8b2ea4f1",
+      "ownerArea": "CI runner workload identity",
+      "lane": "L4-ci-runner-workload-identity",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "A UID-scoped firewall rule protects the ordinary job process, but the agent and job share one host account, metadata remains enabled, and privileged job paths are outside that rule. The residual credential path remains valid."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: the fleet needs a root-resistant workload-identity boundary that removes usable instance-role credentials during jobs, followed by deployed AWS proof against ordinary and privileged probes plus effective permissions-boundary verification. The finding remains dispositioned remediate with the runner-admission/workload-identity arc.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "33cd94a12d788191afbec1edc25c433f",
+      "title": "Red-team gate misses sudo IMDS credential path",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "e65b2ff6d8655921a0dec7635bd990eab11a5c28",
+      "ownerArea": "CI runner workload identity",
+      "lane": "L4-ci-runner-workload-identity",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The red-team workflow proves credential denial only for the non-root user and container path. It has no privileged-host probe or effective permissions-boundary assertion, and its verifier expects only the existing four gates."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: the repo-side verifier now requires named Gates A-E, but a root-resistant workload-identity boundary and deployed AWS proof against privileged credential access plus effective permissions-boundary drift are still required. The finding remains dispositioned remediate with the runner-admission/workload-identity arc.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "87e92cedfe34819189e2747d988cd0bb",
+      "title": "Yeet publish writes generated index through symlinks",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "450d11b32f55e8a62049e1c7de8279914fe07e44",
+      "ownerArea": "repository CLI safe writes",
+      "lane": "L5-repo-cli-safe-writes",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Portfolio index repair writes directly to a predictable repository path and then stages it without checking the final entry or parent chain for symlinks."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Portfolio-index repair uses a shared contained write that rejects lexical escapes and symlinked components, rechecks canonical containment, atomically renames a private temporary file, and stages only after the guarded write succeeds.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts",
+          "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && zsh -ic 'bunx --bun vitest run test/yeet-portfolio-index-guard.test.ts test/yeet-inbox.test.ts test/yeet-remediation.test.ts test/yeet-ack.test.ts test/yeet-inbox-view.test.ts --pool=threads'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-008",
+      "codexId": "bb86533fe99c819182a6edf7e72fe1b8",
+      "title": "Turbo op-run wrapper exposes all local secrets to tasks",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "cf772b58cd890fef395be725b640ccef0647ac80",
+      "ownerArea": "quality-command secret minimization",
+      "lane": "L6-quality-secret-minimization",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "When remote cache secrets are required, every environment-free Turbo step is wrapped with an invocation that loads the complete project environment file and passes the resulting ambient environment to child tasks."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Turbo secret sessions no longer load the project env file. The non-extending child environment permits unresolved references only for TURBO_API, TURBO_TOKEN, and TURBO_TEAM, preventing unrelated references from re-entering through inheritance.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+          "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+          "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+          "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+          "packages/tooling/tool/cli/test/shared-internals.test.ts",
+          "packages/tooling/tool/cli/test/turbo-cache.test.ts"
+        ],
+        "verificationCommands": [
+          "zsh -ic 'bunx vitest run packages/tooling/tool/cli/test/quality-tasks.test.ts packages/tooling/tool/cli/test/shared-internals.test.ts packages/tooling/tool/cli/test/turbo-cache.test.ts packages/tooling/tool/cli/test/flake-quarantine.test.ts'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-009",
+      "codexId": "d1f026deb21881919d853e63780734fe",
+      "title": "IMDS hook can silently remain unarmed",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "4c952edb18dad422e3fa5f95305fc3b0e15c392f",
+      "ownerArea": "CI runner workload identity",
+      "lane": "L4-ci-runner-workload-identity",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Bootstrap logs a missing runner directory as an unarmed metadata guard but continues successfully. Neither the shadow workflow nor its verifier requires the documented deployment-time guard assertion."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Runner bootstrap now exits before registration when the metadata hook cannot be armed, the shadow workflow names the runner IMDS probe as Gate E, and the verifier requires exactly one PASS for every Gate A-E. AMI bake, Pulumi pin, and deployed Gates A-E proof remain required for fleet acceptance.",
+        "changedFiles": [
+          "infra/src/CiFleetController.ts",
+          ".github/workflows/fleet-shadow-check.yml",
+          "goals/ci-fleet-endgame/ops/redteam-verify.sh",
+          "infra/test/CiFleetController.test.ts"
+        ],
+        "verificationCommands": [
+          "cd infra && zsh -ic 'bunx --bun vitest run test/CiFleetController.test.ts --pool=threads --maxWorkers=1 --no-file-parallelism'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-010",
+      "codexId": "2f05c1b1d1e4819182ffc5b0de75004b",
+      "title": "Depth-blind data archival segment bypasses refs gate",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "2aecd8fd2184b0e3b9408c8eb7002138632ff28e",
+      "ownerArea": "knowledge-reference policy",
+      "lane": "L7-knowledge-reference-policy",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The archival classifier treats a generic data segment at any path depth as archival, including beneath live agent and documentation roots, and only live provenance receives the stricter reference gate."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "The archival classifier treats data as captured evidence only at goals/<packet>/data; nested data directories under live knowledge roots remain subject to the live-reference gate.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+          "packages/tooling/tool/cli/test/knowledge-refs.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && zsh -ic 'bunx --bun vitest run --pool=threads test/knowledge-refs.test.ts'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-011",
+      "codexId": "3869a371a3b88191ad1918b2df2e71ab",
+      "title": "Lab delete prints unowned Postgres DROP instructions",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "afe4cdfaa7e28cbdc311150afffe58315c41ed0d",
+      "ownerArea": "delete-package data ownership",
+      "lane": "L8-delete-package-safety",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Manifest decoding accepts a broad lab database name, ownership refusal runs only for requested automatic deletion, and both command rendering and evidence generation can still print an actionable manual DROP command."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "DeletePackage refuses an unowned declared database resource regardless of --drop-data, and command plus registration evidence suppress actionable SQL until the resource matches the selected package-derived schema name.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+          "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.policy.ts",
+          "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+          "packages/tooling/tool/cli/test/delete-package.test.ts"
+        ],
+        "verificationCommands": [
+          "zsh -ic 'bun test packages/tooling/tool/cli/test/delete-package-labs.test.ts packages/tooling/tool/cli/test/delete-package.test.ts'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-012",
+      "codexId": "574797607d308191935c448d70f7c1d9",
+      "title": "Docgen watchdog logs system process command lines",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "0f224c9a3a8a091a6f835a07786071a94462178c",
+      "ownerArea": "docgen process diagnostics",
+      "lane": "L9-docgen-process-privacy",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The stall watchdog enumerates the full arguments column for all host processes, filters only after collection, and returns matching rows without redacting argument values."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "The watchdog collects at most 40 rows from the known docgen child tree and logs only PID, PPID, executable, state, and elapsed time; it no longer enumerates host processes or requests argv.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+          "packages/tooling/tool/cli/test/docgen-stall-watchdog.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && zsh -ic 'bun run beep:test test/docgen-stall-watchdog.test.ts --pool=threads'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-013",
+      "codexId": "6cb93ab3587c81918330133bba28926a",
+      "title": "Watch inbox follows repo symlinks for failure writes",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "2817f286d3236a935259f9465a9a2ba1bca61988",
+      "ownerArea": "repository CLI safe writes",
+      "lane": "L5-repo-cli-safe-writes",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Failure append and remediation dispatch paths use ordinary writes beneath predictable repository locations without inspecting the final entry or parent chain for symlinks."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Inbox appends and remediation dispatch writes use shared contained no-follow helpers that reject symlinked targets and parents. Dispatch uses atomic replacement; existing-file append uses a verified private hard-link alias.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Remediation.ts",
+          "packages/tooling/tool/cli/test/yeet-inbox.test.ts",
+          "packages/tooling/tool/cli/test/yeet-remediation.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && zsh -ic 'bunx --bun vitest run test/yeet-portfolio-index-guard.test.ts test/yeet-inbox.test.ts test/yeet-remediation.test.ts test/yeet-ack.test.ts test/yeet-inbox-view.test.ts --pool=threads'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-014",
+      "codexId": "8f79050754fc8191b3e7675886f6059a",
+      "title": "POSIX path redaction bypass after punctuation",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "81ffcb13e3e09d0440c0be83fa80e9365bcee953",
+      "ownerArea": "knowledge diagnostic redaction",
+      "lane": "L10-knowledge-diagnostic-redaction",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The POSIX path expression allows only a narrow delimiter set before an absolute path. Direct probes show punctuation-prefixed paths remain unchanged and can enter persisted diagnostics."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "The POSIX path boundary blocks only Unicode word and slash adjacency, redacting punctuation-delimited absolute paths while preserving URLs and ASCII or Unicode word-adjacent fragments.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+          "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && zsh -ic 'bunx --bun vitest run --pool=threads test/knowledge-semantic-delta.test.ts'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-015",
+      "codexId": "0b32ed8f84008191b07c25996336ef96",
+      "title": "Ack receipts follow symlinks out of the checkout",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "d2885e5b95e8fa873d3931dee5266697d13a7543",
+      "ownerArea": "repository CLI safe writes",
+      "lane": "L5-repo-cli-safe-writes",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Acknowledgment reads and writes follow the predictable path with ordinary filesystem operations and do not reject a symlink at the final entry or in its parent chain."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Acknowledgment writes use the shared contained atomic overwrite helper, while reads reject symlinked targets or parents and treat those paths as unacknowledged.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts",
+          "packages/tooling/tool/cli/test/yeet-ack.test.ts",
+          "packages/tooling/tool/cli/test/yeet-inbox-view.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && zsh -ic 'bunx --bun vitest run test/yeet-portfolio-index-guard.test.ts test/yeet-inbox.test.ts test/yeet-remediation.test.ts test/yeet-ack.test.ts test/yeet-inbox-view.test.ts --pool=threads'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-016",
+      "codexId": "141acacb3b1081919daab52ebdfc3e75",
+      "title": "Overbroad deletion changeset exemption hides residue",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "e6fbad9abe92fc5615edfe048b96e53dd144fb40",
+      "ownerArea": "delete-package safety",
+      "lane": "L8-delete-package-safety",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The registration probe excludes the canonical deletion-note filename before reading its contents, so a manually crafted or stale changeset under that basename bypasses residue detection."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "A shared helper renders the canonical deletion note and validates parsed frontmatter plus the exact package-specific body; registration geometry exempts the canonical basename only when the complete file matches byte-for-byte.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+          "packages/tooling/tool/cli/src/commands/DeletePackage/internal/DeletionChangeset.ts",
+          "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "packages/tooling/tool/cli/test/delete-package.test.ts"
+        ],
+        "verificationCommands": [
+          "zsh -ic 'bun test packages/tooling/tool/cli/test/delete-package-labs.test.ts packages/tooling/tool/cli/test/delete-package.test.ts'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-017",
+      "codexId": "57be126aec5481918f04d9d0df882b6f",
+      "title": "Check flake quarantine rerun no longer filters packages",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "6418482c7f275d5343a6b6d8d6d7a367cdf7c392",
+      "ownerArea": "flake-quarantine scoping",
+      "lane": "L11-flake-quarantine-scoping",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Filter insertion recognizes only direct Turbo commands. The check retry uses a nested Beep CI-lane command, producing a passthrough filter that never reaches the underlying Turbo invocation."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Flake quarantine recognizes nested bun run beep ci lane commands, places the package filter on that command, and the CI lane parser forwards it into the underlying Turbo arguments.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
+          "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "packages/tooling/tool/cli/test/flake-quarantine.test.ts",
+          "packages/tooling/tool/cli/test/quality-tasks.test.ts"
+        ],
+        "verificationCommands": [
+          "zsh -ic 'bunx vitest run packages/tooling/tool/cli/test/quality-tasks.test.ts packages/tooling/tool/cli/test/shared-internals.test.ts packages/tooling/tool/cli/test/turbo-cache.test.ts packages/tooling/tool/cli/test/flake-quarantine.test.ts'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-018",
+      "codexId": "72cb800162448191b684be534a4358e6",
+      "title": "setup-agent-memory requires GNU realpath",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "9df5225874a02ca04db654a8c45282e45b76c0af",
+      "ownerArea": "agent-memory bootstrap portability",
+      "lane": "L12-agent-bootstrap-portability",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The bootstrap exits on errors and unconditionally uses GNU realpath -m while resolving a possibly absent target. The supported macOS system utility does not provide that option."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "The setup script resolves the longest existing directory prefix physically and normalizes the missing suffix in shell, removing the GNU realpath -m dependency for relative or absolute missing targets.",
+        "changedFiles": [
+          "scripts/setup-agent-memory.sh",
+          "packages/tooling/tool/cli/test/setup-agent-memory.test.ts"
+        ],
+        "verificationCommands": [
+          "zsh -ic 'bun test packages/tooling/tool/cli/test/setup-agent-memory.test.ts'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-019",
+      "codexId": "e3026e33c5448191bdb579132e2c6864",
+      "title": "delete-package can recursively remove workspace container trees",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "e97f73be4467e2d1899219cf9c3ac80fd148fb9d",
+      "ownerArea": "delete-package safety",
+      "lane": "L8-delete-package-safety",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Target resolution has no repository-root or workspace-ancestor refusal, the probe excludes the whole target subtree, and apply performs forced recursive removal. A branch can introduce a container workspace before operator execution."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "DeletePackage refuses the repository root and any target containing another resolved workspace before planning, repeats the topology guard before apply, and reports descendant workspaces as hard file-path dependents.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+          "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.policy.ts",
+          "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+          "packages/tooling/tool/cli/test/delete-package.test.ts"
+        ],
+        "verificationCommands": [
+          "zsh -ic 'bun test packages/tooling/tool/cli/test/delete-package-labs.test.ts packages/tooling/tool/cli/test/delete-package.test.ts'"
+        ]
+      }
+    }
+  ]
+}

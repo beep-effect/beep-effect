@@ -25,9 +25,13 @@ BDUF ceremony.
 
 ## Next Open Question
 
-Does the operator approve [`MAP.md`](./MAP.md) as the goal boundaries,
-dependencies, capability composition, sequencing, and first vertical slice?
-No goals are scaffolded until that review passes.
+The candidate-2/3 gate condition ("fold contract stabilizing: first slice
+proven, advisory self-hosting running") is satisfied on main evidence, and
+closing `packet-control-plane-core` frees the Machinery lane slot. Which
+reopener executes first at `decompose`: the fleet convention-migration
+campaign (named in the goal's PLAN P5, rubric `beep explore --check`, still
+unchartered) or candidate 2 — and does that campaign live as its own goal
+packet or fold into candidate 3?
 
 ## Read This First
 
@@ -38,9 +42,16 @@ No goals are scaffolded until that review passes.
 5. [`RESEARCH.md`](./RESEARCH.md) - synthesis of imports + six Grok lanes (stage 1).
 6. [`DECISIONS.md`](./DECISIONS.md) - grilling log (stage 2).
 7. [`BRIEF.md`](./BRIEF.md) - operator-ratified shaped pitch.
-8. [`MAP.md`](./MAP.md) - decomposition awaiting operator review.
+8. [`MAP.md`](./MAP.md) - ratified decomposition + amendment record (A–G).
 
 ## Trail
+
+- 2026-08-24 (pre-close review): five-lens adversarial review of the shipped
+  first slice grilled with the operator; MAP Amendments D–G recorded
+  (tolerant reader + raw-canonical digest, dual-stage genesis + no-backfill
+  law, tip-only trace, fork-applier staging + opt-in freeze). Close train
+  locked: this docs PR, then P3 rung 4 (pre-close hardening), then P5 close
+  through the guarded writer.
 
 - 2026-08-13 (final ceremony): operator signed off `BRIEF.md`; stage advanced
   to `decompose` and `MAP.md` was drafted from D1-D16 plus live capability

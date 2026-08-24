@@ -8,6 +8,7 @@ import {
   TurboCacheEnvironment,
   TurboCacheMode,
   TurboCachePlan,
+  TurboCacheSecretEnvName,
   turboCacheEnvironmentNeedsSecretSession,
   turboCachePlanArgs,
   turboCachePlanNeedsSecretSession,
@@ -121,6 +122,10 @@ describe("turbo cache plan resolution", () => {
 });
 
 describe("turbo cache control arguments", () => {
+  it("limits secret-session references to Turbo's endpoint, token, and team", () => {
+    expect(TurboCacheSecretEnvName.Options).toEqual(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"]);
+  });
+
   it.each(["--filter=@beep/schema", "--concurrency=3", "--summarize", "check", "--cache-dir=.turbo"])(
     "does not treat %s as cache control",
     (arg) => {

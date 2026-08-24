@@ -28,11 +28,13 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
-  canUseLocalEnv,
+  canUseTurboCacheSecretSession,
   configStringEqualsSync,
   configStringOption,
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
+  turboCacheSecretSessionEnvironment,
+  turboEnvExtendsAmbient,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath, LABS_TURBO_EXCLUDE_FILTER } from "../../internal/cli/Labs/index.ts";
@@ -707,11 +709,9 @@ const turboCachePlan = (args: ReadonlyArray<string>) =>
 const localTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
   turboCachePlanArgs(turboCachePlan(args));
 
-// Steps carrying their own environment must not be op-wrapped: `op run
-// --env-file=.env` overlays the checkout's dotenv onto the child, which would
-// clobber lane-critical values (the hosted coverage identity, a testcontainer
-// connection URI). They are `cache: false` lanes in turbo.json, so they lose no
-// remote hits by staying unwrapped; the run-time degradation below keeps a
+// Steps carrying their own environment stay outside the remote-cache secret
+// session. They are `cache: false` lanes in turbo.json, so they lose no remote
+// hits by staying unwrapped; the run-time degradation below keeps a
 // reference-backed remote posture from reaching them anyway.
 // The session verdict is a parameter for the same reason it is on
 // `withoutUnusableRemoteCache`: taken from the ambient environment here, the
@@ -726,7 +726,7 @@ const turboStepLocalEnv: {
 );
 
 /**
- * Decide whether a Turbo step opts into `op run` local-env injection. Exposed
+ * Decide whether a Turbo step opts into a remote-cache secret session. Exposed
  * for focused unit tests.
  *
  * **Example** (Opt a credential-free step in)
@@ -969,30 +969,68 @@ const withoutUnusableRemoteCache: {
  */
 export const withoutUnusableRemoteCacheForTesting = withoutUnusableRemoteCache;
 
-const withLocalEnv = Effect.fn("QualityTasks.withLocalEnv")(function* (step: QualityTaskStep) {
+const turboSecretSessionStep: {
+  (environment: Readonly<Record<string, string | undefined>>): (step: QualityTaskStep) => QualityTaskStep;
+  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep;
+} = dual(
+  2,
+  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep =>
+    QualityTaskStep.make({
+      label: `${step.label} (op run)`,
+      command: "op",
+      args: ["run", "--", step.command, ...step.args],
+      cwd: step.cwd,
+      ...carriedStepProps(step),
+      env: turboCacheSecretSessionEnvironment({ ...environment, ...(step.env ?? {}) }),
+    })
+);
+
+/**
+ * Wrap a Turbo step in the least-privilege remote-cache secret session.
+ *
+ * **Details**
+ *
+ * The wrapper does not load the project environment file. Its explicit child
+ * environment retains only the Turbo credential references and ordinary
+ * ambient values; spawn sites pair it with `extendEnv: false`.
+ *
+ * **Example** (Wrap a Turbo check step)
+ *
+ * ```ts
+ * import { QualityTaskStep, turboSecretSessionStepForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const step = QualityTaskStep.make({
+ *   label: "check",
+ *   command: "bunx",
+ *   args: ["turbo", "run", "check"],
+ *   cwd: "/repo"
+ * })
+ * console.log(turboSecretSessionStepForTesting(step, { PATH: "/usr/bin" }).command) // "op"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const turboSecretSessionStepForTesting = turboSecretSessionStep;
+
+const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(function* (step: QualityTaskStep) {
   if (step.useLocalEnv !== true) {
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
 
   // A missing, expired, or denied 1Password session degrades the lane to
   // local-only instead of failing it.
-  const shouldUseLocalEnv = yield* canUseLocalEnv(step.cwd);
-  if (!shouldUseLocalEnv) {
+  const canUseSecretSession = yield* canUseTurboCacheSecretSession(step.cwd);
+  if (!canUseSecretSession) {
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
 
-  return QualityTaskStep.make({
-    label: `${step.label} (op run)`,
-    command: "op",
-    args: ["run", "--env-file=.env", "--", step.command, ...step.args],
-    cwd: step.cwd,
-    ...carriedStepProps(step),
-  });
+  return turboSecretSessionStep(step, Bun.env);
 });
 
 const runStep = Effect.fn("QualityTasks.runStep")(function* (step: QualityTaskStep) {
-  const resolved = yield* withLocalEnv(step);
-  const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args);
+  const resolved = yield* withTurboSecretSession(step);
+  const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
   yield* Console.log(`[beep-cli] ${resolved.label}: ${commandText(resolved.command, resolved.args)}`);
   const exitCode = yield* runToExit({
     command: resolved.command,
@@ -1002,7 +1040,7 @@ const runStep = Effect.fn("QualityTasks.runStep")(function* (step: QualityTaskSt
       ...envOverrides,
       ...(resolved.env ?? {}),
     },
-    extendEnv: true,
+    extendEnv: turboEnvExtendsAmbient(resolved.command, resolved.args),
     stdin: "inherit",
     stdio: "inherit",
   }).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn ${commandText(resolved.command, resolved.args)}`));
@@ -1057,8 +1095,8 @@ type QuarantineStepAttempt = {
 const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQuarantine")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<QuarantineStepAttempt, QualityTaskConfigurationError, QualityTaskEnvironment> {
-  const resolved = yield* withLocalEnv(step);
-  const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args);
+  const resolved = yield* withTurboSecretSession(step);
+  const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
   const command = commandText(resolved.command, resolved.args);
   yield* Console.log(`[beep-cli] ${resolved.label}: ${command}`);
   const result = yield* runCaptured({
@@ -1069,7 +1107,7 @@ const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQ
       ...envOverrides,
       ...(resolved.env ?? {}),
     },
-    extendEnv: true,
+    extendEnv: turboEnvExtendsAmbient(resolved.command, resolved.args),
     source: "all",
     bound: flakeQuarantineOutputBound,
     tee: true,
@@ -1393,7 +1431,7 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
   step: QualityTaskStep
 ): Effect.fn.Return<QualityTaskStepOutput, QualityTaskConfigurationError, ChildProcessSpawner.ChildProcessSpawner> {
   const command = commandText(step.command, step.args);
-  const envOverrides = yield* turboEnvOverrides(step.command, step.args);
+  const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
   const captureTimeout = step.captureTimeoutMillis;
   const result = yield* runCaptured({
     command: step.command,
@@ -1403,7 +1441,7 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
       ...envOverrides,
       ...(step.env ?? {}),
     },
-    extendEnv: true,
+    extendEnv: turboEnvExtendsAmbient(step.command, step.args),
     source: "all",
     bound: qualityStepOutputBound,
     trim: true,
@@ -1429,7 +1467,7 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
 const collectStepOutputInternal = Effect.fn("QualityTasks.collectStepOutput")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<QualityTaskStepOutput, QualityTaskConfigurationError, QualityTaskEnvironment> {
-  const resolved = yield* withLocalEnv(step);
+  const resolved = yield* withTurboSecretSession(step);
   return yield* collectResolvedStepOutput(resolved);
 });
 
@@ -1457,7 +1495,7 @@ const runStepGroup = Effect.fn("QualityTasks.runStepGroup")(function* (
   }
 
   yield* Console.log(`[beep-cli] ${label}: running ${A.length(steps)} step(s) with concurrency ${concurrency}`);
-  const resolvedSteps = yield* Effect.forEach(steps, withLocalEnv);
+  const resolvedSteps = yield* Effect.forEach(steps, withTurboSecretSession);
   yield* Effect.forEach(resolvedSteps, (step) =>
     Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`)
   );
@@ -1745,11 +1783,7 @@ const optionalQualityTaskStep = ({ enabled, step }: OptionalQualityTaskStep): Re
 
 const rootBuildSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
   QualityTaskStep.make({
-    label: "build",
-    command: "bunx",
-    args: turboRunArgs(["build"], boundedRootTurboArgs(args)),
-    cwd: repoRoot,
-    useLocalEnv: true,
+    ...turboStep(repoRoot, "build", ["build"], boundedRootTurboArgs(args)),
     flakeQuarantine: "ts2589-no-location",
   }),
 ];
