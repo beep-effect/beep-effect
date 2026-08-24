@@ -1,0 +1,377 @@
+====================================================================================================
+AREA: Category-theory doctrine: the schema-is-truth fever dream and its carriers (repo root manifesto, standards/, crispen skill, workspace-substrate, identity-as-iri
+
+  [exact-structural-match] THE_SCHEMA_IS_TRUTH_A_CATEGORICAL_FEVER_DREAM_FOR_THOSE_WITH_THE_HUEVOS.md (lines 64-73, 119-134)
+  WHAT: The repo's manifesto claims the −1,206-line @beep/md + @beep/lexical-schema refactor worked because of Remark 2.13 of arXiv 2402.15332 (Categorical Deep Learning): a catamorphism out of an initial algebra is UNIQUE, so every hand-written traversal helper was a redundant copy of the one fold the schema had already determined — 'there was only ever one right answer, and we'd been
+  CONN: This is foldlab's 'everything else is folds' plus a theorem foldlab implies but doesn't state: the fold isn't just the universal mechanism, it's canonically UNIQUE per algebra. Foldlab's journal is itself an initial algebra (a log is μ(1 + Entry×−), the List fixpoint the paper uses as its first example), so the identity fold (hash chain) and the meaning fold (reducer) are two c
+  QUOTE: The schema had _already determined_ the one right fold
+
+  [exact-structural-match] THE_SCHEMA_IS_TRUTH_A_CATEGORICAL_FEVER_DREAM_FOR_THOSE_WITH_THE_HUEVOS.md (lines 67-68, 143-148) + packages/foundation/modeling/lexical/src/Lexical.m
+  WHAT: The manifesto identifies S.suspend recursive schemas with the initial algebra μF and invokes Lambek's lemma F(μF) ≅ μF as 'the theorem behind schema === data': one layer of schema applied to the data is isomorphic to the data. The live code ties this knot literally — NodeChildren in Lexical.model.ts carries a comment saying 'we tie the knot with S.suspend', and Md.model.ts does
+  CONN: Direct mate for foldlab's 'programs live in the same value universe as data — identity, meaning, and proof collapse into one mechanism.' Lambek's lemma IS the collapse: the description (one schema layer, the functor F) and the described (the data, μF) are the same fixed point, so there is no separate metadata plane to keep in sync. Foldlab gets the collapse via one canonical by
+  QUOTE: One layer of schema applied to the data is _isomorphic_ to the data. The paradox you felt was a **fixed point** with a name
+
+  [strong] THE_SCHEMA_IS_TRUTH_A_CATEGORICAL_FEVER_DREAM_FOR_THOSE_WITH_THE_HUEVOS.md (lines 77-99) + packages/foundation/modeling/lexical/src/Lexical.codec.ts (
+  WHAT: The manifesto's optic claim: a lens is {get, put}, a bidirectional codec is {decode, encode}, and that is exactly effect-Schema's S.link/S.decodeTo — so the Md↔Lexical codec is optic-shaped, the same categorical object that gives backprop its semantics. Section 4 names the program: render = S.encode is a catamorphism (fold AST to string), parse = S.decode is the anamorphism dua
+  CONN: Maps to foldlab's identity-fold vs meaning-fold pair over one journal: two directions/semantics canonically attached to ONE structure rather than two programs that happen to agree. In beep the single structure is the schema and the two directions are decode/encode; in foldlab it's the journal with hash-chain and reducer folds. Both systems refuse to let the pair drift apart bec
+  QUOTE: The render↔parse duality, the backprop of a neural network, and a humble markdown codec are **the same shape**. Sit with that.
+
+  [strong] THE_SCHEMA_IS_TRUTH_A_CATEGORICAL_FEVER_DREAM_FOR_THOSE_WITH_THE_HUEVOS.md (lines 151-152) + packages/foundation/modeling/lexical/test/Lexical.codec.t
+  WHAT: The manifesto states 'a lossy codec's roundTrip ∘ roundTrip = roundTrip is the functor factoring through a stable subalgebra — lossiness is an algebraic fact, not test trivia.' The test file enacts it: roundTrip is defined as literally re-running the real codec (documentToEditorState |> Effect.runSync |> editorStateToDocument), and every law is asserted by recomputation — expec
+  CONN: This is foldlab's proof-by-recomputation in miniature: verification is not a signature or a zk witness over the codec's output, it IS re-running the fold and checking you land on the fixed point. Beep additionally names WHERE you land — the stable subalgebra (the image of the codec) — which gives foldlab's 're-running the fold is the proof' its algebraic why: recomputation prov
+  QUOTE: lossiness is an algebraic fact, not test trivia
+
+  [strong] explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md (lines 11-27, 240-278, 455-469)
+  WHAT: A locked design doc promoting @beep/identity into a Grothendieck-fibration system: 'the identity path and the IRI become two literal-typed encodings of the same value; annotations become sections over the base category $I mints; retrieval becomes dereference' — O(path-length) address computation independent of corpus size, 'dereference, not search.' The ontology layer is 'an in
+  CONN: Structural cousin of foldlab's 'digests as universal names': canonical names whose retrieval is dereference rather than search — beep's names are path-addressed literal types instead of content digests, but both make the name the address and both interconvert encodings of one identity (path↔IRI↔CURIE vs bytes↔digest). The fold architecture also mirrors foldlab's fence + typed-r
+  QUOTE: the identity path and the IRI become two literal-typed encodings of the same value; annotations become sections over the base category `$I` mints; retrieval becomes dereference
+
+  [suggestive] standards/schema-first-development-prompt.md:42 + .claude/skills/crispen/SKILL.md:17 + docs/product/workspace-substrate.md:56
+  WHAT: The creed 'The schema is truth. Behavior precipitates from the data.' is not just the manifesto — it's operationalized in three enforcement carriers: the schema-first development standard (repository law), a dedicated refactoring skill (crispen) whose whole job is absorbing invariants back into schemas, and a product decision doc that rejected adopting Dockview because an agent
+  CONN: The governance parallel to foldlab's 'one canonical byte form': both systems pick a single collapse point (canonical bytes there, the schema here) and then refuse every design that would put truth anywhere else — foldlab won't admit un-digested state, beep won't admit a library whose serialized state is 'a JSON blob shaped by implementation history.' The manifesto's line 150 cl
+  QUOTE: schema is truth, and behavior precipitates from it
+====================================================================================================
+AREA: beep-effect concrete machinery matching foldlab's journal/fold/digest/fence/refusal/proof stack, plus the shared-vocabulary inventory of scratchpad/effect-ontol
+
+  [exact-structural-match] packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts
+  WHAT: The execution decision record: every governed agent action writes an ExecutionDecisionRecord chained per run by (seq, prevHash, hash), where hash is a SHA-256 seal over a versioned canonical-JSON encoding of the record's own content, prevHash included. verifyExecutionDecisionChain (~line 640) re-verifies a whole run by recomputing every seal, checking dense zero-based seq, and 
+  CONN: This is foldlab's identity fold (hash chain over the journal) plus proof-by-recomputation, exactly: plain SHA-256, no PKI, no signatures — re-running the fold IS the verification. The doc comment even states foldlab's own honest caveat: internal consistency proves nothing about the tail without an externally anchored tail hash — which is precisely the job foldlab gives the fenc
+  QUOTE: The chain property follows: alter any sealed field and the seal breaks; alter the seal and the next record's prevHash breaks.
+
+  [exact-structural-match] packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.ports.ts
+  WHAT: The ledger port is deliberately append-and-read only — no update, no delete, and no way to express either in the type; the Postgres tables additionally reject both by trigger (migration in packages/_internal/db-admin/src/migrations/EpistemicExecutionLedger.ts). Chain verification is intentionally NOT on the port: the domain verifier recomputes seals from whatever rows a reader 
+  CONN: Foldlab's 'storage is untrusted, the fold is the authority' stance made into a service contract: because verification is recomputation in the pure domain, the storage adapter is outside the trust boundary — it physically cannot certify its own contents.
+  QUOTE: verifyExecutionDecisionChain in epistemic/domain recomputes every seal from the rows a reader fetched, so a lying adapter cannot vouch for its own chain.
+
+  [exact-structural-match] packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts
+  WHAT: The enforcement boundary between the MCP agent surface and the ledger. Three load-bearing properties in the module doc: (1) write-ahead, fail-closed — the decision row is sealed and appended BEFORE the verdict returns, and a failed ledger write refuses the dispatch; (2) session-frozen authority — the grant set freezes on first dispatch and nothing read mid-session can widen it;
+  CONN: This is the fenced register for exactly-once decisions: 'no record, no action' is fencing stated as a slogan. The decision (what was decided) is durably registered before the effect (what happened) can occur — foldlab's journal/register split, at an agent-security boundary.
+  QUOTE: A failed decision write refuses the dispatch — no record, no action — with the bounded ledger-unavailable reason.
+
+  [exact-structural-match] packages/epistemic/domain/src/values/ExecutionVerdict/ExecutionVerdict.model.ts
+  WHAT: DenialReason is a closed LiteralKit domain of ten reasons (grant-expired, grant-set-digest-mismatch, policy-revision-mismatch, ledger-unavailable, ...); guidance is a constant per reason from a total lookup, never interpolated with request data, and reasons are recorded in the ledger but never returned to the agent.
+  CONN: Typed refusals, plus a threat-model twist foldlab doesn't state: free-text refusal reasons are a payload-smuggling channel into the journal, and differential refusal text is an oracle for reconstructing the grant set by enumeration. Refusals are journal values with a closed vocabulary precisely so the journal stays no-payload.
+  QUOTE: Denial reasons are a closed literal domain, never free text — free text is a payload-smuggling channel into a no-payload ledger.
+
+  [exact-structural-match] packages/epistemic/domain/src/values/internal/CanonicalJson.ts
+  WHAT: One deterministic canonical-JSON encoder (recursively sorted keys over wire-form values) deliberately kept as a single private implementation feeding both the grant-set seal and the ledger record seals. Digest-named values built on it: ExecutionRunKey ('opaque digest key naming one governed run'), SinkDestinationDigest and GrantOperationDigest — raw destinations and operation n
+  CONN: Foldlab's 'one canonical byte form -> digests as universal names' as literal code, including the reason there must be exactly one encoder: two encoders would silently split identity.
+  QUOTE: a second private copy could drift and silently split the digests those seals are supposed to share
+
+  [exact-structural-match] packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts
+  WHAT: DraftGrantSet vs FrozenGrantSet: evaluation only accepts the frozen type, so widening a frozen set does not compile; freezeGrantSet computes a digest over the versioned canonical encoding of (grants, policyRevision, frozenAt), and verifyFrozenGrantSetDigest re-checks the seal on any instance by recomputation. Every subsequent decision record carries the grant-set digest, and gr
+  CONN: A fenced register entry: 'what was decided' (the authority for a session) is fixed once, named by digest, referenced by name from every journal entry, and re-verifiable by recomputation. The draft/frozen type split is fencing enforced by the compiler.
+  QUOTE: the frozen class is additionally sealed two ways: a digest computed at freeze time
+
+  [exact-structural-match] packages/epistemic/domain/src/values/ClaimProjection/ClaimProjectionView.model.ts
+  WHAT: The claim read model, documented as: 'Deterministic in-memory read model folded from a single-owner authority array of candidate claims. It is a rebuildable projection: the same authority always yields a structurally-equal view, and it carries no write capability.' admittedKeys are sorted for stable, referentially-equal rebuilds.
+  CONN: Foldlab's meaning fold verbatim — the derived view is a fold over the authority sequence, deterministic and rebuildable, and structurally prevented from feeding back into the journal (no write capability). Same-vocabulary sibling: EdgeVersion (packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts) stores bitemporal append-only assertions with a supersedes line
+  QUOTE: there are no magic sentinel dates and no persisted isLatest flag, because "latest" is a question you ask the axes, not a fact you store
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+  WHAT: Branch-scoped append-only NDJSON journal of quality attempts: schema-typed events (attempt-started/attempt-finished carrying the exact verdict), fsync after append, and torn-trailing-record recovery — a host dying mid-append leaves a torn final line that gets detected and dropped so the journal stays usable. Its sibling ProofState.ts records durable proof state keyed by (comman
+  CONN: The repo's quality operator is a chained journal (what happened) plus a proof-by-recomputation register (what was verified): a 'proof' is nothing but the recorded output of running the quality fold over one exact byte state, valid only while the digest matches — drift the bytes and the only way back to proven is recomputing the fold. The torn-tail handling is real WAL disciplin
+  QUOTE: A host that dies mid-append leaves a torn final record; dropping it keeps the journal usable instead of failing every later attempt on the same bad line.
+
+  [exact-structural-match] goals/knowledge-surface-automation/research/p4-goals-projection-design.md
+  WHAT: The goals capability-projection engine design (merged PR #765): a pure compileCapabilityProjection maps decoded goal manifests to normalized rows consumed by both a disposable in-memory bun:sqlite engine (recursive CTEs for frontier/blockers/cycles) and a tiny pure-TypeScript reference evaluator; every SQL result must be byte-equal as canonical JSON to the TS evaluator's output
+  CONN: Foldlab's verification ladder rung R4 (lockstep conformance): the same fold implemented twice in independent substrates, run in lockstep, outputs compared byte-for-byte on the canonical encoding. The sealed fixtures are R0 fixture walls; the repo's property lanes (fcRuns=400) and the port's schema-arbitrary audit are R1. Line 201: 'SQL and TS outputs byte-equal as canonical JSO
+  QUOTE: SQL is differential-tested, never trusted. ... A query without a differential is a defect.
+
+  [exact-structural-match] packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts
+  WHAT: Fail-closed construction of source-identity-bound text anchors: only verifyTextAnchor can create the VerifiedTextAnchor runtime type (it re-derives the quote from the exact source bytes named by a SourceTextDigest); persisting demotes it to a TextAnchorVerificationReceipt whose doc says 're-verification requires canonical source text'. Failure reasons are a closed domain: cross
+  CONN: Proof-by-recomputation as a type discipline: a stored proof is not a proof — the verified type is only mintable by running the verification against digest-named canonical bytes, and reading it back from storage forces the recomputation. This is foldlab's 'identity, meaning, and proof collapse into one mechanism' for citations.
+  QUOTE: Persisted anchor and source identity from an earlier verification; re-verification requires canonical source text.
+
+  [strong] research/README.md
+  WHAT: The nightly research routine's laws: one immutable packet per dated run (corrections land as later packets, never edits), truth is per-packet claims.jsonl plus a single-writer research/ledger/, and every index/digest is derived at run start, rebuildable, and never committed. Machine proposes, human admits.
+  CONN: Journal doctrine applied to a knowledge pipeline rather than code: immutable append-only history + single-writer register + all views as rebuildable folds over the record stream. Weaker than foldlab (no hash chaining across packets), but the truth-vs-derived split is identical.
+  QUOTE: per-packet claims.jsonl plus research/ledger/ are the source of truth; every index/digest (exclusion digest, DuckDB catalog) is derived at run start, rebuildable, and never committ
+
+  [strong] goals/projection-dispatch-core/GOAL.md
+  WHAT: Active goal packet for restart-safe projection dispatch: atomically commit an accepted record plus projection intent, update a rebuildable projection through a persisted Effect v4 worker, and prove convergence after restart even when the desktop hint is lost — with mandatory kill-before/kill-after crash windows and the explicit law 'Never assume exactly once'; idempotency keys 
+  CONN: Foldlab's durable workflow = crash-safe + single-shot + replayable continuation, stated as acceptance criteria: single-shot comes from version-keyed fencing rather than delivery guarantees, and replayability comes from the projection being a rebuildable fold over the authority records. Depends on the effect-v4-workflow-engine-spike persistence adapter — the same journaled Workf
+  QUOTE: Prove the authority record plus intent commit atomically and every crash window recovers pending intent. Never assume exactly once.
+
+  [exact-structural-match] scratchpad/effect-ontology/Domain/Identity.ts
+  WHAT: The port's identity module (shared vocabulary — this is Benjamin's v4 rework of Mepuka's own Domain/Identity): ContentHash is the full 64-char SHA-256 as canonical content identity, deliberately independent from semantic identifiers and storage locations; upstream's 16-char prefix is quarantined as LegacyContentHashPrefix, ingress-only, 'not canonical content identity'; Documen
+  CONN: Digests as universal names, straight from foldlab — and OntologyVersion is a content-addressed artifact name (the Unison move: the version IS the hash of the content). The port's sharpest editorial decision is foldlab-flavored too: truncated digests are demoted to interop because a 64-bit prefix is not identity. IdempotencyKey is the fencing primitive: exactly-once keyed by the
+  QUOTE: Content identity is deliberately independent from semantic identifiers and storage locations.
+
+  [exact-structural-match] scratchpad/effect-ontology/Workflow/DurableActivities.ts
+  WHAT: The port's durable activities over effect/unstable/workflow's Activity.make: 'These activities are journaled by the WorkflowEngine for crash recovery', with every activity output an explicit schema because journal entries must be serializable values. Workflow/Merge.ts beside it is the pure fold: 'Implements monoid operations for streaming reduction' — KnowledgeGraph fragments f
+  CONN: Both halves of foldlab in Mepuka's own vocabulary: the durable workflow is a journaled, replayable continuation (crash recovery = replay the journal), and graph assembly is explicitly a monoid fold over a stream. Also Domain/Schema/EventSchema.ts builds on Effect v4's eventlog EventGroup — 'Payload schemas are the event-journal boundary' — so the port already contains a literal
+  QUOTE: Activities are automatically retried and journaled
+
+  [strong] scratchpad/effect-ontology/SOURCE_BASELINE.md
+  WHAT: The port itself is governed foldlab-style: the frozen upstream source is named by a sorted sha256sum manifest whose aggregate hash is recorded (9792d51e...), and README.md declares 'If the frozen source hashes drift, implementation stops until the baseline is explicitly refreshed.' PORTING_LEDGER.md is a per-symbol register of decided dispositions — ported / subsumed / redesign
+  CONN: The porting process is a digest-fenced journal-and-register: source identity is a content hash (drift breaks the fence and halts the fold), and every decision about meaning lands in an append-style decided-register with typed dispositions. Nice Discord beat: the methodology used to port Mepuka's code is itself shaped like foldlab.
+  QUOTE: If the frozen source hashes drift, implementation stops until the baseline is explicitly refreshed.
+
+  [strong] apps/professional-desktop/src/chat/ui/ComposerPolicy.ts
+  WHAT: Product-level typed refusals: ComposerSafetyRefusal is a schema class (line 131) emitted inline when a draft violates the Markdown user-content safety boundary, with per-category DocumentViolationFlags choosing the refusal phrasing; tested by test/intake-refusal.test.ts and test/composer-policy.test.ts. Same pattern at the domain edge: ClaimGateResult (packages/epistemic/domain
+  CONN: Shows typed refusal-as-value is repo-wide doctrine, not one slice: refusals are schema instances that flow through the UI and the domain rather than thrown strings, and event identity naming one immutable observation is the journal mindset leaking into plain entity IDs.
+  QUOTE: An inline refusal for a draft that fails the Markdown user-content safety boundary.
+====================================================================================================
+AREA: Yeet quality operator (packages/tooling/tool/cli/src/commands/Yeet) — receipts, fingerprints, proof-binding
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts (collectDiffFingerprint L228-245, YeetRunState L47-68, assertReusableVerifiedState 
+  WHAT: Yeet's 'proof' that a ~18-min verify passed is a durable YeetRunState JSON binding a SHA-256 tree fingerprint — sha256(git status --short \0 git diff --binary HEAD \0 git diff --binary --cached) — plus commitSha, branch/base/head, the proof command text, and per-lane proofs each keyed by (commandHash, diffFingerprint). `yeet publish --reuse-verified` recomputes the fingerprint 
+  CONN: Exact structural match to proof-by-recomputation + digests-as-universal-names: the verification's name is (command hash, tree hash), and checking a proof = recompute the digest and compare, no PKI. Bonus war story for the 'one canonical byte form' thesis: the fingerprint hashes the *staging arrangement*, not the resulting tree, so a no-op `git add` after a green verify renames 
+  QUOTE: One durable per-lane proof record keyed by command and tree fingerprint.
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts (yeetInboxRowId L279-285, appendYeetInboxRow L483-498, module Gotchas L22-36)
+  WHAT: The checkout failure inbox is an append-only NDJSON journal (`.beep/inbox/failures.ndjson`) of immutable, schema-versioned failure rows. Each row's id is deterministically derived from content — sha256(prNumber:headSha:lane) truncated — with an explicit law: 'Do not add observation-time entropy to the id.' Re-observing the same red across watch restarts re-derives the same id, 
+  CONN: Exact match to the chained-journal + digest-as-name pair: identity is a pure function of canonical content, so the journal can be at-least-once appended by concurrent writers while consumers get effective exactly-once semantics by folding with id-dedup. Liveness is deliberately NOT a row property — it's decided at read time by joining against the wave record, i.e., meaning is a
+  QUOTE: Rows are immutable first-observation evidence and the file is append-only
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts (module doc L1-29, YeetAckResolution L148-157, readYeetAckState L300-319)
+  WHAT: Acknowledgment of an inbox row is the existence of a receipt file at `.beep/inbox/acks/<deterministic-id>` — a per-decision register separate from the journal. The receipt is typed as a union of exactly three closing moves (fix-sha | wontfix+reason | thread-url); a bare 'seen' member is deliberately absent because a receipt with no work log 'would turn the ack protocol into a d
+  CONN: This is the journal/register split verbatim: failures.ndjson records what happened (immutable, append-only), acks/<id> records what was decided (keyed by the digest-name, one slot per identity). Divergence worth noting in the Discord reply: unlike a fenced write-once register, re-acking overwrites by contract (last resolution wins) because a typo'd SHA must not dead-end the fix
+  QUOTE: The receipt file's *existence* is the acknowledgment; its decodability is not.
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Yeet/internal/InboxView.ts (module doc L1-25, YeetInboxLiveness L88-101)
+  WHAT: The consumer side never trusts derived state on disk: `yeet inbox list` and the harness adapters (Claude hook deny, Codex splice, Grok tail) rebuild the enforcement view by replaying the whole journal — tolerant line-by-line decode (garbage counted and skipped, never fatal), dedup keep-first by id, then a three-way join of each row against its ack receipt and the current remedi
+  CONN: Exact match to 'everything else is folds' and the identity-fold vs meaning-fold distinction: the same append-only journal supports the identity question (deterministic ids, dedup) and the meaning question (enforcement view) as two different folds run at read time; writers append and never look back.
+  QUOTE: turns that append-only evidence into the three joined facts enforcement runs on: what failed (the row), whether it was dealt with (the ack state), and whether it still matters (liv
+
+  [strong] packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts (tryClaimProofLockExclusive L369-384, acquireFullProofLock L426-487)
+  WHAT: Heavyweight full-proof runs are serialized per checkout by an atomic exclusive file create (`flag: "wx"` = O_CREAT|O_EXCL) whose payload is a typed lock record (pid, command, proofTier, startedAt). A losing contender decodes the incumbent and computes a total disposition — replace-stale | refuse-active | refuse-unreadable — and even after removing a stale lock it re-claims atom
+  CONN: A fencing register in miniature: exactly-one proof session is decided by a single atomic write only one contender can win, the fence token is the lock file itself, and every non-winning outcome is a typed refusal (YeetCommandError with the owner's pid and start time) rather than a wait or a clobber.
+  QUOTE: Re-claim atomically; if another contender won the race after we removed the stale lock, fail closed rather than overwrite an active lock.
+
+  [strong] packages/tooling/tool/cli/src/commands/Yeet/internal/Remediation.ts (module doc L1-38)
+  WHAT: The wave record at `.beep/inbox/dispatch.json` is the decision state for the backpressure engine: first red for a head opens a repair wave, later reds queue onto it, a new push supersedes the wave. The dispatch policy is explicitly 'a pure total function over the persisted YeetRemediationWave'; the effectful shell only loads, appends the inbox row, persists, announces. The reco
+  CONN: Strong match to Raft-as-fold-over-log and durable-workflow thinking: state = pure fold of (persisted record, next observation), crash/race safety comes not from consensus but from the journal's append-only + content-addressed-id invariants making every divergence re-convergent under refold. Exactly-once delivery is replaced by idempotence-by-identity.
+  QUOTE: never a lost capsule (the inbox is append-only and ids are deterministic, so consumers dedup by id)
+
+  [strong] packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts (YeetAttemptStarted/Finished L42-105)
+  WHAT: A second, branch-scoped append-only journal (`attempts.ndjson`): a durable attempt-started marker is written immediately BEFORE a Yeet attempt executes, and an attempt-finished marker embeds the exact typed verdict afterward, both as a schema-versioned tagged union (yeet-attempt-journal/v1) correlated by attemptId.
+  CONN: The write-ahead half of the durable-workflow pattern: an attempt that crashes leaves a started-without-finished pair the next session can observe on replay — the journal, not process memory, is what makes the operator loop crash-safe and auditable.
+  QUOTE: A durable marker written immediately before a Yeet attempt executes.
+
+  [strong] packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts (runPublishMode L419-540) + packages/tooling/tool/cli/src/commands/Yeet/internal/Publi
+  WHAT: Publish ordering enforces that proof and pushed bytes are the same bytes: commit is created first, the full proof runs against that exact tree, writeVerifiedState binds the green run to the fingerprint, and then validatePostCommitProofDidNotChangeWorktree refuses the push if running the proof itself mutated the worktree. With --reuse-verified the entire proof phase is replaced 
+  CONN: Proof-by-recomputation's two obligations, both enforced mechanically: (1) a proof is only valid over the canonical bytes it was computed from — so reuse is a digest comparison, and (2) the verifier must be a pure fold — if recomputation changes the input it attests, the attestation is refused. The stale-proof error is a typed refusal, not an exit code.
+  QUOTE: yeet publish --reuse-verified found stale proof state: ... diff fingerprint changed
+
+  [strong] packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts (L1-9) and InboxPorcelain.ts (Gotchas L14-21)
+  WHAT: Every non-plan yeet run writes a schema-first machine-readable verdict document (typed lane statuses: passed/failed/skipped/not-run/not-run-early-stop) so agents read outcomes without scanning logs. The `yeet inbox append` porcelain refuses any externally-supplied row whose id does not equal the deterministic id re-derived from its capsule, 'because a wrongly-minted id would fo
+  CONN: Typed refusals as first-class outputs (the verdict doc and every YeetCommandError are structured values, not strings), and the append guard is literally an identity-fold integrity check at the ingress boundary: the system re-runs the naming fold on submitted data and rejects names it cannot recompute — verification of identity by recomputation, applied to untrusted writers.
+  QUOTE: a wrongly-minted id would fork the failure's identity away from its ack receipt and its dedup history
+====================================================================================================
+AREA: goals/ packet system: packet-core CAS event streams, deterministic fold, fork repair, and the projection engine design
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.schemas.ts (lines 813-869, 156-184)
+  WHAT: Each goal packet carries a per-event content-addressed journal at goals/<slug>/ops/events/: one JSON file per event, identity = sha-256 of the event's canonical (key-sorted, compact) JSON encoding, each event carrying a `parent` digest chaining to the previous event and an `expectedRevision` CAS declaration. The digest is never stored inside the file — it lives only in the file
+  CONN: This IS foldlab's 'one canonical byte form -> digests as universal names -> chained journal for what happened'. Canonical encoding (canonicalJsonText: recursively key-sorted, absent keys omitted) makes bytes the identity; the parent-digest chain is the identity fold (hash chain); the journal is append-only files in git.
+  QUOTE: two concurrent appends produce two children of one parent — a detectable fork, never a silent overwrite
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts (lines 1-14, 113-131)
+  WHAT: Event digests are recomputed from raw bytes at read time and verified against the file name; a mismatch surfaces as a `digest-mismatch` chain issue rather than being trusted. There is no signature, no PKI — verification is literally re-running the canonical encode + hash.
+  CONN: Proof-by-recomputation, verbatim: re-running the encode+digest IS the verification. Same for the meaning side — the golden replay test folds the committed stream and asserts byte-for-byte equality with the committed derived state and trace (test/goals-packet-core.test.ts:339-408), i.e. re-running the fold is the proof that the projection is honest.
+  QUOTE: it is recomputed at read time and verified against the file name, so a tampered or corrupted event surfaces as a chain issue instead of being trusted
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketFold.ts (lines 291-344)
+  WHAT: `foldPacketEvents` is a pure fold over the same journal the hash chain verifies: it orders events by seq-then-digest, walks the unambiguous linear prefix, and derives status, `furthestStage` (monotonic high-water mark by ordinal), `resumeStage` (cursor of the last stage event), tip, and the effective risk-tier override. Identical streams fold to identical states regardless of r
+  CONN: The identity-fold vs meaning-fold split over one journal: PacketDigest walks the chain for identity, foldPacketEvents reduces the same events for meaning. Two folds, one value universe, exactly the foldlab decomposition. Forks and integrity issues don't fail the fold — they're carried *inside* the derived state as data.
+  QUOTE: identical streams fold to identical states regardless of read order
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketEventStore.ts (lines 305-333) and PacketCore.errors.ts (lines 59-99)
+  WHAT: Appends are compare-and-set against the folded revision: `expectedRevision !== derived.revision` raises `PacketCasConflictError` (a schema-tagged error carrying expected/actual revisions), and any append onto a forked or integrity-broken chain is refused outright with `PacketStreamError`. Reads are advisory and never fail; only writes fence.
+  CONN: The fenced register for exactly-once decisions: the fence token is the expected revision, the decision (a status transition or risk-tier override) lands exactly once or is refused whole, and losing a race yields a typed refusal — not an exception, a schema value (`S.TaggedError`) with the fencing evidence inside it. Typed refusals as first-class results, exactly.
+  QUOTE: A compare-and-set append lost to a concurrent write; the transition is refused whole.
+
+  [strong] packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts (lines 1-22, 440-448)
+  WHAT: The guarded writer splits every decision into `plan` (fold the live stream, compute the exact events a transition would append plus the derived state after them — writes nothing) and `commit` (append each event under its own CAS, regenerate the trace projection only after all land). A partial failure leaves a valid linear chain, never a fork; the caller re-plans against reality
+  CONN: Durable-workflow shape: the decision is crash-safe (partial commit = valid prefix, replayable), single-shot (CAS fence), and replayable (re-plan is just re-fold). And the comment at line 441 is the journal-outranks-register doctrine stated as code: the meaning fold over the journal is truth; any stored snapshot (ops/manifest.json) is a fallback record.
+  QUOTE: The stream is the system of record for its own history: when it already derives a status ... that derived status is the accurate `previous`, not the caller's manifest snapshot.
+
+  [exact-structural-match] packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketFold.ts (lines 558-654) and goals/packet-control-plane-core/PLAN.md (lines 89-99)
+  WHAT: `planForkRepair` (P3 rung 3, PR #766) is a pure, read-only fork-repair derivation: survivor chosen by seq-then-digest order ('content-deterministic, no clock trust'), losing branches' bodies rebased verbatim onto the surviving tip (timestamps/actors preserved — history rebased, never rewritten), losing files listed for removal. It targets the innermost fork on the surviving pat
+  CONN: Explicit fork-repair as a named, deterministic, plan-first operation over the journal — the exact concept foldlab names, including the invariant-shaped proof ('applying the plan in memory folds linear ... nothing lost', a strict-shrink argument that is an inductive invariant over repeated application). Survivor-by-digest is choosing history by content addressing, not clocks.
+  QUOTE: deterministic survivor (the fork's first child in seq-then-digest order — content-deterministic, no clock trust)
+
+  [exact-structural-match] goals/packet-control-plane-core/ops/trace.json and PacketCore.schemas.ts (lines 1287-1334)
+  WHAT: The committed projection (`ops/trace.json`) binds its `sourceTip` (the journal tip it was computed from) and a `projectorVersion` (the version of the fold code). Staleness is always derivable: tip moved, or projector version bumped. Stale traces are regenerated from the stream, never upcast — 'projections are disposable derived copies'. This packet self-hosts: its own live 3-ev
+  CONN: Meaning folds as projections with the fold's code identity pinned in the output: the projection names both its input (tip digest) and its reducer version, so 'is this meaning current?' is a pure comparison — recompute-over-trust again. The projectorVersion-as-evolution-axis (bump only when bytes for old streams change, v1 traces retire by decode failure) is content-addressed-me
+  QUOTE: projections are disposable derived copies, regenerated from the stream, never upcast
+
+  [exact-structural-match] goals/knowledge-surface-automation/research/p4-goals-projection-design.md (contracts 2, 6; lines 47-70, 199-216)
+  WHAT: The projection-engine design (PR #765) for `beep goals next|explain`: a pure `compileCapabilityProjection` maps decoded manifests (any discovery order) to sorted, duplicate-free row arrays; the same rows feed both a disposable in-memory bun:sqlite engine (recursive CTEs) and a tiny pure-TypeScript reference evaluator; every SQL result is compared byte-for-byte as canonical JSON
+  CONN: This is R4 lockstep conformance from the verification ladder: two independent implementations of the same meaning fold run in lockstep and must agree byte-for-byte, with the reference evaluator kept 'small enough to review as obviously correct'. The repo also holds the lower rungs: committed golden fixtures = R0 fixture walls (test/fixtures/packet-core/{golden-linear,forked,ris
+  QUOTE: SQL is differential-tested, never trusted.
+
+  [strong] goals/packet-control-plane-core/PLAN.md (lines 54-99) and goals/packet-control-plane-core/SPEC.md (lines 45-60)
+  WHAT: The word 'rung' is native vocabulary here: P3 is 'Remaining core rungs', each rung a separate small PR that 'may not weaken the P1 proof fixtures' — proofs are a ratchet, later rungs build on earlier proofs. The SPEC's binding constraints read like a foldlab creed: 'Git Markdown packets and the event chain are the sole system of record; every projection is read-only and derived
+  CONN: Convergent ladder framing (honest caveat: beep's rungs sequence delivery, foldlab's rungs grade verification strength — but both are monotone ladders where a rung must preserve every proof below it), plus the journal/derived doctrine stated as ratified law rather than emergent style. Good Discord quote material because it was written with zero knowledge of foldlab.
+  QUOTE: Git Markdown packets and the event chain are the sole system of record; every projection is read-only and derived.
+
+  [strong] packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketFold.ts (lines 51-114)
+  WHAT: `PACKET_EVENT_UPCASTERS` is a version-keyed registry of pure rewriters bridging older wire shapes to the current event version, with golden replay fixtures required to prove an upcast stream 'still folds byte-identically'. Contrast with projections, which are never upcast — only recomputed.
+  CONN: The two evolution disciplines fall out of the journal/fold split exactly as foldlab predicts: the journal (recorded facts) evolves by explicit upcast with byte-stable replay proof, while meaning (projections) evolves by re-running the fold. Facts migrate; meanings recompute.
+  QUOTE: golden replay fixtures prove the rewritten stream still folds byte-identically
+
+  [suggestive] goals/README.md and goals/packet-control-plane-core/ops/manifest.json
+  WHAT: The wider packet system around the event core: ~110 goal packets, each a directory of authored Markdown (SPEC normative, PLAN mutable, GOAL launcher) plus ops/manifest.json (machine-readable lifecycle/phases/verificationCommands/stopConditions) and an immutable history/reflections/ archive. Manifests declare capabilities (provides/requires) that the projection engine folds into
+  CONN: Raft-as-fold-over-log at the portfolio level: the global 'state of the initiative machine' (frontier, blocked-on, cycles) is never stored — it is a deterministic fold over per-packet declarations, recomputed per invocation from a disposable engine, with the readiness field literally versioned as nominal-vs-evidence-backed so 'what was decided' and 'what is proven' never share a
+  QUOTE: One deterministic projection feeds JSON, the Mermaid block, and the later dashboard so renderers cannot invent divergent semantics.
+====================================================================================================
+AREA: Append-only fact/decision machinery: candor gate + IDS fact records + research ledger (plus the epistemic ExecutionLedger hash-chain precedent they build on)
+
+  [exact-structural-match] packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts (sealExecutionDecision ~L506-547, verifyExecutionDecisionChain ~L636-699
+  WHAT: A hash-chained write-ahead decision journal in the epistemic slice: each ExecutionDecisionRecord is sealed by SHA-256 over a versioned canonical-JSON encoding of its content (prevHash included, hash excluded); verifyExecutionDecisionChain re-verifies a run by recomputing every seal and checking dense zero-based seq + prevHash linkage. No signatures, no PKI — anyone with the row
+  CONN: This IS foldlab's identity fold + proof-by-recomputation: verification is literally re-running the fold over the journal and comparing digests, with the same canonical-byte-form prerequisite (canonicalJson + a pinned encodingVersion feed digestOf). Even the caveat matches the honest version of the claim — recomputation proves mutual consistency of what you hold, and tail-anchor
+  QUOTE: alter any sealed field and the seal breaks; alter the seal and the next record's prevHash breaks
+
+  [exact-structural-match] packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.ports.ts (L1-15, L34-41)
+  WHAT: The ExecutionLedger port: appendDecision / appendOutcome / readDecisions / readUnsettledAllowed and nothing else. appendDecision is the write-ahead half — the governed gate records the decision BEFORE the effect runs, and any append failure becomes a refusal (the effect never runs unrecorded). readUnsettledAllowed is the derived 'decided, outcome unknown' predicate. Chain verif
+  CONN: Foldlab's fenced register for exactly-once decisions, plus typed refusals: decision-before-effect is the fence (no record, no action), a denied verdict carries a bounded reason schema, and trust is placed in recomputation rather than in the adapter — the reader folds, the storage layer is untrusted.
+  QUOTE: The surface is deliberately append-and-read only: there is no update, no delete, and no way to express either, because the tables reject both by trigger and the mutable operation w
+
+  [exact-structural-match] packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.service.ts (header L1-11, evaluateGroup L200-223, makeCandorPolicy L254-275)
+  WHAT: The candor gate: a derived, fail-closed predicate recomputed on every call from two append-only record sets (PatentCitationEvent facts + CandorDisposition judgments). There is no stored 'duty satisfied' state anywhere — blocked/released exists only as the output of the recomputation. Currency of an observation is derived from declared supersession links (lineage written once, h
+  CONN: A meaning fold over the journal, with foldlab's exact posture: the fold's output (the gate verdict) is never persisted, only recomputed — so there is nothing to drift, cache-poison, or falsely close; verification of 'is promotion candor-blocked' IS re-running the fold. The head-derivation from declared supersession is the same 'the log is truth, current state is a fold' move as
+  QUOTE: Nothing here stores, caches, or infers a "duty satisfied" state ... every branch either finds a recorded human decision bound to an exact observation version, or declines to treat 
+
+  [exact-structural-match] packages/law-practice/domain/src/entities/CandorDisposition/CandorDisposition.model.ts (L20-49)
+  WHAT: The decision record: one dated attorney judgment bound to one exact observation version (event id + text digest). A recorded disposition is never edited — revision and withdrawal append a new record whose `supersedes` field names the prior one, and lifecycle is a LiteralKit domain (active/superseded/withdrawn). The consuming predicate fails closed on authorship: only a User-kin
+  CONN: Foldlab's fenced register entry: what was decided is written once and never overwritten, only retired by a later dated superseding entry — so the register preserves 'what was decided at time T' forever while the fold derives what currently stands. The User-principal check is a fencing rule on WHO may write a register entry that discharges an obligation.
+  QUOTE: A recorded disposition is never edited. Revision and withdrawal append a new record whose `supersedes` names the prior one, so what was decided at filing time stays readable exactl
+
+  [strong] packages/_internal/db-admin/drizzle/20260813143745_baseline-functions/migration.sql (L83-89 execution ledger, L182-189 candor tables) + packages/law-p
+  WHAT: Postgres BEFORE UPDATE OR DELETE triggers on the decision/outcome, contradiction, evidence-verification, candor (event, disposition, IDS fact), and legal-position tables that RAISE EXCEPTION 'law practice candor records are append-only: % on %'. The PGlite migration test proves the guard by attempting the forbidden UPDATE/DELETE, and the port-level vocabulary (CandorRecord.port
+  CONN: Journal immutability enforced at three layers of the same stack — type vocabulary (can't express mutation), service port (no member), storage trigger (rejects it) — which is the substrate a chained-journal/fold system needs before proof-by-recomputation means anything: recomputing a fold only verifies history if history physically can't be rewritten in place.
+  QUOTE: RAISE EXCEPTION 'law practice candor records are append-only: % on %', TG_OP, TG_TABLE_NAME;
+
+  [strong] packages/law-practice/domain/src/entities/IdsSubmissionFact/IdsSubmissionFact.model.ts (~L27-50) + explorations/patent-citation-candor-gate/DECISIONS.
+  WHAT: The fact half of the hard fact/judgment split: each IDS submission is an independent append-only record of presence-only facts (what was filed, fees, statements, office treatment as observed) carrying its own operativeDate; a correction is a NEW record because 37 CFR 1.97(i) makes the later date operative — editing the original would destroy a legally meaningful fact. The DECIS
+  CONN: This is the identity-fold vs meaning-fold split over one journal, drawn as a legal boundary: everything mechanically derivable (window arithmetic, currency, coverage) is a fold the machine re-runs; the one thing that is NOT a fold — meaning at law — exists only as a human-authored register entry. The recorded fact plays the theorem role (recomputable by anyone), the disposition
+  QUOTE: a fact that would be destroyed by editing the original record
+
+  [strong] research/README.md (Laws, L23-45) + goals/nightly-research-routine/SPEC.md (L80-87 novelty ledger, L106-115 publish fence)
+  WHAT: The nightly research routine's truth architecture: per-packet claims.jsonl plus research/ledger/ are the single-writer source of truth; packets are immutable after merge — corrections land as later packets, never edits; EVERY index/digest (exclusion digest, DuckDB catalog) is derived at run start, rebuildable, and never committed. Unactioned suggestions tombstone into research/
+  CONN: The same one-mechanism split at repo scale: claims.jsonl+ledger is the chained journal (append-only, corrections as later entries), tombstones are dated superseding dispositions (never deletion — supersession with an evidence condition for revival), the last-successful-run stamp + open-PR block is a fencing register giving exactly-once packet publication, and the rule 'every di
+  QUOTE: per-packet `claims.jsonl` plus `research/ledger/` are the source of truth; every index/digest ... is derived at run start, rebuildable, and never committed
+
+  [strong] packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.values.ts (UncoveredReason, L18, L98-135)
+  WHAT: The gate's failure channel is a closed LiteralKit vocabulary of reasons — no-disposition, disposition-not-effective, disposition-author-not-user, no-rule56-judgment, quarantined, possible-duplicate, source-unresolved, anchor-unverified, ambiguous-lineage — exhaustive over the reasons the package can reach; every blocked verdict names WHY each event is uncovered rather than rais
+  CONN: Foldlab's typed refusals: the gate never fails with an exception or an opaque false — refusal is a first-class, schema-bounded value in the fold's output, so a blocked promotion is itself recorded, explainable data in the same value universe as the facts that produced it.
+  QUOTE: Fail-closed reason one recorded citation event is not covered by an attorney judgment.
+
+  [strong] goals/patent-citation-candor-gate/SPEC.md (Constraints, L234-243 version currency; acceptance L304-322)
+  WHAT: The SPEC's currency law: 'Version currency is declared, never inferred' — arrival order, ingestion order, and timestamps never establish which observation is current; supersession must name the exact prior observation version, the head is derived, and absent/ambiguous/forked lineage (including replays and out-of-order arrival) fails closed. The test suite pins replay-safety exp
+  CONN: This is the durable-workflow/replayability discipline from foldlab stated as schema law: the journal must fold to the same state under redelivery, reordering, and replay — idempotence and crash-safety are properties of the fold over declared links, not of the transport. Wall-clock time is explicitly demoted below declared causal structure, same as a chained journal demotes rece
+  QUOTE: Lineage is written once and the head is derived, never stored as an `isCurrent` flag
+
+  [suggestive] packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts (L165-232, digest fields)
+  WHAT: The ledger's no-payload discipline: raw sink destinations and granted operation names never enter the ledger — only their SHA-256 digests do (SinkDestinationDigest, GrantOperationDigest), and operators correlate by recomputing digests from what they hold.
+  CONN: Digests-as-universal-names: the journal references things by content digest rather than by carrying them, and correlation works by anyone recomputing the digest of the value they possess — foldlab's 'digests as universal names' used for exactly its intended purpose (naming without custody).
+  QUOTE: operators correlate by recomputing digests from
+====================================================================================================
+AREA: programs live in the same value universe as data — concrete beep-effect code examples (recursive schema fixpoints, codec-as-renderer, exhaustive folds, derived-
+
+  [exact-structural-match] packages/foundation/modeling/md/src/Md.render.ts (lines 1562-1568, 1609, 1639, with the AST fixpoint at packages/foundation/modeling/md/src/Md.model.t
+  WHAT: The @beep/md Markdown renderer is not a function bolted next to the data model — it IS a schema value. The document AST is a recursive schema fixpoint (`InlineChildren = S.Array(S.suspend((): S.Codec<Inline.Type, Inline.Encoded> => Inline))` at Md.model.ts:293, same for BlockChildren:1195 and the mutually-recursive `ListItemChild = S.suspend(... S.Union([Inline, Block]))` at 12
+  CONN: Exact instantiation of foldlab's 'programs live in the same value universe as data': the meaning fold (AST → rendered text) is packaged as a codec, so the program that extracts meaning is a first-class value built from the same combinators as the data model, and the direction that can't exist is a typed refusal rather than an exception. Identity (the AST as canonical form) and 
+  QUOTE: export const DocumentToMarkdown = DocumentSchema.pipe(S.decodeTo(Markdown, { decode: SchemaGetter.transform(renderMarkdownDocumentUnsafe), ... }))
+
+  [exact-structural-match] packages/foundation/modeling/md/src/Md.render.ts:656-657 (also 711-712, 1028, 1055, 1149, 1232; Md.behavior.ts:211-212; Block union at Md.model.ts:281
+  WHAT: Every renderer over the Markdown AST is a compiler-checked total fold: `export const renderMarkdownBlock: (block: Block) => string = Match.type<Block>().pipe(Match.tagsExhaustive({...}))` — one handler per tag of the 18-member Block union, no default case allowed. The same pattern folds the union for HTML (:711), plain text (Md.behavior.ts:211), and the Pandoc bridge (packages/
+  CONN: foldlab's 'everything else is folds' with the totality obligation discharged statically: the fold over the closed tagged union is the program, and exhaustiveness — the thing foldlab's verification ladder has to re-establish per fold — is a type-system invariant here. It is the algebra-of-the-union made mandatory: you cannot ship a fold that forgets a case.
+  QUOTE: export const renderMarkdownBlock: (block: Block) => string = Match.type<Block>().pipe(Match.tagsExhaustive({...
+
+  [exact-structural-match] packages/foundation/modeling/html/src/Html.conformance.ts (proof minting at 208-229, schema at 248-256, fold at 2288, conform at 2348)
+  WHAT: HTML conformance is proof-by-recomputation made literal. `inspectConformance` (:2288) is a pure fold over the recursive HTML AST returning path-addressed issues; `conform` (:2348) runs it and, only on zero issues, mints a `ConformantHtmlValue` — a value that is unforgeable outside the module (unique `conformantHtmlProof` symbol + a module-private `WeakMap` from proof to the pro
+  CONN: This is foldlab's 'proof-by-recomputation, no PKI/zk' as a TypeScript mechanism: there is no signature to check — possession of the proof value is only possible if the fold actually ran to completion, and re-running `conform` is the verification. The proof, the data it certifies, and the checker are all values in one universe (the proof even has a schema).
+  QUOTE: Runtime-issued proof of HTML AST conformance.
+
+  [strong] packages/foundation/ui-system/dock/src (reducer at internal/Reducer.ts:1066 and 1205; events at Dock.events.ts:497-560; refusals at Dock.outcomes.ts:3
+  WHAT: The dock/workspace engine is a command→fold→event system where every layer is schema data. The layout is a recursive fixpoint (`DockNodeRef = S.suspend((): S.Codec<DockNode.Type, DockNode.Encoded> => DockNode)`, Dock.models-tree.ts:644). `reduceDockCommand` (internal/Reducer.ts:1066) is the deterministic fold from (workspace, command envelope) to a transition that carries schem
+  CONN: Structurally this is foldlab's journal + meaning fold + typed refusals in one package: state is a fold over schema-valued events, restore is replay, 'nothing happened' is an enumerated decided value rather than a silent return, and even the union-of-events program surface is computed from a literal domain (data) instead of hand-written — the schema derives the program shape.
+  QUOTE: Expected reasons a valid dock intent produces no state change or domain event.
+
+  [strong] packages/foundation/modeling/md/src/Md.escape.ts:1014 (StringArray at :40-44; story in commit 719ba22e4b, PR #303 'crispen @beep/md')
+  WHAT: The deleted-line story: the repo-wide 'crispening' campaign's pilot deleted @beep/md's two free-floating hand-written S.is guard walls and replaced the public guard with the schema-derived one — the surviving line is literally `export const isStringArray = StringArray.is;` (:1014), byte-identical in signature to the helper it retired. The swap was certified by an added S.toArbi
+  CONN: 'Schemas whose behavior is derived rather than authored' with receipts — the guard is no longer a program someone wrote, it's a projection of the data definition; and the parity law is exactly foldlab's R1 rung (property tests) used to prove a derived program equivalent to the hand-written one it deletes. The schema even generates its own test inputs (S.toArbitrary), so the ver
+  QUOTE: export const isStringArray = StringArray.is;
+====================================================================================================
+AREA: Content-addressing and hash-chain machinery sweep (canonical byte forms, digests-as-names, append-only journals, proof-by-recomputation, fencing registers) acro
+
+  [exact-structural-match] packages/epistemic/domain/src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts
+  WHAT: Shipped domain value: a versioned, escaped, TOTAL canonical string encoding of an epistemic edge identity (absent scopes render as a dedicated '<none>' marker, symmetric relations sort their endpoints so both presentations collapse), whose SHA-256 digest is the branded LogicalEdgeKey — the `logical_key` column every bitemporal edge version partitions on.
+  CONN: Exact 'one canonical byte form -> digest as universal name'. The digest exists for a structural reason foldlab would recognize: SQL treats NULL components as distinct under '=', so a multi-column key silently splits one logical edge into several; folding every component (including absences) into one total encoding makes identity a decidable string equality, then the hash names 
+  QUOTE: Folding every component — including absent ones — into a single total encoding makes "same logical edge" a decidable string equality.
+
+  [exact-structural-match] packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts (chain verify at lines 674-699, ledger doctrine lines 1-20, honest limit
+  WHAT: A per-run hash-chained execution ledger: write-ahead decision records carry (seq, prevHash, hash) with dense zero-based sequencing, sealed as SHA-256 over a versioned canonical-JSON encoding; outcome records bind to exactly one allowed decision by decisionHash. The ledger stores ONLY hashes, opaque ids, bounded literals, and typed outcomes — raw destinations and operation names
+  CONN: This is foldlab's identity fold (hash chain) over a journal, plus the decided-vs-happened split: decisions are 'what was decided' (a refused dispatch produces a decision and NO outcome), outcomes are 'what happened', bound by hash. Verification is literally proof-by-recomputation — no PKI, no signatures; the file is explicit that seals are plain SHA-256 with no secret key and e
+  QUOTE: Read it as "these records are mutually consistent," never as "nothing was removed."
+
+  [exact-structural-match] packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts (receipt-vs-proof at lines 140-251)
+  WHAT: Fail-closed text-anchor verification: the runtime 'verified anchor' is an opaque value that cannot be decoded, constructed, or persisted — it is produced only by actually checking the candidate anchor against exact canonical source text. What CAN be persisted is a structural receipt, and the reverse conversion is intentionally unavailable. Typed refusal reasons (quote-mismatch,
+  CONN: Proof-by-recomputation as a type-system invariant: a stored certificate is just a claim; the only way to reacquire proof is to re-run the verification fold against the canonical bytes. This is foldlab's 're-running the fold IS verification' made unforgeable in TypeScript — the proof type has no decoder, so the compiler enforces that persistence demotes proof to receipt.
+  QUOTE: a receipt must be re-verified with canonical source text
+
+  [exact-structural-match] packages/ontology/use-cases/src/tools/OntologyToolService.ts (fingerprintSession lines 90-101, ensureCas line 226, content-addressed prov snapshots li
+  WHAT: Every ontology dataset is canonicalized with W3C RDFC-1.0 (a real canonical byte form for RDF graphs, blank-node labeling included), hashed to a 64-hex OntologyFingerprint, and every mutation is a stateless compare-and-set on that fingerprint: mismatch returns a recoverable typed refusal telling the agent to refetch and rebuild the proposal against the current fingerprint. Prov
+  CONN: Canonical bytes -> digest as name -> fenced (exactly-once-per-expected-state) decision, in one shipped surface. The CAS-on-semantic-fingerprint is a fencing register for graph mutations: a decision is admitted only against the state it was decided about. Also carries typed refusals ('Visible refusal for an ontology mutation that would have no effect', fail-closed TierGate refus
+  QUOTE: Semantic rdfc-1.0 fingerprint used by stateless ontology compare-and-set writes.
+
+  [exact-structural-match] packages/tooling/library/ai-metrics/src/otlp.ts (lines 845-852, 560-580) + .changeset/ai-metrics-otlp-at-least-once.md
+  WHAT: AI-metrics span export is at-least-once with content-addressed span ids: traceId/spanId are derived deterministically from privacy-safe source content (sourceKind, sourceRole, sourcePathHash), so identical content always produces identical ids and a redelivered span collapses into the row the collector already holds (unique constraint on span_id). The export watermark is explic
+  CONN: Exactly-once BY NAMING rather than by handshake — foldlab's core move. The changeset even narrates the failure it fixed in foldlab terms: the old watermark 'recorded an intention, not an outcome'. Correctness lives in the digest-derived identity; the checkpoint only keeps redundant sends rare.
+  QUOTE: Correctness therefore does not depend on the watermark being perfectly accurate; the watermark only keeps redundant sends rare.
+
+  [strong] packages/tooling/library/ai-metrics/src/derived-storage.ts (lines 540-560, 916+)
+  WHAT: A run-once migration ledger (`ai_metrics_schema_migrations`, migration_id primary key) for derived DuckDB storage. The doctrine is lived, not aspirational: migration `ai-metrics-otlp-export-watermark-v1` is KNOWN WRONG and preserved verbatim in source, because the ledger records the id, not the text — editing it in place would fix nothing on stores that applied it while silentl
+  CONN: A fencing register for exactly-once decisions plus journal immutability: you never rewrite what was decided, you append a new decision. Honest caveat: migration ids are minted names, not content digests, so the fence is nominal — the immutability is enforced by discipline and the run-once ledger, not by hashing the migration text.
+  QUOTE: Shipped migrations are immutable; treat this one as a historical record.
+
+  [strong] packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts (seal lines 330-380, refusal lines 447-500)
+  WHAT: A run's execution authority is frozen into a FrozenGrantSet sealed by a SHA-256 digest over a versioned canonical-JSON encoding computed at freeze time; verifyFrozenGrantSetDigest re-verifies the seal by recomputing from the set's own contents, and evaluation fails closed with the typed refusal `grant-set-digest-mismatch` — answering nothing else — when the seal disagrees. The 
+  CONN: Foldlab's 'fenced register for what was decided': authority is decided once at run open, sealed by digest, and any set that crossed a process or persistence boundary must have its seal recomputed before it is trusted. Proof-by-recomputation again — the seal is not a signature, it is a recomputable fold over canonical bytes.
+  QUOTE: Re-verifies a frozen set's seal by recomputing the digest from its own contents. Run this on any frozen set that crossed a process or persistence boundary before trusting it for ev
+
+  [strong] .claude/hooks/hook-pulse.sh + packages/tooling/library/ai-metrics/src/hook-pulse.ts + test/hook-pulse-writer.test.ts (conformance suite at line 516)
+  WHAT: An append-only NDJSON hook-pulse ledger, sharded one file per UTC day per session so concurrent worktrees can never interleave lines. Identifiers (sessionId, cwd, transcriptPath) are salted SHA-256 pseudonyms computed as `salt\0value`, and the same raw event must carry identical digests on every rung. The writer is bash; the reader/replayer is TypeScript; a conformance test spa
+  CONN: Three foldlab ideas at once: digests as universal (privacy-preserving) names that are stable across independent producers; an append-only journal whose replay reader recomputes meaning rather than trusting the writer; and genuine lockstep conformance (R4 on the verification ladder) — two implementations of one convention held together by executing both and comparing digests, no
+  QUOTE: The writer is shell, so the only honest conformance test spawns the real shell writer
+
+  [strong] packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts (lines 43, 226-244, 709-765)
+  WHAT: Yeet's quality proof is a durable per-lane record keyed by command and a SHA-256 'tree fingerprint' — hash of HEAD commit plus the exact staged and unstaged binary diffs. Publish asserts the saved proof's fingerprint still matches the current worktree; any drift ('diff fingerprint changed') refuses and forces `yeet verify` to be re-run against the exact current tree.
+  CONN: Memoized proof-by-recomputation: the proof is not portable testimony, it binds to the digest of the exact byte state it was computed over, and verification of anything else means re-running the fold (the verify suite). Structurally between foldlab's 'recomputation IS verification' and a build cache — the honest reading is that the fingerprint decides WHEN recomputation is owed,
+  QUOTE: One durable per-lane proof record keyed by command and tree fingerprint.
+
+  [strong] packages/tooling/library/qa-capture/src/Collector.service.ts (canonical seq lines 343-370) + packages/tooling/tool/cli/src/commands/Qa/
+  WHAT: The browser-QA witness pipeline: a page-injected witness posts NDJSON action events to a collector that appends them to `events.ndjson` from a single writer fiber, rewriting EVERY accepted event's seq with one monotone session-wide counter at ingest (witness counters restart per navigation, so raw page-local seqs collide). `beep qa extract` then derives per-gesture frame strips
+  CONN: A real append-only journal with a single sequencer owning canonical order — the collector is the authority on 'what happened', exactly the journal half of foldlab. Honest caveat on the fold half: extraction is a deterministic fold over the journal, but the final judge is a vision model, so the meaning fold at the end of this pipeline is NOT replayable — evidence is; judgment is
+  QUOTE: The collector owns the canonical session-wide sequence: every accepted event's seq is rewritten at ingest
+
+  [strong] packages/epistemic/domain/src/values/EvidenceVerification/EvidenceVerification.model.ts (key at lines 120-160)
+  WHAT: One exact evidence-id + verified-source-anchor pair is named by a SHA-256 digest over a versioned canonical-JSON wire encoding ('evidence-verification-manifestation/v1'), and isEvidenceVerificationManifestationKey checks a persisted key by re-deriving it from the payload. Uniqueness is applied to (org_id, manifestation_key).
+  CONN: Digest-as-name for a semantic manifestation (schema-encode -> canonical JSON -> version prefix -> hash), with validation as recomputation. Same pattern as LogicalEdgeIdentity applied to evidence provenance; together they show canonical-encoding-then-digest is a house pattern in the epistemic domain, not a one-off.
+  QUOTE: Repeating the same manifestation produces the same key; changing any bound field produces a different key.
+
+  [strong] packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts (lines 59-120, 269-305)
+  WHAT: Workspace source text is resolved against PINNED `sha256:`-prefixed digests: the resolver re-hashes the source bytes and refuses with typed 'source-digest-mismatch' if they drifted, extracts text with a pinned extractor, re-hashes the extracted text, and refuses with 'text-digest-mismatch' if that disagrees too. Derived operation/artifact ids embed the digest hex (`operation:${
+  CONN: Content-addressed identity verified by recomputation ON EVERY USE, at two levels (raw bytes and the deterministic extraction fold over them) — the extractor is pinned precisely so the text digest is a reproducible function of the source digest. Typed refusals for each failure mode rather than a boolean.
+  QUOTE: The source bytes no longer match the pinned source digest.
+
+  [strong] packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts (lines 96-149) + packages/documents/server/src/aggregates/Sync/VaultSyncEn
+  WHAT: Document intake hashes the raw bytes into a DocumentContentDigest that becomes part of the Document's identity and its projected vault path; the vault sync engine then uses digest equality to classify filesystem changes — same digest at a new path is a move/rename, same path with a new digest is an edit requiring re-upload.
+  CONN: Digest as the identity of content independent of location — the sync engine literally distinguishes 'the value moved' from 'the value changed' by comparing names-of-bytes, which is the operational payoff foldlab claims for content addressing. Weaker than a full CAS: storage paths are taxonomy+filename with the digest carried along, not digest-keyed blobs.
+
+  [strong] packages/epistemic/tables/src/entities/EdgeVersion/EdgeVersion.table.ts + goals/belief-view-engine/SPEC.md (lines 12-71) + packages/epistemic/domain/s
+  WHAT: The bitemporal EdgeVersion table is an append-only version history partitioned by the content-derived logical_key, with a `logical_key` exclusion constraint and an open-head partial unique index (one current version per edge) owned by raw SQL because Drizzle can't express them. Over this substrate: ClaimProjection is a shipped deterministic total fold ('folded from a single-own
+  CONN: Journal (append-only versions named by a digest) + meaning fold (deterministic projection to a view) + the identity/meaning separation: the digest names the timeline, the fold derives current belief, and replay determinism is a checked acceptance criterion, not a vibe. The SPEC even hunts replay poison — mutable inputs that break byte-identical refolds — which is the exact fail
+  QUOTE: Byte-identical replay: same request + policy revision + authority cut
+
+  [suggestive] packages/tooling/tool/docgen/src/ProofManifest.ts (lines 204-212, 385-401) and turbo task hashing generally (.claude/skills/turborepo/references/cachi
+  WHAT: The contrast set. Docgen's proof manifest digests sorted canonical file lists (inputs, outputs, tool version) and verifies by recomputing and comparing — but the file says plainly what it is: 'The manifest is a reuse proof, not a published API contract.' Turbo's content-addressed task fingerprints are the same shape with even less semantic weight.
+  CONN: These are digests-as-cache-keys, not digests-as-names: nothing downstream refers to the digest, nothing folds over a history of them, and staleness just means 'recompute'. Worth citing in the Discord reply as the honest boundary — beep has both kinds, and the difference between a memo key and a universal name is exactly whether anything else in the system uses the digest to REF
+  QUOTE: The manifest is a reuse proof, not a published API contract.
+
+  [suggestive] explorations/effect-ontology-harvest/research/content-addressing-storage.md
+  WHAT: Benjamin's own harvest research over Mepuka's effect-ontology codebase: line-cited analyses of its provider-versioned embedding cache keys, extraction idempotency fingerprint, and reversible content-addressed path grammar, each mapped against beep's existing Sha256Hex substrate (packages/foundation/modeling/schema/src/Sha256.ts) and digest-derived artifact/operation identities 
+  CONN: Direct Discord callback: beep has already structurally mapped Mepuka's own content-addressing machinery onto its digest substrate — including critiques (truncated 16-hex ContentHash vs beep's full-digest policy, ambiguous '|' delimiters vs canonical structured encoding) that are exactly the canonical-byte-form discipline foldlab preaches.

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "protocol-as-value",
+    "title": "Protocol as Value",
+    "status": "active",
+    "stage": "shape",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-23",
+    "updated": "2026-08-23"
+  }
+}
