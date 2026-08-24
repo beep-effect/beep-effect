@@ -11,16 +11,20 @@
  * @since 0.0.0
  */
 
-import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
-import { Effect, FileSystem, HashSet, Path, pipe } from "effect";
-import * as Eq from "effect/Equal";
+import { Effect, HashSet, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { jsonObjectTextFromMixedOutput } from "../../internal/cli/MixedOutputJson.ts";
+import {
+  CitedArtifactExistsInput,
+  CitedArtifactExistsVerdict,
+  evaluateCitedArtifactExists,
+} from "./CitedArtifactExistsGate.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
+import type { FileSystem, Path } from "effect";
 import type { QaInventory } from "./Inventory.schemas.ts";
 import type { QaEventLog } from "./Qa.session.ts";
 
@@ -188,6 +192,62 @@ export const crossCheckEvidence: {
     })
 );
 
+const citedArtifactVerdictToCrossCheckImpl = (
+  verdict: CitedArtifactExistsVerdict,
+  missingEventIds: ReadonlyArray<number>
+): EvidenceCrossCheck =>
+  CitedArtifactExistsVerdict.match(verdict, {
+    allowed: () => EvidenceCrossCheck.make({ missingEventIds, missingPaths: A.empty<string>() }),
+    denied: ({ audit }) => EvidenceCrossCheck.make({ missingEventIds, missingPaths: audit.detail.missingPaths }),
+  });
+
+/**
+ * Projects a cited-artifact gate verdict into the legacy evidence aggregate.
+ *
+ * **Details**
+ *
+ * Audit metadata stays on the typed verdict. The projection carries only the
+ * ordered missing paths and the unchanged event-id result because those are
+ * the fields the existing renderer and command error channels expose.
+ *
+ * **Example** (Project a denied verdict)
+ *
+ * ```ts
+ * import {
+ *   CitedArtifactExistsDenied,
+ *   CitedArtifactExistsGate,
+ *   CitedArtifactExistsVerdict
+ * } from "@beep/repo-cli/commands/Qa/CitedArtifactExistsGate"
+ * import { citedArtifactVerdictToCrossCheck } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ *
+ * const verdict = CitedArtifactExistsVerdict.cases.denied.make({
+ *   audit: {
+ *     detail: CitedArtifactExistsDenied.make({
+ *       checkedPaths: ["frames/ghost.png"],
+ *       missingPaths: ["frames/ghost.png"]
+ *     }),
+ *     evaluator: "qa",
+ *     gateId: CitedArtifactExistsGate.id,
+ *     occurredAt: "2026-08-24T00:00:00.000Z",
+ *     outcome: "denied",
+ *     reason: "The citation is missing."
+ *   }
+ * })
+ * const check = citedArtifactVerdictToCrossCheck(verdict, [412])
+ * console.log(check.missingPaths) // ["frames/ghost.png"]
+ * ```
+ *
+ * @param verdict - Typed cited-artifact gate result.
+ * @param missingEventIds - Existing witness-event cross-check result.
+ * @returns Lossless legacy aggregate used by judge-lint and judge-ingest.
+ * @category projections
+ * @since 0.0.0
+ */
+export const citedArtifactVerdictToCrossCheck: {
+  (missingEventIds: ReadonlyArray<number>): (verdict: CitedArtifactExistsVerdict) => EvidenceCrossCheck;
+  (verdict: CitedArtifactExistsVerdict, missingEventIds: ReadonlyArray<number>): EvidenceCrossCheck;
+} = dual(2, citedArtifactVerdictToCrossCheckImpl);
+
 /**
  * Render a cross-check failure into an operator-readable error.
  *
@@ -261,30 +321,12 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
   inventory: QaInventory,
   eventLog: QaEventLog
 ): Effect.fn.Return<EvidenceCrossCheck, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  // fallow-ignore-next-line code-duplication -- judge-check resolves cited paths while judge-pack assembles typed image evidence after the same mandatory root guard
-  const canonicalRoot = yield* fs.realPath(layout.root).pipe(Effect.orElseSucceed(() => path.resolve(layout.root)));
-  // Citations are round-relative by contract; a `../` escape resolving to an
-  // artifact in another round (or anywhere above) must count as missing, not
-  // as backed evidence.
-  const present = yield* Effect.forEach(citedPaths(inventory), (relative) => {
-    const resolved = path.resolve(canonicalRoot, relative);
-    return resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: relative }).pipe(
-      Effect.filterOrFail(
-        (canonical) => Eq.equals(resolved, canonical),
-        () => QaCommandError.make({ message: `qa judge-check refused linked evidence path "${relative}".` })
-      ),
-      Effect.flatMap((canonical) => fs.stat(canonical)),
-      Effect.map((info) => (Eq.equals(info.type, "File") ? O.some(relative) : O.none<string>())),
-      Effect.orElseSucceed(O.none<string>)
-    );
-  });
-  return crossCheckEvidence(
-    inventory,
-    HashSet.fromIterable(A.getSomes(present)),
-    HashSet.fromIterable(A.map(eventLog.events, (event) => event.seq))
+  const verdict = yield* evaluateCitedArtifactExists(
+    CitedArtifactExistsInput.make({ citedPaths: citedPaths(inventory), roundRoot: layout.root })
   );
+  const knownEventIds = HashSet.fromIterable(A.map(eventLog.events, (event) => event.seq));
+  const missingEventIds = A.filter(citedEventIds(inventory), (seq) => !HashSet.has(knownEventIds, seq));
+  return citedArtifactVerdictToCrossCheck(verdict, missingEventIds);
 });
 
 /**
