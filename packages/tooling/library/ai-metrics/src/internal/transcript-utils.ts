@@ -8,38 +8,31 @@ import { A, Str } from "@beep/utils";
 import { flow, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { AiMetricsTranscriptSource } from "../models.ts";
+import * as S from "effect/Schema";
+import {
+  AiMetricsTranscriptSource,
+  ClaudeTranscriptEventName,
+  CodexTranscriptEventName,
+  OpenClawTranscriptEventName,
+} from "../models.ts";
+import type { AiMetricsTranscriptEventName } from "../models.ts";
+
+export { repoPathToClaudeProjectName } from "../shell.ts";
+
 import type { Path } from "effect";
 
-const codexEventNames = [
-  "assistant_message",
-  "event",
-  "event_msg",
-  "response_item",
-  "session_meta",
-  "turn_context",
-  "user_message",
-] as const;
+const isClaudeTranscriptEventName = S.is(ClaudeTranscriptEventName);
+const isCodexTranscriptEventName = S.is(CodexTranscriptEventName);
+const isOpenClawTranscriptEventName = S.is(OpenClawTranscriptEventName);
 
-const claudeEventNames = ["assistant", "message", "summary", "system", "tool_result", "tool_use", "user"] as const;
-
-const openClawEventNames = [
-  "event",
-  "gateway_request",
-  "gateway_response",
-  "message",
-  "request",
-  "response",
-  "session",
-  "tool_call",
-  "tool_result",
-] as const;
-
-const eventNamesForSource = (sourceKind: AiMetricsTranscriptSource): ReadonlyArray<string> =>
+const isEventNameForSource = (
+  sourceKind: AiMetricsTranscriptSource,
+  value: unknown
+): value is AiMetricsTranscriptEventName =>
   AiMetricsTranscriptSource.$match(sourceKind, {
-    claude: () => claudeEventNames,
-    codex: () => codexEventNames,
-    openclaw: () => openClawEventNames,
+    claude: () => isClaudeTranscriptEventName(value),
+    codex: () => isCodexTranscriptEventName(value),
+    openclaw: () => isOpenClawTranscriptEventName(value),
   });
 
 /**
@@ -55,23 +48,6 @@ export const transcriptLines: (content: string) => ReadonlyArray<string> = flow(
 );
 
 /**
- * Return the first defined string from a small candidate list.
- *
- * @category utilities
- * @since 0.0.0
- */
-export const firstString = (...values: ReadonlyArray<string | undefined>): O.Option<string> =>
-  pipe(values, A.map(O.fromNullishOr), A.getSomes, A.head);
-
-/**
- * Convert a repository path into Claude's project-directory name.
- *
- * @category utilities
- * @since 0.0.0
- */
-export const repoPathToClaudeProjectName: (repoRoot: string) => string = Str.replace(/[/\\]/gu, "-");
-
-/**
  * Normalize a source path relative to a root with POSIX separators.
  *
  * @category utilities
@@ -85,15 +61,6 @@ export const normalizedRelativePath: {
 );
 
 /**
- * Build an optional timestamp object for schema class constructors.
- *
- * @category utilities
- * @since 0.0.0
- */
-export const optionalTimestamp = (timestamp: string | undefined): { readonly timestamp?: string } =>
-  timestamp === undefined ? {} : { timestamp };
-
-/**
  * Normalize transcript metadata into a bounded, source-specific metric event name.
  *
  * @category utilities
@@ -104,12 +71,12 @@ export const metricEventName = ({
   sourceKind,
   value,
 }: {
-  readonly fallback: string;
+  readonly fallback: AiMetricsTranscriptEventName;
   readonly sourceKind: AiMetricsTranscriptSource;
   readonly value: string | undefined;
-}): string =>
+}): AiMetricsTranscriptEventName =>
   pipe(
     O.fromNullishOr(value),
-    O.filter((eventName) => A.contains(eventNamesForSource(sourceKind), eventName)),
+    O.filter((eventName) => isEventNameForSource(sourceKind, eventName)),
     O.getOrElse(() => fallback)
   );

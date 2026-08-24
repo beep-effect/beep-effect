@@ -12,7 +12,7 @@ import * as O from "@beep/utils/Option";
 import { Effect, Encoding, flow, Order, pipe, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { firstString, metricEventName, optionalTimestamp, transcriptLines } from "./internal/transcript-utils.ts";
+import { metricEventName, transcriptLines } from "./internal/transcript-utils.ts";
 import { AiMetricsSourceAttribution, AiMetricsSourceRole, AiMetricsTranscriptSource } from "./models.ts";
 import type { TranscriptIngestSummary } from "./models.ts";
 
@@ -149,7 +149,7 @@ export class AiMetricsRedactionResult extends S.Class<AiMetricsRedactionResult>(
  * import { AiMetricsRawEventEnvelope } from "@beep/repo-ai-metrics"
  *
  * const envelope = AiMetricsRawEventEnvelope.make({
- *   eventName: "codex.event_msg",
+ *   eventName: "event_msg",
  *   lineNumber: 1,
  *   rawEventHash: "event-hash",
  *   sourceKind: "codex",
@@ -189,7 +189,7 @@ export class AiMetricsRawEventEnvelope extends S.Class<AiMetricsRawEventEnvelope
  *
  * const sanitized = AiMetricsSanitizedTranscript.make({
  *   acceptedEvents: 1,
- *   eventNames: ["codex.event_msg"],
+ *   eventNames: ["event_msg"],
  *   rawEventEnvelopes: [],
  *   rejectedLines: 0,
  *   sourceKind: "codex",
@@ -257,7 +257,7 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
  *   }),
  *   sanitized: AiMetricsSanitizedTranscript.make({
  *     acceptedEvents: 1,
- *     eventNames: ["codex.event_msg"],
+ *     eventNames: ["event_msg"],
  *     rawEventEnvelopes: [],
  *     rejectedLines: 0,
  *     sourceKind: "codex",
@@ -692,7 +692,8 @@ const redactionResultFor = (content: string): AiMetricsRedactionResult => {
 
 const eventNameFor = (sourceKind: AiMetricsTranscriptSource, decoded: GenericTranscriptLine): string =>
   pipe(
-    firstString(decoded.type, decoded.event),
+    O.fromUndefinedOr(decoded.type),
+    O.orElse(() => O.fromUndefinedOr(decoded.event)),
     O.map((value) => metricEventName({ fallback: "event", sourceKind, value })),
     O.getOrElse(() => "event")
   );
@@ -733,7 +734,7 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
           sourceKind,
           sourcePathHash,
           sourceRole: attribution.sourceRole,
-          ...optionalTimestamp(decoded.value.timestamp),
+          ...O.getSomesStruct({ timestamp: O.fromUndefinedOr(decoded.value.timestamp) }),
         })
       );
     }),
@@ -758,7 +759,7 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
  *     sourcePath: "session.jsonl",
  *     summary: TranscriptIngestSummary.make({
  *       acceptedEvents: 1,
- *       eventNames: ["codex.event_msg"],
+ *       eventNames: ["event_msg"],
  *       rejectedLines: 0,
  *       sourceKind: "codex",
  *       sourcePathHash: "source-hash",
@@ -817,8 +818,8 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
     sourceRole: attribution.sourceRole,
     ...O.getSomesStruct({ threadSpawn: O.fromUndefinedOr(attribution.threadSpawn) }),
     totalLines: summary.totalLines,
-    ...O.getSomesStruct({ firstTimestamp: O.fromUndefinedOr(summary.firstTimestamp) }),
-    ...O.getSomesStruct({ lastTimestamp: O.fromUndefinedOr(summary.lastTimestamp) }),
+    ...O.getSomesStruct({ firstTimestamp: summary.firstTimestamp }),
+    ...O.getSomesStruct({ lastTimestamp: summary.lastTimestamp }),
   });
 });
 
@@ -837,7 +838,7 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
  *     sourcePath: "session.jsonl",
  *     summary: TranscriptIngestSummary.make({
  *       acceptedEvents: 1,
- *       eventNames: ["codex.event_msg"],
+ *       eventNames: ["event_msg"],
  *       rejectedLines: 0,
  *       sourceKind: "codex",
  *       sourcePathHash: "source-hash",

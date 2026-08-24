@@ -2,6 +2,8 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
   AGENT_EFFECTIVENESS_PHOENIX_PROJECT,
   AgentEffectivenessAnnotationValue,
+  AgentSession,
+  AgentTurn,
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
   AiMetricsConfigSnapshotInput,
@@ -82,6 +84,8 @@ import {
   runAiMetricsRetentionRestoreDrill,
   sourceDiscoveryToJson,
   summarizeTranscriptText,
+  summaryToJson,
+  TranscriptIngestSummary,
   upsertAiMetricsBenchmarkCase,
   writeAiMetricsConfigSnapshotArtifacts,
   writeAiMetricsDerivedStorage,
@@ -98,7 +102,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { FastCheck as fc, TestClock } from "effect/testing";
-import type { TUnsafe } from "@beep/types";
 
 const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
   const formatIssue = SchemaIssue.makeFormatterDefault();
@@ -256,7 +259,7 @@ const phoenixService = <A extends { readonly tool: string }>(spec: { readonly se
     A.findFirst((service) => service.tool === AiMetricsTool.Enum.phoenix)
   );
 
-layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (it) => {
+layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "summarizes Codex JSONL and counts rejected lines",
     Effect.fn(function* () {
@@ -280,9 +283,12 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       expect(summary.acceptedEvents).toBe(2);
       expect(summary.rejectedLines).toBe(1);
       expect(summary.eventNames).toEqual(["event_msg", "session_meta"]);
-      expect(summary.firstTimestamp).toBe("2026-05-05T10:00:00Z");
-      expect(summary.lastTimestamp).toBe("2026-05-05T10:01:00Z");
+      expect(summary.firstTimestamp).toEqual(O.some("2026-05-05T10:00:00Z"));
+      expect(summary.lastTimestamp).toEqual(O.some("2026-05-05T10:01:00Z"));
       expect(summary.sourcePathHash).not.toBe("codex.jsonl");
+      const encoded = yield* summaryToJson(summary);
+      expect(encoded).toContain('"firstTimestamp":"2026-05-05T10:00:00Z"');
+      expect(encoded).toContain('"lastTimestamp":"2026-05-05T10:01:00Z"');
     })
   );
 
@@ -304,20 +310,23 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
   );
 
   it("preserves crispened schema wire shapes and arbitrary round trips", () => {
-    expect(
-      S.encodeUnknownSync(S.fromJsonString(CodexTranscriptLine))(CodexTranscriptLine.make({ type: "event_msg" }))
-    ).toBe('{"type":"event_msg"}');
-    expect(
-      S.encodeUnknownSync(S.fromJsonString(ClaudeTranscriptLine))(ClaudeTranscriptLine.make({ type: "message" }))
-    ).toBe('{"type":"message"}');
-    expect(
-      S.encodeUnknownSync(S.fromJsonString(OpenClawTranscriptLine))(OpenClawTranscriptLine.make({ event: "message" }))
-    ).toBe('{"event":"message"}');
+    expect(CodexTranscriptLine.encodeJsonSync(CodexTranscriptLine.make({ type: "event_msg" }))).toBe(
+      '{"type":"event_msg"}'
+    );
+    expect(ClaudeTranscriptLine.encodeJsonSync(ClaudeTranscriptLine.make({ type: "message" }))).toBe(
+      '{"type":"message"}'
+    );
+    expect(OpenClawTranscriptLine.encodeJsonSync(OpenClawTranscriptLine.make({ event: "message" }))).toBe(
+      '{"event":"message"}'
+    );
 
     assertSchemaEncodeDecodeRoundTrip(AiMetricsTranscriptTextSummaryInput);
+    assertSchemaEncodeDecodeRoundTrip(AgentSession, { numRuns: 8 });
+    assertSchemaEncodeDecodeRoundTrip(AgentTurn, { numRuns: 8 });
     assertSchemaEncodeDecodeRoundTrip(CodexTranscriptLine, { numRuns: 8 });
     assertSchemaEncodeDecodeRoundTrip(ClaudeTranscriptLine, { numRuns: 8 });
     assertSchemaEncodeDecodeRoundTrip(OpenClawTranscriptLine, { numRuns: 8 });
+    assertSchemaEncodeDecodeRoundTrip(TranscriptIngestSummary, { numRuns: 8 });
     assertSchemaEncodeDecodeRoundTrip(AiMetricsOtlpAttributeValue);
     assertSchemaEncodeDecodeRoundTrip(AiMetricsForwarderOtlpExport);
     assertSchemaEncodeDecodeRoundTrip(AgentEffectivenessAnnotationValue);

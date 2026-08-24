@@ -10,7 +10,7 @@ import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { firstString, metricEventName, optionalTimestamp, transcriptLines } from "./internal/transcript-utils.ts";
+import { metricEventName, transcriptLines } from "./internal/transcript-utils.ts";
 import {
   AgentTurn,
   AiMetricsTranscriptSource,
@@ -22,8 +22,6 @@ import {
 import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("ingest");
-
-const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString(TranscriptIngestSummary));
 
 /**
  * Error raised by AI metrics ingest helpers.
@@ -97,7 +95,7 @@ const codexTurn = (sourcePathHash: string, lineNumber: number, line: CodexTransc
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.codex,
     sourcePathHash,
-    ...optionalTimestamp(line.timestamp),
+    timestamp: O.fromUndefinedOr(line.timestamp),
   });
 
 const claudeTurn = (sourcePathHash: string, lineNumber: number, line: ClaudeTranscriptLine): AgentTurn =>
@@ -110,26 +108,24 @@ const claudeTurn = (sourcePathHash: string, lineNumber: number, line: ClaudeTran
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.claude,
     sourcePathHash,
-    ...optionalTimestamp(line.timestamp),
+    timestamp: O.fromUndefinedOr(line.timestamp),
   });
 
 const openClawTurn = (sourcePathHash: string, lineNumber: number, line: OpenClawTranscriptLine): AgentTurn =>
   AgentTurn.make({
-    eventName: pipe(
-      firstString(line.event, line.type),
-      O.map((value) =>
-        metricEventName({
-          fallback: "event",
-          sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
-          value,
-        })
+    eventName: metricEventName({
+      fallback: "event",
+      sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
+      value: pipe(
+        O.fromUndefinedOr(line.event),
+        O.orElse(() => O.fromUndefinedOr(line.type)),
+        O.getOrUndefined
       ),
-      O.getOrElse(() => "event")
-    ),
+    }),
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
     sourcePathHash,
-    ...optionalTimestamp(line.timestamp),
+    timestamp: O.fromUndefinedOr(line.timestamp),
   });
 
 const decodeTranscriptTurn = (
@@ -163,23 +159,10 @@ const eventNameList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string>
 );
 
 const timestampList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string> = flow(
-  A.map((event) => O.fromNullishOr(event.timestamp)),
+  A.map((event) => event.timestamp),
   A.getSomes,
   A.sort(Order.String)
 );
-
-const summaryTimestampFields = (
-  events: ReadonlyArray<AgentTurn>
-): { readonly firstTimestamp?: string; readonly lastTimestamp?: string } => {
-  const timestamps = timestampList(events);
-  const firstTimestamp = A.head(timestamps);
-  const lastTimestamp = A.get(timestamps, A.length(timestamps) - 1);
-
-  return {
-    ...(O.isSome(firstTimestamp) ? { firstTimestamp: firstTimestamp.value } : {}),
-    ...(O.isSome(lastTimestamp) ? { lastTimestamp: lastTimestamp.value } : {}),
-  };
-};
 
 /**
  * Summarize JSONL transcript text into a stable ingest summary.
@@ -216,12 +199,12 @@ export const summarizeTranscriptText: (
       )
     );
     const lines = transcriptLines(content);
-    const parsed = yield* Effect.forEach(
+    const events = pipe(
       lines,
-      (line, index) => Effect.succeed(decodeTranscriptTurn(sourceKind, sourcePathHash, index + 1, line)),
-      { concurrency: 16 }
+      A.map((line, index) => decodeTranscriptTurn(sourceKind, sourcePathHash, index + 1, line)),
+      A.getSomes
     );
-    const events = A.getSomes(parsed);
+    const timestamps = timestampList(events);
 
     return TranscriptIngestSummary.make({
       acceptedEvents: A.length(events),
@@ -230,7 +213,8 @@ export const summarizeTranscriptText: (
       sourceKind,
       sourcePathHash,
       totalLines: A.length(lines),
-      ...summaryTimestampFields(events),
+      firstTimestamp: A.head(timestamps),
+      lastTimestamp: A.last(timestamps),
     });
   }
 );
@@ -247,7 +231,7 @@ export const summarizeTranscriptText: (
  *   summaryToJson(
  *     TranscriptIngestSummary.make({
  *       acceptedEvents: 1,
- *       eventNames: ["codex.event_msg"],
+ *       eventNames: ["event_msg"],
  *       rejectedLines: 0,
  *       sourceKind: "codex",
  *       sourcePathHash: "source-hash",
@@ -264,7 +248,7 @@ export const summarizeTranscriptText: (
  */
 export const summaryToJson: (summary: TranscriptIngestSummary) => Effect.Effect<string, AiMetricsIngestError> =
   Effect.fn("AiMetrics.summaryToJson")(function* (summary) {
-    return yield* encodeTranscriptIngestSummaryJson(summary).pipe(
+    return yield* TranscriptIngestSummary.encodeJsonEffect(summary).pipe(
       Effect.mapError((cause) =>
         AiMetricsIngestError.make({
           cause,

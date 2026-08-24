@@ -6,8 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, UnknownRecord } from "@beep/schema";
-import { Effect } from "effect";
+import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoAiMetricsId.create("models");
@@ -116,6 +115,116 @@ export const AiMetricsTranscriptSource = LiteralKit(["codex", "claude", "opencla
  * @since 0.0.0
  */
 export type AiMetricsTranscriptSource = typeof AiMetricsTranscriptSource.Type;
+
+/**
+ * Event names accepted from Codex transcript records.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CodexTranscriptEventName = LiteralKit([
+  "assistant_message",
+  "event",
+  "event_msg",
+  "response_item",
+  "session_meta",
+  "turn_context",
+  "user_message",
+]).pipe(
+  $I.annoteSchema("CodexTranscriptEventName", {
+    description: "Bounded event-name vocabulary accepted from Codex transcript records.",
+  })
+);
+
+/**
+ * Runtime type for {@link CodexTranscriptEventName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CodexTranscriptEventName = typeof CodexTranscriptEventName.Type;
+
+/**
+ * Event names accepted from Claude transcript records.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ClaudeTranscriptEventName = LiteralKit([
+  "assistant",
+  "message",
+  "summary",
+  "system",
+  "tool_result",
+  "tool_use",
+  "user",
+]).pipe(
+  $I.annoteSchema("ClaudeTranscriptEventName", {
+    description: "Bounded event-name vocabulary accepted from Claude transcript records.",
+  })
+);
+
+/**
+ * Runtime type for {@link ClaudeTranscriptEventName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ClaudeTranscriptEventName = typeof ClaudeTranscriptEventName.Type;
+
+/**
+ * Event names accepted from OpenClaw transcript records.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OpenClawTranscriptEventName = LiteralKit([
+  "event",
+  "gateway_request",
+  "gateway_response",
+  "message",
+  "request",
+  "response",
+  "session",
+  "tool_call",
+  "tool_result",
+]).pipe(
+  $I.annoteSchema("OpenClawTranscriptEventName", {
+    description: "Bounded event-name vocabulary accepted from OpenClaw transcript records.",
+  })
+);
+
+/**
+ * Runtime type for {@link OpenClawTranscriptEventName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpenClawTranscriptEventName = typeof OpenClawTranscriptEventName.Type;
+
+/**
+ * Normalized event-name vocabulary shared by transcript turns.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsTranscriptEventName = S.Union([
+  CodexTranscriptEventName,
+  ClaudeTranscriptEventName,
+  OpenClawTranscriptEventName,
+]).annotate(
+  $I.annote("AiMetricsTranscriptEventName", {
+    description: "Normalized event names emitted by supported AI transcript sources.",
+  })
+);
+
+/**
+ * Runtime type for {@link AiMetricsTranscriptEventName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsTranscriptEventName = typeof AiMetricsTranscriptEventName.Type;
 
 /**
  * Role of a discovered source file within the source's local storage.
@@ -370,12 +479,9 @@ export class AiMetricsOtlpEndpointSpec extends S.Class<AiMetricsOtlpEndpointSpec
  */
 export class AiMetricsScoreWeights extends S.Class<AiMetricsScoreWeights>($I`AiMetricsScoreWeights`)(
   {
-    cost: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(0.1)), S.withDecodingDefaultKey(Effect.succeed(0.1))),
-    flow: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(0.2)), S.withDecodingDefaultKey(Effect.succeed(0.2))),
-    outcome: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(0.7)),
-      S.withDecodingDefaultKey(Effect.succeed(0.7))
-    ),
+    cost: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.1)),
+    flow: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.2)),
+    outcome: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.7)),
   },
   $I.annote("AiMetricsScoreWeights", {
     description: "Default weighted rubric emphasizing outcomes over flow and cost.",
@@ -407,10 +513,7 @@ export class ConfigSnapshot extends S.Class<ConfigSnapshot>($I`ConfigSnapshot`)(
     changedPaths: S.Array(S.String),
     configHash: S.String,
     gitCommit: S.optionalKey(S.String),
-    includedPaths: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    includedPaths: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
     label: S.String,
     previousSnapshotId: S.optionalKey(S.String),
     snapshotId: S.String,
@@ -419,6 +522,10 @@ export class ConfigSnapshot extends S.Class<ConfigSnapshot>($I`ConfigSnapshot`)(
     description: "Hashed snapshot of Codex, Claude, assistant, and repo guidance configuration with diff attribution.",
   })
 ) {}
+
+const SourceRoleDefaultPrimary = AiMetricsSourceRole.pipe(
+  SchemaUtils.withKeyDefaults(AiMetricsSourceRole.Enum.primary)
+);
 
 /**
  * Canonical unit of analysis for coding-agent metrics.
@@ -452,10 +559,7 @@ export class AgentTask extends S.Class<AgentTask>($I`AgentTask`)(
     repoRootHash: S.String,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
-    sourceRole: AiMetricsSourceRole.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
-    ),
+    sourceRole: SourceRoleDefaultPrimary,
     title: S.String,
   },
   $I.annote("AgentTask", {
@@ -486,20 +590,11 @@ export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
   {
     agentSessionId: S.String,
     agentTaskId: S.optionalKey(S.String),
-    agentNicknameHash: S.optionalKey(S.String),
-    agentRoleHash: S.optionalKey(S.String),
-    forkedFromIdHash: S.optionalKey(S.String),
-    parentSessionIdHash: S.optionalKey(S.String),
-    parentThreadIdHash: S.optionalKey(S.String),
-    sessionIdHash: S.optionalKey(S.String),
+    ...AiMetricsSourceAttribution.fields,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
-    sourceRole: AiMetricsSourceRole.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
-    ),
-    startedAt: S.optionalKey(S.String),
-    threadSpawn: S.optionalKey(S.Boolean),
+    sourceRole: SourceRoleDefaultPrimary,
+    startedAt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AgentSession", {
     description:
@@ -516,7 +611,7 @@ export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
  * import { AgentTurn } from "@beep/repo-ai-metrics"
  *
  * const turn = AgentTurn.make({
- *   eventName: "codex.event_msg",
+ *   eventName: "event_msg",
  *   lineNumber: 12,
  *   sourceKind: "codex",
  *   sourcePathHash: "source-hash"
@@ -529,15 +624,12 @@ export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
  */
 export class AgentTurn extends S.Class<AgentTurn>($I`AgentTurn`)(
   {
-    eventName: S.String,
+    eventName: AiMetricsTranscriptEventName,
     lineNumber: S.Finite,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
-    sourceRole: AiMetricsSourceRole.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
-    ),
-    timestamp: S.optionalKey(S.String),
+    sourceRole: SourceRoleDefaultPrimary,
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AgentTurn", {
     description: "Single normalized transcript line suitable for derived analytics and OTel export.",
@@ -649,7 +741,10 @@ export class OutcomeLabel extends S.Class<OutcomeLabel>($I`OutcomeLabel`)(
   $I.annote("OutcomeLabel", {
     description: "Structured manual label used to calibrate deploy-safe AI metrics scorecards.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(OutcomeLabel));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(OutcomeLabel));
+}
 
 /**
  * Repeatable benchmark case for comparing agent configurations.
@@ -682,7 +777,10 @@ export class BenchmarkCase extends S.Class<BenchmarkCase>($I`BenchmarkCase`)(
   $I.annote("BenchmarkCase", {
     description: "Repeatable coding-agent benchmark case with prompt content stored by hash or external reference.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(BenchmarkCase));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(BenchmarkCase));
+}
 
 /**
  * Benchmark run result under one config snapshot.
@@ -721,7 +819,10 @@ export class BenchmarkRun extends S.Class<BenchmarkRun>($I`BenchmarkRun`)(
   $I.annote("BenchmarkRun", {
     description: "Observed result from running one benchmark case against one configuration snapshot.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(BenchmarkRun));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(BenchmarkRun));
+}
 
 /**
  * Derived scorecard for weekly or config-impact review.
@@ -755,10 +856,7 @@ export class BenchmarkRun extends S.Class<BenchmarkRun>($I`BenchmarkRun`)(
 export class Scorecard extends S.Class<Scorecard>($I`Scorecard`)(
   {
     benchmarkRunCount: S.Finite,
-    completionReady: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
+    completionReady: SchemaUtils.BoolKeyDefaultFalse,
     configSnapshotId: S.String,
     costScore: S.Finite,
     coverageGaps: S.Array(S.String),
@@ -787,7 +885,7 @@ export class Scorecard extends S.Class<Scorecard>($I`Scorecard`)(
  *
  * const summary = TranscriptIngestSummary.make({
  *   acceptedEvents: 1,
- *   eventNames: ["codex.event_msg"],
+ *   eventNames: ["event_msg"],
  *   rejectedLines: 0,
  *   sourceKind: "codex",
  *   sourcePathHash: "source-hash",
@@ -803,8 +901,8 @@ export class TranscriptIngestSummary extends S.Class<TranscriptIngestSummary>($I
   {
     acceptedEvents: S.Finite,
     eventNames: S.Array(S.String),
-    firstTimestamp: S.optionalKey(S.String),
-    lastTimestamp: S.optionalKey(S.String),
+    firstTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    lastTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     rejectedLines: S.Finite,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
@@ -813,7 +911,10 @@ export class TranscriptIngestSummary extends S.Class<TranscriptIngestSummary>($I
   $I.annote("TranscriptIngestSummary", {
     description: "Line-count, timestamp, and event-name summary from transcript ingestion with private paths hashed.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(TranscriptIngestSummary));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(TranscriptIngestSummary));
+}
 
 /**
  * Minimal external Codex JSONL shape.
@@ -840,6 +941,7 @@ export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTr
   })
 ) {
   static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(CodexTranscriptLine));
+  static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(CodexTranscriptLine));
 }
 
 /**
@@ -869,6 +971,7 @@ export class ClaudeTranscriptLine extends S.Class<ClaudeTranscriptLine>($I`Claud
   })
 ) {
   static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(ClaudeTranscriptLine));
+  static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(ClaudeTranscriptLine));
 }
 
 /**
@@ -898,4 +1001,5 @@ export class OpenClawTranscriptLine extends S.Class<OpenClawTranscriptLine>($I`O
   })
 ) {
   static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(OpenClawTranscriptLine));
+  static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(OpenClawTranscriptLine));
 }
