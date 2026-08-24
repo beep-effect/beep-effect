@@ -64,6 +64,48 @@ export const AiProviderCliHomeFsOperation = AiProviderCliHomeFsOperationBase.pip
  */
 export type AiProviderCliHomeFsOperation = typeof AiProviderCliHomeFsOperation.Type;
 
+const AiProviderCliHomeFileSystemErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({
+      description: "Underlying platform failure, when one was captured.",
+    }),
+  effectiveHomePath: S.NonEmptyString.annotateKey({
+    description: "Shadow home directory path the operation maintained.",
+  }),
+  entryName: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Home entry name involved in the failed operation, when applicable.",
+  }),
+  operation: AiProviderCliHomeFsOperation.annotateKey({
+    description: "Filesystem operation that failed.",
+  }),
+  path: S.NonEmptyString.annotateKey({
+    description: "Filesystem path the operation acted on.",
+  }),
+  sharedHomePath: S.NonEmptyString.annotateKey({
+    description: "Shared home directory path backing the layout.",
+  }),
+  targetPath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Symlink target path, when the operation involved one.",
+  }),
+} satisfies S.Struct.Fields;
+const AiProviderCliHomeFileSystemErrorEquivalenceFields = {
+  effectiveHomePath: AiProviderCliHomeFileSystemErrorFields.effectiveHomePath,
+  entryName: AiProviderCliHomeFileSystemErrorFields.entryName,
+  operation: AiProviderCliHomeFileSystemErrorFields.operation,
+  path: AiProviderCliHomeFileSystemErrorFields.path,
+  sharedHomePath: AiProviderCliHomeFileSystemErrorFields.sharedHomePath,
+  targetPath: AiProviderCliHomeFileSystemErrorFields.targetPath,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameAiProviderCliHomeFileSystemErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiProviderCliHomeFileSystemError", AiProviderCliHomeFileSystemErrorEquivalenceFields)
+);
+const sameAiProviderCliHomeFileSystemError = (
+  self: AiProviderCliHomeFileSystemError,
+  that: AiProviderCliHomeFileSystemError
+): boolean => sameAiProviderCliHomeFileSystemErrorFields(self, that);
+
 /**
  * Filesystem failure raised while maintaining a provider CLI home layout.
  *
@@ -92,33 +134,13 @@ export class AiProviderCliHomeFileSystemError extends S.TaggedError<AiProviderCl
   $I`AiProviderCliHomeFileSystemError`
 )(
   "AiProviderCliHomeFileSystemError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({
-        description: "Underlying platform failure, when one was captured.",
-      }),
-    effectiveHomePath: S.NonEmptyString.annotateKey({
-      description: "Shadow home directory path the operation maintained.",
-    }),
-    entryName: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Home entry name involved in the failed operation, when applicable.",
-    }),
-    operation: AiProviderCliHomeFsOperation.annotateKey({
-      description: "Filesystem operation that failed.",
-    }),
-    path: S.NonEmptyString.annotateKey({
-      description: "Filesystem path the operation acted on.",
-    }),
-    sharedHomePath: S.NonEmptyString.annotateKey({
-      description: "Shared home directory path backing the layout.",
-    }),
-    targetPath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Symlink target path, when the operation involved one.",
-    }),
-  },
-  $I.annote("AiProviderCliHomeFileSystemError", {
+  AiProviderCliHomeFileSystemErrorFields,
+  $I.annoteClass<
+    S.declare<AiProviderCliHomeFileSystemError>,
+    readonly [S.TaggedStruct<"AiProviderCliHomeFileSystemError", typeof AiProviderCliHomeFileSystemErrorFields>]
+  >("AiProviderCliHomeFileSystemError", {
     description: "Filesystem failure raised while maintaining a provider CLI home layout.",
+    toEquivalence: () => sameAiProviderCliHomeFileSystemError,
   })
 ) {
   override get message() {
@@ -129,6 +151,22 @@ export class AiProviderCliHomeFileSystemError extends S.TaggedError<AiProviderCl
     return `Provider CLI home filesystem operation '${this.operation}' failed for '${this.path}'${target}.`;
   }
 }
+
+const AiProviderCliHomePathConflictErrorFields = {
+  effectiveHomePath: S.NonEmptyString.annotateKey({
+    description: "Shadow home directory path that conflicted.",
+  }),
+  sharedHomePath: S.NonEmptyString.annotateKey({
+    description: "Shared home directory path that conflicted.",
+  }),
+} satisfies S.Struct.Fields;
+const sameAiProviderCliHomePathConflictErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiProviderCliHomePathConflictError", AiProviderCliHomePathConflictErrorFields)
+);
+const sameAiProviderCliHomePathConflictError = (
+  self: AiProviderCliHomePathConflictError,
+  that: AiProviderCliHomePathConflictError
+): boolean => sameAiProviderCliHomePathConflictErrorFields(self, that);
 
 /**
  * Failure raised when the shadow home path equals the shared home path.
@@ -153,22 +191,44 @@ export class AiProviderCliHomePathConflictError extends S.TaggedError<AiProvider
   $I`AiProviderCliHomePathConflictError`
 )(
   "AiProviderCliHomePathConflictError",
-  {
-    effectiveHomePath: S.NonEmptyString.annotateKey({
-      description: "Shadow home directory path that conflicted.",
-    }),
-    sharedHomePath: S.NonEmptyString.annotateKey({
-      description: "Shared home directory path that conflicted.",
-    }),
-  },
-  $I.annote("AiProviderCliHomePathConflictError", {
+  AiProviderCliHomePathConflictErrorFields,
+  $I.annoteClass<
+    S.declare<AiProviderCliHomePathConflictError>,
+    readonly [S.TaggedStruct<"AiProviderCliHomePathConflictError", typeof AiProviderCliHomePathConflictErrorFields>]
+  >("AiProviderCliHomePathConflictError", {
     description: "Failure raised when a shadow home path equals the shared home path.",
+    toEquivalence: () => sameAiProviderCliHomePathConflictError,
   })
 ) {
   override get message() {
     return `Provider CLI shadow home path '${this.effectiveHomePath}' must be different from the shared home path '${this.sharedHomePath}'.`;
   }
 }
+
+const AiProviderCliHomeEntryConflictErrorFields = {
+  effectiveHomePath: S.NonEmptyString.annotateKey({
+    description: "Shadow home directory path being maintained.",
+  }),
+  entryName: S.NonEmptyString.annotateKey({
+    description: "Home entry name that could not be linked.",
+  }),
+  linkPath: S.NonEmptyString.annotateKey({
+    description: "Shadow-home path where the symlink should live.",
+  }),
+  sharedHomePath: S.NonEmptyString.annotateKey({
+    description: "Shared home directory path backing the layout.",
+  }),
+  targetPath: S.NonEmptyString.annotateKey({
+    description: "Shared-home path the symlink should point at.",
+  }),
+} satisfies S.Struct.Fields;
+const sameAiProviderCliHomeEntryConflictErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiProviderCliHomeEntryConflictError", AiProviderCliHomeEntryConflictErrorFields)
+);
+const sameAiProviderCliHomeEntryConflictError = (
+  self: AiProviderCliHomeEntryConflictError,
+  that: AiProviderCliHomeEntryConflictError
+): boolean => sameAiProviderCliHomeEntryConflictErrorFields(self, that);
 
 /**
  * Failure raised when a non-symlink entry blocks a required shadow-home link.
@@ -196,31 +256,41 @@ export class AiProviderCliHomeEntryConflictError extends S.TaggedError<AiProvide
   $I`AiProviderCliHomeEntryConflictError`
 )(
   "AiProviderCliHomeEntryConflictError",
-  {
-    effectiveHomePath: S.NonEmptyString.annotateKey({
-      description: "Shadow home directory path being maintained.",
-    }),
-    entryName: S.NonEmptyString.annotateKey({
-      description: "Home entry name that could not be linked.",
-    }),
-    linkPath: S.NonEmptyString.annotateKey({
-      description: "Shadow-home path where the symlink should live.",
-    }),
-    sharedHomePath: S.NonEmptyString.annotateKey({
-      description: "Shared home directory path backing the layout.",
-    }),
-    targetPath: S.NonEmptyString.annotateKey({
-      description: "Shared-home path the symlink should point at.",
-    }),
-  },
-  $I.annote("AiProviderCliHomeEntryConflictError", {
+  AiProviderCliHomeEntryConflictErrorFields,
+  $I.annoteClass<
+    S.declare<AiProviderCliHomeEntryConflictError>,
+    readonly [S.TaggedStruct<"AiProviderCliHomeEntryConflictError", typeof AiProviderCliHomeEntryConflictErrorFields>]
+  >("AiProviderCliHomeEntryConflictError", {
     description: "Failure raised when a non-symlink entry blocks a required shadow-home link.",
+    toEquivalence: () => sameAiProviderCliHomeEntryConflictError,
   })
 ) {
   override get message() {
     return `Cannot create provider CLI shadow home entry '${this.entryName}' because '${this.linkPath}' already exists and is not a symlink.`;
   }
 }
+
+const AiProviderCliHomePrivateEntrySymlinkErrorFields = {
+  effectiveHomePath: S.NonEmptyString.annotateKey({
+    description: "Shadow home directory path being maintained.",
+  }),
+  entryName: S.NonEmptyString.annotateKey({
+    description: "Private home entry name that resolved to a symlink.",
+  }),
+  path: S.NonEmptyString.annotateKey({
+    description: "Shadow-home path of the offending symlink.",
+  }),
+  sharedHomePath: S.NonEmptyString.annotateKey({
+    description: "Shared home directory path backing the layout.",
+  }),
+} satisfies S.Struct.Fields;
+const sameAiProviderCliHomePrivateEntrySymlinkErrorFields = S.toEquivalence(
+  S.TaggedStruct("AiProviderCliHomePrivateEntrySymlinkError", AiProviderCliHomePrivateEntrySymlinkErrorFields)
+);
+const sameAiProviderCliHomePrivateEntrySymlinkError = (
+  self: AiProviderCliHomePrivateEntrySymlinkError,
+  that: AiProviderCliHomePrivateEntrySymlinkError
+): boolean => sameAiProviderCliHomePrivateEntrySymlinkErrorFields(self, that);
 
 /**
  * Failure raised when a private credential entry resolves to a symlink.
@@ -247,22 +317,18 @@ export class AiProviderCliHomePrivateEntrySymlinkError extends S.TaggedError<AiP
   $I`AiProviderCliHomePrivateEntrySymlinkError`
 )(
   "AiProviderCliHomePrivateEntrySymlinkError",
-  {
-    effectiveHomePath: S.NonEmptyString.annotateKey({
-      description: "Shadow home directory path being maintained.",
-    }),
-    entryName: S.NonEmptyString.annotateKey({
-      description: "Private home entry name that resolved to a symlink.",
-    }),
-    path: S.NonEmptyString.annotateKey({
-      description: "Shadow-home path of the offending symlink.",
-    }),
-    sharedHomePath: S.NonEmptyString.annotateKey({
-      description: "Shared home directory path backing the layout.",
-    }),
-  },
-  $I.annote("AiProviderCliHomePrivateEntrySymlinkError", {
+  AiProviderCliHomePrivateEntrySymlinkErrorFields,
+  $I.annoteClass<
+    S.declare<AiProviderCliHomePrivateEntrySymlinkError>,
+    readonly [
+      S.TaggedStruct<
+        "AiProviderCliHomePrivateEntrySymlinkError",
+        typeof AiProviderCliHomePrivateEntrySymlinkErrorFields
+      >,
+    ]
+  >("AiProviderCliHomePrivateEntrySymlinkError", {
     description: "Failure raised when a private credential entry resolves to a symlink.",
+    toEquivalence: () => sameAiProviderCliHomePrivateEntrySymlinkError,
   })
 ) {
   override get message() {

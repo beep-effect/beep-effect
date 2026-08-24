@@ -77,6 +77,18 @@ export const XAiErrorReason = XAiErrorReasonBase.pipe(
  */
 export type XAiErrorReason = typeof XAiErrorReason.Type;
 
+const XAiErrorFields = {
+  cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  endpoint: S.OptionFromOptionalKey(XAiEndpointId).pipe(SchemaUtils.withNoneDefault),
+  method: S.OptionFromOptionalKey(XAiHttpMethod).pipe(SchemaUtils.withNoneDefault),
+  methodName: S.OptionFromOptionalKey(XAiEndpointMethodName).pipe(SchemaUtils.withNoneDefault),
+  path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  reason: XAiErrorReason,
+  status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+} satisfies S.Struct.Fields;
+const sameXAiErrorFields = S.toEquivalence(S.TaggedStruct("XAiError", XAiErrorFields));
+const sameXAiError = (self: XAiError, that: XAiError): boolean => sameXAiErrorFields(self, that);
+
 /**
  * Technical failure raised by the xAI driver boundary.
  *
@@ -94,17 +106,10 @@ export type XAiErrorReason = typeof XAiErrorReason.Type;
  */
 export class XAiError extends S.TaggedError<XAiError>($I`XAiError`)(
   "XAiError",
-  {
-    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    endpoint: S.OptionFromOptionalKey(XAiEndpointId).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(XAiHttpMethod).pipe(SchemaUtils.withNoneDefault),
-    methodName: S.OptionFromOptionalKey(XAiEndpointMethodName).pipe(SchemaUtils.withNoneDefault),
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    reason: XAiErrorReason,
-    status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
-  },
-  $I.annote("XAiError", {
+  XAiErrorFields,
+  $I.annoteClass<S.declare<XAiError>, readonly [S.TaggedStruct<"XAiError", typeof XAiErrorFields>]>("XAiError", {
     description: "Redacted technical failure raised by the xAI driver boundary.",
+    toEquivalence: () => sameXAiError,
   })
 ) {
   /**

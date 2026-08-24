@@ -313,6 +313,22 @@ const removeCorpusSession = (
   return [exists, HashMap.remove(sessions, corpusId)];
 };
 
+const CorpusManagerErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+  corpusId: S.OptionFromOptionalKey(S.String),
+  message: S.String,
+} satisfies S.Struct.Fields;
+const CorpusManagerErrorEquivalenceFields = {
+  corpusId: CorpusManagerErrorFields.corpusId,
+  message: CorpusManagerErrorFields.message,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameCorpusManagerErrorFields = S.toEquivalence(
+  S.TaggedStruct("CorpusManagerError", CorpusManagerErrorEquivalenceFields)
+);
+const sameCorpusManagerError = (self: CorpusManagerError, that: CorpusManagerError): boolean =>
+  sameCorpusManagerErrorFields(self, that);
+
 /**
  * Typed failure for creating, learning, querying, or inspecting a managed corpus.
  *
@@ -330,13 +346,13 @@ const removeCorpusSession = (
  */
 export class CorpusManagerError extends S.TaggedError<CorpusManagerError>($I`CorpusManagerError`)(
   "CorpusManagerError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
-    corpusId: S.OptionFromOptionalKey(S.String),
-    message: S.String,
-  },
-  $I.annote("CorpusManagerError", {
+  CorpusManagerErrorFields,
+  $I.annoteClass<
+    S.declare<CorpusManagerError>,
+    readonly [S.TaggedStruct<"CorpusManagerError", typeof CorpusManagerErrorFields>]
+  >("CorpusManagerError", {
     description: "Failure raised while managing a stateful wink BM25 corpus.",
+    toEquivalence: () => sameCorpusManagerError,
   })
 ) {
   /**

@@ -98,6 +98,23 @@ export const SanityErrorReason = SanityErrorReasonBase.pipe(
  */
 export type SanityErrorReason = typeof SanityErrorReason.Type;
 
+const SanityErrorFields = {
+  cause: S.optionalKey(S.String).annotateKey({
+    description: "Redacted cause label captured from an unknown transport or decoding failure.",
+  }),
+  reason: SanityErrorReason.annotateKey({
+    description: "Sanity driver failure reason.",
+  }),
+  status: S.optionalKey(SanityHttpStatus).annotateKey({
+    description: "HTTP status code returned by Sanity when available.",
+  }),
+  url: S.optionalKey(S.String).annotateKey({
+    description: "Sanity request URL associated with the failure when available.",
+  }),
+} satisfies S.Struct.Fields;
+const sameSanityErrorFields = S.toEquivalence(S.TaggedStruct("SanityError", SanityErrorFields));
+const sameSanityError = (self: SanityError, that: SanityError): boolean => sameSanityErrorFields(self, that);
+
 /**
  * Technical failure raised by the Sanity driver boundary.
  *
@@ -119,23 +136,14 @@ export type SanityErrorReason = typeof SanityErrorReason.Type;
  */
 export class SanityError extends S.TaggedError<SanityError>($I`SanityError`)(
   "SanityError",
-  {
-    cause: S.optionalKey(S.String).annotateKey({
-      description: "Redacted cause label captured from an unknown transport or decoding failure.",
-    }),
-    reason: SanityErrorReason.annotateKey({
-      description: "Sanity driver failure reason.",
-    }),
-    status: S.optionalKey(SanityHttpStatus).annotateKey({
-      description: "HTTP status code returned by Sanity when available.",
-    }),
-    url: S.optionalKey(S.String).annotateKey({
-      description: "Sanity request URL associated with the failure when available.",
-    }),
-  },
-  $I.annote("SanityError", {
-    description: "Redacted technical failure raised by the Sanity API driver boundary.",
-  })
+  SanityErrorFields,
+  $I.annoteClass<S.declare<SanityError>, readonly [S.TaggedStruct<"SanityError", typeof SanityErrorFields>]>(
+    "SanityError",
+    {
+      description: "Redacted technical failure raised by the Sanity API driver boundary.",
+      toEquivalence: () => sameSanityError,
+    }
+  )
 ) {
   /**
    * Create a Sanity driver error.

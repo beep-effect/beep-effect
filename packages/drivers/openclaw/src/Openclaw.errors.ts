@@ -35,7 +35,27 @@ const commandContextFields = {
   subcommand: S.NonEmptyString.annotateKey({
     description: "Subcommand being executed when the failure occurred.",
   }),
-};
+} satisfies S.Struct.Fields;
+
+const OpenclawCommandSpawnErrorFields = {
+  ...commandContextFields,
+  argumentCount: NonNegativeInteger.annotateKey({
+    description: "Number of arguments passed to the executable.",
+  }),
+  cause: S.Defect({ includeStack: true }).annotateKey({
+    description: "Underlying platform failure raised while spawning the process.",
+  }),
+} satisfies S.Struct.Fields;
+const OpenclawCommandSpawnErrorEquivalenceFields = {
+  ...commandContextFields,
+  argumentCount: OpenclawCommandSpawnErrorFields.argumentCount,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameOpenclawCommandSpawnErrorFields = S.toEquivalence(
+  S.TaggedStruct("OpenclawCommandSpawnError", OpenclawCommandSpawnErrorEquivalenceFields)
+);
+const sameOpenclawCommandSpawnError = (self: OpenclawCommandSpawnError, that: OpenclawCommandSpawnError): boolean =>
+  sameOpenclawCommandSpawnErrorFields(self, that);
 
 /**
  * Failure to start the OpenClaw executable.
@@ -59,23 +79,40 @@ const commandContextFields = {
  */
 export class OpenclawCommandSpawnError extends S.TaggedError<OpenclawCommandSpawnError>($I`OpenclawCommandSpawnError`)(
   "OpenclawCommandSpawnError",
-  {
-    ...commandContextFields,
-    argumentCount: NonNegativeInteger.annotateKey({
-      description: "Number of arguments passed to the executable.",
-    }),
-    cause: S.Defect({ includeStack: true }).annotateKey({
-      description: "Underlying platform failure raised while spawning the process.",
-    }),
-  },
-  $I.annote("OpenclawCommandSpawnError", {
+  OpenclawCommandSpawnErrorFields,
+  $I.annoteClass<
+    S.declare<OpenclawCommandSpawnError>,
+    readonly [S.TaggedStruct<"OpenclawCommandSpawnError", typeof OpenclawCommandSpawnErrorFields>]
+  >("OpenclawCommandSpawnError", {
     description: "Failure raised when the operating system cannot spawn the OpenClaw executable.",
+    toEquivalence: () => sameOpenclawCommandSpawnError,
   })
 ) {
   override get message(): string {
     return `Failed to spawn ${this.executable} ${this.subcommand}.`;
   }
 }
+
+const OpenclawCommandExitErrorFields = {
+  ...commandContextFields,
+  diagnostics: S.OptionFromOptionalKey(OpenclawDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Trimmed capped diagnostics, attached only for secret-free operations.",
+  }),
+  exitCode: OpenclawExitCode.annotateKey({
+    description: "Nonzero exit status returned by the process.",
+  }),
+  stderrLength: NonNegativeInteger.annotateKey({
+    description: "Captured standard-error length without exposing its contents.",
+  }),
+  stdoutLength: NonNegativeInteger.annotateKey({
+    description: "Captured standard-output length without exposing its contents.",
+  }),
+} satisfies S.Struct.Fields;
+const sameOpenclawCommandExitErrorFields = S.toEquivalence(
+  S.TaggedStruct("OpenclawCommandExitError", OpenclawCommandExitErrorFields)
+);
+const sameOpenclawCommandExitError = (self: OpenclawCommandExitError, that: OpenclawCommandExitError): boolean =>
+  sameOpenclawCommandExitErrorFields(self, that);
 
 /**
  * Nonzero process exit with redacted output lengths.
@@ -107,29 +144,33 @@ export class OpenclawCommandSpawnError extends S.TaggedError<OpenclawCommandSpaw
  */
 export class OpenclawCommandExitError extends S.TaggedError<OpenclawCommandExitError>($I`OpenclawCommandExitError`)(
   "OpenclawCommandExitError",
-  {
-    ...commandContextFields,
-    diagnostics: S.OptionFromOptionalKey(OpenclawDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Trimmed capped diagnostics, attached only for secret-free operations.",
-    }),
-    exitCode: OpenclawExitCode.annotateKey({
-      description: "Nonzero exit status returned by the process.",
-    }),
-    stderrLength: NonNegativeInteger.annotateKey({
-      description: "Captured standard-error length without exposing its contents.",
-    }),
-    stdoutLength: NonNegativeInteger.annotateKey({
-      description: "Captured standard-output length without exposing its contents.",
-    }),
-  },
-  $I.annote("OpenclawCommandExitError", {
+  OpenclawCommandExitErrorFields,
+  $I.annoteClass<
+    S.declare<OpenclawCommandExitError>,
+    readonly [S.TaggedStruct<"OpenclawCommandExitError", typeof OpenclawCommandExitErrorFields>]
+  >("OpenclawCommandExitError", {
     description: "Redacted diagnostic for an OpenClaw process that exited unsuccessfully.",
+    toEquivalence: () => sameOpenclawCommandExitError,
   })
 ) {
   override get message(): string {
     return `${this.executable} ${this.subcommand} exited with code ${this.exitCode}.`;
   }
 }
+
+const OpenclawCommandTimeoutErrorFields = {
+  ...commandContextFields,
+  timeoutMs: NonNegativeInteger.annotateKey({
+    description: "Timeout duration in milliseconds.",
+  }),
+} satisfies S.Struct.Fields;
+const sameOpenclawCommandTimeoutErrorFields = S.toEquivalence(
+  S.TaggedStruct("OpenclawCommandTimeoutError", OpenclawCommandTimeoutErrorFields)
+);
+const sameOpenclawCommandTimeoutError = (
+  self: OpenclawCommandTimeoutError,
+  that: OpenclawCommandTimeoutError
+): boolean => sameOpenclawCommandTimeoutErrorFields(self, that);
 
 /**
  * Process timeout with the configured duration in milliseconds.
@@ -154,20 +195,39 @@ export class OpenclawCommandTimeoutError extends S.TaggedError<OpenclawCommandTi
   $I`OpenclawCommandTimeoutError`
 )(
   "OpenclawCommandTimeoutError",
-  {
-    ...commandContextFields,
-    timeoutMs: NonNegativeInteger.annotateKey({
-      description: "Timeout duration in milliseconds.",
-    }),
-  },
-  $I.annote("OpenclawCommandTimeoutError", {
+  OpenclawCommandTimeoutErrorFields,
+  $I.annoteClass<
+    S.declare<OpenclawCommandTimeoutError>,
+    readonly [S.TaggedStruct<"OpenclawCommandTimeoutError", typeof OpenclawCommandTimeoutErrorFields>]
+  >("OpenclawCommandTimeoutError", {
     description: "Failure raised when an OpenClaw process exceeds its configured timeout.",
+    toEquivalence: () => sameOpenclawCommandTimeoutError,
   })
 ) {
   override get message(): string {
     return `${this.executable} ${this.subcommand} timed out after ${this.timeoutMs}ms.`;
   }
 }
+
+const OpenclawOutputParseErrorFields = {
+  ...commandContextFields,
+  cause: S.Defect({ includeStack: true }).annotateKey({
+    description: "Schema decoding failure retained for structured diagnostics.",
+  }),
+  stdoutLength: NonNegativeInteger.annotateKey({
+    description: "Captured standard-output length without exposing its contents.",
+  }),
+} satisfies S.Struct.Fields;
+const OpenclawOutputParseErrorEquivalenceFields = {
+  ...commandContextFields,
+  stdoutLength: OpenclawOutputParseErrorFields.stdoutLength,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameOpenclawOutputParseErrorFields = S.toEquivalence(
+  S.TaggedStruct("OpenclawOutputParseError", OpenclawOutputParseErrorEquivalenceFields)
+);
+const sameOpenclawOutputParseError = (self: OpenclawOutputParseError, that: OpenclawOutputParseError): boolean =>
+  sameOpenclawOutputParseErrorFields(self, that);
 
 /**
  * Failure to decode a process's stdout into its expected model.
@@ -196,17 +256,13 @@ export class OpenclawCommandTimeoutError extends S.TaggedError<OpenclawCommandTi
  */
 export class OpenclawOutputParseError extends S.TaggedError<OpenclawOutputParseError>($I`OpenclawOutputParseError`)(
   "OpenclawOutputParseError",
-  {
-    ...commandContextFields,
-    cause: S.Defect({ includeStack: true }).annotateKey({
-      description: "Schema decoding failure retained for structured diagnostics.",
-    }),
-    stdoutLength: NonNegativeInteger.annotateKey({
-      description: "Captured standard-output length without exposing its contents.",
-    }),
-  },
-  $I.annote("OpenclawOutputParseError", {
+  OpenclawOutputParseErrorFields,
+  $I.annoteClass<
+    S.declare<OpenclawOutputParseError>,
+    readonly [S.TaggedStruct<"OpenclawOutputParseError", typeof OpenclawOutputParseErrorFields>]
+  >("OpenclawOutputParseError", {
     description: "Failure raised when OpenClaw process output cannot be decoded.",
+    toEquivalence: () => sameOpenclawOutputParseError,
   })
 ) {
   override get message(): string {

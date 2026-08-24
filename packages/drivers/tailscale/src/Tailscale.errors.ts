@@ -42,7 +42,20 @@ const commandContextFields = {
   argumentCount: NonNegativeInteger.annotateKey({
     description: "Number of arguments passed to the Tailscale executable.",
   }),
-};
+} satisfies S.Struct.Fields;
+
+const TailscaleCommandSpawnErrorFields = {
+  ...commandContextFields,
+  cause: S.Defect({ includeStack: true }).annotateKey({
+    description: "Underlying platform failure raised while spawning Tailscale.",
+  }),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameTailscaleCommandSpawnErrorFields = S.toEquivalence(
+  S.TaggedStruct("TailscaleCommandSpawnError", commandContextFields)
+);
+const sameTailscaleCommandSpawnError = (self: TailscaleCommandSpawnError, that: TailscaleCommandSpawnError): boolean =>
+  sameTailscaleCommandSpawnErrorFields(self, that);
 
 /**
  * Failure to start the Tailscale executable.
@@ -68,20 +81,34 @@ export class TailscaleCommandSpawnError extends S.TaggedError<TailscaleCommandSp
   $I`TailscaleCommandSpawnError`
 )(
   "TailscaleCommandSpawnError",
-  {
-    ...commandContextFields,
-    cause: S.Defect({ includeStack: true }).annotateKey({
-      description: "Underlying platform failure raised while spawning Tailscale.",
-    }),
-  },
-  $I.annote("TailscaleCommandSpawnError", {
+  TailscaleCommandSpawnErrorFields,
+  $I.annoteClass<
+    S.declare<TailscaleCommandSpawnError>,
+    readonly [S.TaggedStruct<"TailscaleCommandSpawnError", typeof TailscaleCommandSpawnErrorFields>]
+  >("TailscaleCommandSpawnError", {
     description: "Failure raised when the operating system cannot spawn the Tailscale CLI.",
+    toEquivalence: () => sameTailscaleCommandSpawnError,
   })
 ) {
   override get message(): string {
     return `Failed to spawn tailscale ${this.subcommand}.`;
   }
 }
+
+const TailscaleCommandOutputErrorFields = {
+  ...commandContextFields,
+  cause: S.Defect({ includeStack: true }).annotateKey({
+    description: "Underlying stream failure raised while collecting process output.",
+  }),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameTailscaleCommandOutputErrorFields = S.toEquivalence(
+  S.TaggedStruct("TailscaleCommandOutputError", commandContextFields)
+);
+const sameTailscaleCommandOutputError = (
+  self: TailscaleCommandOutputError,
+  that: TailscaleCommandOutputError
+): boolean => sameTailscaleCommandOutputErrorFields(self, that);
 
 /**
  * Failure while collecting output from a running Tailscale process.
@@ -107,20 +134,37 @@ export class TailscaleCommandOutputError extends S.TaggedError<TailscaleCommandO
   $I`TailscaleCommandOutputError`
 )(
   "TailscaleCommandOutputError",
-  {
-    ...commandContextFields,
-    cause: S.Defect({ includeStack: true }).annotateKey({
-      description: "Underlying stream failure raised while collecting process output.",
-    }),
-  },
-  $I.annote("TailscaleCommandOutputError", {
+  TailscaleCommandOutputErrorFields,
+  $I.annoteClass<
+    S.declare<TailscaleCommandOutputError>,
+    readonly [S.TaggedStruct<"TailscaleCommandOutputError", typeof TailscaleCommandOutputErrorFields>]
+  >("TailscaleCommandOutputError", {
     description: "Failure raised while collecting output from a running Tailscale process.",
+    toEquivalence: () => sameTailscaleCommandOutputError,
   })
 ) {
   override get message(): string {
     return `Failed to read output from tailscale ${this.subcommand}.`;
   }
 }
+
+const TailscaleCommandExitErrorFields = {
+  ...commandContextFields,
+  exitCode: S.Int.annotateKey({
+    description: "Nonzero exit status returned by the Tailscale process.",
+  }),
+  stdoutLength: S.optionalKey(NonNegativeInteger).annotateKey({
+    description: "Captured standard-output length without exposing its contents.",
+  }),
+  stderrLength: NonNegativeInteger.annotateKey({
+    description: "Captured standard-error length without exposing its contents.",
+  }),
+} satisfies S.Struct.Fields;
+const sameTailscaleCommandExitErrorFields = S.toEquivalence(
+  S.TaggedStruct("TailscaleCommandExitError", TailscaleCommandExitErrorFields)
+);
+const sameTailscaleCommandExitError = (self: TailscaleCommandExitError, that: TailscaleCommandExitError): boolean =>
+  sameTailscaleCommandExitErrorFields(self, that);
 
 /**
  * Nonzero Tailscale process exit with redacted output lengths.
@@ -145,26 +189,41 @@ export class TailscaleCommandOutputError extends S.TaggedError<TailscaleCommandO
  */
 export class TailscaleCommandExitError extends S.TaggedError<TailscaleCommandExitError>($I`TailscaleCommandExitError`)(
   "TailscaleCommandExitError",
-  {
-    ...commandContextFields,
-    exitCode: S.Int.annotateKey({
-      description: "Nonzero exit status returned by the Tailscale process.",
-    }),
-    stdoutLength: S.optionalKey(NonNegativeInteger).annotateKey({
-      description: "Captured standard-output length without exposing its contents.",
-    }),
-    stderrLength: NonNegativeInteger.annotateKey({
-      description: "Captured standard-error length without exposing its contents.",
-    }),
-  },
-  $I.annote("TailscaleCommandExitError", {
+  TailscaleCommandExitErrorFields,
+  $I.annoteClass<
+    S.declare<TailscaleCommandExitError>,
+    readonly [S.TaggedStruct<"TailscaleCommandExitError", typeof TailscaleCommandExitErrorFields>]
+  >("TailscaleCommandExitError", {
     description: "Redacted diagnostic for a Tailscale process that exited unsuccessfully.",
+    toEquivalence: () => sameTailscaleCommandExitError,
   })
 ) {
   override get message(): string {
     return `tailscale ${this.subcommand} exited with code ${this.exitCode}.`;
   }
 }
+
+const TailscaleCommandTimeoutErrorFields = {
+  ...commandContextFields,
+  timeoutMs: NonNegativeInteger.annotateKey({
+    description: "Timeout duration in milliseconds.",
+  }),
+  cause: S.Defect({ includeStack: true }).annotateKey({
+    description: "Timeout defect emitted by Effect.",
+  }),
+} satisfies S.Struct.Fields;
+const TailscaleCommandTimeoutErrorEquivalenceFields = {
+  ...commandContextFields,
+  timeoutMs: TailscaleCommandTimeoutErrorFields.timeoutMs,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameTailscaleCommandTimeoutErrorFields = S.toEquivalence(
+  S.TaggedStruct("TailscaleCommandTimeoutError", TailscaleCommandTimeoutErrorEquivalenceFields)
+);
+const sameTailscaleCommandTimeoutError = (
+  self: TailscaleCommandTimeoutError,
+  that: TailscaleCommandTimeoutError
+): boolean => sameTailscaleCommandTimeoutErrorFields(self, that);
 
 /**
  * Tailscale process timeout with the configured duration in milliseconds.
@@ -191,17 +250,13 @@ export class TailscaleCommandTimeoutError extends S.TaggedError<TailscaleCommand
   $I`TailscaleCommandTimeoutError`
 )(
   "TailscaleCommandTimeoutError",
-  {
-    ...commandContextFields,
-    timeoutMs: NonNegativeInteger.annotateKey({
-      description: "Timeout duration in milliseconds.",
-    }),
-    cause: S.Defect({ includeStack: true }).annotateKey({
-      description: "Timeout defect emitted by Effect.",
-    }),
-  },
-  $I.annote("TailscaleCommandTimeoutError", {
+  TailscaleCommandTimeoutErrorFields,
+  $I.annoteClass<
+    S.declare<TailscaleCommandTimeoutError>,
+    readonly [S.TaggedStruct<"TailscaleCommandTimeoutError", typeof TailscaleCommandTimeoutErrorFields>]
+  >("TailscaleCommandTimeoutError", {
     description: "Failure raised when a Tailscale process exceeds its configured timeout.",
+    toEquivalence: () => sameTailscaleCommandTimeoutError,
   })
 ) {
   override get message(): string {
@@ -267,6 +322,16 @@ export const TailscaleCommandError = S.Union([
  */
 export type TailscaleCommandError = typeof TailscaleCommandError.Type;
 
+const TailscaleStatusParseErrorFields = {
+  cause: S.Defect({ includeStack: true }).annotateKey({
+    description: "Schema decoding failure retained for structured diagnostics.",
+  }),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameTailscaleStatusParseErrorFields = S.toEquivalence(S.TaggedStruct("TailscaleStatusParseError", {}));
+const sameTailscaleStatusParseError = (self: TailscaleStatusParseError, that: TailscaleStatusParseError): boolean =>
+  sameTailscaleStatusParseErrorFields(self, that);
+
 /**
  * Failure to decode the JSON emitted by `tailscale status`.
  *
@@ -284,13 +349,13 @@ export type TailscaleCommandError = typeof TailscaleCommandError.Type;
  */
 export class TailscaleStatusParseError extends S.TaggedError<TailscaleStatusParseError>($I`TailscaleStatusParseError`)(
   "TailscaleStatusParseError",
-  {
-    cause: S.Defect({ includeStack: true }).annotateKey({
-      description: "Schema decoding failure retained for structured diagnostics.",
-    }),
-  },
-  $I.annote("TailscaleStatusParseError", {
+  TailscaleStatusParseErrorFields,
+  $I.annoteClass<
+    S.declare<TailscaleStatusParseError>,
+    readonly [S.TaggedStruct<"TailscaleStatusParseError", typeof TailscaleStatusParseErrorFields>]
+  >("TailscaleStatusParseError", {
     description: "Failure raised when Tailscale status JSON cannot be decoded.",
+    toEquivalence: () => sameTailscaleStatusParseError,
   })
 ) {
   override get message(): string {
