@@ -27,12 +27,12 @@ Scope:
 - Out: accepted risk, raw evidence in git, Codex Create PR/patch buttons,
   unrelated cleanup, weakened quality/security gates.
 
-Current position: `active`. P2 validation and repo-side P3 remediation happened
-in this capture PR. Fifteen findings have repo-side fixes with focused proof.
-CSF-001, CSF-004, CSF-005, and CSF-006 remain confirmed `remediate` items
-handed to the runner-admission/workload-identity arc for external GitHub
-organization runner-group and AWS deployment proof. Post-merge dashboard
-closure remains pending for the exact 19 captured IDs.
+Current position: `completed-retained`. All 19 findings were validated. PR #783
+contains the 15 repo-side remediations. Thirteen dashboard IDs were closed as
+Already fixed on 2026-08-24. CSF-003 and CSF-009 remain open pending
+`goals/runner-trust-boundary` P1 deployment proof. CSF-001, CSF-004, CSF-005,
+and CSF-006 are transferred to that packet. This packet does not own further
+remediation or claim closure for those six IDs.
 
 Rules:
 
@@ -44,14 +44,15 @@ Rules:
    finding, merging tests only where the same root cause is exercised.
 4. Keep raw report bodies ignored under `raw/`. Tracked records may contain only
    sanitized metadata, summaries, decisions, changed files, and proof.
-5. Run focused tests, affected package checks, packet validation, then Yeet
-   repair/verify. Publish one intentional PR and monitor through mergeable.
-6. After merge, close only the exact 19-ID allowlist in Codex as Already fixed
-   (or the evidence-backed invalid reason) and verify zero packet-open findings.
-7. Keep the four runner findings with the receiving architecture arc until it
-   records the required external proof. Do not treat the handoff as accepted
-   risk or as dashboard closure.
+5. Treat PR #783 as the repository remediation evidence for this retained
+   packet. Do not reopen its source scope for receiving-packet work.
+6. Preserve the 13 exact-ID closures recorded on 2026-08-24. Close CSF-003 and
+   CSF-009 only after `runner-trust-boundary` P1 proves the fresh deployment.
+7. Keep CSF-001, CSF-004, CSF-005, and CSF-006 with
+   `goals/runner-trust-boundary` until it records the admission,
+   workload-identity, deployment, and dashboard evidence. The handoff is not
+   accepted risk or closure.
 
-Stop if the signed-in CSV export is unavailable, tracked evidence contains secret
-or raw-path material, a fix needs an out-of-packet architecture decision, or the
-same blocker repeats after reasonable investigation.
+Stop if tracked evidence contains secret or raw-path material, a proposed edit
+reopens this packet's completed source scope, or a dashboard action would close
+one of the six handed-off IDs without the receiving packet's required proof.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -32,23 +32,30 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-`P5 repo-proof` - all 19 findings are validated. This capture PR contains
-repo-side remediation and focused proof for 15 findings. CSF-001, CSF-004,
-CSF-005, and CSF-006 remain confirmed `remediate` items handed to the
-runner-admission/workload-identity arc for external GitHub organization
-runner-group and AWS deployment proof. This packet claims neither that proof
-nor dashboard closure for those four findings.
+`P9 complete` - all 19 findings were validated. PR #783 contains repo-side
+remediation and focused proof for 15 findings. On 2026-08-24, 13 dashboard IDs
+were closed as Already fixed citing PR #783. CSF-003 and CSF-009 remain open
+pending the fresh deployment proof in
+[`runner-trust-boundary` P1](../runner-trust-boundary/PLAN.md). CSF-001,
+CSF-004, CSF-005, and CSF-006 are transferred to that packet for admission and
+workload-identity remediation. This source packet is complete and retained; it
+does not claim the receiving packet's external proof or dashboard closure.
 
 ## Findings at a glance
 
-5 High, 4 Medium, 5 Low, 5 Informational findings. Fifteen are remediated
-repo-side in this PR and four remain with the named runner architecture arc.
-Accepted risk is unavailable.
+5 High, 4 Medium, 5 Low, 5 Informational findings. Fifteen were remediated in
+PR #783. Thirteen of those dashboard IDs are closed as Already fixed. The two
+deployment-held IDs and four transferred runner IDs account for the exact six
+findings still open in the dashboard on 2026-08-24. Accepted risk was not used.
 
 ## Notes
 
 - Raw report bodies remain untracked under `raw/`; tracked files are sanitized.
 - Do not use Codex's Create PR or patch-apply controls.
-- CSF-003 and CSF-009 have repo-side fixes but still require the retained AMI
-  bake, Pulumi pin, and deployed Gates A-E proof before fleet acceptance.
-- Browser closure is post-merge and must match the captured Codex ID allowlist.
+- CSF-003 and CSF-009 have repo-side fixes but remain open until
+  `runner-trust-boundary` P1 records the fresh AMI bake, Pulumi pin, deployed
+  Gates A-E, setup fast-path, deregistration, and teardown proof.
+- The exact identity transfer and current dashboard state are retained in
+  [`runner-trust-boundary/SPEC.md`](../runner-trust-boundary/SPEC.md#findings-transfer).
+- Future dashboard closure belongs to the receiving packet and must use the
+  captured Codex ID allowlist.
