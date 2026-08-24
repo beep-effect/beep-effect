@@ -58,7 +58,12 @@ satisfy the ≥2 gate):
 4. **Two proof migrations**:
    - **Goals PacketCore** — the richest instance (chain + CAS + fork repair)
      re-hosted on the kit, with golden-replay byte-parity fixtures (its own
-     R4 discipline) proving digests and folds unchanged;
+     R4 discipline) proving digests and folds unchanged. The kit therefore
+     admits an explicit **legacy digest representation**: existing bare-hex
+     ids and `<seq>-<type>-<digest>.json` filenames stay valid as-is — the
+     versioned self-describing format applies to newly minted digests only,
+     never to rewriting stored filenames or parent chains (the event
+     upcaster cannot repair digest renames);
    - **epistemic ExecutionRecord** — seals computed through the shared
      encoder, byte-identical seal proof.
 
@@ -75,8 +80,11 @@ the Mepuka call produces joint scope):
   + display map); conservative decidable fragment only (fixed census,
   delegation-free — the implementable MPST fragment).
 - **Conformance fold** — each agent's journal folded against its projection;
-  refusals as values; evidence portable because verification is
-  recomputation.
+  refusals as values. Recomputation proves internal consistency; per
+  `verifyExecutionDecisionChain`'s own contract, evidence that crosses a
+  trust boundary additionally needs an externally anchored tail hash +
+  expected length (anchoring stays a separate candidate, not smuggled into
+  this kit).
 - Consumers in order of concreteness: fleet messaging, MCP tool surfaces
   (digest-pinned tool definitions kill the rug-pull class), agents slice.
 
@@ -88,9 +96,11 @@ the Mepuka call produces joint scope):
 - **Compatibility checking**: async session subtyping is undecidable —
   offer digest equality plus explicitly conservative checks; never promise
   "v2 safely refines v1" in general.
-- **Migration byte-parity**: PacketCore digests live in file names; the
-  migration preserves digests exactly or goes through the existing
-  upcaster + golden-replay machinery — no silent re-digesting.
+- **Migration byte-parity**: PacketCore digests live in file names and
+  parent chains; the migration preserves them byte-identically via the
+  legacy digest representation, proven by golden-replay fixtures — no
+  re-digesting, no filename rewrites (the event upcaster cannot repair
+  digest renames).
 - **Digest format**: minimal versioned prefix, not full CID/multiformats.
 - **Poly async semantics**: cite the math, do not formalize it; engineering
   first.

@@ -17,7 +17,7 @@
 | Source | Title | Upstream (repo) | Location | Theme | Disposition |
 |--------|-------|-----------------|----------|-------|-------------|
 | mining-2026-08-23 | Seven-area foldlab-concept audit of beep-effect (~60 findings, file:line cites) | this repo | [`../assets/mining-findings-2026-08-23.txt`](../assets/mining-findings-2026-08-23.txt) | five journal/register/fold/digest instances | reuse (in-repo) |
-| effect-engine-keying | Activity results keyed by `${executionId}/${activity.name}`; executionId digest of payload | effect-smol (local checkout `~/YeeBois/dev/effect-smol`) | `packages/effect/src/unstable/cluster/ClusterWorkflowEngine.ts:510`; `unstable/workflow/WorkflowEngine.ts:693`; `unstable/workflow/Workflow.ts:317` | rename-re-executes verification | reference (MIT; upstream API, not vendored) |
+| effect-engine-keying | Activity results keyed by `${executionId}/${activity.name}`; executionId digest of payload | [Effect-TS/effect-smol](https://github.com/Effect-TS/effect-smol) at `3a1128c7684e04d34d9f541f77adaac38a513056` (verified against a local checkout at that revision) | `packages/effect/src/unstable/cluster/ClusterWorkflowEngine.ts:510`; `unstable/workflow/WorkflowEngine.ts:693`; `unstable/workflow/Workflow.ts:317` | rename-re-executes verification | reference (MIT; upstream API, not vendored) |
 
 ## 2. Upstream repositories & licenses
 

@@ -152,8 +152,11 @@ the thesis closes.
   unifying substrate. See also
   [`assets/mining-findings-2026-08-23.txt`](./assets/mining-findings-2026-08-23.txt).
 - **Digest schema has one owner**: `@beep/schema` `Sha256Hex` (branded,
-  $I-annotated) + effectful `computeSha256Hex`
-  (`packages/foundation/modeling/schema/src/Sha256.ts`).
+  $I-annotated) plus the exported effectful codecs `Sha256HexFromBytes` /
+  `Sha256HexFromHexBytes`
+  (`packages/foundation/modeling/schema/src/Sha256.ts`; the hashing function
+  itself is module-private — new consumers go through the schemas or a new
+  exported helper).
 - **Graph-as-data carrier exists**: `@beep/schema` Graph suite
   (`packages/foundation/modeling/schema/src/Graph/`) — serializable topology
   values, no protocol semantics yet.
