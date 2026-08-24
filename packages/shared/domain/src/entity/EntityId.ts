@@ -429,6 +429,42 @@ type EntityIdStatics<
 type EntityIdEquivalence<TBrand extends string> = {
   bivarianceHack(self: EntityIdValueFor<TBrand>, that: EntityIdValueFor<TBrand>): boolean;
 }["bivarianceHack"];
+
+type EntityIdSchema<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, number>;
+
+/**
+ * Codec statics carried by every entity id built with {@link factory}.
+ *
+ * **Details**
+ *
+ * The factory pipes each branded id schema through
+ * `SchemaUtils.withSyncCodecStatics` and `SchemaUtils.withEffectCodecStatics`
+ * before attaching the entity metadata statics, so both codec groups are
+ * uniform across the entity-id fleet. The codec groups' dual `equivalence` is
+ * omitted here because the factory deliberately attaches its own plain
+ * two-argument entity-id equivalence last.
+ *
+ * **Example** (Guard through factory-attached codec statics)
+ *
+ * ```ts
+ * import { $SharedDomainId } from "@beep/identity/packages"
+ * import * as EntityId from "@beep/shared-domain/entity/EntityId"
+ *
+ * const $I = $SharedDomainId.create("identity/Shared")
+ * const OrganizationId = EntityId.factory("shared", $I)("organization")
+ * const statics: EntityId.EntityIdCodecStatics<"SharedOrganizationId"> = OrganizationId
+ *
+ * console.log(statics.is(1))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EntityIdCodecStatics<TBrand extends string> = Omit<
+  SchemaUtils.SyncCodecStatics<EntityIdSchema<TBrand>> & SchemaUtils.EffectCodecStatics<EntityIdSchema<TBrand>>,
+  "equivalence"
+>;
+
 const decodeOptionsResult = S.decodeUnknownResult(Options);
 
 /**
@@ -463,7 +499,8 @@ type Maker<Slice extends string> = <
   ResolvedResource<Slice, Name, Overrides>,
   ResolvedEntityType<Slice, Name, Overrides>,
   ResolvedBrand<Slice, Name, Overrides>
->;
+> &
+  EntityIdCodecStatics<ResolvedBrand<Slice, Name, Overrides>>;
 
 type Factory = {
   <const Slice extends string>(slice: Slice, identity: IdentityComposer<string>): Maker<Slice>;
@@ -557,6 +594,13 @@ const buildDefinition = <
 /**
  * Build a slice-scoped entity id maker.
  *
+ * **Details**
+ *
+ * Every produced id schema carries the entity metadata statics plus the sync
+ * and Effect codec groups (see {@link EntityIdCodecStatics}). The codec groups
+ * are attached before the entity metadata statics so the factory's plain
+ * entity-id `equivalence` stays the canonical equivalence static.
+ *
  * **Example** (Build slice-scoped id maker)
  *
  * ```ts
@@ -586,7 +630,8 @@ export const factory: Factory = dual(
       ResolvedResource<Slice, Name, Overrides>,
       ResolvedEntityType<Slice, Name, Overrides>,
       ResolvedBrand<Slice, Name, Overrides>
-    > => {
+    > &
+      EntityIdCodecStatics<ResolvedBrand<Slice, Name, Overrides>> => {
       const definition = buildDefinition(slice, name, overrides);
       const schema = EntityIdValue.pipe(
         S.brand(definition.brand),
@@ -596,14 +641,17 @@ export const factory: Factory = dual(
       );
       const typedSchema = schema as S.Codec<EntityIdValueFor<ResolvedBrand<Slice, Name, Overrides>>, number>;
 
-      return attachEntityIdStatics(typedSchema, {
-        brand: definition.brand,
-        definition,
-        entityType: definition.entityType,
-        equivalence: S.toEquivalence(typedSchema),
-        resource: definition.resource,
-        slice,
-        tableName: definition.tableName,
-      });
+      return attachEntityIdStatics(
+        typedSchema.pipe(SchemaUtils.withSyncCodecStatics, SchemaUtils.withEffectCodecStatics),
+        {
+          brand: definition.brand,
+          definition,
+          entityType: definition.entityType,
+          equivalence: S.toEquivalence(typedSchema),
+          resource: definition.resource,
+          slice,
+          tableName: definition.tableName,
+        }
+      );
     }
 );

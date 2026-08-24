@@ -7,7 +7,6 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as EntityId from "../../entity/EntityId.ts";
 
 const $I = $WorkspaceDomainId.create("identity/Workspace");
@@ -29,7 +28,7 @@ const make = EntityId.factory("workspace", $I);
  */
 export const CandidateDraftId = make("candidate_draft", {
   description: "Identifier for a candidate draft entity.",
-}).pipe(SchemaUtils.withSyncCodecStatics);
+});
 
 /**
  * Runtime type for {@link CandidateDraftId}.
