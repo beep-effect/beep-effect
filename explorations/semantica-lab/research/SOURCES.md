@@ -32,6 +32,24 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
   find it via Notion search)
 - Bake-off candidate URLs: fetch-verified in [`docs-url-census.md`](./docs-url-census.md) and
   in each family sheet's Sources appendix (`bakeoff-*.md`).
+- **Upstream tracker sweep (2026-08-24):** the semantica-agi/semantica GitHub tracker as of that
+  date (330 issues, 67 open PRs, 328 PRs merged since 2026-06-01; 725 items) pulled with `gh`,
+  classified by seven concurrent Grok 4.6 lanes (one JSONL row per item, count-checked against
+  the shards), synthesized by one Grok lane into
+  [`upstream-tracker-mining.md`](./upstream-tracker-mining.md), verified by a Codex Sol skeptic
+  ([`reviews/2026-08-24-tracker-mining-review.md`](./reviews/2026-08-24-tracker-mining-review.md)).
+  Committed: the classified inventory [`tracker/inventory.jsonl`](./tracker/inventory.jsonl)
+  (number, kind, state, title, url, family, disposition, evidence <= 30 words). Not committed:
+  issue/PR bodies and comments (third-party content; quoted at most 12 words per item) — the raw
+  dump, lane reports, and the orchestrator live in the out-of-repo mirror under the workstation
+  semantica clone (dot-directory tracker-mining). Every cited item is addressable as
+  https://github.com/semantica-agi/semantica/issues/N or /pull/N.
+- **Benchmarks vocabulary skim (T3, 2026-08-24):** [`benchmarks-vocab.md`](./benchmarks-vocab.md).
+  The relocated `semantica-benchmarks` sidecar is **not fetchable** (both URLs named in PR #607 and
+  the extraction commit return 404; absent from the semantica-agi org listing) — license
+  UNVERIFIED, reference-only, nothing vendored. The lane read the last in-tree snapshot before
+  extraction (parent of deletion commit `98cec956fe7e`, 56 files, MIT source tree): a
+  pytest-benchmark throughput harness. Metric names borrowed from issue #574 only.
 - **S1–S5 primary sources** (each URL fetched and the claim located on the page, 2026-08-24):
   - S1 stop rule — Shape Up ch. 3 "Appetite" https://basecamp.com/shapeup/1.2-chapter-03 ;
     ch. 8 "The circuit breaker" https://basecamp.com/shapeup/2.2-chapter-08 ; ch. 14 "Decide

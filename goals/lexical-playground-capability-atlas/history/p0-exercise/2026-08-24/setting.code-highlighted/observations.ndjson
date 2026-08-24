@@ -1,0 +1,27 @@
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.code-highlighted","outcome":"pass","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isCodeHighlighted\":false,\"isRichText\":true,\"showTreeView\":false}","entryId":"setting.code-highlighted","outcome":"pass","step":2}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.code-highlighted","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.code-highlighted","outcome":"pass","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"setting.code-highlighted","outcome":"pass","step":5}
+{"action":"click","detail":"css=[data-test-id=\"options-button\"]","entryId":"setting.code-highlighted","outcome":"pass","step":6}
+{"action":"expect-selector","detail":"role=switch name=\"Enable Code Highlighting\" is visible","entryId":"setting.code-highlighted","outcome":"pass","step":7}
+{"action":"click","detail":"role=switch name=\"Enable Code Highlighting\"","entryId":"setting.code-highlighted","outcome":"pass","step":8}
+{"action":"expect-attr","detail":"role=switch name=\"Enable Code Highlighting\"[aria-checked]=\"true\"","entryId":"setting.code-highlighted","outcome":"pass","step":9}
+{"action":"type","detail":"insert \"Code highlighting evidence\" in css=.ContentEditable__root","entryId":"setting.code-highlighted","outcome":"pass","step":10}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"setting.code-highlighted","outcome":"pass","step":11}
+{"action":"screenshot","detail":"enabled-and-serialized","entryId":"setting.code-highlighted","outcome":"pass","step":12}
+{"action":"set-viewport","detail":"480x900","entryId":"setting.code-highlighted","outcome":"pass","step":13}
+{"action":"keyboard","detail":"Tab","entryId":"setting.code-highlighted","outcome":"pass","step":14}
+{"action":"screenshot","detail":"enabled-narrow-keyboard","entryId":"setting.code-highlighted","outcome":"pass","step":15}
+{"action":"click","detail":"role=switch name=\"Enable Code Highlighting\"","entryId":"setting.code-highlighted","outcome":"pass","step":16}
+{"action":"expect-attr","detail":"role=switch name=\"Enable Code Highlighting\"[aria-checked]=\"false\"","entryId":"setting.code-highlighted","outcome":"pass","step":17}
+{"action":"screenshot","detail":"reset","entryId":"setting.code-highlighted","outcome":"pass","step":18}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"setting.code-highlighted","outcome":"pass","step":19}
+{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"setting.code-highlighted","outcome":"pass","step":20}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"setting.code-highlighted","outcome":"pass","step":21}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"setting.code-highlighted","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"setting.code-highlighted","outcome":"pass","step":23}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"setting.code-highlighted","outcome":"pass","step":24}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"setting.code-highlighted","outcome":"pass","step":25}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"setting.code-highlighted","outcome":"pass","step":26}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"setting.code-highlighted","outcome":"pass","step":27}

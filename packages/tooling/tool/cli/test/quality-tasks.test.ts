@@ -82,6 +82,8 @@ import {
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
 import {
+  hasRemoteTurboCacheArgs,
+  localOnlyTurboCacheArgs,
   readTurboCacheEnvironmentSync,
   resolveTurboCachePlan,
   turboCachePlanArgs,
@@ -1442,7 +1444,7 @@ describe("quality task adapter", () => {
     expect(steps[0]).toMatchObject({
       label: "lint:fix",
       command: "bunx",
-      args: expectedRootTurboArgs("lint:fix", passthroughTasks),
+      args: localOnlyTurboCacheArgs(expectedRootTurboArgs("lint:fix", passthroughTasks)),
       env: {
         BEEP_FC_SEED: "20260708",
         CI: "true",
@@ -1450,6 +1452,10 @@ describe("quality task adapter", () => {
         NODE_OPTIONS: "--no-experimental-webstorage",
         TERM_PROGRAM: undefined,
         TERM_PROGRAM_VERSION: undefined,
+        TURBO_API: undefined,
+        TURBO_CACHE: "local:rw",
+        TURBO_TEAM: undefined,
+        TURBO_TOKEN: undefined,
         VITEST_COVERAGE_RATCHET: "1",
       },
     });
@@ -1465,7 +1471,7 @@ describe("quality task adapter", () => {
     expect(steps[0]).toMatchObject({
       label: "coverage:ratchet",
       command: "bunx",
-      args: expectedRootTurboArgs("coverage", []),
+      args: localOnlyTurboCacheArgs(expectedRootTurboArgs("coverage", [])),
       env: {
         BEEP_FC_SEED: "20260708",
         CI: "true",
@@ -1473,10 +1479,58 @@ describe("quality task adapter", () => {
         NODE_OPTIONS: "--no-experimental-webstorage",
         TERM_PROGRAM: undefined,
         TERM_PROGRAM_VERSION: undefined,
+        TURBO_API: undefined,
+        TURBO_CACHE: "local:rw",
+        TURBO_TEAM: undefined,
+        TURBO_TOKEN: undefined,
         VITEST_COVERAGE_RATCHET: "1",
       },
     });
     expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
+  });
+
+  it("reduces coverage children to the pull-request Turbo posture whatever the host carries", () => {
+    const steps = withEnvVar("TURBO_API", "https://cache.example.test", () =>
+      withEnvVar("TURBO_TOKEN", "op://fixture-vault/turbo/token", () =>
+        withEnvVar("TURBO_TEAM", "team_fixture", () =>
+          withEnvVar("TURBO_CACHE", "local:rw,remote:r", () =>
+            rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+          )
+        )
+      )
+    );
+    const env = steps[0]?.env ?? {};
+
+    // Present-and-undefined is the spawn-time "unset" signal, so the keys must
+    // exist rather than merely be absent from a toMatchObject expectation.
+    expect(env).toHaveProperty("TURBO_API");
+    expect(env).toHaveProperty("TURBO_TOKEN");
+    expect(env).toHaveProperty("TURBO_TEAM");
+    expect(env.TURBO_API).toBeUndefined();
+    expect(env.TURBO_TOKEN).toBeUndefined();
+    expect(env.TURBO_TEAM).toBeUndefined();
+    expect(env.TURBO_CACHE).toBe("local:rw");
+  });
+
+  it("never hands a coverage turbo run a generated remote cache argument", () => {
+    // A generated `--cache=local:rw,remote:r` outranks the TURBO_CACHE the
+    // coverage environment pins, and the credentials it would need were just
+    // scrubbed from that environment. Whatever the ambient plan resolves to
+    // (this checkout may be configured for remote reads), coverage invocations
+    // carry no remote posture while the caller-owned passthrough survives.
+    const ambientPlanArgs = expectedTurboCacheArgs([]);
+    const coverage = rootQualityStepsForTesting("/repo", getInvocation(["coverage"]));
+    const fullSteps = coverageFullStepsForTesting("/repo", ["@beep/schema"], []);
+    const callerOwned = coverageFullStepsForTesting("/repo", ["@beep/schema"], ["--remote-only"]);
+
+    expect(A.every(coverage, (step) => !hasRemoteTurboCacheArgs(step.args))).toBe(true);
+    expect(A.every(A.drop(fullSteps, 1), (step) => !hasRemoteTurboCacheArgs(step.args))).toBe(true);
+    expect(
+      A.every(coverage, (step) => A.isReadonlyArrayEmpty(ambientPlanArgs) || A.contains(step.args, "--cache=local:rw"))
+    ).toBe(true);
+    // The prebuild is a plain build invocation and keeps the ambient plan.
+    expect(fullSteps[0]?.args).toEqual(expect.arrayContaining([...ambientPlanArgs]));
+    expect(A.every(A.drop(callerOwned, 1), (step) => A.contains(step.args, "--remote-only"))).toBe(true);
   });
 
   it("preserves existing Node options when disabling experimental Web Storage for coverage", () => {
@@ -1517,13 +1571,9 @@ describe("quality task adapter", () => {
     expect(steps[0]).toMatchObject({
       label: "coverage:baseline",
       command: "bunx",
-      args: expectedTurboArgs("coverage", [
-        "--concurrency=1",
-        "--force",
-        "--",
-        "--fileParallelism=true",
-        "--maxWorkers=2",
-      ]),
+      args: localOnlyTurboCacheArgs(
+        expectedTurboArgs("coverage", ["--concurrency=1", "--force", "--", "--fileParallelism=true", "--maxWorkers=2"])
+      ),
       env: {
         BEEP_FC_SEED: "20260708",
         CI: "true",
@@ -1531,6 +1581,10 @@ describe("quality task adapter", () => {
         NODE_OPTIONS: "--no-experimental-webstorage",
         TERM_PROGRAM: undefined,
         TERM_PROGRAM_VERSION: undefined,
+        TURBO_API: undefined,
+        TURBO_CACHE: "local:rw",
+        TURBO_TEAM: undefined,
+        TURBO_TOKEN: undefined,
         VITEST_COVERAGE_RATCHET: "1",
         VITEST_COVERAGE_REPORT_ONLY: "1",
       },

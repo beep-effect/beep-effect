@@ -1,6 +1,10 @@
 // Coverage regression baseline. Do not edit by hand.
 // Regenerate with: bun run coverage:baseline:write
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
+// Deterministic since ship-velocity B9: coverageEnvironment() pins the
+// pull-request Turbo posture, so this row measures the same locally,
+// on PR jobs, and on main pushes (proof: goals/ship-velocity/research/
+// OPPORTUNITIES.md §2026-08-24 B9).
 {
   "schema_version": 2,
   "generated_at": "2026-08-24T11:32:06.686Z",
@@ -22730,18 +22734,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/commands/Qa/CitedArtifactExistsGate.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Qa/Control.ts": {
           "lines": 44,
           "statements": 42.3,
@@ -22896,18 +22888,6 @@
             "statements": 7,
             "branches": 2,
             "functions": 6
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Qa/QaJudgeGateId.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Qa/Record.ts": {
@@ -24975,15 +24955,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": {
-          "lines": 86.56,
-          "statements": 86.76,
-          "branches": 92.85,
-          "functions": 82.14,
+          "lines": 100,
+          "statements": 100,
+          "branches": 97.61,
+          "functions": 100,
           "uncovered": {
-            "lines": 9,
-            "statements": 9,
-            "branches": 3,
-            "functions": 5
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts": {
@@ -25839,6 +25819,30 @@
           }
         },
         "packages/tooling/tool/cli/src/test/Yeet.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Qa/CitedArtifactExistsGate.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Qa/QaJudgeGateId.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

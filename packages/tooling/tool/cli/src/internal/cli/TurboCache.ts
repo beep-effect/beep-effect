@@ -100,6 +100,40 @@ export const TurboCacheEnvName = LiteralKit(["TURBO_API", "TURBO_TOKEN", "TURBO_
 export type TurboCacheEnvName = typeof TurboCacheEnvName.Type;
 
 /**
+ * Environment overrides that reduce any checkout to the hosted pull-request
+ * cache posture: every credential scrubbed, cache pinned local-only.
+ *
+ * **Details**
+ *
+ * `check.yml` hands pull-request jobs a blank credential triple and
+ * `TURBO_CACHE=local:rw`; main pushes receive a literal token and a
+ * workstation carries a 1Password reference. Code that classifies those
+ * values (`EnvConfig.readTurboCacheEnvironment`) executes different arms under
+ * each, so any measurement that must agree across all three — the coverage
+ * ratchet — spreads this record over its child environment. `satisfies`
+ * against {@link TurboCacheEnvName} keeps the posture complete when a new
+ * name joins the quad.
+ *
+ * **Example** (Scrub a coverage child environment)
+ *
+ * ```ts
+ * import { turboCachePullRequestPosture } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(turboCachePullRequestPosture.TURBO_CACHE)
+ * console.log(turboCachePullRequestPosture.TURBO_TOKEN)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const turboCachePullRequestPosture = {
+  TURBO_API: undefined,
+  TURBO_TOKEN: undefined,
+  TURBO_TEAM: undefined,
+  TURBO_CACHE: TurboCacheMode.Enum.LocalOnly,
+} satisfies Readonly<Record<TurboCacheEnvName, string | undefined>>;
+
+/**
  * Turbo credential environment variables whose `op://` references a secret session may resolve.
  *
  * **Details**
