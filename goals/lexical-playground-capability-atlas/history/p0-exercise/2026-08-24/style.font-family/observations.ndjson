@@ -1,0 +1,27 @@
+{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"style.font-family","outcome":"fail","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"style.font-family","outcome":"pass","step":2}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"style.font-family","outcome":"fail","step":3}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"style.font-family","outcome":"fail","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"style.font-family","outcome":"pass","step":5}
+{"action":"type","detail":"insert \"Evidence lifecycle\" in css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":6}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":7}
+{"action":"click","detail":"role=button name=\"Formatting options for font family\"","entryId":"style.font-family","outcome":"pass","step":8}
+{"action":"click","detail":"scope=.dropdown:visible role=button name-prefix=\"Courier New\"","entryId":"style.font-family","outcome":"pass","step":9}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__paragraph [style*=\"font-family\"] is visible","entryId":"style.font-family","outcome":"pass","step":10}
+{"action":"screenshot","detail":"activated","entryId":"style.font-family","outcome":"pass","step":11}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":12}
+{"action":"screenshot","detail":"undone","entryId":"style.font-family","outcome":"pass","step":13}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":14}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__paragraph [style*=\"font-family\"] is visible","entryId":"style.font-family","outcome":"pass","step":15}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":16}
+{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":17}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":18}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"style.font-family","outcome":"pass","step":19}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"style.font-family","outcome":"pass","step":20}
+{"action":"set-viewport","detail":"480x900","entryId":"style.font-family","outcome":"pass","step":21}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"style.font-family","outcome":"pass","step":22}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-redone","entryId":"style.font-family","outcome":"pass","step":23}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":24}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"style.font-family","outcome":"pass","step":25}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"style.font-family","outcome":"pass","step":26}
+{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"style.font-family","outcome":"fail","step":27}

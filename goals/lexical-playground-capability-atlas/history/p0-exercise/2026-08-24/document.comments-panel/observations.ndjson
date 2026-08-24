@@ -1,0 +1,32 @@
+{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"document.comments-panel","outcome":"fail","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"document.comments-panel","outcome":"pass","step":2}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"document.comments-panel","outcome":"fail","step":3}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"document.comments-panel","outcome":"fail","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"document.comments-panel","outcome":"pass","step":5}
+{"action":"type","detail":"insert \"Comments panel evidence\" in css=.ContentEditable__root","entryId":"document.comments-panel","outcome":"pass","step":6}
+{"action":"screenshot","detail":"before","entryId":"document.comments-panel","outcome":"pass","step":7}
+{"action":"click","detail":"role=button name=\"Show Comments\"","entryId":"document.comments-panel","outcome":"pass","step":8}
+{"action":"expect-selector","detail":"css=.CommentPlugin_CommentsPanel is visible","entryId":"document.comments-panel","outcome":"pass","step":9}
+{"action":"keyboard","detail":"Tab","entryId":"document.comments-panel","outcome":"pass","step":10}
+{"action":"click","detail":"role=button name=\"Hide Comments\"","entryId":"document.comments-panel","outcome":"pass","step":11}
+{"action":"expect-selector","detail":"css=.CommentPlugin_CommentsPanel is detached","entryId":"document.comments-panel","outcome":"pass","step":12}
+{"action":"click","detail":"role=button name=\"Show Comments\"","entryId":"document.comments-panel","outcome":"pass","step":13}
+{"action":"expect-selector","detail":"css=.CommentPlugin_CommentsPanel is visible","entryId":"document.comments-panel","outcome":"pass","step":14}
+{"action":"screenshot","detail":"after","entryId":"document.comments-panel","outcome":"pass","step":15}
+{"action":"click","detail":"role=button name=\"Hide Comments\"","entryId":"document.comments-panel","outcome":"pass","step":16}
+{"action":"expect-selector","detail":"css=.CommentPlugin_CommentsPanel is detached","entryId":"document.comments-panel","outcome":"pass","step":17}
+{"action":"set-viewport","detail":"480x900","entryId":"document.comments-panel","outcome":"pass","step":18}
+{"action":"keyboard","detail":"Tab","entryId":"document.comments-panel","outcome":"pass","step":19}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"document.comments-panel","outcome":"pass","step":20}
+{"action":"screenshot","detail":"narrow-keyboard","entryId":"document.comments-panel","outcome":"pass","step":21}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"document.comments-panel","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"document.comments-panel","outcome":"pass","step":23}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"document.comments-panel","outcome":"pass","step":24}
+{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"document.comments-panel","outcome":"pass","step":25}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"document.comments-panel","outcome":"pass","step":26}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"document.comments-panel","outcome":"pass","step":27}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"document.comments-panel","outcome":"pass","step":28}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"document.comments-panel","outcome":"pass","step":29}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"document.comments-panel","outcome":"pass","step":30}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"document.comments-panel","outcome":"pass","step":31}
+{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"document.comments-panel","outcome":"fail","step":32}

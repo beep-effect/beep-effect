@@ -1,0 +1,29 @@
+{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"extension.floating-toolbar","outcome":"fail","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"extension.floating-toolbar","outcome":"pass","step":2}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"extension.floating-toolbar","outcome":"fail","step":3}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"extension.floating-toolbar","outcome":"fail","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"extension.floating-toolbar","outcome":"pass","step":5}
+{"action":"type","detail":"insert \"Floating toolbar\" in css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":6}
+{"action":"screenshot","detail":"before","entryId":"extension.floating-toolbar","outcome":"pass","step":7}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":8}
+{"action":"expect-selector","detail":"role=toolbar name=\"Floating text format toolbar\" is visible","entryId":"extension.floating-toolbar","outcome":"pass","step":9}
+{"action":"expect-selector","detail":"scope=[role=\"toolbar\"][aria-label=\"Floating text format toolbar\"] role=button name=\"Format text as bold\" is visible","entryId":"extension.floating-toolbar","outcome":"pass","step":10}
+{"action":"expect-attr","detail":"scope=[role=\"toolbar\"][aria-label=\"Floating text format toolbar\"] role=button name=\"Format text as bold\"[tabindex]=\"0\"","entryId":"extension.floating-toolbar","outcome":"pass","step":11}
+{"action":"keyboard","detail":"Enter on scope=[role=\"toolbar\"][aria-label=\"Floating text format toolbar\"] role=button name=\"Format text as bold\"","entryId":"extension.floating-toolbar","outcome":"pass","step":12}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textBold is visible","entryId":"extension.floating-toolbar","outcome":"pass","step":13}
+{"action":"screenshot","detail":"after","entryId":"extension.floating-toolbar","outcome":"pass","step":14}
+{"action":"set-viewport","detail":"480x900","entryId":"extension.floating-toolbar","outcome":"pass","step":15}
+{"action":"keyboard","detail":"Tab","entryId":"extension.floating-toolbar","outcome":"pass","step":16}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"extension.floating-toolbar","outcome":"pass","step":17}
+{"action":"screenshot","detail":"narrow-keyboard","entryId":"extension.floating-toolbar","outcome":"pass","step":18}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":19}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":20}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":21}
+{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":23}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"extension.floating-toolbar","outcome":"pass","step":24}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"extension.floating-toolbar","outcome":"pass","step":25}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":26}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"extension.floating-toolbar","outcome":"pass","step":27}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"extension.floating-toolbar","outcome":"pass","step":28}
+{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"extension.floating-toolbar","outcome":"fail","step":29}

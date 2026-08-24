@@ -5,6 +5,7 @@ import { CompatibilityFormat, EditorCapabilityAtlas } from "./CapabilityAtlas.sc
 const atlasPath = Bun.fileURLToPath(new URL("../research/capability-atlas.json", import.meta.url));
 const evidenceGapsPath = Bun.fileURLToPath(new URL("../research/p0-evidence-gaps.md", import.meta.url));
 const repoRoot = Bun.fileURLToPath(new URL("../../../", import.meta.url));
+const exerciseScreenshotPrefix = "goals/lexical-playground-capability-atlas/history/";
 const expectedCommit = "a933222c489e7025d87b9217c2489d309fc8a3cf";
 const expectedVersion = "0.49.0";
 
@@ -376,7 +377,7 @@ for (const capability of atlas.capabilities) {
     fail(`${capability.id} has no source or live evidence`);
   }
   if (capability.evidenceStatus === "verified-live" && capability.upstreamEvidence.live.length === 0) {
-    fail(`${capability.id} is verified-live without live evidence`);
+    fail(`${capability.id} is verified-live without at least one live evidence item`);
   }
   if (capability.evidenceStatus === "verified-source" && capability.upstreamEvidence.source.length === 0) {
     fail(`${capability.id} is verified-source without source evidence`);
@@ -433,7 +434,10 @@ for (const capability of atlas.capabilities) {
   for (const item of capability.upstreamEvidence.live) {
     await validateRepoPath(`${capability.id} live audit`, item.auditPath);
     for (const screenshot of item.screenshots) {
-      if (!atlas.evidence.screenshots.some((item) => item.path === screenshot)) {
+      if (
+        !screenshot.startsWith(exerciseScreenshotPrefix) &&
+        !atlas.evidence.screenshots.some((item) => item.path === screenshot)
+      ) {
         fail(`${capability.id} cites screenshot outside the pinned inventory: ${screenshot}`);
       }
       await validateRepoPath(`${capability.id} screenshot`, screenshot);

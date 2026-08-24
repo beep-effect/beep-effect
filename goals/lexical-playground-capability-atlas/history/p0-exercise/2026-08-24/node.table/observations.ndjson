@@ -1,0 +1,41 @@
+{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"node.table","outcome":"fail","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"node.table","outcome":"pass","step":2}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"node.table","outcome":"fail","step":3}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"node.table","outcome":"fail","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.table","outcome":"pass","step":5}
+{"action":"click","detail":"role=button name=\"Insert specialized editor node\"","entryId":"node.table","outcome":"pass","step":6}
+{"action":"click","detail":"scope=.dropdown:visible role=button name-prefix=\"Table\"","entryId":"node.table","outcome":"pass","step":7}
+{"action":"type","detail":"fill \"2\" in css=[data-test-id=\"table-modal-columns\"]","entryId":"node.table","outcome":"pass","step":8}
+{"action":"type","detail":"fill \"2\" in css=[data-test-id=\"table-modal-rows\"]","entryId":"node.table","outcome":"pass","step":9}
+{"action":"click","detail":"css=[data-test-id=\"table-model-confirm-insert\"] button","entryId":"node.table","outcome":"pass","step":10}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__table nth=0 is visible","entryId":"node.table","outcome":"pass","step":11}
+{"action":"screenshot","detail":"activation-path-1","entryId":"node.table","outcome":"pass","step":12}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":13}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":14}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":15}
+{"action":"type","detail":"insert \"/\" in css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":16}
+{"action":"click","detail":"role=option name=\"Table\"","entryId":"node.table","outcome":"pass","step":17}
+{"action":"type","detail":"fill \"2\" in css=[data-test-id=\"table-modal-columns\"]","entryId":"node.table","outcome":"pass","step":18}
+{"action":"type","detail":"fill \"2\" in css=[data-test-id=\"table-modal-rows\"]","entryId":"node.table","outcome":"pass","step":19}
+{"action":"click","detail":"css=[data-test-id=\"table-model-confirm-insert\"] button","entryId":"node.table","outcome":"pass","step":20}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__table nth=0 is visible","entryId":"node.table","outcome":"pass","step":21}
+{"action":"screenshot","detail":"activation-path-2","entryId":"node.table","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":23}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":24}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":25}
+{"action":"type","detail":"insert \"| A | B |\\n|---|---|\\n| 1 | 2 |\" in css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":26}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":27}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__table nth=0 is visible","entryId":"node.table","outcome":"pass","step":28}
+{"action":"screenshot","detail":"activation-path-3","entryId":"node.table","outcome":"pass","step":29}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":30}
+{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":31}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":32}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"node.table","outcome":"pass","step":33}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"node.table","outcome":"pass","step":34}
+{"action":"set-viewport","detail":"480x900","entryId":"node.table","outcome":"pass","step":35}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.table","outcome":"pass","step":36}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"node.table","outcome":"pass","step":37}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":38}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.table","outcome":"pass","step":39}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.table","outcome":"pass","step":40}
+{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"node.table","outcome":"fail","step":41}

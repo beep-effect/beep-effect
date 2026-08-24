@@ -1,0 +1,26 @@
+{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"transformer.emoji","outcome":"fail","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"transformer.emoji","outcome":"pass","step":2}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"transformer.emoji","outcome":"fail","step":3}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"transformer.emoji","outcome":"fail","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"transformer.emoji","outcome":"pass","step":5}
+{"action":"type","detail":"insert \":smile:\" in css=.ContentEditable__root","entryId":"transformer.emoji","outcome":"pass","step":6}
+{"action":"expect-selector","detail":"text=\"😄\" is visible","entryId":"transformer.emoji","outcome":"pass","step":7}
+{"action":"screenshot","detail":"activation-path-1","entryId":"transformer.emoji","outcome":"pass","step":8}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"transformer.emoji","outcome":"pass","step":9}
+{"action":"click","detail":"role=button name=\"Convert To Markdown\"","entryId":"transformer.emoji","outcome":"pass","step":10}
+{"action":"type","detail":"fill \":smile:\" in css=.ContentEditable__root","entryId":"transformer.emoji","outcome":"pass","step":11}
+{"action":"click","detail":"role=button name=\"Convert from markdown\"","entryId":"transformer.emoji","outcome":"pass","step":12}
+{"action":"expect-selector","detail":"text=\"😄\" is visible","entryId":"transformer.emoji","outcome":"pass","step":13}
+{"action":"screenshot","detail":"activation-path-2","entryId":"transformer.emoji","outcome":"pass","step":14}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"transformer.emoji","outcome":"pass","step":15}
+{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"transformer.emoji","outcome":"pass","step":16}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"transformer.emoji","outcome":"pass","step":17}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"transformer.emoji","outcome":"pass","step":18}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"transformer.emoji","outcome":"pass","step":19}
+{"action":"set-viewport","detail":"480x900","entryId":"transformer.emoji","outcome":"pass","step":20}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"transformer.emoji","outcome":"pass","step":21}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"transformer.emoji","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"transformer.emoji","outcome":"pass","step":23}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"transformer.emoji","outcome":"pass","step":24}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"transformer.emoji","outcome":"pass","step":25}
+{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"transformer.emoji","outcome":"fail","step":26}

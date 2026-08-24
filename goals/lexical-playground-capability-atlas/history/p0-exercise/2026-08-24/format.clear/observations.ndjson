@@ -1,0 +1,32 @@
+{"action":"network-request","detail":"GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"format.clear","outcome":"fail","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"format.clear","outcome":"pass","step":2}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"format.clear","outcome":"fail","step":3}
+{"action":"network-request","detail":"GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"format.clear","outcome":"fail","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.clear","outcome":"pass","step":5}
+{"action":"type","detail":"insert \"Clear formatting\" in css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":6}
+{"action":"screenshot","detail":"before","entryId":"format.clear","outcome":"pass","step":7}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":8}
+{"action":"click","detail":"role=button name=\"Format text as bold. Shortcut: Ctrl+B\"","entryId":"format.clear","outcome":"pass","step":9}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textBold is visible","entryId":"format.clear","outcome":"pass","step":10}
+{"action":"click","detail":"role=button name=\"Formatting options for additional text styles\"","entryId":"format.clear","outcome":"pass","step":11}
+{"action":"click","detail":"scope=.dropdown:visible role=button name-prefix=\"Clear Formatting\"","entryId":"format.clear","outcome":"pass","step":12}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textBold is detached","entryId":"format.clear","outcome":"pass","step":13}
+{"action":"keyboard","detail":"Control+B on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":14}
+{"action":"keyboard","detail":"Control+\\ on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":15}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textBold is detached","entryId":"format.clear","outcome":"pass","step":16}
+{"action":"screenshot","detail":"after","entryId":"format.clear","outcome":"pass","step":17}
+{"action":"set-viewport","detail":"480x900","entryId":"format.clear","outcome":"pass","step":18}
+{"action":"keyboard","detail":"Tab","entryId":"format.clear","outcome":"pass","step":19}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.clear","outcome":"pass","step":20}
+{"action":"screenshot","detail":"narrow-keyboard","entryId":"format.clear","outcome":"pass","step":21}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":23}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":24}
+{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":25}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":26}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"format.clear","outcome":"pass","step":27}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"format.clear","outcome":"pass","step":28}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":29}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"format.clear","outcome":"pass","step":30}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.clear","outcome":"pass","step":31}
+{"action":"network-summary","detail":"none: 3 non-localhost request(s)","entryId":"format.clear","outcome":"fail","step":32}

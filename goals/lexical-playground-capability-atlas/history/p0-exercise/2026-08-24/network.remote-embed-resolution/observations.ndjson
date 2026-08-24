@@ -1,0 +1,1 @@
+{"action":"manual","detail":"The pinned Playground has no authorized-provider resolver or consent UI for inert remote references; its embed nodes load provider content directly, so the atlas contract must be exercised manually in the product host that owns authorization policy.","entryId":"network.remote-embed-resolution","outcome":"skipped","step":1}
