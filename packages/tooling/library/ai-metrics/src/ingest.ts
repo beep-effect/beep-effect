@@ -6,6 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -76,7 +77,7 @@ export class AiMetricsTranscriptTextSummaryInput extends S.Class<AiMetricsTransc
 )(
   {
     content: S.String,
-    hashSalt: S.optionalKey(S.String),
+    hashSalt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sourceKind: AiMetricsTranscriptSource,
     sourcePath: S.String,
   },
@@ -90,12 +91,12 @@ const codexTurn = (sourcePathHash: string, lineNumber: number, line: CodexTransc
     eventName: metricEventName({
       fallback: "event",
       sourceKind: AiMetricsTranscriptSource.Enum.codex,
-      value: line.type,
+      value: O.some(line.type),
     }),
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.codex,
     sourcePathHash,
-    timestamp: O.fromUndefinedOr(line.timestamp),
+    timestamp: line.timestamp,
   });
 
 const claudeTurn = (sourcePathHash: string, lineNumber: number, line: ClaudeTranscriptLine): AgentTurn =>
@@ -108,7 +109,7 @@ const claudeTurn = (sourcePathHash: string, lineNumber: number, line: ClaudeTran
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.claude,
     sourcePathHash,
-    timestamp: O.fromUndefinedOr(line.timestamp),
+    timestamp: line.timestamp,
   });
 
 const openClawTurn = (sourcePathHash: string, lineNumber: number, line: OpenClawTranscriptLine): AgentTurn =>
@@ -117,15 +118,14 @@ const openClawTurn = (sourcePathHash: string, lineNumber: number, line: OpenClaw
       fallback: "event",
       sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
       value: pipe(
-        O.fromUndefinedOr(line.event),
-        O.orElse(() => O.fromUndefinedOr(line.type)),
-        O.getOrUndefined
+        line.event,
+        O.orElse(() => line.type)
       ),
     }),
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
     sourcePathHash,
-    timestamp: O.fromUndefinedOr(line.timestamp),
+    timestamp: line.timestamp,
   });
 
 const decodeTranscriptTurn = (
@@ -172,10 +172,11 @@ const timestampList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string>
  * ```ts
  * import { summarizeTranscriptText } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * const result = Effect.runPromise(
  *   summarizeTranscriptText({
  *     content: "{\"type\":\"event_msg\"}",
- *     hashSalt: "local-smoke-salt",
+ *     hashSalt: O.some("local-smoke-salt"),
  *     sourceKind: "codex",
  *     sourcePath: "sample.jsonl"
  *   })
@@ -234,7 +235,7 @@ export const summarizeTranscriptText: (
  *       eventNames: ["event_msg"],
  *       rejectedLines: 0,
  *       sourceKind: "codex",
- *       sourcePathHash: "source-hash",
+ *       sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111",
  *       totalLines: 1
  *     })
  *   )

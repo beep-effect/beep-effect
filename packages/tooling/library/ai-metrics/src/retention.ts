@@ -28,23 +28,47 @@ import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "./duckdb.ts";
 import { listAiMetricsDirectoryFileInfo } from "./file-inventory.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
+import { modifiedAtMillis } from "./internal/file-info.ts";
+import { normalizedRelativePath } from "./internal/transcript-utils.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource, ConfigSnapshot } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("retention");
 
-const AiMetricsRetentionMutationMode = LiteralKit(["delete", "compact"]).pipe(
+/**
+ * Mutation applied to retained AI metrics artifacts.
+ *
+ * **Example** (Select delete mode)
+ *
+ * ```ts
+ * import { AiMetricsRetentionMutationMode } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsRetentionMutationMode.Enum.delete)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsRetentionMutationMode = LiteralKit(["delete", "compact"]).pipe(
   $I.annoteSchema("AiMetricsRetentionMutationMode", {
     description: "Mutation operation recorded by AI metrics retention delete and compact workflows.",
   })
 );
+
+/**
+ * Runtime type for {@link AiMetricsRetentionMutationMode}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsRetentionMutationMode = typeof AiMetricsRetentionMutationMode.Type;
 const RawArchiveObjectIdPattern = /^raw-[a-f0-9]{64}$/u;
 class RawArchivePlanItem extends S.Class<RawArchivePlanItem>($I`RawArchivePlanItem`)(
   {
     archiveObjectId: S.String,
     archivePath: S.String,
     archiveRunObjectId: S.String,
-    encryptedAtEpochMillis: S.Finite,
+    encryptedAtEpochMillis: S.Natural,
     ingestRunId: S.String,
     plaintextContentHash: S.String,
     sourceKind: AiMetricsTranscriptSource,
@@ -60,7 +84,7 @@ class RawArchiveObjectRow extends S.Class<RawArchiveObjectRow>($I`RawArchiveObje
     archiveObjectId: S.String,
     archivePath: S.String,
     archiveRunObjectId: S.String,
-    encryptedAtEpochMillis: S.Finite,
+    encryptedAtEpochMillis: S.Natural,
     ingestRunId: S.String,
     plaintextContentHash: S.String,
     sourceKind: AiMetricsTranscriptSource,
@@ -75,7 +99,7 @@ class RawArchiveObjectRow extends S.Class<RawArchiveObjectRow>($I`RawArchiveObje
 
 class IngestRunRow extends S.Class<IngestRunRow>($I`IngestRunRow`)(
   {
-    completedAtEpochMillis: S.Finite,
+    completedAtEpochMillis: S.Natural,
     ingestRunId: S.String,
   },
   $I.annote("IngestRunRow", {
@@ -88,7 +112,7 @@ class IngestRunRow extends S.Class<IngestRunRow>($I`IngestRunRow`)(
 class OutcomeLabelRow extends S.Class<OutcomeLabelRow>($I`OutcomeLabelRow`)(
   {
     labelId: S.String,
-    labeledAtEpochMillis: S.OptionFromNullOr(S.Finite),
+    labeledAtEpochMillis: S.OptionFromNullOr(S.Natural),
   },
   $I.annote("OutcomeLabelRow", {
     description: "Decoded DuckDB row for one outcome label with a nullable legacy timestamp.",
@@ -100,7 +124,7 @@ class OutcomeLabelRow extends S.Class<OutcomeLabelRow>($I`OutcomeLabelRow`)(
 class BenchmarkRunRow extends S.Class<BenchmarkRunRow>($I`BenchmarkRunRow`)(
   {
     benchmarkRunId: S.String,
-    recordedAtEpochMillis: S.OptionFromNullOr(S.Finite),
+    recordedAtEpochMillis: S.OptionFromNullOr(S.Natural),
   },
   $I.annote("BenchmarkRunRow", {
     description: "Decoded DuckDB row for one benchmark run with a nullable legacy timestamp.",
@@ -112,7 +136,7 @@ class BenchmarkRunRow extends S.Class<BenchmarkRunRow>($I`BenchmarkRunRow`)(
 class ScorecardRow extends S.Class<ScorecardRow>($I`ScorecardRow`)(
   {
     scorecardId: S.String,
-    windowEndEpochMillis: S.OptionFromNullOr(S.Finite),
+    windowEndEpochMillis: S.OptionFromNullOr(S.Natural),
   },
   $I.annote("ScorecardRow", {
     description: "Decoded DuckDB row for one scorecard with a nullable legacy window end.",
@@ -124,7 +148,7 @@ class ScorecardRow extends S.Class<ScorecardRow>($I`ScorecardRow`)(
 class PathPlanItem extends S.Class<PathPlanItem>($I`PathPlanItem`)(
   {
     absolutePath: S.String,
-    modifiedAtEpochMillis: S.Finite,
+    modifiedAtEpochMillis: S.Natural,
     relativePath: S.String,
   },
   $I.annote("PathPlanItem", {
@@ -152,13 +176,6 @@ const retentionFailure = (message: string, cause: unknown): AiMetricsRetentionEr
     cause,
     message,
   });
-
-const optionalModifiedAtMillis = (info: FileSystem.File.Info): number =>
-  pipe(
-    info.mtime,
-    O.map((mtime) => mtime.getTime()),
-    O.getOrElse(() => 0)
-  );
 
 const inWindow =
   (input: AiMetricsRetentionSelector) =>
@@ -190,11 +207,8 @@ const quoteSqlString = flow(Str.replace(/'/gu, "''"), (value) => `'${value}'`);
 
 const sqlStringList: (values: ReadonlyArray<string>) => string = flow(A.map(quoteSqlString), A.join(", "));
 
-const normalizedRelativePath = (path: Path.Path, root: string, filePath: string): string =>
-  pipe(path.relative(root, filePath), Str.replace(/\\/gu, "/"));
-
 const isStrictChildPath = (path: Path.Path, root: string, filePath: string): boolean => {
-  const relativePath = normalizedRelativePath(path, root, filePath);
+  const relativePath = normalizedRelativePath(filePath, { pathApi: path, root });
   return (
     Str.isNonEmpty(relativePath) &&
     relativePath !== ".." &&
@@ -295,10 +309,10 @@ export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionErr
  */
 export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelector>($I`AiMetricsRetentionSelector`)(
   S.Struct({
-    beforeEpochMillis: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    beforeEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
     dataRoot: S.String,
-    sinceEpochMillis: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    untilEpochMillis: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    sinceEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    untilEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
   }).check(
     S.makeFilter(
       (selector) => {
@@ -343,7 +357,7 @@ export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelect
  *   ingestRunId: "ingest-1",
  *   plaintextContentHash: "content-hash",
  *   sourceKind: "codex",
- *   sourcePathHash: "source-hash"
+ *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111"
  * })
  *
  * console.log(item.sourceKind) // "codex"
@@ -358,7 +372,7 @@ export class AiMetricsRetentionRawArchiveItem extends S.Class<AiMetricsRetention
 )(
   {
     archiveObjectId: S.String,
-    encryptedAtEpochMillis: S.Finite,
+    encryptedAtEpochMillis: S.Natural,
     ingestRunId: S.String,
     plaintextContentHash: S.String,
     sourceKind: AiMetricsTranscriptSource,
@@ -396,7 +410,7 @@ export class AiMetricsRetentionRawArchiveItem extends S.Class<AiMetricsRetention
  */
 export class AiMetricsRetentionFileItem extends S.Class<AiMetricsRetentionFileItem>($I`AiMetricsRetentionFileItem`)(
   {
-    modifiedAtEpochMillis: S.Finite,
+    modifiedAtEpochMillis: S.Natural,
     relativePath: S.String,
   },
   $I.annote("AiMetricsRetentionFileItem", {
@@ -438,7 +452,7 @@ export class AiMetricsRetentionFileItem extends S.Class<AiMetricsRetentionFileIt
  *       ingestRunId: "ingest-1",
  *       plaintextContentHash: "content-hash",
  *       sourceKind: "codex",
- *       sourcePathHash: "source-hash"
+ *       sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111"
  *     })
  *   ],
  *   reports: [],
@@ -464,9 +478,9 @@ export class AiMetricsRetentionInventory extends S.Class<AiMetricsRetentionInven
     schemaVersion: S.Literal("beep.ai_metrics.retention_inventory.v1").pipe(
       SchemaUtils.withConstantDefault("beep.ai_metrics.retention_inventory.v1")
     ),
-    selectedDerivedExportCount: S.Finite,
-    selectedRawArchiveObjectCount: S.Finite,
-    selectedReportCount: S.Finite,
+    selectedDerivedExportCount: S.Natural,
+    selectedRawArchiveObjectCount: S.Natural,
+    selectedReportCount: S.Natural,
   },
   $I.annote("AiMetricsRetentionInventory", {
     description: "Path-safe retained AI metrics raw, derived, and report inventory for one selector.",
@@ -513,9 +527,9 @@ export class AiMetricsRetentionMutationResult extends S.Class<AiMetricsRetention
   $I`AiMetricsRetentionMutationResult`
 )(
   {
-    deletedDerivedExportCount: S.Finite,
-    deletedRawArchiveObjectCount: S.Finite,
-    deletedReportCount: S.Finite,
+    deletedDerivedExportCount: S.Natural,
+    deletedRawArchiveObjectCount: S.Natural,
+    deletedReportCount: S.Natural,
     dryRun: S.Boolean,
     explicitWindow: S.Boolean,
     mode: AiMetricsRetentionMutationMode,
@@ -611,10 +625,10 @@ export class AiMetricsRetentionEnforcementResult extends S.Class<AiMetricsRetent
 )(
   {
     dataRoot: S.String,
-    deletedDerivedExportCount: S.Finite,
+    deletedDerivedExportCount: S.Natural,
     dryRun: S.Boolean,
-    keptDerivedExportCount: S.Finite,
-    maxSnapshotExports: S.Finite,
+    keptDerivedExportCount: S.Natural,
+    maxSnapshotExports: S.Natural,
     schemaVersion: S.Literal("beep.ai_metrics.retention_enforcement.v1").pipe(
       SchemaUtils.withConstantDefault("beep.ai_metrics.retention_enforcement.v1")
     ),
@@ -651,7 +665,7 @@ export class AiMetricsRetentionEnforcementResult extends S.Class<AiMetricsRetent
  * import { Redacted } from "effect"
  *
  * const input = AiMetricsRetentionRestoreDrillInput.make({
- *   rawArchiveKey: Redacted.make("base64-32-byte-key"),
+ *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *   restoreRoot: "/tmp/ai-metrics-restore",
  *   selector: AiMetricsRetentionSelector.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
  * })
@@ -720,7 +734,7 @@ export class AiMetricsRetentionRestoreDrillResult extends S.Class<AiMetricsReten
   {
     derivedDuckDbPath: S.String,
     hashMatches: S.Boolean,
-    replayedObjectCount: S.Finite,
+    replayedObjectCount: S.Natural,
     restoreRoot: S.String,
     schemaVersion: S.Literal("beep.ai_metrics.retention_restore_drill.v1").pipe(
       SchemaUtils.withConstantDefault("beep.ai_metrics.retention_restore_drill.v1")
@@ -768,7 +782,7 @@ const listDirectoryFiles = Effect.fn("AiMetrics.retention.listDirectoryFiles")(f
     A.map(
       ([absolutePath, info]): PathPlanItem => ({
         absolutePath,
-        modifiedAtEpochMillis: optionalModifiedAtMillis(info),
+        modifiedAtEpochMillis: modifiedAtMillis(info),
         relativePath: relativeToDataRoot(dataRoot, absolutePath),
       })
     ),
@@ -812,7 +826,7 @@ const listParquetExportDirs = Effect.fn("AiMetrics.retention.listParquetExportDi
 
       const item = PathPlanItem.make({
         absolutePath,
-        modifiedAtEpochMillis: optionalModifiedAtMillis(stat),
+        modifiedAtEpochMillis: modifiedAtMillis(stat),
         relativePath: relativeToDataRoot(dataRoot, absolutePath),
       });
       return keep(item, entry) ? O.some(item) : O.none<PathPlanItem>();
@@ -1216,7 +1230,7 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
 }: {
   readonly dryRun: boolean;
   readonly input: AiMetricsRetentionSelector;
-  readonly mode: typeof AiMetricsRetentionMutationMode.Type;
+  readonly mode: AiMetricsRetentionMutationMode;
 }) {
   const duckDbPath = aiMetricsDerivedDuckDbPath(input.dataRoot);
   const plan = yield* withAiMetricsDuckDb(readRetentionPlan(input), duckDbPath).pipe(
@@ -1409,7 +1423,7 @@ export const runAiMetricsRetentionCompact: {
  *
  * const program = runAiMetricsRetentionRestoreDrill(
  *   AiMetricsRetentionRestoreDrillInput.make({
- *     rawArchiveKey: Redacted.make("base64-32-byte-key"),
+ *     rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *     restoreRoot: "/tmp/ai-metrics-restore",
  *     selector: AiMetricsRetentionSelector.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
  *   })
@@ -1459,7 +1473,7 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
     label: "P7 restore drill",
     snapshotId: "restore-drill",
   });
-  const repoRootHash = yield* hashPrivateIdentifier(input.restoreRoot, O.getOrUndefined(input.hashSalt)).pipe(
+  const repoRootHash = yield* hashPrivateIdentifier(input.restoreRoot, input.hashSalt).pipe(
     Effect.mapError((cause) => retentionFailure("Failed to hash restore drill root.", cause))
   );
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
@@ -1480,7 +1494,7 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
           retentionFailure("Failed to decrypt retained archive object during restore drill.", cause)
         )
       );
-      const contentHash = yield* hashPrivateIdentifier(plaintext, O.getOrUndefined(input.hashSalt)).pipe(
+      const contentHash = yield* hashPrivateIdentifier(plaintext, input.hashSalt).pipe(
         Effect.mapError((cause) => retentionFailure("Failed to hash restored archive plaintext identity.", cause))
       );
       const legacyPublicContentHash = yield* hashPublicTextSha256(plaintext).pipe(
@@ -1499,19 +1513,20 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
       const restoreSourcePath = path.join(input.restoreRoot, "restore-source", `${item.archiveObjectId}.jsonl`);
       const summary = yield* summarizeTranscriptText({
         content: plaintext,
-        ...O.getSomesStruct({ hashSalt: input.hashSalt }),
+        hashSalt: input.hashSalt,
         sourceKind: item.sourceKind,
         sourcePath: restoreSourcePath,
       }).pipe(Effect.mapError((cause) => retentionFailure("Failed to summarize restored archive plaintext.", cause)));
       const privacy = yield* makeAiMetricsPrivacyCheckResult({
         content: plaintext,
-        ...O.getSomesStruct({ hashSalt: input.hashSalt }),
+        hashSalt: input.hashSalt,
+        relativePath: O.none(),
         sourcePath: restoreSourcePath,
         summary,
       }).pipe(Effect.mapError((cause) => retentionFailure("Failed to sanitize restored archive plaintext.", cause)));
       const archiveObject = yield* writeEncryptedRawArchiveObject({
         content: plaintext,
-        ...O.getSomesStruct({ hashSalt: input.hashSalt }),
+        hashSalt: input.hashSalt,
         rawArchiveDir: spec.storage.rawArchiveDir,
         rawArchiveKey: input.rawArchiveKey,
         sourceKind: item.sourceKind,

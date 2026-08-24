@@ -47,11 +47,9 @@ const childPath = (root: string, child: string): string => `${root}/${child}`;
 const requireInstallDataRoot = Effect.fn("AiMetrics.requireInstallDataRoot")(function* (input: AiMetricsInstallInput) {
   const resolved = resolveAiMetricsDataRoot(
     AiMetricsDataRootInput.make({
-      ...O.getSomesStruct({
-        flagDataRoot: O.filter(input.dataRoot, flow(Str.trim, Str.isNonEmpty)),
-        homeDir: O.filter(input.homeDir, flow(Str.trim, Str.isNonEmpty)),
-        stateHome: O.filter(input.stateHome, flow(Str.trim, Str.isNonEmpty)),
-      }),
+      flagDataRoot: O.filter(input.dataRoot, flow(Str.trim, Str.isNonEmpty)),
+      homeDir: O.filter(input.homeDir, flow(Str.trim, Str.isNonEmpty)),
+      stateHome: O.filter(input.stateHome, flow(Str.trim, Str.isNonEmpty)),
       target: input.target,
     })
   );

@@ -33,7 +33,7 @@ export class EffectLawsAllowlistEntry extends S.Class<EffectLawsAllowlistEntry>(
 
 export class EffectLawsAllowlistDocument extends S.Class<EffectLawsAllowlistDocument>($I`EffectLawsAllowlistDocument`)(
   {
-    version: S.Literal(1),
+    version: S.tag(1),
     entries: S.Array(EffectLawsAllowlistEntry).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<EffectLawsAllowlistEntry>())),
       S.withDecodingDefault(Effect.succeed(A.empty<(typeof EffectLawsAllowlistEntry)["Encoded"]>()))

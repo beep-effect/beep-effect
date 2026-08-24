@@ -1,8 +1,14 @@
-import { hashPublicTextSha256, redactAiMetricsSensitiveText } from "@beep/repo-ai-metrics/privacy";
+import {
+  AI_METRICS_LOCAL_INSECURE_HASH_SALT,
+  hashPrivateIdentifier,
+  hashPublicTextSha256,
+  redactAiMetricsSensitiveText,
+} from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -14,6 +20,18 @@ describe("AI metrics privacy boundaries", () => {
     Effect.gen(function* () {
       const hash = yield* hashPublicTextSha256("public identity");
       expect(isSha256Hex(hash)).toBe(true);
+    })
+  );
+
+  it.effect("preserves salted and unsalted hash bytes across the Option API migration", () =>
+    Effect.gen(function* () {
+      const value = "/synthetic/private/session.jsonl";
+      const salt = "synthetic-test-salt";
+      const salted = yield* hashPrivateIdentifier(value, O.some(salt));
+      const unsalted = yield* hashPrivateIdentifier(value, O.none());
+
+      expect(salted).toBe(yield* hashPublicTextSha256(`${salt}\u0000${value}`));
+      expect(unsalted).toBe(yield* hashPublicTextSha256(`${AI_METRICS_LOCAL_INSECURE_HASH_SALT}\u0000${value}`));
     })
   );
 

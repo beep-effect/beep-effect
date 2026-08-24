@@ -35,6 +35,7 @@ import {
   AiMetricsQualityGateStatus,
   AiMetricsRating,
   AiMetricsRetentionEnforcementPolicy,
+  AiMetricsRetentionMutationMode,
   AiMetricsRetentionRestoreDrillInput,
   AiMetricsRetentionSelector,
   AiMetricsSourceDiscoveryInput,
@@ -133,7 +134,6 @@ const decodeNonNegativeInteger = S.decodeUnknownEffect(AiMetricsNonNegativeInteg
 const decodeRating = S.decodeUnknownEffect(AiMetricsRating);
 
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
-const decodeMirrorManifestJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleManifest));
 const encodeInstallSpecJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallSpec));
 const defaultP7MirrorRemoteRoot = "/srv/data/ai-metrics/p7-derived-mirror";
 // cspell:words yubi
@@ -299,7 +299,10 @@ const resolveDataRoot = Effect.fn("AIMetrics.resolveDataRoot")(function* (
   const stateHome = yield* readOptionalConfigString("XDG_STATE_HOME");
   const makeInput = (homeDir: O.Option<string>) =>
     AiMetricsDataRootInput.make({
-      ...O.getSomesStruct({ envDataRoot, flagDataRoot, homeDir, stateHome }),
+      envDataRoot,
+      flagDataRoot,
+      homeDir,
+      stateHome,
       target,
     });
   const missingHomeDir = O.none<string>();
@@ -322,11 +325,10 @@ const resolveDataRoot = Effect.fn("AIMetrics.resolveDataRoot")(function* (
 
 const resolveHashSalt = Effect.fn("AIMetrics.resolveHashSalt")(function* (hashSalt: O.Option<string>) {
   if (O.isSome(hashSalt)) {
-    return hashSalt.value;
+    return hashSalt;
   }
 
-  const envSalt = yield* readOptionalConfigString("BEEP_AI_METRICS_HASH_SALT");
-  return O.isSome(envSalt) ? envSalt.value : undefined;
+  return yield* readOptionalConfigString("BEEP_AI_METRICS_HASH_SALT");
 });
 
 const resolveHashSaltSecretRef = Effect.fn("AIMetrics.resolveHashSaltSecretRef")(function* (
@@ -381,7 +383,7 @@ class RequireHashSaltForTargetOptions extends S.Class<RequireHashSaltForTargetOp
   $I`RequireHashSaltForTargetOptions`
 )(
   {
-    hashSalt: S.UndefinedOr(S.String),
+    hashSalt: S.Option(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("RequireHashSaltForTargetOptions", {
@@ -393,7 +395,7 @@ const requireHashSaltForTarget = Effect.fn("AIMetrics.requireHashSaltForTarget")
   hashSalt,
   target,
 }: RequireHashSaltForTargetOptions) {
-  if (target === AiMetricsDeployTarget.Enum.local || (hashSalt !== undefined && Str.isNonEmpty(Str.trim(hashSalt)))) {
+  if (target === AiMetricsDeployTarget.Enum.local || O.exists(hashSalt, flow(Str.trim, Str.isNonEmpty))) {
     return hashSalt;
   }
 
@@ -1036,13 +1038,13 @@ const makeInstallDoctorProgram = Effect.fn("AIMetrics.makeInstallDoctorProgram")
     AiMetricsSourceDiscoveryInput.make({
       homeDir: yield* resolveHomeDir(homeDir),
       includeAll: all,
-      ...(O.isSome(maxFileBytes) ? { maxFileBytes: maxFileBytes.value } : {}),
+      maxFileBytes,
       maxFiles,
       repoRoot: yield* resolveRepoRoot(repoRoot),
       target: AiMetricsDeployTarget.Enum.local,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(resolvedHashSalt) }),
-      ...O.getSomesStruct({ sinceEpochMillis: O.fromUndefinedOr(sinceEpochMillis) }),
-      ...(O.isSome(openClawUnit) ? { openClawUnitPath: openClawUnit.value } : {}),
+      hashSalt: resolvedHashSalt,
+      sinceEpochMillis: O.fromUndefinedOr(sinceEpochMillis),
+      openClawUnitPath: openClawUnit,
     })
   );
   const result = yield* makeAiMetricsInstallDoctorResult(
@@ -1167,7 +1169,7 @@ const makeIngestProgram = Effect.fn("AIMetrics.makeIngestProgram")(function* ({
   });
   const summary = yield* summarizeTranscriptText({
     content,
-    ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(resolvedHashSalt) }),
+    hashSalt: resolvedHashSalt,
     sourceKind: source,
     sourcePath: absolutePath,
   });
@@ -1312,13 +1314,13 @@ const makeSourcesDiscoverProgram = Effect.fn("AIMetrics.makeSourcesDiscoverProgr
     AiMetricsSourceDiscoveryInput.make({
       homeDir: yield* resolveHomeDir(homeDir),
       includeAll: all,
-      ...(O.isSome(maxFileBytes) ? { maxFileBytes: maxFileBytes.value } : {}),
+      maxFileBytes,
       maxFiles,
       repoRoot: yield* resolveRepoRoot(repoRoot),
       target,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(resolvedHashSalt) }),
-      ...O.getSomesStruct({ sinceEpochMillis: O.fromUndefinedOr(sinceEpochMillis) }),
-      ...(O.isSome(openClawUnit) ? { openClawUnitPath: openClawUnit.value } : {}),
+      hashSalt: resolvedHashSalt,
+      sinceEpochMillis: O.fromUndefinedOr(sinceEpochMillis),
+      openClawUnitPath: openClawUnit,
     })
   );
 
@@ -1425,15 +1427,16 @@ const makePrivacyCheckProgram = Effect.fn("AIMetrics.makePrivacyCheckProgram")(f
   const resolvedHashSalt = yield* resolveHashSalt(hashSalt);
   const summary = yield* summarizeTranscriptText({
     content,
-    ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(resolvedHashSalt) }),
+    hashSalt: resolvedHashSalt,
     sourceKind: source,
     sourcePath: absolutePath,
   });
   const result = yield* makeAiMetricsPrivacyCheckResult({
     content,
+    hashSalt: resolvedHashSalt,
+    relativePath: O.none(),
     sourcePath: absolutePath,
     summary,
-    ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(resolvedHashSalt) }),
   });
 
   if (json) {
@@ -1690,7 +1693,7 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
   const sinceEpochMillis = all ? undefined : yield* parseSinceEpochMillis(since);
   const forwarderInput = AiMetricsForwarderInput.make({
     dataRoot: O.some(resolvedDataRoot),
-    hashSalt: O.fromUndefinedOr(resolvedHashSalt),
+    hashSalt: resolvedHashSalt,
     hashSaltSecretRef: installInput.hashSaltSecretRef,
     rawArchiveKeySecretRef: installInput.rawArchiveKeySecretRef,
     homeDir: yield* resolveHomeDir(homeDir),
@@ -1773,7 +1776,7 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
   const duckDbLocation = result.duckDbPath;
   yield* Console.log(`derived duckdb: ${duckDbLocation}`);
   yield* Console.log(`parquet mode: ${result.parquetExportMode}`);
-  const parquetLocation = O.fromUndefinedOr(result.parquetExportDir);
+  const parquetLocation = result.parquetExportDir;
   if (O.isSome(parquetLocation)) {
     yield* Console.log(`parquet export: ${parquetLocation.value}`);
   }
@@ -2545,7 +2548,7 @@ const readMirrorManifest = Effect.fn("AIMetrics.readMirrorManifest")(function* (
         AiMetricsCommandError.make({ cause, message: "Failed to read AI metrics mirror manifest JSON." })
       )
     );
-  return yield* decodeMirrorManifestJson(content).pipe(
+  return yield* AiMetricsMirrorBundleManifest.decodeJsonEffect(content).pipe(
     Effect.mapError((cause) =>
       AiMetricsCommandError.make({ cause, message: "Failed to parse AI metrics mirror manifest JSON." })
     )
@@ -2813,7 +2816,7 @@ const makeMirrorStatusProgram = Effect.fn("AIMetrics.makeMirrorStatusProgram")(f
 }: MakeMirrorStatusProgramParams) {
   const manifestPath = `${remoteRoot}/manifest.json`;
   const captured = yield* runCapturedCommand("ssh", [host, `cat ${shellQuote(manifestPath)}`]);
-  const manifest = yield* decodeMirrorManifestJson(captured.stdout).pipe(
+  const manifest = yield* AiMetricsMirrorBundleManifest.decodeJsonEffect(captured.stdout).pipe(
     Effect.mapError((cause) =>
       AiMetricsCommandError.make({ cause, message: "Failed to parse remote AI metrics mirror manifest JSON." })
     )
@@ -2933,7 +2936,7 @@ class MakeRetentionMutationProgramParams extends S.Class<MakeRetentionMutationPr
     confirm: S.Option(S.String),
     dataRoot: S.Option(S.String),
     json: S.Boolean,
-    mode: S.Literals(["compact", "delete"]),
+    mode: AiMetricsRetentionMutationMode,
     since: S.Option(S.String),
     until: S.Option(S.String),
   },

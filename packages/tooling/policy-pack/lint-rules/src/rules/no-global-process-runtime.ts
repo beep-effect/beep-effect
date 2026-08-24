@@ -8,6 +8,7 @@
 
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashMap, MutableHashSet } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import {
   getPropertyName,
@@ -94,7 +95,7 @@ export default defineRule({
     const currentScope = (): { shadowed: boolean } => scopeStack[scopeStack.length - 1] ?? { shadowed: false };
 
     const paramShadowsProcess = (params: ReadonlyArray<ESTree.ParamPattern>): boolean =>
-      params.some((param) => param.type === "Identifier" && param.name === "process");
+      A.some(params, (param) => param.type === "Identifier" && param.name === "process");
 
     const pushScope = (params: ReadonlyArray<ESTree.ParamPattern>) => {
       scopeStack.push({ shadowed: paramShadowsProcess(params) });

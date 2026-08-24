@@ -8,7 +8,7 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -840,7 +840,7 @@ export class AiMetricsDerivedStorageWriteInput extends S.Class<AiMetricsDerivedS
     ),
     records: S.Array(AiMetricsDerivedTranscriptRecord),
     repoRootHash: S.String,
-    startedAtEpochMillis: S.Finite,
+    startedAtEpochMillis: S.Natural,
     storage: AiMetricsStorageLayout,
     target: AiMetricsDeployTarget,
   },
@@ -876,14 +876,14 @@ export class AiMetricsDerivedStorageWriteResult extends S.Class<AiMetricsDerived
   $I`AiMetricsDerivedStorageWriteResult`
 )(
   {
-    archiveObjectCount: S.Finite,
+    archiveObjectCount: S.Natural,
     duckDbPath: S.String,
     ingestRunId: S.String,
-    parquetExportDir: S.optionalKey(S.String),
+    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     parquetExportMode: AiMetricsParquetExportMode,
     parquetTables: S.Array(AiMetricsDerivedTable),
-    sourceFileCount: S.Finite,
-    turnCount: S.Finite,
+    sourceFileCount: S.Natural,
+    turnCount: S.Natural,
   },
   $I.annote("AiMetricsDerivedStorageWriteResult", {
     description: "Safe counts and export paths produced by one DuckDB derived storage write.",
@@ -1447,6 +1447,25 @@ const recordTurnCount: (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>
   A.reduce(0, (left, right) => left + right)
 );
 
+const writeDerivedRows = Effect.fn("AiMetrics.derivedStorage.writeRows")(function* (
+  input: AiMetricsDerivedStorageWriteInput,
+  completedAtEpochMillis: number,
+  turnCount: number
+) {
+  yield* ensureAiMetricsDerivedStorageRaw();
+  yield* upsertRun(input, completedAtEpochMillis, turnCount);
+  yield* Effect.forEach(
+    input.records,
+    Effect.fnUntraced(function* (record) {
+      const agentTaskId = yield* upsertAgentTask(input, record);
+      yield* upsertSourceFile(input, record);
+      yield* upsertArchiveObject(input, record);
+      yield* upsertSessionAndTurns(input, agentTaskId, record);
+    }),
+    { discard: true }
+  );
+});
+
 /**
  * Project sanitized AI metrics records into DuckDB and export Parquet snapshots.
  *
@@ -1515,22 +1534,11 @@ export const writeAiMetricsDerivedStorage = Effect.fn("AiMetrics.writeAiMetricsD
 
     yield* duckdb
       .withTransaction(
-        Effect.fn((transaction) =>
-          Effect.gen(function* () {
-            yield* ensureAiMetricsDerivedStorageRaw();
-            yield* upsertRun(input, completedAtEpochMillis, turnCount);
-            yield* Effect.forEach(
-              input.records,
-              Effect.fnUntraced(function* (record) {
-                const agentTaskId = yield* upsertAgentTask(input, record);
-                yield* upsertSourceFile(input, record);
-                yield* upsertArchiveObject(input, record);
-                yield* upsertSessionAndTurns(input, agentTaskId, record);
-              }),
-              { discard: true }
-            );
-          }).pipe(Effect.provideService(DuckDb, transaction))
-        )
+        Effect.fn("AiMetrics.derivedStorage.writeTransaction")(function* (transaction: DuckDbClient) {
+          yield* writeDerivedRows(input, completedAtEpochMillis, turnCount).pipe(
+            Effect.provideService(DuckDb, transaction)
+          );
+        })
       )
       .pipe(Effect.mapError((cause) => derivedFailure("Failed to write AI metrics derived DuckDB tables.", cause)));
 
@@ -1542,7 +1550,7 @@ export const writeAiMetricsDerivedStorage = Effect.fn("AiMetrics.writeAiMetricsD
       archiveObjectCount,
       duckDbPath: input.storage.duckDbPath,
       ingestRunId: input.ingestRunId,
-      ...O.getSomesStruct({ parquetExportDir }),
+      parquetExportDir,
       parquetExportMode: input.parquetExportMode,
       parquetTables: O.isSome(parquetExportDir) ? AiMetricsDerivedTable.Options : [],
       sourceFileCount: input.records.length,

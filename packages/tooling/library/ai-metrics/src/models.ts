@@ -10,6 +10,7 @@ import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoAiMetricsId.create("models");
+const OptionalTranscriptString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
 
 /**
  * Numeric count returned by aggregate DuckDB queries.
@@ -25,7 +26,7 @@ const $I = $RepoAiMetricsId.create("models");
  * @since 0.0.0
  */
 export class CountRow extends S.Class<CountRow>($I`CountRow`)(
-  { count: S.Finite },
+  { count: S.Int },
   $I.annote("CountRow", { description: "Numeric count returned by an aggregate DuckDB query." })
 ) {
   static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(CountRow));
@@ -187,6 +188,7 @@ export const CodexTranscriptEventName = LiteralKit([
   "turn_context",
   "user_message",
 ]).pipe(
+  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("CodexTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from Codex transcript records.",
   })
@@ -215,6 +217,7 @@ export const ClaudeTranscriptEventName = LiteralKit([
   "tool_use",
   "user",
 ]).pipe(
+  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("ClaudeTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from Claude transcript records.",
   })
@@ -245,6 +248,7 @@ export const OpenClawTranscriptEventName = LiteralKit([
   "tool_call",
   "tool_result",
 ]).pipe(
+  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("OpenClawTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from OpenClaw transcript records.",
   })
@@ -332,14 +336,14 @@ export type AiMetricsSourceRole = typeof AiMetricsSourceRole.Type;
  */
 export class AiMetricsSourceAttribution extends S.Class<AiMetricsSourceAttribution>($I`AiMetricsSourceAttribution`)(
   {
-    agentNicknameHash: S.optionalKey(S.String),
-    agentRoleHash: S.optionalKey(S.String),
-    forkedFromIdHash: S.optionalKey(S.String),
-    parentSessionIdHash: S.optionalKey(S.String),
-    parentThreadIdHash: S.optionalKey(S.String),
-    sessionIdHash: S.optionalKey(S.String),
+    agentNicknameHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    agentRoleHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    forkedFromIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    parentSessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    parentThreadIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    sessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sourceRole: AiMetricsSourceRole,
-    threadSpawn: S.optionalKey(S.Boolean),
+    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AiMetricsSourceAttribution", {
     description: "Hash-only metadata that distinguishes primary sessions from delegated subagent work.",
@@ -527,6 +531,19 @@ export const AiMetricsNonNegativeInteger = S.Int.check(
   })
 );
 
+const AiMetricsPositiveInteger = S.Int.check(
+  S.isGreaterThan(0, {
+    identifier: $I`AiMetricsPositiveIntegerCheck`,
+    title: "AI metrics positive integer",
+    description: "A one-based integer position that must be greater than zero.",
+    message: "Expected a positive integer",
+  })
+).pipe(
+  $I.annoteSchema("AiMetricsPositiveInteger", {
+    description: "Positive integer used for one-based AI metrics positions.",
+  })
+);
+
 /**
  * Install-owned OTLP endpoint contract consumed by CLI, local smoke, and IaC.
  *
@@ -637,7 +654,7 @@ const SourceRoleDefaultPrimary = AiMetricsSourceRole.pipe(
  *   createdAtEpochMillis: 1_717_000_000_000,
  *   repoRootHash: "repo-hash",
  *   sourceKind: "codex",
- *   sourcePathHash: "source-hash",
+ *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111",
  *   title: "Repair package docs"
  * })
  * console.log(task.sourceRole)
@@ -649,10 +666,10 @@ const SourceRoleDefaultPrimary = AiMetricsSourceRole.pipe(
 export class AgentTask extends S.Class<AgentTask>($I`AgentTask`)(
   {
     agentTaskId: S.String,
-    configSnapshotId: S.optionalKey(S.String),
-    createdAtEpochMillis: S.Finite,
-    firstSeenAt: S.optionalKey(S.String),
-    lastSeenAt: S.optionalKey(S.String),
+    configSnapshotId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    createdAtEpochMillis: S.Natural,
+    firstSeenAt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    lastSeenAt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     repoRootHash: S.String,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
@@ -675,7 +692,7 @@ export class AgentTask extends S.Class<AgentTask>($I`AgentTask`)(
  * const session = AgentSession.make({
  *   agentSessionId: "session-1",
  *   sourceKind: "claude",
- *   sourcePathHash: "source-hash"
+ *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111"
  * })
  * console.log(session.sourceRole)
  * ```
@@ -686,7 +703,7 @@ export class AgentTask extends S.Class<AgentTask>($I`AgentTask`)(
 export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
   {
     agentSessionId: S.String,
-    agentTaskId: S.optionalKey(S.String),
+    agentTaskId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     ...AiMetricsSourceAttribution.fields,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
@@ -711,7 +728,7 @@ export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
  *   eventName: "event_msg",
  *   lineNumber: 12,
  *   sourceKind: "codex",
- *   sourcePathHash: "source-hash"
+ *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111"
  * })
  * console.log(turn.eventName)
  * ```
@@ -722,11 +739,11 @@ export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
 export class AgentTurn extends S.Class<AgentTurn>($I`AgentTurn`)(
   {
     eventName: AiMetricsTranscriptEventName,
-    lineNumber: S.Finite,
+    lineNumber: AiMetricsPositiveInteger,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
     sourceRole: SourceRoleDefaultPrimary,
-    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    timestamp: OptionalTranscriptString,
   },
   $I.annote("AgentTurn", {
     description: "Single normalized transcript line suitable for derived analytics and OTel export.",
@@ -740,13 +757,14 @@ export class AgentTurn extends S.Class<AgentTurn>($I`AgentTurn`)(
  *
  * ```ts
  * import { ModelCall } from "@beep/repo-ai-metrics"
+ * import * as O from "effect/Option"
  *
  * const call = ModelCall.make({
  *   callId: "call-1",
- *   latencyMs: 840,
+ *   latencyMs: O.some(840),
  *   model: "gpt-5",
  *   provider: "openai",
- *   totalTokens: 4096
+ *   totalTokens: O.some(4096)
  * })
  * console.log(call.totalTokens)
  * ```
@@ -757,10 +775,10 @@ export class AgentTurn extends S.Class<AgentTurn>($I`AgentTurn`)(
 export class ModelCall extends S.Class<ModelCall>($I`ModelCall`)(
   {
     callId: S.String,
-    latencyMs: S.optionalKey(S.Finite),
+    latencyMs: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     model: S.String,
     provider: S.String,
-    totalTokens: S.optionalKey(S.Finite),
+    totalTokens: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ModelCall", {
     description: "Provider/model usage, latency, and token measurement for a coding-agent run.",
@@ -774,10 +792,11 @@ export class ModelCall extends S.Class<ModelCall>($I`ModelCall`)(
  *
  * ```ts
  * import { ToolInvocation } from "@beep/repo-ai-metrics"
+ * import * as O from "effect/Option"
  *
  * const invocation = ToolInvocation.make({
- *   durationMs: 1250,
- *   exitCode: 0,
+ *   durationMs: O.some(1250),
+ *   exitCode: O.some(0),
  *   toolName: "exec_command",
  *   toolRunId: "tool-1"
  * })
@@ -789,8 +808,8 @@ export class ModelCall extends S.Class<ModelCall>($I`ModelCall`)(
  */
 export class ToolInvocation extends S.Class<ToolInvocation>($I`ToolInvocation`)(
   {
-    durationMs: S.optionalKey(S.Finite),
-    exitCode: S.optionalKey(S.Finite),
+    durationMs: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    exitCode: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
     toolName: S.String,
     toolRunId: S.String,
   },
@@ -829,7 +848,7 @@ export class OutcomeLabel extends S.Class<OutcomeLabel>($I`OutcomeLabel`)(
     followUpFix: S.Boolean,
     interventionCount: AiMetricsNonNegativeInteger,
     labelId: S.String,
-    labeledAtEpochMillis: S.Finite,
+    labeledAtEpochMillis: S.Natural,
     note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
@@ -911,7 +930,7 @@ export class BenchmarkRun extends S.Class<BenchmarkRun>($I`BenchmarkRun`)(
     note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
-    recordedAtEpochMillis: S.Finite,
+    recordedAtEpochMillis: S.Natural,
   },
   $I.annote("BenchmarkRun", {
     description: "Observed result from running one benchmark case against one configuration snapshot.",
@@ -952,20 +971,20 @@ export class BenchmarkRun extends S.Class<BenchmarkRun>($I`BenchmarkRun`)(
  */
 export class Scorecard extends S.Class<Scorecard>($I`Scorecard`)(
   {
-    benchmarkRunCount: S.Finite,
+    benchmarkRunCount: AiMetricsNonNegativeInteger,
     completionReady: SchemaUtils.BoolKeyDefaultFalse,
     configSnapshotId: S.String,
     costScore: S.Finite,
     coverageGaps: S.Array(AiMetricsCoverageGap),
     flowScore: S.Finite,
-    labelCount: S.Finite,
+    labelCount: AiMetricsNonNegativeInteger,
     outcomeScore: S.Finite,
     scorecardId: S.String,
-    taskCount: S.Finite,
+    taskCount: AiMetricsNonNegativeInteger,
     totalScore: S.Finite,
     weights: AiMetricsScoreWeights,
-    windowEndEpochMillis: S.Finite,
-    windowStartEpochMillis: S.Finite,
+    windowEndEpochMillis: S.Natural,
+    windowStartEpochMillis: S.Natural,
   },
   $I.annote("Scorecard", {
     description: "Outcome-heavy aggregate score for one config snapshot inside a weekly review window.",
@@ -985,7 +1004,7 @@ export class Scorecard extends S.Class<Scorecard>($I`Scorecard`)(
  *   eventNames: ["event_msg"],
  *   rejectedLines: 0,
  *   sourceKind: "codex",
- *   sourcePathHash: "source-hash",
+ *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111",
  *   totalLines: 1
  * })
  * console.log(summary.eventNames)
@@ -996,14 +1015,14 @@ export class Scorecard extends S.Class<Scorecard>($I`Scorecard`)(
  */
 export class TranscriptIngestSummary extends S.Class<TranscriptIngestSummary>($I`TranscriptIngestSummary`)(
   {
-    acceptedEvents: S.Finite,
+    acceptedEvents: AiMetricsNonNegativeInteger,
     eventNames: S.Array(S.String),
     firstTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     lastTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rejectedLines: S.Finite,
+    rejectedLines: AiMetricsNonNegativeInteger,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
-    totalLines: S.Finite,
+    totalLines: AiMetricsNonNegativeInteger,
   },
   $I.annote("TranscriptIngestSummary", {
     description: "Line-count, timestamp, and event-name summary from transcript ingestion with private paths hashed.",
@@ -1029,8 +1048,8 @@ export class TranscriptIngestSummary extends S.Class<TranscriptIngestSummary>($I
  */
 export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTranscriptLine`)(
   {
-    payload: S.optionalKey(S.Unknown),
-    timestamp: S.optionalKey(S.String),
+    payload: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.String,
   },
   $I.annote("CodexTranscriptLine", {
@@ -1048,7 +1067,8 @@ export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTr
  *
  * ```ts
  * import { ClaudeTranscriptLine } from "@beep/repo-ai-metrics"
- * const line = ClaudeTranscriptLine.make({ type: "message" })
+ * import * as O from "effect/Option"
+ * const line = ClaudeTranscriptLine.make({ type: O.some("message") })
  * console.log(line.type)
  * ```
  *
@@ -1057,11 +1077,11 @@ export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTr
  */
 export class ClaudeTranscriptLine extends S.Class<ClaudeTranscriptLine>($I`ClaudeTranscriptLine`)(
   {
-    cwd: S.optionalKey(S.String),
-    message: S.optionalKey(S.Unknown),
-    sessionId: S.optionalKey(S.String),
-    timestamp: S.optionalKey(S.String),
-    type: S.optionalKey(S.String),
+    cwd: OptionalTranscriptString,
+    message: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
+    sessionId: OptionalTranscriptString,
+    timestamp: OptionalTranscriptString,
+    type: OptionalTranscriptString,
   },
   $I.annote("ClaudeTranscriptLine", {
     description: "Boundary shape decoded from Claude Code project JSONL lines.",
@@ -1078,7 +1098,8 @@ export class ClaudeTranscriptLine extends S.Class<ClaudeTranscriptLine>($I`Claud
  *
  * ```ts
  * import { OpenClawTranscriptLine } from "@beep/repo-ai-metrics"
- * const line = OpenClawTranscriptLine.make({ event: "gateway_metadata" })
+ * import * as O from "effect/Option"
+ * const line = OpenClawTranscriptLine.make({ event: O.some("gateway_metadata") })
  * console.log(line.event)
  * ```
  *
@@ -1087,11 +1108,11 @@ export class ClaudeTranscriptLine extends S.Class<ClaudeTranscriptLine>($I`Claud
  */
 export class OpenClawTranscriptLine extends S.Class<OpenClawTranscriptLine>($I`OpenClawTranscriptLine`)(
   {
-    event: S.optionalKey(S.String),
-    message: S.optionalKey(S.String),
-    payload: S.optionalKey(UnknownRecord),
-    timestamp: S.optionalKey(S.String),
-    type: S.optionalKey(S.String),
+    event: OptionalTranscriptString,
+    message: OptionalTranscriptString,
+    payload: S.OptionFromOptionalKey(UnknownRecord).pipe(SchemaUtils.withNoneDefault),
+    timestamp: OptionalTranscriptString,
+    type: OptionalTranscriptString,
   },
   $I.annote("OpenClawTranscriptLine", {
     description: "Boundary shape decoded from OpenClaw JSONL or exported event lines.",

@@ -686,12 +686,12 @@ const isSha256Hex = S.is(Sha256Hex);
  * @category utilities
  * @since 0.0.0
  */
-export const hookPulseHashSalt: Config.Config<string | undefined> = Config.string("BEEP_HOOK_PULSE_HASH_SALT").pipe(
+export const hookPulseHashSalt: Config.Config<O.Option<string>> = Config.string("BEEP_HOOK_PULSE_HASH_SALT").pipe(
   Config.orElse(() => Config.string("BEEP_AI_METRICS_HASH_SALT")),
-  Config.withDefault(undefined)
+  Config.option
 );
 
-const privateReference = (value: string, hashSalt: string | undefined) =>
+const privateReference = (value: string, hashSalt: O.Option<string>) =>
   isSha256Hex(value) ? Effect.succeed(value) : hashPrivateIdentifier(value, hashSalt).pipe(Effect.map(Sha256Hex.make));
 
 // The salt is a per-decode constant, not a per-field one, so it is resolved once

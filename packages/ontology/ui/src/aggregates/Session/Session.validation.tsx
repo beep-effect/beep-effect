@@ -80,7 +80,7 @@ const validationResultView = (
               <div className="break-all font-mono text-muted-foreground">{violation.focusNode}</div>
               <div className="mt-1 break-all font-mono">{violation.path.value}</div>
               <p className="mt-1 text-muted-foreground">{violation.message}</p>
-              {repairs.length === 0 ? (
+              {A.isReadonlyArrayEmpty(repairs) ? (
                 <p className="mt-2 text-muted-foreground">No verified repair.</p>
               ) : (
                 <div className="mt-2 space-y-1">

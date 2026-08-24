@@ -2,18 +2,26 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { AiMetricsDerivedStorageWriteResult } from "@beep/repo-ai-metrics/derived-storage";
 import {
   AiMetricsRetentionEnforcementPolicy,
+  AiMetricsRetentionEnforcementResult,
   AiMetricsRetentionInventory,
+  AiMetricsRetentionMutationResult,
+  AiMetricsRetentionRestoreDrillResult,
   AiMetricsRetentionSelector,
   runAiMetricsRetentionDelete,
 } from "@beep/repo-ai-metrics/retention";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const decodeRetentionInventoryResult = S.decodeUnknownResult(AiMetricsRetentionInventory);
 const decodeDerivedStorageWriteResult = S.decodeUnknownResult(AiMetricsDerivedStorageWriteResult);
+const encodeDerivedStorageWriteResult = S.encodeUnknownResult(AiMetricsDerivedStorageWriteResult);
+const DerivedStorageWriteResultArbitrary = S.toArbitrary(AiMetricsDerivedStorageWriteResult)(fc);
+const isDerivedStorageWriteResult = S.is(AiMetricsDerivedStorageWriteResult);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -27,16 +35,43 @@ const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E,
       return yield* fs.makeTempDirectory();
     }),
     use,
-    (tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true, force: true });
-      })
+    Effect.fnUntraced(function* (tmpDir) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.remove(tmpDir, { recursive: true, force: true });
+    })
   );
 
 it("enforces retention policy, window, version, and Parquet-table invariants at construction or decode", () => {
   expect(() =>
     AiMetricsRetentionEnforcementPolicy.make({ dataRoot: "/tmp/metrics", maxSnapshotExports: -1 })
+  ).toThrow();
+  expect(() =>
+    AiMetricsRetentionMutationResult.make({
+      deletedDerivedExportCount: -1,
+      deletedRawArchiveObjectCount: 0,
+      deletedReportCount: 0,
+      dryRun: true,
+      explicitWindow: true,
+      mode: "delete",
+    })
+  ).toThrow();
+  expect(() =>
+    AiMetricsRetentionEnforcementResult.make({
+      dataRoot: "/tmp/metrics",
+      deletedDerivedExportCount: 0,
+      dryRun: true,
+      keptDerivedExportCount: 1.5,
+      maxSnapshotExports: 2,
+    })
+  ).toThrow();
+  expect(() =>
+    AiMetricsRetentionRestoreDrillResult.make({
+      derivedDuckDbPath: "/tmp/restore/derived.duckdb",
+      hashMatches: true,
+      replayedObjectCount: -1,
+      restoreRoot: "/tmp/restore",
+      transcriptTextPrinted: false,
+    })
   ).toThrow();
   expect(() =>
     AiMetricsRetentionEnforcementPolicy.make({ dataRoot: "/tmp/metrics", maxSnapshotExports: 1.5 })
@@ -75,7 +110,26 @@ it("enforces retention policy, window, version, and Parquet-table invariants at 
       })
     )
   ).toBe(true);
+  const absentParquetDir = Result.getOrThrow(
+    decodeDerivedStorageWriteResult({
+      archiveObjectCount: 0,
+      duckDbPath: "/tmp/metrics/derived/ai-metrics.duckdb",
+      ingestRunId: "ingest-1",
+      parquetExportMode: "none",
+      parquetTables: [],
+      sourceFileCount: 0,
+      turnCount: 0,
+    })
+  );
+  expect(absentParquetDir.parquetExportDir).toEqual(O.none());
+  expect(Result.getOrThrow(encodeDerivedStorageWriteResult(absentParquetDir))).not.toHaveProperty("parquetExportDir");
 });
+
+it("derives valid storage results from the schema", () =>
+  fc.assert(
+    fc.property(DerivedStorageWriteResultArbitrary, (result) => isDerivedStorageWriteResult(result)),
+    fcRuns(12)
+  ));
 
 it.effect(
   "defaults and encodes the retention inventory schema version",

@@ -8,7 +8,6 @@ import { A, Str } from "@beep/utils";
 import { flow, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import {
   AiMetricsTranscriptSource,
   ClaudeTranscriptEventName,
@@ -21,18 +20,14 @@ export { repoPathToClaudeProjectName } from "../shell.ts";
 
 import type { Path } from "effect";
 
-const isClaudeTranscriptEventName = S.is(ClaudeTranscriptEventName);
-const isCodexTranscriptEventName = S.is(CodexTranscriptEventName);
-const isOpenClawTranscriptEventName = S.is(OpenClawTranscriptEventName);
-
 const isEventNameForSource = (
   sourceKind: AiMetricsTranscriptSource,
   value: unknown
 ): value is AiMetricsTranscriptEventName =>
   AiMetricsTranscriptSource.$match(sourceKind, {
-    claude: () => isClaudeTranscriptEventName(value),
-    codex: () => isCodexTranscriptEventName(value),
-    openclaw: () => isOpenClawTranscriptEventName(value),
+    claude: () => ClaudeTranscriptEventName.isAny(value),
+    codex: () => CodexTranscriptEventName.isAny(value),
+    openclaw: () => OpenClawTranscriptEventName.isAny(value),
   });
 
 /**
@@ -73,10 +68,10 @@ export const metricEventName = ({
 }: {
   readonly fallback: AiMetricsTranscriptEventName;
   readonly sourceKind: AiMetricsTranscriptSource;
-  readonly value: string | undefined;
+  readonly value: O.Option<string>;
 }): AiMetricsTranscriptEventName =>
   pipe(
-    O.fromNullishOr(value),
+    value,
     O.filter((eventName) => isEventNameForSource(sourceKind, eventName)),
     O.getOrElse(() => fallback)
   );

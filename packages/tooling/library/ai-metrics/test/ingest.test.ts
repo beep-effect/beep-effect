@@ -59,6 +59,7 @@ import {
   listAiMetricsBenchmarkCases,
   listAiMetricsRetentionInventory,
   locateLatestAiMetricsMirrorBundle,
+  ModelCall,
   makeAiMetricsConfigSnapshot,
   makeAiMetricsInstallApplyDryRunResult,
   makeAiMetricsInstallDoctorResult,
@@ -85,6 +86,7 @@ import {
   sourceDiscoveryToJson,
   summarizeTranscriptText,
   summaryToJson,
+  ToolInvocation,
   TranscriptIngestSummary,
   upsertAiMetricsBenchmarkCase,
   writeAiMetricsConfigSnapshotArtifacts,
@@ -95,7 +97,7 @@ import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect, it, layer } from "@effect/vitest";
 import { Effect, Encoding, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -234,23 +236,98 @@ const spanIdsByName = (
     A.map((projection) => projection.spanId)
   );
 
-const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
-  schema: Schema,
+const assertEncodeDecodeRoundTrip = <A>(
+  law: {
+    readonly arbitrary: fc.Arbitrary<A>;
+    readonly decode: (input: unknown) => A;
+    readonly encode: (value: A) => unknown;
+    readonly equivalent: (self: A, that: A) => boolean;
+  },
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeUnknownSync(schema);
-  const equivalent = S.toEquivalence(schema);
-
   fc.assert(
-    fc.property(arbitrary, (value) => {
-      const decoded = decode(encode(value));
+    fc.property(law.arbitrary, (value) => {
+      const decoded = law.decode(law.encode(value));
 
-      return Equal.equals(decoded, value) || equivalent(decoded, value);
+      return Equal.equals(decoded, value) || law.equivalent(decoded, value);
     }),
     fcRuns(options?.numRuns ?? 12)
   );
+};
+
+const transcriptTextSummaryInputLaw = {
+  arbitrary: S.toArbitrary(AiMetricsTranscriptTextSummaryInput)(fc),
+  decode: S.decodeUnknownSync(AiMetricsTranscriptTextSummaryInput),
+  encode: S.encodeUnknownSync(AiMetricsTranscriptTextSummaryInput),
+  equivalent: S.toEquivalence(AiMetricsTranscriptTextSummaryInput),
+};
+const agentSessionLaw = {
+  arbitrary: S.toArbitrary(AgentSession)(fc),
+  decode: S.decodeUnknownSync(AgentSession),
+  encode: S.encodeUnknownSync(AgentSession),
+  equivalent: S.toEquivalence(AgentSession),
+};
+const isAgentSession = S.is(AgentSession);
+const AgentSessionSchemaProperty = fc.property(S.toArbitrary(AgentSession)(fc), (session) => isAgentSession(session));
+const agentTurnLaw = {
+  arbitrary: S.toArbitrary(AgentTurn)(fc),
+  decode: S.decodeUnknownSync(AgentTurn),
+  encode: S.encodeUnknownSync(AgentTurn),
+  equivalent: S.toEquivalence(AgentTurn),
+};
+const codexTranscriptLineLaw = {
+  arbitrary: S.toArbitrary(CodexTranscriptLine)(fc),
+  decode: S.decodeUnknownSync(CodexTranscriptLine),
+  encode: S.encodeUnknownSync(CodexTranscriptLine),
+  equivalent: S.toEquivalence(CodexTranscriptLine),
+};
+const claudeTranscriptLineLaw = {
+  arbitrary: S.toArbitrary(ClaudeTranscriptLine)(fc),
+  decode: S.decodeUnknownSync(ClaudeTranscriptLine),
+  encode: S.encodeUnknownSync(ClaudeTranscriptLine),
+  equivalent: S.toEquivalence(ClaudeTranscriptLine),
+};
+const openClawTranscriptLineLaw = {
+  arbitrary: S.toArbitrary(OpenClawTranscriptLine)(fc),
+  decode: S.decodeUnknownSync(OpenClawTranscriptLine),
+  encode: S.encodeUnknownSync(OpenClawTranscriptLine),
+  equivalent: S.toEquivalence(OpenClawTranscriptLine),
+};
+const transcriptIngestSummaryLaw = {
+  arbitrary: S.toArbitrary(TranscriptIngestSummary)(fc),
+  decode: S.decodeUnknownSync(TranscriptIngestSummary),
+  encode: S.encodeUnknownSync(TranscriptIngestSummary),
+  equivalent: S.toEquivalence(TranscriptIngestSummary),
+};
+const otlpAttributeValueLaw = {
+  arbitrary: S.toArbitrary(AiMetricsOtlpAttributeValue)(fc),
+  decode: S.decodeUnknownSync(AiMetricsOtlpAttributeValue),
+  encode: S.encodeUnknownSync(AiMetricsOtlpAttributeValue),
+  equivalent: S.toEquivalence(AiMetricsOtlpAttributeValue),
+};
+const forwarderOtlpExportLaw = {
+  arbitrary: S.toArbitrary(AiMetricsForwarderOtlpExport)(fc),
+  decode: S.decodeUnknownSync(AiMetricsForwarderOtlpExport),
+  encode: S.encodeUnknownSync(AiMetricsForwarderOtlpExport),
+  equivalent: S.toEquivalence(AiMetricsForwarderOtlpExport),
+};
+const effectivenessAnnotationValueLaw = {
+  arbitrary: S.toArbitrary(AgentEffectivenessAnnotationValue)(fc),
+  decode: S.decodeUnknownSync(AgentEffectivenessAnnotationValue),
+  encode: S.encodeUnknownSync(AgentEffectivenessAnnotationValue),
+  equivalent: S.toEquivalence(AgentEffectivenessAnnotationValue),
+};
+const retentionMutationResultLaw = {
+  arbitrary: S.toArbitrary(AiMetricsRetentionMutationResult)(fc),
+  decode: S.decodeUnknownSync(AiMetricsRetentionMutationResult),
+  encode: S.encodeUnknownSync(AiMetricsRetentionMutationResult),
+  equivalent: S.toEquivalence(AiMetricsRetentionMutationResult),
+};
+const nonEmptyTrimmedStringLaw = {
+  arbitrary: S.toArbitrary(NonEmptyTrimmedStr)(fc),
+  decode: S.decodeUnknownSync(NonEmptyTrimmedStr),
+  encode: S.encodeUnknownSync(NonEmptyTrimmedStr),
+  equivalent: S.toEquivalence(NonEmptyTrimmedStr),
 };
 
 const phoenixService = <A extends { readonly tool: string }>(spec: { readonly services: ReadonlyArray<A> }) =>
@@ -258,6 +335,31 @@ const phoenixService = <A extends { readonly tool: string }>(spec: { readonly se
     spec.services,
     A.findFirst((service) => service.tool === AiMetricsTool.Enum.phoenix)
   );
+
+it("derives valid agent sessions from the schema", () => fc.assert(AgentSessionSchemaProperty, fcRuns(12)));
+
+it("rejects impossible line and measurement values at construction", () => {
+  expect(() =>
+    AgentTurn.make({ eventName: "event_msg", lineNumber: 0, sourceKind: "codex", sourcePathHash: "source" })
+  ).toThrow();
+  expect(() =>
+    ModelCall.make({
+      callId: "call-1",
+      latencyMs: O.some(-1),
+      model: "synthetic-model",
+      provider: "synthetic-provider",
+      totalTokens: O.some(0),
+    })
+  ).toThrow();
+  expect(() =>
+    ToolInvocation.make({
+      durationMs: O.some(1.5),
+      exitCode: O.some(0),
+      toolName: "synthetic-tool",
+      toolRunId: "tool-1",
+    })
+  ).toThrow();
+});
 
 layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
   it.effect(
@@ -313,31 +415,31 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
     expect(CodexTranscriptLine.encodeJsonSync(CodexTranscriptLine.make({ type: "event_msg" }))).toBe(
       '{"type":"event_msg"}'
     );
-    expect(ClaudeTranscriptLine.encodeJsonSync(ClaudeTranscriptLine.make({ type: "message" }))).toBe(
+    expect(ClaudeTranscriptLine.encodeJsonSync(ClaudeTranscriptLine.make({ type: O.some("message") }))).toBe(
       '{"type":"message"}'
     );
-    expect(OpenClawTranscriptLine.encodeJsonSync(OpenClawTranscriptLine.make({ event: "message" }))).toBe(
+    expect(OpenClawTranscriptLine.encodeJsonSync(OpenClawTranscriptLine.make({ event: O.some("message") }))).toBe(
       '{"event":"message"}'
     );
 
-    assertSchemaEncodeDecodeRoundTrip(AiMetricsTranscriptTextSummaryInput);
-    assertSchemaEncodeDecodeRoundTrip(AgentSession, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(AgentTurn, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(CodexTranscriptLine, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(ClaudeTranscriptLine, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(OpenClawTranscriptLine, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(TranscriptIngestSummary, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(AiMetricsOtlpAttributeValue);
-    assertSchemaEncodeDecodeRoundTrip(AiMetricsForwarderOtlpExport);
-    assertSchemaEncodeDecodeRoundTrip(AgentEffectivenessAnnotationValue);
-    assertSchemaEncodeDecodeRoundTrip(AiMetricsRetentionMutationResult);
-    assertSchemaEncodeDecodeRoundTrip(NonEmptyTrimmedStr);
+    assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw);
+    assertEncodeDecodeRoundTrip(agentSessionLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(agentTurnLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(otlpAttributeValueLaw);
+    assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw);
+    assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw);
+    assertEncodeDecodeRoundTrip(retentionMutationResultLaw);
+    assertEncodeDecodeRoundTrip(nonEmptyTrimmedStringLaw);
   });
 
   it.effect(
     "normalizes Codex attribution metadata before hashing",
     Effect.fn(function* () {
-      const hashSalt = "test-salt";
+      const hashSalt = O.some("test-salt");
       const attribution = yield* makeAiMetricsSourceAttribution({
         content:
           '{"type":"session_meta","payload":{"id":" session-1 ","parent_session_id":"   ","source":{"subagent":{"agent_nickname":"   ","agent_role":" reviewer ","parent_thread_id":" thread-1 "}}}}',
@@ -348,11 +450,11 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       });
 
       expect(attribution.sourceRole).toBe("subagent");
-      expect(attribution.agentNicknameHash).toBeUndefined();
-      expect(attribution.parentSessionIdHash).toBeUndefined();
-      expect(attribution.agentRoleHash).toBe(yield* hashPrivateIdentifier("reviewer", hashSalt));
-      expect(attribution.parentThreadIdHash).toBe(yield* hashPrivateIdentifier("thread-1", hashSalt));
-      expect(attribution.sessionIdHash).toBe(yield* hashPrivateIdentifier("session-1", hashSalt));
+      expect(attribution.agentNicknameHash).toEqual(O.none());
+      expect(attribution.parentSessionIdHash).toEqual(O.none());
+      expect(attribution.agentRoleHash).toEqual(O.some(yield* hashPrivateIdentifier("reviewer", hashSalt)));
+      expect(attribution.parentThreadIdHash).toEqual(O.some(yield* hashPrivateIdentifier("thread-1", hashSalt)));
+      expect(attribution.sessionIdHash).toEqual(O.some(yield* hashPrivateIdentifier("session-1", hashSalt)));
     })
   );
 
@@ -462,13 +564,13 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           yield* Effect.gen(function* () {
             const summary = yield* summarizeTranscriptText({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourceKind: AiMetricsTranscriptSource.Enum.codex,
               sourcePath,
             });
             const privacy = yield* makeAiMetricsPrivacyCheckResult({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourcePath,
               summary,
             });
@@ -486,11 +588,11 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             const record = AiMetricsDerivedTranscriptRecord.make({
               archiveObject: AiMetricsRawArchiveObject.make({
                 algorithm: "AES-256-GCM",
-                archiveObjectId: "raw-content-addressed-object",
+                archiveObjectId: "raw-1111111111111111111111111111111111111111111111111111111111111111",
                 archivePath: path.join(dataRoot, "raw/codex/raw-content-addressed-object.json"),
                 created: false,
                 encryptedAtEpochMillis: 1,
-                plaintextContentHash: "plaintext-content-hash",
+                plaintextContentHash: "2222222222222222222222222222222222222222222222222222222222222222",
                 sourceKind: AiMetricsTranscriptSource.Enum.codex,
                 sourcePathHash: summary.sourcePathHash,
               }),
@@ -513,7 +615,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               })
             );
             expect(disabled.parquetExportMode).toBe("none");
-            expect(disabled.parquetExportDir).toBeUndefined();
+            expect(disabled.parquetExportDir).toEqual(O.none());
             expect(disabled.parquetTables).toEqual([]);
             expect(yield* fs.exists(path.join(dataRoot, "derived/parquet"))).toBe(false);
 
@@ -525,7 +627,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               })
             );
             expect(latest.parquetExportMode).toBe("latest");
-            expect(latest.parquetExportDir).toBe(path.join(dataRoot, "derived/parquet/latest"));
+            expect(latest.parquetExportDir).toEqual(O.some(path.join(dataRoot, "derived/parquet/latest")));
             expect(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/ai_metrics_turns.parquet"))).toBe(true);
 
             yield* writeText(path.join(dataRoot, "derived/parquet/latest/stale.tmp"), "stale\n");
@@ -636,13 +738,13 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           yield* Effect.gen(function* () {
             const summary = yield* summarizeTranscriptText({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourceKind: AiMetricsTranscriptSource.Enum.codex,
               sourcePath,
             });
             const privacy = yield* makeAiMetricsPrivacyCheckResult({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourcePath,
               summary,
             });
@@ -660,11 +762,11 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             const record = AiMetricsDerivedTranscriptRecord.make({
               archiveObject: AiMetricsRawArchiveObject.make({
                 algorithm: "AES-256-GCM",
-                archiveObjectId: "raw-content-addressed-object",
+                archiveObjectId: "raw-1111111111111111111111111111111111111111111111111111111111111111",
                 archivePath: path.join(dataRoot, "raw/codex/raw-content-addressed-object.json"),
                 created: false,
                 encryptedAtEpochMillis: 1,
-                plaintextContentHash: "plaintext-content-hash",
+                plaintextContentHash: "2222222222222222222222222222222222222222222222222222222222222222",
                 sourceKind: AiMetricsTranscriptSource.Enum.codex,
                 sourcePathHash: summary.sourcePathHash,
               }),
@@ -1093,7 +1195,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
 
           const discovery = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               repoRoot,
@@ -1305,13 +1407,13 @@ volumes:
           yield* Effect.gen(function* () {
             const summary = yield* summarizeTranscriptText({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourceKind: AiMetricsTranscriptSource.Enum.claude,
               sourcePath,
             });
             const privacy = yield* makeAiMetricsPrivacyCheckResult({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourcePath,
               summary,
             });
@@ -1329,11 +1431,11 @@ volumes:
             const record = AiMetricsDerivedTranscriptRecord.make({
               archiveObject: AiMetricsRawArchiveObject.make({
                 algorithm: "AES-256-GCM",
-                archiveObjectId: "raw-content-addressed-object",
+                archiveObjectId: "raw-1111111111111111111111111111111111111111111111111111111111111111",
                 archivePath: path.join(dataRoot, "raw/codex/raw-content-addressed-object.json"),
                 created: true,
                 encryptedAtEpochMillis: 1,
-                plaintextContentHash: "plaintext-content-hash",
+                plaintextContentHash: "2222222222222222222222222222222222222222222222222222222222222222",
                 sourceKind: AiMetricsTranscriptSource.Enum.claude,
                 sourcePathHash: summary.sourcePathHash,
               }),
@@ -1460,7 +1562,7 @@ volumes:
     Effect.fn(function* () {
       const summary = yield* summarizeTranscriptText({
         content: '{"type":"sk-secretfixture","timestamp":"2026-05-05T10:00:00Z"}',
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourceKind: AiMetricsTranscriptSource.Enum.codex,
         sourcePath: "codex.jsonl",
       });
@@ -1485,13 +1587,13 @@ volumes:
           );
           const summary = yield* summarizeTranscriptText({
             content,
-            hashSalt: "test-salt",
+            hashSalt: O.some("test-salt"),
             sourceKind: AiMetricsTranscriptSource.Enum.codex,
             sourcePath,
           });
           const result = yield* makeAiMetricsPrivacyCheckResult({
             content,
-            hashSalt: "test-salt",
+            hashSalt: O.some("test-salt"),
             sourcePath,
             summary,
           });
@@ -1534,13 +1636,13 @@ volumes:
           yield* Effect.gen(function* () {
             const summary = yield* summarizeTranscriptText({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourceKind: AiMetricsTranscriptSource.Enum.codex,
               sourcePath,
             });
             const privacy = yield* makeAiMetricsPrivacyCheckResult({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourcePath,
               summary,
             });
@@ -1571,11 +1673,11 @@ volumes:
                   AiMetricsDerivedTranscriptRecord.make({
                     archiveObject: AiMetricsRawArchiveObject.make({
                       algorithm: "AES-256-GCM",
-                      archiveObjectId: "raw-subagent",
+                      archiveObjectId: "raw-3333333333333333333333333333333333333333333333333333333333333333",
                       archivePath: path.join(dataRoot, "raw/codex/raw-subagent.json"),
                       created: false,
                       encryptedAtEpochMillis: 1,
-                      plaintextContentHash: "plaintext-content-hash",
+                      plaintextContentHash: "4444444444444444444444444444444444444444444444444444444444444444",
                       sourceKind: AiMetricsTranscriptSource.Enum.codex,
                       sourcePathHash: summary.sourcePathHash,
                     }),
@@ -2616,13 +2718,13 @@ volumes:
       const content = '{"type":"session_meta","timestamp":"2026-05-05T12:00:00Z"}';
       const summary = yield* summarizeTranscriptText({
         content,
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourceKind: AiMetricsTranscriptSource.Enum.codex,
         sourcePath: "codex.jsonl",
       });
       const result = yield* makeAiMetricsPrivacyCheckResult({
         content,
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourcePath: "codex.jsonl",
         summary,
       });
@@ -2762,6 +2864,7 @@ volumes:
             '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}'
           );
           yield* writeText(path.join(repoRoot, "AGENTS.md"), "# Test agent guide\n");
+          yield* writeText(path.join(dataRoot, "raw"), "block archive directory creation\n");
 
           const error = yield* Effect.flip(
             runAiMetricsForwarder(
@@ -2771,7 +2874,7 @@ volumes:
                 hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
-                rawArchiveKey: Redacted.make("not-valid-base64"),
+                rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(11))),
                 repoRoot,
                 target: AiMetricsDeployTarget.Enum.local,
               })
@@ -2811,11 +2914,15 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              hashSalt: "test-salt",
+              claudeProjectsRoot: O.none(),
+              codexSessionsRoot: O.none(),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
-              openClawUnitPath,
+              maxFileBytes: O.none(),
+              openClawUnitPath: O.some(openClawUnitPath),
               repoRoot,
+              sinceEpochMillis: O.none(),
             })
           );
           const json = yield* sourceDiscoveryToJson(result);
@@ -2854,8 +2961,8 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              claudeProjectsRoot: claudeRoot,
-              hashSalt: "test-salt",
+              claudeProjectsRoot: O.some(claudeRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               repoRoot,
@@ -2898,8 +3005,8 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              codexSessionsRoot: codexRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               repoRoot,
@@ -2945,12 +3052,15 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              codexSessionsRoot: codexRoot,
-              hashSalt: "test-salt",
+              claudeProjectsRoot: O.none(),
+              codexSessionsRoot: O.some(codexRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
-              maxFileBytes: 128,
+              maxFileBytes: O.some(128),
+              openClawUnitPath: O.none(),
               repoRoot,
+              sinceEpochMillis: O.none(),
             })
           );
           const codex = pipe(
@@ -2958,7 +3068,7 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.codex)
           );
 
-          expect(result.maxFileBytes).toBe(128);
+          expect(result.maxFileBytes).toEqual(O.some(128));
           expect(O.isSome(codex)).toBe(true);
           if (O.isNone(codex)) {
             return;
@@ -2989,8 +3099,8 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              codexSessionsRoot: codexRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               repoRoot,
@@ -3020,20 +3130,20 @@ volumes:
       const content = '{"sessionId":"claude-session","timestamp":"2026-05-05T11:00:00Z"}';
       const primarySummary = yield* summarizeTranscriptText({
         content,
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourceKind: AiMetricsTranscriptSource.Enum.claude,
         sourcePath: "/tmp/subagents/workspace/claude.jsonl",
       });
       const primary = yield* makeAiMetricsPrivacyCheckResult({
         content,
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourcePath: "/tmp/subagents/workspace/claude.jsonl",
         summary: primarySummary,
       });
       const subagent = yield* makeAiMetricsPrivacyCheckResult({
         content,
-        hashSalt: "test-salt",
-        relativePath: "subagents/claude.jsonl",
+        hashSalt: O.some("test-salt"),
+        relativePath: O.some("subagents/claude.jsonl"),
         sourcePath: "/tmp/workspace/subagents/claude.jsonl",
         summary: primarySummary,
       });

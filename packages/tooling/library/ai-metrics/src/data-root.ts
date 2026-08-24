@@ -8,7 +8,7 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, WindowsUncPath } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import { Effect, pipe, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AiMetricsDeployTarget } from "./models.ts";
@@ -17,8 +17,25 @@ const $I = $RepoAiMetricsId.create("data-root");
 
 const dankserverDataRoot = "/srv/data/ai-metrics";
 
-const nonBlank = (value: string | undefined): O.Option<string> =>
-  value === undefined || Str.isEmpty(Str.trim(value)) ? O.none() : O.some(Str.trim(value));
+const NonBlankStringInput = S.Union([S.String, S.Option(S.String)]);
+const OptionalNonBlank = S.optionalKey(NonBlankStringInput).pipe(
+  S.decodeTo(
+    S.Option(S.String),
+    SchemaTransformation.transformOptional({
+      decode: (value) =>
+        O.some(
+          pipe(
+            value,
+            O.flatMap((input) => (O.isOption(input) ? input : O.some(input))),
+            O.map(Str.trim),
+            O.filter(Str.isNonEmpty)
+          )
+        ),
+      encode: O.flatten,
+    })
+  ),
+  SchemaUtils.withNoneDefault
+);
 
 const AiMetricsAbsoluteDataRootCheck = S.makeFilter(
   (value: FilePath) => pipe(value, Str.startsWith("/")) || WindowsDrivePath.is(value) || WindowsUncPath.is(value),
@@ -132,8 +149,9 @@ type AiMetricsDataRootRung = {
  *
  * ```ts
  * import { AiMetricsDataRootInput } from "@beep/repo-ai-metrics"
+ * import * as O from "effect/Option"
  *
- * const input = AiMetricsDataRootInput.make({ homeDir: "/home/dev" })
+ * const input = AiMetricsDataRootInput.make({ homeDir: O.some("/home/dev") })
  *
  * console.log(input.target) // "local"
  * ```
@@ -143,10 +161,10 @@ type AiMetricsDataRootRung = {
  */
 export class AiMetricsDataRootInput extends S.Class<AiMetricsDataRootInput>($I`AiMetricsDataRootInput`)(
   {
-    envDataRoot: S.optionalKey(S.String),
-    flagDataRoot: S.optionalKey(S.String),
-    homeDir: S.optionalKey(S.String),
-    stateHome: S.optionalKey(S.String),
+    envDataRoot: OptionalNonBlank,
+    flagDataRoot: OptionalNonBlank,
+    homeDir: OptionalNonBlank,
+    stateHome: OptionalNonBlank,
     target: AiMetricsDeployTarget.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.local)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsDeployTarget.Enum.local))
@@ -232,8 +250,9 @@ export class AiMetricsDataRootError extends S.TaggedError<AiMetricsDataRootError
  *
  * ```ts
  * import { AiMetricsStateHomeInput } from "@beep/repo-ai-metrics"
+ * import * as O from "effect/Option"
  *
- * const input = AiMetricsStateHomeInput.make({ homeDir: "/home/dev" })
+ * const input = AiMetricsStateHomeInput.make({ homeDir: O.some("/home/dev") })
  *
  * console.log(input.homeDir) // /home/dev
  * ```
@@ -243,8 +262,8 @@ export class AiMetricsDataRootError extends S.TaggedError<AiMetricsDataRootError
  */
 export class AiMetricsStateHomeInput extends S.Class<AiMetricsStateHomeInput>($I`AiMetricsStateHomeInput`)(
   {
-    homeDir: S.optionalKey(S.String),
-    stateHome: S.optionalKey(S.String),
+    homeDir: OptionalNonBlank,
+    stateHome: OptionalNonBlank,
   },
   $I.annote("AiMetricsStateHomeInput", {
     description: "Home directory and XDG_STATE_HOME inputs consumed by AI metrics state-home resolution.",
@@ -288,11 +307,11 @@ const AiMetricsStateHome = Fn({
  * import { aiMetricsStateHome } from "@beep/repo-ai-metrics"
  * import * as O from "effect/Option"
  *
- * console.log(aiMetricsStateHome({ homeDir: "/home/dev" }))
+ * console.log(aiMetricsStateHome({ homeDir: O.some("/home/dev"), stateHome: O.none() }))
  * // { _id: 'Option', _tag: 'Some', value: '/home/dev/.local/state' }
- * console.log(O.getOrThrow(aiMetricsStateHome({ homeDir: "/home/dev", stateHome: "/custom/state" })))
+ * console.log(O.getOrThrow(aiMetricsStateHome({ homeDir: O.some("/home/dev"), stateHome: O.some("/custom/state") })))
  * // /custom/state
- * console.log(O.isNone(aiMetricsStateHome({ homeDir: "  " }))) // true
+ * console.log(O.isNone(aiMetricsStateHome({ homeDir: O.some("  "), stateHome: O.none() }))) // true
  * ```
  *
  * @param input - Optional home directory and optional `XDG_STATE_HOME` value.
@@ -303,10 +322,10 @@ const AiMetricsStateHome = Fn({
 export const aiMetricsStateHome: (input: AiMetricsStateHomeInput) => O.Option<string> =
   AiMetricsStateHome.implementSync((input) =>
     pipe(
-      nonBlank(input.stateHome),
+      input.stateHome,
       O.orElse(() =>
         pipe(
-          nonBlank(input.homeDir),
+          input.homeDir,
           O.map((home) => `${withoutTrailingSlash(home)}/.local/state`)
         )
       ),
@@ -331,7 +350,7 @@ export const aiMetricsStateHome: (input: AiMetricsStateHomeInput) => O.Option<st
  *
  * import * as O from "effect/Option"
  *
- * console.log(aiMetricsStateRoot(O.getOrThrow(aiMetricsStateHome({ homeDir: "/home/dev" }))))
+ * console.log(aiMetricsStateRoot(O.getOrThrow(aiMetricsStateHome({ homeDir: O.some("/home/dev"), stateHome: O.none() }))))
  * // /home/dev/.local/state/beep/ai-metrics
  * ```
  *
@@ -374,7 +393,7 @@ export const aiMetricsStateRoot = (stateHome: string): string => `${stateHome}/b
  * import * as O from "effect/Option"
  *
  * const resolved = resolveAiMetricsDataRoot(
- *   AiMetricsDataRootInput.make({ homeDir: "/home/dev" })
+ *   AiMetricsDataRootInput.make({ homeDir: O.some("/home/dev") })
  * )
  *
  * console.log(O.getOrThrow(resolved).path)
@@ -390,8 +409,8 @@ export const aiMetricsStateRoot = (stateHome: string): string => `${stateHome}/b
  *
  * const resolved = resolveAiMetricsDataRoot(
  *   AiMetricsDataRootInput.make({
- *     envDataRoot: "/var/lib/ai-metrics",
- *     flagDataRoot: "/srv/store"
+ *     envDataRoot: O.some("/var/lib/ai-metrics"),
+ *     flagDataRoot: O.some("/srv/store")
  *   })
  * )
  *
@@ -416,11 +435,11 @@ export const resolveAiMetricsDataRoot = (input: AiMetricsDataRootInput): O.Optio
   });
 
   return pipe(
-    nonBlank(input.flagDataRoot),
+    input.flagDataRoot,
     O.map((value) => rung(withoutTrailingSlash(value), AiMetricsDataRootSource.Enum.flag)),
     O.orElse(() =>
       pipe(
-        nonBlank(input.envDataRoot),
+        input.envDataRoot,
         O.map((value) => rung(withoutTrailingSlash(value), AiMetricsDataRootSource.Enum.environment))
       )
     ),

@@ -326,7 +326,7 @@ const identityRegistryFailure = (message: string) => (cause: unknown) =>
   AiMetricsIdentityRegistryError.make({ cause, message });
 
 const hashPrivate = (value: string, hashSalt: string | undefined) =>
-  hashPrivateIdentifier(value, hashSalt).pipe(
+  hashPrivateIdentifier(value, O.fromUndefinedOr(hashSalt)).pipe(
     Effect.mapError(identityRegistryFailure("Failed to hash an AI metrics identity value."))
   );
 
@@ -748,7 +748,7 @@ export const readAiMetricsIdentityRegistry: (
     if (O.isNone(content)) {
       return AiMetricsIdentityRegistry.make({
         generatedAtEpochMillis: nowEpochMillis,
-        hashSaltStatus: resolveAiMetricsHashSaltStatus(undefined),
+        hashSaltStatus: resolveAiMetricsHashSaltStatus(O.none()),
         roots: A.empty<AiMetricsCanonicalRoot>(),
         sourceInstances: A.empty<AiMetricsSourceInstance>(),
       });
@@ -847,8 +847,9 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   const pathApi = yield* Path.Path;
   const existing = yield* readAiMetricsIdentityRegistry(input.dataRoot);
 
-  const hashSaltStatus = resolveAiMetricsHashSaltStatus(input.hashSalt);
-  const hashSaltNamespaceId = yield* hashPrivateIdentifier(hashSaltNamespaceMarker, input.hashSalt).pipe(
+  const hashSalt = O.fromUndefinedOr(input.hashSalt);
+  const hashSaltStatus = resolveAiMetricsHashSaltStatus(hashSalt);
+  const hashSaltNamespaceId = yield* hashPrivateIdentifier(hashSaltNamespaceMarker, hashSalt).pipe(
     Effect.mapError(identityRegistryFailure("Failed to derive the AI metrics hash-salt namespace id."))
   );
   const existingPopulated =

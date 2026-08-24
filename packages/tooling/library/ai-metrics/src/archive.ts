@@ -12,6 +12,7 @@ import { Clock, Effect, Encoding, FileSystem, Path, Redacted, Result } from "eff
 import * as S from "effect/Schema";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
+import type * as O from "@beep/utils/Option";
 
 const $I = $RepoAiMetricsId.create("archive");
 const AES_GCM_KEY_BYTES = 32;
@@ -190,7 +191,7 @@ export class AiMetricsEncryptedRawArchiveEnvelope extends S.Class<AiMetricsEncry
     algorithm: AiMetricsArchiveAlgorithm,
     archiveObjectId: AiMetricsRawArchiveObjectId,
     ciphertextBase64: AesGcmCiphertextBase64,
-    encryptedAtEpochMillis: S.Finite,
+    encryptedAtEpochMillis: S.Natural,
     nonceBase64: AesGcmNonceBase64,
     plaintextContentHash: ArchiveSha256Hex,
     sourceKind: AiMetricsTranscriptSource,
@@ -203,7 +204,13 @@ export class AiMetricsEncryptedRawArchiveEnvelope extends S.Class<AiMetricsEncry
   static readonly decodeUnknownEffectFromJsonString = S.decodeUnknownEffect(
     S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope)
   );
+  static readonly decodeUnknownResultFromJsonString = S.decodeUnknownResult(
+    S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope)
+  );
   static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
+    S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope)
+  );
+  static readonly encodeUnknownResultFromJsonString = S.encodeUnknownResult(
     S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope)
   );
 }
@@ -235,13 +242,13 @@ export class AiMetricsEncryptedRawArchiveEnvelope extends S.Class<AiMetricsEncry
 export class AiMetricsRawArchiveObject extends S.Class<AiMetricsRawArchiveObject>($I`AiMetricsRawArchiveObject`)(
   {
     algorithm: AiMetricsArchiveAlgorithm,
-    archiveObjectId: S.String,
+    archiveObjectId: AiMetricsRawArchiveObjectId,
     archivePath: S.String,
     created: S.Boolean,
-    encryptedAtEpochMillis: S.Finite,
-    plaintextContentHash: S.String,
+    encryptedAtEpochMillis: S.Natural,
+    plaintextContentHash: ArchiveSha256Hex,
     sourceKind: AiMetricsTranscriptSource,
-    sourcePathHash: S.String,
+    sourcePathHash: ArchiveSha256Hex,
   },
   $I.annote("AiMetricsRawArchiveObject", {
     description: "Safe metadata for one encrypted raw transcript archive object.",
@@ -263,7 +270,7 @@ export class AiMetricsRawArchiveObject extends S.Class<AiMetricsRawArchiveObject
  * @category models
  * @since 0.0.0
  */
-export const AiMetricsRawArchiveKey = S.String.pipe(
+export const AiMetricsRawArchiveKey = Aes256KeyBase64.pipe(
   S.RedactedFromValue,
   $I.annoteSchema("AiMetricsRawArchiveKey", {
     description: "Redacted base64 AES-256-GCM key used for raw archive encryption.",
@@ -386,11 +393,12 @@ const readExistingArchiveObject = Effect.fn("AiMetrics.readExistingArchiveObject
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import { Effect, Redacted } from "effect"
+ * import * as O from "effect/Option"
  * const program = writeEncryptedRawArchiveObject({
  *   content: "{\"type\":\"event_msg\"}",
- *   hashSalt: "fixture-salt",
+ *   hashSalt: O.some("fixture-salt"),
  *   rawArchiveDir: ".ai-metrics/raw",
- *   rawArchiveKey: Redacted.make("base64-32-byte-key"),
+ *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *   sourceKind: AiMetricsTranscriptSource.Enum.codex,
  *   sourcePath: "session.jsonl"
  * }).pipe(Effect.provide(NodeServices.layer))
@@ -416,7 +424,7 @@ export const writeEncryptedRawArchiveObject = Effect.fn("AiMetrics.writeEncrypte
     sourcePath,
   }: {
     readonly content: string;
-    readonly hashSalt?: string;
+    readonly hashSalt: O.Option<string>;
     readonly rawArchiveDir: string;
     readonly rawArchiveKey: AiMetricsRawArchiveKey;
     readonly sourceKind: AiMetricsTranscriptSource;
