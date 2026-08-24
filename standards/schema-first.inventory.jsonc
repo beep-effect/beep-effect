@@ -3802,6 +3802,16 @@
       "reason": "S.TaggedError declaration \"CliReportedExit\" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes."
     },
     {
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "symbol": "FsGuardError",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-tagged-error-equivalence",
+      "line": 89,
+      "owner": "@beep/repo-cli",
+      "reason": "Inherited from main (#783) after the non-driver baseline was seeded; part of the tooling burn-down. S.TaggedError declaration must declare a fields-only toEquivalence annotation; follow packages/drivers/tika/src/Tika.errors.ts."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/internal/cli/Json.ts",
       "symbol": "CliJsonError",
       "kind": "schema-policy-advisory",
