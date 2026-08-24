@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/runner-trust-boundary",
   "lifecycle": "active",
-  "statusNote": "P0 pending: validate the ratified non-privileged EC2 runner posture against live GitHub organization and AWS facts, then complete the operator grill before P1 deployment proof or either remediation lane starts.",
+  "statusNote": "P0 ratified 2026-08-24 in research/P0-GRILL.md. The P1 08-24 CSF-003/CSF-009 deployment proof is in progress before P2 Workload identity boundary and P3 Admission defense in depth.",
   "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -29,6 +29,10 @@
     "goals/runner-trust-boundary/SPEC.md",
     "goals/runner-trust-boundary/PLAN.md",
     "goals/runner-trust-boundary/GOAL.md",
+    "goals/runner-trust-boundary/research/P0-GRILL.md",
+    "goals/runner-trust-boundary/research/P0-FACTS.md",
+    "goals/runner-trust-boundary/research/P0-MECHANISM.md",
+    "goals/runner-trust-boundary/research/P0-THREAT-MODEL.md",
     "goals/runner-trust-boundary/research/SOURCES.md",
     "goals/codex-security-findings-2026-08-10/ops/triage.json",
     "goals/codex-security-findings-2026-08-13/ops/triage.json",
@@ -36,7 +40,13 @@
     "goals/ci-fleet-residue/research/p2-acceptance-evidence.md",
     "goals/ci-lane-economics/research/placement-decision.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/P0-GRILL.md",
+    "research/P0-FACTS.md",
+    "research/P0-MECHANISM.md",
+    "research/P0-THREAT-MODEL.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -52,21 +62,21 @@
     {
       "id": "P0",
       "name": "Posture validation and grill gate",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "08-24 CSF-003/CSF-009 deployment proof",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
-      "name": "Admission defense in depth",
+      "name": "Workload identity boundary",
       "status": "pending"
     },
     {
       "id": "P3",
-      "name": "Workload identity boundary",
+      "name": "Admission defense in depth",
       "status": "pending"
     },
     {
@@ -92,16 +102,15 @@
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/runner-trust-boundary/GOAL.md)\" -le 4000",
-    "jq . goals/runner-trust-boundary/ops/manifest.json",
-    "rg -n \"runner-trust-boundary|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/runner-trust-boundary",
+    "jq . goals/runner-trust-boundary/ops/manifest.json > /dev/null",
     "bun run beep goals index --check",
     "bun run beep goals doctor",
     "bun run beep lint reflection-artifacts",
     "git diff --check -- goals/runner-trust-boundary goals/INDEX.md"
   ],
   "stopConditions": [
-    "P0 facts contradict the ratified posture and the operator has not recorded a new decision.",
-    "The P0 operator grill is incomplete or does not ratify the design and proof plan.",
+    "A later fact contradicts the 2026-08-24 P0 ratification and the operator has not recorded a new decision.",
+    "One-way self-only metadata disable cannot be proved; stop and use the ratified no-profile broker fallback.",
     "A proposal moves heavy pull-request lanes to hosted runners or makes admission gating the primary boundary.",
     "The job VM retains usable application instance-role credentials or a bootstrap path recoverable by job-controlled privilege.",
     "A Bun-binary, sealed-cache, AMI, red-team gate, deregistration, or teardown check fails.",
