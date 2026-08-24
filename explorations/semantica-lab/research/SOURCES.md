@@ -32,6 +32,30 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
   find it via Notion search)
 - Bake-off candidate URLs: fetch-verified in [`docs-url-census.md`](./docs-url-census.md) and
   in each family sheet's Sources appendix (`bakeoff-*.md`).
+- **S1–S5 primary sources** (each URL fetched and the claim located on the page, 2026-08-24):
+  - S1 stop rule — Shape Up ch. 3 "Appetite" https://basecamp.com/shapeup/1.2-chapter-03 ;
+    ch. 8 "The circuit breaker" https://basecamp.com/shapeup/2.2-chapter-08 ; ch. 14 "Decide
+    When to Stop" https://basecamp.com/shapeup/3.5-chapter-14
+  - S2 gold-label separation — Zheng et al. 2023, "Judging LLM-as-a-Judge with MT-Bench and
+    Chatbot Arena" (self-enhancement bias) https://arxiv.org/abs/2306.05685 ; Panickssery,
+    Bowman, Feng 2024, "LLM Evaluators Recognize and Favor Their Own Generations"
+    https://arxiv.org/abs/2404.13076 ; Yang et al. 2023 (rephrased-sample contamination)
+    https://arxiv.org/abs/2311.04850
+  - S3 embeddings — `Effect-TS/effect` main `packages/effect/src/unstable/ai/EmbeddingModel.ts`
+    and `packages/ai/openai/src/OpenAiEmbeddingModel.ts` (local `.repos/effect`, 02a5146d69);
+    OpenAI `POST /embeddings` wire format
+    https://raw.githubusercontent.com/openai/openai-openapi/master/openapi.yaml
+  - S4 lab shape — Tauri v2 process model https://v2.tauri.app/concept/process-model/ ; sidecar
+    https://v2.tauri.app/develop/sidecar/ ; architecture https://v2.tauri.app/concept/architecture/
+  - S5/S8 reasoning — RDF 1.1 Semantics §9.2.1 RDFS entailment patterns
+    https://www.w3.org/TR/rdf11-mt/#patterns-of-rdfs-entailment-informative ; Muñoz, Pérez,
+    Gutierrez 2009, "Simple and Efficient Minimal RDFS" (ρdf; JWS 7(3))
+    https://users.dcc.uchile.cl/~cgutierr/papers/jws09.pdf ; SWAP reason vocabulary
+    https://www.w3.org/2000/10/swap/reason# ; EYE repo (MIT) https://github.com/eyereasoner/eye
+    (`reasoning/socrates/socrates-proof.n3`, `documentation/command_line.md`); eye-js (npm
+    `eyereasoner`, MIT) https://github.com/eyereasoner/eye-js ; Doorenbos 1995, CMU-CS-95-113
+    http://reports-archive.adm.cs.cmu.edu/anon/1995/CMU-CS-95-113.pdf ; Doyle 1979, "A Truth
+    Maintenance System" https://doi.org/10.1016/0004-3702(79)90008-0
 
 ## 4. In-repo capability references
 
@@ -46,6 +70,9 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
 | Embedded Postgres + ORM | `@beep/pglite`, `@beep/postgres` | reuse (storage bake-off; pgvector-on-PGlite convergence) |
 | Property graph in-memory | `effect/Graph` (Effect v4) | reuse candidate |
 | LLM providers / agent chat | agents slice (`@beep/agents-client` etc.) | already-have (LLM multiplexing auto-parked, D10) |
+| Embeddings (S3-rev, one row) | contract `effect/unstable/ai` `EmbeddingModel` (4.0.0-rc.111) + shipped `@effect/ai-openai` `OpenAiEmbeddingModel.layer` (root dep; verified in `.repos/effect/packages/ai/openai/src/OpenAiEmbeddingModel.ts`) wrapped by a new `@beep/openai` driver mirroring `@beep/anthropic`; lab owns `EmbeddingVector` + `ModelIdentity` | reuse contract + Layer; NET-NEW = thin driver only. Superseded: a hand-written `EmbeddingModel.make` Layer over `@beep/venice-ai` `createEmbedding` (S3, rejected) |
+| effect-ontology shapes (`ProviderMetadata`, `toReifiedTriples`, `Timeline`, `QuadDelta`, `ProvenanceUri`) | `scratchpad/effect-ontology` — non-importable | borrow-shape / pattern-only per `effect-ontology-map.md` (S6) |
+| Reasoning oracle (test-time) | — (no EYE driver in `packages/drivers`; `n3`, `oxigraph`, `shacl`, `rdf-canonize` exist) | NET-NEW wiring: EYE WASM decode for C2 gold proofs (G3/G5) |
 | Local practice-KG precedent (PGlite + DuckDB + read-only MCP) | `apps/practice-kg-mcp` | pattern |
 | Tauri shell + Bun sidecar + migrations | `apps/professional-desktop` | pattern only (never imported) |
 | Lab scaffold + lifecycle | `bun run beep create-package --lab`, `standards/architecture/15-lab-apps.md` | reuse |
