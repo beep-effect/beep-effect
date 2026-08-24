@@ -23,7 +23,6 @@ import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
 import { and, asc, eq } from "drizzle-orm";
 import { Clock, DateTime, Effect, HashMap, Match, Order, pipe, Ref, Semaphore } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { InMemoryState } from "./ThreadStore.repo.internal.ts";
 import type { CuidState } from "@beep/schema/Cuid";
 import type { MessageInsert } from "@beep/workspace-tables/entities/Message";
@@ -33,12 +32,6 @@ import type { MessageEntityInput, ThreadEntityInput, TurnEntityInput } from "./T
 const THREAD_TABLE_NAME = "workspace_thread" as const;
 const TURN_TABLE_NAME = "workspace_turn" as const;
 const MESSAGE_TABLE_NAME = "workspace_message" as const;
-
-const encodeWorkspaceId = S.encodeSync(WorkspaceIdentity.WorkspaceId);
-const encodeThreadId = S.encodeSync(WorkspaceIdentity.ThreadId);
-const encodeTurnId = S.encodeSync(WorkspaceIdentity.TurnId);
-const encodeMessageId = S.encodeSync(WorkspaceIdentity.MessageId);
-const encodeDocument = S.encodeSync(Document);
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
 
@@ -113,13 +106,14 @@ const makeMessageEntity = (
 ): Message =>
   Message.decodeUnknownSync({
     ...baseEntityRecord("WorkspaceMessage", input.id, publicId, timestamps),
-    content: encodeDocument(input.content),
+    content: Document.encodeSync(input.content),
     role: input.role,
     threadId: input.threadId,
     turnId: input.turnId,
   });
 
-const threadIdToNumber = (id: WorkspaceIdentity.ThreadId): PosInt => PosInt.make(Number(encodeThreadId(id)));
+const threadIdToNumber = (id: WorkspaceIdentity.ThreadId): PosInt =>
+  PosInt.make(Number(WorkspaceIdentity.ThreadId.encodeSync(id)));
 
 const turnIndexOrder = Order.mapInput(Order.Number, (turn: Turn) => turn.turnIndex);
 
@@ -248,7 +242,7 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
 
   return ThreadStoreServer.Thread.ThreadStore.of({
     createThread: Effect.fn("Workspace.ThreadStore.createThread")(function* (input) {
-      const workspaceId = PosInt.make(Number(encodeWorkspaceId(input.workspaceId)));
+      const workspaceId = PosInt.make(Number(WorkspaceIdentity.WorkspaceId.encodeSync(input.workspaceId)));
       const publicId = yield* publicIds.thread;
       const now = yield* Clock.currentTimeMillis;
       return yield* Ref.modify(store, (state) => {
@@ -265,11 +259,11 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
       });
     }),
     listThreads: Effect.fn("Workspace.ThreadStore.listThreads")(function* (workspaceId) {
-      const encoded = PosInt.make(Number(encodeWorkspaceId(workspaceId)));
+      const encoded = PosInt.make(Number(WorkspaceIdentity.WorkspaceId.encodeSync(workspaceId)));
       const state = yield* Ref.get(store);
       return pipe(
         A.fromIterable(HashMap.values(state.threads)),
-        A.filter((thread) => Number(encodeWorkspaceId(thread.workspaceId)) === encoded)
+        A.filter((thread) => Number(WorkspaceIdentity.WorkspaceId.encodeSync(thread.workspaceId)) === encoded)
       );
     }),
     setTitleIfEmpty: Effect.fn("Workspace.ThreadStore.setTitleIfEmpty")(function* (input) {
@@ -287,7 +281,7 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
           {
             id: threadId,
             title: input.title,
-            workspaceId: PosInt.make(Number(encodeWorkspaceId(current.value.workspaceId))),
+            workspaceId: PosInt.make(Number(WorkspaceIdentity.WorkspaceId.encodeSync(current.value.workspaceId))),
           },
           current.value.publicId,
           // Renaming a thread must not restamp when it was created.
@@ -313,7 +307,7 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
       }
       const parentTurnId = pipe(
         input.parentTurnId,
-        O.map((id) => PosInt.make(Number(encodeTurnId(id)))),
+        O.map((id) => PosInt.make(Number(WorkspaceIdentity.TurnId.encodeSync(id)))),
         O.getOrNull
       );
       const messagePublicId = yield* publicIds.message;
@@ -365,7 +359,7 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
         A.filter((turn) => threadIdToNumber(turn.threadId) === numericId)
       );
       return projectTimeline(threadId, turns, (messageId) =>
-        HashMap.get(state.messages, PosInt.make(Number(encodeMessageId(messageId))))
+        HashMap.get(state.messages, PosInt.make(Number(WorkspaceIdentity.MessageId.encodeSync(messageId))))
       );
     }),
   });
@@ -430,7 +424,7 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
     createThread: Effect.fn("Workspace.ThreadStore.drizzleCreateThread")(function* (input) {
       return yield* writeSemaphore.withPermit(
         Effect.gen(function* () {
-          const workspaceId = PosInt.make(Number(encodeWorkspaceId(input.workspaceId)));
+          const workspaceId = PosInt.make(Number(WorkspaceIdentity.WorkspaceId.encodeSync(input.workspaceId)));
           const existingThreads = yield* db
             .select()
             .from(threadTable)
@@ -457,7 +451,7 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
       );
     }),
     listThreads: Effect.fn("Workspace.ThreadStore.drizzleListThreads")(function* (workspaceId) {
-      const encoded = PosInt.make(Number(encodeWorkspaceId(workspaceId)));
+      const encoded = PosInt.make(Number(WorkspaceIdentity.WorkspaceId.encodeSync(workspaceId)));
       const rows = yield* db
         .select()
         .from(threadTable)
@@ -499,7 +493,7 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
       }
       const parentTurnId = pipe(
         input.parentTurnId,
-        O.map((id) => PosInt.make(Number(encodeTurnId(id)))),
+        O.map((id) => PosInt.make(Number(WorkspaceIdentity.TurnId.encodeSync(id)))),
         O.getOrNull
       );
       const messagePublicId = yield* publicIds.message;
@@ -546,7 +540,7 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
                 O.map(fromTurnRow),
                 O.getOrElse(() => turnSeed)
               );
-              const persistedTurnId = PosInt.make(Number(encodeTurnId(persistedTurn.id)));
+              const persistedTurnId = PosInt.make(Number(WorkspaceIdentity.TurnId.encodeSync(persistedTurn.id)));
 
               const messageInsert: MessageInsert = {
                 ...toMessageInsert(messageSeed),
@@ -559,11 +553,13 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
                 O.map(fromMessageRow),
                 O.getOrElse(() => messageSeed)
               );
-              const persistedMessageId = PosInt.make(Number(encodeMessageId(persistedMessage.id)));
+              const persistedMessageId = PosInt.make(
+                Number(WorkspaceIdentity.MessageId.encodeSync(persistedMessage.id))
+              );
 
               const reconciledTurn = makeTurnEntity(
                 {
-                  id: PosInt.make(Number(encodeTurnId(persistedTurn.id))),
+                  id: PosInt.make(Number(WorkspaceIdentity.TurnId.encodeSync(persistedTurn.id))),
                   threadId,
                   parentTurnId,
                   turnIndex,
@@ -618,10 +614,10 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
       const turns = A.map(turnRows, fromTurnRow);
       const messages = A.map(messageRows, fromMessageRow);
       const messageById = HashMap.fromIterable(
-        A.map(messages, (message) => [Number(encodeMessageId(message.id)), message] as const)
+        A.map(messages, (message) => [Number(WorkspaceIdentity.MessageId.encodeSync(message.id)), message] as const)
       );
       return projectTimeline(threadId, turns, (messageId) =>
-        HashMap.get(messageById, Number(encodeMessageId(messageId)))
+        HashMap.get(messageById, Number(WorkspaceIdentity.MessageId.encodeSync(messageId)))
       );
     }),
   });

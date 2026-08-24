@@ -46,16 +46,6 @@
       "reason": "Shared test harness module rather than a test: it defines the MCP request/response codecs both professional-desktop integration suites consume. Round-trip property coverage for those schemas lives with the suite that owns them, in ontology-mcp-http.test.ts via assertSchemaRoundTrip."
     },
     {
-      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 50,
-      "owner": "@beep/professional-desktop",
-      "reason": "End-to-end authority acceptance suite: the codecs are exercised through a live MCP server against a real PGlite ledger, so the file's value is behavioral, not codec round-tripping. Schema-derived property coverage for these schemas already exists — ExecutionAuthority.test.ts 'derives round-tripping arbitraries for execution authority schemas', and ontology-mcp-http.test.ts runs assertSchemaRoundTrip over the MCP request codecs."
-    },
-    {
       "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",

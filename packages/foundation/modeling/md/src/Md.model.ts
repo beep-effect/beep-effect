@@ -2956,7 +2956,9 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
   $I.annote("Document", {
     description: "Root Markdown document AST.",
   })
-) {}
+) {
+  static readonly encodeSync = S.encodeSync(Document);
+}
 
 /**
  * Companion namespace for {@link Document}.

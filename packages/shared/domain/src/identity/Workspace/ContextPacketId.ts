@@ -7,6 +7,7 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as EntityId from "../../entity/EntityId.ts";
 
 const $I = $WorkspaceDomainId.create("identity/Workspace");
@@ -28,7 +29,7 @@ const make = EntityId.factory("workspace", $I);
  */
 export const ContextPacketId = make("context_packet", {
   description: "Identifier for a bounded context packet entity.",
-});
+}).pipe(SchemaUtils.withSyncCodecStatics);
 
 /**
  * Runtime type for {@link ContextPacketId}.
