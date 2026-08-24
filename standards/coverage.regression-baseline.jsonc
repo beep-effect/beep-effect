@@ -24064,9 +24064,9 @@
         },
         "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts": {
           "lines": 69.53,
-          "statements": 69.28,
-          "branches": 41.79,
-          "functions": 86.84,
+          "statements": 69.07,
+          "branches": 53.57,
+          "functions": 83.87,
           "uncovered": {
             "lines": 46,
             "statements": 47,
