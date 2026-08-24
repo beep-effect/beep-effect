@@ -14,9 +14,8 @@ The 2026-08-24 charter ratifies these constraints:
   instance-role credentials, a sealed digest-verified AMI, and one ephemeral VM
   per job.
 - Admission gating is defense in depth.
-- P0 was ratified on 2026-08-24. P1 is the standalone fresh deployment proof
-  for the two held Codex IDs, followed by P2 Workload identity boundary and P3
-  Admission defense in depth.
+- P0 was ratified on 2026-08-24. P1 and P2 are complete with closure-ready
+  evidence retained. P3 Admission defense in depth is next.
 
 ## P1 deployment evidence
 
@@ -33,6 +32,27 @@ provenance for its accepted and retained-superseded results.
 | [Lane probe 32761137404](https://github.com/beep-effect/beep-effect/actions/runs/32761137404) | Bake #1 image rejected after `main` changed the lockfile key | Retained negative-path evidence |
 | [Red-team run 32763386226](https://github.com/beep-effect/beep-effect/actions/runs/32763386226) | `AMI_PIN` rejected a pre-flip bake #1 worker after deploy #2 | Retained negative-path evidence |
 | [Lane probe 32763385680](https://github.com/beep-effect/beep-effect/actions/runs/32763385680) | Setup rejected the stale key on a pre-flip bake #1 worker | Retained negative-path evidence |
+
+## P2 workload-identity evidence
+
+The tracked, sanitized chronology is
+[`P2-EVIDENCE.md`](./P2-EVIDENCE.md). These run pages retain the canary,
+deployed workload-identity proof, live-sampling correction, lane proof, and
+rollout-loop record.
+
+| Run | Role in the evidence chain | Status |
+| --- | --- | --- |
+| [Red-team run 32786883010](https://github.com/beep-effect/beep-effect/actions/runs/32786883010) | Gates A through J and L exactly once; live `disabled applied`; `AMI_PIN`; scoped deregistration; one-second EC2 teardown | Accepted P2 proof |
+| [Red-team run 32787722297](https://github.com/beep-effect/beep-effect/actions/runs/32787722297) | Same gates on the pushed head `1d8e2b5f6b`, whose Gate L also requires `self_redisable`; live `disabled applied`; `AMI_PIN` | Confirmation on the pushed head |
+| [Canary shadow check 32785914235](https://github.com/beep-effect/beep-effect/actions/runs/32785914235) | Launch-template v13 self-disable and post-disable lock proof; informational `JIT residue: visible` | Accepted canary proof |
+| [Lane probe 32786113766](https://github.com/beep-effect/beep-effect/actions/runs/32786113766) | `test-integration` on a locked v13 worker with Bun `1.4.0` and lockfile key `f81ab29f…` | Accepted P2 lane proof |
+| [Red-team run 32786113945](https://github.com/beep-effect/beep-effect/actions/runs/32786113945) | All required gates and `AMI_PIN` passed; post-termination metadata read returned `disabled pending` | Retained, superseded by live sampling |
+| [Red-team run 32779945159](https://github.com/beep-effect/beep-effect/actions/runs/32779945159) | Launch-template v10 rollout loop left the proof queued and exposed the fleet-wide failure | Retained incident evidence |
+| [Lane probe 32779945093](https://github.com/beep-effect/beep-effect/actions/runs/32779945093) | Queued through the rollout loop, began after v9 restoration, and was cancelled rather than accepted as P2 proof | Retained, superseded |
+
+The two concurrent acceptance wrappers crossed local artifact filenames for
+runs `32786113766` and `32786113945`. The hosted workflow and job names above
+define their roles.
 
 ## Source packets
 
