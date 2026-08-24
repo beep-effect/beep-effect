@@ -2,10 +2,11 @@
 
 ## Status
 
-Status: `active`. P2 validation and repo-side P3 remediation happened in the
-capture PR itself. All 19 findings are validated; 15 are remediated repo-side
-with focused proof, and 4 remain an explicit handoff to the
-runner-admission/workload-identity arc. P5 repository proof is next.
+Status: `completed-retained`. All 19 findings were validated. PR #783 contains
+15 repo-side remediations, 13 dashboard IDs were closed as Already fixed on
+2026-08-24, two IDs remain held for `runner-trust-boundary` P1 deployment
+proof, and four IDs are transferred to that packet's admission and
+workload-identity lanes.
 
 ## Phases
 
@@ -16,11 +17,11 @@ runner-admission/workload-identity arc. P5 repository proof is next.
 | P2 validate | complete | Reproduce each report at current HEAD. | All 19 items have strict verdict, disposition, rationale, and owner surface. |
 | P3 lane-partition | complete | Group shared root causes and disjoint paths. | All 19 items are assigned to 12 remediation lanes. |
 | P4 remediate | complete | Fix or transfer all real findings with focused checks. | Fifteen repo-side fixes are recorded; four runner findings have a named receiving arc and required external proof. |
-| P5 repo-proof | pending | Run packet validation and Yeet repair/verify. | No packet drift; local proof green. |
-| P6 publish | pending | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
-| P7 monitor | pending | Close hosted checks and actionable reviews. | PR green and mergeable. |
-| P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 19 IDs resolved. |
-| P9 close | pending | Record evidence, reflection, and lifecycle. | Packet set to `completed-retained` in the same closeout PR state. |
+| P5 repo-proof | complete | Run packet validation and Yeet repair/verify. | Repository proof for the 15 remediations is retained with PR #783. |
+| P6 publish | complete | Publish one intentional PR through Yeet. | PR #783 is the published remediation record. |
+| P7 monitor | complete | Close hosted checks and actionable reviews. | PR #783 reached the terminal delivery state used for dashboard closure. |
+| P8 merge-and-close | complete | Close or transfer every captured finding. | Thirteen IDs closed as Already fixed; two held and four transferred to `runner-trust-boundary` with exact proof requirements. |
+| P9 close | complete | Record evidence, reflection, and lifecycle. | Packet is `completed-retained`; the closeout reflection validates. |
 
 ## Execution Rules
 
@@ -31,19 +32,20 @@ runner-admission/workload-identity arc. P5 repository proof is next.
 - Use focused tests first, then package checks, then Yeet.
 - Never stage ignored raw evidence.
 
-## Runner architecture handoff
+## Runner trust-boundary handoff
 
 CSF-001, CSF-004, CSF-005, and CSF-006 remain confirmed and dispositioned
 `remediate`. They are not accepted risk or dashboard closure. Complete repair
 requires a trust boundary outside pull-request-editable workflow content and no
 usable cloud identity during runner jobs. The runner-admission/workload-identity
-arc owns these findings until organization-owned controls and external GitHub
-runner-group/AWS deployment proof verify the resulting boundary.
+goal is [`goals/runner-trust-boundary`](../runner-trust-boundary/README.md). It
+owns these findings until organization-owned controls and external GitHub
+runner-group plus AWS deployment proof verify the resulting boundary.
 
-## Fleet deployment follow-up
+## Held deployment proof
 
-The repository changes for CSF-003 and CSF-009 are complete, but fleet
-acceptance still requires this AWS evidence:
+The repository changes for CSF-003 and CSF-009 are complete, but the dashboard
+IDs remain open. `runner-trust-boundary` P1 owns this proof:
 
 1. Bake a fresh runner AMI with `bun run beep runners bake` and the production
    region, subnet, and security-group inputs. Retain the generated report and
@@ -61,12 +63,17 @@ Local proof covers generated script content, Pulumi input content, YAML syntax,
 and gate accounting. It does not prove AL2023 ownership after a real bake,
 registration ordering during live boot, or deployed IMDS behavior.
 
+On complete P1 proof, the receiving packet closes the two held exact IDs as
+Already fixed and records the dashboard state. This packet needs no further
+phase work.
+
 ## Packet Verification
 
 ```sh
 test "$(wc -m < goals/codex-security-findings-2026-08-24/GOAL.md)" -le 4000
 jq . goals/codex-security-findings-2026-08-24/ops/manifest.json
 jq . goals/codex-security-findings-2026-08-24/ops/triage.json
+jq . goals/codex-security-findings-2026-08-24/ops/closures.json
 test "$(find goals/codex-security-findings-2026-08-24/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 19
 git diff --check -- goals/codex-security-findings-2026-08-24
 ```

@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "runner-trust-boundary",
+    "packetId": "goal-packet/v1:86891349f7fd4e9fa0ae81212a26c855c198a4603f12a600201abe32200547e6",
+    "title": "Runner Trust Boundary",
+    "status": "active",
+    "created": "2026-08-24",
+    "updated": "2026-08-24",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/runner-trust-boundary",
+  "lifecycle": "active",
+  "statusNote": "P0 pending: validate the ratified non-privileged EC2 runner posture against live GitHub organization and AWS facts, then complete the operator grill before P1 deployment proof or either remediation lane starts.",
+  "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the deployed runner class has no usable ambient instance-role credentials, the remediation PR is merge-ready and merged, and every transferred Codex ID is then closed with exact proof.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/runner-trust-boundary/README.md",
+    "goals/runner-trust-boundary/SPEC.md",
+    "goals/runner-trust-boundary/PLAN.md",
+    "goals/runner-trust-boundary/GOAL.md",
+    "goals/runner-trust-boundary/research/SOURCES.md",
+    "goals/codex-security-findings-2026-08-10/ops/triage.json",
+    "goals/codex-security-findings-2026-08-13/ops/triage.json",
+    "goals/codex-security-findings-2026-08-24/ops/triage.json",
+    "goals/ci-fleet-residue/research/p2-acceptance-evidence.md",
+    "goals/ci-lane-economics/research/placement-decision.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/runner-trust-boundary/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Posture validation and grill gate",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "08-24 CSF-003/CSF-009 deployment proof",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Admission defense in depth",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Workload identity boundary",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Boundary verification",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet publish, review, and merge gate",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Dashboard closure",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/runner-trust-boundary/GOAL.md)\" -le 4000",
+    "jq . goals/runner-trust-boundary/ops/manifest.json",
+    "rg -n \"runner-trust-boundary|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/runner-trust-boundary",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts",
+    "git diff --check -- goals/runner-trust-boundary goals/INDEX.md"
+  ],
+  "stopConditions": [
+    "P0 facts contradict the ratified posture and the operator has not recorded a new decision.",
+    "The P0 operator grill is incomplete or does not ratify the design and proof plan.",
+    "A proposal moves heavy pull-request lanes to hosted runners or makes admission gating the primary boundary.",
+    "The job VM retains usable application instance-role credentials or a bootstrap path recoverable by job-controlled privilege.",
+    "A Bun-binary, sealed-cache, AMI, red-team gate, deregistration, or teardown check fails.",
+    "Required GitHub or AWS authority is unavailable for deployed proof.",
+    "Work crosses into fleet performance or architecture ownership without an explicit handoff.",
+    "Tracked evidence contains raw findings, secrets, email addresses, machine IDs, or developer-local absolute paths."
+  ]
+}
