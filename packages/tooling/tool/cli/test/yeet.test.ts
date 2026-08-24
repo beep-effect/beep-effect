@@ -1609,7 +1609,7 @@ describe("yeet quality issue index", () => {
     expect(O.getOrUndefined(remediation)).toContain("typos");
   });
 
-  it("extracts the changeset sub-lane hint with the empty-changeset remedy", () => {
+  it("extracts the changeset sub-lane hint with the package patch remedy", () => {
     const issues = prePushFailureIssues(
       context,
       "[beep-cli] quality:changeset-status: bun run changeset:status:since-main\nSome packages have been changed but no changesets were found."
@@ -1620,7 +1620,7 @@ describe("yeet quality issue index", () => {
       category: "changeset-policy",
       subCategory: "changeset-status",
     });
-    expect(issues[0]?.remediation).toContain("changeset add --empty");
+    expect(issues[0]?.remediation).toContain("each changed package with `patch`");
   });
 
   it("extracts the typos sub-lane hint from hook-style failures", () => {

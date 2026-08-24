@@ -128,6 +128,25 @@ bypassing every lab construction rule; and lab dependency tables declaring
 workspace packages no emitted file imports, which would fail the required Knip
 context on the first lab.
 
+**Addendum (2026-08-23, post-closeout): P2-D12's stock-parity clause is
+superseded on new information.** The `@changesets/cli` v3 major flipped the
+`privatePackages` default from `{version: true}` to `{version: false}`; with
+no `privatePackages` key in `.changeset/config.json` and every workspace
+package private, stock `changeset status --since` filters all workspaces out
+and can never fail. That made the wrapper's `stock-parity` verdict — and the
+local `changeset:status:since-main` yeet gate — silently vacuous, and the
+mixed check was near-vacuous for a different reason: it counted every pending
+changeset in `.changeset/` (~450 accumulated, naming nearly every package) as
+coverage. The operator ratified the repair 2026-08-23: the ceremony's purpose
+is change documentation, so the wrapper enforces its in-process
+per-package rule on **all** verdicts, counting only changesets **added in the
+since-range** (stock v2 `--since` semantics), and no longer spawns the stock
+CLI. `.changeset/config.json` stays untouched (`privatePackages` is
+deliberately not armed — the no-edit ratification holds), the pending-changeset
+backlog stays in place as the documentation corpus, and the unreachable
+`release.yml` is retired with its `changeset-graph` validation preserved in
+the repo-sanity lane. Landed by this maintenance PR.
+
 ## P3 Outcome (2026-08-17)
 
 **Spike result: the CI half of D4's toolchain question is a non-issue.** The

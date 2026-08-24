@@ -2,8 +2,6 @@ import {
   ChangesetGraphPackageReference,
   ChangesetStatusPartition,
   ChangesetStatusWorkspacePackage,
-  changesetStatusPassthroughSteps,
-  changesetStatusPlanSteps,
   changesetStatusVerdict,
   githubCheckChangesetStatusLane,
   partitionChangedFilesForStatus,
@@ -14,36 +12,70 @@ import { Unknown } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcessSpawner } from "effect/unstable/process";
 
 const REPO_ROOT = "/repo";
-
 const fixtureWorkspaceDirs: ReadonlyArray<string> = ["packages/demo", "apps/labs/cognee"];
+const encoder = new TextEncoder();
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
-const runGit = Effect.fn("ChangesetStatusTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-  const handle = yield* ChildProcess.make("git", ["-c", "commit.gpgsign=false", ...args], {
-    cwd: repoRoot,
-    stdin: "ignore",
-    stdout: "ignore",
-    stderr: "ignore",
+const makeHandle = (output: string) =>
+  ChildProcessSpawner.makeHandle({
+    pid: ChildProcessSpawner.ProcessId(1),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    stdin: Sink.drain,
+    stdout: Stream.make(encoder.encode(output)),
+    stderr: Stream.empty,
+    all: Stream.make(encoder.encode(output)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    unref: Effect.succeed(Effect.void),
   });
-  const exitCode = yield* handle.exitCode;
-  expect(exitCode).toBe(0);
-});
 
-const withTempRepo = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>
+const gitFixtureLayer = (
+  changedFiles: ReadonlyArray<string>,
+  addedChangesets: ReadonlyArray<string>,
+  spawned: Array<string>
+) =>
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) =>
+      Effect.sync(() => {
+        if (command._tag !== "StandardCommand") {
+          return makeHandle("");
+        }
+        const args = command.args;
+        spawned.push(A.join([command.command, ...args], " "));
+        const output = A.contains(args, "--diff-filter=ACMRTUXBD")
+          ? A.join(changedFiles, "\u0000")
+          : A.contains(args, "--diff-filter=A")
+            ? A.join(addedChangesets, "\u0000")
+            : A.contains(args, "ls-files")
+              ? A.join(["packages/demo/package.json", "apps/labs/cognee/package.json"], "\u0000")
+              : "";
+        return makeHandle(output);
+      })
+    )
+  );
+
+const withTempRepo = <A2, E, R>(
+  changedFiles: ReadonlyArray<string>,
+  addedChangesets: ReadonlyArray<string>,
+  spawned: Array<string>,
+  use: (tmpDir: string) => Effect.Effect<A2, E, R>
+) =>
   Effect.scoped(
     Effect.acquireUseRelease(
       Effect.gen(function* () {
@@ -54,7 +86,11 @@ const withTempRepo = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>
       }),
       ({ tmpDir }) => use(tmpDir),
       ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true })
-    ).pipe(provideScopedLayer(testLayer))
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(NodeServices.layer, TestConsole.layer, gitFixtureLayer(changedFiles, addedChangesets, spawned))
+      )
+    )
   );
 
 const writeRepoFile = Effect.fn("ChangesetStatusTest.writeRepoFile")(function* (
@@ -73,11 +109,6 @@ const writeRepoFile = Effect.fn("ChangesetStatusTest.writeRepoFile")(function* (
 const writePackageJson = (repoRoot: string, relativePath: string, document: unknown) =>
   writeRepoFile(repoRoot, relativePath, `${encodeJson(document)}\n`);
 
-const commitAll = Effect.fn("ChangesetStatusTest.commitAll")(function* (repoRoot: string, message: string) {
-  yield* runGit(repoRoot, ["add", "."]);
-  yield* runGit(repoRoot, ["commit", "-m", message]);
-});
-
 const writeStatusFixtureRepo = Effect.fn("ChangesetStatusTest.writeStatusFixtureRepo")(function* (repoRoot: string) {
   yield* writePackageJson(repoRoot, "package.json", {
     private: true,
@@ -90,11 +121,6 @@ const writeStatusFixtureRepo = Effect.fn("ChangesetStatusTest.writeStatusFixture
   yield* writeRepoFile(repoRoot, "packages/demo/src/index.ts", "export const demo = 1;\n");
   yield* writeRepoFile(repoRoot, ".changeset/README.md", "# Changesets\n");
   yield* writePackageJson(repoRoot, ".changeset/config.json", { ignore: [] });
-  yield* runGit(repoRoot, ["init", "-b", "main"]);
-  yield* runGit(repoRoot, ["config", "user.email", "beep@example.com"]);
-  yield* runGit(repoRoot, ["config", "user.name", "beep"]);
-  yield* commitAll(repoRoot, "base");
-  yield* runGit(repoRoot, ["checkout", "-b", "feature"]);
 });
 
 const writeLabApp = Effect.fn("ChangesetStatusTest.writeLabApp")(function* (repoRoot: string) {
@@ -107,7 +133,7 @@ const writeLabApp = Effect.fn("ChangesetStatusTest.writeLabApp")(function* (repo
 
 describe("changeset status wrapper", () => {
   describe("partition + verdict", () => {
-    it("classifies a lab-only diff as lab-exempt with no planned steps", () => {
+    it("classifies a lab-only diff as lab-exempt", () => {
       const partition = partitionChangedFilesForStatus(["apps/labs/cognee/src/main.ts"], fixtureWorkspaceDirs);
 
       expect(partition).toEqual(
@@ -121,10 +147,9 @@ describe("changeset status wrapper", () => {
 
       const verdict = changesetStatusVerdict(partition);
       expect(verdict).toBe("lab-exempt");
-      expect(changesetStatusPlanSteps(REPO_ROOT, verdict, "origin/main")).toEqual([]);
     });
 
-    it("classifies a mixed lab/product diff as mixed-reimplemented without spawning stock", () => {
+    it("classifies a mixed lab/product diff as enforced", () => {
       const partition = partitionChangedFilesForStatus(
         ["apps/labs/cognee/src/main.ts", "packages/demo/src/index.ts"],
         fixtureWorkspaceDirs
@@ -134,25 +159,16 @@ describe("changeset status wrapper", () => {
       expect([...partition.productWorkspaceDirs]).toEqual(["packages/demo"]);
 
       const verdict = changesetStatusVerdict(partition);
-      expect(verdict).toBe("mixed-reimplemented");
-      expect(changesetStatusPlanSteps(REPO_ROOT, verdict, "origin/main")).toEqual([]);
+      expect(verdict).toBe("enforced");
     });
 
-    it("routes a root-only diff to stock parity with one stock step", () => {
+    it("routes a root-only diff to in-process enforcement", () => {
       const partition = partitionChangedFilesForStatus(["package.json"], fixtureWorkspaceDirs);
 
       expect([...partition.blockingPaths]).toEqual(["package.json"]);
 
       const verdict = changesetStatusVerdict(partition);
-      expect(verdict).toBe("stock-parity");
-
-      const steps = changesetStatusPlanSteps(REPO_ROOT, verdict, "origin/main");
-      expect(steps).toHaveLength(1);
-      expect(steps[0]).toMatchObject({
-        command: "bunx",
-        args: ["changeset", "status", "--since=origin/main"],
-        cwd: REPO_ROOT,
-      });
+      expect(verdict).toBe("enforced");
     });
 
     it("classifies deleted and renamed lab paths as lab without a live owner", () => {
@@ -165,13 +181,13 @@ describe("changeset status wrapper", () => {
       expect(changesetStatusVerdict(partition)).toBe("lab-exempt");
     });
 
-    it("treats a lab path renamed into product space as mixed-reimplemented", () => {
+    it("treats a lab path renamed into product space as enforced", () => {
       const partition = partitionChangedFilesForStatus(
         ["apps/labs/cognee/src/main.ts", "packages/demo/src/main.ts"],
         fixtureWorkspaceDirs
       );
 
-      expect(changesetStatusVerdict(partition)).toBe("mixed-reimplemented");
+      expect(changesetStatusVerdict(partition)).toBe("enforced");
     });
 
     it("keeps neutral prefixes and the identity companion file out of the exemption gate", () => {
@@ -201,29 +217,11 @@ describe("changeset status wrapper", () => {
       );
 
       expect([...partition.productWorkspaceDirs]).toEqual(["packages/foundation/modeling/identity"]);
-      expect(changesetStatusVerdict(partition)).toBe("mixed-reimplemented");
+      expect(changesetStatusVerdict(partition)).toBe("enforced");
     });
 
-    it("routes an empty diff to stock parity", () => {
-      expect(changesetStatusVerdict(partitionChangedFilesForStatus([], fixtureWorkspaceDirs))).toBe("stock-parity");
-    });
-  });
-
-  describe("plan steps", () => {
-    it("plans a stock passthrough step without --since when the flag is absent", () => {
-      const steps = changesetStatusPassthroughSteps(REPO_ROOT);
-
-      expect(steps).toHaveLength(1);
-      expect(steps[0]).toMatchObject({
-        command: "bunx",
-        args: ["changeset", "status"],
-        cwd: REPO_ROOT,
-      });
-    });
-
-    it("plans no steps for the exempt and reimplemented verdicts", () => {
-      expect(changesetStatusPlanSteps(REPO_ROOT, "lab-exempt", "origin/main")).toEqual([]);
-      expect(changesetStatusPlanSteps(REPO_ROOT, "mixed-reimplemented", "origin/main")).toEqual([]);
+    it("routes an empty diff to in-process enforcement", () => {
+      expect(changesetStatusVerdict(partitionChangedFilesForStatus([], fixtureWorkspaceDirs))).toBe("enforced");
     });
   });
 
@@ -281,14 +279,16 @@ describe("changeset status wrapper", () => {
     });
   });
 
-  describe("runChangesetStatus over a real merge-base diff", () => {
+  describe("runChangesetStatus with captured git fixtures", () => {
     it("exempts a lab-only branch without consulting changesets", () =>
       Effect.runPromise(
-        withTempRepo((tmpDir) =>
-          Effect.gen(function* () {
+        withTempRepo(
+          ["apps/labs/cognee/src/main.ts"],
+          [],
+          [],
+          Effect.fn(function* (tmpDir) {
             yield* writeStatusFixtureRepo(tmpDir);
             yield* writeLabApp(tmpDir);
-            yield* commitAll(tmpDir, "add lab");
 
             yield* runChangesetStatus(tmpDir, O.some("main"));
 
@@ -303,40 +303,43 @@ describe("changeset status wrapper", () => {
         )
       ));
 
-    it("keeps a pending changeset naming a deleted lab as graph-lane business", () =>
+    it("does not count a base-backlog changeset as product coverage", () =>
       Effect.runPromise(
-        withTempRepo((tmpDir) =>
-          Effect.gen(function* () {
+        withTempRepo(
+          ["packages/demo/src/index.ts"],
+          [],
+          [],
+          Effect.fn(function* (tmpDir) {
             yield* writeStatusFixtureRepo(tmpDir);
-            yield* writeLabApp(tmpDir);
             yield* writeRepoFile(
               tmpDir,
-              ".changeset/dead-lab.md",
+              ".changeset/base-backlog.md",
               `---
-"@beep/dead-lab": patch
+"@beep/demo": patch
 ---
 
-Reference a deleted lab.
+Base backlog coverage must not count.
 `
             );
-            yield* commitAll(tmpDir, "add lab and stale changeset");
 
-            yield* runChangesetStatus(tmpDir, O.some("main"));
+            const error = yield* Effect.flip(runChangesetStatus(tmpDir, O.some("main")));
 
-            const logs = yield* TestConsole.logLines;
-            expect(A.some(logs, (line) => P.isString(line) && line.includes("verdict=lab-exempt"))).toBe(true);
+            expect(error._tag).toBe("CliReportedExit");
+            const errors = yield* TestConsole.errorLines;
+            expect(A.some(errors, (line) => P.isString(line) && line.includes("@beep/demo"))).toBe(true);
           })
         )
       ));
 
-    it("fails a mixed branch whose product workspace lacks a pending changeset", () =>
+    it("fails the product-only path in-process when no in-range changeset covers it", () =>
       Effect.runPromise(
-        withTempRepo((tmpDir) =>
-          Effect.gen(function* () {
+        withTempRepo(
+          ["packages/demo/src/index.ts"],
+          [],
+          [],
+          Effect.fn(function* (tmpDir) {
             yield* writeStatusFixtureRepo(tmpDir);
-            yield* writeLabApp(tmpDir);
             yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const demo = 2;\n");
-            yield* commitAll(tmpDir, "mixed change without changeset");
 
             const error = yield* Effect.flip(runChangesetStatus(tmpDir, O.some("main")));
 
@@ -351,12 +354,14 @@ Reference a deleted lab.
         )
       ));
 
-    it("passes a mixed branch whose product workspace is named by a pending changeset", () =>
+    it("passes the product-only path when an in-range-added changeset covers it", () =>
       Effect.runPromise(
-        withTempRepo((tmpDir) =>
-          Effect.gen(function* () {
+        withTempRepo(
+          ["packages/demo/src/index.ts", ".changeset/demo-change.md"],
+          [".changeset/demo-change.md"],
+          [],
+          Effect.fn(function* (tmpDir) {
             yield* writeStatusFixtureRepo(tmpDir);
-            yield* writeLabApp(tmpDir);
             yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const demo = 2;\n");
             yield* writeRepoFile(
               tmpDir,
@@ -368,7 +373,6 @@ Reference a deleted lab.
 Patch demo.
 `
             );
-            yield* commitAll(tmpDir, "mixed change with changeset");
 
             yield* runChangesetStatus(tmpDir, O.some("main"));
 
@@ -377,11 +381,40 @@ Patch demo.
               A.some(
                 logs,
                 (line) =>
-                  P.isString(line) && line.includes("every changed product workspace is named by a pending changeset")
+                  P.isString(line) && line.includes("every changed product workspace is named by a changeset added")
               )
             ).toBe(true);
           })
         )
       ));
+
+    it("defaults an absent --since value to origin/main without spawning stock changesets", () => {
+      const spawned: Array<string> = [];
+      return Effect.runPromise(
+        withTempRepo(
+          ["packages/demo/src/index.ts", ".changeset/demo-change.md"],
+          [".changeset/demo-change.md"],
+          spawned,
+          Effect.fn(function* (tmpDir) {
+            yield* writeStatusFixtureRepo(tmpDir);
+            yield* writeRepoFile(
+              tmpDir,
+              ".changeset/demo-change.md",
+              `---
+"@beep/demo": patch
+---
+
+Patch demo.
+`
+            );
+
+            yield* runChangesetStatus(tmpDir, O.none());
+
+            expect(A.some(spawned, (command) => command.includes("origin/main...HEAD"))).toBe(true);
+            expect(A.every(spawned, (command) => !command.includes("bunx changeset status"))).toBe(true);
+          })
+        )
+      );
+    });
   });
 });

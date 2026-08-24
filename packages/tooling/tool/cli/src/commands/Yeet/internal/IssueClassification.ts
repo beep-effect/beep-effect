@@ -235,7 +235,7 @@ const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
     subCategory: "changeset-status",
     category: "changeset-policy",
     remediation:
-      "Run `bun run changeset:status:since-main`. If the change is intentionally version-neutral, run `bunx changeset add --empty` and commit the empty changeset.",
+      "Run `bun run changeset:status:since-main`. Write a changeset listing each changed package with `patch`; packages on the changesets config `ignore` list are exempt.",
   },
   {
     needle: "typos",
