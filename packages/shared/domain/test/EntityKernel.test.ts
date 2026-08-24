@@ -23,6 +23,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { makeEffect } from "effect/SchemaParser";
 import { FastCheck as fc } from "effect/testing";
+import { hasFunctionStatic, invokeStatic } from "./StaticProbes.ts";
 
 const $I = $SharedDomainId.create("entity/test/EntityKernel");
 const makeSharedId = EntityId.factory("shared", $I);
@@ -54,13 +55,6 @@ const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect
   const exit = yield* Effect.exit(effect);
   assert.strictEqual(Exit.isFailure(exit), true);
 });
-// `annotate` returns the bare codec type, so statics that survive it are probed by name.
-const hasFunctionStatic = (schema: object, key: string): boolean =>
-  P.hasProperty(schema, key) && P.isFunction(Reflect.get(schema, key));
-const invokeStatic = (schema: object, key: string, ...args: ReadonlyArray<unknown>): O.Option<unknown> => {
-  const candidate: unknown = Reflect.get(schema, key);
-  return O.map(O.liftPredicate(candidate, P.isFunction), (fn) => fn.call(schema, ...args));
-};
 
 const systemPrincipal = {
   component: "Runtime",

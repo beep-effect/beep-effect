@@ -5,9 +5,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import { cast } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { hasFunctionStatic, invokeStatic } from "./StaticProbes.ts";
 import type * as EntityId from "@beep/shared-domain/entity/EntityId";
 
 type IdentitySpec = {
@@ -381,15 +381,7 @@ const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect
   const exit = yield* Effect.exit(effect);
   expect(Exit.isFailure(exit)).toBe(true);
 });
-// `EntityId.Any` only types the entity metadata statics, so the factory-attached codec
-// statics are probed by name without widening that type.
 const codecStaticKeys = ["is", "fromUnknown", "decodeOption", "decodeUnknownEffect", "encodeEffect", "equivalence"];
-const hasFunctionStatic = (schema: object, key: string): boolean =>
-  P.hasProperty(schema, key) && P.isFunction(Reflect.get(schema, key));
-const invokeStatic = (schema: object, key: string, ...args: ReadonlyArray<unknown>): O.Option<unknown> => {
-  const candidate: unknown = Reflect.get(schema, key);
-  return O.map(O.liftPredicate(candidate, P.isFunction), (fn) => fn.call(schema, ...args));
-};
 
 describe("P3 identity namespaces", () => {
   it("expose deterministic entity-id metadata", () => {
