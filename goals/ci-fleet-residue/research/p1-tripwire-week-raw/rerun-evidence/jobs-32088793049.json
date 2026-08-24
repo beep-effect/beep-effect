@@ -1,0 +1,18 @@
+{
+  "jobs": [
+    {
+      "completed_at": "2026-08-18T02:22:00Z",
+      "conclusion": "cancelled",
+      "failed_steps": [
+        { "conclusion": "cancelled", "name": "Install Playwright Chromium" }
+      ],
+      "id": 95566721042,
+      "labels": ["ubuntu-24.04"],
+      "name": "Build And Test",
+      "runner_name": "GitHub Actions 1000010632",
+      "started_at": "2026-08-18T01:35:58Z",
+      "status": "completed"
+    }
+  ],
+  "run_id": 32088793049
+}
