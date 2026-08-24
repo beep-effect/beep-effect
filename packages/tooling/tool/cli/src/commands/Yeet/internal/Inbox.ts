@@ -42,11 +42,13 @@
 import { createHash } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, Path } from "effect";
 import * as S from "effect/Schema";
+import { appendContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { safeArtifactName } from "./ArtifactPaths.ts";
+import type { FileSystem } from "effect";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Inbox");
 
@@ -443,10 +445,11 @@ export const renderYeetInboxRowLine = (row: YeetInboxRow): Effect.Effect<string,
  * **Details**
  *
  * Creates the inbox directory on first use and appends exactly one NDJSON
- * line. Appends are the only mutation the writer side performs — rows are
- * immutable once written, and acknowledgment happens through receipt files,
- * so concurrent writers interleave whole lines rather than contending on a
- * shared document.
+ * line. The contained append rejects symlinked targets and parents, then
+ * appends through a verified private hard-link alias so the predictable target
+ * pathname is never opened for writing. Rows remain immutable once written,
+ * and acknowledgment happens through receipt files, so concurrent writers
+ * retain whole-line append semantics.
  *
  * **Example** (Build the append effect)
  *
@@ -484,15 +487,11 @@ export const appendYeetInboxRow = Effect.fn("Yeet.appendYeetInboxRow")(function*
   repoRoot: string,
   row: YeetInboxRow
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const paths = yield* yeetInboxPaths(repoRoot);
   const line = yield* renderYeetInboxRowLine(row).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode an inbox row."))
   );
-  yield* fs
-    .makeDirectory(paths.dir, { recursive: true })
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to create the inbox directory "${paths.dir}".`)));
-  yield* fs
-    .writeFileString(paths.failuresPath, `${line}\n`, { flag: "a" })
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to append to the failure inbox "${paths.failuresPath}".`)));
+  yield* appendContainedFileString(repoRoot, paths.failuresPath, `${line}\n`).pipe(
+    Effect.mapError(YeetCommandError.new(`Failed to append to the failure inbox "${paths.failuresPath}".`))
+  );
 });

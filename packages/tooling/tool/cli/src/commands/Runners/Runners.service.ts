@@ -364,32 +364,41 @@ shutdown -P +350
 trap 'shutdown -P now' EXIT
 dnf install -y git unzip zip jq docker libicu
 systemctl enable --now docker
-install -d -o ec2-user -g ec2-user /home/ec2-user/.bun /home/ec2-user/.bun/bin
+install -d -o ec2-user -g ec2-user /home/ec2-user/.bun
+install -d -o root -g root -m 0755 /usr/local/bin /opt/beep-ci /etc/beep-ci
 curl --fail --location --proto '=https' --tlsv1.2 --retry 3 \
   --output /tmp/bun-linux-x64.zip \
   'https://github.com/oven-sh/bun/releases/download/bun-v${inputs.bunVersion}/bun-linux-x64.zip'
 printf '%s  %s\n' '${inputs.bunArchiveSha256}' /tmp/bun-linux-x64.zip | sha256sum --check --strict -
 rm -rf /tmp/bun-linux-x64
 unzip -q /tmp/bun-linux-x64.zip -d /tmp/bun-linux-x64
-install -o ec2-user -g ec2-user -m 0755 \
-  /tmp/bun-linux-x64/bun-linux-x64/bun /home/ec2-user/.bun/bin/bun
-ln -sfn bun /home/ec2-user/.bun/bin/bunx
-chown -h ec2-user:ec2-user /home/ec2-user/.bun/bin/bunx
-/home/ec2-user/.bun/bin/bunx --version
+install -o root -g root -m 0755 \
+  /tmp/bun-linux-x64/bun-linux-x64/bun /usr/local/bin/bun
+ln -sfn bun /usr/local/bin/bunx
+chown -h root:root /usr/local/bin/bunx
+bun_binary_sha256="$(sha256sum /usr/local/bin/bun | cut -d ' ' -f 1)"
+/usr/local/bin/bunx --version
 rm -rf /tmp/bun-linux-x64 /tmp/bun-linux-x64.zip
 git clone --filter=blob:none ${BAKE_CLONE_URL} /tmp/beep-effect
 git -C /tmp/beep-effect checkout --detach ${inputs.gitRevision}
 test "$(sha256sum /tmp/beep-effect/bun.lock | cut -d ' ' -f 1)" = "${inputs.lockfileSha256}"
 chown -R ec2-user:ec2-user /tmp/beep-effect
-sudo -u ec2-user env HOME=/home/ec2-user BUN_INSTALL=/home/ec2-user/.bun \
-  /home/ec2-user/.bun/bin/bun install --cwd /tmp/beep-effect --frozen-lockfile
-install -d /etc/beep-ci
+sudo -u ec2-user env HOME=/home/ec2-user PATH=/usr/local/bin:/usr/bin:/bin \
+  /usr/local/bin/bun install --cwd /tmp/beep-effect --frozen-lockfile
+tar -C /home/ec2-user/.bun/install -czf /opt/beep-ci/bun-install-cache.tgz cache
+chown root:root /opt/beep-ci/bun-install-cache.tgz
+chmod 0444 /opt/beep-ci/bun-install-cache.tgz
+bun_install_cache_sha256="$(sha256sum /opt/beep-ci/bun-install-cache.tgz | cut -d ' ' -f 1)"
 printf '%s\n' '${inputs.lockfileSha256}' > /etc/beep-ci/bun-lock.sha256
 printf '%s\n' '${inputs.bunVersion}' > /etc/beep-ci/bun-version
 printf '%s\n' '${inputs.bunArchiveSha256}' > /etc/beep-ci/bun-archive.sha256
+printf '%s\n' "\${bun_binary_sha256}" > /etc/beep-ci/bun-binary.sha256
+printf '%s\n' "\${bun_install_cache_sha256}" > /etc/beep-ci/bun-install-cache.sha256
 printf '%s\n' '${inputs.gitRevision}' > /etc/beep-ci/source-revision
-touch /etc/beep-ci/baked-runner
-rm -rf /tmp/beep-effect /root/.cache /home/ec2-user/.cache
+install -o root -g root -m 0444 /dev/null /etc/beep-ci/baked-runner
+chmod 0444 /etc/beep-ci/*.sha256 /etc/beep-ci/bun-version /etc/beep-ci/source-revision
+rm -rf /tmp/beep-effect /root/.cache /home/ec2-user/.cache \
+  /home/ec2-user/.bun/bin /home/ec2-user/.bun/install/cache
 cloud-init clean --logs
 truncate -s 0 /etc/machine-id
 rm -f /var/lib/dbus/machine-id
@@ -687,6 +696,7 @@ const makePlan = Effect.fn("Runners.plan")(function* () {
       "beep-ci:bake=true",
       "AssociatePublicIpAddress=true",
       "shutdown -P backstop",
+      "root-owned Bun binary + installed digest + authenticated warm cache",
       "lockfile-sha256 + bun-archive-sha256 + bun-version staleness key",
       "unconditional instance termination",
     ],

@@ -16,6 +16,7 @@ import { LiteralKit } from "@beep/schema";
 import { Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GOALS_DIR } from "../../Goals/Inventory.ts";
 import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "../../Goals/PortfolioIndex.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -227,9 +228,9 @@ export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfol
     });
   }
 
-  yield* fs
-    .writeFileString(indexPath, regenerated)
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to write the regenerated ${PORTFOLIO_INDEX_PATH}.`)));
+  yield* writeContainedFileString(context.repoRoot, indexPath, regenerated).pipe(
+    Effect.mapError(YeetCommandError.new(`Failed to write the regenerated ${PORTFOLIO_INDEX_PATH}.`))
+  );
   yield* runGitOutput(context.repoRoot, ["add", "--", PORTFOLIO_INDEX_PATH]);
   yield* Console.log(
     `[yeet] regenerated ${PORTFOLIO_INDEX_PATH} from ${GOALS_DIR}/*/ops/manifest.json and staged it into the commit`

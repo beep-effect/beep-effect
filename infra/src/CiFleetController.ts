@@ -71,9 +71,10 @@ const runnerToolbeltPostInstall = `(
 // exactly that one non-writable script. Re-invocation from a malicious step is
 // harmless — the installer is idempotent and only re-asserts the DROP. Every
 // firewall prerequisite and hook invocation fails CLOSED before job steps can
-// run. A missing runner directory leaves the hook visibly unarmed for Gate E
-// to reject during deployment; the whole snippet stays subshell-scoped for the
-// same inline-user-data reason as the toolbelt above.
+// run. A missing runner directory aborts post-install before the module can
+// register the runner. Gate E still proves the hook on a live worker; the whole
+// snippet stays subshell-scoped for the same inline-user-data reason as the
+// toolbelt above.
 const imdsJobHookPostInstall = `(
   set -eu
   dnf install -y iptables-nft
@@ -112,6 +113,7 @@ BEEP_IMDS_DROP
   done
   if [ "\${hook_armed}" = false ]; then
     logger -t beep-imds-hook "runner directory not found; per-job IMDS hook NOT armed"
+    exit 1
   fi
 )
 `;
@@ -367,12 +369,13 @@ type CiFleetControllerArgs = {
  * installs `iptables-nft` and verifies the nft backend plus OWNER match before
  * writing or wiring the hook. The installer and wrapper propagate failures so
  * GitHub's job-start hook fails closed before any job step can run. A missing
- * runner directory leaves the hook unarmed for the Gate E IMDSv2 token-PUT
- * probe to reject during deployment; no live deployment proof is claimed here.
- * Deploys are gated on Gate E plus the full guest-isolation red-team re-run on
- * a live ephemeral worker; the always-on layers remain IMDSv2 hop limit 1, the
- * permissions-boundary-capped instance role, the ephemeral one-job-one-VM
- * lifecycle, and JIT config that keeps no registration token on the instance.
+ * runner directory now aborts post-install before runner registration. Gate E
+ * then proves live job pickup and denial of the runner user's IMDSv2 token PUT;
+ * no live deployment proof is claimed here. Deploys are gated on Gate E plus
+ * the full guest-isolation red-team re-run on a live ephemeral worker; the
+ * always-on layers remain IMDSv2 hop limit 1, the permissions-boundary-capped
+ * instance role, the ephemeral one-job-one-VM lifecycle, and JIT config that
+ * keeps no registration token on the instance.
  *
  * Reliability semantics for the one-job-one-VM fleet: `job_retry` rescues a
  * job whose runner died between launch and pickup (spot reclaim, boot

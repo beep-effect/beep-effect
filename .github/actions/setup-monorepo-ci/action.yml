@@ -27,39 +27,54 @@ runs:
       id: baked
       shell: bash
       # A `beep runners bake` image ships the Bun toolchain and a warmed
-      # package store, stamped with the lockfile sha, the Bun version, and the
-      # verified Bun archive sha it was baked against. The fast path activates
-      # only when ALL THREE staleness keys match this checkout; any missing
-      # marker or mismatch fails OPEN into the ordinary download/restore path
-      # below.
+      # package store, stamped with the lockfile sha, the Bun version, the
+      # verified Bun archive sha, and digests for the installed Bun binary and
+      # sealed package-store archive. The fast path activates only when the
+      # checkout keys match and both root-owned artifacts match their digests.
+      # Any missing marker or mismatch fails open into the ordinary setup path.
       run: |
+        set -euo pipefail
         hit=false
+        # Never trust a writable cache inherited from the image or an earlier
+        # step. A valid baked image restores it from the authenticated archive.
+        rm -rf -- "${HOME:?}/.bun/install/cache"
         if [ -f /etc/beep-ci/baked-runner ] \
           && [ -f /etc/beep-ci/bun-lock.sha256 ] \
           && [ -f /etc/beep-ci/bun-version ] \
           && [ -f /etc/beep-ci/bun-archive.sha256 ] \
-          && [ -x "$HOME/.bun/bin/bun" ]; then
+          && [ -f /etc/beep-ci/bun-binary.sha256 ] \
+          && [ -f /etc/beep-ci/bun-install-cache.sha256 ] \
+          && [ -x /usr/local/bin/bun ] \
+          && [ -L /usr/local/bin/bunx ] \
+          && [ -f /opt/beep-ci/bun-install-cache.tgz ]; then
           baked_lock="$(cat /etc/beep-ci/bun-lock.sha256)"
           checkout_lock="$(sha256sum bun.lock | cut -d ' ' -f 1)"
           baked_bun="$(cat /etc/beep-ci/bun-version)"
           checkout_bun="$(tr -d '[:space:]' < .bun-version)"
           baked_archive="$(cat /etc/beep-ci/bun-archive.sha256)"
           checkout_archive="$(tr -d '[:space:]' < .bun-linux-x64.sha256)"
+          baked_binary="$(cat /etc/beep-ci/bun-binary.sha256)"
+          installed_binary="$(sha256sum /usr/local/bin/bun | cut -d ' ' -f 1)"
+          baked_cache="$(cat /etc/beep-ci/bun-install-cache.sha256)"
+          installed_cache="$(sha256sum /opt/beep-ci/bun-install-cache.tgz | cut -d ' ' -f 1)"
+          bun_owner_mode="$(stat -c '%u:%g:%a' /usr/local/bin/bun)"
+          cache_owner_mode="$(stat -c '%u:%g:%a' /opt/beep-ci/bun-install-cache.tgz)"
+          bunx_target="$(readlink /usr/local/bin/bunx)"
           if [ "$baked_lock" = "$checkout_lock" ] \
             && [ "$baked_bun" = "$checkout_bun" ] \
-            && [ "$baked_archive" = "$checkout_archive" ]; then
+            && [ "$baked_archive" = "$checkout_archive" ] \
+            && [ "$baked_binary" = "$installed_binary" ] \
+            && [ "$baked_cache" = "$installed_cache" ] \
+            && [ "$bun_owner_mode" = "0:0:755" ] \
+            && [ "$cache_owner_mode" = "0:0:444" ] \
+            && [ "$bunx_target" = "bun" ]; then
+            install -d -m 0755 "$HOME/.bun/install"
+            tar -xzf /opt/beep-ci/bun-install-cache.tgz -C "$HOME/.bun/install"
             hit=true
-            echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
-            # The release zip ships only the bun binary; images baked before
-            # the bake script created bunx (ami-07fb13d84a42d3584 and older)
-            # lack the symlink and every `bunx turbo` spawn dies with ENOENT.
-            if [ ! -e "$HOME/.bun/bin/bunx" ]; then
-              ln -s bun "$HOME/.bun/bin/bunx"
-              echo "baked runner repair: created missing bunx symlink"
-            fi
-            echo "baked runner fast path: bun $baked_bun, lockfile $baked_lock, archive $baked_archive"
+            echo "/usr/local/bin" >> "$GITHUB_PATH"
+            echo "baked runner fast path: bun $baked_bun, binary $baked_binary, lockfile $baked_lock, archive $baked_archive, cache $baked_cache"
           else
-            echo "baked runner stale (lock $baked_lock vs $checkout_lock, bun $baked_bun vs $checkout_bun, archive $baked_archive vs $checkout_archive); using full setup"
+            echo "baked runner stale or failed integrity checks; using full setup"
           fi
         fi
         echo "hit=$hit" >> "$GITHUB_OUTPUT"

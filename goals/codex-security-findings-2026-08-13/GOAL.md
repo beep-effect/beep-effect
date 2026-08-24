@@ -29,16 +29,13 @@ Scope:
 - Out: accepted risk, raw evidence in git, Codex Create PR/patch buttons,
   unrelated cleanup, weakened quality/security gates.
 
-Current position: P2/P3 are complete for all 19 findings. CSF-002, CSF-007,
-CSF-009, CSF-010, CSF-013, and CSF-014 are merged; CSF-011 was already fixed.
-CSF-012, CSF-015, CSF-016, CSF-017, CSF-018, and CSF-019 have focused local
-proof and are being consolidated into PR #712; merged-tree full Yeet proof and
-publication remain pending. The prior quality ledger contains 42 repaired
-reviewer and gate items, and the only known #712 review thread has a proved
-local documentation fix awaiting the combined push.
-CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 remain confirmed
-`remediate` items blocked on runner admission/workload-identity architecture
-and external GitHub organization runner-group/AWS deployment proof.
+Current position: `completed-retained`. Repository-local findings are merged
+through PRs #650, #655, #673, #681, #688, #696, #697, and #712. PR #712
+carries CSF-012 and CSF-015 through CSF-019. CSF-001, CSF-003, CSF-004,
+CSF-005, CSF-006, and CSF-008 remain confirmed `remediate` items handed to the
+runner-admission/workload-identity arc for external GitHub organization
+runner-group and AWS deployment proof. This packet claims neither that proof
+nor dashboard closure for those six findings.
 
 Rules:
 
@@ -58,9 +55,9 @@ Refresh triage: all 19 records are validated and assigned to remediation lanes.
    repair/verify. Publish intentional narrow PRs and monitor through mergeable.
 6. After merge, close only the exact 19-ID allowlist in Codex as Already fixed
    (or the evidence-backed invalid reason) and verify zero packet-open findings.
-7. Treat CSF-002, CSF-007, CSF-009, CSF-010, CSF-013, and CSF-014 as merged.
-   Consolidate the six remaining repository-fixable findings into PR #712;
-   never merge it, and do not publish the six externally blocked findings.
+7. Treat all repository-local findings as merged. Keep the six runner findings
+   with the receiving architecture arc until it records external proof and
+   exact-ID dashboard closure.
 
 Stop if the signed-in CSV export is unavailable, tracked evidence contains secret
 or raw-path material, a fix needs an out-of-packet architecture decision, or the
