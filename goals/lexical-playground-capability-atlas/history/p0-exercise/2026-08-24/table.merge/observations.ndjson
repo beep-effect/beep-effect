@@ -1,0 +1,36 @@
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"table.merge","outcome":"pass","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false,\"tableCellMerge\":true}","entryId":"table.merge","outcome":"pass","step":2}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"table.merge","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"table.merge","outcome":"pass","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"table.merge","outcome":"pass","step":5}
+{"action":"screenshot","detail":"before","entryId":"table.merge","outcome":"pass","step":6}
+{"action":"click","detail":"role=button name=\"Insert specialized editor node\"","entryId":"table.merge","outcome":"pass","step":7}
+{"action":"click","detail":"scope=.dropdown:visible role=button name-prefix=\"Table\"","entryId":"table.merge","outcome":"pass","step":8}
+{"action":"type","detail":"fill \"2\" in css=[data-test-id=\"table-modal-rows\"]","entryId":"table.merge","outcome":"pass","step":9}
+{"action":"type","detail":"fill \"2\" in css=[data-test-id=\"table-modal-columns\"]","entryId":"table.merge","outcome":"pass","step":10}
+{"action":"click","detail":"css=[data-test-id=\"table-model-confirm-insert\"] button","entryId":"table.merge","outcome":"pass","step":11}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__table is visible","entryId":"table.merge","outcome":"pass","step":12}
+{"action":"drag","detail":"css=.PlaygroundEditorTheme__tableCell nth=0 -> css=.PlaygroundEditorTheme__tableCell nth=1","entryId":"table.merge","outcome":"pass","step":13}
+{"action":"expect-selector","detail":"css=.table-cell-action-button is visible","entryId":"table.merge","outcome":"pass","step":14}
+{"action":"click","detail":"css=.table-cell-action-button","entryId":"table.merge","outcome":"pass","step":15}
+{"action":"click","detail":"role=button name=\"Merge cells\"","entryId":"table.merge","outcome":"pass","step":16}
+{"action":"screenshot","detail":"after","entryId":"table.merge","outcome":"pass","step":17}
+{"action":"set-viewport","detail":"480x900","entryId":"table.merge","outcome":"pass","step":18}
+{"action":"keyboard","detail":"Tab","entryId":"table.merge","outcome":"pass","step":19}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"table.merge","outcome":"pass","step":20}
+{"action":"screenshot","detail":"narrow-keyboard","entryId":"table.merge","outcome":"pass","step":21}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"table.merge","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"table.merge","outcome":"pass","step":23}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"table.merge","outcome":"pass","step":24}
+{"action":"clipboard-verify","detail":"css=.ContentEditable__root system clipboard matched captured editor text \"\"","entryId":"table.merge","outcome":"pass","step":25}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"table.merge","outcome":"pass","step":26}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"table.merge","outcome":"pass","step":27}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"table.merge","outcome":"pass","step":28}
+{"action":"paste-verify","detail":"css=.ContentEditable__root remained empty after the inserted line break","entryId":"table.merge","outcome":"pass","step":29}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"table.merge","outcome":"pass","step":30}
+{"action":"export-verify","detail":"surface-json-Playground-2026-08-24T18_39_26.330Z.lexical editorState.root text contains captured editor text \"\"","entryId":"table.merge","outcome":"pass","step":31}
+{"action":"screenshot","detail":"surface-roundtrip","entryId":"table.merge","outcome":"pass","step":32}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"table.merge","outcome":"pass","step":33}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"table.merge","outcome":"pass","step":34}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"table.merge","outcome":"pass","step":35}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"table.merge","outcome":"pass","step":36}

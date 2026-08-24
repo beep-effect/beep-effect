@@ -7,11 +7,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Order, pipe } from "effect";
+import { Effect, MutableHashMap, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
+import { QualityTaskConfigurationError } from "../Quality.errors.ts";
+import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
+import type { FileSystem } from "effect";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScope");
 
@@ -261,6 +265,57 @@ export class CoverageScopeOwner extends S.Class<CoverageScopeOwner>($I`CoverageS
   })
 ) {}
 
+const workspacePackageHasCoverage = (scripts: Readonly<Record<string, string>> | undefined): boolean =>
+  pipe(scripts ?? {}, R.get("coverage"), O.isSome);
+
+/**
+ * Discover the workspace owners consumed by affected coverage planning.
+ *
+ * **Details**
+ *
+ * Both affected coverage execution and unscoped baseline writes use this
+ * function, so package ownership and coverage-script detection cannot drift
+ * between the two planners.
+ *
+ * **Example** (Build the shared owner effect)
+ *
+ * ```ts
+ * import { workspaceCoverageScopeOwners } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(workspaceCoverageScopeOwners(process.cwd()))) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root containing the workspace manifest.
+ * @returns Sorted workspace owners and their coverage capability.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const workspaceCoverageScopeOwners = Effect.fn("CoverageScope.workspaceCoverageScopeOwners")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  ReadonlyArray<CoverageScopeOwner>,
+  QualityTaskConfigurationError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const path = yield* Path.Path;
+  const packageMap = yield* discoverWorkspacePackages(repoRoot, path).pipe(
+    QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage scope planning.")
+  );
+
+  return pipe(
+    A.fromIterable(MutableHashMap.values(packageMap)),
+    A.map((info) =>
+      CoverageScopeOwner.make({
+        hasCoverage: workspacePackageHasCoverage(info.packageJson.scripts),
+        packageName: info.name,
+        packagePath: info.path,
+      })
+    ),
+    A.sort(Order.mapInput(Order.String, (owner: CoverageScopeOwner) => owner.packageName))
+  );
+});
+
 class CoverageFullScope extends S.TaggedClass<CoverageFullScope>($I`CoverageFullScope`)(
   "full",
   { reasons: S.Array(S.String) },
@@ -502,6 +557,54 @@ const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePat
   );
 
 /**
+ * Map changed files to the coverage-owning workspace packages whose measured
+ * baseline rows may be adopted.
+ *
+ * **Details**
+ *
+ * Every changed path is mapped through the same package and repository-fixture
+ * ownership rules used by {@link planCoverageAffectedScope}. The result is
+ * deduplicated and sorted independently of full-run classification.
+ *
+ * **Gotchas**
+ *
+ * A full-run planner verdict changes which packages are measured, never which
+ * rows this owner list permits a baseline write to adopt. Only
+ * `--replace-all` expands adoption to the whole measured document.
+ *
+ * **Example** (Keep a manifest owner in the adoption set)
+ *
+ * ```ts
+ * import { changedCoverageOwners, CoverageScopeOwner } from "@beep/repo-cli/test/Quality"
+ *
+ * const owner = CoverageScopeOwner.make({
+ *   packageName: "@beep/example",
+ *   packagePath: "packages/example",
+ *   hasCoverage: true
+ * })
+ * console.log(changedCoverageOwners([owner], ["packages/example/package.json"])) // ["@beep/example"]
+ * ```
+ *
+ * @param owners - Current workspace packages and whether each defines coverage.
+ * @param changedFiles - Sorted or unsorted repository-relative changed paths.
+ * @returns Sorted unique coverage owners for all changed files.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const changedCoverageOwners: {
+  (changedFiles: ReadonlyArray<string>): (owners: ReadonlyArray<CoverageScopeOwner>) => ReadonlyArray<string>;
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(
+  2,
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): ReadonlyArray<string> =>
+    pipe(
+      A.getSomes(A.map(changedFiles, (filePath) => selectedOwnerForFile(owners, filePath))),
+      A.dedupe,
+      A.sort(Order.String)
+    )
+);
+
+/**
  * Derive a conservative coverage plan from changed files and current workspace owners.
  *
  * **Details**
@@ -509,6 +612,12 @@ const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePat
  * Global coverage inputs, unknown paths, shared test-kit changes, and package
  * manifest changes force a full run. Otherwise only directly changed owners
  * that currently define coverage are selected.
+ *
+ * **Gotchas**
+ *
+ * A full verdict controls measurement breadth only. Baseline adoption remains
+ * the package owners returned by {@link changedCoverageOwners} unless the
+ * operator explicitly passes `--replace-all`.
  *
  * **Example** (Select a directly changed owner)
  *
@@ -543,12 +652,35 @@ export const planCoverageAffectedScope: {
     return CoverageFullScope.make({ reasons });
   }
 
-  const packageNames = pipe(
-    A.getSomes(A.map(changedFiles, (filePath) => selectedOwnerForFile(owners, filePath))),
-    A.dedupe,
-    A.sort(Order.String)
-  );
+  const packageNames = changedCoverageOwners(owners, changedFiles);
   return A.isReadonlyArrayNonEmpty(packageNames)
     ? CoverageSelectedScope.make({ packageNames })
     : CoverageNoopScope.make();
 });
+
+/**
+ * Derive affected coverage scope from changed files using live workspace ownership.
+ *
+ * **Example** (Build the shared affected-scope effect)
+ *
+ * ```ts
+ * import { planWorkspaceCoverageAffectedScope } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(planWorkspaceCoverageAffectedScope(process.cwd(), []))) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root containing the workspace manifest.
+ * @param changedFiles - Repository-relative committed and dirty paths.
+ * @returns Full, selected, or no-op coverage scope using the shared owner inventory.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const planWorkspaceCoverageAffectedScope = Effect.fn("CoverageScope.planWorkspaceCoverageAffectedScope")(
+  function* (
+    repoRoot: string,
+    changedFiles: ReadonlyArray<string>
+  ): Effect.fn.Return<CoverageAffectedScope, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
+    return planCoverageAffectedScope(yield* workspaceCoverageScopeOwners(repoRoot), changedFiles);
+  }
+);

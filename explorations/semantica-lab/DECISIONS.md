@@ -386,3 +386,35 @@ Benjamin's merge of #794 ratifies them. Both tighten the canary without changing
   retrieval/analytics/UX (`trustgraph-workbench`); `VerifiedSpan` lives in `@beep/langextract`
   (`@beep/langextract/VerifiedSpan`), not `@beep/nlp-processing`; the scaffold command carries the
   `--description` that `--lab` requires.
+
+## 2026-08-24 (tracker sweep) — T1–T3, ratified by Benjamin
+
+Source: [`research/upstream-tracker-mining.md`](./research/upstream-tracker-mining.md) (725-item
+sweep, skeptic RATIFY-WITH-EDITS applied) and its six open questions; Benjamin answered in one
+round.
+
+- **T1 (evals gate wording; refines O4).** The queued evals-harness gate fires only when the lab
+  proves a schema-validated `EvalReport` + gold-proposer ≠ extractor (S2) + replay identity (G7)
+  reusable beyond semantica inputs. Upstream's live runner PR #1090 landing does not touch the
+  gate; the gate is about the report contract, not a runner.
+- **T2 (MAP rule: never wait on overlapping upstream PRs).** Duplicates are routine upstream
+  (RETE #1077 vs catalog twins, SHACL docs #1158 vs #1150, Turtle escape #1148 vs #1122). The
+  port decides from the shared schema; which upstream PR lands is telemetry for the atlas, not a
+  MAP dependency.
+- **T3 (benchmarks skim).** The relocated eval suite (#607, #570–#575, out-of-tree repo) is
+  skimmed by one bounded Grok lane for `EvalReport` metric vocabulary only
+  (`research/benchmarks-vocab.md`); it is not a W1 corpus change. **Landed the same day:** the
+  sidecar repo is not fetchable (404 on both URLs, absent from the org), and the last in-tree
+  snapshot is a pytest-benchmark throughput harness, not a correctness suite. Verdict: gold sets
+  G-structure/G-entity/G-relation/G-entailment unchanged; the `EvalReport` metric vocabulary
+  adopts the *names* from issue #574 (entity span F1 over CanonicalText spans, REBEL-style
+  end-to-end triple F1 over Statements, pairwise F1 + B-Cubed over Entity clusters) and nothing
+  else from that harness.
+- **Upstream posting (extends O2).** Prepare for Benjamin's review: one upstream PR carrying the
+  three danklocal Explorer fixes (dedupe: DELETE and URL-key unreported; persist cousin-matched
+  #376/#1134; cite #518 as the registry spec); a new upstream issue for the simulated
+  HermiT/Pellet consistency checks (zero tracker hits, unique D6 finding); a comment on #1090
+  for the evals docs contradiction instead of standalone doc issue 2. Doc issue 3's rewrite is
+  not chosen yet. Nothing posts without him.
+- **PR vehicle.** #794 merges first (his merge); the sweep lands as a follow-up docs PR from
+  `main`.

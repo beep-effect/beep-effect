@@ -1435,6 +1435,45 @@ same stable diagnostic identity.
 This supersedes test-local equivalence overrides and the prior implicit
 acceptance of `S.TaggedError`'s declaration fallback.
 
+## 2026-08-24: Local Coverage Baseline Regeneration Holds Unchanged Packages
+
+- **Status:** Active
+
+Decision:
+
+The hosted Coverage Regression lane is the authority for the floors in
+`standards/coverage.regression-baseline.jsonc`. An unscoped local
+`bun run coverage:baseline:write` therefore adopts this run's measurement only
+for workspace owners of the changed files (`TURBO_SCM_BASE` or the
+`origin/main` merge-base through `HEAD`, plus the dirty worktree), using the
+same owner mapping as `--affected` coverage. That adoption set is collected
+for every changed file even when another path causes the planner's `full`
+verdict. Every other committed package row is held verbatim; packages with no
+committed row are added; packages that left the workspace are pruned. A `full`
+verdict changes what the run measures, never what the writer adopts.
+`--replace-all` is the only whole-document replacement path. The writer
+reports the replaced/held/added/pruned split and any full-run reasons on every
+write.
+
+Rationale:
+
+Local and hosted measurements disagree for environment-dependent files in both
+directions: local runs raised `EnvConfig.ts` floors the hosted runner could
+not reach (the lane failed on a different unrelated row after every push) and
+lowered `BunResolver.ts` branch floors with an identical uncovered count (a
+loosened ratchet a reviewer had to catch). A `min(local, committed)` rule keeps
+the second defect, so the writer holds rows instead of merging them. Package
+granularity is deliberate: per-file holding inside a changed package cannot be
+reconciled with that package's measured aggregate, so environment-dependent
+rows inside a changed package are still pinned to the hosted figure by hand.
+Over-holding after a global input change is visible immediately in the hosted
+lane and can be corrected by scoping that package into the adoption set;
+silently replacing every measured row would instead import unrelated local
+environment drift across the document.
+
+This supersedes the prior unscoped-regeneration behaviour, which replaced every
+row from the local run.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

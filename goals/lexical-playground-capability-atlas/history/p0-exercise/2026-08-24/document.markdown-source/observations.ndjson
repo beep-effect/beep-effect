@@ -1,0 +1,31 @@
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"document.markdown-source","outcome":"pass","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"document.markdown-source","outcome":"pass","step":2}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"document.markdown-source","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"document.markdown-source","outcome":"pass","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"document.markdown-source","outcome":"pass","step":5}
+{"action":"screenshot","detail":"before","entryId":"document.markdown-source","outcome":"pass","step":6}
+{"action":"click","detail":"role=button name=\"Convert To Markdown\"","entryId":"document.markdown-source","outcome":"pass","step":7}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":8}
+{"action":"type","detail":"fill \"# Markdown source evidence\" in css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":9}
+{"action":"click","detail":"role=button name=\"Convert from markdown\"","entryId":"document.markdown-source","outcome":"pass","step":10}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__h1 is visible","entryId":"document.markdown-source","outcome":"pass","step":11}
+{"action":"screenshot","detail":"after","entryId":"document.markdown-source","outcome":"pass","step":12}
+{"action":"set-viewport","detail":"480x900","entryId":"document.markdown-source","outcome":"pass","step":13}
+{"action":"keyboard","detail":"Tab","entryId":"document.markdown-source","outcome":"pass","step":14}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"document.markdown-source","outcome":"pass","step":15}
+{"action":"screenshot","detail":"narrow-keyboard","entryId":"document.markdown-source","outcome":"pass","step":16}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":17}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":18}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":19}
+{"action":"clipboard-verify","detail":"css=.ContentEditable__root system clipboard matched captured editor text \"Markdown source evidence\"","entryId":"document.markdown-source","outcome":"pass","step":20}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":21}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":22}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"document.markdown-source","outcome":"pass","step":23}
+{"action":"paste-verify","detail":"css=.ContentEditable__root contains 2 whitespace-stripped copies of captured editor text \"Markdown source evidence\"","entryId":"document.markdown-source","outcome":"pass","step":24}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"document.markdown-source","outcome":"pass","step":25}
+{"action":"export-verify","detail":"surface-json-Playground-2026-08-24T18_39_42.197Z.lexical editorState.root text contains captured editor text \"Markdown source evidence\"","entryId":"document.markdown-source","outcome":"pass","step":26}
+{"action":"screenshot","detail":"surface-roundtrip","entryId":"document.markdown-source","outcome":"pass","step":27}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":28}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"document.markdown-source","outcome":"pass","step":29}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"document.markdown-source","outcome":"pass","step":30}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"document.markdown-source","outcome":"pass","step":31}

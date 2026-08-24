@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/lexical-playground-capability-atlas",
   "lifecycle": "active",
-  "statusNote": "P0 core artifacts landed on 2026-08-24; P0 remains active pending live lifecycle evidence or user-approved waivers for 162 unverified atlas entries.",
+  "statusNote": "P0 entry gate closed on 2026-08-24 with 152 exercised entries and 10 approved waivers; the activation-path gate remains open for 12 user-visible paths.",
   "mission": "Version the complete Lexical Playground capability atlas and prove the minimal schema-backed editor profile resolver in Storybook and a synthetic Professional Desktop dock panel.",
   "executionCapable": true,
   "reflectionRequired": true,

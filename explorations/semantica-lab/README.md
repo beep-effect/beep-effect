@@ -17,7 +17,9 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-Draft `MAP.md`: canary C0-C2 as Goal 1 with C0 on F1 + one W1 paper as the first vertical slice;
+Tracker questions answered (DECISIONS T1–T3): after #794 merges, land the sweep as a docs PR
+from `main` (with the benchmarks vocabulary skim and the HermiT/Pellet issue draft). Then draft
+`MAP.md`: canary C0-C2 as Goal 1 with C0 on F1 + one W1 paper as the first vertical slice;
 the `@beep/openai` driver as a pre-C1 slice; the storage-inversion and NET-NEW reasoning spikes as
 post-C2 goals; two O4 OSS gates and the atlas-sync candidate queued; every row passes the
 capability check. Then graduate and scaffold the lab. Background: decompose
@@ -46,6 +48,11 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-08-24 (tracker sweep, stage loop): mined the full semantica tracker (725 items) with
+  seven Grok lanes + Grok synthesis + Codex skeptic (RATIFY-WITH-EDITS, applied). Both O4 gates
+  STRENGTHENED; held danklocal fixes confirmed unreported; Benjamin answered the six questions
+  (T1–T3). Benchmarks sidecar unfetchable (metric names only); HermiT/Pellet upstream issue
+  drafted and spot-checked. Feeds MAP.
 - 2026-08-24 (shape grill, S1–S5): Benjamin asked "what is the need for a timeline?" and for
   opinions on the four design items. Built a private teaching workspace
   (the private, untracked docs-internal teach workspace for semantica-lab: mission, lesson 1,

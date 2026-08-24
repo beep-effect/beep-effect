@@ -1,0 +1,45 @@
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"node.figma","outcome":"pass","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"node.figma","outcome":"pass","step":2}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"node.figma","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"node.figma","outcome":"pass","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.figma","outcome":"pass","step":5}
+{"action":"click","detail":"role=button name=\"Insert specialized editor node\"","entryId":"node.figma","outcome":"pass","step":6}
+{"action":"click","detail":"scope=.dropdown:visible role=button name-prefix=\"Figma Document\"","entryId":"node.figma","outcome":"pass","step":7}
+{"action":"type","detail":"fill \"https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931/Sample-File\" in css=[data-test-id=\"figma-embed-modal-url\"]","entryId":"node.figma","outcome":"pass","step":8}
+{"action":"network-request","detail":"GET https://www.figma.com/embed?embed_host=lexical&url=%20%20%20%20%20%20%20%20https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931","entryId":"node.figma","outcome":"pass","step":9}
+{"action":"click","detail":"css=[data-test-id=\"figma-embed-modal-submit-btn\"]","entryId":"node.figma","outcome":"pass","step":10}
+{"action":"expect-selector","detail":"css=iframe[src*=\"figma.com/embed\"] is visible","entryId":"node.figma","outcome":"pass","step":11}
+{"action":"screenshot","detail":"activation-path-1","entryId":"node.figma","outcome":"pass","step":12}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":13}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":14}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":15}
+{"action":"type","detail":"insert \"/\" in css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":16}
+{"action":"click","detail":"role=option name=\"Embed Figma Document\"","entryId":"node.figma","outcome":"pass","step":17}
+{"action":"type","detail":"fill \"https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931/Sample-File\" in css=[data-test-id=\"figma-embed-modal-url\"]","entryId":"node.figma","outcome":"pass","step":18}
+{"action":"network-request","detail":"GET https://www.figma.com/embed?embed_host=lexical&url=%20%20%20%20%20%20%20%20https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931","entryId":"node.figma","outcome":"pass","step":19}
+{"action":"click","detail":"css=[data-test-id=\"figma-embed-modal-submit-btn\"]","entryId":"node.figma","outcome":"pass","step":20}
+{"action":"expect-selector","detail":"css=iframe[src*=\"figma.com/embed\"] is visible","entryId":"node.figma","outcome":"pass","step":21}
+{"action":"screenshot","detail":"activation-path-2","entryId":"node.figma","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":23}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":24}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":25}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root text/plain","entryId":"node.figma","outcome":"pass","step":26}
+{"action":"expect-selector","detail":"role=option name=\"Embed Figma Document\" is visible","entryId":"node.figma","outcome":"pass","step":27}
+{"action":"network-request","detail":"GET https://www.figma.com/embed?embed_host=lexical&url=%20%20%20%20%20%20%20%20https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931","entryId":"node.figma","outcome":"pass","step":28}
+{"action":"click","detail":"role=option name=\"Embed Figma Document\"","entryId":"node.figma","outcome":"pass","step":29}
+{"action":"expect-selector","detail":"css=iframe[src*=\"figma.com/embed\"] is visible","entryId":"node.figma","outcome":"pass","step":30}
+{"action":"screenshot","detail":"activation-path-3","entryId":"node.figma","outcome":"pass","step":31}
+{"action":"network-request","detail":"GET https://www.figma.com/embed/interstitial?embed_host=lexical&embed_path=%2Ffile%2FLKQ4FJ4bTnCSjedbRpk931%3Fembed_host%3Dlexical%26kind%3Dfile%26page-selector%3D0%26viewer%3D1&theme&version=1","entryId":"node.figma","outcome":"pass","step":32}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":33}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":34}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":35}
+{"action":"network-request","detail":"GET https://www.figma.com/embed?embed_host=lexical&url=%20%20%20%20%20%20%20%20https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931","entryId":"node.figma","outcome":"pass","step":36}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"node.figma","outcome":"pass","step":37}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"node.figma","outcome":"pass","step":38}
+{"action":"set-viewport","detail":"480x900","entryId":"node.figma","outcome":"pass","step":39}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.figma","outcome":"pass","step":40}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"node.figma","outcome":"pass","step":41}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":42}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.figma","outcome":"pass","step":43}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.figma","outcome":"pass","step":44}
+{"action":"network-summary","detail":"authorized-provider: 5 capability request(s); 3 baseline egress request(s)","entryId":"node.figma","outcome":"pass","step":45}

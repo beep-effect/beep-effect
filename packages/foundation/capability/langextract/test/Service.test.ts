@@ -116,6 +116,7 @@ describe("LangExtractService", () => {
         expect(result.extractions).toHaveLength(2);
         expect(result.diagnostics.alignedCount).toBe(2);
         expect(result.annotatedDocument.entities).toHaveLength(2);
+        expect(result.annotatedDocument.mentions).toHaveLength(2);
         expect(result.annotatedDocument.chunks[0]?.span.end).toBe(Str.length("Alice founded Acme."));
       })
     );

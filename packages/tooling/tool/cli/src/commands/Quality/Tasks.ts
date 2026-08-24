@@ -47,6 +47,7 @@ import {
   turboCacheEnvironmentNeedsSecretSession,
   turboCachePlanArgs,
   turboCachePlanNeedsSecretSession,
+  turboCachePullRequestPosture,
 } from "../../internal/cli/TurboCache.ts";
 import {
   CapturedStep,
@@ -63,7 +64,7 @@ import {
   compareCoverageRegressionBaseline,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
-import { CoverageScopeOwner, planCoverageAffectedScope, planCoverageFullShards } from "./internal/CoverageScope.ts";
+import { planCoverageFullShards, planWorkspaceCoverageAffectedScope } from "./internal/CoverageScope.ts";
 import {
   detectNoLocationTs2589Flake,
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
@@ -149,6 +150,7 @@ const COVERAGE_SCOPED_BASELINE_VITEST_ARGS = [
   COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG,
 ] as const;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
+const COVERAGE_REPLACE_ALL_ARG = "--replace-all";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
 // Full root lint runs the aggregate Turbo graph plus repo policy tools. Keep
@@ -223,6 +225,7 @@ type RootAuditSelectionState = {
 type CoverageTaskOptions = {
   readonly args: ReadonlyArray<string>;
   readonly expectedPackageNames: ReadonlyArray<string>;
+  readonly replaceAll: boolean;
   readonly scoped: boolean;
   readonly skip: boolean;
   readonly writeBaseline: boolean;
@@ -550,11 +553,12 @@ const isExplicitTurboAffectedOrScopeArg = (arg: string): boolean =>
   arg === "--affected" || isExplicitTurboScopeArg(arg);
 
 const isCoverageWriteBaselineArg = (arg: string): boolean => arg === COVERAGE_WRITE_BASELINE_ARG;
+const isCoverageReplaceAllArg = (arg: string): boolean => arg === COVERAGE_REPLACE_ALL_ARG;
 
 const isCoveragePassthroughDelimiter = (arg: string): boolean => arg === "--";
 
 const stripCoverageControlArgs: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
-  (arg) => !isCoverageWriteBaselineArg(arg) && !isCoveragePassthroughDelimiter(arg)
+  (arg) => !isCoverageWriteBaselineArg(arg) && !isCoverageReplaceAllArg(arg) && !isCoveragePassthroughDelimiter(arg)
 );
 
 const coverageTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
@@ -571,6 +575,7 @@ const parseCoverageTaskOptions = (args: ReadonlyArray<string>): CoverageTaskOpti
   return {
     args: coverageTurboArgs(stripped),
     expectedPackageNames: A.empty<string>(),
+    replaceAll: A.some(stripped, isCoverageReplaceAllArg),
     scoped: A.some(stripped, isExplicitTurboAffectedOrScopeArg),
     skip: false,
     writeBaseline: A.some(stripped, isCoverageWriteBaselineArg),
@@ -584,6 +589,7 @@ const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray
 
 const isCoverageFullOwnedBooleanArg = (arg: string): boolean =>
   arg === COVERAGE_WRITE_BASELINE_ARG ||
+  arg === COVERAGE_REPLACE_ALL_ARG ||
   arg === "--only" ||
   Str.startsWith("--only=")(arg) ||
   arg === "--summarize" ||
@@ -626,6 +632,16 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   args: ReadonlyArray<string>
 ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const parsed = parseCoverageTaskOptions(args);
+  if (parsed.replaceAll && parsed.scoped) {
+    return yield* QualityTaskConfigurationError.new(
+      `${COVERAGE_REPLACE_ALL_ARG} only applies to an unscoped ${COVERAGE_WRITE_BASELINE_ARG} run.`
+    );
+  }
+  if (parsed.replaceAll && !parsed.writeBaseline) {
+    return yield* QualityTaskConfigurationError.new(
+      `${COVERAGE_REPLACE_ALL_ARG} requires ${COVERAGE_WRITE_BASELINE_ARG}; it only controls coverage baseline replacement.`
+    );
+  }
   if (!A.some(args, isCoverageAffectedArg)) {
     return parsed;
   }
@@ -646,16 +662,7 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
     QualityTaskConfigurationError.mapError(`Failed to collect affected coverage files from ${base}...HEAD.`)
   );
-  const path = yield* Path.Path;
-  const owners = yield* workspaceTaskOwners(repoRoot);
-  const scopeOwners = A.map(owners, (owner) =>
-    CoverageScopeOwner.make({
-      hasCoverage: ownerDefinesScript("coverage")(owner),
-      packageName: owner.packageName,
-      packagePath: pipe(path.relative(repoRoot, owner.packageDir), Str.replace(/\\/gu, "/")),
-    })
-  );
-  const scope = planCoverageAffectedScope(scopeOwners, changedFiles);
+  const scope = yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles);
   const passthroughArgs = withoutCoverageAffectedArg(args);
 
   return yield* Match.value(scope).pipe(
@@ -669,6 +676,7 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
           Effect.as({
             args: coverageTurboArgs([...passthroughArgs, ...A.map(packageNames, (name) => `--filter=${name}`)]),
             expectedPackageNames: packageNames,
+            replaceAll: parsed.replaceAll,
             scoped: true,
             skip: false,
             writeBaseline: parsed.writeBaseline,
@@ -678,6 +686,7 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
         Effect.succeed({
           args: A.empty<string>(),
           expectedPackageNames: A.empty<string>(),
+          replaceAll: parsed.replaceAll,
           scoped: true,
           skip: true,
           writeBaseline: parsed.writeBaseline,
@@ -685,6 +694,29 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
     })
   );
 });
+
+/**
+ * Validate root coverage arguments through the runtime option resolver.
+ *
+ * **Example** (Build a validation effect)
+ *
+ * ```ts
+ * import { validateCoverageTaskArgsForTesting } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(validateCoverageTaskArgsForTesting("/repo", ["--write-baseline"]))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root used if affected scope requires workspace discovery.
+ * @param args - Root coverage passthrough arguments to validate.
+ * @category testing
+ * @since 0.0.0
+ */
+export const validateCoverageTaskArgsForTesting = Effect.fn("QualityTasks.validateCoverageTaskArgsForTesting")(
+  function* (repoRoot: string, args: ReadonlyArray<string>) {
+    yield* resolveCoverageTaskOptions(repoRoot, args);
+  }
+);
 
 const isLintFixAggregateArg = (arg: string): boolean => A.some(LINT_FIX_AGGREGATE_ARGS, (name) => name === arg);
 
@@ -787,13 +819,23 @@ const splitAtTurboPassthrough = (
     })
   );
 
+// Coverage children receive the pull-request posture in their environment,
+// but a generated `--cache=local:rw,remote:r` argument outranks TURBO_CACHE and
+// would have turbo read a remote cache whose credentials that posture just
+// scrubbed. Downgrade the generated plan to local-only for coverage runs; a
+// caller-owned cache argument stays caller-owned (standards/turbo-remote-cache.md).
+const turboCacheArgsFor = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  includesTurboCoverageTask(tasks, args)
+    ? localOnlyTurboCacheArgs(localTurboCacheArgs(args))
+    : localTurboCacheArgs(args);
+
 const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => {
   const [optionArgs, passthroughArgs] = splitAtTurboPassthrough(args);
   return [
     "turbo",
     "run",
     ...tasks,
-    ...localTurboCacheArgs(args),
+    ...turboCacheArgsFor(tasks, args),
     ...optionArgs,
     ...labsExcludeFilterArgs(tasks, optionArgs),
     ...passthroughArgs,
@@ -832,8 +874,14 @@ const coverageFastCheckSeed = (): string =>
     O.getOrElse(() => DEFAULT_COVERAGE_FAST_CHECK_SEED)
   );
 
-// Coverage is a hosted ratchet. Pin its CI identity and remove desktop terminal
-// metadata so local baseline generation exercises the same branches as GitHub.
+// Coverage is a hosted ratchet. Pin its CI identity, remove desktop terminal
+// metadata, and reduce the Turbo remote-cache quad to the pull-request posture
+// so local baseline generation, PR jobs, and main pushes all exercise the same
+// branches: a workstation's 1Password-backed TURBO_TOKEN and a main push's
+// literal token each reach arms of internal/cli/EnvConfig.ts that a PR job's
+// blank quad never does (ship-velocity B9). Step env wins over
+// turboEnvOverrides at spawn time, and the prebuild step never receives this
+// record, so main pushes keep their remote-cache reads for the build graph.
 const coverageEnvironment = (): Record<string, string | undefined> => ({
   BEEP_FC_SEED: coverageFastCheckSeed(),
   CI: "true",
@@ -841,6 +889,7 @@ const coverageEnvironment = (): Record<string, string | undefined> => ({
   NODE_OPTIONS: coverageNodeOptions(),
   TERM_PROGRAM: undefined,
   TERM_PROGRAM_VERSION: undefined,
+  ...turboCachePullRequestPosture,
   VITEST_COVERAGE_RATCHET: "1",
 });
 
@@ -2270,7 +2319,9 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   }
 
   if (options.writeBaseline) {
-    yield* writeCoverageRegressionBaseline(repoRoot, options.scoped, options.expectedPackageNames);
+    yield* writeCoverageRegressionBaseline(repoRoot, options.scoped, options.expectedPackageNames, {
+      replaceAll: options.replaceAll,
+    });
     return;
   }
 

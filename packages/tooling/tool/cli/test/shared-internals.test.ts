@@ -15,6 +15,7 @@ Bun.env.BEEP_SI_BOOL_BAD = "maybe";
 import {
   applyJsoncModification,
   booleanEnvValue,
+  canUseTurboCacheSecretSession,
   configStringEqualsSync,
   configStringOption,
   configStringOptionSync,
@@ -34,18 +35,23 @@ import {
   jsonText,
   nextCursor,
   readOptionalConfigString,
+  readOptionalRedactedConfigString,
+  readTurboCacheEnvironment,
   renderSchemaFirstPolicyFindingLine,
   SchemaFirstPolicyFinding,
   SchemaFirstPolicyIssuePrefix,
   SchemaFirstPolicySeverity,
+  TurboCacheEnvironment,
   turboCacheSecretSessionEnvironment,
   turboEnvExtendsAmbient,
   turboEnvOverrides,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Data, Effect, Layer } from "effect";
+import { ConfigProvider, Data, Effect, Layer, Redacted, Ref, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
+import { ChildProcessSpawner } from "effect/unstable/process";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -419,4 +425,114 @@ describe("turboEnvOverrides", () => {
     expect(overridesFor({}, "op", args)).toEqual({ TURBO_UI: "false" });
     expect(turboEnvExtendsAmbient("op", args)).toBe(false);
   });
+});
+
+// Every classification arm is reachable from an explicit record, so the
+// file's measured coverage no longer depends on which Turbo posture the host
+// process happens to carry (ship-velocity B9).
+describe("readTurboCacheEnvironment", () => {
+  const REMOTE_READ = "local:rw,remote:r";
+
+  it("classifies literal values and unresolved references per name", () => {
+    expect(
+      readTurboCacheEnvironment({
+        TURBO_API: "https://cache.example.test",
+        TURBO_TOKEN: "op://fixture-vault/turbo/token",
+        TURBO_TEAM: "team_fixture",
+        TURBO_CACHE: REMOTE_READ,
+      })
+    ).toStrictEqual(
+      TurboCacheEnvironment.make({ api: "literal", token: "secret-reference", team: "literal", cache: REMOTE_READ })
+    );
+  });
+
+  it("treats blank, whitespace, and missing names as absent", () => {
+    expect(
+      readTurboCacheEnvironment({ TURBO_API: "", TURBO_TOKEN: "   ", TURBO_TEAM: undefined, TURBO_CACHE: "" })
+    ).toStrictEqual(TurboCacheEnvironment.make({}));
+    expect(readTurboCacheEnvironment({})).toStrictEqual(TurboCacheEnvironment.make({}));
+  });
+
+  it("trims the cache posture and ignores unrelated names", () => {
+    expect(
+      readTurboCacheEnvironment({ TURBO_CACHE: ` ${REMOTE_READ} `, UNRELATED: "op://fixture-vault/other/value" })
+    ).toStrictEqual(TurboCacheEnvironment.make({ cache: REMOTE_READ }));
+  });
+});
+
+describe("readOptionalRedactedConfigString", () => {
+  it.effect(
+    "wraps a configured value in Redacted and reports a missing key as none",
+    Effect.fnUntraced(function* () {
+      const present = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: "secret" })))(
+        readOptionalRedactedConfigString("TOKEN")
+      );
+      expect(O.map(present, Redacted.value)).toEqual(O.some("secret"));
+
+      const missing = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
+        readOptionalRedactedConfigString("TOKEN")
+      );
+      expect(O.isNone(missing)).toBe(true);
+    })
+  );
+});
+
+describe("canUseTurboCacheSecretSession", () => {
+  const stubHandle = (exitCode: number) =>
+    ChildProcessSpawner.makeHandle({
+      all: Stream.empty,
+      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+      getInputFd: () => Sink.drain,
+      getOutputFd: () => Stream.empty,
+      isRunning: Effect.succeed(false),
+      kill: () => Effect.void,
+      pid: ChildProcessSpawner.ProcessId(1),
+      stderr: Stream.empty,
+      stdin: Sink.drain,
+      stdout: Stream.empty,
+      unref: Effect.succeed(Effect.void),
+    });
+
+  const sessionWith = Effect.fn("sessionWith")(function* (
+    env: Record<string, string>,
+    spawn: Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>
+  ) {
+    const spawned = yield* Ref.make(0);
+    const spawner = ChildProcessSpawner.make(() =>
+      Ref.update(spawned, (count) => count + 1).pipe(Effect.andThen(spawn))
+    );
+    const usable = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(
+      canUseTurboCacheSecretSession("/repo")
+    ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+    return { usable, spawned: yield* Ref.get(spawned) };
+  });
+
+  it.effect(
+    "refuses a session under CI without probing the op CLI",
+    Effect.fnUntraced(function* () {
+      expect(yield* sessionWith({ CI: "true" }, Effect.succeed(stubHandle(0)))).toEqual({
+        usable: false,
+        spawned: 0,
+      });
+    })
+  );
+
+  it.effect(
+    "accepts a session when op whoami exits zero and refuses otherwise",
+    Effect.fnUntraced(function* () {
+      expect(yield* sessionWith({}, Effect.succeed(stubHandle(0)))).toEqual({ usable: true, spawned: 1 });
+      expect(yield* sessionWith({ CI: "false" }, Effect.succeed(stubHandle(1)))).toEqual({
+        usable: false,
+        spawned: 1,
+      });
+    })
+  );
+
+  it.effect(
+    "treats a spawn failure as an unavailable op CLI",
+    Effect.fnUntraced(function* () {
+      const failure = PlatformError.badArgument({ module: "ChildProcess", method: "spawn", description: "ENOENT" });
+      expect(yield* sessionWith({}, Effect.fail(failure))).toEqual({ usable: false, spawned: 1 });
+    })
+  );
 });
