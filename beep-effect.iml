@@ -148,6 +148,9 @@
       <excludeFolder url="file://$MODULE_DIR$/explorations/ontology-curation-governance" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/ontology-lifecycle-qa" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/packet-system-redesign" />
+      <excludeFolder url="file://$MODULE_DIR$/explorations/full-document-editor" />
+      <excludeFolder url="file://$MODULE_DIR$/explorations/oppold-corpus-overhaul" />
+      <excludeFolder url="file://$MODULE_DIR$/explorations/typed-agent-skill-contracts" />
       <excludeFolder url="file://$MODULE_DIR$/tools/skillopt/.venv" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
