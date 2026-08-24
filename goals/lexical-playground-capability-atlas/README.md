@@ -37,10 +37,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research completed on 2026-08-24. The final atlas has 154 `verified-live`
-entries, 14 `verified-source` entries, and 10 `unverified` entries covered by
-user-approved Exception Ledger waivers. The exercise harness has been hermetic
-since PR #793.
+P0 Research is in progress. The entry gate is closed with 152 exercised entries
+and 10 `unverified` entries covered by user-approved Exception Ledger waivers.
+The activation-path gate remains open for 12 user-visible paths on
+`verified-live` entries. The exercise harness has been hermetic since PR #793.
 
 - [`research/capability-atlas.json`](./research/capability-atlas.json) is the
   normative `editor-capability-atlas/v1` artifact.

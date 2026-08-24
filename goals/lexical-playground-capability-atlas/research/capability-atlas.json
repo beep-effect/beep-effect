@@ -4774,7 +4774,7 @@
       },
       "ownership": {
         "ownerPackage": "owning product slice with @beep/editor projection",
-        "targetGoal": "configurable-full-document-editor"
+        "targetGoal": "document-annotation-substrate"
       },
       "registrations": {
         "nodes": ["MarkNode"],
@@ -23989,7 +23989,7 @@
       },
       "ownership": {
         "ownerPackage": "@beep/editor",
-        "targetGoal": "configurable-full-document-editor"
+        "targetGoal": "document-annotation-substrate"
       },
       "registrations": {
         "nodes": [],
@@ -24119,7 +24119,7 @@
         "decisionRefs": ["D1", "D3", "D15", "D16", "D17", "D19"]
       },
       "ownership": {
-        "ownerPackage": "configurable-full-document-editor",
+        "ownerPackage": "@beep/editor",
         "targetGoal": "configurable-full-document-editor"
       },
       "registrations": {
@@ -25042,7 +25042,7 @@
       },
       "ownership": {
         "ownerPackage": "owning product slice with @beep/editor projection",
-        "targetGoal": "configurable-full-document-editor"
+        "targetGoal": "document-annotation-substrate"
       },
       "registrations": {
         "nodes": [],
@@ -25537,7 +25537,7 @@
         "decisionRefs": ["D3", "D14", "D15", "D17"]
       },
       "ownership": {
-        "ownerPackage": "configurable-full-document-editor",
+        "ownerPackage": "owning product slice (authorization/consent policy) + NET-NEW provider driver (drivers family); @beep/editor projection",
         "targetGoal": "configurable-full-document-editor"
       },
       "registrations": {

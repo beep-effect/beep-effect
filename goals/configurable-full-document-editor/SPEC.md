@@ -106,12 +106,8 @@ Goal A's [Exception Ledger](../lexical-playground-capability-atlas/SPEC.md#excep
 records the approved waivers. Goal B must retain each obligation until the
 named proof removes it:
 
-- `comments.threads`: record 480 px comments-panel lifecycle proof with a
-  reachable close control and Export.
-- `node.mark`: record 480 px comments-panel lifecycle proof with a reachable
-  close control and Export.
-- `document.comments-panel`: record 480 px comments-panel lifecycle proof with
-  a reachable close control and Export.
+`comments.threads`, `node.mark`, and `document.comments-panel` are inherited by `document-annotation-substrate` per the Non-Goals route above, not by Goal B.
+
 - `extension.floating-toolbar`: record a keyboard route from the editor into
   the floating toolbar.
 - `transformer.table`: record a flat table from the typed shortcut, or re-ratify

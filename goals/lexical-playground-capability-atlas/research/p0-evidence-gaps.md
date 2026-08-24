@@ -7,7 +7,9 @@ This ledger is the live-interaction remainder for
 unverified: six pinned Playground defects and four capabilities unavailable in
 the pinned Playground. The other 152 exercised entries are `verified-live`.
 
-P0's live-evidence gate is closed by exercise (152) plus 10 user-approved waivers.
+P0's entry gate is closed (152 exercised + 10 approved waivers). The
+activation-path gate is open (12 user-visible paths on `verified-live` entries),
+so P0 remains `in-progress` until those paths are exercised or waived.
 
 ## Remaining unverified entries
 
@@ -24,6 +26,31 @@ P0's live-evidence gate is closed by exercise (152) plus 10 user-approved waiver
 | `transformer.table` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: The regenerated shortcut path still creates a malformed nested table while the importer path is flat. The pinned transformer path is `packages/lexical-playground/src/plugins/MarkdownTransformers/index.ts:203-330`. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.table/01-activation-path-1.png`. |
 | `transformer.tweet` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: The Enter-triggered transformer replaces the selected TextNode without moving selection, reports `updateEditor: selection has been lost` followed by `Point.getNode: node not found`, and unmounts the app because the Playground has no error boundary. Pinned paths: `packages/lexical-playground/src/plugins/MarkdownTransformers/index.ts:184-200` and `packages/lexical-markdown/src/MarkdownShortcuts.ts:75-92`. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.tweet/observations.ndjson`. |
 
+## Activation-path gate
+
+The live audit records 45 activation paths with `evidenceStatus: unverified`.
+The gate is open on these 12 user-visible paths from `verified-live` entries:
+
+| Atlas ID | Surface |
+| --- | --- |
+| `node.image` | `paste-drop` |
+| `node.image` | `importer` |
+| `setting.tree-view` | `settings-panel` |
+| `format.bold` | `markdown-shortcut` |
+| `format.italic` | `markdown-shortcut` |
+| `format.strikethrough` | `markdown-shortcut` |
+| `format.inline-code` | `markdown-shortcut` |
+| `format.semantic-highlight` | `markdown-shortcut` |
+| `extension.history` | `toolbar` |
+| `authoring.autocomplete` | `selection` |
+| `table.column-reorder` | `context-menu` |
+| `document.read-only` | `read-only` |
+
+The remaining 33 paths do not open the live gate. Twenty-two are
+`programmatic`, so source evidence or the P1 resolver tests prove them. Eleven
+are covered at entry level: 10 are on capabilities with approved waivers, and
+`interchange.canonical-json/importer` is on a `verified-source` capability.
+
 ## Approved waivers
 
 The approved owners, rationales, and removal conditions are recorded once in
@@ -32,7 +59,7 @@ the [`SPEC.md` Exception Ledger](../SPEC.md#exception-ledger).
 ## Completion rule
 
 The verifier's exit code proves schema validity, stable-ID reconciliation,
-dependency/path integrity, and the pinned inventory counts. It does not replace
-the live-evidence gate. That gate closed after exercise covered 152 entries and
-the user approved owner-backed Exception Ledger waivers for all 10 remaining
-unverified rows.
+dependency/path integrity, and the pinned inventory counts. With P0
+`in-progress`, it reports an open gate without conflating incomplete evidence
+with an invalid atlas. A `complete` manifest fails verification until both the
+entry gate and activation-path gate are closed.
