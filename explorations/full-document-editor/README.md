@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -15,9 +15,9 @@ foundation into Professional Desktop's document Portal.
 
 ## Next Open Question
 
-None — Goal A graduated. Resume here after
-`goals/lexical-playground-capability-atlas` establishes the atlas and profile
-contract, then evaluate graduation of `configurable-full-document-editor`.
+None. The two promised-now goals are scaffolded. The seven remaining MAP
+candidates stay gated re-entry points; when a gate fires, reopen this
+exploration at `decompose` rather than scaffolding directly from an old row.
 
 ## Read This First
 
@@ -33,3 +33,6 @@ contract, then evaluate graduation of `configurable-full-document-editor`.
 ## Trail
 
 - 2026-08-04: captured the initiative, completed live Chrome and local-source audits, resolved D1-D27 with the user, shaped/decomposed the work, and graduated Goal A into `goals/lexical-playground-capability-atlas`.
+- 2026-08-24: graduated Goal B into `goals/configurable-full-document-editor`;
+  both promised-now goals now exist, so the exploration status flipped to
+  `graduated`. The seven gated MAP candidates remain re-entry points.

@@ -3,11 +3,9 @@
   "exploration": {
     "slug": "typed-agent-skill-contracts",
     "title": "Typed Agent Skill Contracts",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
-    "openQuestions": [
-      "Next wave: when kg-ingestion-contracts (or another MAP.md candidate) is picked up, run its own shape pass before graduating it — the exploration remains the home of waves 2-6."
-    ],
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/skill-contract-kernel"],
@@ -15,6 +13,6 @@
       "supersededBy": null
     },
     "created": "2026-08-10",
-    "updated": "2026-08-13"
+    "updated": "2026-08-24"
   }
 }
