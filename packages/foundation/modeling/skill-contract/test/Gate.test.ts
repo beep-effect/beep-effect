@@ -10,9 +10,11 @@ import {
   GateVerdict,
   makeGateId,
 } from "@beep/skill-contract";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { GateEvaluator } from "@beep/skill-contract";
 
 const ConsumerGateId = makeGateId(LiteralKit(["artifact-exists", "event-exists"]));
@@ -88,6 +90,17 @@ describe("@beep/skill-contract Gate", () => {
       expect(mismatch.message).toContain("denied");
     })
   );
+
+  it("round-trips schema-derived arbitrary gate declarations", () =>
+    fc.assert(
+      fc.property(S.toArbitrary(GateDeclaration)(fc), (candidate) => {
+        const encoded = Result.getOrThrow(S.encodeUnknownResult(GateDeclaration)(candidate));
+        const decoded = Result.getOrThrow(S.decodeResult(GateDeclaration)(encoded));
+
+        expect(S.toEquivalence(GateDeclaration)(decoded, candidate)).toBe(true);
+      }),
+      fcRuns(25)
+    ));
 
   it("supports curried audit and verdict schema factories", () => {
     const Detail = S.Struct({ paths: S.Array(S.String) });
