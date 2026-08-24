@@ -114,3 +114,15 @@ first-class output). Public repo: paths relative, no secrets, no session ids.
 - **Prevention:** create detached verification worktrees from a stable Git
   common directory, or pass Semgrep a validated repository path instead of a
   worktree metadata path that can disappear during preflight cleanup.
+
+## 2026-08-23 — captured child watchdog started after the missing event
+
+- **Doing:** closing PR 764 after `Lint Policy` twice consumed its full hosted
+  50-minute timeout.
+- **Evidence:** both failed jobs logged 25 of 26 policy steps complete;
+  `lint:native-runtime` never returned, and runner cleanup killed six nested
+  Bun processes. `runCaptured` bounded a pipe only after the direct child's
+  `exitCode`, so a wrapper whose exit signal never arrived had no deadline.
+- **Prevention:** invoke repo CLI policy children without the package-script
+  wrapper, ignore stdin for noninteractive capture, and bound the full child
+  lifetime with explicit process-group cleanup before the workflow timeout.

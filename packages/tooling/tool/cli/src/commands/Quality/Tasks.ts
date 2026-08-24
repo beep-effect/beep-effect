@@ -6,6 +6,7 @@
  */
 
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
+import { PosInt } from "@beep/schema/Int";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import {
@@ -46,6 +47,7 @@ import {
   turboCachePlanNeedsSecretSession,
 } from "../../internal/cli/TurboCache.ts";
 import {
+  CapturedStep,
   formatCommandLine,
   QualityTaskStep,
   qualityStepOutputBound,
@@ -88,6 +90,7 @@ import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
 import type {
   GithubCheckFailurePolicy,
@@ -159,6 +162,20 @@ const ROOT_LINT_STEP_CONCURRENCY = 3;
 // (deprecated shards ~12-16 GiB, docgen, semantic-delta) fits; evidence:
 // goals/lint-policy-single-digit (P1 hosted profile + closeout).
 const LINT_POLICY_STEP_CONCURRENCY = 3;
+// A single lost child-exit signal must fail with the command name while the
+// workflow still has time to report and clean up. The longest healthy policy
+// child is under eight minutes on the hosted heavy runner.
+const QUALITY_CAPTURE_TIMEOUT_MILLIS = PosInt.make(Duration.toMillis("15 minutes"));
+const QUALITY_CAPTURE_FORCE_KILL_AFTER: Duration.Input = "5 seconds";
+const QUALITY_CAPTURE_TIMEOUT_EXIT_CODE = 124;
+const REPO_CLI_ENTRY_PATH = "packages/tooling/tool/cli/src/bin.ts";
+
+const capturedTimeoutResult = (error: CaptureCommandTimedOutError): CapturedStep =>
+  CapturedStep.make({
+    exitCode: QUALITY_CAPTURE_TIMEOUT_EXIT_CODE,
+    output: error.message,
+    truncated: false,
+  });
 
 type QualityTaskEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 
@@ -903,6 +920,7 @@ const sqlIntegrationConnectionUriFromEnv = (env: Record<string, string | undefin
 const carriedStepProps = (step: QualityTaskStep) => ({
   ...optionalProp("env", O.fromUndefinedOr(step.env)),
   ...optionalProp("flakeQuarantine", O.fromUndefinedOr(step.flakeQuarantine)),
+  ...optionalProp("captureTimeoutMillis", O.fromUndefinedOr(step.captureTimeoutMillis)),
 });
 
 // A spawn that is not wrapped in `op run` sees the credentials exactly as this
@@ -1055,7 +1073,10 @@ const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQ
     source: "all",
     bound: flakeQuarantineOutputBound,
     tee: true,
-  }).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`));
+  }).pipe(
+    Effect.catchTag("CaptureCommandTimedOutError", (error) => Effect.succeed(capturedTimeoutResult(error))),
+    QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`)
+  );
 
   return {
     exitCode: result.exitCode,
@@ -1373,6 +1394,7 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
 ): Effect.fn.Return<QualityTaskStepOutput, QualityTaskConfigurationError, ChildProcessSpawner.ChildProcessSpawner> {
   const command = commandText(step.command, step.args);
   const envOverrides = yield* turboEnvOverrides(step.command, step.args);
+  const captureTimeout = step.captureTimeoutMillis;
   const result = yield* runCaptured({
     command: step.command,
     args: step.args,
@@ -1382,11 +1404,19 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
       ...(step.env ?? {}),
     },
     extendEnv: true,
-    stdin: "inherit",
     source: "all",
     bound: qualityStepOutputBound,
     trim: true,
-  }).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`));
+    ...(P.isUndefined(captureTimeout)
+      ? {}
+      : {
+          forceKillAfter: QUALITY_CAPTURE_FORCE_KILL_AFTER,
+          timeout: captureTimeout,
+        }),
+  }).pipe(
+    Effect.catchTag("CaptureCommandTimedOutError", (error) => Effect.succeed(capturedTimeoutResult(error))),
+    QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`)
+  );
 
   return {
     command,
@@ -1526,7 +1556,7 @@ const bunxStep = (cwd: string, label: string, args: ReadonlyArray<string>) =>
   });
 
 const repoCliStep = (cwd: string, label: string, args: ReadonlyArray<string>) =>
-  bunRunStep(cwd, label, ["beep", ...args]);
+  bunRunStep(cwd, label, [REPO_CLI_ENTRY_PATH, "--", ...args]);
 
 type SqlIntegrationChildCommand = {
   readonly args: ReadonlyArray<string>;
@@ -1832,55 +1862,63 @@ const scopedLawStep = (
 ): ReadonlyArray<QualityTaskStep> =>
   scopedRepoCliStep(repoRoot, label, ["laws", command, ...args], isLawSourcePath, files);
 
-const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> => [
-  // Static LPT order from research/00-evidence-brief.md (run 31683014887):
-  // deprecated-apis 975199ms, docgen 197298ms, semantic-delta 78127ms,
-  // schema-first 51162ms, then every remaining step in descending measured duration.
-  repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
-  repoCliStep(repoRoot, "lint:docgen", ["docgen", "check", "--reuse-proof-manifest"]),
-  // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
-  // introduced by this branch and lets the corpus keep its inherited ones.
-  repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
-  // Whole-tree census with a zero-tolerance gate on live host-path classes; never file-scoped
-  // because any tracked document can introduce a machine-local reference.
-  repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
-  repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
-  ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
-  bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),
-  ...scopedLawStep(repoRoot, "lint:native-runtime", "native-runtime", ["--check"], files),
-  repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
-  ...scopedLawStep(repoRoot, "lint:frozen-grant-set", "frozen-grant-set", ["--check"], files),
-  repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
-  ...scopedLawStep(repoRoot, "lint:effect-fn", "effect-fn", ["--check"], files),
-  ...scopedRepoCliStep(
-    repoRoot,
-    "lint:package-test-imports",
-    ["lint", "package-test-imports"],
-    isPackageTestImportPath,
-    files
-  ),
-  ...scopedLawStep(repoRoot, "lint:effect-imports", "effect-imports", ["--check"], files),
-  repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
-  repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
-  // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
-  // backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
-  bunxStep(repoRoot, "lint:oxlint", ["oxlint", "--quiet"]),
-  ...scopedRepoCliStep(
-    repoRoot,
-    "lint:ecosystem-polarity",
-    ["lint", "ecosystem-polarity"],
-    isEcosystemPolarityPath,
-    files
-  ),
-  repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
-  repoCliStep(repoRoot, "lint:jsdoc-module-tags", ["quality", "jsdoc-module-tags"]),
-  repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
-  repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
-  repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
-  repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
-  repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
-  bunxStep(repoRoot, "lint:typos", ["typos"]),
-];
+const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> =>
+  A.map(
+    [
+      // Static LPT order from research/00-evidence-brief.md (run 31683014887):
+      // deprecated-apis 975199ms, docgen 197298ms, semantic-delta 78127ms,
+      // schema-first 51162ms, then every remaining step in descending measured duration.
+      repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
+      repoCliStep(repoRoot, "lint:docgen", ["docgen", "check", "--reuse-proof-manifest"]),
+      // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
+      // introduced by this branch and lets the corpus keep its inherited ones.
+      repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
+      // Whole-tree census with a zero-tolerance gate on live host-path classes; never file-scoped
+      // because any tracked document can introduce a machine-local reference.
+      repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
+      repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
+      ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
+      bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),
+      ...scopedLawStep(repoRoot, "lint:native-runtime", "native-runtime", ["--check"], files),
+      repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
+      ...scopedLawStep(repoRoot, "lint:frozen-grant-set", "frozen-grant-set", ["--check"], files),
+      repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
+      ...scopedLawStep(repoRoot, "lint:effect-fn", "effect-fn", ["--check"], files),
+      ...scopedRepoCliStep(
+        repoRoot,
+        "lint:package-test-imports",
+        ["lint", "package-test-imports"],
+        isPackageTestImportPath,
+        files
+      ),
+      ...scopedLawStep(repoRoot, "lint:effect-imports", "effect-imports", ["--check"], files),
+      repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
+      repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
+      // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
+      // backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
+      bunxStep(repoRoot, "lint:oxlint", ["oxlint", "--quiet"]),
+      ...scopedRepoCliStep(
+        repoRoot,
+        "lint:ecosystem-polarity",
+        ["lint", "ecosystem-polarity"],
+        isEcosystemPolarityPath,
+        files
+      ),
+      repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
+      repoCliStep(repoRoot, "lint:jsdoc-module-tags", ["quality", "jsdoc-module-tags"]),
+      repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
+      repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
+      repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
+      repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
+      repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
+      bunxStep(repoRoot, "lint:typos", ["typos"]),
+    ],
+    (step) =>
+      QualityTaskStep.make({
+        ...step,
+        captureTimeoutMillis: QUALITY_CAPTURE_TIMEOUT_MILLIS,
+      })
+  );
 
 /**
  * Build the repo-wide root lint policy subprocess steps.
