@@ -23,14 +23,36 @@ DECISIONS §spine track: the kernel is the dependency of every other wave, the A
 research findings land in it, and it has immediate in-repo consumers. Waves 2–6 are ordered by
 product pull (KG work feeds the legal/patent bet), retrofit concreteness (yeet, qa), then
 greenfield surface (protocols last — least consumer pull until kernel evidence types exist).
-Waves 2–6 graduate only after their own shape passes the definition-of-ready; the exploration
-packet stays `active` as their home.
+Waves 2–6 graduate only after their own shape passes the definition-of-ready; picking one up
+reopens this `graduated` packet at `decompose` for that shape pass (graduation contract;
+DECISIONS 2026-08-24 §status flip).
 
 **Track → candidate mapping** (the locked decision names five *tracks*; this map yields six
 *goal candidates* because the contract-kernel track spawns a second, consumer-retrofit goal):
 contract kernel → #1 (spine) **and** #3 (its evidence-ladder/recovery retrofit onto yeet);
 KG ingestion+eval → #2; query/browser ops → #4; memory routing → #5; fleet protocol surface →
 #6. DECISIONS §spine track carries the same mapping note.
+
+## Cross-packet coordination: protocol-as-value (2026-08-24)
+
+[`explorations/protocol-as-value`](../protocol-as-value/README.md) (at `shape`, no MAP yet)
+proposes a journal/register/fold substrate with canonical encoding and versioned digests that
+overlaps several waves here. Re-check this section when that packet reaches decompose:
+
+- **Wave 2 (kg-ingestion-contracts):** its manifest/state-machine/evidence-ledger/PROV-O work
+  should consume that substrate or declare a compatibility seam, not re-derive it.
+- **Wave 3 (ops-evidence-ladder):** the yeet lane is one of the journal/register instances the
+  protocol brief wants to collapse — avoid a second audit/register vocabulary.
+- **Wave 4 (browser-lease-capabilities):** reuse its fenced-register/refusal-value types if
+  they land first.
+- **Wave 6 (fleet-protocol-contracts):** strongest interaction — clients, credential chains,
+  and OAuth/PKCE stay in wave 6; the transport-neutral global protocol value, per-role
+  projections, and conformance folds belong to the protocol kit. Their future MAPs need an
+  explicit dependency or handshake; fleet messaging is a named first consumer on the
+  protocol side.
+- **Kernel receipts (goal 1):** digest-bound subjects use today's digest types with an
+  explicit migration seam to the proposed canonical-encoding substrate — no competing
+  canonical encoding (DECISIONS 2026-08-24 §digest seam).
 
 ## First vertical slice (inside goal 1)
 
@@ -54,7 +76,7 @@ explicitly NET-NEW. Verdicts from [`research/inventory/`](./research/inventory/)
 | Receipt-vs-capability split (opaque constructor) | EXISTS | `@beep/provenance` `VerifiedTextAnchor` — same §5 |
 | Verdict-as-value precedent | EXISTS | `@beep/mcp-kit` `TierGateVerdict`, `@beep/epistemic-use-cases` `ClaimGateResult` — same §5, [protocol-query-memory.md §2](./research/inventory/protocol-query-memory.md) |
 | Retrofit target schemas + evidence cross-checks | EXISTS | `@beep/repo-cli` `Inventory.schemas.ts`, `JudgeCheck.ts` — contract-kernel-evidence.md §4 |
-| Markdown document model for the projection | EXISTS | `@beep/md` (render-as-encode; parked idea now activated) |
+| Markdown document model for the projection | EXISTS | `@beep/md` (`render`/`renderUnsafe` one-way rendering; the deprecated `DocumentToMarkdown` `S.encode` path is not the target — DECISIONS 2026-08-24) |
 | `SkillContract` aggregate root | NET-NEW | contract-kernel-evidence.md verdict table, port 1 |
 | Evidence-ladder ADT + terminal union | NET-NEW | same, port 2 |
 | In-toto-aligned receipt family (`EvidenceReceipt`/`FailureReceipt`/`GateSummary`) | NET-NEW (vocabulary from in-toto/SLSA) | same, ports 1/4; [workflow-evidence-frameworks.md §6](./research/landscape/workflow-evidence-frameworks.md) |

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "configurable-full-document-editor",
+    "title": "Configurable Full Document Editor",
+    "status": "paused",
+    "created": "2026-08-24",
+    "updated": "2026-08-24",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/configurable-full-document-editor",
+  "lifecycle": "paused",
+  "statusNote": "Paused at scaffold: authored-but-not-started; resume when goals/lexical-playground-capability-atlas satisfies its completion gate and delivers the ratified atlas/profile contract.",
+  "mission": "Implement every production-eligible single-user Playground document semantic, authoring mechanic, and projection in semantic batches behind the ratified registry.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/full-document-editor",
+    "graduated": "2026-08-24"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "explorations/full-document-editor/DECISIONS.md",
+    "goals/lexical-playground-capability-atlas/SPEC.md",
+    "goals/configurable-full-document-editor/README.md",
+    "goals/configurable-full-document-editor/SPEC.md",
+    "goals/configurable-full-document-editor/PLAN.md",
+    "goals/configurable-full-document-editor/GOAL.md",
+    "goals/configurable-full-document-editor/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/configurable-full-document-editor/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/configurable-full-document-editor/GOAL.md)\" -le 4000",
+    "jq . goals/configurable-full-document-editor/ops/manifest.json",
+    "rg -n \"configurable-full-document-editor|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/configurable-full-document-editor",
+    "git diff --check -- goals/configurable-full-document-editor explorations/full-document-editor",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "Goal A has not satisfied its completion gate or has not delivered the ratified atlas/profile contract; Goal B must remain paused.",
+    "A requested batch crosses into one of the seven gated successor goals or another surface outside the ratified D13 scope.",
+    "A proposed schema, codec, or migration would replace @beep/md as document authority, conflate distinct semantics, or silently lose supported content.",
+    "Opening content would add remote egress, executable payloads, or new auth/security behavior without a separately approved boundary.",
+    "Existing documents or consumers need an irreversible or lossy migration without a versioned compatibility plan, fixtures, rollback, and user approval.",
+    "Required focused verification or browser QA cannot run, or an introduced failure cannot be separated from inherited or unrelated failures."
+  ]
+}

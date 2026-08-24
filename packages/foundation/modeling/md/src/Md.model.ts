@@ -16,6 +16,18 @@ const $I = $MdId.create("Md.model");
 const codeFenceLanguagePattern = /^[A-Za-z0-9][A-Za-z0-9_+.-]*$/u;
 const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
 const footnoteIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u;
+// This check never rejects a document. Effect's arbitrary compiler alone reads
+// the maxLength hint, keeping recursive child-list breadth bounded.
+const MarkdownArbitraryArraySizeHint = S.makeFilter<ReadonlyArray<unknown>>(() => true, {
+  identifier: $I`MarkdownArbitraryArraySizeHint`,
+  title: "Markdown arbitrary array size hint",
+  description: "Caps derived arbitrary child arrays at two elements without constraining decoded Markdown documents.",
+  arbitrary: {
+    constraint: {
+      maxLength: 2,
+    },
+  },
+});
 
 /**
  * Single safe Markdown fenced-code info-string token.
@@ -290,11 +302,13 @@ export type EmbedKind = typeof EmbedKind.Type;
  * @category models
  * @since 0.0.0
  */
-export const InlineChildren = S.Array(S.suspend((): S.Codec<Inline.Type, Inline.Encoded> => Inline)).pipe(
-  $I.annoteSchema("InlineChildren", {
-    description: "Recursive inline children used by Markdown inline container nodes.",
-  })
-);
+export const InlineChildren = S.Array(S.suspend((): S.Codec<Inline.Type, Inline.Encoded> => Inline))
+  .check(MarkdownArbitraryArraySizeHint)
+  .pipe(
+    $I.annoteSchema("InlineChildren", {
+      description: "Recursive inline children used by Markdown inline container nodes.",
+    })
+  );
 
 /**
  * Type for {@link InlineChildren}.
@@ -1192,11 +1206,13 @@ export declare namespace Inline {
  * @category models
  * @since 0.0.0
  */
-export const BlockChildren = S.Array(S.suspend((): S.Codec<Block.Type, Block.Encoded> => Block)).pipe(
-  $I.annoteSchema("BlockChildren", {
-    description: "Recursive block children used by Markdown block container nodes.",
-  })
-);
+export const BlockChildren = S.Array(S.suspend((): S.Codec<Block.Type, Block.Encoded> => Block))
+  .check(MarkdownArbitraryArraySizeHint)
+  .pipe(
+    $I.annoteSchema("BlockChildren", {
+      description: "Recursive block children used by Markdown block container nodes.",
+    })
+  );
 
 /**
  * Type for {@link BlockChildren}.
@@ -1334,11 +1350,13 @@ export declare namespace ListItemChild {
  * @category models
  * @since 0.0.0
  */
-export const ListItemChildren = S.Array(ListItemChild).pipe(
-  $I.annoteSchema("ListItemChildren", {
-    description: "Inline and block children rendered inside a Markdown list item.",
-  })
-);
+export const ListItemChildren = S.Array(ListItemChild)
+  .check(MarkdownArbitraryArraySizeHint)
+  .pipe(
+    $I.annoteSchema("ListItemChildren", {
+      description: "Inline and block children rendered inside a Markdown list item.",
+    })
+  );
 
 /**
  * Type for {@link ListItemChildren}.
@@ -1637,11 +1655,13 @@ export declare namespace Li {
  * @category models
  * @since 0.0.0
  */
-export const ListChildren = S.Array(Li).pipe(
-  $I.annoteSchema("ListChildren", {
-    description: "List item nodes used by ordered and unordered list blocks.",
-  })
-);
+export const ListChildren = S.Array(Li)
+  .check(MarkdownArbitraryArraySizeHint)
+  .pipe(
+    $I.annoteSchema("ListChildren", {
+      description: "List item nodes used by ordered and unordered list blocks.",
+    })
+  );
 
 /**
  * Type for {@link ListChildren}.
@@ -1945,11 +1965,13 @@ export type TaskListItemSpec = typeof TaskListItemSpec.Type;
  * @category models
  * @since 0.0.0
  */
-export const TaskItemChildren = S.Array(TaskItem).pipe(
-  $I.annoteSchema("TaskItemChildren", {
-    description: "Task item children used by GFM task list blocks.",
-  })
-);
+export const TaskItemChildren = S.Array(TaskItem)
+  .check(MarkdownArbitraryArraySizeHint)
+  .pipe(
+    $I.annoteSchema("TaskItemChildren", {
+      description: "Task item children used by GFM task list blocks.",
+    })
+  );
 
 /**
  * Type for {@link TaskItemChildren}.

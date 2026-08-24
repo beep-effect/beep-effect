@@ -20,7 +20,6 @@ const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation)(fc);
 const TikaErrorReasonArbitrary = S.toArbitrary(TikaErrorReason)(fc);
 const TikaErrorOptionsArbitrary = S.toArbitrary(TikaErrorOptions)(fc);
 const TikaErrorArbitrary = S.toArbitrary(TikaError)(fc);
-const sameTikaErrorFields = S.toEquivalence(S.Struct(TikaError.fields));
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExtractFileOperation = S.encodeEffect(ExtractFileOperation);
@@ -32,16 +31,12 @@ const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: C
 const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
   Result.getOrThrow(S.decodeUnknownResult(schema)(value));
 
-const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
-  schema: Codec,
-  value: Codec["Type"],
-  equivalence: (self: Codec["Type"], that: Codec["Type"]) => boolean = S.toEquivalence(schema)
-): void => {
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
   const encoded = encode(schema, value);
   const decoded = decode(schema, encoded);
 
   expect(encode(schema, decoded)).toEqual(encoded);
-  expect(equivalence(decoded, value)).toBe(true);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 };
 
 const fixtureIds = Effect.all({
@@ -120,7 +115,7 @@ describe("@beep/tika", () => {
 
           expectRoundTrip(TikaErrorReason, errorReason);
           expectRoundTrip(TikaErrorOptions, errorOptions);
-          expectRoundTrip(TikaError, error, sameTikaErrorFields);
+          expectRoundTrip(TikaError, error);
         }
       ),
       fcRuns(25)

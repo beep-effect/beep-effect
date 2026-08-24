@@ -72,7 +72,7 @@ flowchart TD
 | Stage | Artifact | What happens | Exit signal |
 | --- | --- | --- | --- |
 | 0 capture | `CAPTURE.md` | Append-only raw dump: text, links, screenshots. Never interrogated, never reorganized. | The idea has enough mass to be worth grounding. |
-| 1 research | `RESEARCH.md` | Cited prior art + in-repo capability inventory (`standards/repo-exports.catalog.md`, targeted code search, local docs); start `research/SOURCES.md` (the provenance ledger). | The landscape and the existing lego bricks are known. |
+| 1 research | `RESEARCH.md` | Cited prior art + in-repo capability inventory (live source search in `packages/**/src/**`, package barrels at `**/src/index.ts`, local docs); start `research/SOURCES.md` (the provenance ledger). | The landscape and the existing lego bricks are known. |
 | 2 align | `DECISIONS.md` | Grilling dialogue: one branch-closing question at a time, recommended answer first. Every resolution is logged. | Manifest `openQuestions` is empty or explicitly deferred. |
 | 3 shape | `BRIEF.md` | Shape Up pitch: problem, appetite, fat-marker solution sketch, rabbit holes, no-gos. | The human says the brief matches the picture in their head. |
 | 4 decompose | `MAP.md` | Candidate goal packets with sequencing, dependency edges, first vertical slice, capability citations. | Graduation definition-of-ready passes. |
@@ -150,9 +150,9 @@ An exploration may graduate only when all four hold:
    mission one-liner, dependency/sequencing edges, and the chosen first
    vertical slice.
 4. **Capability check** - every major component in `MAP.md` cites an existing
-   repo capability (`standards/repo-exports.catalog.md`, targeted code search,
-   local docs) or is explicitly marked net-new. Compose the lego bricks; do not
-   rebuild them.
+   repo capability (live source search in `packages/**/src/**`, package barrels
+   at `**/src/index.ts`, local docs) or is explicitly marked net-new. Compose
+   the lego bricks; do not rebuild them.
 
 Mechanics, per approved candidate goal:
 
