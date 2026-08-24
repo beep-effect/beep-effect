@@ -2,7 +2,7 @@ encryptionsalt: v1:d1UtUvnQxrA=:v1:wXUDO7YvIR4o36Gt:Wb6zhIDuCMK7/V/y9yw9FswDX7vb
 config:
   ciRunners:amiId: ami-052355af2a014bd2c
   # The base image is pinned, while boot-time dnf upgrade-minimal still applies package security updates on every launch.
-  ciFleetController:amiId: ami-07fb13d84a42d3584
+  ciFleetController:amiId: ami-0738c1b69711969bc
   ciFleetController:githubAppIdSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/github-action-runners/app/github_app_id
   ciFleetController:githubAppKeyBase64SsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/github-action-runners/app/github_app_key_base64
   ciFleetController:githubAppWebhookSecretSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/github-action-runners/app/github_app_webhook_secret

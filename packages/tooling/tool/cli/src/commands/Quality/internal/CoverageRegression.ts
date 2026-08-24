@@ -17,6 +17,7 @@ import {
   Effect,
   FileSystem,
   flow,
+  HashSet,
   Inspectable,
   Match,
   MutableHashMap,
@@ -25,17 +26,23 @@ import {
   pipe,
   Tuple,
 } from "effect";
+import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
 import { enforceRatchet } from "../../../internal/ratchet/index.ts";
+import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
+import { resolveGitCommit, resolveGitMergeBase } from "../../../internal/repo-run/GitExec.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
+import { changedCoverageOwners, planCoverageAffectedScope, workspaceCoverageScopeOwners } from "./CoverageScope.ts";
 import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageRegression");
@@ -445,6 +452,118 @@ export class CoverageSnapshotEntry extends S.Class<CoverageSnapshotEntry>($I`Cov
   },
   $I.annote("CoverageSnapshotEntry", {
     description: "Baseline entry paired with the package it covers.",
+  })
+) {}
+
+/**
+ * Disposition applied to one package row during a baseline write.
+ *
+ * **Example** (Recognize a held row)
+ *
+ * ```ts
+ * import { CoverageBaselineRowDisposition } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(CoverageBaselineRowDisposition.is("held")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CoverageBaselineRowDisposition = LiteralKit(["replaced", "held", "added", "pruned"]).pipe(
+  $I.annoteSchema("CoverageBaselineRowDisposition", {
+    description: "Outcome for one package row while planning a coverage baseline write.",
+  })
+);
+
+/**
+ * Disposition applied to one package row during a baseline write.
+ *
+ * @see {@link CoverageBaselineRowDisposition} for the runtime schema and literal helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CoverageBaselineRowDisposition = typeof CoverageBaselineRowDisposition.Type;
+
+/**
+ * Changed-package adoption set, full-run diagnostics, and comparison-base
+ * label for an unscoped baseline write.
+ *
+ * **Details**
+ *
+ * `packageNames` is the sorted set of coverage owners for every changed file.
+ * `fullReasons` comes from the affected-run planner but does not expand that
+ * adoption set.
+ *
+ * **Gotchas**
+ *
+ * A non-empty `fullReasons` array means the run measured the full workspace;
+ * it does not authorize whole-document replacement. Only `--replace-all`
+ * grants that behavior.
+ *
+ * **Example** (Describe a dirty-only change set)
+ *
+ * ```ts
+ * import { CoverageBaselineChangeSet } from "@beep/repo-cli/test/Quality"
+ *
+ * const changeSet = CoverageBaselineChangeSet.make({
+ *   baseDescription: "dirty worktree only",
+ *   packageNames: [],
+ *   fullReasons: []
+ * })
+ * console.log(changeSet.baseDescription)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageBaselineChangeSet extends S.Class<CoverageBaselineChangeSet>($I`CoverageBaselineChangeSet`)(
+  {
+    baseDescription: S.NonEmptyString,
+    packageNames: S.Array(S.String),
+    fullReasons: S.Array(S.String),
+  },
+  $I.annote("CoverageBaselineChangeSet", {
+    description: "Coverage-row adoption owners, full-run diagnostics, and the Git comparison base used to derive them.",
+  })
+) {}
+
+/**
+ * Complete package rows and per-package outcomes for one baseline write.
+ *
+ * **Details**
+ *
+ * The nested change set records the exact changed-owner adoption set and any
+ * independent reasons the measurement planner selected the full workspace.
+ *
+ * **Gotchas**
+ *
+ * A `replaced` disposition is driven by a changed owner or `--replace-all`,
+ * never merely by a non-empty full-reason list.
+ *
+ * **Example** (Represent an empty first-write plan)
+ *
+ * ```ts
+ * import { CoverageBaselineWritePlan } from "@beep/repo-cli/test/Quality"
+ *
+ * const plan = CoverageBaselineWritePlan.make({
+ *   changeSet: { baseDescription: "dirty worktree only", packageNames: [], fullReasons: [] },
+ *   packages: {},
+ *   dispositions: {}
+ * })
+ * console.log(plan.packages) // {}
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageBaselineWritePlan extends S.Class<CoverageBaselineWritePlan>($I`CoverageBaselineWritePlan`)(
+  {
+    changeSet: CoverageBaselineChangeSet,
+    packages: S.Record(S.String, CoveragePackageBaseline),
+    dispositions: S.Record(S.String, CoverageBaselineRowDisposition),
+  },
+  $I.annote("CoverageBaselineWritePlan", {
+    description: "Coverage baseline package rows to write plus the disposition of every measured or removed package.",
   })
 ) {}
 
@@ -907,6 +1026,131 @@ export const collectCoverageSnapshot = Effect.fn("CoverageRegression.collectCove
 const snapshotPackages = (entries: ReadonlyArray<CoverageSnapshotEntry>): Record<string, CoveragePackageBaseline> =>
   R.fromEntries(A.map(entries, (entry) => [entry.packageName, entry.baseline] as const));
 
+const replaceMeasuredPackage = (
+  packageNames: ReadonlyArray<string>,
+  replaceAll: boolean
+): ((packageName: string) => boolean) => {
+  const changedNames = HashSet.fromIterable(packageNames);
+  return Bool.match(replaceAll, {
+    onTrue: () => () => true,
+    onFalse:
+      () =>
+      (packageName: string): boolean =>
+        HashSet.has(changedNames, packageName),
+  });
+};
+
+/**
+ * Plan an unscoped coverage baseline write without reading files or running Git.
+ *
+ * **Details**
+ *
+ * Measured rows owned by changed files are adopted. Other measured packages
+ * hold committed rows when present and are added when absent. Committed rows
+ * absent from the validated full-workspace snapshot are pruned.
+ *
+ * **Gotchas**
+ *
+ * Full-run reasons describe measurement breadth only and never widen adoption.
+ * `replaceAll` is the sole whole-document replacement path and overrides the
+ * changed-owner set.
+ *
+ * **Example** (Hold an unchanged measured package)
+ *
+ * ```ts
+ * import {
+ *   CoverageBaselineChangeSet,
+ *   CoveragePackageBaseline,
+ *   CoverageSnapshotEntry,
+ *   CoverageUncoveredCounts,
+ *   planCoverageBaselineWrite
+ * } from "@beep/repo-cli/test/Quality"
+ *
+ * const uncovered = CoverageUncoveredCounts.make({ branches: 0, functions: 0, lines: 0, statements: 0 })
+ * const committed = CoveragePackageBaseline.make({
+ *   path: "packages/example", branches: 80, functions: 80, lines: 80, statements: 80,
+ *   uncovered, files: {}
+ * })
+ * const measured = CoveragePackageBaseline.make({ ...committed, lines: 90 })
+ * const changeSet = CoverageBaselineChangeSet.make({
+ *   baseDescription: "dirty worktree only",
+ *   packageNames: [],
+ *   fullReasons: []
+ * })
+ * const plan = planCoverageBaselineWrite(
+ *   { "@beep/example": committed },
+ *   [CoverageSnapshotEntry.make({ packageName: "@beep/example", baseline: measured })],
+ *   changeSet,
+ *   { replaceAll: false }
+ * )
+ * console.log(plan.packages["@beep/example"]?.lines) // 80
+ * ```
+ *
+ * @param previousPackages - Package rows from the committed schema-v2 baseline.
+ * @param entries - Full-workspace package rows measured by the current run.
+ * @param changeSet - Changed-owner adoption set, full-run reasons, and comparison-base provenance.
+ * @param options - Whether to replace every measured row regardless of changed ownership.
+ * @returns Rows to write and one disposition for every measured or pruned package.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const planCoverageBaselineWrite: {
+  (
+    entries: ReadonlyArray<CoverageSnapshotEntry>,
+    changeSet: CoverageBaselineChangeSet,
+    options: { readonly replaceAll: boolean }
+  ): (previousPackages: Record<string, CoveragePackageBaseline>) => CoverageBaselineWritePlan;
+  (
+    previousPackages: Record<string, CoveragePackageBaseline>,
+    entries: ReadonlyArray<CoverageSnapshotEntry>,
+    changeSet: CoverageBaselineChangeSet,
+    options: { readonly replaceAll: boolean }
+  ): CoverageBaselineWritePlan;
+} = dual(
+  4,
+  (
+    previousPackages: Record<string, CoveragePackageBaseline>,
+    entries: ReadonlyArray<CoverageSnapshotEntry>,
+    changeSet: CoverageBaselineChangeSet,
+    options: { readonly replaceAll: boolean }
+  ): CoverageBaselineWritePlan => {
+    const measuredNames = HashSet.fromIterable(A.map(entries, (entry) => entry.packageName));
+    const shouldReplace = replaceMeasuredPackage(changeSet.packageNames, options.replaceAll);
+    const packages = R.empty<string, CoveragePackageBaseline>();
+    const dispositions = R.empty<string, CoverageBaselineRowDisposition>();
+
+    for (const entry of A.sort(entries, packageByNameOrder)) {
+      if (shouldReplace(entry.packageName)) {
+        R.assignProperty(packages, entry.packageName, entry.baseline);
+        R.assignProperty(dispositions, entry.packageName, CoverageBaselineRowDisposition.Enum.replaced);
+        continue;
+      }
+
+      pipe(
+        R.get(previousPackages, entry.packageName),
+        O.match({
+          onNone: () => {
+            R.assignProperty(packages, entry.packageName, entry.baseline);
+            R.assignProperty(dispositions, entry.packageName, CoverageBaselineRowDisposition.Enum.added);
+          },
+          onSome: (committed) => {
+            R.assignProperty(packages, entry.packageName, committed);
+            R.assignProperty(dispositions, entry.packageName, CoverageBaselineRowDisposition.Enum.held);
+          },
+        })
+      );
+    }
+
+    for (const packageName of A.sort(R.keys(previousPackages), Order.String)) {
+      if (!HashSet.has(measuredNames, packageName)) {
+        R.assignProperty(dispositions, packageName, CoverageBaselineRowDisposition.Enum.pruned);
+      }
+    }
+
+    return CoverageBaselineWritePlan.make({ changeSet, dispositions, packages });
+  }
+);
+
 /**
  * Merge a snapshot over the packages a previous baseline recorded.
  *
@@ -982,18 +1226,157 @@ export const baselineEntriesLostByReplacement: {
     )
 );
 
+const coverageBaselineGitAdapter: GitCommandErrorAdapter<QualityTaskConfigurationError> = {
+  onSpawnFailure: (commandLine) => (cause) =>
+    QualityTaskConfigurationError.new(`Failed to run ${commandLine}: ${Inspectable.toStringUnknown(cause, 0)}`),
+  onNonZeroExit: ({ commandLine, exitCode }) =>
+    QualityTaskConfigurationError.new(`${commandLine} failed with exit code ${exitCode}.`),
+  onTruncated: O.none(),
+};
+
+/**
+ * Remove the generated baseline artifact from the writer's changed-file input.
+ *
+ * **Details**
+ *
+ * The baseline remains a global input for ordinary affected coverage planning.
+ * Only regeneration planning ignores it, so rerunning the writer does not make
+ * its own prior output authorize package-row adoption or a full-reason notice.
+ *
+ * **Example** (Ignore the writer's own output)
+ *
+ * ```ts
+ * import { coverageBaselineWriterChangedFiles } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(
+ *   coverageBaselineWriterChangedFiles([
+ *     "standards/coverage.regression-baseline.jsonc",
+ *     "packages/example/src/Index.ts"
+ *   ])
+ * ) // ["packages/example/src/Index.ts"]
+ * ```
+ *
+ * @param changedFiles - Repository-relative changed paths collected for regeneration planning.
+ * @returns Changed paths excluding the coverage baseline artifact.
+ * @category filtering
+ * @since 0.0.0
+ */
+export const coverageBaselineWriterChangedFiles: (changedFiles: ReadonlyArray<string>) => ReadonlyArray<string> =
+  A.filter((filePath) => !Str.equivalence(filePath, coverageRegressionBaselinePath));
+
+const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
+  "CoverageRegression.coverageBaselineChangeSetFromChangedFiles"
+)(function* (
+  repoRoot: string,
+  changedFiles: ReadonlyArray<string>,
+  baseDescription: string
+): Effect.fn.Return<CoverageBaselineChangeSet, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
+  const writerChangedFiles = coverageBaselineWriterChangedFiles(changedFiles);
+  const owners = yield* workspaceCoverageScopeOwners(repoRoot);
+  const scope = planCoverageAffectedScope(owners, writerChangedFiles);
+  const fullReasons = Match.value(scope).pipe(
+    Match.discriminatorsExhaustive("_tag")({
+      full: ({ reasons }) => reasons,
+      selected: () => A.empty<string>(),
+      noop: () => A.empty<string>(),
+    })
+  );
+
+  return CoverageBaselineChangeSet.make({
+    baseDescription,
+    packageNames: changedCoverageOwners(owners, writerChangedFiles),
+    fullReasons,
+  });
+});
+
+const coverageBaselineChangeSetFromBase = Effect.fn("CoverageRegression.coverageBaselineChangeSetFromBase")(function* (
+  repoRoot: string,
+  base: string,
+  baseDescription: string
+): Effect.fn.Return<
+  CoverageBaselineChangeSet,
+  QualityTaskConfigurationError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
+    QualityTaskConfigurationError.mapError(`Failed to collect coverage baseline files from ${base}...HEAD.`)
+  );
+  return yield* coverageBaselineChangeSetFromChangedFiles(repoRoot, changedFiles, baseDescription);
+});
+
+const originMainMergeBase = Effect.fn("CoverageRegression.originMainMergeBase")(function* (
+  repoRoot: string
+): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const originMain = yield* Effect.option(resolveGitCommit(repoRoot, "origin/main", coverageBaselineGitAdapter));
+  return yield* O.match(originMain, {
+    onNone: () => Effect.succeed(O.none<string>()),
+    onSome: () => Effect.option(resolveGitMergeBase(repoRoot, "origin/main", "HEAD", coverageBaselineGitAdapter)),
+  });
+});
+
+const collectCoverageBaselineChangeSet = Effect.fn("CoverageRegression.collectCoverageBaselineChangeSet")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  CoverageBaselineChangeSet,
+  QualityTaskConfigurationError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const configuredBase = yield* configStringOption("TURBO_SCM_BASE");
+  if (O.isSome(configuredBase)) {
+    const configuredCommit = yield* Effect.option(
+      resolveGitCommit(repoRoot, configuredBase.value, coverageBaselineGitAdapter)
+    );
+    if (O.isSome(configuredCommit)) {
+      return yield* coverageBaselineChangeSetFromBase(
+        repoRoot,
+        configuredBase.value,
+        `TURBO_SCM_BASE ${configuredBase.value}`
+      );
+    }
+
+    yield* Console.log(
+      `[coverage-ratchet] TURBO_SCM_BASE ${configuredBase.value} does not resolve here; falling back to origin/main merge-base or dirty-worktree files only`
+    );
+  }
+
+  const mergeBase = yield* originMainMergeBase(repoRoot);
+  if (O.isSome(mergeBase)) {
+    return yield* coverageBaselineChangeSetFromBase(
+      repoRoot,
+      mergeBase.value,
+      `origin/main merge-base ${Str.slice(0, 7)(mergeBase.value)}`
+    );
+  }
+
+  yield* Console.log("[coverage-ratchet] no comparison base resolved; using dirty-worktree files only");
+  const changedFiles = yield* collectDirtyWorktreeFiles(repoRoot, {
+    diffArgs: ["--no-renames"],
+    pathspecs: A.empty(),
+    onProbeFailure: "fail",
+  }).pipe(
+    Effect.map((files) => pipe(files, A.dedupe, A.sort(Order.String))),
+    QualityTaskConfigurationError.mapError("Failed to collect dirty-worktree files for coverage baseline planning.")
+  );
+  return yield* coverageBaselineChangeSetFromChangedFiles(repoRoot, changedFiles, "dirty worktree only");
+});
+
 const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocumentFromSnapshot")(function* (
   repoRoot: string,
   entries: ReadonlyArray<CoverageSnapshotEntry>,
   previous: O.Option<CoverageRegressionBaselineDocument>,
-  scoped: boolean
+  scoped: boolean,
+  writePlan: O.Option<CoverageBaselineWritePlan> = O.none()
 ): Effect.fn.Return<
   CoverageRegressionBaseline,
   QualityTaskConfigurationError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
   const currentPrevious = pipe(previous, O.filter(isCurrentCoverageRegressionBaseline));
-  const inheritedMetadata = scoped ? currentPrevious : O.none<CoverageRegressionBaseline>();
+  const heldRow = pipe(
+    writePlan,
+    O.exists((plan) => A.some(R.values(plan.dispositions), (disposition) => disposition === "held"))
+  );
+  const inheritedMetadata = scoped || heldRow ? currentPrevious : O.none<CoverageRegressionBaseline>();
   const generatedAt = O.isSome(inheritedMetadata)
     ? inheritedMetadata.value.generated_at
     : yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
@@ -1001,10 +1384,9 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
 
   return CoverageRegressionBaseline.make({
     schema_version: 2,
-    // A merge leaves most entries untouched, so claiming this run's timestamp
-    // and revision for the whole document would attribute a provenance the
-    // unmeasured entries do not have. Only a full regeneration earns fresh
-    // metadata; a merge inherits the last one.
+    // Holding any committed row means this run did not measure the provenance
+    // of the whole document. Only a write that holds no row earns fresh
+    // metadata; scoped merges and held-row plans inherit the last one.
     generated_at: generatedAt,
     git_sha: gitSha,
     command: coverageRegressionRegenerationCommand,
@@ -1024,10 +1406,15 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
       O.map((document) => document.follow_ups),
       O.getOrElse(() => ({}))
     ),
-    packages:
-      scoped && O.isSome(currentPrevious)
-        ? mergeCoverageBaselinePackagesForTesting(currentPrevious.value.packages, entries)
-        : snapshotPackages(entries),
+    packages: pipe(
+      writePlan,
+      O.map((plan) => plan.packages),
+      O.getOrElse(() =>
+        scoped && O.isSome(currentPrevious)
+          ? mergeCoverageBaselinePackagesForTesting(currentPrevious.value.packages, entries)
+          : snapshotPackages(entries)
+      )
+    ),
   });
 });
 
@@ -1140,6 +1527,78 @@ const validateCoverageSnapshotCompleteness = Effect.fn("CoverageRegression.valid
   }
 );
 
+const coverageBaselineDispositionCount = (
+  plan: CoverageBaselineWritePlan,
+  disposition: CoverageBaselineRowDisposition
+): number => A.length(A.filter(R.values(plan.dispositions), (candidate) => candidate === disposition));
+
+/**
+ * Render the operator-facing disposition summary for an unscoped baseline write.
+ *
+ * **Details**
+ *
+ * Ordinary writes always report the replaced, added, held, and pruned split.
+ * Planner full-run reasons are appended as measurement context without
+ * changing the disposition wording.
+ *
+ * **Gotchas**
+ *
+ * The `--replace-all` form has its own whole-document summary. Full-run reasons
+ * alone retain the changed-owner summary and recommend that explicit escape
+ * hatch when every floor truly should be re-measured.
+ *
+ * **Example** (Summarize a held-row plan)
+ *
+ * ```ts
+ * import {
+ *   CoverageBaselineChangeSet,
+ *   CoverageBaselineWritePlan,
+ *   coverageBaselineWriteSummary
+ * } from "@beep/repo-cli/test/Quality"
+ *
+ * const plan = CoverageBaselineWritePlan.make({
+ *   changeSet: CoverageBaselineChangeSet.make({
+ *     baseDescription: "dirty worktree only",
+ *     packageNames: [],
+ *     fullReasons: []
+ *   }),
+ *   packages: {},
+ *   dispositions: {}
+ * })
+ * console.log(coverageBaselineWriteSummary(plan, false))
+ * ```
+ *
+ * @param plan - Planned package rows, dispositions, and change-set context.
+ * @param replaceAll - Whether the operator explicitly requested whole-document replacement.
+ * @returns One complete coverage-ratchet console line.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageBaselineWriteSummary: {
+  (replaceAll: boolean): (plan: CoverageBaselineWritePlan) => string;
+  (plan: CoverageBaselineWritePlan, replaceAll: boolean): string;
+} = dual(2, (plan: CoverageBaselineWritePlan, replaceAll: boolean): string => {
+  const replaced = coverageBaselineDispositionCount(plan, CoverageBaselineRowDisposition.Enum.replaced);
+  const added = coverageBaselineDispositionCount(plan, CoverageBaselineRowDisposition.Enum.added);
+  const held = coverageBaselineDispositionCount(plan, CoverageBaselineRowDisposition.Enum.held);
+  const pruned = coverageBaselineDispositionCount(plan, CoverageBaselineRowDisposition.Enum.pruned);
+  const changedOwnerSummary =
+    `[coverage-ratchet] wrote ${coverageRegressionBaselinePath}: replaced ${replaced} changed package(s), ` +
+    `added ${added}, held ${held} unchanged package(s) at committed rows, pruned ${pruned} ` +
+    `(base: ${plan.changeSet.baseDescription})`;
+  const fullReasonNotice = A.match(plan.changeSet.fullReasons, {
+    onEmpty: () => "",
+    onNonEmpty: (reasons) =>
+      ` — global coverage inputs changed (${A.join(reasons, "; ")}); pass --replace-all if every floor should be re-measured`,
+  });
+
+  return Bool.match(replaceAll, {
+    onTrue: () =>
+      `[coverage-ratchet] wrote ${coverageRegressionBaselinePath}: replaced all ${replaced} package(s), pruned ${pruned} (--replace-all; base: ${plan.changeSet.baseDescription})`,
+    onFalse: () => `${changedOwnerSummary}${fullReasonNotice}`,
+  });
+});
+
 /**
  * Write the committed coverage regression baseline from generated summaries.
  *
@@ -1147,19 +1606,34 @@ const validateCoverageSnapshotCompleteness = Effect.fn("CoverageRegression.valid
  *
  * A scoped run measures only the packages it was filtered to, so its snapshot
  * is merged over the committed document and every unmeasured entry is carried
- * through. An unscoped run is a full regeneration and replaces the document
- * outright, which is what prunes entries for packages that no longer exist.
+ * through. An unscoped schema-v2 write adopts measured rows only for workspace
+ * owners of changed files, holds committed rows for every other measured
+ * package, adds new packages, and prunes deleted packages. The affected planner
+ * still determines measurement breadth, while `replaceAll` is the only path
+ * that adopts the whole measured document.
  *
  * **Gotchas**
  *
- * An unscoped run that measured fewer packages than the document it is about to
- * replace is refused rather than written. That shape means the coverage run did
- * not cover what it claimed to — a partial failure, a filter the caller forgot
- * to declare — and writing it would delete the missing entries silently.
+ * An unscoped run that measured fewer live packages than the committed document
+ * is refused rather than planned. A full-run planner verdict never expands the
+ * adoption set. Within a changed package the whole measured row is adopted, so
+ * environment-dependent file rows there may still need manual pinning to the
+ * hosted figure.
+ *
+ * **Example** (Build an unscoped write effect)
+ *
+ * ```ts
+ * import { writeCoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * const write = writeCoverageRegressionBaseline("/repo", false)
+ * console.log(Effect.isEffect(write)) // true
+ * ```
  *
  * @param repoRoot - Repository root.
  * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
  * @param expectedPackageNames - Exact scoped package names that must emit summaries before the baseline is written.
+ * @param options - Optional escape hatch for replacing every measured package row.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1167,7 +1641,8 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
   function* (
     repoRoot: string,
     scoped: boolean,
-    expectedPackageNames: ReadonlyArray<string> = A.empty<string>()
+    expectedPackageNames: ReadonlyArray<string> = A.empty<string>(),
+    options: { readonly replaceAll?: boolean } = {}
   ): Effect.fn.Return<
     void,
     CoverageRegressionError,
@@ -1182,6 +1657,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     // and overwrite a baseline that merely failed to parse, so only a genuinely
     // missing file yields `None`; anything else propagates.
     const previous = yield* readPreviousBaseline(repoRoot);
+    const replaceAll = options.replaceAll === true;
 
     if (
       scoped &&
@@ -1207,17 +1683,35 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
 
       if (A.isReadonlyArrayNonEmpty(lost)) {
         return yield* QualityTaskConfigurationError.new(
-          `Refusing to write ${coverageRegressionBaselinePath}: an unscoped regeneration replaces the document, and ${A.length(lost)} package(s) it records are still in the workspace but produced no coverage summary in this run, so their entries would be deleted: ${A.join(lost, ", ")}. Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead. Packages that no longer exist are pruned normally and do not trigger this.`
+          `Refusing to write ${coverageRegressionBaselinePath}: an unscoped regeneration requires a complete workspace snapshot, and ${A.length(lost)} package(s) recorded in the baseline are still in the workspace but produced no coverage summary in this run: ${A.join(lost, ", ")}. Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead. Packages that no longer exist are pruned normally and do not trigger this.`
         );
       }
     }
 
-    const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, previous, scoped);
+    const currentPrevious = pipe(previous, O.filter(isCurrentCoverageRegressionBaseline));
+    const writePlan =
+      !scoped && O.isSome(currentPrevious)
+        ? O.some(
+            planCoverageBaselineWrite(
+              currentPrevious.value.packages,
+              entries,
+              yield* collectCoverageBaselineChangeSet(repoRoot),
+              { replaceAll }
+            )
+          )
+        : O.none<CoverageBaselineWritePlan>();
+    const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, previous, scoped, writePlan);
     yield* writeBaselineDocument(repoRoot, baseline);
     yield* Console.log(
       scoped
         ? `[coverage-ratchet] merged ${A.length(entries)} measured package(s) into ${coverageRegressionBaselinePath} (${R.size(baseline.packages)} total)`
-        : `[coverage-ratchet] wrote ${coverageRegressionBaselinePath} with ${A.length(entries)} package(s)`
+        : pipe(
+            writePlan,
+            O.map((plan) => coverageBaselineWriteSummary(plan, replaceAll)),
+            O.getOrElse(
+              () => `[coverage-ratchet] wrote ${coverageRegressionBaselinePath} with ${A.length(entries)} package(s)`
+            )
+          )
     );
   }
 );

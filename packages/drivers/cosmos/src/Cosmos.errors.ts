@@ -52,6 +52,14 @@ export const CosmosDriverErrorReason = LiteralKit(["importFailed", "adapterInvar
  */
 export type CosmosDriverErrorReason = typeof CosmosDriverErrorReason.Type;
 
+const CosmosDriverErrorFields = {
+  reason: CosmosDriverErrorReason,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameCosmosDriverErrorFields = S.toEquivalence(S.TaggedStruct("CosmosDriverError", CosmosDriverErrorFields));
+const sameCosmosDriverError = (self: CosmosDriverError, that: CosmosDriverError): boolean =>
+  sameCosmosDriverErrorFields(self, that);
+
 /**
  * Typed cosmos driver error.
  *
@@ -73,12 +81,13 @@ export type CosmosDriverErrorReason = typeof CosmosDriverErrorReason.Type;
  */
 export class CosmosDriverError extends S.TaggedError<CosmosDriverError>($I`CosmosDriverError`)(
   "CosmosDriverError",
-  {
-    reason: CosmosDriverErrorReason,
-    message: S.String,
-  },
-  $I.annote("CosmosDriverError", {
+  CosmosDriverErrorFields,
+  $I.annoteClass<
+    S.declare<CosmosDriverError>,
+    readonly [S.TaggedStruct<"CosmosDriverError", typeof CosmosDriverErrorFields>]
+  >("CosmosDriverError", {
     description: "Typed error raised by cosmos and sigma graph render adapters.",
+    toEquivalence: () => sameCosmosDriverError,
   })
 ) {
   /** Creates an adapter-invariant failure for an invalid runtime module shape. */

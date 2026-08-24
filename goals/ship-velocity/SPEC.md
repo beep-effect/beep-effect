@@ -116,6 +116,24 @@ be closed, not tolerated.
   and call the exact resulting lane locally; delete the YAML duplicate.
 - **B8 Parity ledger.** Every local↔remote divergence that still occurs is recorded as a defect
   with the lane, cause class, and fix — the ledger trending to zero is the workstream's proof.
+- **B9 Deterministic coverage runtime.** The coverage ratchet compares per-file percentages
+  with no variance headroom, so the vitest children that produce them must see one environment
+  everywhere. `coverageEnvironment()` (`Quality/Tasks.ts`) already pins `CI`, `GITHUB_ACTIONS`,
+  `NODE_OPTIONS`, `BEEP_FC_SEED` and scrubs `TERM_PROGRAM*`; it now also spreads the hosted
+  pull-request Turbo posture (`turboCachePullRequestPosture`: `TURBO_API`/`TURBO_TOKEN`/
+  `TURBO_TEAM` scrubbed, `TURBO_CACHE=local:rw`) so a workstation's 1Password-backed
+  `TURBO_TOKEN` or a main push's literal token can no longer change which arms of
+  `internal/cli/EnvConfig.ts` execute. The ambient Turbo reader is a pure function of an
+  injected record (`readTurboCacheEnvironment`) with every arm unit-tested, so the file's
+  measurement is a property of the test suite, not of the host. Prerequisite of B2 and B4: a
+  local coverage run that can mint floors hosted cannot reach is worse than none
+  (`research/OPPORTUNITIES.md` §2026-08-24 B9 carries the 150-run evidence).
+  **Acceptance:** (1) `coverageEnvironment()` names every `TurboCacheEnvName`; (2) the same
+  `bun run coverage -- --filter=@beep/repo-cli` run yields identical `EnvConfig.ts` rows with a
+  literal token, an `op://` reference, and a blank quad in the ambient environment; (3) the
+  hosted Coverage Regression job on the PR reports the same `EnvConfig.ts` row as the local
+  run; (4) the prebuild step keeps its remote-cache reads on main pushes (it never receives the
+  coverage env).
 
 ## Workstream C — Turbo cache: readers, warmth, proof
 

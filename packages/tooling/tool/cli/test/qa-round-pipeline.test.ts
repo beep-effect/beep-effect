@@ -37,13 +37,15 @@ import {
 } from "@beep/repo-cli/commands/Qa";
 import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
-import { thunk } from "@beep/utils";
+import { A, thunk } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import type { ProbeVideoRequest } from "@beep/ffmpeg";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -437,6 +439,58 @@ describe("commands/Qa judge ingest and lint", () => {
       )
     ));
 
+  it.effect("prints the detailed dirty cross-check before returning CliReportedExit(1)", () =>
+    withTempCwd(
+      Effect.fnUntraced(function* (cwd) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { layout } = yield* prepareRound(cwd, 1);
+        const dirty = yield* encodeJson({
+          findings: [
+            {
+              evidence: [{ eventIds: [412], kind: "strip", path: "frames/ghost.png" }],
+              fix: "Capture the cited frame and witness event.",
+              id: "R1-01",
+              lens: "selection-smear",
+              repro: "Drag the sash.",
+              severity: "P0",
+              title: "Ghost evidence",
+            },
+          ],
+          judge: { effort: "high", model: "gpt-5.6-sol" },
+          requiredCount: 1,
+          round: 1,
+          schemaVersion: "qa-inventory/v1",
+          sessionRef: "session.json",
+        });
+        const inventoryPath = path.join(layout.root, "inventory.json");
+        yield* fs.writeFileString(inventoryPath, dirty);
+
+        const observed = yield* Effect.gen(function* () {
+          const error = yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(
+            Effect.flip
+          );
+          const lines = A.filter(yield* TestConsole.logLines, P.isString);
+          return { error, lines };
+        }).pipe(provideScopedLayer(TestConsole.layer));
+
+        expect(observed.error).toMatchObject({
+          _tag: "CliReportedExit",
+          exitCode: 1,
+          message: "qa judge-lint: round 1 inventory is not backed by evidence",
+        });
+        expect(observed.lines).toEqual([
+          "qa judge-lint: round 1",
+          "  findings: 1 (required 1)",
+          `  inventory: ${inventoryPath}`,
+          "qa judge inventory for round 1 cites evidence the round cannot back up.\n" +
+            "  missing artifact: frames/ghost.png\n" +
+            "  missing event id: 412",
+        ]);
+      })
+    )
+  );
+
   it.effect("fails judge-lint when the round has no inventory yet", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
@@ -452,42 +506,50 @@ describe("commands/Qa judge ingest and lint", () => {
   );
 
   it.effect("refuses an inventory citing evidence the round cannot back up", () =>
-    Effect.gen(function* () {
-      const dirty = yield* encodeJson({
-        findings: [
-          {
-            evidence: [{ eventIds: [412], kind: "strip", path: "frames/ghost.png" }],
-            fix: "fix it",
-            id: "R1-01",
-            lens: "selection-smear",
-            repro: "drag the sash",
-            severity: "P0",
-            title: "ghost evidence",
-          },
-        ],
-        judge: { effort: "high", model: "gpt-5.6-sol" },
-        requiredCount: 1,
-        round: 1,
-        schemaVersion: "qa-inventory/v1",
-        sessionRef: "session.json",
-      });
-      const exit = yield* Effect.exit(
-        withTempCwd(
-          Effect.fnUntraced(function* (cwd) {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            yield* prepareRound(cwd, 1);
-            const transcript = path.join(cwd, "judge-stdout.txt");
-            yield* fs.writeFileString(transcript, `${fence}json\n${dirty}\n${fence}\n`);
-            return yield* runQaJudgeIngest(
-              cwd,
-              QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })
-            );
-          })
-        )
-      );
-      expect(Exit.isFailure(exit)).toBe(true);
-    })
+    withTempCwd(
+      Effect.fnUntraced(function* (cwd) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { layout } = yield* prepareRound(cwd, 1);
+        const dirty = yield* encodeJson({
+          findings: [
+            {
+              evidence: [{ eventIds: [412], kind: "strip", path: "frames/ghost.png" }],
+              fix: "fix it",
+              id: "R1-01",
+              lens: "selection-smear",
+              repro: "drag the sash",
+              severity: "P0",
+              title: "ghost evidence",
+            },
+          ],
+          judge: { effort: "high", model: "gpt-5.6-sol" },
+          requiredCount: 1,
+          round: 1,
+          schemaVersion: "qa-inventory/v1",
+          sessionRef: "session.json",
+        });
+        const transcript = path.join(cwd, "judge-stdout.txt");
+        const inventoryPath = path.join(layout.root, "inventory.json");
+        const inventoryMarkdownPath = path.join(layout.root, "inventory.md");
+        yield* fs.writeFileString(transcript, `${fence}json\n${dirty}\n${fence}\n`);
+
+        const error = yield* runQaJudgeIngest(
+          cwd,
+          QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })
+        ).pipe(Effect.flip);
+
+        expect(error).toMatchObject({
+          _tag: "QaCommandError",
+          message:
+            "qa judge inventory for round 1 cites evidence the round cannot back up.\n" +
+            "  missing artifact: frames/ghost.png\n" +
+            "  missing event id: 412",
+        });
+        expect(yield* fs.exists(inventoryPath)).toBe(false);
+        expect(yield* fs.exists(inventoryMarkdownPath)).toBe(false);
+      })
+    )
   );
 
   it.effect("fails ingest when the judge transcript carries no fenced inventory", () =>

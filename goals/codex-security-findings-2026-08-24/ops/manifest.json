@@ -3,22 +3,22 @@
   "initiative": {
     "id": "codex-security-findings-2026-08-24",
     "title": "Codex Security Findings (2026-08-24)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-24",
     "updated": "2026-08-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-08-24",
-  "lifecycle": "active",
-  "statusNote": "19 validated; 15 remediated repo-side in this PR; 4 deferred to the runner-admission/workload-identity arc; post-merge Codex dashboard closure pending for the exact captured IDs.",
-  "mission": "Remediate and close the 19 Codex Cloud security findings captured on 2026-08-24.",
+  "lifecycle": "completed-retained",
+  "statusNote": "19 validated; 15 remediated in PR #783; 13 dashboard IDs closed as Already fixed on 2026-08-24; CSF-003 and CSF-009 remain open pending goals/runner-trust-boundary P1 deployment proof; CSF-001, CSF-004, CSF-005, and CSF-006 transferred to goals/runner-trust-boundary.",
+  "mission": "Remediate and close the bounded findings from the 2026-08-24 capture, then transfer the six runner-boundary IDs with explicit proof gates.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 19 Codex findings are resolved with zero packet-applicable open findings.",
+    "statement": "Not achieved until the bounded repository remediations ship, exact dashboard actions are recorded, and every remaining open ID has a named receiving packet with an explicit proof gate.",
     "grandfathered": false
   },
   "branch": "codex/security-findings-2026-08-24",
@@ -29,6 +29,8 @@
     "goals/codex-security-findings-2026-08-24/SPEC.md",
     "goals/codex-security-findings-2026-08-24/PLAN.md",
     "goals/codex-security-findings-2026-08-24/GOAL.md",
+    "goals/codex-security-findings-2026-08-24/ops/triage.json",
+    "goals/codex-security-findings-2026-08-24/ops/closures.json",
     "goals/codex-security-findings-2026-08-24/research/SOURCES.md"
   ],
   "researchReports": ["research/SOURCES.md"],
@@ -67,7 +69,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All 19 findings are validated and remain dispositioned remediate. Fifteen are remediated repo-side in this PR; four are deferred to the runner-admission/workload-identity arc for external GitHub organization runner-group and AWS deployment proof."
+    "note": "All 19 findings are validated. PR #783 contains 15 repo-side remediations; 13 dashboard IDs closed as Already fixed on 2026-08-24. CSF-003 and CSF-009 remain held for goals/runner-trust-boundary P1 deployment proof. CSF-001, CSF-004, CSF-005, and CSF-006 transferred to that packet."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -114,38 +116,42 @@
       "id": "P4",
       "name": "Remediate",
       "status": "complete",
-      "statusNote": "Fifteen findings are remediated repo-side with focused proof; four runner findings are transferred to the named architecture arc for external proof."
+      "statusNote": "Fifteen findings are remediated in PR #783 with focused proof; CSF-001, CSF-004, CSF-005, and CSF-006 are transferred to goals/runner-trust-boundary for external proof."
     },
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "pending"
+      "status": "complete",
+      "statusNote": "Repository proof for the 15 remediations is retained with PR #783."
     },
     {
       "id": "P6",
       "name": "Publish",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "complete",
+      "statusNote": "Thirteen dashboard IDs closed as Already fixed on 2026-08-24. CSF-003 and CSF-009 remain held for runner-trust-boundary P1 proof; CSF-001, CSF-004, CSF-005, and CSF-006 transferred to that packet."
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete",
+      "statusNote": "Packet closed as completed-retained with history/reflections/2026-08-24-codex.md."
     }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/codex-security-findings-2026-08-24/GOAL.md)\" -le 4000",
     "jq . goals/codex-security-findings-2026-08-24/ops/manifest.json",
     "jq . goals/codex-security-findings-2026-08-24/ops/triage.json",
+    "jq . goals/codex-security-findings-2026-08-24/ops/closures.json",
     "test \"$(find goals/codex-security-findings-2026-08-24/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 19",
     "git diff --check -- goals/codex-security-findings-2026-08-24",
     "jq -r '.findings[].commit' goals/codex-security-findings-2026-08-24/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",

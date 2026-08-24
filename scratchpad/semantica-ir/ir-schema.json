@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beep.dev/schemas/semantica-symbol-ir.schema.json",
+  "title": "Semantica symbol IR record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "module",
+    "layer",
+    "qualname",
+    "kind",
+    "bases",
+    "decorators",
+    "signature",
+    "params",
+    "returns",
+    "raises",
+    "docstring",
+    "file",
+    "lineno",
+    "end_lineno",
+    "is_public",
+    "is_async",
+    "registry_names"
+  ],
+  "properties": {
+    "module": { "type": "string", "minLength": 1 },
+    "layer": {
+      "enum": ["input", "core", "storage", "qa", "context_memory", "output", "utilities"]
+    },
+    "qualname": { "type": "string", "minLength": 1 },
+    "kind": {
+      "enum": ["class", "function", "method", "dataclass", "pydantic_model", "protocol", "constant"]
+    },
+    "bases": { "$ref": "#/$defs/stringArray" },
+    "decorators": { "$ref": "#/$defs/stringArray" },
+    "signature": { "type": "string", "minLength": 1 },
+    "params": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/parameter" }
+    },
+    "returns": { "type": ["string", "null"] },
+    "raises": { "$ref": "#/$defs/stringArray" },
+    "docstring": { "$ref": "#/$defs/docstring" },
+    "file": { "type": "string", "pattern": "^semantica/.*\\.py$" },
+    "lineno": { "type": "integer", "minimum": 1 },
+    "end_lineno": { "type": "integer", "minimum": 1 },
+    "is_public": { "type": "boolean" },
+    "is_async": { "type": "boolean" },
+    "registry_names": { "$ref": "#/$defs/stringArray" }
+  },
+  "$defs": {
+    "nullableString": { "type": ["string", "null"] },
+    "stringArray": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "annotation", "default"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "annotation": { "$ref": "#/$defs/nullableString" },
+        "default": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "docstring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw", "summary", "sections"],
+      "properties": {
+        "raw": { "type": "string" },
+        "summary": { "type": "string" },
+        "sections": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Args": { "type": "string" },
+            "Returns": { "type": "string" },
+            "Raises": { "type": "string" },
+            "Examples": { "type": "string" },
+            "Attributes": { "type": "string" },
+            "Notes": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

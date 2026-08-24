@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
 import { Effect, HashMap, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -44,6 +44,7 @@ import type {
   SchemaFirstLintOptions,
   SchemaFirstPolicyRuleId,
 } from "../Lint.schemas.ts";
+import type { SchemaFirstLintFindings } from "../SchemaFirst.render.ts";
 import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.ts";
 
 const isLiteralKitConstAssertionArgument = (argument: Node): boolean =>
@@ -132,6 +133,20 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     if (O.isSome(arbitraryTestsEntry)) {
       A.appendInPlace(entries, arbitraryTestsEntry.value);
     }
+
+    if (!isExcludedTypeScriptSourcePath(filePath) && SchemaFirstDetectors.sourceHasTaggedErrorSignal(sourceFile)) {
+      for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
+        const entry = SchemaFirstDetectors.taggedErrorEquivalenceEntryFromClassDeclaration(
+          declaration,
+          filePath,
+          owner
+        );
+        if (O.isSome(entry)) {
+          A.appendInPlace(entries, entry.value);
+        }
+      }
+    }
+
     if (isSchemaFirstExcludedFile(filePath)) {
       continue;
     }
@@ -316,9 +331,8 @@ const mergeInventory = (
     O.getOrElse(HashMap.empty<string, SchemaFirstInventoryEntry>)
   );
 
-  const mergedEntries = pipe(
-    liveDocument.entries,
-    A.map((entry) => O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry))
+  const mergedEntries = A.map(liveDocument.entries, (entry) =>
+    O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry)
   );
 
   return SchemaFirstInventoryDocument.make({
@@ -327,25 +341,6 @@ const mergeInventory = (
     scope: liveDocument.scope,
     entries: sortSchemaFirstEntries(mergedEntries),
   });
-};
-
-type SchemaFirstLintFindings = {
-  readonly missingEntries: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly staleEntries: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly enforcedCandidates: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly boundaryCodecAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly defaultsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly staticApiAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly equivalenceAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly precisionAuditAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly arbitraryTestsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly numericDomainAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly fnSchemaAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly normalizationAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly nullReturnAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly getsomesStructAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly activeAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly policyExemptCount: number;
 };
 
 const collectSchemaFirstLintFindings = (
@@ -376,6 +371,10 @@ const collectSchemaFirstLintFindings = (
   const defaultsAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-defaults"));
   const staticApiAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-static-api"));
   const equivalenceAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-equivalence"));
+  const taggedErrorEquivalenceAdvisories = A.filter(
+    policyFilteredEntries,
+    isActiveSchemaFirstRuleAdvisory("SFV4-tagged-error-equivalence")
+  );
   const precisionAuditAdvisories = A.filter(
     policyFilteredEntries,
     isActiveSchemaFirstRuleAdvisory("SFV4-precision-audit")
@@ -407,6 +406,7 @@ const collectSchemaFirstLintFindings = (
     defaultsAdvisories,
     staticApiAdvisories,
     equivalenceAdvisories,
+    taggedErrorEquivalenceAdvisories,
     precisionAuditAdvisories,
     arbitraryTestsAdvisories,
     numericDomainAdvisories,
@@ -419,6 +419,7 @@ const collectSchemaFirstLintFindings = (
       ...defaultsAdvisories,
       ...staticApiAdvisories,
       ...equivalenceAdvisories,
+      ...taggedErrorEquivalenceAdvisories,
       ...precisionAuditAdvisories,
       ...arbitraryTestsAdvisories,
       ...numericDomainAdvisories,

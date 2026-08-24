@@ -362,9 +362,10 @@ export class LangExtractDiagnostics extends S.Class<LangExtractDiagnostics>($I`L
  * const annotatedDocument = Contract.AnnotatedDocument.make({
  *   chunks: [],
  *   entities: [],
+ *   mentions: [],
  *   provenance,
  *   relations: [],
- *   version: "nlp-ir/1.0"
+ *   version: "nlp-ir/1.1"
  * })
  * console.log(LangExtractResult.make({
  *   annotatedDocument,

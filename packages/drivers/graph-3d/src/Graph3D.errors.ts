@@ -57,6 +57,14 @@ export const Graph3DDriverErrorReason = LiteralKit([
  */
 export type Graph3DDriverErrorReason = typeof Graph3DDriverErrorReason.Type;
 
+const Graph3DDriverErrorFields = {
+  reason: Graph3DDriverErrorReason,
+  message: S.String,
+} satisfies S.Struct.Fields;
+const sameGraph3DDriverErrorFields = S.toEquivalence(S.TaggedStruct("Graph3DDriverError", Graph3DDriverErrorFields));
+const sameGraph3DDriverError = (self: Graph3DDriverError, that: Graph3DDriverError): boolean =>
+  sameGraph3DDriverErrorFields(self, that);
+
 /**
  * Typed graph-3d driver error.
  *
@@ -78,12 +86,13 @@ export type Graph3DDriverErrorReason = typeof Graph3DDriverErrorReason.Type;
  */
 export class Graph3DDriverError extends S.TaggedError<Graph3DDriverError>($I`Graph3DDriverError`)(
   "Graph3DDriverError",
-  {
-    reason: Graph3DDriverErrorReason,
-    message: S.String,
-  },
-  $I.annote("Graph3DDriverError", {
+  Graph3DDriverErrorFields,
+  $I.annoteClass<
+    S.declare<Graph3DDriverError>,
+    readonly [S.TaggedStruct<"Graph3DDriverError", typeof Graph3DDriverErrorFields>]
+  >("Graph3DDriverError", {
     description: "Typed error raised by the instanced three.js graph render adapter.",
+    toEquivalence: () => sameGraph3DDriverError,
   })
 ) {
   /** Creates an adapter-invariant failure for an invalid runtime state. */
