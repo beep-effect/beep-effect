@@ -155,6 +155,30 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
     })
   );
 
+  it.effect("rejects filesystem roots and invalid paths while accepting supported absolute paths", () =>
+    Effect.gen(function* () {
+      const rejected = ["/", "C:\\", "\\\\server\\share", "relative/store", "/tmp/invalid\u0000store"];
+      const accepted = ["/tmp/ai-metrics", "C:\\state\\ai-metrics", "\\\\server\\share\\ai-metrics"];
+
+      yield* Effect.forEach(
+        rejected,
+        Effect.fnUntraced(function* (path) {
+          const failure = yield* Effect.flip(requireAbsoluteAiMetricsDataRoot(path));
+          expect(failure).toBeInstanceOf(AiMetricsDataRootError);
+          expect(failure.message).toContain("non-root");
+        }),
+        { discard: true }
+      );
+      yield* Effect.forEach(
+        accepted,
+        Effect.fnUntraced(function* (path) {
+          expect(yield* requireAbsoluteAiMetricsDataRoot(path)).toBe(path);
+        }),
+        { discard: true }
+      );
+    })
+  );
+
   it.effect("fails an unresolvable local install spec instead of falling back to the clone", () =>
     Effect.gen(function* () {
       const failure = yield* Effect.flip(

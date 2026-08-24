@@ -30,6 +30,11 @@ import {
 const $I = $RepoAiMetricsId.create("source-discovery");
 
 const DEFAULT_MAX_FILES = 200;
+const SourceDiscoveryEpochMillis = S.Natural.pipe(
+  $I.annoteSchema("SourceDiscoveryEpochMillis", {
+    description: "Non-negative integral epoch milliseconds used by source discovery boundaries.",
+  })
+);
 
 /**
  * P1 source discovery availability status.
@@ -94,18 +99,12 @@ export class AiMetricsSourceDiscoveryInput extends S.Class<AiMetricsSourceDiscov
     codexSessionsRoot: S.optionalKey(S.String),
     hashSalt: S.optionalKey(S.String),
     homeDir: S.String,
-    includeAll: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    maxFiles: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_FILES)),
-      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_FILES))
-    ),
-    maxFileBytes: S.optionalKey(S.Finite),
+    includeAll: SchemaUtils.BoolKeyDefaultFalse,
+    maxFiles: S.Natural.pipe(SchemaUtils.withKeyDefaults(DEFAULT_MAX_FILES)),
+    maxFileBytes: S.optionalKey(S.Natural),
     openClawUnitPath: S.optionalKey(S.String),
     repoRoot: S.String,
-    sinceEpochMillis: S.optionalKey(S.Finite),
+    sinceEpochMillis: S.optionalKey(SourceDiscoveryEpochMillis),
     target: AiMetricsDeployTarget.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.local)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsDeployTarget.Enum.local))
@@ -150,7 +149,7 @@ export class AiMetricsDiscoveredTranscriptFile extends S.Class<AiMetricsDiscover
     parentSessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     parentThreadIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sizeBytes: S.Finite,
+    sizeBytes: S.Natural,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
     sourceRole: AiMetricsSourceRole,
@@ -184,27 +183,15 @@ export class AiMetricsDiscoveredTranscriptFile extends S.Class<AiMetricsDiscover
  */
 export class AiMetricsDiscoveredSource extends S.Class<AiMetricsDiscoveredSource>($I`AiMetricsDiscoveredSource`)(
   {
-    candidateFileCount: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
-    fileCount: S.Finite,
+    candidateFileCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(0)),
+    fileCount: S.Natural,
     files: S.Array(AiMetricsDiscoveredTranscriptFile),
-    includedFileCount: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
-    limitedByMaxFiles: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
+    includedFileCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(0)),
+    limitedByMaxFiles: SchemaUtils.BoolKeyDefaultFalse,
     message: S.optionalKey(S.String),
     newestModifiedAtMillis: S.optionalKey(S.Finite),
     rootPathHash: S.String,
-    sizeExcludedFileCount: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
+    sizeExcludedFileCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(0)),
     sourceKind: AiMetricsTranscriptSource,
     status: AiMetricsSourceStatus,
   },
@@ -242,15 +229,15 @@ export class AiMetricsSourceDiscoveryResult extends S.Class<AiMetricsSourceDisco
   $I`AiMetricsSourceDiscoveryResult`
 )(
   {
-    discoveredFileCount: S.Finite,
-    generatedAtEpochMillis: S.Finite,
+    discoveredFileCount: S.Natural,
+    generatedAtEpochMillis: SourceDiscoveryEpochMillis,
     hashSaltStatus: AiMetricsHashSaltStatus,
     homeDirHash: S.String,
     includeAll: S.Boolean,
-    maxFiles: S.Finite,
-    maxFileBytes: S.optionalKey(S.Finite),
+    maxFiles: S.Natural,
+    maxFileBytes: S.optionalKey(S.Natural),
     repoRootHash: S.String,
-    sinceEpochMillis: S.optionalKey(S.Finite),
+    sinceEpochMillis: S.optionalKey(SourceDiscoveryEpochMillis),
     sources: S.Array(AiMetricsDiscoveredSource),
     target: AiMetricsDeployTarget,
   },

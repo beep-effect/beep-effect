@@ -9,7 +9,7 @@ import { DuckDb, DuckDbConnectionOptions, DuckDbParquetExport } from "@beep/duck
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Clock, Effect, FileSystem, Layer, Path, pipe } from "effect";
+import { Clock, Effect, FileSystem, flow, Layer, Path, pipe, Tuple } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { AiMetricsDeployTarget, CountRow } from "./models.ts";
@@ -736,12 +736,10 @@ export const locateLatestAiMetricsMirrorBundle = Effect.fn("AiMetrics.locateLate
   return pointer.bundleDir;
 });
 
-const rowCountsFor = (tables: ReadonlyArray<AiMetricsMirrorTableExport>) =>
-  pipe(
-    tables,
-    A.map((table) => [table.tableName, table.rowCount] as const),
-    R.fromEntries
-  );
+const rowCountsFor = flow(
+  A.map((table: AiMetricsMirrorTableExport) => Tuple.make(table.tableName, table.rowCount)),
+  R.fromEntries
+);
 
 const mirrorStatusFor = (
   input: AiMetricsMirrorBundleInput,

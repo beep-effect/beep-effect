@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Fn, LiteralKit } from "@beep/schema";
+import { FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, WindowsUncPath } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
@@ -16,12 +16,41 @@ import { AiMetricsDeployTarget } from "./models.ts";
 const $I = $RepoAiMetricsId.create("data-root");
 
 const dankserverDataRoot = "/srv/data/ai-metrics";
-const absolutePathPattern = /^(?:[A-Za-z]:[\\/]|\\\\|\/)/u;
-
-const isAbsolutePath = (value: string): boolean => absolutePathPattern.test(value);
 
 const nonBlank = (value: string | undefined): O.Option<string> =>
   value === undefined || Str.isEmpty(Str.trim(value)) ? O.none() : O.some(Str.trim(value));
+
+const AiMetricsAbsoluteDataRootCheck = S.makeFilter(
+  (value: FilePath) => pipe(value, Str.startsWith("/")) || WindowsDrivePath.is(value) || WindowsUncPath.is(value),
+  {
+    identifier: $I`AiMetricsAbsoluteDataRootCheck`,
+    title: "AI Metrics Absolute Data Root",
+    description: "A non-root absolute POSIX, Windows drive, or Windows UNC file path.",
+    message: "AI metrics data root must be an absolute path with a non-root leaf segment",
+  }
+);
+
+/**
+ * Branded absolute, non-root filesystem path safe for AI metrics persistence.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsAbsoluteDataRoot = FilePath.check(AiMetricsAbsoluteDataRootCheck).pipe(
+  S.brand("AiMetricsAbsoluteDataRoot"),
+  SchemaUtils.withEffectCodecStatics,
+  $I.annoteSchema("AiMetricsAbsoluteDataRoot", {
+    description: "Absolute non-root filesystem path accepted for an AI metrics data root.",
+  })
+);
+
+/**
+ * Runtime type for {@link AiMetricsAbsoluteDataRoot}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsAbsoluteDataRoot = typeof AiMetricsAbsoluteDataRoot.Type;
 
 const withoutTrailingSlash = (value: string): string =>
   pipe(value, Str.replace(/\/+$/u, ""), (trimmed) => (Str.isEmpty(trimmed) ? value : trimmed));
@@ -426,14 +455,17 @@ export const resolveAiMetricsDataRoot = (input: AiMetricsDataRootInput): O.Optio
  * @category utilities
  * @since 0.0.0
  */
-export const requireAbsoluteAiMetricsDataRoot: (dataRoot: string) => Effect.Effect<string, AiMetricsDataRootError> =
-  Effect.fn("AiMetrics.requireAbsoluteAiMetricsDataRoot")(function* (dataRoot: string) {
-    if (!isAbsolutePath(dataRoot)) {
-      return yield* AiMetricsDataRootError.make({
-        cause: dataRoot,
-        message: "AI metrics data root must be an absolute path.",
-      });
-    }
-
-    return dataRoot;
-  });
+export const requireAbsoluteAiMetricsDataRoot: (
+  dataRoot: string
+) => Effect.Effect<AiMetricsAbsoluteDataRoot, AiMetricsDataRootError> = Effect.fn(
+  "AiMetrics.requireAbsoluteAiMetricsDataRoot"
+)(function* (dataRoot: string) {
+  return yield* AiMetricsAbsoluteDataRoot.decodeEffect(dataRoot).pipe(
+    Effect.mapError((cause) =>
+      AiMetricsDataRootError.make({
+        cause,
+        message: "AI metrics data root must be an absolute path with a non-root leaf segment.",
+      })
+    )
+  );
+});

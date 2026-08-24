@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Encoding, flow, Order, pipe, SchemaTransformation } from "effect";
@@ -18,6 +18,7 @@ import type { TranscriptIngestSummary } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("privacy");
 const decodeNonEmptyTrimmedOption = S.decodeUnknownOption(NonEmptyTrimmedStr);
+const decodeSha256Hex = S.decodeEffect(Sha256Hex);
 const NonEmptyTrimmedStringInput = S.Union([S.String, S.Option(NonEmptyTrimmedStr)]);
 
 const decodeOptionalNonEmptyTrimmed = (
@@ -432,17 +433,26 @@ export const resolveAiMetricsHashSaltStatus = (hashSalt: string | undefined): Ai
  * @category utilities
  * @since 0.0.0
  */
-export const hashPublicTextSha256: (value: string) => Effect.Effect<string, AiMetricsPrivacyError> = Effect.fn(
+export const hashPublicTextSha256: (value: string) => Effect.Effect<Sha256Hex, AiMetricsPrivacyError> = Effect.fn(
   "AiMetrics.hashPublicTextSha256"
 )(function* (value) {
-  return yield* Effect.tryPromise({
+  const buffer = yield* Effect.tryPromise({
     try: () => globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
     catch: (cause) =>
       AiMetricsPrivacyError.make({
         cause,
         message: "Failed to compute public SHA-256 digest.",
       }),
-  }).pipe(Effect.map((buffer) => Encoding.encodeHex(new Uint8Array(buffer))));
+  });
+
+  return yield* decodeSha256Hex(Encoding.encodeHex(new Uint8Array(buffer))).pipe(
+    Effect.mapError((cause) =>
+      AiMetricsPrivacyError.make({
+        cause,
+        message: "Failed to validate the computed public SHA-256 digest.",
+      })
+    )
+  );
 });
 
 /**
@@ -463,8 +473,8 @@ export const hashPublicTextSha256: (value: string) => Effect.Effect<string, AiMe
  * @since 0.0.0
  */
 export const hashPrivateIdentifier: {
-  (value: string, hashSalt: string | undefined): Effect.Effect<string, AiMetricsPrivacyError>;
-  (hashSalt: string | undefined): (value: string) => Effect.Effect<string, AiMetricsPrivacyError>;
+  (value: string, hashSalt: string | undefined): Effect.Effect<Sha256Hex, AiMetricsPrivacyError>;
+  (hashSalt: string | undefined): (value: string) => Effect.Effect<Sha256Hex, AiMetricsPrivacyError>;
 } = dual(
   2,
   Effect.fn("AiMetrics.hashPrivateIdentifier")(function* (value: string, hashSalt: string | undefined) {
