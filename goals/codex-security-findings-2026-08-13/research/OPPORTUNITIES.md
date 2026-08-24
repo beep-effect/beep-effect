@@ -247,3 +247,15 @@
 - Prevention: include `bun run beep quality test-tsgo` in focused proof when a
   repair changes package test files, because the owning package check does not
   cover every repository Effect diagnostic applied to tests.
+
+## 2026-08-24 — Packet sanitation misclassified reflection frontmatter
+
+- Work: run the packet's public-repository sanitation check after adding the
+  required closeout reflections.
+- Evidence: `scanSensitiveText` reported `spreadsheet-formula` once for each
+  reflection because the whole-document input began with the required `---`
+  YAML delimiter. The reflection lint separately accepted both artifacts with
+  zero blocking findings.
+- Prevention: give packet-level sanitation a frontmatter-aware document mode
+  that scans frontmatter values and Markdown body content without treating the
+  YAML delimiter as an exported spreadsheet value.

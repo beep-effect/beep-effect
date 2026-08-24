@@ -68,6 +68,7 @@ import {
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
+  turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
   withoutUnusableRemoteCacheForTesting,
   workspaceTaskFiltersForTesting,
@@ -608,6 +609,35 @@ describe("quality task adapter", () => {
       "--base",
       "origin/main",
       "--summarize",
+    ]);
+  });
+
+  it("carries a quarantine package filter into the nested check lane's Turbo invocation", () => {
+    const steps = ciLaneStepsForTesting(
+      "/repo",
+      "check",
+      CiLaneRunOptions.make({
+        affected: true,
+        base: "origin/main",
+        head: "HEAD",
+        summarize: true,
+        mode: "affected",
+        to: "HEAD",
+        last: false,
+        changesetStatus: false,
+        validateEnvelopes: false,
+        filter: "@beep/schema",
+      })
+    );
+
+    expect(steps[0]?.args).toEqual([
+      "run",
+      "check",
+      "--",
+      "--concurrency=1",
+      "--affected",
+      "--summarize",
+      "--filter=@beep/schema",
     ]);
   });
 
@@ -3256,6 +3286,36 @@ describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
     expect(turboStepLocalEnvForTesting(undefined, true)).toEqual(O.some(true));
     expect(turboStepLocalEnvForTesting(undefined, false)).toEqual(O.none());
     expect(turboStepLocalEnvForTesting({ CI: "true" }, true)).toEqual(O.none());
+  });
+
+  it("wraps a Turbo step without loading the project env file or carrying unrelated references", () => {
+    const wrapped = turboSecretSessionStepForTesting(remoteStep({}), {
+      PATH: "/fixture/bin",
+      TURBO_API: "op://fixture-vault/turbo/api",
+      TURBO_TOKEN: "op://fixture-vault/turbo/token",
+      TURBO_TEAM: "fixture-team",
+      TURBO_CACHE: "local:rw,remote:r",
+      UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
+    });
+
+    expect(wrapped.command).toBe("op");
+    expect(wrapped.args).toEqual([
+      "run",
+      "--",
+      "bunx",
+      "turbo",
+      "run",
+      "check",
+      "--cache=local:rw,remote:r",
+      "--concurrency=3",
+    ]);
+    expect(wrapped.env).toStrictEqual({
+      PATH: "/fixture/bin",
+      TURBO_API: "op://fixture-vault/turbo/api",
+      TURBO_TOKEN: "op://fixture-vault/turbo/token",
+      TURBO_TEAM: "fixture-team",
+      TURBO_CACHE: "local:rw,remote:r",
+    });
   });
 
   it("rewrites the posture when the credentials still need an op run session", () => {

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -32,9 +32,11 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-`P5 repo-proof` - all 18 findings are triaged: 6 already fixed, 5 fixed in this
-PR, and 7 deferred to explicit P2 architecture or policy work. Local proof is
-in progress; shipping and Codex closure remain orchestrator-owned.
+`P9 complete` - PR #655 merged the five bounded fixes and retained the seven
+explicit P2 handoffs. PRs #697, #688, and #712 later landed the semantic-delta,
+agent-policy, and coverage-provenance items. CSF-001 through CSF-004 remain with
+the runner-admission/workload-identity arc for external proof. This closeout
+does not claim dashboard closure for handed-off findings.
 
 ## Findings at a glance
 
@@ -46,4 +48,5 @@ materially invalid.
 
 - Raw report bodies remain untracked under `raw/`; tracked files are sanitized.
 - Do not use Codex's Create PR or patch-apply controls.
-- Browser closure is post-merge and must match the captured Codex ID allowlist.
+- Dashboard closure for handed-off findings belongs to the receiving arcs and
+  must match the captured Codex ID allowlist.

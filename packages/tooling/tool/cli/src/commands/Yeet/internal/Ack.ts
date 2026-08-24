@@ -29,14 +29,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, Match } from "effect";
+import { Effect, Match } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { readContainedFileStringNoFollow, writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { yeetInboxAckPath, yeetInboxPaths } from "./Inbox.ts";
-import type { Path } from "effect";
+import { yeetInboxAckPath } from "./Inbox.ts";
+import type { FileSystem, Path } from "effect";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Ack");
 
@@ -278,9 +278,10 @@ export class YeetAckState extends S.Class<YeetAckState>($I`YeetAckState`)(
  * **Details**
  *
  * Every failure mode folds into the state rather than the error channel: a
- * missing file is `acked: false`, an unreadable or undecodable file is
- * `acked: true, receipt: null`. Consumers on the hook hot path get one total
- * read with no failure cases to mishandle into a stuck denial.
+ * missing file or a rejected symlink path is `acked: false`, while an
+ * unreadable or undecodable regular entry is `acked: true, receipt: null`.
+ * Consumers on the hook hot path get one total read with no failure cases to
+ * mishandle into a stuck denial.
  *
  * **Example** (Build the read effect)
  *
@@ -301,20 +302,14 @@ export const readYeetAckState = Effect.fn("Yeet.readYeetAckState")(function* (
   repoRoot: string,
   id: string
 ): Effect.fn.Return<YeetAckState, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const ackPath = yield* yeetInboxAckPath(repoRoot, id);
-  // Existence and readability are decided separately: a receipt that exists
-  // but cannot be read (permissions, a directory squatting on the path, EIO)
-  // still acks its row — folding those read failures into "unacked" would
-  // re-arm enforcement over a bookkeeping defect.
-  const acked = yield* fs.exists(ackPath).pipe(Effect.orElseSucceed(thunkFalse));
-  if (!acked) {
+  const guardedRead = yield* Effect.option(readContainedFileStringNoFollow(repoRoot, ackPath));
+  if (O.isNone(guardedRead) || !guardedRead.value.exists) {
     return YeetAckState.make({ acked: false, receipt: null });
   }
-  const text = yield* Effect.option(fs.readFileString(ackPath));
   return YeetAckState.make({
     acked: true,
-    receipt: O.getOrNull(O.flatMap(text, YeetAckReceiptJson.decodeOption)),
+    receipt: O.getOrNull(O.flatMap(guardedRead.value.contents, YeetAckReceiptJson.decodeOption)),
   });
 });
 
@@ -354,17 +349,12 @@ export const writeYeetAckReceipt = Effect.fn("Yeet.writeYeetAckReceipt")(functio
   repoRoot: string,
   receipt: YeetAckReceipt
 ): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const paths = yield* yeetInboxPaths(repoRoot);
   const ackPath = yield* yeetInboxAckPath(repoRoot, receipt.id);
   const json = yield* YeetAckReceiptJson.encode(receipt).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode an ack receipt."))
   );
-  yield* fs
-    .makeDirectory(paths.acksDir, { recursive: true })
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to create the acks directory "${paths.acksDir}".`)));
-  yield* fs
-    .writeFileString(ackPath, `${json}\n`)
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to write the ack receipt "${ackPath}".`)));
+  yield* writeContainedFileString(repoRoot, ackPath, `${json}\n`).pipe(
+    Effect.mapError(YeetCommandError.new(`Failed to write the ack receipt "${ackPath}".`))
+  );
   return ackPath;
 });

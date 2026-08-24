@@ -2,10 +2,10 @@
 
 ## Status
 
-Status: `active`. Validation and lane partitioning are complete for all 19
-findings. Six bounded remediations are merged, one finding was already fixed,
-six repository-fixable findings are being consolidated into PR #712, and six
-CI trust-boundary findings remain blocked on architecture and external proof.
+Status: `completed-retained`. All repository-local remediations are merged,
+including CSF-012 and CSF-015 through CSF-019 in PR #712. Six CI trust-boundary
+findings remain an explicit handoff to the runner-admission/workload-identity
+arc for external proof.
 
 ## Phases
 
@@ -15,12 +15,12 @@ CI trust-boundary findings remain blocked on architecture and external proof.
 | P1 capture | complete | Capture the full signed-in CSV snapshot. | 19 IDs reconcile: 7 High, 6 Medium, 2 Low, 4 Informational. |
 | P2 validate | complete | Validate all reports at current HEAD. | 19/19 have verdict, disposition, and rationale. |
 | P3 lane-partition | complete | Assign findings to disjoint root-cause lanes. | 19/19 have an owner and lane. |
-| P4 remediate       | in-progress | Fix all real findings with focused checks.              | Six fixes are merged, six are locally proved for PR #712, and six CI findings await external evidence.                                                      |
-| P5 repo-proof      | in-progress | Run packet validation and Yeet repair/verify.           | Focused proof is green; combined merged-tree generation and exact-head full Yeet remain.                                                                     |
-| P6 publish         | in-progress | Publish intentional PRs through Yeet.                   | Consolidate the remaining repository-fixable findings into PR #712 and close every review thread.                                                            |
-| P7 monitor         | pending     | Close hosted checks and actionable reviews.             | PR green and mergeable.                                                                                                                                        |
-| P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 19 IDs resolved. |
-| P9 close           | pending     | Record evidence, reflection, and lifecycle.             | Packet set to `completed-retained` in the same closeout PR state.                                                                                              |
+| P4 remediate | complete | Fix or transfer all real findings with focused checks. | Repository-local fixes are merged; six runner findings have a named receiving arc. |
+| P5 repo-proof | complete | Run packet validation and Yeet repair/verify. | PR #712 contains the final repository-local batch and merged on 2026-08-14. |
+| P6 publish | complete | Publish intentional PRs through Yeet. | All repository-local remediation PRs are merged. |
+| P7 monitor | complete | Close hosted checks and actionable reviews. | Merged PR evidence is retained in local history. |
+| P8 merge-and-close | complete | Merge, close, or hand off captured findings. | Repository-local work merged; six runner findings transferred without a dashboard-closure claim. |
+| P9 close | complete | Record evidence, reflection, and lifecycle. | Packet set to `completed-retained` with a closeout reflection. |
 
 ## Execution Rules
 
@@ -30,21 +30,24 @@ CI trust-boundary findings remain blocked on architecture and external proof.
 - Keep global files and ledgers serialized.
 - Use focused tests first, then package checks, then Yeet.
 - Never stage ignored raw evidence.
-- Six remediation findings are merged. Consolidate CSF-012, CSF-015, and
-  CSF-016 through CSF-019 into PR #712. Keep the six runner findings held
-  without the required architecture and external proof; never merge the PR.
+- Keep the six runner findings with the receiving architecture arc until it
+  records the required external proof. Do not treat the handoff as accepted
+  risk or as scanner closure.
 
-## Active Architecture Stop
+## Retained architecture handoff
 
 CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 are confirmed and
-remain dispositioned `remediate`; they are not accepted risk or deferred
+remain dispositioned `remediate`; they are not accepted risk or dashboard
 closure. Complete repair requires a trust boundary outside pull-request-editable
 workflow content and removal of usable cloud identity during runner jobs. Those
-P2/P3 have landed, but P4 remains in progress until organization-owned controls
-and external GitHub runner-group/AWS deployment proof verify the resulting
-boundary.
+items are owned by the runner-admission/workload-identity arc until
+organization-owned controls and external GitHub runner-group/AWS deployment
+proof verify the resulting boundary.
 
 ## P5 Preflight Evidence
+
+The entries below are retained pre-merge evidence. PR #712's verified merge
+supersedes their pending publication state.
 
 - Round 1 reviewed baseline commit
   `f2322856de0d2b51d0e0c73ca1a76671b9a93f3c`. The ten canonical roles,

@@ -378,10 +378,10 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
  *
  * **Details**
  *
- * Appends an explicit package filter to either a nested `bun run <script>` lane
- * or a direct `bunx turbo run` lane and preserves the lane's environment
- * verbatim. Nested Bun scripts receive the filter after `--`; direct Turbo
- * invocations receive it as a Turbo option. Preserving an inherited
+ * Appends an explicit package filter and preserves the lane's environment
+ * verbatim. Direct `bunx turbo run` commands and nested `bun run beep ci lane`
+ * commands receive the filter as an option; other Bun scripts receive it after
+ * `--`. Preserving an inherited
  * `TURBO_FORCE=true` is deliberate: under a forced sweep an older successful
  * cache entry can exist at the failed task's unchanged hash, and a cache-reading
  * rerun would replay it without invoking the compiler — a vacuous green.
@@ -413,12 +413,19 @@ export const standaloneQuarantineRerunStep: {
     step.command === "bunx" &&
     A.get(step.args, 0).pipe(O.contains("turbo")) &&
     A.get(step.args, 1).pipe(O.contains("run"));
+  const nestedBeepCiLane =
+    step.command === "bun" &&
+    A.get(step.args, 0).pipe(O.contains("run")) &&
+    A.get(step.args, 1).pipe(O.contains("beep")) &&
+    A.get(step.args, 2).pipe(O.contains("ci")) &&
+    A.get(step.args, 3).pipe(O.contains("lane"));
   return QualityTaskStep.make({
     label: `${step.label}:flake-rerun:${task.packageName}`,
     command: step.command,
-    args: directTurboRun
-      ? [...step.args, `--filter=${task.packageName}`]
-      : [...step.args, "--", `--filter=${task.packageName}`],
+    args:
+      directTurboRun || nestedBeepCiLane
+        ? [...step.args, `--filter=${task.packageName}`]
+        : [...step.args, "--", `--filter=${task.packageName}`],
     cwd: step.cwd,
     ...optionalProp("env", O.fromUndefinedOr(step.env)),
     ...optionalProp("useLocalEnv", O.fromUndefinedOr(step.useLocalEnv)),

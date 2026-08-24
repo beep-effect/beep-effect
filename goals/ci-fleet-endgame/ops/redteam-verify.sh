@@ -6,6 +6,13 @@ readonly workflow="fleet-shadow-check.yml"
 readonly poll_seconds=20
 readonly max_run_polls=60
 readonly teardown_limit=300
+readonly required_gates=(
+  A_APP_SECRET_SSM
+  B_S3
+  C_TAILNET_LAN
+  D_CONTAINER_IMDS
+  E_RUNNER_IMDS_HOOK
+)
 
 branch="${1:-${REDTEAM_REF:-}}"
 if [[ -z "${branch}" ]]; then
@@ -104,8 +111,13 @@ if (( run_completed == 1 )); then
   echo "gate summary:"
   grep -E 'GATE [A-Z0-9_]+: (PASS|FAIL)$' "${run_log}" || true
   [[ "${conclusion}" == success ]] || run_failed=1
-  if [[ "$(grep -Ec 'GATE [A-Z0-9_]+: PASS$' "${run_log}" || true)" -ne 4 ]] || \
-    grep -Eq 'GATE [A-Z0-9_]+: FAIL$' "${run_log}"; then
+  for gate in "${required_gates[@]}"; do
+    if [[ "$(grep -Fc "GATE ${gate}: PASS" "${run_log}" || true)" -ne 1 ]]; then
+      echo "required gate did not report exactly one PASS: ${gate}"
+      gate_failed=1
+    fi
+  done
+  if grep -Eq 'GATE [A-Z0-9_]+: FAIL$' "${run_log}"; then
     gate_failed=1
   fi
 else

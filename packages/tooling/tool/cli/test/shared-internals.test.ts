@@ -32,18 +32,16 @@ import {
   isUnresolvedSecretReference,
   JsonStringCodec,
   jsonText,
-  LocalEnvStep,
-  localEnvOpRunStep,
   nextCursor,
   readOptionalConfigString,
   renderSchemaFirstPolicyFindingLine,
   SchemaFirstPolicyFinding,
   SchemaFirstPolicyIssuePrefix,
   SchemaFirstPolicySeverity,
+  turboCacheSecretSessionEnvironment,
+  turboEnvExtendsAmbient,
   turboEnvOverrides,
-  withLocalEnv,
 } from "@beep/repo-cli/test/SharedInternals";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Data, Effect, Layer } from "effect";
 import * as O from "effect/Option";
@@ -269,20 +267,6 @@ describe("EnvConfig readers", () => {
     expect(isUnresolvedSecretReference("postgres://localhost")).toBe(false);
     expect(isUnresolvedSecretReference(undefined)).toBe(false);
   });
-
-  it("localEnvOpRunStep wraps a step in op run", () => {
-    const wrapped = localEnvOpRunStep({ label: "test", command: "bun", args: ["test"], cwd: "/repo" });
-    expect(wrapped.command).toBe("op");
-    expect(wrapped.args).toEqual(["run", "--env-file=.env", "--", "bun", "test"]);
-    expect(wrapped.label).toBe("test (op run)");
-  });
-
-  it.effect("withLocalEnv leaves an unrequested step unchanged", () => {
-    const step = LocalEnvStep.make({ label: "test", command: "bun", args: ["test"], cwd: "/repo" });
-    return Effect.gen(function* () {
-      expect(yield* withLocalEnv(step).pipe(provideScopedLayer(NodeServices.layer))).toBe(step);
-    });
-  });
 });
 
 describe("Github plumbing", () => {
@@ -363,11 +347,10 @@ describe("turboEnvOverrides", () => {
     env: Record<string, string>,
     command: string,
     args: ReadonlyArray<string>
-  ): Record<string, string | undefined> => Effect.runSync(withTurboEnv(env)(turboEnvOverrides(command, args)));
+  ): Record<string, string | undefined> => Effect.runSync(withTurboEnv(env)(turboEnvOverrides(command, args, env)));
 
   const opRunArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => [
     "run",
-    "--env-file=.env",
     "--",
     "bunx",
     "turbo",
@@ -377,7 +360,7 @@ describe("turboEnvOverrides", () => {
   it("returns nothing for a non-turbo command", () => {
     expect(overridesFor({}, "git", ["status"])).toEqual({});
     expect(overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
-    expect(overridesFor({}, "op", ["run", "--env-file=.env", "--", "bun", "run", "build"])).toEqual({});
+    expect(overridesFor({}, "op", ["run", "--", "bun", "run", "build"])).toEqual({});
   });
 
   it("guards the TUI on a direct turbo spawn with resolved credentials", () => {
@@ -405,23 +388,35 @@ describe("turboEnvOverrides", () => {
     });
   });
 
-  // Regression guard: `op run` resolves op:// references out of the environment
-  // it is handed, not only out of --env-file. Scrubbing them from a wrapped
-  // spawn deletes the credential it exists to resolve, leaving the wrapped
-  // turbo with none at all.
-  it("keeps unresolved references intact for an op run wrapped spawn", () => {
-    expect(
-      overridesFor(
-        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
-        "op",
-        opRunArgs(["run", "check"])
-      )
-    ).toStrictEqual({ TURBO_UI: "false" });
+  it("gives a wrapped spawn only Turbo secret references and a non-extending environment", () => {
+    const environment = {
+      PATH: "/fixture/bin",
+      SAFE_LITERAL: "fixture-value",
+      TURBO_API: "op://fixture-vault/turbo/api",
+      TURBO_TOKEN: "op://fixture-vault/turbo/token",
+      TURBO_TEAM: "op://fixture-vault/turbo/team",
+      TURBO_CACHE: REMOTE_READ,
+      UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
+    };
+    const sanitized = {
+      PATH: "/fixture/bin",
+      SAFE_LITERAL: "fixture-value",
+      TURBO_API: "op://fixture-vault/turbo/api",
+      TURBO_TOKEN: "op://fixture-vault/turbo/token",
+      TURBO_TEAM: "op://fixture-vault/turbo/team",
+      TURBO_CACHE: REMOTE_READ,
+    };
+    const args = opRunArgs(["run", "check"]);
+
+    expect(turboCacheSecretSessionEnvironment(environment)).toStrictEqual(sanitized);
+    expect(overridesFor(environment, "op", args)).toStrictEqual({ ...sanitized, TURBO_UI: "false" });
+    expect(turboEnvExtendsAmbient("op", args)).toBe(false);
   });
 
   it("recognizes a wrapped spawn whose turbo arguments contain their own separator", () => {
-    expect(overridesFor({}, "op", opRunArgs(["run", "coverage", "--", "--maxWorkers=1"]))).toEqual({
-      TURBO_UI: "false",
-    });
+    const args = opRunArgs(["run", "coverage", "--", "--maxWorkers=1"]);
+
+    expect(overridesFor({}, "op", args)).toEqual({ TURBO_UI: "false" });
+    expect(turboEnvExtendsAmbient("op", args)).toBe(false);
   });
 });

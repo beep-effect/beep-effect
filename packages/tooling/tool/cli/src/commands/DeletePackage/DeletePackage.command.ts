@@ -10,7 +10,7 @@ import { DomainError, decodePackageJsonEffect, findRepoRoot, resolveWorkspaceDir
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Unknown } from "@beep/schema/Unknown";
-import { A, Str, Text, thunkFalse } from "@beep/utils";
+import { A, Str, thunkFalse } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -43,6 +43,7 @@ import {
   DeletePackagePolicy,
 } from "./DeletePackage.schemas.ts";
 import { DeletePackageDataResource } from "./internal/DataResource.ts";
+import { renderCanonicalDeletionChangeset } from "./internal/DeletionChangeset.ts";
 import type {
   DependentsReport,
   RegistrationGeometryServiceShape,
@@ -58,9 +59,10 @@ class ResolvedDeleteTarget extends S.Class<ResolvedDeleteTarget>($I`ResolvedDele
   {
     target: RegistrationTarget,
     liveWorkspace: S.Boolean,
+    workspacePaths: S.Array(PosixPath),
   },
   $I.annote("ResolvedDeleteTarget", {
-    description: "A live workspace target or an explicit deleted-target doctor probe.",
+    description: "A live workspace target or deleted-target doctor probe with the resolved workspace path inventory.",
   })
 ) {}
 
@@ -161,6 +163,7 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
   const normalizedInput = normalizePath(input);
   const requestedName = packageNameForInput(input);
   const workspaces = A.fromIterable(yield* resolveWorkspaceDirs(repoRoot));
+  const workspacePaths = A.map(workspaces, ([, dir]) => normalizePath(path.relative(repoRoot, dir)));
   const match = A.findFirst(
     workspaces,
     ([name, dir]) =>
@@ -184,6 +187,7 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
         lab,
       }),
       liveWorkspace: true,
+      workspacePaths,
     });
   }
 
@@ -203,7 +207,26 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
       private: true,
     }),
     liveWorkspace: false,
+    workspacePaths,
   });
+});
+
+const workspacePathsAtRoot = Effect.fn("DeletePackage.workspacePathsAtRoot")(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  const workspaces = A.fromIterable(yield* resolveWorkspaceDirs(repoRoot));
+  return A.map(workspaces, ([, directory]) => normalizePath(path.relative(repoRoot, directory)));
+});
+
+const enforceOwnedTreeTargetPolicy = Effect.fn("DeletePackage.enforceOwnedTreeTargetPolicy")(function* (
+  target: RegistrationTarget,
+  workspacePaths: ReadonlyArray<string>
+) {
+  const refusal = DeletePackagePolicyEvaluation.ownedTreeRefusal(target, workspacePaths);
+  if (O.isNone(refusal)) return;
+  yield* Console.error(
+    `[delete-package] REFUSE [${refusal.value.kind}/${refusal.value.severity}] ${refusal.value.detail}`
+  );
+  return yield* failWithReportedExit("delete-package: target path refused.");
 });
 
 const printPlan = Effect.fn("DeletePackage.printPlan")(function* (
@@ -374,11 +397,7 @@ export const rewritePendingChangesets = Effect.fn("DeletePackage.rewritePendingC
   const slug = pipe(packageName, Str.replace("@beep/", Str.empty));
   const deletionNote = path.join(changesetDir, `delete-${slug}.md`);
   yield* DeletionNotePolicy.$match(deletionNotePolicy, {
-    "emit-empty-note": () =>
-      fs.writeFileString(
-        deletionNote,
-        Text.joinLines(["---", "{}", "---", "", `No release: remove \`${packageName}\` from the workspace.`, ""])
-      ),
+    "emit-empty-note": () => fs.writeFileString(deletionNote, renderCanonicalDeletionChangeset(packageName)),
     "labs-exempt": () => Effect.void,
   });
 });
@@ -686,7 +705,9 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot();
   const resolved = yield* resolveDeleteTarget(repoRoot, options.target, options.check);
+  yield* enforceOwnedTreeTargetPolicy(resolved.target, resolved.workspacePaths);
   const executePlan = Effect.fn("DeletePackage.executePlan")(function* (plan: RegistrationPlan) {
+    yield* enforceOwnedTreeTargetPolicy(plan.target, yield* workspacePathsAtRoot(repoRoot));
     if (options.retireChangesets)
       yield* Console.log(
         "[delete-package] --retire-changesets requested; the existing retired registry is preserved without adding an ambiguous name record."
@@ -700,14 +721,21 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
     // the live DROP executor is deferred, so the manual step is printed here
     // whether or not consent was given.
     const dataSurface = A.findFirst(surfacesForTarget(plan.target), RegistrationSurface.guards["data-resource"]);
+    const dataSlug = pipe(plan.target.packageName, Str.replace("@beep/", Str.empty));
     yield* O.match(dataSurface, {
       onNone: () => Effect.void,
-      onSome: (surface) =>
-        Console.log(
+      onSome: (surface) => {
+        if (!DeletePackageDataResource.labSchemaOwnershipProven(dataSlug, surface.resourceName)) {
+          return Console.error(
+            `[delete-package] data-resource ${surface.id}: REFUSE stale manifest resource ${surface.resourceName}; no database command emitted.`
+          );
+        }
+        return Console.log(
           options.dropData
-            ? `[delete-package] data-resource ${surface.id}: consent received; the live drop is deferred in P2 — run manually: ${DeletePackageDataResource.renderManualDropStep(surface.resourceName)}`
+            ? `[delete-package] data-resource ${surface.id}: consent received; the live drop is deferred in P2; run manually: ${DeletePackageDataResource.renderManualDropStep(surface.resourceName)}`
             : `[delete-package] data-resource ${surface.id}: requires ${surface.destructiveConsentFlag}; manual step: ${DeletePackageDataResource.renderManualDropStep(surface.resourceName)}`
-        ),
+        );
+      },
     });
 
     const deletionNotePolicy = pipe(

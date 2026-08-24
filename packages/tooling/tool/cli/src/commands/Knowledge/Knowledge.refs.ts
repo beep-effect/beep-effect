@@ -1170,7 +1170,7 @@ export const KNOWLEDGE_SCANNER_SCOPE: ReadonlyArray<string> = [
 const SCANNER_ROOT_FILES = HashSet.make("AGENTS.md", "CLAUDE.md");
 const SCANNER_PREFIXES = A.map(A.drop(KNOWLEDGE_SCANNER_SCOPE, 2), (root) => `${root}/`);
 const EXCLUDED_PREFIXES: ReadonlyArray<string> = ["docs/generated/", "docs/_internal/"];
-const ARCHIVAL_SEGMENTS = HashSet.make(
+const ARCHIVAL_DIRECTORY_SEGMENTS = HashSet.make(
   "history",
   "research",
   "reviews",
@@ -1179,12 +1179,13 @@ const ARCHIVAL_SEGMENTS = HashSet.make(
   "outputs",
   "reflections",
   "logs",
-  ".proofs",
-  // Admitted by the Workstream A rewrite pass: `data/` holds machine-captured pipeline
-  // artifacts (hash-pinned extraction records quoting verbatim source text), the same
-  // captured-proof class as `outputs` — rewriting them would corrupt the capture.
-  "data"
+  ".proofs"
 );
+
+const isGoalPacketDataPath = (segments: ReadonlyArray<string>): boolean =>
+  O.exists(A.get(segments, 0), (segment) => Str.Equivalence(segment, "goals")) &&
+  O.exists(A.get(segments, 1), Str.isNonEmpty) &&
+  O.exists(A.get(segments, 2), (segment) => Str.Equivalence(segment, "data"));
 
 /**
  * Whether a repository path sits inside the scanned knowledge surface.
@@ -1220,15 +1221,14 @@ export const isKnowledgeScopedPath = (repoPath: string): boolean => {
 };
 
 /**
- * Whether a repository path sits below an archival directory segment.
+ * Whether a repository path sits below an archival directory root.
  *
  * **Details**
  *
- * The archival segments are `history`, `research`, `reviews`, `synthesis`, `findings`, `outputs`,
- * `reflections`, `logs`, `.proofs`, and `data`. The test is by exact path segment, so a file merely
- * named `research-notes.md` is live. `data` earned its place in the Workstream A rewrite pass:
- * packet `data/` directories hold machine-captured pipeline artifacts whose recorded text is
- * hash-pinned, so they are captured proof rather than editable guidance.
+ * The explicit archival directory names are matched as exact path segments, so a file merely named
+ * `research-notes.md` is live. The generic name `data` is archival only at the packet-owned root
+ * `goals/<packet>/data/`: those directories hold hash-pinned pipeline captures. A nested `data/`
+ * directory anywhere else remains live guidance.
  *
  * **Example** (Separate archival evidence from live guidance)
  *
@@ -1236,6 +1236,7 @@ export const isKnowledgeScopedPath = (repoPath: string): boolean => {
  * import { isKnowledgeArchivalPath } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(isKnowledgeArchivalPath("goals/example/research/notes.md")) // true
+ * console.log(isKnowledgeArchivalPath(".claude/skills/data/SKILL.md")) // false
  * console.log(isKnowledgeArchivalPath("goals/example/PLAN.md")) // false
  * ```
  *
@@ -1244,8 +1245,12 @@ export const isKnowledgeScopedPath = (repoPath: string): boolean => {
  * @category predicates
  * @since 0.0.0
  */
-export const isKnowledgeArchivalPath = (repoPath: string): boolean =>
-  A.some(Str.split("/")(repoPath), (segment) => HashSet.has(ARCHIVAL_SEGMENTS, segment));
+export const isKnowledgeArchivalPath = (repoPath: string): boolean => {
+  const segments = Str.split("/")(repoPath);
+  return (
+    A.some(segments, (segment) => HashSet.has(ARCHIVAL_DIRECTORY_SEGMENTS, segment)) || isGoalPacketDataPath(segments)
+  );
+};
 
 const GOVERNED_BARE_ROOTS = HashSet.make(
   ".agents",
