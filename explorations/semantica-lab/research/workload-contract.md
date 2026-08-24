@@ -1,8 +1,9 @@
-# Workload Contract — v1.3
+# Workload Contract — v1.4
 
 v1.0 ratified 2026-08-24; v1.1 corrected the corpus count; v1.2 applied G4/G6/G7; v1.3 applied
 S1/S2/S3/S5 (probe-denominated stop rule, gold-proposer separation, OpenAI embeddings Layer,
-G-entailment split). Hard gates are Tier-L only. Hosted models are in scope for M1. Offline
+G-entailment split); v1.4 applied R1–R3 (PR #802 review: report/telemetry split, full-W1 gate
+per stage, G-projection before rebuild identity). Hard gates are Tier-L only. Hosted models are in scope for M1. Offline
 means the loop replays from a content-addressed cache with the network off. Changes to this
 file are dated DECISIONS entries.
 
@@ -31,6 +32,10 @@ file are dated DECISIONS entries.
   with character spans.
 - **G-entity:** 5 W1 papers — persons, orgs, works, methods with spans.
 - **G-relation:** 3 W1 papers — typed relations among G-entity entities.
+- **G-projection (gates C1, R3):** over F1 + one G-relation W1 paper, committed expected
+  projections for the frozen embedding model and dimension: at least one known kNN neighbour pair
+  (chunk ids + rank) and SPARQL result sets with expected non-empty bindings and counts. C1 checks
+  these BEFORE rebuild identity; an empty or mismatched projection fails C1.
 - **G-entailment/rdfs (gates C2, S5):** a fixed suite over F1 + the seeded ontology: ρdf closure
   cases (rdfs2, 3, 5, 7, 9, 11) and SKOS hierarchy cases via one explicit broader-transitivity
   rule, each with expected derivations AND expected proofs (checkable derivation, not just
@@ -79,11 +84,12 @@ response hash) in the schema.
 
 Headless, in the Bun sidecar process: ingest → parse → split → normalize → extract → KG build →
 RDFS-closure reasoning → eval over W1 + F1, emitting a schema-validated eval report (corpus
-hash, gold version, per-metric results, Tier-L results, Tier-D telemetry).
+hash, gold version, per-call `ModelIdentity`, per-metric results) plus a per-run `EvalRunTelemetry`
+sidecar (Tier-L measurements, Tier-D telemetry) that is never part of the report digest (R1).
 
 **Offline (G7):** after the first hosted fetch, every provider result is cached
 content-addressed with its model identity. A second run with the network disabled must
-reproduce the EvalReport bytes. API-unavailable is a typed degraded state, never a silent
+reproduce the `EvalReport` digest (`reportDigest`); the telemetry sidecar is expected to differ (R1). API-unavailable is a typed degraded state, never a silent
 fallback. Fully-offline live inference is not an M1 criterion.
 
 **Determinism:** content-addressed ids, pinned model identities, stable ordering. Re-running W1
@@ -95,4 +101,7 @@ candidate from its sheet's slate. If that fails too, the family parks and the pa
 to decompose rather than relaxing this contract silently. Passing means the rubric's hard gates
 plus the two Tier-L gates (cold start <5s, p95 <100ms) plus a quality floor (beat the
 G-structure/G-entity baselines set by the first passing run). Wall-clock per stage and per run
-is recorded as Tier-D telemetry and never gates.
+is recorded as Tier-D telemetry and never gates. Every stage pass additionally requires the full W1
+manifest (25 papers) + F1 to run end-to-end live and replay with equal report digests and zero
+typed-degraded document failures (R2); gold-scored criteria on the gold subsets never substitute
+for the full run.

@@ -67,7 +67,7 @@ papers.
    `ProvenanceEvent`, `ModelIdentity`, the `ProviderCache` key, `EvalRun`
    (with the S2 refinement), `EvalReport`
    ([`shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
-   v1.3). `CanonicalText` is composed from `ResolvedSourceText` + `TextAnchor`,
+   v1.4). `CanonicalText` is composed from `ResolvedSourceText` + `TextAnchor`,
    not built (M1).
 2. Define the C0 `Context.Service` contracts (`DocumentSource`, `Parser`,
    `Canonicalizer`, `Chunker`, `Extractor`, `Ledger`, `ProviderCache`,
@@ -75,7 +75,7 @@ papers.
    Capability Check.
 3. Wire the CLI entry: `canary c0 --manifest w1.manifest.json --paper <id>`
    and the same with `--offline`.
-4. Prove the slice as lab tests: byte-identical reports, `verifyTextAnchor`
+4. Prove the slice as lab tests: equal report digests (telemetry sidecars excluded), `verifyTextAnchor`
    on every span, non-zero G-relation count, typed degraded states for the
    malformed specimens, report fields present.
 5. Extend to all three G-relation papers; run hybrid (LangExtract shape) and
@@ -97,8 +97,8 @@ edge; do not let it block P1 or P2.
    (no DDL names a dimension); alternate-dimension fixture proves the keying.
 3. RDF projection rebuilt from the ledger into Oxigraph per run under an
    Effect-level timeout; `QuadDelta`-shaped rebuild-identity witness.
-4. `canary c1` live and `--offline`; rebuild identity test (drop, rebuild,
-   identical query results); rebuild cost recorded as telemetry.
+4. `canary c1` live and `--offline`; `G-projection` expectations first, then the rebuild identity test
+   (drop, rebuild, identical query results); rebuild cost recorded as telemetry.
 5. On pass: Storage and Embeddings verdicts to `DECISIONS.md`; the embedding
    dimension is frozen from here.
 

@@ -40,7 +40,8 @@ Execution:
    `--offline`), then all three G-relation papers. Schemas first, then
    `Context.Service` contracts, then first-probe Layers.
 3. P3 C1 only after the sibling `openai-driver` packet is merged: vector table
-   + RDF rebuild; rebuild identity; alternate-dimension fixture.
+   + RDF rebuild; `G-projection` expectations first, then rebuild identity;
+   alternate-dimension fixture.
 4. P4 C2: ρdf closure + EYE oracle, crash injection, Tier-L bars.
 5. After each pass, write the verdict entry to `DECISIONS.md` before touching
    the atlas. Yeet each stage to `merge-ready: yes`.
@@ -51,7 +52,8 @@ Non-negotiable:
 - `CanonicalText` = `ResolvedSourceText`; spans = `TextAnchor`; every span
   passes `verifyTextAnchor`. No loss map.
 - The provider cache is the determinism; network-off replay must reproduce
-  report bytes. Typed degraded states, never success-shaped fallbacks.
+  report digest (telemetry sidecar excluded); every stage also runs the full
+  W1 + F1 manifest live and replay. Typed degraded states, never success-shaped fallbacks.
 - Gold proposer's provider family ≠ extractor's (schema refinement).
 - Dimension-keyed vectors; no DDL names a dimension; no id brand truncates.
 - Closure equality + per-event rule validation at C2, never premise-set

@@ -1,4 +1,4 @@
-# Shared Schema One-Pager — v1.3 (M1 compose-not-build 2026-08-24; v1.2 S6 effect-ontology fold-in;
+# Shared Schema One-Pager — v1.4 (R1 report/telemetry split, PR #802 review 2026-08-24; v1.3 M1 compose-not-build; v1.2 S6 effect-ontology fold-in;
 v1.1 post-bake-off-review additions; v1.0 RATIFIED 2026-08-24) (A7)
 
 The distinctions every bake-off winner must preserve. Fat-marker contract, not final code: names
@@ -55,8 +55,14 @@ compatibility round checks composition.
   the seed; semantica's single-step "explanations" are the anti-pattern.
 - **PipelineStep** — serializable tagged step algebra (D16): step kind (LiteralKit), config
   schema, dependency edges; interpreted by services. No raw callables in definitions.
-- **EvalReport** — corpus hash, gold version, per-metric results, budgets observed;
-  schema-validated (qa-inventory pattern).
+- **EvalReport** *(re-scoped v1.4, R1)* — the replay-stable, content-addressed payload: corpus
+  hash, gold version, per-call `ModelIdentity` + provider-cache keys, per-metric results;
+  `reportDigest` = sha256 of its canonical JSON; schema-validated (qa-inventory pattern). Replay
+  identity (G7) is `reportDigest` equality — nothing time-dependent may live in it.
+- **EvalRunTelemetry** *(added v1.4, R1)* — the per-run sidecar referencing a `reportDigest`:
+  run id, mode (`live | replay`), wall-clock, cold start, p95, RSS, disk growth, dependency and
+  model bytes. Tier-L bars are read from the live run's sidecar; Tier-D numbers are recorded;
+  the sidecar is never part of the digest and never compared for identity.
 
 ## Anchors already alive in `@beep/*` (S6, verified by the deep read's skeptics)
 
