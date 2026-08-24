@@ -3,7 +3,12 @@
 ## Status
 
 Stage: `graduate`
-Status: `active` (later-wave candidates remain; see [`MAP.md`](./MAP.md))
+Status: `graduated`
+
+Spine graduated 2026-08-13 ([`goals/skill-contract-kernel/`](../../goals/skill-contract-kernel/),
+merged via PR #694); status flipped 2026-08-24 per the graduation contract — gated MAP.md
+candidates do not hold a packet open. Waves 2–6 are gated re-entry candidates in
+[`MAP.md`](./MAP.md); a fired gate reopens this packet at `decompose`.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,12 +23,14 @@ evidence layer into beep's epistemic/citation-span/QA stacks.
 
 ## Next Open Question
 
-The spine graduated: [`goals/skill-contract-kernel/`](../../goals/skill-contract-kernel/)
-(2026-08-13). Next: when a later-wave candidate from [`MAP.md`](./MAP.md) is picked up
-(provisional order: kg-ingestion-contracts → ops-evidence-ladder → browser-lease-capabilities
-→ memory-routing-manifest → fleet-protocol-contracts), run its own shape pass before
-graduating it. All shape decisions for the spine are locked in
-[`DECISIONS.md`](./DECISIONS.md) (ten entries, 2026-08-13).
+Execute [`goals/skill-contract-kernel/`](../../goals/skill-contract-kernel/) — it has zero
+execution (all phases pending; no `@beep/skill-contract` package exists yet). When a
+later-wave candidate from [`MAP.md`](./MAP.md) is picked up (provisional order:
+kg-ingestion-contracts → ops-evidence-ladder → browser-lease-capabilities →
+memory-routing-manifest → fleet-protocol-contracts), it reopens this packet at `decompose`
+for its own shape pass. Before shaping waves 2/3/4/6, read `MAP.md` §Cross-packet
+coordination (protocol-as-value overlap). All spine shape decisions are locked in
+[`DECISIONS.md`](./DECISIONS.md) (twelve entries).
 
 ## Read This First
 
@@ -59,3 +66,13 @@ graduating it. All shape decisions for the spine are locked in
   single-goal graduation). `MAP.md` written; definition-of-ready passed;
   `goals/skill-contract-kernel/` scaffolded and cross-linked. Stage `graduate`, status stays
   `active` as the home of waves 2–6.
+- 2026-08-24: grill-with-docs session flipped status `active` → `graduated`: the 2026-08-13
+  "keep active if candidates remain" reading misquoted the graduation contract (which says
+  flip once promised-now goals exist; gated candidates stay in `MAP.md` as re-entry points),
+  and the deliberate hold ("another clone is finishing it") expired when PR #694 merged.
+  Kernel-goal drift corrected after 11 days (Sol xhigh premise check): `S.TaggedError`
+  replaces the retired `TaggedErrorClass`; `render`/`renderUnsafe` replace the deprecated
+  `DocumentToMarkdown`; `ClaimGateResult` cited at `@beep/epistemic-domain`; parity matrix
+  enumerated in the goal SPEC; receipt digest seam locked (today's digest types + explicit
+  migration seam, not waiting on protocol-as-value); Effect rc.108→rc.111 revalidation added
+  to P0. `MAP.md` gains a protocol-as-value coordination section.

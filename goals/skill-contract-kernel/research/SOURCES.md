@@ -62,15 +62,18 @@ Implementation-load-bearing subset:
 
 The bricks this goal composes (verified `file:line` citations in the inventory reports):
 
-- `@beep/schema` — `LiteralKit`, `withKeyDefaults`, `TaggedErrorClass`: **reuse**.
+- `@beep/schema` — `LiteralKit`, `withKeyDefaults`: **reuse**. (The `TaggedErrorClass` helper
+  named at graduation was retired repo-wide, commit `ec3bc91e63` — boundary errors use
+  Effect's `S.TaggedError` directly.)
 - `@beep/identity` — `$I` composers, `$SchemaId`: **reuse**.
 - `@beep/provenance` — `VerifiedTextAnchor` opaque-constructor + receipt split: **reuse as
   pattern**.
 - `@beep/md` — document model for the SKILL.md projection (`S.encode` render): **reuse**.
 - `@beep/repo-cli` Qa command — `Inventory.schemas.ts`, `JudgeCheck.ts`, `JudgeIngest.ts`,
   `JudgeLint.ts`: **extend** (retrofit target; parity required).
-- Verdict-value precedents — `@beep/mcp-kit` `TierGate.ts`, `@beep/epistemic-use-cases`
-  `ClaimGate.service.ts`: **reuse as pattern**.
+- Verdict-value precedents — `@beep/mcp-kit` `TierGate.ts`; `ClaimGateResult` model in
+  `@beep/epistemic-domain` (returned by the `@beep/epistemic-use-cases` `ClaimGate` service):
+  **reuse as pattern** (read-only precedents — modeling cannot import capability or slices).
 - `SkillContract` root, ladder ADT, receipt family, fail-closed gate evaluation: **NET-NEW**
   (declared in exploration `MAP.md` capability check).
 

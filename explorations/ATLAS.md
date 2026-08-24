@@ -63,14 +63,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   migration gate on the core fold contract stabilizing, evidence closure on
   observed self-hosting friction, React v2 on KSA static-v1 daily-use
   evidence. Fired gates reopen the packet at decompose.
-- [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
-  graduate-stage, still active: spine graduated 2026-08-13 to
-  [`goals/skill-contract-kernel/`](../goals/skill-contract-kernel/README.md)
-  (`@beep/skill-contract` foundation/modeling kernel + qa judge-gate retrofit +
-  SKILL.md render-as-encode projection). Waves 2–6 (KG ingestion, ops ladder,
-  browser leases, memory routing, fleet protocols) remain candidates in
-  [`MAP.md`](./typed-agent-skill-contracts/MAP.md); decision log in
-  [`DECISIONS.md`](./typed-agent-skill-contracts/DECISIONS.md).
 - [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
   initiative for a configurable full-document substrate and eventual
   Professional Desktop document Portal. A live Lexical Playground `0.49.0`
@@ -246,6 +238,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
+  graduated 2026-08-24 (spine 2026-08-13) into
+  [`skill-contract-kernel`](../goals/skill-contract-kernel/README.md):
+  `@beep/skill-contract` foundation/modeling kernel + qa judge-gate retrofit +
+  SKILL.md render-as-encode projection — sole promised-now goal, still
+  unexecuted. Waves 2–6 (KG ingestion, ops ladder, browser leases, memory
+  routing, fleet protocols) remain reopen-at-`decompose` MAP points; the MAP's
+  protocol-as-value coordination section governs waves 2/3/4/6 seams.
 - [`ci-hang-observability`](./ci-hang-observability/README.md) — graduated
   2026-08-23 into
   [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md): per-step

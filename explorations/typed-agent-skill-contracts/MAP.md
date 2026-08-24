@@ -32,6 +32,27 @@ contract kernel → #1 (spine) **and** #3 (its evidence-ladder/recovery retrofit
 KG ingestion+eval → #2; query/browser ops → #4; memory routing → #5; fleet protocol surface →
 #6. DECISIONS §spine track carries the same mapping note.
 
+## Cross-packet coordination: protocol-as-value (2026-08-24)
+
+[`explorations/protocol-as-value`](../protocol-as-value/README.md) (at `shape`, no MAP yet)
+proposes a journal/register/fold substrate with canonical encoding and versioned digests that
+overlaps several waves here. Re-check this section when that packet reaches decompose:
+
+- **Wave 2 (kg-ingestion-contracts):** its manifest/state-machine/evidence-ledger/PROV-O work
+  should consume that substrate or declare a compatibility seam, not re-derive it.
+- **Wave 3 (ops-evidence-ladder):** the yeet lane is one of the journal/register instances the
+  protocol brief wants to collapse — avoid a second audit/register vocabulary.
+- **Wave 4 (browser-lease-capabilities):** reuse its fenced-register/refusal-value types if
+  they land first.
+- **Wave 6 (fleet-protocol-contracts):** strongest interaction — clients, credential chains,
+  and OAuth/PKCE stay in wave 6; the transport-neutral global protocol value, per-role
+  projections, and conformance folds belong to the protocol kit. Their future MAPs need an
+  explicit dependency or handshake; fleet messaging is a named first consumer on the
+  protocol side.
+- **Kernel receipts (goal 1):** digest-bound subjects use today's digest types with an
+  explicit migration seam to the proposed canonical-encoding substrate — no competing
+  canonical encoding (DECISIONS 2026-08-24 §digest seam).
+
 ## First vertical slice (inside goal 1)
 
 Define `Gate` + `EvidenceReceipt` schemas only; express **one** existing `JudgeCheck` rule
