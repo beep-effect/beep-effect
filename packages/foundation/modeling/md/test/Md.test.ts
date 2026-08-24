@@ -72,6 +72,7 @@ import {
   SafeDocument,
 } from "@beep/md/Md.safe";
 import { HtmlFragment, Markdown } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Result } from "effect";
@@ -96,7 +97,7 @@ const documentToHtmlFragmentCompatibility = DocumentToHtmlFragment;
 const documentToPlainTextCompatibility = DocumentToPlainText;
 
 const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")]);
-const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeJsonResult = Unknown.encodeUnknownResultFromJsonString;
 const decodeDocumentJsonResult = S.decodeUnknownResult(S.fromJsonString(Document));
 
 const isJsonObject = (value: S.Json): value is JsonObject =>

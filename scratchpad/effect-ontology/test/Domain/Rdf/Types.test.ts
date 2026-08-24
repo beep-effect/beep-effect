@@ -24,7 +24,7 @@ describe("effect-ontology RDF types", () => {
   it("uses canonical RDF/JS term discrimination", () => {
     const namedNode = makeNamedNode("https://example.org/alice");
     const blankNode = makeBlankNode("alice");
-    const literal = makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string");
+    const literal = makeLiteral("Alice", "https://www.w3.org/2001/XMLSchema#string");
 
     expect(S.is(NamedNode)(namedNode)).toBe(true);
     expect(S.is(BlankNode)(blankNode)).toBe(true);
@@ -36,7 +36,7 @@ describe("effect-ontology RDF types", () => {
     const triple = Triple.make({
       subject: makeNamedNode("https://example.org/alice"),
       predicate: makeNamedNode("https://schema.org/name"),
-      object: makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string"),
+      object: makeLiteral("Alice", "https://www.w3.org/2001/XMLSchema#string"),
     });
     const quad = triple.toQuad();
     const recovered = Triple.fromQuad(quad);

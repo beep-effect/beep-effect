@@ -48,6 +48,7 @@ export const NO_NATIVE_RUNTIME_ERROR_FILES = [
  * @since 0.0.0
  */
 export const NO_NATIVE_RUNTIME_EXTRA_CHECK_PATTERNS = [
+  /^scratchpad\/effect-ontology\/.*\.tsx?$/,
   /^packages\/ai\/sdk\/src\/core\/AgentSdkConfig\.ts$/,
   /^packages\/ai\/sdk\/src\/core\/SessionConfig\.ts$/,
   /^packages\/ai\/sdk\/src\/core\/Diagnose\.ts$/,
@@ -76,6 +77,7 @@ export const NO_NATIVE_RUNTIME_EXTRA_CHECK_PATTERNS = [
  * @since 0.0.0
  */
 export const isNoNativeRuntimeErrorFile = (relativeFilePath: string): boolean =>
+  relativeFilePath.startsWith("scratchpad/effect-ontology/") ||
   A.some(NO_NATIVE_RUNTIME_ERROR_FILES, (filePath) => filePath === relativeFilePath);
 
 /**

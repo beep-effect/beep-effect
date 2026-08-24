@@ -1,20 +1,20 @@
 import { lintCommand } from "@beep/repo-cli";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const deprecatedApiLintShards = [
   "apps/architecture-lab-proof",
   "apps/labs",
@@ -883,7 +883,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
           Effect.gen(function* () {
             yield* writeSchemaFirstSourceFixture([
               'import * as S from "effect/Schema";',
-              "export const decodeConfig = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));",
+              "export const decodeConfig = Unknown.decodeUnknownEffectFromJsonString;",
               "",
             ]);
 

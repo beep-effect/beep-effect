@@ -11,6 +11,7 @@ import {
   createCanonicalDocgenConfig,
   toCanonicalDocgenConfigJson,
 } from "@beep/repo-utils/schemas/DocgenConfig";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, HashMap, MutableHashSet, Order, Path } from "effect";
@@ -45,7 +46,7 @@ const DOCGEN_CONFIG_SCAN_IGNORES = [
 const isResolveDocgenWorkspacePackageDataFirst = (args: IArguments): boolean =>
   (args.length === 1 && P.isString(args[0])) || args.length === 2;
 
-const parseJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const parseJsonText = Unknown.decodeUnknownEffectFromJsonString;
 
 const decodeDocgenConfigDocument = S.decodeUnknownEffect(DocgenConfigDocument);
 

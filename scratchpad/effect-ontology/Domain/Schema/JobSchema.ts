@@ -1,8 +1,9 @@
 /**
  * Persisted background-job contracts with retry metadata.
  *
- * @remarks
- * Jobs use a single tagged union and a content-derived identifier. The
+ * **Details**
+ *
+ * * Jobs use a single tagged union and a content-derived identifier. The
  * upstream delimiter-concatenation helpers were intentionally removed because
  * caller-controlled text and wall-clock milliseconds did not provide
  * unambiguous or collision-resistant identity.
@@ -11,7 +12,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils, UUID } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ContentHash, OntologyName } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
@@ -22,9 +23,9 @@ const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
 /**
  * Compact content-derived background-job identifier.
  *
- * @example
+ * **Example** (Use BackgroundJobId)
  * ```ts
- * import { BackgroundJobId } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { BackgroundJobId } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(BackgroundJobId.is("job-abc123def456")) // true
  * ```
@@ -59,12 +60,12 @@ export const BackgroundJobId = S.String.check(
 /**
  * Runtime value decoded by {@link BackgroundJobId}.
  *
- * @example
+ * **Example** (Use BackgroundJobId)
  * ```ts
  * import {
  *   BackgroundJobId,
  *   type BackgroundJobId as BackgroundJobIdValue
- * } from "@effect-ontology/Schema/JobSchema.ts"
+ * } from "@effect-ontology/Schema/JobSchema"
  *
  * const id: BackgroundJobIdValue = BackgroundJobId.make("job-abc123def456")
  * console.log(id)
@@ -94,7 +95,7 @@ const CommonJobFields = {
 const BackgroundJobDefinition = S.TaggedUnion({
   EmbeddingJob: {
     ...CommonJobFields,
-    canonicalEntityId: EntityId,
+    canonicalEntityId: UUID,
     reason: S.NonEmptyString,
   },
   PromptCacheJob: {
@@ -124,14 +125,14 @@ const BackgroundJobDefinition = S.TaggedUnion({
 /**
  * Persisted request to re-embed a canonical entity.
  *
- * @example
+ * **Example** (Use EmbeddingJob)
  * ```ts
- * import { EmbeddingJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { EmbeddingJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(EmbeddingJob.make)
  * ```
  *
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
@@ -144,14 +145,14 @@ export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
 /**
  * Persisted request to update a prompt cache.
  *
- * @example
+ * **Example** (Use PromptCacheJob)
  * ```ts
- * import { PromptCacheJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { PromptCacheJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(PromptCacheJob.make)
  * ```
  *
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
@@ -164,14 +165,14 @@ export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
 /**
  * Persisted request to recompute entity-similarity scores.
  *
- * @example
+ * **Example** (Use SimilarityRecomputeJob)
  * ```ts
- * import { SimilarityRecomputeJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { SimilarityRecomputeJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(SimilarityRecomputeJob.make)
  * ```
  *
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRecomputeJob.pipe(
@@ -184,14 +185,14 @@ export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRe
 /**
  * Persisted request to rebuild blocking tokens for an entity.
  *
- * @example
+ * **Example** (Use BlockingTokenJob)
  * ```ts
- * import { BlockingTokenJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { BlockingTokenJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(BlockingTokenJob.make)
  * ```
  *
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.pipe(
@@ -204,15 +205,15 @@ export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.p
 /**
  * Persisted request to deliver an HTTPS webhook.
  *
- * @example
+ * **Example** (Use WebhookJob)
  * ```ts
- * import { WebhookJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { WebhookJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(WebhookJob.make)
  * ```
  *
  * @invariant Webhook destinations use HTTPS and payloads are JSON-safe.
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
@@ -225,17 +226,18 @@ export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
 /**
  * Schema for every persisted background-job variant.
  *
- * @example
+ * **Example** (Use BackgroundJob)
  * ```ts
- * import { BackgroundJobSchema } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { BackgroundJob } from "@effect-ontology/Schema/JobSchema"
  *
- * console.log(Object.keys(BackgroundJobSchema.cases).length) // 5
+ * console.log(Object.keys(BackgroundJob.cases).length) // 5
  * ```
  *
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
-export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
+export const BackgroundJob = BackgroundJobDefinition.pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("BackgroundJob", {
     description: "Tagged persisted background-job union for embedding, caching, similarity, blocking, and webhooks.",
     toArbitrary: () => S.toArbitrary(BackgroundJobDefinition),
@@ -243,11 +245,11 @@ export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
 );
 
 /**
- * Runtime job decoded by {@link BackgroundJobSchema}.
+ * Runtime job decoded by {@link BackgroundJob}.
  *
- * @example
+ * **Example** (Use BackgroundJob)
  * ```ts
- * import type { BackgroundJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import type { BackgroundJob } from "@effect-ontology/Schema/JobSchema"
  *
  * const jobName = (job: BackgroundJob) => job._tag
  * console.log(jobName)
@@ -256,7 +258,7 @@ export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type BackgroundJob = typeof BackgroundJobSchema.Type;
+export type BackgroundJob = typeof BackgroundJob.Type;
 
 const JobMetadataDefinition = S.Struct({
   id: BackgroundJobId.annotateKey({
@@ -285,12 +287,14 @@ const JobMetadataDefinition = S.Struct({
 /**
  * Retry metadata stored alongside a background job.
  *
- * @example
+ * **Example** (Use JobMetadata)
  * ```ts
- * import { JobMetadataSchema } from "@effect-ontology/Schema/JobSchema.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { JobMetadata } from "@effect-ontology/Schema/JobSchema"
  *
- * const metadata = JobMetadataSchema.fromUnknown({ id: "job-abc123def456" })
- * console.log(metadata.attempts) // 0
+ * const metadata = S.decodeUnknownOption(JobMetadata)({ id: "job-abc123def456" })
+ * console.log(O.map(metadata, (value) => value.attempts)) // Some(0)
  * ```
  *
  * @invariant Attempt count is a non-negative integer and optional failure state
@@ -298,7 +302,7 @@ const JobMetadataDefinition = S.Struct({
  * @category models
  * @since 0.0.0
  */
-export const JobMetadataSchema = JobMetadataDefinition.annotate({
+export const JobMetadata = JobMetadataDefinition.annotate({
   toArbitrary: () => S.toArbitrary(JobMetadataDefinition),
 }).pipe(
   $I.annoteSchema("JobMetadata", {
@@ -308,11 +312,11 @@ export const JobMetadataSchema = JobMetadataDefinition.annotate({
 );
 
 /**
- * Runtime metadata decoded by {@link JobMetadataSchema}.
+ * Runtime metadata decoded by {@link JobMetadata}.
  *
- * @example
+ * **Example** (Use JobMetadata)
  * ```ts
- * import type { JobMetadata } from "@effect-ontology/Schema/JobSchema.ts"
+ * import type { JobMetadata } from "@effect-ontology/Schema/JobSchema"
  *
  * const attempts = (metadata: JobMetadata) => metadata.attempts
  * console.log(attempts)
@@ -321,4 +325,4 @@ export const JobMetadataSchema = JobMetadataDefinition.annotate({
  * @category type-level
  * @since 0.0.0
  */
-export type JobMetadata = typeof JobMetadataSchema.Type;
+export type JobMetadata = typeof JobMetadata.Type;

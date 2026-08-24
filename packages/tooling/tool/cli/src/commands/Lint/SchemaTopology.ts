@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as P from "effect/Predicate";
@@ -66,7 +67,7 @@ export class SchemaTopologyViolation extends S.Class<SchemaTopologyViolation>($I
   })
 ) {}
 
-const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeJson = Unknown.decodeUnknownEffectFromJsonString;
 const schemaRoleFileTargetPattern = /^\.\/(?:src|dist)\/[A-Z][^/]+\/[^/]+\.[a-z][A-Za-z0-9-]*\.(?:ts|js)$/u;
 const crossConceptIndexExportPattern =
   /^\s*export\s+(?:type\s+)?(?:\*|\{[\s\S]*?\})\s*(?:as\s+[A-Za-z_$][\w$]*\s*)?from\s+["']\.\.\/[^"']+["']/mu;

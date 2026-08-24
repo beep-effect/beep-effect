@@ -1,18 +1,20 @@
 /**
  * CLI: Storage Command
  *
+ * **Details**
+ *
  * Browse and manage data in cloud storage (GCS) or local storage.
  *
- * @since 2.0.0
- * @module Cli/Commands/Storage
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
-import * as O from "effect/Option";
+import { Console, Effect, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli";
+import * as Str from "effect/String";
+import { Argument, Command, Flag } from "effect/unstable/cli";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
@@ -23,9 +25,9 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 
 // --- List Command ---
 
-const listPrefix = Args.string("prefix").pipe(
-  Args.optional,
-  Args.withDescription("Path prefix to list (default: root)")
+const listPrefix = Argument.string("prefix").pipe(
+  Argument.optional,
+  Argument.withDescription("Path prefix to list (default: root)")
 );
 
 const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>) {
@@ -34,26 +36,28 @@ const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>
   yield* Console.log(`Listing: ${effectivePrefix || "(root)"}`);
   yield* Console.log("");
   const items = yield* storage.list(effectivePrefix);
-  if (items.length === 0) {
+  if (A.isReadonlyArrayEmpty(items)) {
     yield* Console.log("(empty)");
     return;
   }
   const dirs = MutableHashSet.empty<string>();
-  const files: Array<string> = [];
+  const files = A.empty<string>();
   for (const item of items) {
-    const relativePath = P.isTruthy(effectivePrefix) ? item.replace(effectivePrefix, "").replace(/^\//, "") : item;
-    const parts = relativePath.split("/");
+    const relativePath = P.isTruthy(effectivePrefix)
+      ? Str.replace(/^\//, "")(Str.replace(effectivePrefix, "")(item))
+      : item;
+    const parts = Str.split("/")(relativePath);
     if (parts.length > 1) {
       MutableHashSet.add(dirs, `${parts[0]}/`);
     } else {
       files.push(item);
     }
   }
-  for (const dir of A.fromIterable(dirs).sort()) {
+  for (const dir of A.sort(A.fromIterable(dirs), Order.String)) {
     yield* Console.log(`  📁 ${dir}`);
   }
-  for (const file of files.sort()) {
-    const name = file.split("/").pop() ?? file;
+  for (const file of A.sort(files, Order.String)) {
+    const name = O.getOrElse(A.last(Str.split("/")(file)), () => file);
     yield* Console.log(`  📄 ${name}`);
   }
   yield* Console.log("");
@@ -66,24 +70,24 @@ const listCommand = Command.make("ls", { prefix: listPrefix }, ({ prefix }) =>
 
 // --- Cat Command ---
 
-const catPath = Args.string("path").pipe(Args.withDescription("Path to the object to read"));
+const catPath = Argument.string("path").pipe(Argument.withDescription("Path to the object to read"));
 
-const catLinesOption = Options.integer("lines").pipe(
-  Options.withAlias("n"),
-  Options.withDefault(0),
-  Options.withDescription("Limit output to N lines (0 = all)")
+const catLinesOption = Flag.integer("lines").pipe(
+  Flag.withAlias("n"),
+  Flag.withDefault(0),
+  Flag.withDescription("Limit output to N lines (0 = all)")
 );
 
 const catHandler = Effect.fn("catHandler")(function* (path: string, lines: number) {
   const storage = yield* StorageService;
-  const contentOpt = yield* storage.get(path);
-  if (contentOpt === undefined) {
+  const contentOpt = yield* storage.getOption(path);
+  if (O.isNone(contentOpt)) {
     yield* Console.error(`Not found: ${path}`);
     return;
   }
-  let content = contentOpt;
+  let content = contentOpt.value;
   if (lines > 0) {
-    content = content.split("\n").slice(0, lines).join("\n");
+    content = A.join(A.take(Str.split("\n")(content), lines), "\n");
   }
   yield* Console.log(content);
 });
@@ -99,7 +103,7 @@ const batchesHandler = Effect.fn("batchesHandler")(function* () {
   yield* Console.log("Batch Manifests:");
   yield* Console.log("");
   const items = yield* storage.list("batches/");
-  const manifestPaths = items.filter((item) => item.endsWith("manifest.json"));
+  const manifestPaths = A.filter(items, Str.endsWith("manifest.json"));
   if (manifestPaths.length === 0) {
     yield* Console.log("No batches found.");
     yield* Console.log("");
@@ -107,9 +111,9 @@ const batchesHandler = Effect.fn("batchesHandler")(function* () {
     return;
   }
   for (const manifestPath of manifestPaths) {
-    const contentOpt = yield* storage.get(manifestPath);
-    if (contentOpt !== undefined) {
-      const manifest = BatchManifest.decodeOptionString(contentOpt);
+    const contentOpt = yield* storage.getOption(manifestPath);
+    if (O.isSome(contentOpt)) {
+      const manifest = BatchManifest.decodeOptionString(contentOpt.value);
       yield* O.match(manifest, {
         onNone: () => Console.log(`📦 ${manifestPath} (invalid manifest)`).pipe(Effect.andThen(Console.log(""))),
         onSome: (value) =>
@@ -137,8 +141,8 @@ const infoHandler = Effect.fn("infoHandler")(function* () {
   yield* Console.log("");
   const size = yield* storage.size;
   yield* Console.log(`  Total size: ${formatBytes(size)}`);
-  const hasGcsMarker = yield* storage.get(".gcs-marker").pipe(
-    Effect.map(P.isNotUndefined),
+  const hasGcsMarker = yield* storage.getOption(".gcs-marker").pipe(
+    Effect.map(O.isSome),
     Effect.orElseSucceed(() => false)
   );
   yield* Console.log(`  Type: ${P.isTruthy(hasGcsMarker) ? "GCS" : "Local/Memory"}`);
@@ -147,12 +151,12 @@ const infoHandler = Effect.fn("infoHandler")(function* () {
   const items = yield* storage.list("");
   const dirs = MutableHashSet.empty<string>();
   for (const item of items) {
-    const parts = item.split("/");
+    const parts = Str.split("/")(item);
     if (parts.length > 1) {
       MutableHashSet.add(dirs, parts[0]);
     }
   }
-  for (const dir of A.fromIterable(dirs).sort()) {
+  for (const dir of A.sort(A.fromIterable(dirs), Order.String)) {
     yield* Console.log(`  📁 ${dir}/`);
   }
 });
@@ -173,6 +177,20 @@ const infoCommand = Command.make("info", {}, () => withErrorHandler(infoHandler(
 // Main Storage Command
 // =============================================================================
 
+/**
+ * Exposes storage command for composition by callers of this module.
+ *
+ * **Example** (Inspect storage command)
+ *
+ * ```ts
+ * import { storageCommand } from "@effect-ontology/Cli/Commands/Storage"
+ *
+ * console.log(storageCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const storageCommand = Command.make("storage").pipe(
   Command.withSubcommands([listCommand, catCommand, batchesCommand, infoCommand]),
   Command.withDescription("Browse and manage cloud storage")

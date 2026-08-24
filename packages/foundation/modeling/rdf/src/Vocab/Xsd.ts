@@ -110,3 +110,19 @@ export const XSD_INTEGER = makeNamedNode(`${XSD_NAMESPACE}integer`);
  * @since 0.0.0
  */
 export const XSD_DOUBLE = makeNamedNode(`${XSD_NAMESPACE}double`);
+
+/**
+ * `xsd:dateTime`.
+ *
+ * **Example** (Inspect date-time NamedNode)
+ *
+ * ```ts
+ * import { XSD_DATE_TIME } from "@beep/rdf/Vocab/Xsd"
+ *
+ * console.log(XSD_DATE_TIME.value) // "http://www.w3.org/2001/XMLSchema#dateTime"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const XSD_DATE_TIME = makeNamedNode(`${XSD_NAMESPACE}dateTime`);

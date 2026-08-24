@@ -1,5 +1,6 @@
 import { HttpUrl as CanonicalHttpUrl } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -39,7 +40,7 @@ const schemaModules = [
   ["Search", Search],
   ["Shacl", Shacl],
   ["Timeline", Timeline],
-] as const;
+];
 
 const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
   A.filterMap(Object.entries(moduleExports), ([exportName, value]) =>
@@ -101,24 +102,27 @@ describe("effect-ontology public schema surface", () => {
     expect(Result.isFailure(empty)).toBe(true);
   });
 
-  it("represents extraction input and terminal output with discriminated variants", () => {
-    const source = S.decodeSync(Api.SubmitJobSource)({
-      _tag: "Remote",
-      value: { url: "https://example.com/report.pdf" },
-    });
-    const missingSource = S.decodeUnknownResult(Api.SubmitJobRequest)({});
-    const notFound = S.decodeSync(BatchStatusResponse.BatchStatusResponse)({
-      _tag: "NotFound",
-      value: { batchId: "batch-abc123def456" },
-    });
+  it.effect(
+    "represents extraction input and terminal output with discriminated variants",
+    Effect.fnUntraced(function* () {
+      const source = yield* S.decodeEffect(Api.SubmitJobSource)({
+        _tag: "Remote",
+        value: { url: "https://example.com/report.pdf" },
+      });
+      const missingSource = S.decodeUnknownResult(Api.SubmitJobRequest)({});
+      const notFound = yield* S.decodeEffect(BatchStatusResponse.BatchStatusResponse)({
+        _tag: "NotFound",
+        value: { batchId: "batch-abc123def456" },
+      });
 
-    expect(source._tag).toBe("Remote");
-    expect(Result.isFailure(missingSource)).toBe(true);
-    expect(notFound).toEqual({
-      _tag: "NotFound",
-      value: { batchId: "batch-abc123def456" },
-    });
-  });
+      expect(source._tag).toBe("Remote");
+      expect(Result.isFailure(missingSource)).toBe(true);
+      expect(notFound).toEqual({
+        _tag: "NotFound",
+        value: { batchId: "batch-abc123def456" },
+      });
+    })
+  );
 
   it("keeps classification-derived chunking behavior colocated with its literal schema", () => {
     expect(

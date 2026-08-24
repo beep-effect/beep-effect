@@ -6,10 +6,10 @@ import {
   recordIdForOrdinal,
   severityCountsOf,
 } from "@beep/repo-cli/test/Codex";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import * as S from "effect/Schema";
 import type { CodexFindingsIngestError } from "@beep/repo-cli/test/Codex";
 
 const hex = (seed: string, length: number): string => {
@@ -86,7 +86,7 @@ describe("codex findings identity assignment", () => {
     const a = captureFinding({ codexId: hex("aa", 32), severity: "Low" });
     const b = captureFinding({ codexId: hex("bb", 32), severity: "High" });
     const c = captureFinding({ codexId: hex("cc", 32), severity: "Medium" });
-    const encode = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+    const encode = Unknown.encodeUnknownSyncFromJsonString;
 
     return Effect.runPromise(
       Effect.all([planFrom(payloadOf([a, b, c])), planFrom(payloadOf([c, a, b]))]).pipe(

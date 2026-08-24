@@ -1,6 +1,8 @@
 /**
  * SHACL Schema Types
  *
+ * **Details**
+ *
  * Browser-safe schemas for normalized SHACL validation results, reports, and
  * workflow policy.
  *
@@ -9,15 +11,12 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation";
-import { flow } from "effect";
+import { ShaclValidationResult, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import { Duration, flow, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
-import * as Duration from "effect/Duration";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { FastCheck } from "effect/testing";
 
@@ -95,17 +94,19 @@ const makeShaclValidationReportArbitrary = (fc: typeof FastCheck) =>
 /**
  * Complete normalized report for one SHACL validation run.
  *
- * @remarks
- * The canonical validation result is embedded under `validation`; the other
+ * **Details**
+ *
+ * * The canonical validation result is embedded under `validation`; the other
  * fields are experiment-specific execution metadata.
  *
  * The decoded `durationMs` value is an Effect `Duration`; its encoded form is
  * the finite, non-negative millisecond measurement named by the field.
  *
- * @example
+ * **Example** (Use ShaclValidationReport)
+ *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ShaclValidationReport } from "@effect-ontology/Schema/Shacl.ts"
+ * import { ShaclValidationReport } from "@effect-ontology/Schema/Shacl"
  *
  * const report = S.decodeUnknownResult(ShaclValidationReport)({
  *   validation: { conforms: true, violations: [], truncated: false },
@@ -120,8 +121,8 @@ const makeShaclValidationReportArbitrary = (fc: typeof FastCheck) =>
  *
  * @invariant Validation semantics are owned by `ShaclValidationResult`; counts
  * are non-negative integers, and the elapsed duration is finite.
- * @see {@link https://www.w3.org/TR/shacl/#validation-report | SHACL validation report}
- * @category validation
+ * @see {@link https://www.w3.org/TR/shacl/#validation-report | SHACL validation report} for related behavior and composition guidance.
+ * @category schemas
  * @since 0.0.0
  */
 export const ShaclValidationReport = ShaclValidationReportFields.annotate({
@@ -131,15 +132,16 @@ export const ShaclValidationReport = ShaclValidationReportFields.annotate({
     description:
       "Complete normalized SHACL validation report with spec-consistent conformance, graph sizes, completion time, and finite duration.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**
  * Runtime value decoded by {@link ShaclValidationReport}.
  *
- * @example
+ * **Example** (Use ShaclValidationReport)
+ *
  * ```ts
- * import type { ShaclValidationReport } from "@effect-ontology/Schema/Shacl.ts"
+ * import type { ShaclValidationReport } from "@effect-ontology/Schema/Shacl"
  *
  * const summary: Pick<ShaclValidationReport, "validation"> = {
  *   validation: { conforms: true, violations: [], truncated: false }
@@ -181,23 +183,26 @@ class ValidationPolicyFields extends S.Class<ValidationPolicyFields>($I`Validati
 /**
  * Workflow policy that maps SHACL result severities to failure behavior.
  *
- * @remarks
- * `logOnly` takes precedence over both failure flags. When it is false,
+ * **Details**
+ *
+ * * `logOnly` takes precedence over both failure flags. When it is false,
  * `failOnWarning` extends failure behavior to Warning-level results while
  * `failOnViolation` controls Violation-level results. Info-level results never
  * fail a workflow under this policy. The schema-owned `shouldFail` static
  * evaluates this policy without changing standards-level report conformance.
  *
- * @example
+ * **Example** (Use ValidationPolicy)
  * ```ts
- * import { ValidationPolicy } from "@effect-ontology/Schema/Shacl.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ValidationPolicy } from "@effect-ontology/Schema/Shacl"
  *
- * const strict = ValidationPolicy.fromUnknown({ failOnWarning: true })
+ * const strict = S.decodeUnknownOption(ValidationPolicy)({ failOnWarning: true })
  *
- * console.log(strict.failOnViolation) // true
- * console.log(strict.failOnWarning) // true
- * console.log(strict.logOnly) // false
- * console.log(ValidationPolicy.shouldFail(strict, [])) // false
+ * console.log(O.map(strict, (policy) => policy.failOnViolation)) // Some(true)
+ * console.log(O.map(strict, (policy) => policy.failOnWarning)) // Some(true)
+ * console.log(O.map(strict, (policy) => policy.logOnly)) // Some(false)
+ * console.log(O.map(strict, (policy) => ValidationPolicy.shouldFail(policy, []))) // Some(false)
  * ```
  *
  * @category policies
@@ -222,14 +227,8 @@ export const ValidationPolicy = ValidationPolicyFields.annotate({
       Bool.and(
         Bool.not(policy.logOnly),
         Bool.or(
-          Bool.and(
-            policy.failOnViolation,
-            A.some(results, (result) => result.severity === "violation")
-          ),
-          Bool.and(
-            policy.failOnWarning,
-            A.some(results, (result) => result.severity === "warning")
-          )
+          Bool.and(policy.failOnViolation, A.some(results, ShaclValidationViolation.guards.violation)),
+          Bool.and(policy.failOnWarning, A.some(results, ShaclValidationViolation.guards.warning))
         )
       )
     ),
@@ -239,12 +238,14 @@ export const ValidationPolicy = ValidationPolicyFields.annotate({
 /**
  * Runtime value decoded by {@link ValidationPolicy}.
  *
- * @example
+ * **Example** (Use ValidationPolicy)
  * ```ts
- * import { ValidationPolicy, type ValidationPolicy as ValidationPolicyValue } from "@effect-ontology/Schema/Shacl.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ValidationPolicy, type ValidationPolicy as ValidationPolicyValue } from "@effect-ontology/Schema/Shacl"
  *
- * const policy: ValidationPolicyValue = ValidationPolicy.fromUnknown({ logOnly: true })
- * console.log(policy.logOnly) // true
+ * const policy = S.decodeUnknownOption(ValidationPolicy)({ logOnly: true })
+ * console.log(O.map(policy, (value: ValidationPolicyValue) => value.logOnly)) // Some(true)
  * ```
  *
  * @category type-level

@@ -39,6 +39,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`protocol-as-value`](./protocol-as-value/README.md) — shape
+  (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
+  (digest-named global protocol type + projections + journal-audited
+  conformance) survived four refutation attempts; five in-repo
+  journal/register/fold instances verified as day-one customers. Align
+  closed (8 decisions): kit thesis, collapse first — wave 1 = canonical
+  encoding + versioned digests + journal/register/fold kit in `@beep/schema`
+  with PacketCore + ExecutionRecord proof migrations; wave 2 (protocol kit)
+  gated; `$I` stays static; decoupled from identity-iri-fibered. Next:
+  Benjamin's BRIEF review, then decompose.
 - [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — align
   (2026-08-17): restoration bar **v2** ratified after an 8-lane adversarial
   review corrected the census (three recycle volumes, raw f-recyclebin

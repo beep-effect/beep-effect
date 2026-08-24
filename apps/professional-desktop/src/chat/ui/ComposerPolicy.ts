@@ -354,12 +354,15 @@ const characterLimitRefusal = (length: number): ComposerSendDecision =>
     })
   );
 
-const acceptWithinLimit = (content: SafeDocument, plainText: string): ComposerSendDecision => {
+const acceptWithinLimit: {
+  (content: SafeDocument, plainText: string): ComposerSendDecision;
+  (plainText: string): (content: SafeDocument) => ComposerSendDecision;
+} = dual(2, (content: SafeDocument, plainText: string): ComposerSendDecision => {
   const length = Str.length(plainText);
   return length > MAX_MESSAGE_CHARACTERS
     ? characterLimitRefusal(length)
     : ComposerSendDecision.cases.send.make({ content });
-};
+});
 
 /**
  * The pure composer decision policy every composer handler calls directly.

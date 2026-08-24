@@ -11,9 +11,9 @@
  */
 
 import { SessionStore } from "@beep/qa-capture";
+import { Unknown } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
-import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { decodeQaInventory } from "./Inventory.schemas.ts";
@@ -63,7 +63,7 @@ export const runQaJudgeLint = Effect.fn("QaJudgeLint.run")(function* (
         `qa judge-lint could not read ${inventoryPath}; run \`bun run beep qa judge-ingest --round ${options.round} --from <file>\` first.`
       )
     );
-  const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(raw).pipe(
+  const parsed = yield* Unknown.decodeEffectFromJsonString(raw).pipe(
     QaCommandError.mapError(`qa judge-lint could not parse ${inventoryPath} as JSON.`)
   );
   const inventory = yield* decodeQaInventory(parsed).pipe(

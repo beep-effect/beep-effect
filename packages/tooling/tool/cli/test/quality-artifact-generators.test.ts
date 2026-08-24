@@ -3,12 +3,12 @@ import {
   summarizeTurboQueryAffectedOutput,
   writeJSDocDocumentationInventory,
 } from "@beep/repo-cli/test/Quality";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
@@ -17,7 +17,7 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
 );
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const fixedGeneratedAt = "2026-01-01T00:00:00.000Z";
 
 const tsdocPolicy = {

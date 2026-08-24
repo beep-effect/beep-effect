@@ -11,9 +11,12 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/CourtInference/CourtInference.model");
+
+const CourtLevelBase = LiteralKit(["supreme", "appellate", "trial", "unknown"]);
 
 /**
  * Court level classification inferred from a reporter series.
@@ -39,10 +42,11 @@ const $I = $LawPracticeDomainId.create("values/CourtInference/CourtInference.mod
  * @category models
  * @since 0.0.0
  */
-export const CourtLevel = LiteralKit(["supreme", "appellate", "trial", "unknown"]).pipe(
+export const CourtLevel = CourtLevelBase.pipe(
   $I.annoteSchema("CourtLevel", {
     description: "Court level classification inferred from a reporter series.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(CourtLevelBase)
 );
 
 /**
@@ -62,6 +66,10 @@ export const CourtLevel = LiteralKit(["supreme", "appellate", "trial", "unknown"
  * @since 0.0.0
  */
 export type CourtLevel = typeof CourtLevel.Type;
+
+const KnownCourtLevel = LiteralKit(CourtLevelBase.pickOptions(["supreme", "appellate", "trial"]));
+
+const CourtJurisdictionBase = LiteralKit(["federal", "state", "unknown"]);
 
 /**
  * Jurisdiction classification inferred from a reporter series.
@@ -88,10 +96,11 @@ export type CourtLevel = typeof CourtLevel.Type;
  * @category models
  * @since 0.0.0
  */
-export const CourtJurisdiction = LiteralKit(["federal", "state", "unknown"]).pipe(
+export const CourtJurisdiction = CourtJurisdictionBase.pipe(
   $I.annoteSchema("CourtJurisdiction", {
     description: "Jurisdiction classification inferred from a reporter series.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(CourtJurisdictionBase)
 );
 
 /**
@@ -112,6 +121,10 @@ export const CourtJurisdiction = LiteralKit(["federal", "state", "unknown"]).pip
  */
 export type CourtJurisdiction = typeof CourtJurisdiction.Type;
 
+const CourtInferenceConfidence = S.Finite.annotateKey({
+  description: "Confidence score 0.0-1.0 (1.0 for unambiguous, 0.7 for regional multi-state).",
+});
+
 /**
  * Court level and jurisdiction inferred from a reporter series.
  *
@@ -119,7 +132,9 @@ export type CourtJurisdiction = typeof CourtJurisdiction.Type;
  *
  * Populated independently of the parenthetical-extracted `court` field, so a
  * citation may carry both a reporter-derived inference and an explicitly parsed
- * court. The optional `state` code is present only for state-specific reporters.
+ * court. Federal and state systems both have supreme/highest, appellate, and
+ * trial levels. The optional `state` code belongs only to the state variant;
+ * the unknown jurisdiction pairs with the unknown level.
  *
  * **Example** (Make inference with state)
  *
@@ -135,35 +150,71 @@ export type CourtJurisdiction = typeof CourtJurisdiction.Type;
  * })
  *
  * console.log(inference.level) // "appellate"
- * console.log(O.getOrNull(inference.state)) // "NY"
+ * console.log(CourtInference.match(inference, {
+ *   federal: () => null,
+ *   state: ({ state }) => O.getOrNull(state),
+ *   unknown: () => null,
+ * })) // "NY"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class CourtInference extends S.Class<CourtInference>($I`CourtInference`)(
-  {
-    level: CourtLevel.annotateKey({
-      description: "Court level classification.",
-    }),
-    jurisdiction: CourtJurisdiction.annotateKey({
-      description: "Jurisdiction classification.",
-    }),
-    state: S.String.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "2-letter state code, only for state-specific reporters.",
-      })
-    ),
-    confidence: S.Finite.annotateKey({
-      description: "Confidence score 0.0-1.0 (1.0 for unambiguous, 0.7 for regional multi-state).",
-    }),
-  },
-  $I.annote("CourtInference", {
+export const CourtInference = CourtJurisdiction.mapMembers(
+  Tuple.evolve([
+    (literal: S.Literal<"federal">) =>
+      S.Struct({
+        jurisdiction: S.tag(literal.literal).annotateKey({
+          description: "Federal court-system jurisdiction.",
+        }),
+        level: KnownCourtLevel.annotateKey({
+          description: "Supreme, appellate, or trial level within the federal court system.",
+        }),
+        confidence: CourtInferenceConfidence,
+      }),
+    (literal: S.Literal<"state">) =>
+      S.Struct({
+        jurisdiction: S.tag(literal.literal).annotateKey({
+          description: "State court-system jurisdiction.",
+        }),
+        level: KnownCourtLevel.annotateKey({
+          description: "Supreme/highest, appellate, or trial level within a state court system.",
+        }),
+        state: S.String.pipe(
+          S.OptionFromOptionalKey,
+          SchemaUtils.withNoneDefault,
+          S.annotateKey({
+            description: "2-letter state code when the reporter identifies one state.",
+          })
+        ),
+        confidence: CourtInferenceConfidence,
+      }),
+    (literal: S.Literal<"unknown">) =>
+      S.Struct({
+        jurisdiction: S.tag(literal.literal).annotateKey({
+          description: "Unknown court-system jurisdiction.",
+        }),
+        level: S.tag("unknown").annotateKey({
+          description: "Unknown court level.",
+        }),
+        confidence: CourtInferenceConfidence,
+      }),
+  ])
+).pipe(
+  S.toTaggedUnion("jurisdiction"),
+  $I.annoteSchema("CourtInference", {
     description: "Court level and jurisdiction inferred from a reporter series.",
   })
-) {}
+);
+
+/**
+ * Runtime type for {@link CourtInference}.
+ *
+ * @see {@link CourtInference} for the jurisdiction-tagged inference schema.
+ * @category models
+ * @since 0.0.0
+ */
+export type CourtInference = typeof CourtInference.Type;
 
 /**
  * Companion namespace for `CourtInference`.

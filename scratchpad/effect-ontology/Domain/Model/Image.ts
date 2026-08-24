@@ -31,9 +31,9 @@ const Base64ImageData = S.NonEmptyString.check(
 /**
  * Semantic role an image plays in its source document.
  *
- * @example
+ * **Example** (Use ImageRole)
  * ```ts
- * import { ImageRole } from "@effect-ontology/Model/Image.ts"
+ * import { ImageRole } from "@effect-ontology/Model/Image"
  *
  * console.log(ImageRole.is.hero("hero")) // true
  * console.log(ImageRole.is.thumbnail("inline")) // false
@@ -55,9 +55,9 @@ export const ImageRole = LiteralKit(["hero", "inline", "thumbnail"])
 /**
  * Runtime value accepted by {@link ImageRole}.
  *
- * @example
+ * **Example** (Use ImageRole)
  * ```ts
- * import type { ImageRole } from "@effect-ontology/Model/Image.ts"
+ * import type { ImageRole } from "@effect-ontology/Model/Image"
  *
  * const role: ImageRole = "inline"
  * console.log(role) // "inline"
@@ -71,9 +71,9 @@ export type ImageRole = typeof ImageRole.Type;
 /**
  * Kind of aggregate that owns an image reference.
  *
- * @example
+ * **Example** (Use ImageOwnerType)
  * ```ts
- * import { ImageOwnerType } from "@effect-ontology/Model/Image.ts"
+ * import { ImageOwnerType } from "@effect-ontology/Model/Image"
  *
  * console.log(ImageOwnerType.is.document("document")) // true
  * ```
@@ -81,22 +81,19 @@ export type ImageRole = typeof ImageRole.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ImageOwnerType = LiteralKit(["link", "document"])
-  .annotate({
+export const ImageOwnerType = LiteralKit(["link", "document"]).pipe(
+  $I.annoteSchema("ImageOwnerType", {
+    description: "Closed set of owner kinds supported by image manifests.",
     toArbitrary: () => (fc) => fc.constantFrom("link", "document"),
   })
-  .annotate(
-    $I.annote("ImageOwnerType", {
-      description: "Closed set of owner kinds supported by image manifests.",
-    })
-  );
+);
 
 /**
  * Runtime value accepted by {@link ImageOwnerType}.
  *
- * @example
+ * **Example** (Use ImageOwnerType)
  * ```ts
- * import type { ImageOwnerType } from "@effect-ontology/Model/Image.ts"
+ * import type { ImageOwnerType } from "@effect-ontology/Model/Image"
  *
  * const owner: ImageOwnerType = "document"
  * console.log(owner) // "document"
@@ -107,52 +104,51 @@ export const ImageOwnerType = LiteralKit(["link", "document"])
  */
 export type ImageOwnerType = typeof ImageOwnerType.Type;
 
-const ImageCandidateFields = {
-  sourceUrl: URLStr.annotateKey({
-    description: "Original URL from which the image can be fetched.",
-  }),
-  alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Alternative text recovered from the source." })
-  ),
-  caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Figure caption or nearby descriptive text." })
-  ),
-  role: ImageRole.annotateKey({
-    description: "Semantic role the image plays in its source.",
-  }),
-  order: NonNegativeInt.annotateKey({
-    description: "Zero-based image position in the source.",
-  }),
-  referrerUrl: URLStr.annotateKey({
-    description: "Page URL on which the image was discovered.",
-  }),
-} as const;
-
 /**
  * Image discovered before fetching, hashing, or persistence.
  *
- * @example
+ * **Example** (Use ImageCandidate)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageCandidate } from "@effect-ontology/Model/Image.ts"
+ * import { ImageCandidate } from "@effect-ontology/Model/Image"
  *
- * const candidate = S.decodeUnknownSync(ImageCandidate)({
+ * const candidate = S.decodeUnknownOption(ImageCandidate)({
  *   sourceUrl: "https://example.com/skyline.jpg",
  *   role: "hero",
  *   order: 0,
  *   referrerUrl: "https://example.com/article"
  * })
  *
- * console.log(candidate.role) // "hero"
+ * console.log(O.map(candidate, (value) => value.role)) // "hero"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class ImageCandidate extends S.Class<ImageCandidate>($I`ImageCandidate`)(
-  ImageCandidateFields,
+  {
+    sourceUrl: URLStr.annotateKey({
+      description: "Original URL from which the image can be fetched.",
+    }),
+    alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Alternative text recovered from the source." })
+    ),
+    caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Figure caption or nearby descriptive text." })
+    ),
+    role: ImageRole.annotateKey({
+      description: "Semantic role the image plays in its source.",
+    }),
+    order: NonNegativeInt.annotateKey({
+      description: "Zero-based image position in the source.",
+    }),
+    referrerUrl: URLStr.annotateKey({
+      description: "Page URL on which the image was discovered.",
+    }),
+  },
   $I.annote("ImageCandidate", {
     description: "Raw image discovery record before content-addressed ingestion.",
   })
@@ -164,53 +160,23 @@ export class ImageCandidate extends S.Class<ImageCandidate>($I`ImageCandidate`)(
   static readonly decodeOption = S.decodeUnknownOption(ImageCandidate);
 }
 
-const ImageAssetFields = {
-  hash: Sha256Hex.annotateKey({
-    description: "Full SHA-256 digest used as the asset's content identity.",
-  }),
-  contentType: MimeType.kinds.Image.annotateKey({
-    description: "IANA image media type of the stored bytes.",
-  }),
-  sizeBytes: PosInt.annotateKey({
-    description: "Strictly positive encoded size in bytes.",
-  }),
-  width: S.OptionFromOptionalKey(PosInt).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Pixel width when image metadata is available." })
-  ),
-  height: S.OptionFromOptionalKey(PosInt).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Pixel height when image metadata is available." })
-  ),
-  storagePath: S.NonEmptyString.annotateKey({
-    description: "Repository or object-storage path containing the original bytes.",
-  }),
-  sourceUrl: S.OptionFromOptionalKey(URLStr).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Original fetch URL retained for provenance." })
-  ),
-  createdAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "UTC instant at which the asset was first stored." })
-  ),
-} as const;
-
 /**
  * Deduplicated, content-addressed metadata for stored image bytes.
  *
- * @example
+ * **Example** (Use ImageAsset)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageAsset } from "@effect-ontology/Model/Image.ts"
+ * import { ImageAsset } from "@effect-ontology/Model/Image"
  *
- * const asset = S.decodeUnknownSync(ImageAsset)({
+ * const asset = S.decodeUnknownOption(ImageAsset)({
  *   hash: "a".repeat(64),
  *   contentType: "image/jpeg",
  *   sizeBytes: 1024,
  *   storagePath: "assets/images/a/original"
  * })
  *
- * console.log(asset.contentType) // "image/jpeg"
+ * console.log(O.map(asset, (value) => value.contentType)) // "image/jpeg"
  * ```
  *
  * @invariant `hash` is a complete SHA-256 digest and byte/pixel counts are
@@ -219,7 +185,36 @@ const ImageAssetFields = {
  * @since 0.0.0
  */
 export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
-  ImageAssetFields,
+  {
+    hash: Sha256Hex.annotateKey({
+      description: "Full SHA-256 digest used as the asset's content identity.",
+    }),
+    contentType: MimeType.kinds.Image.annotateKey({
+      description: "IANA image media type of the stored bytes.",
+    }),
+    sizeBytes: PosInt.annotateKey({
+      description: "Strictly positive encoded size in bytes.",
+    }),
+    width: S.OptionFromOptionalKey(PosInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Pixel width when image metadata is available." })
+    ),
+    height: S.OptionFromOptionalKey(PosInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Pixel height when image metadata is available." })
+    ),
+    storagePath: S.NonEmptyString.annotateKey({
+      description: "Repository or object-storage path containing the original bytes.",
+    }),
+    sourceUrl: S.OptionFromOptionalKey(URLStr).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Original fetch URL retained for provenance." })
+    ),
+    createdAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "UTC instant at which the asset was first stored." })
+    ),
+  },
   $I.annote("ImageAsset", {
     description: "Content-addressed metadata for one stored image asset.",
   })
@@ -239,60 +234,59 @@ export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
   static readonly encodeEffect = S.encodeEffect(ImageAsset);
 }
 
-const ImageRefFields = {
-  ownerType: ImageOwnerType.annotateKey({
-    description: "Kind of aggregate that owns this reference.",
-  }),
-  ownerId: S.NonEmptyString.annotateKey({
-    description: "Identifier of the owning link or document.",
-  }),
-  assetHash: Sha256Hex.annotateKey({
-    description: "Content digest of the referenced asset.",
-  }),
-  alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Context-specific alternative text." })
-  ),
-  caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Context-specific image caption." })
-  ),
-  position: NonNegativeInt.annotateKey({
-    description: "Zero-based position within the owner content.",
-  }),
-  context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Surrounding source text retained for prompt context." })
-  ),
-  role: S.OptionFromOptionalKey(ImageRole).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Context-specific image role when known." })
-  ),
-} as const;
-
 /**
  * Owner-scoped reference from a document or link to an image asset.
  *
- * @example
+ * **Example** (Use ImageRef)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageRef } from "@effect-ontology/Model/Image.ts"
+ * import { ImageRef } from "@effect-ontology/Model/Image"
  *
- * const ref = S.decodeUnknownSync(ImageRef)({
+ * const ref = S.decodeUnknownOption(ImageRef)({
  *   ownerType: "document",
  *   ownerId: "doc-1",
  *   assetHash: "b".repeat(64),
  *   position: 0
  * })
  *
- * console.log(ref.ownerId) // "doc-1"
+ * console.log(O.map(ref, (value) => value.ownerId)) // "doc-1"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class ImageRef extends S.Class<ImageRef>($I`ImageRef`)(
-  ImageRefFields,
+  {
+    ownerType: ImageOwnerType.annotateKey({
+      description: "Kind of aggregate that owns this reference.",
+    }),
+    ownerId: S.NonEmptyString.annotateKey({
+      description: "Identifier of the owning link or document.",
+    }),
+    assetHash: Sha256Hex.annotateKey({
+      description: "Content digest of the referenced asset.",
+    }),
+    alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Context-specific alternative text." })
+    ),
+    caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Context-specific image caption." })
+    ),
+    position: NonNegativeInt.annotateKey({
+      description: "Zero-based position within the owner content.",
+    }),
+    context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Surrounding source text retained for prompt context." })
+    ),
+    role: S.OptionFromOptionalKey(ImageRole).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Context-specific image role when known." })
+    ),
+  },
   $I.annote("ImageRef", {
     description: "Context-bearing reference from an owner aggregate to a content-addressed image.",
   })
@@ -301,33 +295,18 @@ export class ImageRef extends S.Class<ImageRef>($I`ImageRef`)(
   static readonly is = S.is(ImageRef);
 }
 
-const ImageManifestFields = {
-  ownerType: ImageOwnerType.annotateKey({
-    description: "Kind of aggregate represented by the manifest.",
-  }),
-  ownerId: S.NonEmptyString.annotateKey({
-    description: "Identifier of the aggregate represented by the manifest.",
-  }),
-  images: S.Array(ImageRef).pipe(
-    SchemaUtils.withEmptyArrayDefaults<ImageRef>(),
-    S.annotateKey({ description: "Image references in source order." })
-  ),
-  updatedAt: S.DateTimeUtcFromString.annotateKey({
-    description: "UTC instant at which the manifest was last updated.",
-  }),
-} as const;
-
 /**
  * Ordered image-reference manifest for one owner.
  *
- * @remarks
- * `totalCount` is derived from `images`; it is intentionally not persisted as
+ * **Details**
+ *
+ * * `totalCount` is derived from `images`; it is intentionally not persisted as
  * a second, potentially inconsistent source of truth.
  *
- * @example
+ * **Example** (Use ImageManifest)
  * ```ts
  * import { DateTime } from "effect"
- * import { ImageManifest } from "@effect-ontology/Model/Image.ts"
+ * import { ImageManifest } from "@effect-ontology/Model/Image"
  *
  * const manifest = ImageManifest.make({
  *   ownerType: "document",
@@ -343,7 +322,21 @@ const ImageManifestFields = {
  * @since 0.0.0
  */
 export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
-  ImageManifestFields,
+  {
+    ownerType: ImageOwnerType.annotateKey({
+      description: "Kind of aggregate represented by the manifest.",
+    }),
+    ownerId: S.NonEmptyString.annotateKey({
+      description: "Identifier of the aggregate represented by the manifest.",
+    }),
+    images: S.Array(ImageRef).pipe(
+      SchemaUtils.withEmptyArrayDefaults<ImageRef>(),
+      S.annotateKey({ description: "Image references in source order." })
+    ),
+    updatedAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant at which the manifest was last updated.",
+    }),
+  },
   $I.annote("ImageManifest", {
     description: "Ordered image-reference manifest with a derived, non-stale count.",
   })
@@ -351,10 +344,10 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
   /**
    * Number of references in this manifest.
    *
-   * @example
+   * **Example** (Inspect an empty manifest)
    * ```ts
    * import { DateTime } from "effect"
-   * import { ImageManifest } from "@effect-ontology/Model/Image.ts"
+   * import { ImageManifest } from "@effect-ontology/Model/Image"
    *
    * const manifest = ImageManifest.make({
    *   ownerType: "document",
@@ -380,41 +373,12 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
   };
 }
 
-const ImageForPromptFields = {
-  base64: Base64ImageData.annotateKey({
-    description: "Base64-encoded image bytes.",
-  }),
-  mediaType: MimeType.kinds.Image.annotateKey({
-    description: "Image media type supplied to the multimodal model.",
-  }),
-  alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Alternative text supplied to the model." })
-  ),
-  caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Caption supplied to the model." })
-  ),
-  context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Surrounding text supplied to the model." })
-  ),
-  position: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Source-document position when available." })
-  ),
-  assetHash: S.OptionFromOptionalKey(Sha256Hex).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Source asset digest retained for traceability." })
-  ),
-} as const;
-
 /**
  * Image payload prepared for multimodal model input.
  *
- * @example
+ * **Example** (Use ImageForPrompt)
  * ```ts
- * import { ImageForPrompt } from "@effect-ontology/Model/Image.ts"
+ * import { ImageForPrompt } from "@effect-ontology/Model/Image"
  *
  * const image = ImageForPrompt.make({
  *   base64: "AA==",
@@ -428,36 +392,49 @@ const ImageForPromptFields = {
  * @since 0.0.0
  */
 export class ImageForPrompt extends S.Class<ImageForPrompt>($I`ImageForPrompt`)(
-  ImageForPromptFields,
+  {
+    base64: Base64ImageData.annotateKey({
+      description: "Base64-encoded image bytes.",
+    }),
+    mediaType: MimeType.kinds.Image.annotateKey({
+      description: "Image media type supplied to the multimodal model.",
+    }),
+    alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Alternative text supplied to the model." })
+    ),
+    caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Caption supplied to the model." })
+    ),
+    context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Surrounding text supplied to the model." })
+    ),
+    position: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Source-document position when available." })
+    ),
+    assetHash: S.OptionFromOptionalKey(Sha256Hex).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Source asset digest retained for traceability." })
+    ),
+  },
   $I.annote("ImageForPrompt", {
     description: "Validated base64 image payload and context for multimodal prompting.",
   })
 ) {}
 
-const ImageFetchResultFields = {
-  bytes: S.Uint8Array.annotateKey({
-    description: "Fetched image bytes.",
-  }),
-  hash: Sha256Hex.annotateKey({
-    description: "SHA-256 digest computed from the fetched bytes.",
-  }),
-  contentType: MimeType.kinds.Image.annotateKey({
-    description: "Detected or declared image media type.",
-  }),
-  candidate: ImageCandidate.annotateKey({
-    description: "Discovery record that led to the fetch.",
-  }),
-} as const;
-
 /**
  * Successful result of fetching and identifying an image candidate.
  *
- * @example
+ * **Example** (Use ImageFetchResult)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageFetchResult } from "@effect-ontology/Model/Image.ts"
+ * import { ImageFetchResult } from "@effect-ontology/Model/Image"
  *
- * const result = S.decodeUnknownSync(ImageFetchResult)({
+ * const result = S.decodeUnknownOption(ImageFetchResult)({
  *   bytes: new Uint8Array([1]),
  *   hash: "c".repeat(64),
  *   contentType: "image/png",
@@ -469,14 +446,27 @@ const ImageFetchResultFields = {
  *   }
  * })
  *
- * console.log(result.bytes.length) // 1
+ * console.log(O.map(result, (value) => value.bytes.length)) // 1
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class ImageFetchResult extends S.Class<ImageFetchResult>($I`ImageFetchResult`)(
-  ImageFetchResultFields,
+  {
+    bytes: S.Uint8Array.annotateKey({
+      description: "Fetched image bytes.",
+    }),
+    hash: Sha256Hex.annotateKey({
+      description: "SHA-256 digest computed from the fetched bytes.",
+    }),
+    contentType: MimeType.kinds.Image.annotateKey({
+      description: "Detected or declared image media type.",
+    }),
+    candidate: ImageCandidate.annotateKey({
+      description: "Discovery record that led to the fetch.",
+    }),
+  },
   $I.annote("ImageFetchResult", {
     description: "Fetched image bytes paired with their digest, media type, and discovery provenance.",
   })

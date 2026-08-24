@@ -42,6 +42,13 @@ export {
  * @since 0.0.0
  */
 export type { Input as FieldInput, Patched as PatchedField } from "./core/Field.ts";
+/**
+ * Public SQL metadata carriers retained by downstream declaration emit.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type { DefaultSqlExpr, DefaultValue, References } from "./core/Meta.ts";
 /** Repository result and version-column types.
  * @category type-level
  * @since 0.0.0

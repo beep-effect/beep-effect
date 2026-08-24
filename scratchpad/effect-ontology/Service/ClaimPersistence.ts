@@ -1,16 +1,20 @@
 /**
  * Claim Persistence Service
  *
+ * **Details**
+ *
  * Encapsulates the persistence logic for claims extracted from documents.
  * Handles article creation, claim-to-row mapping, and idempotent upserts.
  *
- * @since 2.0.0
- * @module Service/ClaimPersistence
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { ArticleRepository } from "../Repository/Article.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimInsertRow } from "../Repository/schema.ts";
@@ -25,38 +29,59 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ClaimPersistence");
 /**
  * Metadata for the source article
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the ArticleMetadata contract)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ArticleMetadata } from "@effect-ontology/Service/ClaimPersistence"
+ *
+ * console.log(S.is(ArticleMetadata)({})) // false
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface ArticleMetadata {
-  /** Article URI (unique identifier) */
-  readonly uri: string;
-  /** Ontology ID for namespace scoping */
-  readonly ontologyId: string;
-  /** Article headline */
-  readonly headline?: string;
-  /** When the article was published */
-  readonly publishedAt: Date;
-  /** Source/publisher name */
-  readonly sourceName?: string;
-  /** Content hash for deduplication */
-  readonly contentHash?: string;
-}
+export class ArticleMetadata extends S.Class<ArticleMetadata>($I`ArticleMetadata`)(
+  {
+    uri: S.NonEmptyString,
+    ontologyId: S.NonEmptyString,
+    headline: S.optionalKey(S.String),
+    publishedAt: S.Date,
+    sourceName: S.optionalKey(S.NonEmptyString),
+    contentHash: S.optionalKey(S.NonEmptyString),
+  },
+  $I.annote("ArticleMetadata", {
+    description: "Validated article identity, publication time, and optional source metadata.",
+  })
+) {}
 
 /**
  * Result of claim persistence operation
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the PersistenceResult contract)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PersistenceResult } from "@effect-ontology/Service/ClaimPersistence"
+ *
+ * console.log(S.is(PersistenceResult)({})) // false
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface PersistenceResult {
-  /** Database ID of the article */
-  readonly articleId: string;
-  /** Number of claims actually inserted (excludes duplicates) */
-  readonly claimsInserted: number;
-  /** Total claims processed */
-  readonly claimsTotal: number;
-}
+export class PersistenceResult extends S.Class<PersistenceResult>($I`PersistenceResult`)(
+  {
+    articleId: S.NonEmptyString,
+    claimsInserted: NonNegativeInt,
+    claimsTotal: NonNegativeInt,
+  },
+  $I.annote("PersistenceResult", {
+    description: "Article identifier and non-negative claim persistence counts.",
+  })
+) {}
 
 // =============================================================================
 // Service
@@ -65,11 +90,21 @@ export interface PersistenceResult {
 /**
  * Claim Persistence Service
  *
+ * **Details**
+ *
  * Persists extracted claims to PostgreSQL with proper article linking
  * and idempotent upsert handling.
  *
- * @since 2.0.0
- * @category Services
+ * **Example** (Inspect claim persistence service)
+ *
+ * ```ts
+ * import { ClaimPersistenceService } from "@effect-ontology/Service/ClaimPersistence"
+ *
+ * console.log(ClaimPersistenceService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class ClaimPersistenceService extends Context.Service<ClaimPersistenceService>()($I`ClaimPersistenceService`, {
   make: Effect.gen(function* () {
@@ -89,7 +124,7 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
      * @param graphUri - URI of the RDF graph file (optional)
      * @returns Persistence result with article ID and insert count
      */
-    const persistClaims = Effect.fn(function* (
+    const persistClaims = Effect.fn("ClaimPersistence.persistClaims")(function* (
       claims: ReadonlyArray<ClaimData>,
       articleMeta: ArticleMetadata,
       graphUri?: string
@@ -118,7 +153,7 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
         predicateIri: claim.predicateIri,
         objectValue: claim.objectValue,
         objectType: claim.objectType,
-        rank: "normal" as const,
+        rank: "normal",
         confidenceScore: claim.confidence?.toString(),
         evidenceText: claim.evidence?.text,
         evidenceStartOffset: claim.evidence?.startOffset,
@@ -139,7 +174,7 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
 
       // 4. Update article with graph URI if provided
       if (P.isNotUndefined(graphUri) && P.isNull(article.graphUri)) {
-        yield* articleRepo.setGraphUri(article.id, graphUri);
+        yield* articleRepo.setGraphUri(article.id, articleMeta.ontologyId, graphUri);
         yield* Effect.logDebug("Article graph URI updated", {
           articleId: article.id,
           graphUri,

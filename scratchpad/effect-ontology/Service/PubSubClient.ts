@@ -1,24 +1,36 @@
 /**
  * Cloud Pub/Sub Client Service
  *
+ * **Details**
+ *
  * Effect-wrapped Google Cloud Pub/Sub client for event distribution
  * and job queue integration.
  *
- * @since 2.0.0
- * @module Service/PubSubClient
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import type { Topic } from "@google-cloud/pubsub";
 import { PubSub } from "@google-cloud/pubsub";
-import { Config, Context, DateTime, Effect, Layer, Stream } from "effect";
+import { Config, Context, DateTime, Duration, Effect, Layer, MutableHashMap, Schedule, Stream } from "effect";
 import * as O from "effect/Option";
-import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
-import * as EventJournal from "effect/unstable/eventlog/EventJournal";
 import { PubSubError } from "../Domain/Error/EventBus.ts";
+import { OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
+import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
+import type { EventEntry } from "./EventBus.ts";
+import { EventBusService } from "./EventBus.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/PubSubClient");
+
+const DeadLetterMessage = S.Struct({
+  originalMessage: BackgroundJob,
+  error: S.String,
+  attempts: NonNegativeInt,
+  failedAt: S.DateTimeUtcFromString,
+});
 
 // =============================================================================
 // Types
@@ -27,17 +39,36 @@ const $I = $ScratchpadId.create("effect-ontology/Service/PubSubClient");
 /**
  * Published message result
  *
- * @since 2.0.0
+ *
+ * **Example** (Use the PublishResult contract)
+ *
+ * ```ts
+ * import type { PublishResult } from "@effect-ontology/Service/PubSubClient"
+ *
+ * const acceptsPublishResult = (_value: PublishResult): void => undefined
+ *
+ * console.log(acceptsPublishResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface PublishResult {
-  readonly messageId: string;
-  readonly topicName: string;
-}
+export class PublishResult extends S.Class<PublishResult>($I`PublishResult`)(
+  {
+    messageId: S.NonEmptyString,
+    topicName: S.NonEmptyString,
+  },
+  $I.annote("PublishResult", {
+    description: "Cloud Pub/Sub acknowledgement identifying the published message and topic.",
+  })
+) {}
 
 /**
  * Received message from subscription
  *
- * @since 2.0.0
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ReceivedMessage {
   readonly id: string;
@@ -51,7 +82,19 @@ export interface ReceivedMessage {
 /**
  * Pub/Sub client configuration
  *
- * @since 2.0.0
+ *
+ * **Example** (Use the PubSubClientConfig contract)
+ *
+ * ```ts
+ * import type { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
+ *
+ * const acceptsPubSubClientConfig = (_value: PubSubClientConfig): void => undefined
+ *
+ * console.log(acceptsPubSubClientConfig)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PubSubClientConfig {
   readonly projectId: string;
@@ -68,7 +111,9 @@ export interface PubSubClientConfig {
 /**
  * PubSubClient service interface
  *
- * @since 2.0.0
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PubSubClientMethods {
   /**
@@ -76,31 +121,27 @@ export interface PubSubClientMethods {
    */
   readonly publish: (
     topicId: string,
-    data: unknown,
+    encodedData: string,
     attributes?: Record<string, string>
   ) => Effect.Effect<PublishResult, PubSubError>;
 
   /**
    * Publish an event to the events topic
    */
-  readonly publishEvent: (
-    eventType: string,
-    payload: unknown,
-    primaryKey: string
-  ) => Effect.Effect<PublishResult, PubSubError>;
+  readonly publishEvent: (event: EventEntry) => Effect.Effect<PublishResult, PubSubError>;
 
   /**
    * Publish a job to the jobs topic
    */
-  readonly publishJob: (jobType: string, payload: unknown, jobId: string) => Effect.Effect<PublishResult, PubSubError>;
+  readonly publishJob: (job: BackgroundJob) => Effect.Effect<PublishResult, PubSubError>;
 
   /**
    * Publish to dead letter queue
    */
   readonly publishToDeadLetter: (
-    originalMessage: unknown,
+    originalMessage: BackgroundJob,
     error: string,
-    attempts: number
+    attempts: NonNegativeInt
   ) => Effect.Effect<PublishResult, PubSubError>;
 
   /**
@@ -117,7 +158,16 @@ export interface PubSubClientMethods {
 /**
  * PubSubClient context tag
  *
- * @since 2.0.0
+ * **Example** (Inspect pub sub client)
+ *
+ * ```ts
+ * import { PubSubClient } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(PubSubClient)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMethods>()($I`PubSubClient`) {}
 
@@ -128,7 +178,16 @@ export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMeth
 /**
  * PubSub configuration from environment
  *
- * @since 2.0.0
+ * **Example** (Inspect pub sub client config)
+ *
+ * ```ts
+ * import { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(PubSubClientConfig)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const PubSubClientConfig = Config.all({
   projectId: Config.string("PUBSUB_PROJECT_ID").pipe(Config.withDefault("effect-ontology")),
@@ -145,11 +204,22 @@ export const PubSubClientConfig = Config.all({
 /**
  * PubSubClient layer with Google Cloud Pub/Sub integration
  *
+ * **Details**
+ *
  * Provides durable event distribution via Cloud Pub/Sub.
  * Used for production deployments where events need to be distributed
  * across multiple Cloud Run instances.
  *
- * @since 2.0.0
+ * **Example** (Inspect pub sub client live)
+ *
+ * ```ts
+ * import { PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(PubSubClientLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const PubSubClientLive = Layer.effect(
   PubSubClient,
@@ -176,19 +246,9 @@ export const PubSubClientLive = Layer.effect(
         return topic;
       });
 
-    const publish: PubSubClientMethods["publish"] = Effect.fn("publish")(function* (topicId, data, attributes) {
+    const publish: PubSubClientMethods["publish"] = Effect.fn("publish")(function* (topicId, encodedData, attributes) {
       const topic = getTopic(topicId);
-      const dataJson = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(data).pipe(
-        Effect.mapError((cause) =>
-          PubSubError.make({
-            method: "publish",
-            topic: topicId,
-            message: "Failed to encode Pub/Sub message",
-            cause: O.some(cause),
-          })
-        )
-      );
-      const dataBuffer = Buffer.from(dataJson);
+      const dataBuffer = Buffer.from(encodedData);
       const messageId = yield* Effect.tryPromise({
         try: () =>
           topic.publishMessage({
@@ -200,7 +260,7 @@ export const PubSubClientLive = Layer.effect(
             method: "publish",
             topic: topicId,
             message: `Failed to publish message: ${error}`,
-            cause: O.some(error as Error),
+            cause: O.some(error),
           }),
       });
       yield* Effect.logDebug("Message published", {
@@ -208,28 +268,47 @@ export const PubSubClientLive = Layer.effect(
         messageId,
         attributes,
       });
-      return {
+      return PublishResult.make({
         messageId,
         topicName: topicId,
-      };
+      });
     });
 
-    const publishEvent: PubSubClientMethods["publishEvent"] = Effect.fn("publishEvent")(
-      function* (eventType, payload, primaryKey) {
-        const timestamp = DateTime.formatIso(yield* DateTime.now);
-        return yield* publish(config.eventsTopicId, payload, {
-          eventType,
-          primaryKey,
-          timestamp,
-        });
-      }
-    );
-
-    const publishJob: PubSubClientMethods["publishJob"] = Effect.fn("publishJob")(function* (jobType, payload, jobId) {
+    const publishEvent: PubSubClientMethods["publishEvent"] = Effect.fn("publishEvent")(function* (event) {
       const timestamp = DateTime.formatIso(yield* DateTime.now);
-      return yield* publish(config.jobsTopicId, payload, {
-        jobType,
-        jobId,
+      const encoded = yield* S.encodeEffect(S.fromJsonString(OntologyEventEntry))(event).pipe(
+        Effect.mapError((cause) =>
+          PubSubError.make({
+            method: "publishEvent",
+            topic: config.eventsTopicId,
+            message: "Failed to encode the canonical ontology event.",
+            cause: O.some(cause),
+          })
+        )
+      );
+      return yield* publish(config.eventsTopicId, encoded, {
+        eventType: event.event,
+        primaryKey: event.primaryKey,
+        ontologyId: event.payload.ontologyId,
+        timestamp,
+      });
+    });
+
+    const publishJob: PubSubClientMethods["publishJob"] = Effect.fn("publishJob")(function* (job) {
+      const timestamp = DateTime.formatIso(yield* DateTime.now);
+      const encoded = yield* S.encodeEffect(S.fromJsonString(BackgroundJob))(job).pipe(
+        Effect.mapError((cause) =>
+          PubSubError.make({
+            method: "publishJob",
+            topic: config.jobsTopicId,
+            message: "Failed to encode the canonical background job.",
+            cause: O.some(cause),
+          })
+        )
+      );
+      return yield* publish(config.jobsTopicId, encoded, {
+        jobType: job._tag,
+        jobId: job.id,
         timestamp,
       });
     });
@@ -237,19 +316,25 @@ export const PubSubClientLive = Layer.effect(
     const publishToDeadLetter: PubSubClientMethods["publishToDeadLetter"] = Effect.fn("publishToDeadLetter")(
       function* (originalMessage, error, attempts) {
         const failedAt = DateTime.formatIso(yield* DateTime.now);
-        return yield* publish(
-          config.dlqTopicId,
-          {
-            originalMessage,
-            error,
-            attempts,
-            failedAt,
-          },
-          {
-            messageType: "dead_letter",
-            attempts: String(attempts),
-          }
+        const encoded = yield* S.encodeUnknownEffect(S.fromJsonString(DeadLetterMessage))({
+          originalMessage,
+          error,
+          attempts,
+          failedAt,
+        }).pipe(
+          Effect.mapError((cause) =>
+            PubSubError.make({
+              method: "publishToDeadLetter",
+              topic: config.dlqTopicId,
+              message: "Failed to encode the dead-letter message.",
+              cause: O.some(cause),
+            })
+          )
         );
+        return yield* publish(config.dlqTopicId, encoded, {
+          messageType: "dead_letter",
+          attempts: String(attempts),
+        });
       }
     );
 
@@ -293,33 +378,34 @@ export const PubSubClientLive = Layer.effect(
 /**
  * Bridge EventJournal changes to Cloud Pub/Sub
  *
+ * **Details**
+ *
  * This layer subscribes to EventJournal changes and publishes them
  * to Cloud Pub/Sub for distribution across instances.
  *
- * @since 2.0.0
+ * **Example** (Inspect event bus pub sub bridge)
+ *
+ * ```ts
+ * import { EventBusPubSubBridge } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(EventBusPubSubBridge)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EventBusPubSubBridge = Layer.effectDiscard(
   Effect.gen(function* () {
-    const journal = yield* EventJournal.EventJournal;
+    const eventBus = yield* EventBusService;
     const pubsubClient = yield* PubSubClient;
 
-    // Subscribe to journal changes and publish to Pub/Sub
-    const changes = yield* journal.changes;
+    const events = yield* eventBus.subscribeEvents;
 
-    yield* Stream.fromSubscription(changes).pipe(
-      Stream.tap((entry: EventJournal.Entry) =>
-        pubsubClient.publishEvent(entry.event, entry.payload, entry.primaryKey).pipe(
-          Effect.catch((error) =>
-            Effect.logError("Failed to publish event to Pub/Sub", {
-              event: entry.event,
-              primaryKey: entry.primaryKey,
-              error: String(error),
-            })
-          )
-        )
-      ),
-      Stream.runDrain,
-      Effect.forkChild
+    yield* events.pipe(
+      Stream.runForEach((entry) => pubsubClient.publishEvent(entry)),
+      Effect.tapError((error) => Effect.logError("EventBus Pub/Sub bridge failed; retrying", { error })),
+      Effect.retry(Schedule.exponential(Duration.millis(100))),
+      Effect.forkScoped
     );
 
     yield* Effect.logInfo("EventBus Pub/Sub bridge started");
@@ -333,6 +419,15 @@ export const EventBusPubSubBridge = Layer.effectDiscard(
 /**
  * Default PubSubClient layer
  *
- * @since 2.0.0
+ * **Example** (Inspect pub sub client default)
+ *
+ * ```ts
+ * import { PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(PubSubClientDefault)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const PubSubClientDefault = PubSubClientLive;

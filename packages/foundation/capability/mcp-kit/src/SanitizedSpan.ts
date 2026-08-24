@@ -21,6 +21,7 @@
  */
 
 import { NonNegativeInt } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { Context, Effect, Layer, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -306,7 +307,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
               readonly isFailure: boolean;
               readonly result: unknown;
             }) =>
-              S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(result.encodedResult).pipe(
+              Unknown.encodeUnknownEffectFromJsonString(result.encodedResult).pipe(
                 Effect.tapCause(Effect.log),
                 Effect.matchCause({
                   onFailure: () =>

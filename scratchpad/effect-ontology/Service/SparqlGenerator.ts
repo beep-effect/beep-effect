@@ -1,6 +1,8 @@
 /**
  * Service: SPARQL Generator
  *
+ * **Details**
+ *
  * Translates natural language questions to SPARQL queries using LLM
  * with ontology schema context.
  *
@@ -10,21 +12,26 @@
  * 3. Validate SPARQL syntax
  * 4. Apply query correction if needed
  *
- * @since 2.0.0
- * @module Service/SparqlGenerator
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { SchemaUtils } from "@beep/schema";
-import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
+import { Context, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
+import { ErrorMessage, OptionalErrorCause, OptionalNonNegativeInt } from "../Domain/Error/Base.ts";
 import type { OntologyContext } from "../Domain/Model/Ontology.ts";
 import { ConfigService } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
+import type { RetryPolicy } from "./Retry.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SparqlGenerator");
 
@@ -35,38 +42,104 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SparqlGenerator");
 /**
  * Error: Failed to generate SPARQL query
  *
- * @since 2.0.0
- * @category Errors
+ * **Example** (Inspect sparql generation error)
+ *
+ * ```ts
+ * import { SparqlGenerationError } from "@effect-ontology/Service/SparqlGenerator"
+ *
+ * console.log(SparqlGenerationError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-export class SparqlGenerationError extends Data.TaggedError("SparqlGenerationError")<{
-  readonly message: string;
-  readonly question: string;
-  readonly cause?: unknown;
-}> {}
+export class SparqlGenerationError extends S.TaggedError<SparqlGenerationError>($I`SparqlGenerationError`)(
+  "SparqlGenerationError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable SPARQL generation failure diagnostic.",
+    }),
+    question: S.NonEmptyString.annotateKey({
+      description: "Natural-language question that could not be translated.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional underlying language-model defect.",
+    }),
+  },
+  $I.annote("SparqlGenerationError", {
+    description: "Failure to generate a SPARQL query from a natural-language question.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 /**
  * Error: SPARQL syntax is invalid
  *
- * @since 2.0.0
- * @category Errors
+ * **Example** (Inspect sparql syntax error)
+ *
+ * ```ts
+ * import { SparqlSyntaxError } from "@effect-ontology/Service/SparqlGenerator"
+ *
+ * console.log(SparqlSyntaxError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-export class SparqlSyntaxError extends Data.TaggedError("SparqlSyntaxError")<{
-  readonly message: string;
-  readonly sparql: string;
-  readonly position?: number;
-}> {}
+export class SparqlSyntaxError extends S.TaggedError<SparqlSyntaxError>($I`SparqlSyntaxError`)(
+  "SparqlSyntaxError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable SPARQL syntax diagnostic.",
+    }),
+    sparql: S.String.annotateKey({
+      description: "SPARQL source that failed validation.",
+    }),
+    position: OptionalNonNegativeInt.annotateKey({
+      description: "Optional zero-based source position associated with the syntax failure.",
+    }),
+  },
+  $I.annote("SparqlSyntaxError", {
+    description: "Static syntax validation failure for generated SPARQL source.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 /**
  * Error: SPARQL correction failed
  *
- * @since 2.0.0
- * @category Errors
+ * **Example** (Inspect sparql correction error)
+ *
+ * ```ts
+ * import { SparqlCorrectionError } from "@effect-ontology/Service/SparqlGenerator"
+ *
+ * console.log(SparqlCorrectionError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-export class SparqlCorrectionError extends Data.TaggedError("SparqlCorrectionError")<{
-  readonly message: string;
-  readonly sparql: string;
-  readonly originalError: string;
-}> {}
+export class SparqlCorrectionError extends S.TaggedError<SparqlCorrectionError>($I`SparqlCorrectionError`)(
+  "SparqlCorrectionError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable SPARQL correction failure diagnostic.",
+    }),
+    sparql: S.String.annotateKey({
+      description: "SPARQL source that could not be corrected.",
+    }),
+    originalError: ErrorMessage.annotateKey({
+      description: "Original syntax diagnostic supplied to the correction pass.",
+    }),
+  },
+  $I.annote("SparqlCorrectionError", {
+    description: "Failure to repair invalid SPARQL using the language model.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 // =============================================================================
 // Schema for LLM structured output
@@ -77,12 +150,12 @@ export class SparqlCorrectionError extends Data.TaggedError("SparqlCorrectionErr
  *
  * @internal
  */
-const SparqlResponseSchema = Schema.Struct({
-  sparql: Schema.String.annotate({
+const SparqlResponseSchema = S.Struct({
+  sparql: S.String.annotate({
     title: "SPARQL Query",
     description: "Valid SPARQL SELECT query",
   }),
-  explanation: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+  explanation: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
     title: "Explanation",
     description: "Brief explanation of the query logic",
   }),
@@ -101,40 +174,27 @@ type SparqlResponse = typeof SparqlResponseSchema.Type;
 /**
  * SparqlGenerator - Natural language to SPARQL translation service
  *
+ * **Details**
+ *
  * Provides methods to translate natural language questions to SPARQL queries
  * using LLM with ontology schema context for grounding.
  *
- * @example
- * ```typescript
- * Effect.gen(function*() {
- *   const generator = yield* SparqlGenerator
- *   const ontology = yield* OntologyService.ontology
+ * **Example** (Inspect the SPARQL-generator layer)
  *
- *   const result = yield* generator.generate(
- *     "Who founded Acme Corp?",
- *     ontology
- *   )
+ * ```ts
+ * import { Layer } from "effect"
+ * import { SparqlGenerator } from "@effect-ontology/Service/SparqlGenerator"
  *
- *   console.log(result.sparql)
- *   // SELECT ?founder WHERE { ?org a :Organization ; :name "Acme Corp" ; :founder ?founder . }
- * })
+ * console.log(Layer.isLayer(SparqlGenerator.Default)) // true
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @category services
+ * @since 0.0.0
  */
 export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`SparqlGenerator`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
-
-    // Retry schedule for LLM calls
-    const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) =>
-        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))
-      ),
-      Schedule.jittered
-    );
 
     return {
       /**
@@ -182,22 +242,20 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
           });
 
           // Call LLM for structured output
-          const response = yield* generateObjectWithFeedback(llm, {
+          const response = yield* generateObjectWithFeedback({
             prompt,
             schema: SparqlResponseSchema,
             objectName: "SparqlResponse",
-            maxAttempts: config.runtime.retryMaxAttempts,
             serviceName: "SparqlGenerator",
-            timeoutMs: config.llm.timeoutMs,
-            retrySchedule,
+            retryPolicy: config.llm.retryPolicy,
           }).pipe(
-            Effect.mapError(
-              (error) =>
-                new SparqlGenerationError({
-                  message: `Failed to generate SPARQL: ${error._tag}`,
-                  question,
-                  cause: error,
-                })
+            Effect.provideService(LanguageModel.LanguageModel, llm),
+            Effect.mapError((error) =>
+              SparqlGenerationError.make({
+                message: `Failed to generate SPARQL: ${error._tag}`,
+                question,
+                cause: O.some(error),
+              })
             )
           );
 
@@ -212,21 +270,18 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
 
             // Attempt correction
             const corrected = yield* correctQuery(
-              llm,
               result.sparql,
               syntaxError.message,
               schemaContext,
-              config.runtime.retryMaxAttempts,
-              config.llm.timeoutMs,
-              retrySchedule
+              config.llm.retryPolicy
             ).pipe(
-              Effect.mapError(
-                (error) =>
-                  new SparqlGenerationError({
-                    message: `SPARQL correction failed: ${error.message}`,
-                    question,
-                    cause: error,
-                  })
+              Effect.provideService(LanguageModel.LanguageModel, llm),
+              Effect.mapError((error) =>
+                SparqlGenerationError.make({
+                  message: `SPARQL correction failed: ${error.message}`,
+                  question,
+                  cause: O.some(error),
+                })
               )
             );
 
@@ -269,14 +324,8 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
 
           const schemaContext = formatSchemaContext(ontology);
 
-          const corrected = yield* correctQuery(
-            llm,
-            sparql,
-            error,
-            schemaContext,
-            config.runtime.retryMaxAttempts,
-            config.llm.timeoutMs,
-            retrySchedule
+          const corrected = yield* correctQuery(sparql, error, schemaContext, config.llm.retryPolicy).pipe(
+            Effect.provideService(LanguageModel.LanguageModel, llm)
           );
 
           yield* Effect.logInfo("SparqlGenerator.correct complete", {
@@ -370,7 +419,7 @@ const formatSchemaContext = (ontology: OntologyContext): string => {
  * Format namespace prefixes as SPARQL PREFIX declarations
  */
 const formatPrefixes = (prefixes: Record<string, string>): string =>
-  Object.entries(prefixes)
+  R.toEntries(prefixes)
     .map(([prefix, uri]) => `PREFIX ${prefix}: <${uri}>`)
     .join("\n");
 
@@ -415,11 +464,11 @@ Generate the query now.`;
  * Checks for common structural issues.
  */
 const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => {
-  const trimmed = sparql.trim();
+  const trimmed = Str.trim(sparql);
 
   // Check for empty query
   if (P.not(P.isTruthy)(trimmed)) {
-    return new SparqlSyntaxError({
+    return SparqlSyntaxError.make({
       message: "Empty query",
       sparql,
     });
@@ -428,7 +477,7 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   // Check for SELECT keyword
   const upperQuery = trimmed.toUpperCase();
   if (!upperQuery.includes("SELECT") && !upperQuery.includes("ASK") && !upperQuery.includes("CONSTRUCT")) {
-    return new SparqlSyntaxError({
+    return SparqlSyntaxError.make({
       message: "Query must contain SELECT, ASK, or CONSTRUCT",
       sparql,
     });
@@ -436,7 +485,7 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
 
   // Check for WHERE clause (required for SELECT)
   if (upperQuery.includes("SELECT") && !upperQuery.includes("WHERE")) {
-    return new SparqlSyntaxError({
+    return SparqlSyntaxError.make({
       message: "SELECT query must contain WHERE clause",
       sparql,
     });
@@ -446,7 +495,7 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   const openBraces = (trimmed.match(/{/g) || []).length;
   const closeBraces = (trimmed.match(/}/g) || []).length;
   if (openBraces !== closeBraces) {
-    return new SparqlSyntaxError({
+    return SparqlSyntaxError.make({
       message: `Unbalanced braces: ${openBraces} open, ${closeBraces} close`,
       sparql,
     });
@@ -456,7 +505,7 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   const openParens = (trimmed.match(/\(/g) || []).length;
   const closeParens = (trimmed.match(/\)/g) || []).length;
   if (openParens !== closeParens) {
-    return new SparqlSyntaxError({
+    return SparqlSyntaxError.make({
       message: `Unbalanced parentheses: ${openParens} open, ${closeParens} close`,
       sparql,
     });
@@ -466,13 +515,13 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   const singleQuotes = (trimmed.match(/'/g) || []).length;
   const doubleQuotes = (trimmed.match(/"/g) || []).length;
   if (singleQuotes % 2 !== 0) {
-    return new SparqlSyntaxError({
+    return SparqlSyntaxError.make({
       message: "Unclosed single-quoted string",
       sparql,
     });
   }
   if (doubleQuotes % 2 !== 0) {
-    return new SparqlSyntaxError({
+    return SparqlSyntaxError.make({
       message: "Unclosed double-quoted string",
       sparql,
     });
@@ -485,33 +534,27 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
  * Correct a SPARQL query using LLM
  */
 const correctQuery = (
-  llm: LanguageModel.Service,
   sparql: string,
   error: string,
   schemaContext: string,
-  maxAttempts: number,
-  timeoutMs: number,
-  retrySchedule: Schedule.Schedule<unknown, unknown, never>
-): Effect.Effect<string, SparqlCorrectionError> =>
+  retryPolicy: RetryPolicy
+): Effect.Effect<string, SparqlCorrectionError, LanguageModel.LanguageModel> =>
   Effect.gen(function* () {
     const prompt = buildCorrectionPrompt(sparql, error, schemaContext);
 
-    const response = yield* generateObjectWithFeedback(llm, {
+    const response = yield* generateObjectWithFeedback({
       prompt,
       schema: SparqlResponseSchema,
       objectName: "SparqlResponse",
-      maxAttempts,
       serviceName: "SparqlGenerator.correct",
-      timeoutMs,
-      retrySchedule,
+      retryPolicy,
     }).pipe(
-      Effect.mapError(
-        () =>
-          new SparqlCorrectionError({
-            message: "Failed to correct SPARQL query",
-            sparql,
-            originalError: error,
-          })
+      Effect.mapError(() =>
+        SparqlCorrectionError.make({
+          message: "Failed to correct SPARQL query",
+          sparql,
+          originalError: error,
+        })
       )
     );
 
@@ -520,7 +563,7 @@ const correctQuery = (
     // Validate the corrected query
     const syntaxError = validateSparqlSyntax(corrected);
     if (P.isNotUndefined(syntaxError)) {
-      return yield* new SparqlCorrectionError({
+      return yield* SparqlCorrectionError.make({
         message: `Corrected query still has syntax errors: ${syntaxError.message}`,
         sparql: corrected,
         originalError: error,

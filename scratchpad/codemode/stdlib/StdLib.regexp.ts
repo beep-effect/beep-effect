@@ -1,3 +1,4 @@
+import { Unknown } from "@beep/schema/Unknown";
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
 import { SafeObject } from "@beep/schema"
 import { isBlockedMember } from "../Codemode.tool-runtime.ts"
@@ -5,7 +6,6 @@ import { CodeModeRegExp } from "../Codemode.values.ts"
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts"
 import { LiteralKit } from "@beep/schema"
 import { P , R,} from "@beep/utils";
-import * as S from "effect/Schema"
 import {
   type RegExpMethod,
   type RegExpStatic,
@@ -41,7 +41,7 @@ export const regexpProperties = LiteralKit([
   "dotAll",
 ])
 
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown))
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString
 
 export const regexFailureReason = (error: unknown): string =>
   (error instanceof Error ? error.message : String(error)).replace(/^Invalid regular expression:\s*/i, "")

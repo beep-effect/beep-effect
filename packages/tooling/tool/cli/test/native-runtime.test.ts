@@ -1,8 +1,7 @@
 import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "@beep/repo-cli/test/Laws";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import { expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   NodeTestLayer,
   withTempWorkingDirectory,
@@ -26,10 +25,11 @@ const expectStrictNativeError = (
   expect(A.map(summary.diagnostics, (diagnostic) => diagnostic.severity)).toEqual(["error"]);
 };
 
-describe("native runtime laws", () => {
-  it("exempts ecosystem members in full and explicit include scans", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+it.layer(NodeTestLayer)("native runtime laws", (it) => {
+  it.effect(
+    "exempts ecosystem members in full and explicit include scans",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           const source = "export const value = new Date();\n";
@@ -52,12 +52,14 @@ describe("native runtime laws", () => {
           expect(explicitSummary.scannedFiles).toBe(0);
           expect(explicitSummary.strictFailure).toBe(false);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      );
+    })
+  );
 
-  it("fails strict check for non-hotspot warnings", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+  it.effect(
+    "fails strict check for non-hotspot warnings",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile("packages/demo/src/index.ts", "export const value = new Date();\n");
@@ -77,12 +79,14 @@ describe("native runtime laws", () => {
           expect(summary.affectedFiles).toEqual(["packages/demo/src/index.ts"]);
           expect(A.map(summary.diagnostics, (diagnostic) => diagnostic.severity)).toEqual(["warn"]);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      );
+    })
+  );
 
-  it("allows platform availability typeof guards", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+  it.effect(
+    "allows platform availability typeof guards",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -104,12 +108,14 @@ describe("native runtime laws", () => {
           expect(summary.strictFailure).toBe(false);
           expect(summary.affectedFiles).toEqual([]);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      );
+    })
+  );
 
-  it("fails strict check for hotspot-native runtime violations", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+  it.effect(
+    "fails strict check for hotspot-native runtime violations",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -126,12 +132,38 @@ describe("native runtime laws", () => {
 
           expectStrictNativeError(summary, ["packages/tooling/tool/cli/src/commands/Lint/index.ts"]);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      );
+    })
+  );
 
-  it("fails strict check for switch statements outside hotspot files", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+  it.effect(
+    "treats effect-ontology native Error construction as a strict violation",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeDefaultTsconfig;
+          yield* writeProjectFile(
+            "scratchpad/effect-ontology/Runtime/RateLimitedLanguageModel.ts",
+            'import { Effect } from "effect";\nexport const fail = Effect.die(new Error("boom"));\n'
+          );
+
+          const summary = yield* runNoNativeRuntimeRules(
+            NoNativeRuntimeRulesOptions.make({
+              strictCheck: true,
+              excludePaths: [],
+            })
+          );
+
+          expectStrictNativeError(summary, ["scratchpad/effect-ontology/Runtime/RateLimitedLanguageModel.ts"]);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "fails strict check for switch statements outside hotspot files",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -160,12 +192,14 @@ describe("native runtime laws", () => {
 
           expectStrictNativeError(summary, ["packages/demo/src/index.ts"], ["nativeSwitch"]);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      );
+    })
+  );
 
-  it("suppresses allowlisted map-set constructors by snapshot path and kind", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+  it.effect(
+    "suppresses allowlisted map-set constructors by snapshot path and kind",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -186,6 +220,7 @@ describe("native runtime laws", () => {
           expect(summary.touchedFiles).toBe(0);
           expect(summary.affectedFiles).toEqual([]);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      );
+    })
+  );
 });

@@ -7,6 +7,7 @@ import {
   runGoalsDoctor,
 } from "@beep/repo-cli/commands/Goals";
 import { findRepoRoot } from "@beep/repo-utils/Root";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
@@ -20,7 +21,7 @@ import { ChildProcess } from "effect/unstable/process";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const encodeGoalManifest = S.encodeUnknownEffect(GoalManifest);
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const COMPLETION_GATE = {
   operator: "yeet",

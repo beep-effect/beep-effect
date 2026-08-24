@@ -1,18 +1,24 @@
 /**
  * Embedding Circuit Breaker Service
  *
+ * **Details**
+ *
  * Provides circuit breaker protection for embedding provider API calls.
  * Each provider (Voyage, Nomic) gets its own circuit breaker instance
  * to prevent cascading failures and enable graceful fallback.
  *
- * @since 2.0.0
- * @module Service/EmbeddingCircuitBreaker
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Duration, Effect, HashMap, Layer, Option, Ref } from "effect";
-import type { CircuitBreaker, CircuitBreakerConfig, CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
-import { makeCircuitBreaker } from "../Runtime/CircuitBreaker.ts";
+import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import type { CircuitBreaker, CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
+import { CircuitState, makeCircuitBreaker } from "../Runtime/CircuitBreaker.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker");
 
@@ -21,39 +27,98 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker
 // =============================================================================
 
 /**
- * Supported embedding provider identifiers
+ * Supported embedding provider identifiers managed by circuit breakers.
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the EmbeddingProviderId contract)
+ *
+ * ```ts
+ * import { EmbeddingProviderId } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * console.log(EmbeddingProviderId.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export type EmbeddingProviderId = "voyage" | "nomic" | "openai";
+export const EmbeddingProviderId = LiteralKit(["voyage", "nomic", "openai"]).pipe(
+  $I.annoteSchema("EmbeddingProviderId", {
+    description: "Embedding providers managed by the circuit-breaker service.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link EmbeddingProviderId}.
+ *
+ * **Example** (Use an embedding provider identifier)
+ *
+ * ```ts
+ * import type { EmbeddingProviderId } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * const provider: EmbeddingProviderId = "voyage"
+ * console.log(provider)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EmbeddingProviderId = typeof EmbeddingProviderId.Type;
 
 /**
  * Provider-specific circuit breaker configuration
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the ProviderCircuitConfig contract)
+ *
+ * ```ts
+ * import type { ProviderCircuitConfig } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * const acceptsProviderCircuitConfig = (_value: ProviderCircuitConfig): void => undefined
+ *
+ * console.log(acceptsProviderCircuitConfig)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface ProviderCircuitConfig {
-  /** Number of consecutive failures before opening circuit */
-  readonly maxFailures: number;
-  /** Time to wait before attempting recovery */
-  readonly resetTimeoutMs: number;
-  /** Number of successful calls needed to close circuit */
-  readonly successThreshold: number;
-}
+export class ProviderCircuitConfig extends S.Class<ProviderCircuitConfig>($I`ProviderCircuitConfig`)(
+  {
+    maxFailures: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(3))),
+    resetTimeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(30))),
+    successThreshold: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(2))),
+  },
+  $I.annote("ProviderCircuitConfig", {
+    description: "Failure, recovery-delay, and recovery-success thresholds for an embedding provider.",
+  })
+) {}
 
 /**
  * Circuit breaker status for observability
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the CircuitStatus contract)
+ *
+ * ```ts
+ * import type { CircuitStatus } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * const acceptsCircuitStatus = (_value: CircuitStatus): void => undefined
+ *
+ * console.log(acceptsCircuitStatus)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface CircuitStatus {
-  readonly providerId: EmbeddingProviderId;
-  readonly state: "closed" | "open" | "half_open";
-  readonly isAvailable: boolean;
-}
+export class CircuitStatus extends S.Class<CircuitStatus>($I`CircuitStatus`)(
+  {
+    providerId: EmbeddingProviderId,
+    state: CircuitState,
+    isAvailable: S.Boolean,
+  },
+  $I.annote("CircuitStatus", {
+    description: "Current circuit state and availability of one embedding provider.",
+  })
+) {}
 
 // =============================================================================
 // Default Configuration
@@ -62,25 +127,29 @@ export interface CircuitStatus {
 /**
  * Default circuit breaker configuration for embedding providers
  *
- * @since 2.0.0
- * @category Constants
+ * **Example** (Inspect default embedding circuit config)
+ *
+ * ```ts
+ * import { DEFAULT_EMBEDDING_CIRCUIT_CONFIG } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * console.log(DEFAULT_EMBEDDING_CIRCUIT_CONFIG)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, ProviderCircuitConfig> = {
   voyage: {
-    maxFailures: 3,
-    resetTimeoutMs: 30_000, // 30 seconds
-    successThreshold: 2,
+    maxFailures: PosInt.make(3),
+    resetTimeout: Duration.seconds(30),
+    successThreshold: PosInt.make(2),
   },
-  nomic: {
-    maxFailures: 5,
-    resetTimeoutMs: 60_000, // 1 minute (local, more tolerant)
-    successThreshold: 1,
-  },
-  openai: {
-    maxFailures: 3,
-    resetTimeoutMs: 30_000,
-    successThreshold: 2,
-  },
+  nomic: ProviderCircuitConfig.make({
+    maxFailures: PosInt.make(5),
+    resetTimeout: Duration.minutes(1),
+    successThreshold: PosInt.make(1),
+  }),
+  openai: ProviderCircuitConfig.make({}),
 };
 
 // =============================================================================
@@ -90,10 +159,13 @@ export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, Provi
 /**
  * Embedding Circuit Breaker Service
  *
+ * **Details**
+ *
  * Manages per-provider circuit breakers for embedding API calls.
  *
- * @since 2.0.0
- * @category Service
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface EmbeddingCircuitBreakerService {
   readonly protect: <A, E, R>(
@@ -105,11 +177,25 @@ export interface EmbeddingCircuitBreakerService {
   readonly isAvailable: (providerId: EmbeddingProviderId) => Effect.Effect<boolean>;
   readonly findAvailableProvider: (
     providers: ReadonlyArray<EmbeddingProviderId>
-  ) => Effect.Effect<EmbeddingProviderId | null>;
+  ) => Effect.Effect<O.Option<EmbeddingProviderId>>;
   readonly reset: (providerId: EmbeddingProviderId) => Effect.Effect<void>;
   readonly resetAll: Effect.Effect<void>;
 }
 
+/**
+ * Provides the embedding circuit breaker service capability.
+ *
+ * **Example** (Inspect embedding circuit breaker)
+ *
+ * ```ts
+ * import { EmbeddingCircuitBreaker } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * console.log(EmbeddingCircuitBreaker)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBreaker, EmbeddingCircuitBreakerService>()(
   $I`EmbeddingCircuitBreaker`,
   {
@@ -124,15 +210,10 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
         providerId: EmbeddingProviderId
       ) {
         const circuits = yield* Ref.get(circuitsRef);
-        return yield* Option.match(HashMap.get(circuits, providerId), {
+        return yield* O.match(HashMap.get(circuits, providerId), {
           onNone: Effect.fn("EmbeddingCircuitBreaker.getOrCreateCircuit.onNone")(function* () {
             const config = DEFAULT_EMBEDDING_CIRCUIT_CONFIG[providerId];
-            const circuitConfig: CircuitBreakerConfig = {
-              maxFailures: config.maxFailures,
-              resetTimeout: Duration.millis(config.resetTimeoutMs),
-              successThreshold: config.successThreshold,
-            };
-            const circuit = yield* makeCircuitBreaker(circuitConfig);
+            const circuit = yield* makeCircuitBreaker(config);
             yield* Ref.update(circuitsRef, HashMap.set(providerId, circuit));
             yield* Effect.logDebug(`Created circuit breaker for ${providerId}`);
             return circuit;
@@ -147,7 +228,10 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
        * @param providerId - The embedding provider ID
        * @param effect - The effect to protect
        */
-      const protect = Effect.fn(function* <A, E, R>(providerId: EmbeddingProviderId, effect: Effect.Effect<A, E, R>) {
+      const protect = Effect.fn("EmbeddingCircuitBreaker.protect")(function* <A, E, R>(
+        providerId: EmbeddingProviderId,
+        effect: Effect.Effect<A, E, R>
+      ) {
         const circuit = yield* getOrCreateCircuit(providerId);
         return yield* circuit.protect(effect);
       });
@@ -155,7 +239,9 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
       /**
        * Get circuit status for a provider
        */
-      const getStatus = Effect.fn(function* (providerId: EmbeddingProviderId): Effect.fn.Return<CircuitStatus> {
+      const getStatus = Effect.fn("EmbeddingCircuitBreaker.getStatus")(function* (
+        providerId: EmbeddingProviderId
+      ): Effect.fn.Return<CircuitStatus> {
         const circuit = yield* getOrCreateCircuit(providerId);
         const state = yield* circuit.getState();
         return {
@@ -172,12 +258,8 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
         const circuits = yield* Ref.get(circuitsRef);
         const entries = HashMap.toEntries(circuits);
 
-        if (entries.length === 0) {
-          return [];
-        }
-
         return yield* Effect.all(
-          entries.map(([providerId, circuit]) =>
+          A.map(entries, ([providerId, circuit]) =>
             circuit.getState().pipe(
               Effect.map((state) => ({
                 providerId,
@@ -185,7 +267,8 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
                 isAvailable: state !== "open",
               }))
             )
-          )
+          ),
+          { concurrency: "unbounded" }
         );
       });
 
@@ -198,16 +281,16 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
       /**
        * Find first available provider from a list
        */
-      const findAvailableProvider = Effect.fn(function* (
+      const findAvailableProvider = Effect.fn("EmbeddingCircuitBreaker.findAvailableProvider")(function* (
         providers: ReadonlyArray<EmbeddingProviderId>
-      ): Effect.fn.Return<EmbeddingProviderId | null> {
+      ): Effect.fn.Return<O.Option<EmbeddingProviderId>> {
         for (const providerId of providers) {
           const available = yield* isAvailable(providerId);
           if (available) {
-            return providerId;
+            return O.some(providerId);
           }
         }
-        return null;
+        return O.none();
       });
 
       /**
@@ -217,7 +300,7 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
         Ref.get(circuitsRef).pipe(
           Effect.flatMap((circuits) =>
             HashMap.get(circuits, providerId).pipe(
-              Option.match({
+              O.match({
                 onNone: () => Effect.void,
                 onSome: (circuit) =>
                   circuit.reset().pipe(Effect.tap(() => Effect.logInfo(`Reset circuit breaker for ${providerId}`))),
@@ -256,7 +339,15 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
 /**
  * Live layer for EmbeddingCircuitBreaker
  *
- * @since 2.0.0
- * @category Layers
+ * **Example** (Inspect embedding circuit breaker live)
+ *
+ * ```ts
+ * import { EmbeddingCircuitBreakerLive } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * console.log(EmbeddingCircuitBreakerLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingCircuitBreakerLive: Layer.Layer<EmbeddingCircuitBreaker> = EmbeddingCircuitBreaker.Default;

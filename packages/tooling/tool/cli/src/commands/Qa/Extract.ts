@@ -40,6 +40,7 @@ import {
   SessionStore,
   videoSecondsToEpochMs,
 } from "@beep/qa-capture";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, flow, Match, Number as N, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -262,7 +263,7 @@ export const readExtractionPlan = Effect.fn("QaExtract.readExtractionPlan")(func
   return yield* fs
     .readFileString(planPath)
     .pipe(
-      Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(S.Unknown))),
+      Effect.flatMap(Unknown.decodeUnknownEffectFromJsonString),
       Effect.flatMap(decodeExtractionPlan),
       Effect.map(O.some),
       Effect.orElseSucceed(O.none<ExtractionPlan>)

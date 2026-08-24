@@ -23,7 +23,7 @@ import "@testing-library/jest-dom/vitest";
 import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@effect/atom-react";
 import { it } from "@effect/vitest";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Deferred, Effect, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -692,12 +692,13 @@ describe("editor contract hardening", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const lookup = yield* Deferred.make<ReadonlyArray<MentionOption>>();
       const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
+      const scheduler = makeControlledScheduler();
       const source = vi.fn<MentionSource>(() => runPromise(Deferred.await(lookup)));
       const decodedAfterUnmount = vi.fn(() => "late");
       const disconnectObserver = vi.spyOn(MutationObserver.prototype, "disconnect");
       const removeWindowListener = vi.spyOn(window, "removeEventListener");
       const view = render(
-        <RegistryProvider defaultIdleTTL={30_000}>
+        <RegistryProvider defaultIdleTTL={30_000} scheduleTask={scheduler.schedule}>
           <ChatComposer namespace="mention-unmount-interruption" mentionSource={source}>
             <SeedEditor label="Seed pending lookup" text="@pending" />
           </ChatComposer>
@@ -705,16 +706,20 @@ describe("editor contract hardening", { concurrent: false }, () => {
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Seed pending lookup" }));
+      act(() => scheduler.flush());
       yield* Effect.promise(() => waitFor(() => expect(source).toHaveBeenCalledTimes(1)));
       yield* Effect.promise(() => screen.findByText("Looking up mentions..."));
       const editorRoot = screen.getByRole("combobox");
       editorRoot.setAttribute("aria-activedescendant", "lexical-stale-option");
+      disconnectObserver.mockClear();
+      removeWindowListener.mockClear();
       view.rerender(
-        <RegistryProvider defaultIdleTTL={30_000}>
+        <RegistryProvider defaultIdleTTL={30_000} scheduleTask={scheduler.schedule}>
           <div />
         </RegistryProvider>
       );
       yield* Effect.promise(() => waitFor(() => expect(disconnectObserver).toHaveBeenCalled()));
+      act(() => scheduler.flush());
       expect(editorRoot).not.toHaveAttribute("aria-activedescendant");
       expect(removeWindowListener).toHaveBeenCalledWith(
         "scroll",

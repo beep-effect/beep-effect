@@ -14,9 +14,9 @@ describe("effect-ontology RDF vocabulary constants", () => {
   });
 
   it("retains only experiment-owned vocabularies locally", () => {
-    expect(CLAIMS.Claim.value).toBe("http://effect-ontology.dev/claims#Claim");
-    expect(CORRECTIONS.Retraction.value).toBe("http://effect-ontology.dev/corrections#Retraction");
-    expect(EXTR.confidence.value).toBe("http://example.org/kg/confidence");
+    expect(CLAIMS.Claim.value).toBe("https://effect-ontology.dev/claims#Claim");
+    expect(CORRECTIONS.Retraction.value).toBe("https://effect-ontology.dev/corrections#Retraction");
+    expect(EXTR.confidence.value).toBe("https://example.org/kg/confidence");
     expect(IRI.is(CORE.Mention.value)).toBe(true);
   });
 

@@ -1,65 +1,77 @@
 /**
  * CLI: Ingest Command
  *
+ * **Details**
+ *
  * Upload local files to storage and generate batch manifest.
  *
- * @since 2.0.0
- * @module Cli/Commands/Ingest
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import {NonNegativeInt} from "@beep/schema/Int";
-import * as Clock from "effect/Clock";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
+import { NonNegativeInt } from "@beep/schema/Int";
+import { Console, DateTime, Effect, FileSystem, Path, Random } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import * as S from "effect/Schema";
-import {Console, DateTime, Effect, FileSystem, Path} from "effect";
-import {Argument as Args, Command, Flag as Options} from "effect/unstable/cli";
-import type {ManifestDocument} from "../../Domain/Schema/Batch.ts";
-import {BatchManifest} from "../../Domain/Schema/Batch.ts";
-import {OntologyName} from "../../Domain/Identity.ts";
-import {StorageService} from "../../Service/Storage.ts";
-import {withErrorHandler} from "../ErrorHandler.ts";
+import * as Argument from "effect/unstable/cli/Argument";
+import * as Command from "effect/unstable/cli/Command";
+import * as Flag from "effect/unstable/cli/Flag";
+import {
+  BatchId,
+  ContentHash,
+  DocumentId,
+  GcsBucket,
+  GcsUri,
+  Namespace,
+  OntologyName,
+  OntologyVersion,
+} from "../../Domain/Identity.ts";
+import type { ManifestDocument } from "../../Domain/Schema/Batch.ts";
+import { BatchManifest } from "../../Domain/Schema/Batch.ts";
+import { ConfigService } from "../../Service/Config.ts";
+import { StorageService } from "../../Service/Storage.ts";
+import { sha256SyncFull } from "../../Utils/Hash.ts";
+import { withErrorHandler } from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
 // =============================================================================
 
-const inputDir = Args.directory("dir").pipe(Args.withDescription("Directory containing files to ingest"));
+const inputDir = Argument.directory("dir").pipe(Argument.withDescription("Directory containing files to ingest"));
 
-const ontologyOption = Options.file("ontology").pipe(
-  Options.withAlias("o"),
-  Options.withDescription("Path to ontology file (Turtle)")
+const ontologyOption = Flag.file("ontology").pipe(
+  Flag.withAlias("o"),
+  Flag.withDescription("Path to ontology file (Turtle)")
 );
 
-const namespaceOption = Options.string("namespace").pipe(
-  Options.withAlias("n"),
-  Options.withDescription("Target namespace for entity minting")
+const namespaceOption = Flag.string("namespace").pipe(
+  Flag.withAlias("n"),
+  Flag.withDescription("Target namespace for entity minting")
 );
 
-const ontologyIdOption = Options.string("ontology-id").pipe(
-  Options.withDescription("Ontology registry ID (e.g., 'seattle')")
+const ontologyIdOption = Flag.string("ontology-id").pipe(
+  Flag.withDescription("Ontology registry ID (e.g., 'seattle')")
 );
 
-const outputOption = Options.file("output").pipe(
-  Options.withAlias("out"),
-  Options.optional,
-  Options.withDescription("Output path for manifest JSON (default: stdout)")
+const outputOption = Flag.file("output").pipe(
+  Flag.withAlias("out"),
+  Flag.optional,
+  Flag.withDescription("Output path for manifest JSON (default: stdout)")
 );
 
-const batchIdOption = Options.string("batch-id").pipe(
-  Options.withAlias("b"),
-  Options.optional,
-  Options.withDescription("Custom batch ID (default: auto-generated)")
+const batchIdOption = Flag.string("batch-id").pipe(
+  Flag.withAlias("b"),
+  Flag.optional,
+  Flag.withDescription("Custom batch ID (default: auto-generated)")
 );
 
-const prefixOption = Options.string("prefix").pipe(
-  Options.withAlias("p"),
-  Options.optional,
-  Options.withDescription("Storage path prefix for uploaded files")
+const prefixOption = Flag.string("prefix").pipe(
+  Flag.withAlias("p"),
+  Flag.optional,
+  Flag.withDescription("Storage path prefix for uploaded files")
 );
 
 // =============================================================================
@@ -78,19 +90,25 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const storage = yield* StorageService;
-  const timestamp = (yield* Clock.currentTimeMillis).toString(36);
-  const random = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
-  const effectiveBatchId = O.getOrElse(batchId, () => `batch-${timestamp}-${random}`);
+  const config = yield* ConfigService;
+  const randomA = (yield* Random.nextIntBetween(0, 16_777_216)).toString(16).padStart(6, "0");
+  const randomB = (yield* Random.nextIntBetween(0, 16_777_216)).toString(16).padStart(6, "0");
+  const effectiveBatchId = yield* O.match(batchId, {
+    onNone: () => Effect.succeed(BatchId.make(`batch-${randomA}${randomB}`)),
+    onSome: BatchId.decodeUnknownEffect,
+  });
+  const bucket = yield* O.match(config.storage.bucket, {
+    onNone: () => GcsBucket.decodeUnknownEffect(undefined),
+    onSome: GcsBucket.decodeUnknownEffect,
+  });
   const storagePrefix = O.getOrElse(prefix, () => `batches/${effectiveBatchId}`);
   yield* Console.log(`Ingesting files from: ${dir}`);
   yield* Console.log(`Batch ID: ${effectiveBatchId}`);
   const entries = yield* fs.readDirectory(dir);
   const supportedExtensions = [".txt", ".md", ".json", ".html", ".htm"];
-  const files = A.filter(entries, (entry) => A.some(supportedExtensions, (ext) => pipe(
-    entry,
-    Str.toLowerCase,
-    Str.endsWith(ext)
-  )));
+  const files = A.filter(entries, (entry) =>
+    A.some(supportedExtensions, (ext) => pipe(entry, Str.toLowerCase, Str.endsWith(ext)))
+  );
   if (A.isReadonlyArrayEmpty(files)) {
     yield* Console.error(`No supported files found in ${dir}`);
     yield* Console.log(`Supported extensions: ${A.join(supportedExtensions, ", ")}`);
@@ -102,25 +120,29 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
     const filePath = path.join(dir, file);
     const stat = yield* fs.stat(filePath);
     const content = yield* fs.readFileString(filePath);
-    const docId = file.replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase();
+    const docId = DocumentId.fromContentHash(ContentHash.make(sha256SyncFull(content)));
     const storageKey = `${storagePrefix}/documents/${docId}`;
     yield* storage.set(storageKey, content);
-    const contentType = file.endsWith(".json")
+    const contentType = Str.endsWith(".json")(file)
       ? "application/json"
-      : file.endsWith(".html") || file.endsWith(".htm")
+      : Str.endsWith(".html")(file) || Str.endsWith(".htm")(file)
         ? "text/html"
-        : file.endsWith(".md")
+        : Str.endsWith(".md")(file)
           ? "text/markdown"
           : "text/plain";
+    const sourceUri = yield* GcsUri.decodeUnknownEffect(`gs://${bucket}/${storageKey}`);
     documents.push({
-      documentId: docId as ManifestDocument["documentId"],
-      sourceUri: storageKey as ManifestDocument["sourceUri"],
+      documentId: docId,
+      sourceUri,
       contentType,
       sizeBytes: NonNegativeInt.make(Number(stat.size)),
     });
     yield* Console.log(`  Uploaded: ${file} -> ${storageKey}`);
   }
   const ontologyContent = yield* fs.readFileString(ontology);
+  const ontologyName = yield* OntologyName.decodeEffect(ontologyId);
+  const targetNamespace = yield* Namespace.decodeEffect(namespace);
+  const ontologyHash = ContentHash.make(sha256SyncFull(ontologyContent));
   const ontologyFilename = path.basename(ontology);
   const ontologyKey = `${storagePrefix}/ontology/${ontologyFilename}`;
   yield* storage.set(ontologyKey, ontologyContent);
@@ -129,16 +151,18 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   if (P.isUndefined(firstDocument)) {
     return;
   }
+  const ontologyUri = yield* GcsUri.decodeUnknownEffect(`gs://${bucket}/${ontologyKey}`);
+  const createdAt = yield* DateTime.now;
   const manifest = BatchManifest.make({
-    batchId: effectiveBatchId as BatchManifest["batchId"],
-    ontologyId: OntologyName.make(ontologyId),
-    ontologyUri: ontologyKey as BatchManifest["ontologyUri"],
-    ontologyVersion: "1.0.0" as BatchManifest["ontologyVersion"],
-    targetNamespace: namespace as BatchManifest["targetNamespace"],
-    documents: [firstDocument, ...documents.slice(1)],
-    createdAt: DateTime.nowUnsafe(),
+    batchId: effectiveBatchId,
+    ontologyId: ontologyName,
+    ontologyUri,
+    ontologyVersion: OntologyVersion.fromParts(targetNamespace, ontologyName, ontologyHash),
+    targetNamespace,
+    documents: [firstDocument, ...A.drop(documents, 1)],
+    createdAt,
   });
-  const manifestJson = yield* S.encodeEffect(S.fromJsonString(BatchManifest, {space: 2}))(manifest);
+  const manifestJson = yield* BatchManifest.encodeEffectFromJsonStringFormatted(manifest);
   if (O.isSome(output)) {
     yield* fs.writeFileString(output.value, manifestJson);
     yield* Console.log(`Manifest written to: ${output.value}`);
@@ -153,6 +177,20 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
 // Command Definition
 // =============================================================================
 
+/**
+ * Exposes ingest command for composition by callers of this module.
+ *
+ * **Example** (Inspect ingest command)
+ *
+ * ```ts
+ * import { ingestCommand } from "@effect-ontology/Cli/Commands/Ingest"
+ *
+ * console.log(ingestCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const ingestCommand = Command.make(
   "ingest",
   {
@@ -164,6 +202,6 @@ export const ingestCommand = Command.make(
     batchId: batchIdOption,
     prefix: prefixOption,
   },
-  ({batchId, dir, namespace, ontology, ontologyId, output, prefix}) =>
+  ({ batchId, dir, namespace, ontology, ontologyId, output, prefix }) =>
     withErrorHandler(ingestHandler(dir, ontology, ontologyId, namespace, output, batchId, prefix))
 ).pipe(Command.withDescription("Upload local files to storage and generate batch manifest"));

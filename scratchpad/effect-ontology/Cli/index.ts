@@ -1,19 +1,21 @@
 /**
  * CLI: Effect Ontology
  *
+ * **Details**
+ *
  * Command-line interface for knowledge extraction and reasoning tools.
  * Built with @effect/cli for type-safe command parsing.
  *
- * @since 2.0.0
- * @module Cli
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import { makeDrizzleLayer } from "@beep/postgres";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { PgClient } from "@effect/sql-pg";
-import { Config, Effect, Layer, Option } from "effect";
+import { Config, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import { Command } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
+import { DatabaseReadyLive } from "../Runtime/Persistence/PostgresLayer.ts";
 import { makeLanguageModelLayer } from "../Runtime/ProductionRuntime.ts";
 import { ConfigServiceDefault } from "../Service/Config.ts";
 import { ContentEnrichmentAgent } from "../Service/ContentEnrichmentAgent.ts";
@@ -61,28 +63,12 @@ const rootCommand = Command.make("effect-onto").pipe(
 // =============================================================================
 
 /**
- * PostgreSQL client layer
- */
-const PgClientLayer = PgClient.layerConfig({
-  host: Config.string("POSTGRES_HOST"),
-  port: Config.number("POSTGRES_PORT").pipe(Config.withDefault(5432)),
-  database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
-  username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
-  password: Config.redacted("POSTGRES_PASSWORD"),
-});
-
-/**
- * PgDrizzle layer with PgClient dependency
- */
-const PgDrizzleLayer = makeDrizzleLayer().pipe(Layer.provideMerge(PgClientLayer));
-
-/**
  * Full LinkIngestion stack when PostgreSQL is configured
  */
 const LinkIngestionLive = LinkIngestionService.Default.pipe(
   Layer.provideMerge(ContentEnrichmentAgent.Default),
   Layer.provideMerge(JinaReaderClient.Default),
-  Layer.provideMerge(PgDrizzleLayer),
+  Layer.provideMerge(DatabaseReadyLive),
   Layer.provideMerge(ImageExtractor.Default),
   Layer.provideMerge(ImageFetcher.Default),
   Layer.provideMerge(ImageStore.Default),
@@ -100,7 +86,7 @@ const LinkIngestionLayer = Layer.unwrap(
   Effect.gen(function* () {
     const postgresHost = yield* Config.string("POSTGRES_HOST").pipe(Config.option);
 
-    if (Option.isSome(postgresHost)) {
+    if (O.isSome(postgresHost)) {
       return LinkIngestionLive;
     } else {
       // Use the service's built-in Disabled layer
@@ -129,7 +115,7 @@ const CliLive = Layer.mergeAll(
   WikidataClient.Default,
   JinaReaderClient.Default,
   LinkIngestionLayer
-).pipe(Layer.provide(ConfigServiceDefault), Layer.provideMerge(BunServices.layer));
+).pipe(Layer.provideMerge(ConfigServiceDefault), Layer.provideMerge(BunServices.layer));
 
 // =============================================================================
 // Entry Point
@@ -138,7 +124,17 @@ const CliLive = Layer.mergeAll(
 /**
  * Run the CLI with provided arguments
  *
+ * **Example** (Inspect run cli)
+ *
+ * ```ts
+ * import { runCli } from "@effect-ontology/Cli/index"
+ *
+ * console.log(runCli)
+ * ```
+ *
  * @param args - Command line arguments (typically Bun.argv)
+ * @category layers
+ * @since 0.0.0
  */
 export const runCli = (args: ReadonlyArray<string>) => {
   const effect = Command.runWith(rootCommand, {

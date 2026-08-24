@@ -7,8 +7,10 @@
  *
  * @since 0.0.0
  */
+
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -136,7 +138,7 @@ const decodeSettingsSource = (
   content: string
 ): Effect.Effect<SettingsRaw, SettingsParseError | SettingsDecodeError> =>
   Effect.gen(function* () {
-    const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(content).pipe(
+    const parsed = yield* Unknown.decodeEffectFromJsonString(content).pipe(
       Effect.mapError((cause) => SettingsParseError.make({ path, cause }))
     );
     const raw = yield* S.decodeUnknownEffect(SettingsRaw)(parsed).pipe(
@@ -148,7 +150,7 @@ const decodeSettingsSource = (
     return raw;
   });
 
-const encodeUnknownJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeUnknownJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const isUnknownRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   P.isObject(value) && !A.isArray(value);

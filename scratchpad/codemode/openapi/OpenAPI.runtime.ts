@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Unknown } from "@beep/schema/Unknown";
 import { $ScratchpadId } from "@beep/identity";
 import {
   MappedLiteralKit,
@@ -50,8 +51,8 @@ const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.runtime");
 
 const maxErrorBodyChars = 1_024;
 const maxResponseBodyBytes = 50 * 1_024 * 1_024;
-const decodeJson = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
-const encodeJson = S.encodeUnknownOption(S.fromJsonString(S.Unknown));
+const decodeJson = Unknown.decodeUnknownOptionFromJsonString;
+const encodeJson = Unknown.encodeUnknownOptionFromJsonString;
 const decodeNonNegativeInt = S.decodeUnknownOption(NonNegativeInt);
 
 const EncodedPathPunctuation = MappedLiteralKit([

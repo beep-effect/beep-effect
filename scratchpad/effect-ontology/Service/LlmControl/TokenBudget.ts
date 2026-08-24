@@ -1,6 +1,8 @@
 /**
  * Token Budget Service
  *
+ * **Details**
+ *
  * Tracks token usage across extraction stages with per-stage budgets.
  * Prevents any single stage from consuming the entire token allocation.
  *
@@ -11,12 +13,14 @@
  * - Property scoping: 8%
  * - Other: 7%
  *
- * @since 2.0.0
- * @module Service/LlmControl/TokenBudget
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { Context, Effect, Layer, Ref } from "effect";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/TokenBudget");
 
@@ -26,11 +30,53 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/TokenBudget"
 
 /**
  * Stage names that have dedicated token budgets
+ *
+ * **Example** (Inspect budgeted stage)
+ *
+ * ```ts
+ * import { BudgetedStage } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ *
+ * console.log(BudgetedStage)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
-export type BudgetedStage = "entity_extraction" | "relation_extraction" | "grounding" | "property_scoping" | "other";
+export const BudgetedStage = LiteralKit([
+  "entity_extraction",
+  "relation_extraction",
+  "grounding",
+  "property_scoping",
+  "other",
+]);
+
+/**
+ * Describes the budgeted stage data exposed by this module.
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BudgetedStage = typeof BudgetedStage.Type;
+
+const isBudgetedStage = S.is(BudgetedStage);
 
 /**
  * Token budget state tracking usage across stages
+ *
+ *
+ * **Example** (Use the TokenBudgetState contract)
+ *
+ * ```ts
+ * import type { TokenBudgetState } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ *
+ * const acceptsTokenBudgetState = (_value: TokenBudgetState): void => undefined
+ *
+ * console.log(acceptsTokenBudgetState)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TokenBudgetState {
   /** Total token budget for the request */
@@ -59,32 +105,24 @@ const STAGE_ALLOCATIONS: Record<BudgetedStage, number> = {
 /**
  * Token budget management for extraction requests
  *
+ * **Details**
+ *
  * Provides fine-grained control over LLM token consumption with:
  * - Per-stage budget limits
  * - Usage tracking
  * - Budget availability checks
  *
- * @example
- * ```typescript
- * Effect.gen(function*() {
- *   const budget = yield* TokenBudgetService
+ * **Example** (Inspect the token-budget layer)
  *
- *   // Reset for new request
- *   yield* budget.reset(4096)
+ * ```ts
+ * import { Layer } from "effect"
+ * import { TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- *   // Check if stage can afford tokens
- *   const canProceed = yield* budget.canAfford("entity_extraction", 1000)
- *   if (!canProceed) {
- *     yield* Effect.fail(new Error("Token budget exceeded for stage"))
- *   }
- *
- *   // Record usage after LLM call
- *   yield* budget.recordUsage("entity_extraction", 856)
- *
- *   // Check remaining
- *   const remaining = yield* budget.getRemaining()
- * })
+ * console.log(Layer.isLayer(TokenBudgetServiceLive)) // true
  * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export class TokenBudgetService extends Context.Service<
   TokenBudgetService,
@@ -145,7 +183,7 @@ export class TokenBudgetService extends Context.Service<
  * Get budget limit for a stage based on allocation percentage
  */
 const getStageBudget = (stage: string, total: number): number => {
-  const allocation = STAGE_ALLOCATIONS[stage as BudgetedStage] ?? STAGE_ALLOCATIONS.other;
+  const allocation = isBudgetedStage(stage) ? STAGE_ALLOCATIONS[stage] : STAGE_ALLOCATIONS.other;
   return Math.floor(total * allocation);
 };
 
@@ -198,11 +236,33 @@ const make = Effect.gen(function* () {
 
 /**
  * Default layer providing TokenBudgetService
+ *
+ * **Example** (Inspect token budget service live)
+ *
+ * ```ts
+ * import { TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ *
+ * console.log(TokenBudgetServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make);
 
 /**
  * Test layer with configurable initial state
+ *
+ * **Example** (Inspect token budget service test)
+ *
+ * ```ts
+ * import { TokenBudgetServiceTest } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ *
+ * console.log(TokenBudgetServiceTest)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const TokenBudgetServiceTest = (initialTotal: number = 4096): Layer.Layer<TokenBudgetService> =>
   Layer.effect(

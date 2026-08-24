@@ -1,8 +1,9 @@
 /**
  * Serializable activity failures for durable workflow journals.
  *
- * @remarks
- * These values are plain tagged records rather than throwable errors because
+ * **Details**
+ *
+ * * These values are plain tagged records rather than throwable errors because
  * workflow engines persist them. Constructors and conversion helpers live on
  * the schema, while compatibility exports delegate to those statics.
  *
@@ -12,8 +13,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { dual, O, P } from "@beep/utils";
-import * as Inspectable from "effect/Inspectable";
-import * as Match from "effect/Match";
+import { Inspectable, Match } from "effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, OptionalErrorMessage } from "./Base.ts";
 
@@ -82,17 +82,20 @@ const ActivityTimeoutErrorDefinition = ActivityErrorCases.cases.ActivityTimeout;
 /**
  * Serializable timeout at a named workflow activity stage.
  *
- * @example
+ * **Example** (Use ActivityTimeoutError)
  * ```ts
+ * import { Milliseconds } from "@effect-ontology/Error/Base"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ActivityTimeoutError } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityTimeoutError } from "@effect-ontology/Error/Activity"
  *
- * const error = S.decodeUnknownSync(ActivityTimeoutError)({
+ * const error = S.decodeUnknownOption(ActivityTimeoutError)({
+ *   _tag: "ActivityTimeoutError",
  *   stage: "enrichment",
- *   durationMs: 5_000,
+ *   durationMs: Milliseconds.make(5_000),
  *   message: "Enrichment timed out."
  * })
- * console.log(error._tag)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @invariant `durationMs` is a finite non-negative integer.
@@ -110,14 +113,14 @@ export const ActivityTimeoutError = ActivityTimeoutErrorDefinition.annotate({
 /**
  * Runtime value decoded by {@link ActivityTimeoutError}.
  *
- * @example
+ * **Example** (Use ActivityTimeoutError)
  * ```ts
- * import * as S from "effect/Schema"
- * import { ActivityTimeoutError, type ActivityTimeoutError as Timeout } from "@effect-ontology/Error/Activity.ts"
+ * import { Milliseconds } from "@effect-ontology/Error/Base"
+ * import { ActivityTimeoutError, type ActivityTimeoutError as Timeout } from "@effect-ontology/Error/Activity"
  *
- * const error: Timeout = S.decodeUnknownSync(ActivityTimeoutError)({
+ * const error: Timeout = ActivityTimeoutError.make({
  *   stage: "load",
- *   durationMs: 100,
+ *   durationMs: Milliseconds.make(100),
  *   message: "Timed out."
  * })
  * console.log(error.stage)
@@ -133,16 +136,19 @@ const ActivityServiceErrorDefinition = ActivityErrorCases.cases.ActivityServiceF
 /**
  * Serializable service-operation failure raised by an activity.
  *
- * @example
+ * **Example** (Use ActivityServiceError)
  * ```ts
- * import { ActivityServiceError } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityServiceError } from "@effect-ontology/Error/Activity"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ActivityServiceError.make({
+ * const error = S.decodeUnknownOption(ActivityServiceError)({
+ *   _tag: "ActivityServiceError",
  *   service: "JinaReader",
  *   operation: "fetch",
  *   message: "Request failed."
  * })
- * console.log(error.retryable) // false
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
@@ -159,9 +165,9 @@ export const ActivityServiceError = ActivityServiceErrorDefinition.annotate({
 /**
  * Runtime value decoded by {@link ActivityServiceError}.
  *
- * @example
+ * **Example** (Use ActivityServiceError)
  * ```ts
- * import { ActivityServiceError, type ActivityServiceError as ServiceFailure } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityServiceError, type ActivityServiceError as ServiceFailure } from "@effect-ontology/Error/Activity"
  *
  * const error: ServiceFailure = ActivityServiceError.make({
  *   service: "Store",
@@ -181,16 +187,19 @@ const ActivityNotFoundErrorDefinition = ActivityErrorCases.cases.ActivityNotFoun
 /**
  * Serializable missing-resource failure raised by an activity.
  *
- * @example
+ * **Example** (Use ActivityNotFoundError)
  * ```ts
- * import { ActivityNotFoundError } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityNotFoundError } from "@effect-ontology/Error/Activity"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ActivityNotFoundError.make({
+ * const error = S.decodeUnknownOption(ActivityNotFoundError)({
+ *   _tag: "ActivityNotFoundError",
  *   resourceType: "Document",
  *   resourceId: "doc-42",
  *   message: "Document not found: doc-42"
  * })
- * console.log(error.resourceId)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
@@ -207,9 +216,9 @@ export const ActivityNotFoundError = ActivityNotFoundErrorDefinition.annotate({
 /**
  * Runtime value decoded by {@link ActivityNotFoundError}.
  *
- * @example
+ * **Example** (Use ActivityNotFoundError)
  * ```ts
- * import { ActivityNotFoundError, type ActivityNotFoundError as Missing } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityNotFoundError, type ActivityNotFoundError as Missing } from "@effect-ontology/Error/Activity"
  *
  * const error: Missing = ActivityNotFoundError.make({
  *   resourceType: "Shape",
@@ -229,15 +238,18 @@ const ActivityValidationErrorDefinition = ActivityErrorCases.cases.ActivityValid
 /**
  * Serializable activity-input validation failure.
  *
- * @example
+ * **Example** (Use ActivityValidationError)
  * ```ts
- * import { ActivityValidationError } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityValidationError } from "@effect-ontology/Error/Activity"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ActivityValidationError.make({
+ * const error = S.decodeUnknownOption(ActivityValidationError)({
+ *   _tag: "ActivityValidationError",
  *   reason: "Expected a non-empty IRI.",
  *   message: "Activity input is invalid."
  * })
- * console.log(error._tag)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
@@ -254,9 +266,9 @@ export const ActivityValidationError = ActivityValidationErrorDefinition.annotat
 /**
  * Runtime value decoded by {@link ActivityValidationError}.
  *
- * @example
+ * **Example** (Use ActivityValidationError)
  * ```ts
- * import { ActivityValidationError, type ActivityValidationError as Invalid } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityValidationError, type ActivityValidationError as Invalid } from "@effect-ontology/Error/Activity"
  *
  * const error: Invalid = ActivityValidationError.make({
  *   reason: "Invalid value.",
@@ -275,12 +287,15 @@ const ActivityGenericErrorDefinition = ActivityErrorCases.cases.ActivityGeneric;
 /**
  * Serializable fallback for an otherwise unclassified activity failure.
  *
- * @example
+ * **Example** (Use ActivityGenericError)
  * ```ts
- * import { ActivityGenericError } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityGenericError } from "@effect-ontology/Error/Activity"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ActivityGenericError.make({ message: "Unexpected activity failure." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(ActivityGenericError)({
+ *   _tag: "ActivityGenericError", message: "Unexpected activity failure." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
@@ -297,9 +312,9 @@ export const ActivityGenericError = ActivityGenericErrorDefinition.annotate({
 /**
  * Runtime value decoded by {@link ActivityGenericError}.
  *
- * @example
+ * **Example** (Use ActivityGenericError)
  * ```ts
- * import { ActivityGenericError, type ActivityGenericError as GenericFailure } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityGenericError, type ActivityGenericError as GenericFailure } from "@effect-ontology/Error/Activity"
  *
  * const error: GenericFailure = ActivityGenericError.make({ message: "Unexpected." })
  * console.log(error.message)
@@ -310,20 +325,23 @@ export const ActivityGenericError = ActivityGenericErrorDefinition.annotate({
  */
 export type ActivityGenericError = typeof ActivityGenericError.Type;
 
-const messageFromUnknown = Match.type<unknown>().pipe(
-  Match.when(P.isError, (error) =>
-    Match.value(error.message).pipe(
-      Match.when(ErrorMessage.is, (message) => message),
-      Match.orElse(() => ErrorMessage.make(Inspectable.toStringUnknown(error, 0)))
-    )
+const messageFromError = Match.type<Error>().pipe(
+  Match.when(
+    (error) => ErrorMessage.is(error.message),
+    (error) => ErrorMessage.make(error.message)
   ),
+  Match.orElse((error) => ErrorMessage.make(Inspectable.toStringUnknown(error, 0)))
+);
+
+const messageFromUnknown = Match.type<unknown>().pipe(
+  Match.when(P.isError, messageFromError),
   Match.orElse((value) => ErrorMessage.make(Inspectable.toStringUnknown(value, 0)))
 );
 
 const causeFromUnknown = Match.type<unknown>().pipe(
   Match.withReturnType<O.Option<ErrorMessage>>(),
   Match.when(P.isError, (error) => O.fromNullishOr(error.cause).pipe(O.map(messageFromUnknown))),
-  Match.orElse(() => O.none<ErrorMessage>())
+  Match.orElse(O.none<ErrorMessage>)
 );
 
 const makeGeneric = (input: unknown): ActivityGenericError =>
@@ -332,18 +350,19 @@ const makeGeneric = (input: unknown): ActivityGenericError =>
     cause: causeFromUnknown(input),
   });
 
-const makeServiceFailure = (
-  service: string,
-  operation: string,
-  input: unknown,
-  retryable = false
-): ActivityServiceError =>
-  ActivityServiceError.make({
-    service,
-    operation,
-    message: messageFromUnknown(input),
-    retryable,
-  });
+const makeServiceFailure: {
+  (service: string, operation: string, input: unknown, retryable: boolean): ActivityServiceError;
+  (operation: string, input: unknown, retryable: boolean): (service: string) => ActivityServiceError;
+} = dual(
+  4,
+  (service: string, operation: string, input: unknown, retryable: boolean): ActivityServiceError =>
+    ActivityServiceError.make({
+      service,
+      operation,
+      message: messageFromUnknown(input),
+      retryable,
+    })
+);
 
 const makeNotFound: {
   (resourceType: string, resourceId: string): ActivityNotFoundError;
@@ -369,15 +388,16 @@ const ActivityErrorDefinition = S.Union([
 /**
  * Exhaustive journal-safe tagged union of workflow activity failures.
  *
- * @remarks
- * The companion constructors centralize unknown-error rendering and defaults;
+ * **Details**
+ *
+ * * The companion constructors centralize unknown-error rendering and defaults;
  * downstream workflow code can use `.match`, `.guards`, and `.cases`.
  *
- * @example
+ * **Example** (Use ActivityError)
  * ```ts
- * import { ActivityError } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityError } from "@effect-ontology/Error/Activity"
  *
- * const error = ActivityError.fromUnknown(new Error("boom"))
+ * const error = ActivityError.generic("boom")
  * console.log(ActivityError.guards.ActivityGeneric(error)) // true
  * ```
  *
@@ -387,10 +407,10 @@ const ActivityErrorDefinition = S.Union([
 export const ActivityError = ActivityErrorDefinition.pipe(
   $I.annoteSchema("ActivityError", {
     description: "Exhaustive journal-safe tagged union of workflow activity failures.",
-  toArbitrary: () => S.toArbitrary(ActivityErrorDefinition),
+    toArbitrary: () => S.toArbitrary(ActivityErrorDefinition),
   }),
   SchemaUtils.withStatics(() => ({
-    fromUnknown: makeGeneric,
+    generic: makeGeneric,
     serviceFailure: makeServiceFailure,
     notFound: makeNotFound,
   }))
@@ -399,9 +419,9 @@ export const ActivityError = ActivityErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link ActivityError}.
  *
- * @example
+ * **Example** (Use ActivityError)
  * ```ts
- * import { ActivityError, type ActivityError as ActivityFailure } from "@effect-ontology/Error/Activity.ts"
+ * import { ActivityError, type ActivityError as ActivityFailure } from "@effect-ontology/Error/Activity"
  *
  * const error: ActivityFailure = ActivityError.notFound("Document", "doc-42")
  * console.log(error._tag)
@@ -415,11 +435,11 @@ export type ActivityError = typeof ActivityError.Type;
 /**
  * Converts an unknown failure into a journal-safe generic activity error.
  *
- * @example
+ * **Example** (Use toActivityError)
  * ```ts
- * import { toActivityError } from "@effect-ontology/Error/Activity.ts"
+ * import { toActivityError } from "@effect-ontology/Error/Activity"
  *
- * console.log(toActivityError(new Error("boom")).message)
+ * console.log(toActivityError("boom").message)
  * ```
  *
  * @param input - Unknown failure caught at an activity boundary.
@@ -427,16 +447,16 @@ export type ActivityError = typeof ActivityError.Type;
  * @category constructors
  * @since 0.0.0
  */
-export const toActivityError = ActivityError.fromUnknown;
+export const toActivityError = ActivityError.generic;
 
 /**
  * Constructs a journal-safe service-operation activity failure.
  *
- * @example
+ * **Example** (Use serviceError)
  * ```ts
- * import { serviceError } from "@effect-ontology/Error/Activity.ts"
+ * import { serviceError } from "@effect-ontology/Error/Activity"
  *
- * const error = serviceError("Store", "put", new Error("offline"), true)
+ * const error = serviceError("Store", "put", "offline", true)
  * console.log(error.retryable)
  * ```
  *
@@ -449,15 +469,14 @@ export const toActivityError = ActivityError.fromUnknown;
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Constructor parameters are peers; none is pipeable data.
 export const serviceError = ActivityError.serviceFailure;
 
 /**
  * Constructs a journal-safe missing-resource activity failure.
  *
- * @example
+ * **Example** (Use notFoundError)
  * ```ts
- * import { notFoundError } from "@effect-ontology/Error/Activity.ts"
+ * import { notFoundError } from "@effect-ontology/Error/Activity"
  *
  * console.log(notFoundError("Document", "doc-42").message)
  * ```

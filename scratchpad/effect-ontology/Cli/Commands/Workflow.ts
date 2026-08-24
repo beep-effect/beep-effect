@@ -1,19 +1,19 @@
 /**
  * CLI: Workflow Commands
  *
+ * **Details**
+ *
  * Manage durable workflows, cleanup stale links, and re-enrich pending content.
  *
- * @since 2.0.0
- * @module Cli/Commands/Workflow
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
+import { Clock, Console, DateTime, Duration, Effect } from "effect";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
-import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Command, Flag as Options } from "effect/unstable/cli";
+import { Command, Flag } from "effect/unstable/cli";
 import { LinkIngestionService } from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
 
@@ -21,30 +21,30 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 // Command Options
 // =============================================================================
 
-const ontologyOption = Options.string("ontology").pipe(
-  Options.withAlias("o"),
-  Options.optional,
-  Options.withDescription("Ontology ID to scope operations to")
+const ontologyOption = Flag.string("ontology").pipe(
+  Flag.withAlias("o"),
+  Flag.optional,
+  Flag.withDescription("Ontology ID to scope operations to")
 );
 
-const minutesOption = Options.integer("minutes").pipe(
-  Options.withAlias("m"),
-  Options.withDefault(30),
-  Options.withDescription("Consider links stale after this many minutes (default: 30)")
+const minutesOption = Flag.integer("minutes").pipe(
+  Flag.withAlias("m"),
+  Flag.withDefault(30),
+  Flag.withDescription("Consider links stale after this many minutes (default: 30)")
 );
 
-const limitOption = Options.integer("limit").pipe(
-  Options.withAlias("l"),
-  Options.withDefault(100),
-  Options.withDescription("Maximum links to list (default: 100)")
+const limitOption = Flag.integer("limit").pipe(
+  Flag.withAlias("l"),
+  Flag.withDefault(100),
+  Flag.withDescription("Maximum links to list (default: 100)")
 );
 
-const linkIdOption = Options.string("link-id").pipe(Options.withDescription("Specific link ID to re-enrich"));
+const linkIdOption = Flag.string("link-id").pipe(Flag.withDescription("Specific link ID to re-enrich"));
 
-const dryRunOption = Options.boolean("dry-run").pipe(
-  Options.withAlias("n"),
-  Options.withDefault(false),
-  Options.withDescription("Show what would be done without making changes")
+const dryRunOption = Flag.boolean("dry-run").pipe(
+  Flag.withAlias("n"),
+  Flag.withDefault(false),
+  Flag.withDescription("Show what would be done without making changes")
 );
 
 // =============================================================================
@@ -105,7 +105,7 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
     });
     const cutoffDate = DateTime.toDateUtc(DateTime.makeUnsafe((yield* Clock.currentTimeMillis) - minutes * 60 * 1000));
     const staleCandidates = staleLinks.filter((link) => link.updatedAt && link.updatedAt < cutoffDate);
-    if (staleCandidates.length === 0) {
+    if (A.isReadonlyArrayEmpty(staleCandidates)) {
       yield* Console.log("No stale links would be cleaned up.");
       return;
     }
@@ -118,7 +118,7 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
     }
     return;
   }
-  const result = yield* ingestion.cleanupStaleLinks(minutes, ontologyId);
+  const result = yield* ingestion.cleanupStaleLinks(Duration.minutes(minutes), ontologyId);
   if (result.cleaned === 0) {
     yield* Console.log("No stale links found.");
   } else {
@@ -150,8 +150,8 @@ const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string) 
   yield* Console.log("");
   yield* Console.log(`  Status: ${link.status}`);
   yield* Console.log(`  Headline: ${link.headline}`);
-  yield* Console.log(`  Topics: ${(link.topics as Array<string>)?.join(", ") || "(none)"}`);
-  yield* Console.log(`  Key Entities: ${(link.keyEntities as Array<string>)?.join(", ") || "(none)"}`);
+  yield* Console.log(`  Topics: ${link.topics?.join(", ") || "(none)"}`);
+  yield* Console.log(`  Key Entities: ${link.keyEntities?.join(", ") || "(none)"}`);
 });
 
 const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ linkId }) =>
@@ -170,7 +170,7 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
     status: "failed",
     limit,
   });
-  if (links.length === 0) {
+  if (A.isReadonlyArrayEmpty(links)) {
     yield* Console.log("No failed links found.");
     return;
   }
@@ -181,7 +181,7 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
     yield* Console.log(`  Processing: ${link.id}`);
     const result = yield* ingestion.reEnrich(link.id).pipe(
       Effect.catch(
-        Effect.fn(function* (error) {
+        Effect.fnUntraced(function* (error) {
           yield* Console.log(`    Failed: ${error.message}`);
           return O.none();
         })
@@ -208,6 +208,20 @@ const reEnrichAllCommand = Command.make(
 // Parent Command
 // =============================================================================
 
+/**
+ * Exposes workflow command for composition by callers of this module.
+ *
+ * **Example** (Inspect workflow command)
+ *
+ * ```ts
+ * import { workflowCommand } from "@effect-ontology/Cli/Commands/Workflow"
+ *
+ * console.log(workflowCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const workflowCommand = Command.make("workflow").pipe(
   Command.withSubcommands([listPendingCommand, cleanupStaleCommand, reEnrichCommand, reEnrichAllCommand]),
   Command.withDescription("Workflow management: cleanup stale links, re-enrich failed content")

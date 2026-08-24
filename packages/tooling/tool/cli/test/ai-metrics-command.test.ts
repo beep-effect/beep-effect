@@ -10,6 +10,7 @@ import {
   AiMetricsWeeklyReportResult,
 } from "@beep/repo-ai-metrics";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -61,7 +62,7 @@ const LabelQueueArbitrary = S.toArbitrary(AiMetricsLabelQueueResult)(fc);
 const MirrorBundleArbitrary = S.toArbitrary(AiMetricsMirrorBundleResult)(fc);
 const OtlpExportResultArbitrary = S.toArbitrary(AiMetricsOtlpExportResult)(fc);
 const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult)(fc);
-const decodeUnknownJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeUnknownJson = Unknown.decodeUnknownEffectFromJsonString;
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;
 const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");

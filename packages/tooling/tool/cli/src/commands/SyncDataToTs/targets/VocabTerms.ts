@@ -1,8 +1,8 @@
 /**
  * Vocabulary term-inventory target definition.
  *
- * Generates the shared-five namespace term inventories
- * (`rdf`/`rdfs`/`skos`/`owl`/`dcterms`) in `@beep/rdf` from the
+ * Generates the shared namespace term inventories
+ * (`rdf`/`rdfs`/`skos`/`owl`/`dcterms`/`schema`) in `@beep/rdf` from the
  * `@beep/identity` `CoreVocab` registry, single-sourcing the inventories the
  * CURIE literal types are derived from. Curated named-node constants in the
  * hand-authored Vocab modules stay untouched.
@@ -23,7 +23,7 @@ const targetId = "vocab-terms" as const;
 const outputDir = "packages/foundation/modeling/rdf/src/Vocab/generated" as const;
 const canonicalPath = `${outputDir}/vocab-terms.data.json` as const;
 
-const SHARED_PREFIXES = ["rdf", "rdfs", "skos", "owl", "dcterms"] as const;
+const SHARED_PREFIXES = ["rdf", "rdfs", "skos", "owl", "dcterms", "schema"] as const;
 
 type SharedPrefix = (typeof SHARED_PREFIXES)[number];
 
@@ -33,6 +33,7 @@ const moduleNames: Record<SharedPrefix, string> = {
   skos: "Skos",
   owl: "Owl",
   dcterms: "Dcterms",
+  schema: "SchemaOrg",
 };
 
 const displayNames: Record<SharedPrefix, string> = {
@@ -41,6 +42,7 @@ const displayNames: Record<SharedPrefix, string> = {
   skos: "SKOS",
   owl: "OWL",
   dcterms: "DCMI Terms",
+  schema: "Schema.org",
 };
 
 const constantPrefixes: Record<SharedPrefix, string> = {
@@ -49,6 +51,7 @@ const constantPrefixes: Record<SharedPrefix, string> = {
   skos: "SKOS",
   owl: "OWL",
   dcterms: "DCTERMS",
+  schema: "SCHEMA_ORG",
 };
 
 const sortedTerms = (prefix: SharedPrefix): ReadonlyArray<string> => pipe(CoreVocab[prefix].terms, A.sort(Str.Order));
@@ -133,7 +136,7 @@ export const vocabTermsTarget: SyncDataTarget = {
   ...SyncDataTargetMetadata.make({
     id: targetId,
     description:
-      "Shared-five vocabulary term inventories in @beep/rdf generated from the @beep/identity CoreVocab registry.",
+      "Shared vocabulary term inventories in @beep/rdf generated from the @beep/identity CoreVocab registry.",
     access: "public",
     sourceUrls: [],
   }),

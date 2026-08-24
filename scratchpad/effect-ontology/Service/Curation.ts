@@ -1,28 +1,26 @@
 /**
  * Curation Service
  *
+ * **Details**
+ *
  * Service for applying curation actions to claims and entities.
  * Handles corrections, deprecations, alias additions, and rank promotions.
  * Publishes events via EventBusService and queues background jobs for async processing.
  *
- * @since 2.0.0
- * @module Service/Curation
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import type { Stream } from "effect";
-import { Context, DateTime, Effect, Layer } from "effect";
+import { Context, DateTime, Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
-import * as Str from "effect/String";
-import type { SqlError } from "effect/unstable/sql";
+import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { EventBusError } from "../Domain/Error/EventBus.ts";
 import { ContentHash } from "../Domain/Identity.ts";
-import { EntityId } from "../Domain/Model/shared.ts";
 import type {
   AddAliasAction,
   CorrectTripleAction,
@@ -34,7 +32,7 @@ import type {
 import { BackgroundJobId, EmbeddingJob, PromptCacheJob } from "../Domain/Schema/JobSchema.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
-import { EntityRegistryRepository } from "../Repository/EntityRegistry.ts";
+import { CanonicalEntityId, EntityRegistryRepository, normalizeEntityMention } from "../Repository/EntityRegistry.ts";
 import { ExamplesRepository } from "../Repository/Examples.ts";
 import { sha256SyncFull } from "../Utils/Hash.ts";
 import { EmbeddingService } from "./Embedding.ts";
@@ -49,17 +47,29 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Curation");
 
 /**
  * Combined error type for curation service operations
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export type CurationServiceError =
-  | DrizzleError
-  | EffectDrizzleQueryError
-  | SqlError.SqlError
-  | S.SchemaError
-  | AnyEmbeddingError
-  | EventBusError;
+export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError | EventBusError;
 
 /**
  * Result of applying a curation action
+ *
+ *
+ * **Example** (Use the CurationResult contract)
+ *
+ * ```ts
+ * import type { CurationResult } from "@effect-ontology/Service/Curation"
+ *
+ * const acceptsCurationResult = (_value: CurationResult): void => undefined
+ *
+ * console.log(acceptsCurationResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CurationResult {
   readonly action: CurationAction["_tag"];
@@ -71,6 +81,20 @@ export interface CurationResult {
 // Service
 // =============================================================================
 
+/**
+ * Provides the curation service service capability.
+ *
+ * **Example** (Inspect curation service)
+ *
+ * ```ts
+ * import { CurationService } from "@effect-ontology/Service/Curation"
+ *
+ * console.log(CurationService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class CurationService extends Context.Service<CurationService>()($I`CurationService`, {
   make: Effect.gen(function* () {
     const claimRepo = yield* ClaimRepository;
@@ -83,6 +107,16 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     // Action Handlers
     // -------------------------------------------------------------------------
 
+    const curationActionHandler = Match.type<CurationAction>().pipe(
+      Match.tagsExhaustive({
+        CorrectTripleAction: (value) => (now: DateTime.Utc) => handleCorrectTriple(value, now),
+        MarkAsWrongAction: (value) => (now: DateTime.Utc) => handleMarkAsWrong(value, now),
+        AddAliasAction: (value) => (now: DateTime.Utc) => handleAddAlias(value, now),
+        PromoteToPreferredAction: (value) => (now: DateTime.Utc) => handlePromoteToPreferred(value, now),
+        LinkToWikidataAction: (value) => (now: DateTime.Utc) => handleLinkToWikidata(value, now),
+      })
+    );
+
     /**
      * Apply a curation action and publish resulting events
      */
@@ -91,33 +125,18 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
       const now = yield* DateTime.now;
 
-      const result: CurationResult = yield* (() => {
-        switch (action._tag) {
-          case "CorrectTripleAction":
-            return handleCorrectTriple(action, now);
-          case "MarkAsWrongAction":
-            return handleMarkAsWrong(action, now);
-          case "AddAliasAction":
-            return handleAddAlias(action, now);
-          case "PromoteToPreferredAction":
-            return handlePromoteToPreferred(action, now);
-          case "LinkToWikidataAction":
-            return handleLinkToWikidata(action, now);
-        }
-      })();
-
-      return result;
+      return yield* curationActionHandler(action)(now);
     });
 
     /**
      * Handle CorrectTripleAction
      */
-    const handleCorrectTriple = Effect.fn(function* (
+    const handleCorrectTriple = Effect.fn("Curation.handleCorrectTriple")(function* (
       action: CorrectTripleAction,
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
       // Get original claim
-      const originalOpt = yield* claimRepo.getClaim(action.originalClaimId);
+      const originalOpt = yield* claimRepo.getClaim(action.originalClaimId, action.ontologyId);
       if (O.isNone(originalOpt)) {
         yield* Effect.logWarning("Claim not found for correction", {
           claimId: action.originalClaimId,
@@ -142,7 +161,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       });
 
       // Deprecate original claim
-      yield* claimRepo.deprecateClaim(action.originalClaimId, correction.id);
+      yield* claimRepo.deprecateClaim(action.originalClaimId, correction.id, action.ontologyId);
 
       // Create corrected claim
       const replacementObject = P.isString(action.replacement.object)
@@ -201,12 +220,12 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Handle MarkAsWrongAction
      */
-    const handleMarkAsWrong = Effect.fn(function* (
+    const handleMarkAsWrong = Effect.fn("Curation.handleMarkAsWrong")(function* (
       action: MarkAsWrongAction,
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
       // Get claim
-      const claimOpt = yield* claimRepo.getClaim(action.claimId);
+      const claimOpt = yield* claimRepo.getClaim(action.claimId, action.ontologyId);
       if (O.isNone(claimOpt)) {
         yield* Effect.logWarning("Claim not found for deprecation", {
           claimId: action.claimId,
@@ -231,7 +250,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       });
 
       // Deprecate the claim
-      yield* claimRepo.deprecateClaim(action.claimId, correction.id);
+      yield* claimRepo.deprecateClaim(action.claimId, correction.id, action.ontologyId);
 
       // Link claim to correction (no new claim)
       yield* claimRepo.linkClaimsToCorrection(correction.id, action.claimId);
@@ -276,14 +295,14 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Handle AddAliasAction
      */
-    const handleAddAlias = Effect.fn(function* (
+    const handleAddAlias = Effect.fn("Curation.handleAddAlias")(function* (
       action: AddAliasAction,
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
       // Find canonical entity by IRI
       const canonicalOpt = yield* entityRegistry.getCanonicalEntityByIri(
-        action.canonicalEntity.value,
-        action.ontologyId
+        action.ontologyId,
+        action.canonicalEntity.value
       );
       if (O.isNone(canonicalOpt)) {
         yield* Effect.logWarning("Canonical entity not found for alias", {
@@ -297,6 +316,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       }
 
       const canonical = canonicalOpt.value;
+      const canonicalEntityId = yield* S.decodeEffect(CanonicalEntityId)(canonical.id);
 
       // Embed the alias
       const prefixedMention = `${action.ontologyId}: ${action.aliasMention}`;
@@ -305,10 +325,10 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       // Insert alias
       const alias = yield* entityRegistry.insertAlias({
         ontologyId: action.ontologyId,
-        canonicalEntityId: canonical.id,
+        canonicalEntityId,
         mention: action.aliasMention,
-        mentionNormalized: Str.trim(Str.toLowerCase(action.aliasMention)),
-        embedding: embedding as Array<number>,
+        mentionNormalized: normalizeEntityMention(action.aliasMention),
+        embedding: embedding,
         resolutionMethod: action.resolutionMethod,
         resolutionConfidence: String(action.confidence),
       });
@@ -316,7 +336,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       // Rebuild blocking tokens
       yield* entityRegistry.rebuildBlockingTokens(
         action.ontologyId,
-        canonical.id,
+        canonicalEntityId,
         `${canonical.canonicalMention} ${action.aliasMention}`
       );
 
@@ -327,7 +347,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
             ContentHash.make(sha256SyncFull(`${action.ontologyId}:${canonical.id}:${DateTime.toEpochMillis(now)}`))
           ),
           ontologyId: action.ontologyId,
-          canonicalEntityId: EntityId.make(canonical.id),
+          canonicalEntityId,
           reason: "alias_added",
           createdAt: now,
         })
@@ -353,11 +373,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Handle PromoteToPreferredAction
      */
-    const handlePromoteToPreferred = Effect.fn(function* (
+    const handlePromoteToPreferred = Effect.fn("Curation.handlePromoteToPreferred")(function* (
       action: PromoteToPreferredAction,
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
-      yield* claimRepo.promoteToPreferred(action.claimId);
+      yield* claimRepo.promoteToPreferred(action.claimId, action.ontologyId);
 
       // Publish event via EventBusService
       yield* eventBus.publishCurationEvent("ClaimPromoted", {
@@ -412,7 +432,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Create a positive example from a corrected claim
      */
-    const createExampleFromClaim = Effect.fn(function* (
+    const createExampleFromClaim = Effect.fn("Curation.createExampleFromClaim")(function* (
       ontologyId: string,
       newClaim: {
         id: string;
@@ -455,7 +475,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Create a negative example from a wrong claim
      */
-    const createNegativeExample = Effect.fn(function* (
+    const createNegativeExample = Effect.fn("Curation.createNegativeExample")(function* (
       ontologyId: string,
       claim: { subjectIri: string; predicateIri: string; objectValue: string },
       action: MarkAsWrongAction

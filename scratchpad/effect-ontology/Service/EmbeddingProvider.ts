@@ -1,17 +1,21 @@
 /**
  * EmbeddingProvider - Provider-agnostic embedding interface
  *
+ * **Details**
+ *
  * Abstracts over Nomic (local), Voyage (API), and future providers.
  * Enables dynamic provider selection based on configuration.
  *
- * @since 2.0.0
- * @module Service/EmbeddingProvider
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import type { Effect } from "effect";
 import { Context } from "effect";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingProvider");
@@ -19,67 +23,167 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingProvider");
 /**
  * Task types for embeddings
  *
+ * **Details**
+ *
  * Voyage-compatible superset:
  * - search_query: For query text (optimized for search)
  * - search_document: For document text (optimized for indexing)
  * - clustering: For clustering tasks
  * - classification: For classification tasks
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Recognize a query task)
+ *
+ * ```ts
+ * import { EmbeddingTaskType } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * console.log(EmbeddingTaskType.is.search_query("search_query")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export type EmbeddingTaskType = "search_query" | "search_document" | "clustering" | "classification";
+export const EmbeddingTaskType = LiteralKit(["search_query", "search_document", "clustering", "classification"]).pipe(
+  $I.annoteSchema("EmbeddingTaskType", {
+    description: "Embedding task semantics supported across configured providers.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link EmbeddingTaskType}.
+ *
+ * **Example** (Use a clustering task value)
+ *
+ * ```ts
+ * import type { EmbeddingTaskType } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * const task: EmbeddingTaskType = "clustering"
+ * console.log(task) // "clustering"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EmbeddingTaskType = typeof EmbeddingTaskType.Type;
 
 /**
  * Embedding vector type
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Validate a finite vector)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Embedding } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * console.log(S.is(Embedding)([0.1, 0.2])) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export type Embedding = ReadonlyArray<number>;
+export const Embedding = S.Array(S.Finite).pipe(
+  $I.annoteSchema("Embedding", {
+    description: "Finite numeric vector returned by an embedding provider.",
+  })
+);
+
+/**
+ * Runtime vector decoded by {@link Embedding}.
+ *
+ * **Example** (Inspect a decoded vector)
+ *
+ * ```ts
+ * import type { Embedding } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * const vector: Embedding = [0.1, 0.2]
+ * console.log(vector.length) // 2
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Embedding = typeof Embedding.Type;
 
 /**
  * Embedding request for batching
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Create an embedding request)
+ *
+ * ```ts
+ * import { EmbeddingRequest } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * console.log(EmbeddingRequest.make({ text: "Ada", taskType: "search_query" }).taskType)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface EmbeddingRequest {
-  readonly text: string;
-  readonly taskType: EmbeddingTaskType;
-}
+export class EmbeddingRequest extends S.Class<EmbeddingRequest>($I`EmbeddingRequest`)(
+  {
+    text: S.String,
+    taskType: EmbeddingTaskType,
+  },
+  $I.annote("EmbeddingRequest", {
+    description: "Text paired with the provider-specific semantic embedding task.",
+  })
+) {}
 
 /**
  * Provider metadata for cache key generation and configuration
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Create provider metadata)
+ *
+ * ```ts
+ * import { ProviderMetadata } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * const metadata = ProviderMetadata.make({ providerId: "nomic", modelId: "nomic-v1", dimension: 768 })
+ * console.log(metadata.dimension) // 768
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface ProviderMetadata {
-  /**
-   * Provider identifier (nomic, voyage, openai)
-   */
-  readonly providerId: "nomic" | "voyage" | "openai";
-
-  /**
-   * Model identifier (e.g., "voyage-3.5-lite", "nomic-embed-text-v1.5")
-   */
-  readonly modelId: string;
-
-  /**
-   * Native embedding dimension (e.g., 512, 768, 1024)
-   */
-  readonly dimension: number;
-}
+export class ProviderMetadata extends S.Class<ProviderMetadata>($I`ProviderMetadata`)(
+  {
+    providerId: LiteralKit(["nomic", "voyage", "openai"]),
+    modelId: S.NonEmptyString,
+    dimension: S.Finite.check(
+      S.isGreaterThan(0, {
+        message: "Embedding dimension must be greater than zero.",
+      })
+    ),
+  },
+  $I.annote("ProviderMetadata", {
+    description: "Stable provider, model, and positive native vector dimension metadata.",
+  })
+) {}
 
 /**
  * EmbeddingProvider service interface
  *
+ * **Details**
+ *
  * Providers implement this interface to expose their embedding capabilities.
  * The service layer handles caching, deduplication, and batching.
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Implement a deterministic provider)
+ *
+ * ```ts
+ * import { ProviderMetadata } from "@effect-ontology/Service/EmbeddingProvider"
+ * import type { EmbeddingProviderMethods } from "@effect-ontology/Service/EmbeddingProvider"
+ * import * as Effect from "effect/Effect"
+ *
+ * const provider: EmbeddingProviderMethods = {
+ *   metadata: ProviderMetadata.make({ providerId: "nomic", modelId: "demo", dimension: 2 }),
+ *   embedBatch: () => Effect.succeed([[1, 0]]),
+ *   cosineSimilarity: () => 1
+ * }
+ * console.log(provider.metadata.dimension) // 2
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface EmbeddingProviderMethods {
   /**
@@ -115,8 +219,16 @@ export interface EmbeddingProviderMethods {
 /**
  * EmbeddingProvider service tag
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Inspect embedding provider)
+ *
+ * ```ts
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * console.log(EmbeddingProvider)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export class EmbeddingProvider extends Context.Service<EmbeddingProvider, EmbeddingProviderMethods>()(
   $I`EmbeddingProvider`
@@ -125,11 +237,21 @@ export class EmbeddingProvider extends Context.Service<EmbeddingProvider, Embedd
 /**
  * Compute cosine similarity between two vectors
  *
+ * **Details**
+ *
  * Extracted as a utility function since it's pure math and doesn't
  * depend on the provider. Can be shared across implementations.
  *
- * @since 2.0.0
- * @category Utilities
+ * **Example** (Inspect cosine similarity)
+ *
+ * ```ts
+ * import { cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * console.log(cosineSimilarity)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const cosineSimilarity: {
   (b: Embedding): (a: Embedding) => number;

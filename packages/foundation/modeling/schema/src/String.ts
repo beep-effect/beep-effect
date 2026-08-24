@@ -9,9 +9,10 @@ import { $SchemaId } from "@beep/identity";
 import { Str } from "@beep/utils";
 import { identity, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
+import { Unknown } from "./Unknown.ts";
 
 const $I = $SchemaId.create("String");
-const encodeUnknownAsJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeUnknownAsJsonResult = Unknown.encodeUnknownResultFromJsonString;
 const isError = S.is(S.instanceOf(Error));
 
 const stringifyFallback = (value: unknown): string => {

@@ -90,6 +90,7 @@ const isFkAction = (value: unknown): value is FkAction =>
  */
 export interface References<TableName extends string = string, ColumnName extends string = string> {
   readonly columnName: ColumnName;
+  readonly name?: string;
   readonly onDelete: FkAction | undefined;
   readonly onUpdate: FkAction | undefined;
   readonly tableName: TableName;
@@ -109,6 +110,7 @@ export const isReferences = (value: unknown): value is References =>
   hasProperty(value, "columnName") &&
   isString(value.columnName) &&
   value.columnName.length > 0 &&
+  (!hasProperty(value, "name") || isUndefined(value.name) || isString(value.name)) &&
   hasProperty(value, "onDelete") &&
   (isUndefined(value.onDelete) || isFkAction(value.onDelete)) &&
   hasProperty(value, "onUpdate") &&

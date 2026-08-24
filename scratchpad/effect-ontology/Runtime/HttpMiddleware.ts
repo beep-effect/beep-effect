@@ -1,21 +1,51 @@
 /**
  * Runtime: HTTP Middleware
  *
+ * **Details**
+ *
  * Middleware for the HTTP server, including shutdown tracking, authentication,
  * and request logging.
  *
- * @since 2.0.0
- * @module Runtime/HttpMiddleware
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import { Clock, Effect, HashSet, Option, Redacted } from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { Clock, Context, Effect, HashSet, Inspectable, Random, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
 import * as Str from "effect/String";
 import { HttpMiddleware, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { ConflictActor } from "../Domain/Schema/Timeline.ts";
 import { ConfigService } from "../Service/Config.ts";
+import { sha256 } from "../Utils/Hash.ts";
 import { ShutdownService } from "./Shutdown.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Runtime/HttpMiddleware");
+
+/**
+ * Request-local actor used for auditable conflict transitions.
+ *
+ * **Example** (Inspect the request service)
+ *
+ * ```ts
+ * import { CurrentConflictActor } from "@effect-ontology/Runtime/HttpMiddleware"
+ *
+ * console.log(CurrentConflictActor)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class CurrentConflictActor extends Context.Service<CurrentConflictActor, ConflictActor>()(
+  $I`CurrentConflictActor`
+) {}
+
+const SystemConflictActor = ConflictActor.make({
+  principal: "system",
+  credentialFingerprint: O.none(),
+});
 
 /**
  * Paths that are exempt from authentication (health checks)
@@ -26,7 +56,7 @@ const PUBLIC_PATHS = ["/", "/health", "/health/live", "/health/ready", "/health/
  * Check if a path is public (exempt from auth)
  */
 const isEventStreamPath = (path: string): boolean => {
-  const pathname = Option.getOrElse(A.head(Str.split(path, "?")), () => path);
+  const pathname = O.getOrElse(A.head(Str.split(path, "?")), () => path);
   return Str.includes("/events/stream")(pathname);
 };
 
@@ -44,30 +74,40 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
 /**
  * Middleware to enforce API key authentication
  *
+ * **Details**
+ *
  * When API.REQUIRE_AUTH is true:
  * - All /v1/* endpoints require valid X-API-Key header
  * - Health endpoints remain public
  * - Invalid/missing key returns 401
  *
- * @since 2.0.0
- * @category Middleware
+ * **Example** (Inspect make auth middleware)
+ *
+ * ```ts
+ * import { makeAuthMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
+ *
+ * console.log(makeAuthMiddleware)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeAuthMiddleware = Effect.gen(function* () {
   const config = yield* ConfigService;
 
   // Skip auth if not required
   if (!config.api.requireAuth) {
-    return HttpMiddleware.make((app) => app);
+    return HttpMiddleware.make((app) => app.pipe(Effect.provideService(CurrentConflictActor, SystemConflictActor)));
   }
 
   // Parse API keys
-  const apiKeys = Option.match(config.api.keys, {
+  const apiKeys = O.match(config.api.keys, {
     onNone: () => HashSet.empty<string>(),
     onSome: parseApiKeys,
   });
 
   // If auth is required but no keys configured, log warning
-  if (HashSet.size(apiKeys) === 0) {
+  if (HashSet.isEmpty(apiKeys)) {
     yield* Effect.logWarning("API.REQUIRE_AUTH is true but no API.KEYS configured - all requests will be rejected");
   }
 
@@ -78,7 +118,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 
       // Skip auth for public paths
       if (isPublicPath(path)) {
-        return yield* app;
+        return yield* app.pipe(Effect.provideService(CurrentConflictActor, SystemConflictActor));
       }
 
       // Get API key from header
@@ -103,7 +143,16 @@ export const makeAuthMiddleware = Effect.gen(function* () {
       }
 
       // API key valid, proceed with request
-      return yield* app;
+      const credentialFingerprint = yield* sha256(apiKey);
+      return yield* app.pipe(
+        Effect.provideService(
+          CurrentConflictActor,
+          ConflictActor.make({
+            principal: "api-key",
+            credentialFingerprint: O.some(credentialFingerprint),
+          })
+        )
+      );
     })
   );
 });
@@ -111,8 +160,16 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 /**
  * Middleware to track active requests for graceful shutdown
  *
- * @since 2.0.0
- * @category Middleware
+ * **Example** (Inspect make shutdown middleware)
+ *
+ * ```ts
+ * import { makeShutdownMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
+ *
+ * console.log(makeShutdownMiddleware)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeShutdownMiddleware = Effect.gen(function* () {
   const shutdown = yield* ShutdownService;
@@ -123,13 +180,23 @@ export const makeShutdownMiddleware = Effect.gen(function* () {
 /**
  * Middleware to log HTTP requests with timing
  *
+ * **Details**
+ *
  * Logs:
  * - Request method, path, and timing
  * - Response status code
  * - Configurable log level (debug for health checks, info for API)
  *
- * @since 2.0.0
- * @category Middleware
+ * **Example** (Inspect make logging middleware)
+ *
+ * ```ts
+ * import { makeLoggingMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
+ *
+ * console.log(makeLoggingMiddleware)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeLoggingMiddleware = Effect.sync(() =>
   HttpMiddleware.make((app) =>
@@ -154,9 +221,9 @@ export const makeLoggingMiddleware = Effect.sync(() =>
       });
 
       // Execute the handler and capture the response
-      const response = yield* app.pipe(
-        Effect.tap((res) =>
-          Effect.gen(function* () {
+      return yield* app.pipe(
+        Effect.tap(
+          Effect.fnUntraced(function* (res) {
             const elapsed = (yield* Clock.currentTimeMillis) - start;
 
             yield* logLevel("HTTP request completed", {
@@ -168,22 +235,20 @@ export const makeLoggingMiddleware = Effect.sync(() =>
             });
           })
         ),
-        Effect.tapError((error) =>
-          Effect.gen(function* () {
+        Effect.tapError(
+          Effect.fnUntraced(function* (error) {
             const elapsed = (yield* Clock.currentTimeMillis) - start;
 
             yield* Effect.logWarning("HTTP request failed", {
               requestId,
               method,
               path,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
               durationMs: elapsed,
             });
           })
         )
       );
-
-      return response;
     })
   )
 );

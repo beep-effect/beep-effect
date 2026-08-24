@@ -1,3 +1,4 @@
+import { Unknown } from "@beep/schema/Unknown";
 import {Effect} from "effect";
 import * as S from "effect/Schema";
 import {O, P, A} from "@beep/utils";
@@ -84,7 +85,7 @@ import {
   type SyncIteratorRunner
 } from "./Interpreter.iterator.ts";
 
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 export type CallbackRunner<R> = {
   readonly invokeFunction: (fn: CodeModeFunction, args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>
