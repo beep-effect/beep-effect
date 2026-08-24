@@ -1895,6 +1895,20 @@
         "@types/react": "catalog:",
       },
     },
+    "packages/foundation/modeling/skill-contract": {
+      "name": "@beep/skill-contract",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/foundation/modeling/utils": {
       "name": "@beep/utils",
       "version": "0.0.2",
@@ -2544,6 +2558,7 @@
         "@beep/repo-utils": "workspace:^",
         "@beep/runpod": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/skill-contract": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@beep/tika": "workspace:^",
         "@beep/uspto": "workspace:^",
@@ -3324,6 +3339,8 @@
     "@beep/shared-tables": ["@beep/shared-tables@workspace:packages/shared/tables"],
 
     "@beep/shared-use-cases": ["@beep/shared-use-cases@workspace:packages/shared/use-cases"],
+
+    "@beep/skill-contract": ["@beep/skill-contract@workspace:packages/foundation/modeling/skill-contract"],
 
     "@beep/storybook": ["@beep/storybook@workspace:apps/storybook"],
 
