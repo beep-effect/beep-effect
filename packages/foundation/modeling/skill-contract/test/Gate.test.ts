@@ -35,6 +35,11 @@ describe("@beep/skill-contract Gate", () => {
     expect(S.is(GateId)("")).toBe(false);
   });
 
+  it("keeps the base nonempty validation even when a consumer domain declares an empty literal", () => {
+    const Sloppy = makeGateId(LiteralKit([""]));
+    expect(S.is(Sloppy)("")).toBe(false);
+  });
+
   it("exposes severity and the reserved conditional applicability value", () => {
     expect(GateSeverity.Options).toEqual(["blocking", "advisory"]);
     expect(GateApplicability.Options).toEqual(["always", "conditional"]);

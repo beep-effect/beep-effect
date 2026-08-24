@@ -73,6 +73,7 @@ export type GateId = typeof GateId.Type;
  */
 export const makeGateId = <const Ids extends GateIdLiterals>(ids: LiteralKitSchema<Ids>) =>
   ids.pipe(
+    S.check(S.isNonEmpty()),
     S.brand("GateId"),
     $I.annoteSchema("ConsumerGateId", {
       description: "Consumer-owned finite gate identifier domain carrying the kernel GateId brand.",
@@ -259,8 +260,11 @@ const gateAuditRecordImpl = <const Outcome extends GateVerdictTag, Detail extend
     outcome: S.Literal(outcome),
     reason: S.NonEmptyString,
   }).pipe(
-    $I.annoteSchema("GateAuditRecord", {
-      description: "Audit record carried by an allowed or denied gate verdict.",
+    $I.annoteSchema(outcome === "allowed" ? "GateAuditRecordAllowed" : "GateAuditRecordDenied", {
+      description:
+        outcome === "allowed"
+          ? "Audit record carried by an allowed gate verdict."
+          : "Audit record carried by a denied gate verdict.",
     })
   );
 
