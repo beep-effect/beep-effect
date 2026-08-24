@@ -531,8 +531,11 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
 - What would have prevented it: (1) B9 — pin the PR posture into the coverage env and make the
   reader pure, shipped with this receipt; still open, in order of payoff: (2) PR scope includes
   dependents (`CoverageScope.ts` selects direct owners only — #780's `@beep/md` change turned
-  main red on `@beep/pandoc-ast` for 7 pushes); (3) a file-scoped baseline writer that the
-  remediation string points at instead of the repo-wide regen; (4) a comparator policy decision
+  main red on `@beep/pandoc-ast` for 7 pushes); (3) the baseline writer holding every row it
+  did not measure for a changed owner — landed the same afternoon as #795 (DECISIONS.md
+  2026-08-24, complementary: #795 contains the writer, B9 removes the divergence it was
+  containing); what remains is pointing `coverageRegressionRegenerationCommand` at the scoped
+  invocation instead of the repo-wide one; (4) a comparator policy decision
   (new files held to the package tier, package regression requiring `uncovered` to rise, 4-dp
   floors) recorded in `standards/architecture/DECISIONS.md`; (5) B4 publish-time coverage only
   after (1)–(3), or it produces false greens on exactly this class.
