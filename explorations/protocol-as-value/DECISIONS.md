@@ -16,7 +16,9 @@ instances), the protocol-as-value kit, or the Mepuka collaboration shape?
 **Answer:** Kit thesis, collapse first. The protocol-as-value kit is the
 destination (the verified-novel differentiator); wave 1 is the internal
 collapse — one canonical-bytes + digest + journal/register/fold substrate in
-`foundation/modeling`, proven by migrating the five live in-repo customers.
+`foundation/modeling`, proven by migrating live in-repo customers (the
+wave-1 appetite entry below fixes the bar at two proof migrations; the
+other three migrate cleanup-on-touch).
 Wave 2 builds the protocol kit (global type as digest-named value, per-agent
 projections, conformance folds) on that substrate, with fleet messaging, the
 MCP servers, and the agents slice as consumers.

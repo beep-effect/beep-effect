@@ -156,7 +156,7 @@ Papers/articles cited in RESEARCH.md (full per-claim URLs in
   (workflow/cluster gap inventory + content-addressing notes),
   [`fleet-coordination`](../../fleet-coordination/README.md) (D7 messaging rung).
 - Goals: [`goals/identity-iri-fibered`](../../../goals/identity-iri-fibered/README.md)
-  (active/blocked — co-design dependency),
+  (active/blocked — decoupled, adopt-if-lands per DECISIONS 2026-08-23),
   [`goals/effect-v4-workflow-engine-spike`](../../../goals/effect-v4-workflow-engine-spike/GOAL.md)
   (active — drivers/workflow landing zone).
 - This packet: [`../RESEARCH.md`](../RESEARCH.md), [`../CAPTURE.md`](../CAPTURE.md);

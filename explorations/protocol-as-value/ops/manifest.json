@@ -5,7 +5,9 @@
     "title": "Protocol as Value",
     "status": "active",
     "stage": "shape",
-    "openQuestions": [],
+    "openQuestions": [
+      "Shape review: does BRIEF.md match the picture in Benjamin's head? Exit shape only on his confirmation, then decompose into MAP.md."
+    ],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
