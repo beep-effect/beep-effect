@@ -81,9 +81,10 @@ export interface LangExtractRemotePolicyShape {
  * const annotatedDocument = Contract.AnnotatedDocument.make({
  *   chunks: [],
  *   entities: [],
+ *   mentions: [],
  *   provenance,
  *   relations: [],
- *   version: "nlp-ir/1.0"
+ *   version: "nlp-ir/1.1"
  * })
  * const TestLangExtract = Layer.succeed(
  *   LangExtractService,

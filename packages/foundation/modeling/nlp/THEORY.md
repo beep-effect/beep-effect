@@ -134,7 +134,7 @@ what lets `@beep/nlp-mcp` re-expose each as an independent MCP tool.
 ## 8. The generic IR: a free object at the boundary
 
 `src/Handoff/Contract.ts` is the product-neutral handoff: `TextChunk`,
-`Mention`, `Entity`, `Relation`, `AnnotatedDocument` (version `nlp-ir/1.0`),
+`Mention`, `Entity`, `Relation`, `AnnotatedDocument` (version `nlp-ir/1.1`),
 with branded ids, character `Span`s, and PROV-O-style `Provenance`
 (source/generatedBy/timestamp/confidence). It is deliberately the **free
 object**: it carries a generic `type` discriminant on entities/relations and no
