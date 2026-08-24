@@ -55,10 +55,10 @@ Verification:
 ```sh
 test "$(wc -m < goals/honest-repo-signal/GOAL.md)" -le 4000
 jq . goals/honest-repo-signal/ops/manifest.json
-test ! -d packages/drivers/courtlistener
-test ! -d packages/drivers/dol
-test ! -d packages/drivers/federal-register
-test -d packages/drivers/protobuf
+test -z "$(git ls-files packages/drivers/courtlistener)"
+test -z "$(git ls-files packages/drivers/dol)"
+test -z "$(git ls-files packages/drivers/federal-register)"
+# protobuf guard retired 2026-08-13: sibling clone removed it in PR #690
 git diff --check -- goals/honest-repo-signal
 ```
 
