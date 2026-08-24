@@ -117,8 +117,8 @@ without growing into an encyclopedia.
 | Manifest | `jq . goals/honest-repo-signal/ops/manifest.json` | Passes |
 | Index | `bun run beep goals index --check` | Passes |
 | Doctor | `bun run beep goals doctor` | No new blocking findings |
-| Stubs gone | `test ! -d packages/drivers/courtlistener && test ! -d packages/drivers/dol && test ! -d packages/drivers/federal-register` | Passes |
-| Protobuf left | `test -d packages/drivers/protobuf` | Passes until the other clone lands |
+| Stubs gone | `test -z "$(git ls-files packages/drivers/courtlistener packages/drivers/dol packages/drivers/federal-register)"` | Passes (tracked state — gitignored build residue falsifies `test ! -d`) |
+| Protobuf left | Retired 2026-08-13 — the sibling clone removed `@beep/protobuf` in PR #690; this packet did not perform that deletion | Guard expired; no longer checked |
 | Follow-ups | `rg -n "federal-register|dol|courtlistener" goals/honest-repo-signal/research/FOLLOW-UPS.md` | Each stub named |
 | Whitespace | `git diff --check -- goals/honest-repo-signal` | Passes |
 
@@ -133,3 +133,4 @@ without growing into an encyclopedia.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Delivery packet said keep empty scaffolds | `goals/gov-legal-data-driver-delivery` | this packet | User overrode name-claim stubs; research remains | Follow-ups recreated as real drivers |
+| Closeout landed in a separate PR (#777), not the same PR as final work (#680) | this packet P4 | this packet | D8 locked "yeet then stop", scoping the reflection and status flip out of the shipping PR; discovered 2026-08-24 and recorded here as an approved exception to the same-PR flip law rather than leaving a finished packet open | None — historical record; the reflection's HIGH lesson codifies the prevention |
