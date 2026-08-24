@@ -500,3 +500,42 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   `CoverageRegression.ts` — it just has no entry point below the full lane). Sub-minute
   feedback instead of four ~11-minute loops; also makes "re-verify after any source edit"
   cheap enough that stale-tree proofs stop being tempting.
+
+## 2026-08-24 — B9: the coverage lane's dominant failure class was self-inflicted
+
+- What was happening: a sweep of 150 PR runs of `check.yml` (08-17 → 08-24) to explain why
+  Coverage Regression tops churn. It fails 25.7 % (35/136), median 542 s, p90 811 s, 53 % of all
+  lane failures and the sole red lane in 28/35; the next-worst lane fails 5.2 %. Zero infra
+  failures — every red is ratchet content, and 34/35 were full-fallback runs.
+- Evidence: of 15 failed jobs read, 7 were env-divergent per-file floors, five of them on
+  `internal/cli/EnvConfig.ts` with three different floor sets (77.77 / 85.18 / 85.71 functions)
+  minted on three branches. Mechanism, reproduced locally: `.env` carries
+  `TURBO_TOKEN="op://…"`, `isUnresolvedSecretReference` classifies `op://` as unresolved, and
+  the `turboCacheValueSource` lambda runs only when a `TURBO_*` value is non-empty — so a
+  workstation (op:// or a resolved literal) and a main push (literal token) measure 88.05 lines /
+  85.71 functions while PR jobs (blank quad, `check.yml:130-133`) measure 86.56 / 82.14. The
+  ratchet's own remediation string (`coverageRegressionRegenerationCommand` → repo-wide
+  `bun run coverage:baseline:write`) tells agents to regenerate locally, which mints the
+  unattainable row; 39 baseline commits in 90 days, each a `COVERAGE_FULL_INPUT_FILES` hit
+  costing the 9–15 min full shape. Controlled runs (`bun run coverage -- --filter=@beep/repo-cli`
+  with the quad blanked) reproduce the hosted PR row to the decimal (86.76 / 92.85 / 82.14 /
+  86.56, uncovered 151, 434, 496-509), and 266 of 269 comparable repo-cli files match hosted
+  exactly — the other two (`Qa/Judge*.ts`) changed on main after the base commit. A "node 24 vs
+  26 changes V8 branch denominators" hypothesis (memory note on `BunResolver.ts` 53.57 vs
+  41.79) was refuted by the same run: local node 26 reports 41.79, identical to hosted node 24.
+  Proof on the shipped tree: three consecutive `bun run coverage -- --filter=@beep/repo-cli`
+  runs with a literal token, an `op://` reference, and a blank quad in the ambient environment
+  produced identical per-file rows for all 482 measured files; `EnvConfig.ts` reads
+  100 / 97.61 / 100 / 100 in every posture (one untested arm at `turboEnvOverrides`, the
+  team-only-unresolved spread), and the ratchet passed each time.
+- What would have prevented it: (1) B9 — pin the PR posture into the coverage env and make the
+  reader pure, shipped with this receipt; still open, in order of payoff: (2) PR scope includes
+  dependents (`CoverageScope.ts` selects direct owners only — #780's `@beep/md` change turned
+  main red on `@beep/pandoc-ast` for 7 pushes); (3) the baseline writer holding every row it
+  did not measure for a changed owner — landed the same afternoon as #795 (DECISIONS.md
+  2026-08-24, complementary: #795 contains the writer, B9 removes the divergence it was
+  containing); what remains is pointing `coverageRegressionRegenerationCommand` at the scoped
+  invocation instead of the repo-wide one; (4) a comparator policy decision
+  (new files held to the package tier, package regression requiring `uncovered` to rise, 4-dp
+  floors) recorded in `standards/architecture/DECISIONS.md`; (5) B4 publish-time coverage only
+  after (1)–(3), or it produces false greens on exactly this class.

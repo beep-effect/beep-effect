@@ -69,6 +69,9 @@ the C5 metric correction and the new C7 item below.
 
 ## P3 — Full parity
 
+- B9 deterministic coverage runtime — done 2026-08-24: `coverageEnvironment()` spreads the
+  pull-request Turbo posture and `readTurboCacheEnvironment` is pure; prerequisite of B2/B4
+  (a local coverage run that mints floors hosted cannot reach is worse than none).
 - B2 coverage in local proof (#698 landed — build on its scoping).
 - B3 missing cheap lanes; B7 docgen predicate into CLI.
 - B4 `--ci-parity` merged-tree pre-publish tier + PR-posture env.

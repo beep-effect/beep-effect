@@ -24903,17 +24903,19 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": {
-          // Pinned to the hosted-runner measurement: env-sensitive paths execute
-          // locally but not in CI, so a locally regenerated row overshoots.
-          "lines": 86.56,
-          "statements": 86.76,
-          "branches": 92.85,
-          "functions": 82.14,
+          // Deterministic since ship-velocity B9: coverageEnvironment() pins the
+          // pull-request Turbo posture, so this row measures the same locally,
+          // on PR jobs, and on main pushes (proof: goals/ship-velocity/research/
+          // OPPORTUNITIES.md §2026-08-24 B9).
+          "lines": 100,
+          "statements": 100,
+          "branches": 97.61,
+          "functions": 100,
           "uncovered": {
-            "lines": 9,
-            "statements": 9,
-            "branches": 3,
-            "functions": 5
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts": {
