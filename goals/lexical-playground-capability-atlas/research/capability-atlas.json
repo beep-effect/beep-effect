@@ -891,7 +891,8 @@
           "tableCellBackgroundColor",
           "tableCellMerge",
           "tableHorizontalScroll",
-          "useCollabV2"
+          "useCollabV2",
+          "QueryParameterSettingsOverride"
         ],
         "transformers": [],
         "nestedEditors": []
@@ -1210,7 +1211,7 @@
       "registrations": {
         "nodes": ["ListNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["ListPlugin", "CheckListPlugin"],
         "transformers": ["UNORDERED_LIST", "ORDERED_LIST", "CHECK_LIST"],
         "nestedEditors": []
       },
@@ -1850,7 +1851,7 @@
       "registrations": {
         "nodes": ["TableNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["TablePlugin"],
         "transformers": ["TABLE"],
         "nestedEditors": []
       },
@@ -2240,7 +2241,7 @@
       "registrations": {
         "nodes": ["HashtagNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["HashtagPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -2483,7 +2484,7 @@
       "registrations": {
         "nodes": ["AutoLinkNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["AutoLinkPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -2615,7 +2616,7 @@
       "registrations": {
         "nodes": ["LinkNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["LinkPlugin"],
         "transformers": ["LINK"],
         "nestedEditors": []
       },
@@ -2888,7 +2889,7 @@
       "registrations": {
         "nodes": ["PollNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["PollPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -3158,7 +3159,7 @@
       "registrations": {
         "nodes": ["ImageNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["ImagesPlugin"],
         "transformers": ["IMAGE"],
         "nestedEditors": ["image-caption"]
       },
@@ -3302,7 +3303,7 @@
       "registrations": {
         "nodes": ["MentionNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["MentionsPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -3434,7 +3435,7 @@
       "registrations": {
         "nodes": ["EmojiNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["EmojisPlugin"],
         "transformers": ["EMOJI"],
         "nestedEditors": []
       },
@@ -3572,7 +3573,7 @@
       "registrations": {
         "nodes": ["ExcalidrawNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["ExcalidrawPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -3710,7 +3711,7 @@
       "registrations": {
         "nodes": ["EquationNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["EquationsPlugin"],
         "transformers": ["EQUATION", "INLINE_EQUATION"],
         "nestedEditors": []
       },
@@ -3844,7 +3845,7 @@
       "registrations": {
         "nodes": ["KeywordNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["KeywordsPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -3977,7 +3978,7 @@
       "registrations": {
         "nodes": ["HorizontalRuleNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["HorizontalRulePlugin"],
         "transformers": ["HORIZONTAL_RULE"],
         "nestedEditors": []
       },
@@ -4120,7 +4121,7 @@
       "registrations": {
         "nodes": ["TweetNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["TwitterPlugin"],
         "transformers": ["TWEET"],
         "nestedEditors": []
       },
@@ -4268,7 +4269,7 @@
       "registrations": {
         "nodes": ["YouTubeNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["YouTubePlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -4411,7 +4412,7 @@
       "registrations": {
         "nodes": ["FigmaNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["FigmaPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -4699,7 +4700,7 @@
       "registrations": {
         "nodes": ["CollapsibleContainerNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["CollapsiblePlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -5085,7 +5086,7 @@
       "registrations": {
         "nodes": ["PageBreakNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["PageBreakPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -5223,7 +5224,7 @@
       "registrations": {
         "nodes": ["LayoutContainerNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["LayoutPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -5476,7 +5477,7 @@
       "registrations": {
         "nodes": ["SpecialTextNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["SpecialTextPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -5609,7 +5610,7 @@
       "registrations": {
         "nodes": ["DateTimeNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["DateTimePlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -5746,7 +5747,7 @@
       "registrations": {
         "nodes": ["CardNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["CardPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -5997,7 +5998,7 @@
       "registrations": {
         "nodes": ["ReviewNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["ReviewPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -6129,7 +6130,7 @@
       "registrations": {
         "nodes": ["PullQuoteNode"],
         "marks": [],
-        "extensions": [],
+        "extensions": ["PullQuotePlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -7554,7 +7555,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["hasLinkAttributes"],
+        "extensions": ["hasLinkAttributes", "LinkAttributesPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -7950,7 +7951,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["isCharLimit"],
+        "extensions": ["isCharLimit", "CharacterLimitPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -8082,7 +8083,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["isCharLimitUtf8"],
+        "extensions": ["isCharLimitUtf8", "UTF8CharacterLimitPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -8214,7 +8215,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["isCodeHighlighted"],
+        "extensions": ["isCodeHighlighted", "CodeHighlightPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -8607,7 +8608,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["isMaxLength"],
+        "extensions": ["isMaxLength", "MaxLengthPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -8739,7 +8740,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["isRichText"],
+        "extensions": ["isRichText", "PlainTextExtension"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -9264,7 +9265,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["measureTypingPerf"],
+        "extensions": ["measureTypingPerf", "TypingPerfPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -9396,7 +9397,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["selectBlock"],
+        "extensions": ["selectBlock", "BlockWithAlignableContents"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -9528,7 +9529,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["selectionAlwaysOnDisplay"],
+        "extensions": ["selectionAlwaysOnDisplay", "SelectionAlwaysOnDisplay"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -10048,7 +10049,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["shouldUseLexicalContextMenu"],
+        "extensions": ["shouldUseLexicalContextMenu", "ContextMenuPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -10180,7 +10181,10 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["showNestedEditorTreeView"],
+        "extensions": [
+          "showNestedEditorTreeView",
+          "NestedEditorTreeViewPlugin"
+        ],
         "transformers": [],
         "nestedEditors": []
       },
@@ -10312,7 +10316,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["showTableOfContents"],
+        "extensions": ["showTableOfContents", "TableOfContentsPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -10444,7 +10448,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["showTreeView"],
+        "extensions": ["showTreeView", "TreeViewPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -14715,7 +14719,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["ToolbarPlugin"],
+        "extensions": ["ToolbarPlugin", "TabIndentationPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -15915,7 +15919,12 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["FocusPlugin"],
+        "extensions": [
+          "FocusPlugin",
+          "AutoFocusPlugin",
+          "TabFocusPlugin",
+          "RovingTabIndexPlugin"
+        ],
         "transformers": [],
         "nestedEditors": []
       },
@@ -16698,7 +16707,11 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["TablePlugin", "TableActionMenuPlugin"],
+        "extensions": [
+          "TablePlugin",
+          "TableActionMenuPlugin",
+          "TableHoverActionsPlugin"
+        ],
         "transformers": [],
         "nestedEditors": []
       },
@@ -16962,7 +16975,11 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["TablePlugin", "TableActionMenuPlugin"],
+        "extensions": [
+          "TablePlugin",
+          "TableActionMenuPlugin",
+          "TableCellActionMenuPlugin"
+        ],
         "transformers": [],
         "nestedEditors": []
       },
@@ -17622,7 +17639,11 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["TablePlugin", "TableActionMenuPlugin"],
+        "extensions": [
+          "TablePlugin",
+          "TableActionMenuPlugin",
+          "TableCellResizer"
+        ],
         "transformers": [],
         "nestedEditors": []
       },
@@ -21757,7 +21778,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["ActionsPlugin"],
+        "extensions": ["ActionsPlugin", "ClearEditorPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -22686,7 +22707,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": ["ActionsPlugin"],
+        "extensions": ["ActionsPlugin", "SpeechToTextPlugin"],
         "transformers": [],
         "nestedEditors": []
       },
@@ -24546,7 +24567,7 @@
       "registrations": {
         "nodes": [],
         "marks": [],
-        "extensions": [],
+        "extensions": ["SplitScreenPlugin"],
         "transformers": [],
         "nestedEditors": []
       },

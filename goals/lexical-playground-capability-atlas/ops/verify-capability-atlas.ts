@@ -2,9 +2,9 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CompatibilityFormat, EditorCapabilityAtlas } from "./CapabilityAtlas.schemas.ts";
 
-const atlasPath = new URL("../research/capability-atlas.json", import.meta.url).pathname;
-const evidenceGapsPath = new URL("../research/p0-evidence-gaps.md", import.meta.url).pathname;
-const repoRoot = new URL("../../../", import.meta.url).pathname;
+const atlasPath = Bun.fileURLToPath(new URL("../research/capability-atlas.json", import.meta.url));
+const evidenceGapsPath = Bun.fileURLToPath(new URL("../research/p0-evidence-gaps.md", import.meta.url));
+const repoRoot = Bun.fileURLToPath(new URL("../../../", import.meta.url));
 const expectedCommit = "a933222c489e7025d87b9217c2489d309fc8a3cf";
 const expectedVersion = "0.49.0";
 
@@ -378,10 +378,16 @@ for (const capability of atlas.capabilities) {
   if (capability.evidenceStatus === "verified-live" && capability.upstreamEvidence.live.length === 0) {
     fail(`${capability.id} is verified-live without live evidence`);
   }
+  if (capability.evidenceStatus === "verified-source" && capability.upstreamEvidence.source.length === 0) {
+    fail(`${capability.id} is verified-source without source evidence`);
+  }
   if (capability.evidenceStatus === "unverified" && capability.proofGaps.length === 0) {
     fail(`${capability.id} is unverified without a concrete proof gap`);
   }
-  if (capability.disposition.kind === "reject" && !capability.profileEligibility.includes("ineligible")) {
+  if (
+    capability.disposition.kind === "reject" &&
+    (capability.profileEligibility.length !== 1 || capability.profileEligibility[0] !== "ineligible")
+  ) {
     fail(`${capability.id} is rejected but remains profile-eligible`);
   }
   if (
@@ -566,12 +572,20 @@ for (const id of expectedSettingIds) {
     fail(`settings inventory does not resolve to a setting entry: ${id}`);
   }
 }
-for (const item of [
-  ...atlas.evidence.inventories.topLevelRegistrations,
-  ...atlas.evidence.inventories.markdownTransformers,
-]) {
-  if (!capabilityById.has(item.capabilityId)) {
+for (const item of atlas.evidence.inventories.topLevelRegistrations) {
+  const capability = capabilityById.get(item.capabilityId);
+  if (capability === undefined) {
     fail(`${item.name} maps to unknown capability ${item.capabilityId}`);
+  } else if (!capability.registrations.extensions.includes(item.name)) {
+    fail(`${item.name} maps to ${item.capabilityId}, which does not register that extension`);
+  }
+}
+for (const item of atlas.evidence.inventories.markdownTransformers) {
+  const capability = capabilityById.get(item.capabilityId);
+  if (capability === undefined) {
+    fail(`${item.name} maps to unknown capability ${item.capabilityId}`);
+  } else if (!capability.registrations.transformers.includes(item.name)) {
+    fail(`${item.name} maps to ${item.capabilityId}, which does not register that transformer`);
   }
 }
 for (const id of atlas.evidence.inventories.documentActionIds) {
