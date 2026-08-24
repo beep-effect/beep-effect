@@ -34,8 +34,8 @@ lab. Also awaiting him:
 3. [`DECISIONS.md`](./DECISIONS.md) - open with the Current law table; the dated log below it
    is history. Terminology table lives there too.
 4. [`research/criteria-rubric.md`](./research/criteria-rubric.md) - v2.0, ratified.
-5. [`research/workload-contract.md`](./research/workload-contract.md) - v1.2 budgets and corpus.
-6. [`research/shared-schema.md`](./research/shared-schema.md) - v1.1 schema contract.
+5. [`research/workload-contract.md`](./research/workload-contract.md) - v1.3 budgets, corpus, stop rule.
+6. [`research/shared-schema.md`](./research/shared-schema.md) - v1.2 schema contract.
 7. [`RESEARCH.md`](./RESEARCH.md) - grounding sweep and what landed (stage 1).
 8. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - opportunity/friction ledger
    with dispositions.

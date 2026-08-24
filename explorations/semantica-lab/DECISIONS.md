@@ -9,15 +9,15 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Fold the effect-ontology deep read (S6) into BRIEF v1.0; Benjamin confirms the brief; decompose (MAP: canary = Goal 1) | "draft BRIEF" |
+| Next work | Stage `decompose`: draft `MAP.md` (canary C0-C2 = Goal 1; `@beep/openai` driver as a pre-C1 slice; two O4 gates + atlas-sync queued) → graduate → scaffold the lab. BRIEF v1.0 ratified; shared-schema v1.2 and contract v1.3 are the contracts in force | "fold S6; Benjamin confirms" |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is EvalReport telemetry, never a gate | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
 | Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
 | Embeddings | park-pending-canary; contract = `effect/unstable/ai` `EmbeddingModel`; M1 Layer = the shipped `@effect/ai-openai` `OpenAiEmbeddingModel.layer` composed through a new `@beep/openai` driver that mirrors `@beep/anthropic` (S3-rev); Anthropic has no embeddings API; local Snowflake/ONNX lane parked | S3 (openai-compat `/embeddings` op); G6 "via the agents slice" |
 | Input | park-pending-canary; per-stage slate is probe order; PDF.js/MuPDF is a tie | the sheet's per-stage winners |
-| Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents compared at (conclusion, premise-set, rule) (S5); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
-| Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict | the sheet's dual verdict |
+| Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
+| Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict, written at C0, where G-relation now scores (S7) | the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are EvalReport telemetry (Tier-D) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the EvalReport with network off | A8's fully-offline M1 |
@@ -303,9 +303,9 @@ five sheets named winners before rubric §0/§4 prerequisites existed. Full reco
 
 ## 2026-08-24 (shape grill) — S1–S5, ratified by Benjamin in /grill-with-docs rounds
 
-Taught first (private lesson 0001-five-decisions in the untracked docs-internal teach workspace,
-22 fetched-and-verified primary sources), then grilled. Full rationale in the lesson and the
-reference sheet; the decisions:
+Taught first (private lesson 0001-five-decisions in the untracked docs-internal teach workspace),
+then grilled. The 22 fetched-and-verified primary sources behind S1–S5 are listed in
+[`research/SOURCES.md`](./research/SOURCES.md) §3; the decisions:
 
 - **S1 (stop rule; amends contract v1.2 falsifier, BRIEF appetite).** No calendar appetite.
   Benjamin: "What is the need for a timeline? I don't see a reason to delay anything if
@@ -362,3 +362,27 @@ reference sheet; the decisions:
   composition of `@effect/ai-openai` — drift from the driver boundary; keeping the openai-compat
   op plan — duplicates shipped Effect code.)
 - **Mission confirmed** for the private, untracked docs-internal teaching workspace.
+
+## 2026-08-24 (PR #794 review closeout) — S7–S8, review amendments
+
+Applied while closing the shape PR's review threads (Codex P1s, verified against the tree);
+Benjamin's merge of #794 ratifies them. Both tighten the canary without changing its shape.
+
+- **S7 (extractor tripwire timing; amends BRIEF C0/C1).** BRIEF v1.0 wrote the Extractor verdict
+  at C0 but scored G-relation only at C1, so an extractor with the known LangExtract relation-drop
+  defect could earn a verdict before the tripwire ran. Now C0 runs over F1 + the three G-relation
+  W1 papers and scores G-structure, G-entity and G-relation; the Extractor verdict and the
+  tripwire live in the same stage. C1 keeps rebuild identity and dimension keying. (Rejected:
+  defer the Extractor verdict to C1 — spreads one family across two stages.)
+- **S8 (oracle agreement; amends S5).** Comparing `(conclusion, premise-set, rule)` false-fails
+  when an entailment has two valid derivations (two subclass paths) and EYE and the fixpoint pick
+  different sound supports. The C2 gate is now closure equality on the conclusion set plus
+  validation of every `InferenceEvent` against its own rule (premises present in inputs or
+  closure, rule instance correct). EYE supplies the gold conclusions and is a spot-check oracle;
+  its premise choice is not a spec. (Rejected: enumerate all minimal supports — spike-grade work;
+  shared canonicalization first — same.)
+- **Clarifications from the same review:** the D13 charter line now distinguishes construction-
+  side derived projections (C1's rebuild-from-ledger proofs, lab-owned) from consumption-side
+  retrieval/analytics/UX (`trustgraph-workbench`); `VerifiedSpan` lives in `@beep/langextract`
+  (`@beep/langextract/VerifiedSpan`), not `@beep/nlp-processing`; the scaffold command carries the
+  `--description` that `--lab` requires.

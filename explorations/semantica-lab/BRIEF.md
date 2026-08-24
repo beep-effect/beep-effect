@@ -1,7 +1,7 @@
 # Brief — Semantica Port Atlas & Lab
 
-<!-- Stage 3. Shape Up pitch at fat-marker fidelity. DRAFT v0.1 (2026-08-24), awaiting
-Benjamin's review. Exits shape only when he says it matches the picture in his head. -->
+<!-- Stage 3. Shape Up pitch at fat-marker fidelity. v1.0 ratified 2026-08-24; review
+amendments S7/S8 applied during PR #794 closeout. -->
 
 Status: **v1.0 — RATIFIED by Benjamin 2026-08-24** ("matches the picture"; S1–S6 folded in) — synthesized from `CAPTURE.md`, `RESEARCH.md`, and the `DECISIONS.md`
 Current law table (D1–D18, A1–A9, B1–B6, G1–G7, O1–O5). Where this brief and the law table
@@ -28,7 +28,7 @@ proof DAG as data — has no incumbent. The v3 archive already holds a working r
 with a 46-test oracle to build against.
 
 Why now: the bake-off research is done and converged; five family sheets exist as candidate
-screens; the shared schema (v1.1) and workload contract (v1.2) are ratified; the reviewers'
+screens; the shared schema (v1.2) and workload contract (v1.3) are ratified; the reviewers'
 falsifications (winners named before prerequisites existed; five composition seams) are
 reconciled. What is missing is the one thing that turns screens into verdicts: **a running,
 replayable chain over real papers**. Every further hour of desk research is now lower-value
@@ -63,11 +63,14 @@ the M1 runtime reasoner instead of a rule engine.
 ### The lab and its charter
 
 A private Tauri lab app at apps/labs/semantica (spelled in prose until it exists), created by
-`bun run beep create-package semantica --type app --app-kind tauri --lab` (G2), **headless-first**
+`bun run beep create-package semantica --type app --app-kind tauri --lab --description "Semantica port canary: headless Document→KG→eval chain over F1 + W1"` (G2; `--lab` refuses an empty description), **headless-first**
 (A5): the proof surface for M1 is tests, a CLI entry, and later MCP — never the window. The lab
 owns **knowledge construction**: ingest → parse → canonicalize → chunk → extract → ledger →
-projections → reasoning → provenance → evals. `trustgraph-workbench` keeps projection/retrieval/
-graph-UX; the ontology slice is the shared spine both consume (D13). The lab runs under full
+derived projections → reasoning → provenance → evals. "Derived projections" means the
+rebuild-from-ledger vector and RDF tables C1 proves are disposable; that is construction-side
+work because it proves the ledger is the system of record. `trustgraph-workbench` keeps the
+**consumption** side: retrieval, GraphRAG, hybrid search, graph analytics, and graph UX over
+whatever projections exist; the ontology slice is the shared spine both consume (D13). The lab runs under full
 code law but is exempt from ceremony (docgen, JSDoc ratchet, coverage, changeset, Storybook);
 it exports nothing reusable — earned code graduates by extraction to a durable owner
 (`standards/architecture/15-lab-apps.md`).
@@ -83,12 +86,12 @@ flowchart LR
         CT --> CH["Chunk<br/>span against CanonicalText"]
         CH --> EX["Extract (hosted)<br/>EvidenceBatch of EvidenceClaims<br/>spans · confidence · model identity"]
         EX --> L[("Ledger — PGlite<br/>append-only ProvenanceEvents<br/>+ EvidenceBatches (SoR)")]
-        L --> ER0["EvalReport<br/>G-structure · G-entity · replay identity"]
+        L --> ER0["EvalReport<br/>G-structure · G-entity · G-relation · replay identity"]
     end
     subgraph C1 ["C1 — projections"]
         L --> V["Vector table (DuckDB, exact kNN)<br/>dimension-keyed · ModelIdentity"]
         L --> R["RDF projection (Oxigraph)<br/>rebuilt from ledger per run"]
-        V --> ER1["EvalReport + G-relation · rebuild identity"]
+        V --> ER1["EvalReport + rebuild identity · dimension keying"]
         R --> ER1
     end
     subgraph C2 ["C2 — reasoning + crash + budgets"]
@@ -100,22 +103,27 @@ flowchart LR
     CACHE -.-> V
 ```
 
-- **C0** proves the spine: F1 fixtures + one W1-manifest PDF, parsed to a `CanonicalText` with
-  a monotone loss map, chunked with spans, extracted by a hosted model into an `EvidenceBatch`,
-  appended atomically to the PGlite ledger with its `ProvenanceEvent`s, and scored into a
-  schema-validated `EvalReport`. **Pass** = second run with the network disabled reproduces the
-  EvalReport bytes from the provider cache (G7); every span slices back to its text.
+- **C0** proves the spine: F1 fixtures + the three G-relation W1 papers (which also carry
+  G-structure and G-entity labels), parsed to a `CanonicalText` with a monotone loss map,
+  chunked with spans, extracted by a hosted model into an `EvidenceBatch`, appended atomically
+  to the PGlite ledger with its `ProvenanceEvent`s, and scored into a schema-validated
+  `EvalReport` over G-structure, G-entity **and G-relation** (S7: the relation-drop tripwire
+  runs in the same stage that writes the Extractor verdict). **Pass** = second run with the
+  network disabled reproduces the EvalReport bytes from the provider cache (G7); every span
+  slices back to its text; relation count on the G-relation papers is non-zero.
 - **C1** adds the two derived projections: a dimension-keyed vector table with exact kNN in
   DuckDB, and an RDF projection rebuilt from the ledger into Oxigraph per run, queried by
-  SPARQL. **Pass** = rebuild identity (drop projections, rebuild, identical query results) and
-  G-relation scores recorded; embedding dimension is frozen by this stage with an alternate-
-  dimension fixture proving the keying (B4 defaults).
+  SPARQL. **Pass** = rebuild identity (drop projections, rebuild, identical query results);
+  embedding dimension is frozen by this stage with an alternate-dimension fixture proving the
+  keying (B4 defaults).
 - **C2** adds reasoning and hostility: an RDFS-lite closure over the RDF projection emitting
-  `InferenceEvent`s whose proof DAGs are compared against EYE-decoded gold proofs for the
-  G-entailment suite; a crash injected between ledger commit and projection rebuild, followed
-  by restart and identical rebuild; the full Tier-L bars measured at **bundle** level (B5/G4).
-  **Pass** = conclusion + premise-set agreement with the oracle on every gold case, crash
-  identity, cold start <5 s, p95 <100 ms.
+  `InferenceEvent`s checked against EYE for the `G-entailment/rdfs` suite; a crash injected
+  between ledger commit and projection rebuild, followed by restart and identical rebuild; the
+  full Tier-L bars measured at **bundle** level (B5/G4). **Pass** (S8) = the derived conclusion
+  set equals EYE's on every gold case (closure equality), AND every `InferenceEvent` validates
+  against its own rule (premises present in inputs-or-closure, rule instance correct); crash
+  identity; cold start <5 s; p95 <100 ms. Matching EYE's particular premise set is not
+  required — an entailment with two valid derivations must not fail C2.
 
 A stage failing falsifies its families without blocking the spine (G1). Family verdicts are
 written only after the matching stage passes; until then everything is park-pending-canary and
@@ -131,7 +139,7 @@ decompose refines it into the MAP capability table.
 | --- | --- | --- | --- | --- |
 | `DocumentSource` | C0 | local file + committed fixture | `@beep/file-processing` | URL ingest (gate 6 SSRF policy first) |
 | `Parser` (per media type) | C0 | PDF.js **or** MuPDF (tie, probe both), MD, HTML | `@beep/md`, `@beep/html`, `@beep/tika`, `@beep/pandoc-ast` | OCR, DOCX |
-| `Canonicalizer` → `CanonicalText` | C0 | NET-NEW (UTF-16 offsets + loss map) | `VerifiedSpan` semantics in `@beep/nlp-processing` | — |
+| `Canonicalizer` → `CanonicalText` | C0 | NET-NEW (UTF-16 offsets + loss map) | `VerifiedSpan` semantics in `@beep/langextract` (`@beep/langextract/VerifiedSpan`) | — |
 | `Chunker` | C0 | span-preserving sentence/section splitter | `@beep/nlp` | semantic chunking |
 | `Extractor` → `EvidenceBatch` | C0 | hosted LLM (LangExtract shape) **and** pattern (Wink) under one gold probe | `@beep/langextract`, `@beep/nlp-processing` (both carry known defects — see rabbit holes) | local models |
 | `Ledger` (system of record) | C0 | PGlite, append-only | `@beep/pglite`, `@beep/postgres`, `@beep/provenance` | — |
@@ -227,9 +235,12 @@ Each is patched here or graduates as an explicit constraint the goal packet inhe
     transaction commits and before projections rebuild, restarts, and requires projections to
     rebuild to an identical state. This proves the narrow "projections are derived" claim only;
     delete/compaction semantics are the storage-inversion spike's territory (A6).
-11. **Proof comparison is not tree isomorphism (settled, S5).** EYE nests `r:Extraction` and
-    `r:Conjunction` steps our `InferenceEvent` DAG never emits. Patch: C2 compares at
-    (conclusion, premise-set, rule); proof-shape equivalence is a spike question. Corollary:
+11. **Proof comparison is neither tree isomorphism nor premise-set identity (S5, amended S8).**
+    EYE nests `r:Extraction`/`r:Conjunction` steps we never emit, and an entailment reachable by
+    two subclass paths lets sound engines pick different premise sets. Patch: C2's gate is
+    closure equality on conclusions plus per-`InferenceEvent` validation against its rule; EYE's
+    proofs are the gold conclusion source and a spot-check oracle, not a shape to match.
+    Proof-shape equivalence is a spike question. Corollary:
     G-entailment splits into `rdfs` (gates C2; ρdf + SKOS via one explicit transitivity rule,
     since SKOS hierarchy is not RDFS entailment) and `rules` (the ~20 production-rule cases;
     gates the spike). The v3 Rete salvage has no proof objects and no truth maintenance, so it
@@ -261,8 +272,9 @@ These become non-goals in the graduated `SPEC.md`.
 - No local models, ONNX runtimes, GPU/ROCm lanes, or model downloads in M1 (G6).
 - No fully-offline live inference as an M1 criterion; offline means replay from the provider
   cache (G7).
-- No projection/retrieval/graph-UX, GraphRAG, hybrid search, or graph analytics (centrality,
-  communities, PageRank) — that is `trustgraph-workbench`'s charter (D13).
+- No consumption-side retrieval, GraphRAG, hybrid search, graph analytics (centrality,
+  communities, PageRank), or graph UX — that is `trustgraph-workbench`'s charter (D13). The
+  lab's C1 rebuild-from-ledger projections are construction proofs, not retrieval features.
 - No window, sidecar/IPC bridge, packaging matrix (macOS/Windows/arm64), or explorer UI in
   M1 (A5, D12, D16). Mobile is a permanent no-go.
 - No OCR, DOCX, email, or archive ingestion; no URL ingest before a gate-6 SSRF policy exists.

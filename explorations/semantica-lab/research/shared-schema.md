@@ -14,7 +14,7 @@ compatibility round checks composition.
 - **CanonicalText** *(added v1.1 — both bake-off reviews found no sheet named the thing spans
   address)* — the single named canonicalization every downstream span is against: content-
   addressed id, source document ref, producing parser + version, **UTF-16 code-unit offsets**
-  (matching live `VerifiedSpan` semantics), and a monotone raw→canonical loss map (or a typed
+  (matching live `VerifiedSpan` semantics in `@beep/langextract`), and a monotone raw→canonical loss map (or a typed
   lossy-segment declaration). One per document per parse; there is exactly one owner of span
   meaning.
 - **Chunk / TextUnit** — CanonicalText ref + **span** (`{start, end}` UTF-16 offsets against
