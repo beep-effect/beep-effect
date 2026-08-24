@@ -780,15 +780,18 @@ const missingActivationPathWaivers = atlas.capabilities.flatMap((capability) =>
     .map((path) => `${capability.id}/${path.surface}`)
 );
 
-if (p0Status === "complete") {
-  if (missingWaiverIds.length > 0) {
-    fail(`P0 entry gate is OPEN while ops/manifest.json declares P0 complete: ${missingWaiverIds.join(", ")}`);
-  }
-  if (missingActivationPathWaivers.length > 0) {
-    fail(
-      `P0 activation-path gate is OPEN while ops/manifest.json declares P0 complete: ${missingActivationPathWaivers.join(", ")}`
-    );
-  }
+// The entry gate is unconditional: every unverified capability must carry a
+// user-approved Exception Ledger waiver regardless of the manifest phase, so a
+// regressed entry or a deleted ledger row can never pass verification. The
+// activation-path gate may stay open while P0 is in progress, but a manifest
+// that declares P0 complete with open paths is a contradiction and fails.
+if (missingWaiverIds.length > 0) {
+  fail(`P0 entry gate is OPEN: ${missingWaiverIds.join(", ")}`);
+}
+if (p0Status === "complete" && missingActivationPathWaivers.length > 0) {
+  fail(
+    `P0 activation-path gate is OPEN while ops/manifest.json declares P0 complete: ${missingActivationPathWaivers.join(", ")}`
+  );
 }
 
 const summarize = (select: (capability: EditorCapabilityAtlas["capabilities"][number]) => string) => {
