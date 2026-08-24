@@ -18,7 +18,7 @@ Seven-lane sweep of the semantica-agi/semantica GitHub tracker as of 2026-08-24.
 
 Inventory kind × state: 328 `pr/MERGED`, 67 `pr/OPEN`, 282 `issue/CLOSED/COMPLETED`, 47 `issue/OPEN`, 1 `issue/CLOSED/NOT_PLANNED`. Shard sizes sum to 725.
 
-**How lanes classified.** Exactly one family and one disposition per item. Families: `storage-ledger`, `embeddings`, `input-parse`, `chunking-spans`, `extraction`, `entity-resolution-conflicts`, `provenance`, `reasoning`, `ontology-shacl`, `pipeline`, `evals`, plus `mcp-integrations`, `explorer-ui`, `infra-deps`, `other`. Dispositions: `corroborates-finding` (matches a D6 in-source finding), `map-evidence`, `gate-signal` (queued OSS gates `reasoning-package` or `evals-harness`), `dedupes-our-draft`, `port-hazard` (a shared-schema law would make the bug unrepresentable), `ignore` (Dependabot, CI, cosmetic, or outside charter: Explorer UI, agent-frameworks, deploy). Dedupe of the six held drafts was a separate per-lane section; inventory contains **0** `dedupes-our-draft` rows.
+**How lanes classified.** Exactly one family and one disposition per item. Families: `storage-ledger`, `embeddings`, `input-parse`, `chunking-spans`, `extraction`, `entity-resolution-conflicts`, `provenance`, `reasoning`, `ontology-shacl`, `pipeline`, `evals`, plus `mcp-integrations`, `explorer-ui`, `infra-deps`, `other`. Dispositions: `corroborates-finding` (matches a D6 in-source finding), `map-evidence`, `gate-signal` (queued OSS gates `reasoning-package` or `evals-harness`), `dedupes-our-draft`, `port-hazard` (a shared-schema law would make the bug unrepresentable), `ignore` (Dependabot, CI, cosmetic, or outside charter: Explorer UI, agent-frameworks, deploy). Dedupe of the six held drafts was a separate per-lane section; the inventory contains **1** `dedupes-our-draft` row after the review reclassification (#518, in `closed-issues-a`).
 
 **Where the artifacts live.**
 
@@ -50,15 +50,15 @@ Family × disposition from `explorations/semantica-lab/research/tracker/inventor
 | provenance | 0 | 0 | 38 | 16 | 2 | 56 |
 | reasoning | 3 | 13 | 5 | 1 | 0 | 22 |
 | ontology-shacl | 1 | 4 | 33 | 18 | 1 | 57 |
-| pipeline | 1 | 0 | 9 | 2 | 3 | 15 |
+| pipeline | 0 | 0 | 10 | 2 | 3 | 15 |
 | evals | 2 | 13 | 4 | 1 | 2 | 22 |
 | mcp-integrations | 4 | 0 | 5 | 2 | 16 | 27 |
 | explorer-ui | 1 | 0 | 0 | 0 | 79 (+1 dedupes-our-draft: #518, reclassified after review) | 81 |
 | infra-deps | 0 | 0 | 0 | 1 | 103 | 104 |
 | other | 0 | 0 | 29 | 13 | 86 | 128 |
-| **total** | **14** | **30** | **274** | **88** | **318** (+1 dedupes-our-draft) | **725** |
+| **total** | **13** | **30** | **275** | **88** | **318** (+1 dedupes-our-draft) | **725** |
 
-**Reading.** 318/725 rows are ignore (Dependabot/`infra-deps` 103, Explorer UI 79, `other` 86): the tracker’s merge volume is not the kernel. The kernel that should hit MAP is the 274 map-evidence + 88 port-hazard + 30 gate-signal + 14 corroborates-finding rows. `reasoning` and `evals` are the only families whose majority signal is a queued OSS gate (13 gate-signal each). `ontology-shacl` (18) and `provenance` (16) are the densest port-hazard families; `embeddings` is next (11) and carries both D6 corroborations for the random/hash fallback. `chunking-spans` is almost absent as a tracker conversation — span fidelity is enforced by our C0 tripwire, not by their issue traffic. Every `reasoning` row was treated as material (0 ignore). MCP’s 4 corroborates-finding rows are the 12-vs-17 packaged-vs-root split, not a lab charter item.
+**Reading.** 318/725 rows are ignore (Dependabot/`infra-deps` 103, Explorer UI 79, `other` 86): the tracker’s merge volume is not the kernel. The kernel that should hit MAP is the 275 map-evidence + 88 port-hazard + 30 gate-signal + 13 corroborates-finding rows. `reasoning` and `evals` are the only families whose majority signal is a queued OSS gate (13 gate-signal each). `ontology-shacl` (18) and `provenance` (16) are the densest port-hazard families; `embeddings` is next (11) and carries both D6 corroborations for the random/hash fallback. `chunking-spans` is almost absent as a tracker conversation — span fidelity is enforced by our C0 tripwire, not by their issue traffic. Every `reasoning` row was treated as material (0 ignore). `mcp-integrations` rows (#870, #1134, #967, #1151) establish two MCP surfaces with documented behavioral drift; the exact 12-vs-17 tool split is our source-derived D6 count, not a tracker finding.
 
 ## What a MAP author must see
 
@@ -222,13 +222,13 @@ O4 in the brief: two MAP gates, not Goal 1 promises — standalone reasoning pac
 
 **For.** The stub is community-visible (#228 corroborates D6; #1090’s title names the “Coming Soon” replacement). A 35-track real-world suite was specified then relocated out of tree (#570–#575); maintainers extracted `benchmarks/` to semantica-benchmarks (#607) after a brief in-repo landing (#588/#589). Current benches are throughput/latency (#414); #231 already splits correctness from speed. Live demand is a runner with per-metric maximize/minimize+threshold objectives (#1091, #1092) wired into the decision lifecycle (#1133). A shipped “stability” metric was a constant 1.0 placeholder (#1143). The full CLI has no `eval` command (#578).
 
-**Against.** #1090/#1092 are a live in-tree runner, so the hole is no longer “nobody is building this.” Relocation to semantica-benchmarks (#570, #607) means an out-of-tree suite exists. Closed COMPLETED on #228/#570 can be misread as “evals shipped.”
+**Against.** #1090/#1092 are a live in-tree runner, so the hole is no longer “nobody is building this.” Relocation to semantica-benchmarks (#570, #607) records an intended destination only: as of 2026-08-24 the sidecar is not fetchable (both URLs 404, absent from the org listing; see `benchmarks-vocab.md`), so no available out-of-tree suite competes with the gate. Closed COMPLETED on #228/#570 can be misread as “evals shipped.”
 
 **Verdict: STRENGTHENED.** Demand for reproducible, semantic-effectiveness evaluation is independently documented, in-tree evals are still a stub until #1090 lands, and even that runner is not a schema-validated `EvalReport` with gold-proposer ≠ extractor, replay identity, or G-structure/entity/relation/entailment. Uniqueness of the harness is those laws, not the idea of a runner. MAP should not wait on #1090; optionally skim semantica-benchmarks for metric names (open question below).
 
 ## Dedupe verdicts for our held drafts
 
-Merged across all seven lanes. No lane reported `ALREADY-REPORTED` for any of the six. Inventory has 0 `dedupes-our-draft` rows. Posting remains gated on Benjamin (O1/O2); recommendations are for when he chooses to post.
+Merged across all seven lanes. No lane reported `ALREADY-REPORTED` for any of the six. Inventory has 1 `dedupes-our-draft` (#518, reclassified after review) rows. Posting remains gated on Benjamin (O1/O2); recommendations are for when he chooses to post.
 
 | Draft | Merged verdict | Lane notes | Recommendation |
 | --- | --- | --- | --- |
@@ -246,7 +246,7 @@ D6 set (grounding sweep + lane prompt): random-vector embedding fallback shaped 
 | D6 finding | Community independently reported | Unique to us (unreported as that defect) |
 | --- | --- | --- |
 | Random-vector / hash embedding fallback shaped like success | **Yes.** #994 (exit 0 + corrupt file after fallback); #1006 (doctor green while hash fallback). Same class in the cluster: #1005 self-recursive embed wrappers, #433 silent FAISS 768 drop, #738 swallowed `AttributeError`, #885 stale scores, #1139 `save()` with `vectors: {}`. | The exact in-source `vector_store` random-vector path and unreachable `LlamaStore` placeholder are not named as issues; the *class* is public. |
-| “Parallel” pipeline engine runs sequentially | **Partial.** #683 and #578 advertise `set_parallelism` / `run --parallel` / `ExecutionEngine(max_workers=...)`. Inventory marks #683 as this D6 finding. | Nobody filed “the engine is a single sequential `current_data` chain and never uses `ParallelismManager`” as a bug. That execution-engine diagnosis remains ours. |
+| “Parallel” pipeline engine runs sequentially | **No (advertised only).** #683 and #578 document `set_parallelism` / `run --parallel` / `ExecutionEngine(max_workers=...)`; no tracker item reports the engine executing sequentially. #683 reclassified to map-evidence after review. | Unique to us: the sequential-execution defect is source-derived (D6) and unreported. |
 | `SPARQLReasoner.execute_query` always raises / empty bindings | **Yes.** #1083 (empty bindings look like no matches); #1087 (raise `NotImplementedError` rather than implement); #687 (onboarding lists SPARQLReasoner as a verified engine with no caveat). | None — this is fully public, and they chose refuse-over-implement. |
 | Simulated HermiT/Pellet consistency checks | **No as a bug.** #228’s evals wishlist asks for “Reasoning Validation (HermiT/Pellet, F1 up to 0.99)” while D6 found those checks simulated. Zero title hits for simulated/HermiT/Pellet as a defect. | **Yes — unique.** Packet-only unless Benjamin files it. |
 | Fourteen bare-pass ontology facade methods | **Partial.** #831 (open cookbook) documents stub `OntologyValidator`; inventory tagged it as this D6 finding. #1186: documented SHACL path is private `_run_pyshacl`; `OntologyValidator` is structure-only. | The fourteen empty `ontology/methods.py` declarations are not filed. Unique as a count/location. |

@@ -86,9 +86,9 @@ What it changed: both O4 gates come back **STRENGTHENED** with community evidenc
 #300 reports Rete `_matches`/`_can_join` always `True`, #1095 wants provenanced rule actions;
 evals: #1133/#1091 want reproducible, objective-bearing evaluation while in-tree evals stay a
 stub until #1090). Two of the three held `danklocal` fixes are unreported upstream and the third
-is only cousin-matched, so they post as-is. Seven of the eight D6 findings are independently
-reported by the community; simulated HermiT/Pellet checks and the Explorer DELETE/URL-key
-defects remain unique to us. 88 port-hazard rows are bug classes the shared schema forbids by
+is only cousin-matched, so they post as-is. Six of the eight D6 findings are independently
+reported by the community (two only partially); the sequential pipeline engine, the simulated
+HermiT/Pellet checks, and the Explorer DELETE/URL-key defects remain unique to us. 88 port-hazard rows are bug classes the shared schema forbids by
 construction. Six open questions for Benjamin sit at the end of the synthesis; MAP consumes the
 per-family "what a MAP author must see" tables.
 

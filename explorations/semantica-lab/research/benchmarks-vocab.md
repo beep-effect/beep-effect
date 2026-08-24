@@ -183,18 +183,21 @@ Semantica module API against a real downloaded public dataset" and
 "Synthetic fixtures … never as the primary signal for a quality metric"
 (issue #570). That rule was not implemented in the extracted tree.
 
-## What our EvalReport should borrow
+## What our EvalReport should borrow (T3 ruling: metric names only)
 
-Max 8. Each names a metric/field and the shared-schema family.
-
-- **`commit_info.id` + `datetime` (result JSON)** → **EvalReport** corpus-hash / gold-version slot (replay identity). Bind a report to a tree; do not copy `machine_info.node`.
-- **Per-row `name` / `fullname` + `stats.{mean,ops,min,max,stddev}`** → **EvalReport** `per-metric results` and `budgets observed` (latency/throughput as budgets, not correctness).
-- **`Entity.start_char` / `end_char` / `text` / `label` / `confidence`** (`test_extraction.py`) → **Entity** surface forms + **CanonicalText spans** (re-ground offsets as UTF-16 against CanonicalText; their fixture uses Python-str indices).
-- **`SimpleTriplet` `{subject, predicate, object}` IRIs** (`test_triplet_storage.py`) and relationship `{source, target, type}` → **Statement** (RdfTerm slots, not plain strings).
-- **Conflict dicts `{id, type, confidence, properties, relationships}`** (`test_conflicts.py`) → **EvidenceBatch / EvidenceClaim** (observed claims with branded confidence; keep conflicts as separate claims, do not fold via `MERGE_ALL` / `KEEP_HIGHEST_CONFIDENCE`).
 - **Entity span F1** (issue #574, NYT10: "overlap between predicted and gold entity boundaries") → **EvalReport** metric on **Entity** + **CanonicalText spans**. Name only; do not import their datasets as W1 gold.
 - **REBEL end-to-end triple F1 / Macro-F1** (issue #574: subject, relation, and object must all be correct) → **EvalReport** metric on **Statement**.
 - **Pairwise F1 + B-Cubed P/R** (issue #574 vs `gold_cluster(e)`) → **EvalReport** metric on **Entity** (cluster identity, not span-less string match).
+
+### Rejected observations (not adopted; recorded for the atlas only, per T3)
+
+T3 limits adoption to the three metric names above. The following shapes were observed in the recovered harness and are NOT EvalReport requirements. Note `commit_info.id` is a code revision, not a corpus or gold-set hash.
+
+- (rejected) **`commit_info.id` + `datetime` (result JSON)** → **EvalReport** corpus-hash / gold-version slot (replay identity). Bind a report to a tree; do not copy `machine_info.node`.
+- (rejected) **Per-row `name` / `fullname` + `stats.{mean,ops,min,max,stddev}`** → **EvalReport** `per-metric results` and `budgets observed` (latency/throughput as budgets, not correctness).
+- (rejected) **`Entity.start_char` / `end_char` / `text` / `label` / `confidence`** (`test_extraction.py`) → **Entity** surface forms + **CanonicalText spans** (re-ground offsets as UTF-16 against CanonicalText; their fixture uses Python-str indices).
+- (rejected) **`SimpleTriplet` `{subject, predicate, object}` IRIs** (`test_triplet_storage.py`) and relationship `{source, target, type}` → **Statement** (RdfTerm slots, not plain strings).
+- (rejected) **Conflict dicts `{id, type, confidence, properties, relationships}`** (`test_conflicts.py`) → **EvidenceBatch / EvidenceClaim** (observed claims with branded confidence; keep conflicts as separate claims, do not fold via `MERGE_ALL` / `KEEP_HIGHEST_CONFIDENCE`).
 
 ## What we should NOT borrow
 
