@@ -49,12 +49,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   with PacketCore + ExecutionRecord proof migrations; wave 2 (protocol kit)
   gated; `$I` stays static; decoupled from identity-iri-fibered. Next:
   Benjamin's BRIEF review, then decompose.
-- [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — align
-  (2026-08-17): restoration bar **v2** ratified after an 8-lane adversarial
-  review corrected the census (three recycle volumes, raw f-recyclebin
-  trees, the collector's 5,986-error ledger, exFAT reality, mail-first
-  ordering, one-pass copy-while-hashing). Gates practice-kg bundle v2. Next:
-  bound the remaining capture bullets, then the BRIEF.
 - [`packet-system-redesign`](./packet-system-redesign/README.md) —
   graduated 2026-08-17: MAP ratified with amendments (live index-guard
   capability cited; apps/labs as the React candidate's presumptive home).
@@ -236,6 +230,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — graduated
+  2026-08-24 with
+  [`goals/oppold-corpus-salvage-restoration`](../goals/oppold-corpus-salvage-restoration/README.md)
+  as the only promised-now goal. Gated re-entries: `oppold-corpus-pipeline-v2`,
+  `oppold-corpus-semantic-ingestion-v2`, `oppold-corpus-enrichment-v2`,
+  `practice-kg-bundle-v2`, and deferred `solo-practice-corpus-kit`. A fired
+  gate reopens the packet at `decompose`.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
   graduated 2026-08-24 (spine 2026-08-13) into
   [`skill-contract-kernel`](../goals/skill-contract-kernel/README.md):
