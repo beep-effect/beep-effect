@@ -8,6 +8,8 @@
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { parseOutlookHeaders, rfc5322DateFromOutlookTimestamp } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
+import { FileInfo } from "@beep/schema/FileInfo";
+import { thunk0, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -41,10 +43,10 @@ const recipientsFromText = (text: string): string =>
 const messageOrdinal = (directoryName: string): number =>
   pipe(
     Str.match(/(\d+)$/u)(directoryName),
-    O.flatMap((groups) => A.get(groups, 1)),
+    O.flatMap(A.get(1)),
     O.map(Number),
     O.filter(Number.isFinite),
-    O.getOrElse(() => 0)
+    O.getOrElse(thunk0)
   );
 
 const archiveDigestFromDirectory = flow(
@@ -77,10 +79,10 @@ const walkForHeaderFiles = Effect.fn("PracticeKg.walkForHeaderFiles")(function* 
       const info = yield* fs
         .stat(canonical)
         .pipe(PracticeKgProjectionError.mapError(`Failed inspecting "${absolute}".`));
-      if (info.type === "Directory") {
+      if (FileInfo.guards.Directory(info)) {
         return yield* walkForHeaderFiles(canonical, canonicalRoot);
       }
-      return info.type === "File" && entry === "OutlookHeaders.txt" ? A.of(canonical) : A.empty<string>();
+      return FileInfo.guards.File(info) && entry === "OutlookHeaders.txt" ? A.of(canonical) : A.empty<string>();
     })
   );
   return A.flatten(children);
@@ -99,7 +101,7 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
   const archiveInfo = yield* fs
     .stat(archiveRoot)
     .pipe(PracticeKgProjectionError.mapError(`Failed inspecting email archive export "${archiveRoot}".`));
-  if (archiveInfo.type !== "Directory") {
+  if (!FileInfo.guards.Directory(archiveInfo)) {
     return A.empty();
   }
   const canonicalArchiveRoot = yield* fs
@@ -124,8 +126,8 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
           (canonical) => Eq.equals(path.resolve(recipientsPath), canonical),
           () => PracticeKgProjectionError.make({ message: `Refused linked recipients file "${recipientsPath}".` })
         ),
-        Effect.flatMap((canonical) => fs.readFileString(canonical)),
-        Effect.orElseSucceed(() => "")
+        Effect.flatMap(fs.readFileString),
+        Effect.orElseSucceed(thunkEmptyStr)
       );
       const headers = parseOutlookHeaders(headersText);
       return PracticeKgEmailHeaderRow.make({
@@ -134,7 +136,7 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
         messageOrd: NonNegativeInt.make(messageOrdinal(path.basename(messageDir))),
         messageRelPath: relativeMessagePath,
         recipients: recipientsFromText(recipientsText),
-        subject: O.getOrElse(headerValue(headers, "Subject"), () => ""),
+        subject: O.getOrElse(headerValue(headers, "Subject"), thunkEmptyStr),
         ...O.getSomesStruct({
           conversationTopic: headerValue(headers, "Conversation topic"),
           deliveryIso: O.flatMap(headerValue(headers, "Delivery time"), outlookTimestampToIso),
@@ -187,7 +189,7 @@ export const readEmailRows = Effect.fn("PracticeKg.readEmailRows")(function* (
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const rootExists = yield* fs.exists(childrenRoot).pipe(Effect.orElseSucceed(() => false));
+  const rootExists = yield* fs.exists(childrenRoot).pipe(Effect.orElseSucceed(thunkFalse));
   if (!rootExists) {
     return A.empty();
   }

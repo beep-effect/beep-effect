@@ -1,62 +1,111 @@
 /**
  * Telemetry: Prometheus Metrics Service
  *
+ * **Details**
+ *
  * Collects and exports metrics in Prometheus text format.
  * Provides counters, gauges, and histograms for extraction observability.
  *
- * @since 2.0.0
- * @module Telemetry/Metrics
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import { NonNegativeInt } from "@beep/schema";
+import { Context, Duration, HashMap, Layer } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Metrics");
 
 import { Effect, Ref } from "effect";
-import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 /**
  * Extraction metrics input
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Reference ExtractionMetrics fields)
+ *
+ * ```ts
+ * import type { ExtractionMetrics } from "@effect-ontology/Telemetry/Metrics"
+ *
+ * const extractionMetricsFields: ReadonlyArray<keyof ExtractionMetrics> = ["duration", "entityCount", "relationCount"]
+ *
+ * console.log(extractionMetricsFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface ExtractionMetrics {
-  readonly durationMs: number;
-  readonly entityCount: number;
-  readonly relationCount: number;
-  readonly chunkCount: number;
-  readonly success: boolean;
-}
+export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionMetrics`)(
+  {
+    duration: S.Duration,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    chunkCount: NonNegativeInt,
+    success: S.Boolean,
+  },
+  $I.annote("ExtractionMetrics", {
+    description: "Duration, output counts, and outcome of one extraction run.",
+  })
+) {}
 
 /**
  * LLM call metrics input
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Reference LlmCallMetrics fields)
+ *
+ * ```ts
+ * import type { LlmCallMetrics } from "@effect-ontology/Telemetry/Metrics"
+ *
+ * const llmCallMetricsFields: ReadonlyArray<keyof LlmCallMetrics> = ["provider", "model", "duration"]
+ *
+ * console.log(llmCallMetricsFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface LlmCallMetrics {
-  readonly provider: string;
-  readonly model: string;
-  readonly durationMs: number;
-  readonly tokensIn: number;
-  readonly tokensOut: number;
-  readonly success: boolean;
-}
+export class LlmCallMetrics extends S.Class<LlmCallMetrics>($I`LlmCallMetrics`)(
+  {
+    provider: S.NonEmptyString,
+    model: S.NonEmptyString,
+    duration: S.Duration,
+    tokensIn: NonNegativeInt,
+    tokensOut: NonNegativeInt,
+    success: S.Boolean,
+  },
+  $I.annote("LlmCallMetrics", {
+    description: "Provider identity, latency, token counts, and outcome of one language-model call.",
+  })
+) {}
 
 /**
  * Embedding cache metrics input
  *
- * @since 2.0.0
- * @category Types
+ * **Example** (Reference EmbeddingCacheMetrics fields)
+ *
+ * ```ts
+ * import type { EmbeddingCacheMetrics } from "@effect-ontology/Telemetry/Metrics"
+ *
+ * const embeddingCacheMetricsFields: ReadonlyArray<keyof EmbeddingCacheMetrics> = ["hits", "misses", "latency"]
+ *
+ * console.log(embeddingCacheMetricsFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface EmbeddingCacheMetrics {
-  readonly hits: number;
-  readonly misses: number;
-  readonly latencyMs: number;
-}
+export class EmbeddingCacheMetrics extends S.Class<EmbeddingCacheMetrics>($I`EmbeddingCacheMetrics`)(
+  {
+    hits: NonNegativeInt,
+    misses: NonNegativeInt,
+    latency: S.Duration,
+  },
+  $I.annote("EmbeddingCacheMetrics", {
+    description: "Hit and miss counts plus measured cache latency.",
+  })
+) {}
 
 /**
  * Internal metrics state
@@ -110,8 +159,16 @@ const initialState: MetricsState = {
 /**
  * MetricsService - Prometheus metrics collection
  *
- * @since 2.0.0
- * @category Services
+ * **Example** (Inspect metrics service)
+ *
+ * ```ts
+ * import { MetricsService } from "@effect-ontology/Telemetry/Metrics"
+ *
+ * console.log(MetricsService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class MetricsService extends Context.Service<MetricsService>()($I`MetricsService`, {
   make: Effect.gen(function* () {
@@ -131,7 +188,7 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
             total: state.extractions.total + 1,
             successful: state.extractions.successful + (metrics.success ? 1 : 0),
             failed: state.extractions.failed + (metrics.success ? 0 : 1),
-            durationSum: state.extractions.durationSum + metrics.durationMs,
+            durationSum: state.extractions.durationSum + Duration.toMillis(metrics.duration),
             entitySum: state.extractions.entitySum + metrics.entityCount,
             relationSum: state.extractions.relationSum + metrics.relationCount,
           },
@@ -156,7 +213,7 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
             total: existing.total + 1,
             successful: existing.successful + (metrics.success ? 1 : 0),
             failed: existing.failed + (metrics.success ? 0 : 1),
-            durationSum: existing.durationSum + metrics.durationMs,
+            durationSum: existing.durationSum + Duration.toMillis(metrics.duration),
             tokensInSum: existing.tokensInSum + metrics.tokensIn,
             tokensOutSum: existing.tokensOutSum + metrics.tokensOut,
           });
@@ -254,7 +311,7 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
         lines.push("# TYPE llm_tokens_out_sum counter");
 
         for (const [key, metrics] of state.llmCalls) {
-          const [provider, model] = key.split(":");
+          const [provider, model] = Str.split(":")(key);
           const labels = `provider="${provider}",model="${model}"`;
 
           lines.push(`llm_call_total{${labels}} ${metrics.total}`);

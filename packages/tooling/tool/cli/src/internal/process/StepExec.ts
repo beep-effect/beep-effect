@@ -23,17 +23,16 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, PosInt } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, pipe, Stream } from "effect";
+import { Duration, Effect, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
-import type { Duration } from "effect";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -239,6 +238,7 @@ export class QualityTaskStep extends S.Class<QualityTaskStep>($I`QualityTaskStep
     env: S.optionalKey(S.Record(S.String, S.Union([S.String, S.Undefined]))),
     useLocalEnv: S.optionalKey(S.Boolean),
     flakeQuarantine: S.optionalKey(StepFlakeQuarantinePolicy),
+    captureTimeoutMillis: S.optionalKey(PosInt),
   },
   $I.annote("QualityTaskStep", {
     description: "Planned subprocess invocation shared by repo-quality command families.",
@@ -435,6 +435,8 @@ type SpawnFields = {
   readonly cwd?: string | undefined;
   readonly env?: Record<string, string | undefined> | undefined;
   readonly extendEnv?: boolean | undefined;
+  /** Escalate child cleanup to `SIGKILL` after this duration. */
+  readonly forceKillAfter?: Duration.Input | undefined;
   readonly stdin?: StepStdio | undefined;
 };
 
@@ -443,6 +445,7 @@ const spawnFields = (options: SpawnFields) =>
     cwd: O.fromUndefinedOr(options.cwd),
     env: O.fromUndefinedOr(options.env),
     extendEnv: O.fromUndefinedOr(options.extendEnv),
+    forceKillAfter: O.fromUndefinedOr(options.forceKillAfter),
   });
 
 const decodedText = <E>(stream: Stream.Stream<Uint8Array, E>): Stream.Stream<string, E> =>
@@ -480,10 +483,50 @@ class CapturePipeWedgedError extends S.TaggedError<CapturePipeWedgedError>($I`Ca
   })
 ) {}
 
+/**
+ * Error raised when a captured command does not exit within its caller's budget.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class CaptureCommandTimedOutError extends S.TaggedError<CaptureCommandTimedOutError>(
+  $I`CaptureCommandTimedOutError`
+)(
+  "CaptureCommandTimedOutError",
+  {
+    commandLine: S.String,
+    message: S.String,
+  },
+  $I.annote("CaptureCommandTimedOutError", {
+    description: "Captured command exceeded its configured runtime budget and was interrupted.",
+  })
+) {}
+
 /** Grace for inherited-pipe stragglers to close the capture after the child exits, before its process group is reaped. */
 const CAPTURE_DRAIN_GRACE: Duration.Input = "2 seconds";
 /** Grace after the group reap for the kernel to deliver EOF before the capture is declared wedged. */
 const CAPTURE_REAP_GRACE: Duration.Input = "3 seconds";
+/** Grace after forced termination before cleanup detaches from a child whose exit signal was lost. */
+const CAPTURE_FORCE_KILL_REAP_GRACE: Duration.Input = "1 second";
+
+const interruptTimedOutCapture = (
+  handle: ChildProcessSpawner.ChildProcessHandle,
+  forceKillAfter: Duration.Input
+): Effect.Effect<void, never> => {
+  const cleanupTimeout = Duration.sum(
+    Duration.fromInputUnsafe(forceKillAfter),
+    Duration.fromInputUnsafe(CAPTURE_FORCE_KILL_REAP_GRACE)
+  );
+  return Effect.uninterruptibleMask((restore) =>
+    restore(
+      Effect.ignore(
+        handle
+          .kill({ forceKillAfter })
+          .pipe(Effect.timeoutOrElse({ duration: cleanupTimeout, orElse: () => Effect.void }))
+      )
+    ).pipe(Effect.ensuring(Effect.ignore(handle.unref)))
+  );
+};
 
 /**
  * Bounds a capture stream's lifetime to its child process.
@@ -564,6 +607,7 @@ export type RunCapturedOptions = SpawnFields & {
   readonly args: ReadonlyArray<string>;
   readonly source?: CaptureSource | undefined;
   readonly bound?: OutputBound | undefined;
+  readonly timeout?: Duration.Input | undefined;
   readonly trim?: boolean | undefined;
   readonly tee?: boolean | undefined;
 };
@@ -573,12 +617,14 @@ export type RunCapturedOptions = SpawnFields & {
  *
  * **Details**
  *
- * Nonzero exit codes are represented in the result; only spawn/stream failures
- * reach the `PlatformError` channel (map them to a domain error at the call
- * site). Set `bound` to cap the buffer, `trim` to trim the captured text, and
- * `tee` to stream chunks to the parent stdout while capturing. Stdin defaults
- * to `"ignore"` so noninteractive capture cannot inherit or leave an unread
- * pipe accidentally.
+ * Nonzero exit codes are represented in the result. Spawn/stream failures
+ * reach the `PlatformError` channel, while an elapsed `timeout` raises
+ * {@link CaptureCommandTimedOutError}; map those operational errors at the
+ * call site. Set `bound` to cap the buffer, `trim` to trim the captured text,
+ * and `tee` to stream chunks to the parent stdout while capturing. The timeout
+ * bounds the full command lifetime, including the direct child's exit signal.
+ * Stdin defaults to `"ignore"` so noninteractive capture cannot inherit or
+ * leave an unread pipe accidentally.
  *
  * **Example** (Capture a trimmed git status)
  *
@@ -603,9 +649,15 @@ export type RunCapturedOptions = SpawnFields & {
  */
 export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
   options: RunCapturedOptions
-): Effect.fn.Return<CapturedStep, PlatformError.PlatformError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  CapturedStep,
+  PlatformError.PlatformError | CaptureCommandTimedOutError,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
   const source = options.source ?? "all";
-  return yield* Effect.scoped(
+  const commandLine = formatCommandLine(options.command, options.args);
+  const timeout = options.timeout;
+  const operation = Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
@@ -613,8 +665,9 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
         stdout: "pipe",
         stderr: source === "stdout" ? "ignore" : "pipe",
       });
-      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
-      const [captured, exitCode] = yield* Effect.all(
+      const deadline = capturePipeDeadline(handle, commandLine);
+      const forceKillAfter = options.forceKillAfter ?? "1 second";
+      const capture = Effect.all(
         [
           foldDecodedText(
             captureTextStream(handle, source).pipe(Stream.interruptWhen(deadline)),
@@ -625,6 +678,24 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
         ],
         { concurrency: "unbounded" }
       );
+      const [captured, exitCode] = yield* P.isUndefined(timeout)
+        ? capture
+        : capture.pipe(
+            Effect.timeoutOrElse({
+              duration: timeout,
+              orElse: () =>
+                interruptTimedOutCapture(handle, forceKillAfter).pipe(
+                  Effect.andThen(
+                    Effect.fail(
+                      CaptureCommandTimedOutError.make({
+                        commandLine,
+                        message: `${commandLine}: captured command did not exit within ${Duration.toMillis(timeout)}ms`,
+                      })
+                    )
+                  )
+                ),
+            })
+          );
       return CapturedStep.make({
         exitCode,
         output: options.trim === true ? Str.trim(captured.text) : captured.text,
@@ -632,6 +703,8 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
       });
     })
   );
+
+  return yield* operation;
 });
 
 /**
@@ -724,8 +797,7 @@ export type RunToExitOptions = SpawnFields & {
    * Interrupting a `runToExit` closes the child's scope, which signals the
    * process group and then waits for the exit event. Without this, a child that
    * ignores `SIGTERM` makes that wait unbounded, so a caller-side timeout
-   * cannot actually reclaim the process. Left `undefined`, behaviour is
-   * unchanged.
+   * cannot reclaim the process. Left `undefined`, behavior is unchanged.
    */
   readonly forceKillAfter?: Duration.Input | undefined;
 };
@@ -765,7 +837,6 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
-        ...(P.isUndefined(options.forceKillAfter) ? {} : { forceKillAfter: options.forceKillAfter }),
         stdin: options.stdin ?? options.stdio,
         stdout: options.stdio,
         stderr: options.stdio,

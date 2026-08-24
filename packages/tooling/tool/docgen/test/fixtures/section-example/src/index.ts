@@ -21,3 +21,27 @@
  * @since 0.0.0
  */
 export const sectionExample = 42;
+
+/**
+ * Owns a documented public property used by the member-example regression.
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export class SectionExampleOwner {
+  /**
+   * Returns the fixture's stable numeric answer.
+   *
+   * **Example** (Read a public property)
+   *
+   * ```ts
+   * import { SectionExampleOwner } from "../../src/index"
+   *
+   * const owner = new SectionExampleOwner()
+   * console.log(owner.answer) // 42
+   * ```
+   */
+  get answer(): number {
+    return sectionExample;
+  }
+}

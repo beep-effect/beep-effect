@@ -657,12 +657,13 @@ class ExportNewOptions extends S.Class<ExportNewOptions>($I`ExportNewOptions`)(
 ) {}
 
 /**
- * Represents a named export declaration that is documented separately from its original declaration.
+ * Represents a named export edge that points readers to its owning declaration.
  *
  * **Details**
  *
  * Namespace export declarations are marked with `isNamespaceExport` so the printer can label
- * `export * as Name from "./module.ts"` differently from named export lists.
+ * `export * as Name from "./module.ts"` differently from named export lists. Documentation
+ * requirements belong to the declaration that owns the exported symbol, not this edge.
  *
  * **Example** (Creating an Export model)
  *
@@ -708,7 +709,7 @@ export class Export extends S.TaggedClass<Export>($I`Export`)(
     }),
   },
   $I.annote("Export", {
-    description: "Named export declaration documented separately from its original declaration.",
+    description: "Named export edge whose owning declaration carries the public documentation.",
   })
 ) {
   /**

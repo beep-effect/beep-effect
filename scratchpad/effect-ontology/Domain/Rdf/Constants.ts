@@ -1,6 +1,8 @@
 /**
  * Experiment-owned RDF vocabulary constants.
  *
+ * **Details**
+ *
  * Standard RDF vocabularies are imported directly from `@beep/rdf/Vocab/*`
  * by consumers. This module owns only the terms introduced by the
  * effect-ontology experiment.
@@ -12,10 +14,10 @@ import { IRI, makeNamedNode } from "@beep/rdf";
 
 const vocabularyTerm = (namespace: string, localName: string) => makeNamedNode(`${namespace}${localName}`);
 
-const extractionNamespace = IRI.fromUnknown("http://example.org/kg/");
-const claimsNamespace = IRI.fromUnknown("http://effect-ontology.dev/claims#");
-const correctionsNamespace = IRI.fromUnknown("http://effect-ontology.dev/corrections#");
-const coreNamespace = IRI.fromUnknown("http://effect-ontology.dev/core#");
+const extractionNamespace = IRI.fromUnknown("https://example.org/kg/");
+const claimsNamespace = IRI.fromUnknown("https://effect-ontology.dev/claims#");
+const correctionsNamespace = IRI.fromUnknown("https://effect-ontology.dev/corrections#");
+const coreNamespace = IRI.fromUnknown("https://effect-ontology.dev/core#");
 
 /**
  * Legacy extraction-metadata vocabulary.
@@ -28,7 +30,7 @@ const coreNamespace = IRI.fromUnknown("http://effect-ontology.dev/core#");
  * **Example** (Inspect extraction confidence term)
  *
  * ```ts
- * import { EXTR } from "@effect-ontology/Rdf/Constants.ts"
+ * import { EXTR } from "@effect-ontology/Rdf/Constants"
  *
  * console.log(EXTR.confidence.value)
  * ```
@@ -52,7 +54,7 @@ export const EXTR = {
  * **Example** (Inspect claim class term)
  *
  * ```ts
- * import { CLAIMS } from "@effect-ontology/Rdf/Constants.ts"
+ * import { CLAIMS } from "@effect-ontology/Rdf/Constants"
  *
  * console.log(CLAIMS.Claim.value)
  * ```
@@ -105,7 +107,7 @@ export const CLAIMS = {
  * **Example** (Inspect retraction class term)
  *
  * ```ts
- * import { CORRECTIONS } from "@effect-ontology/Rdf/Constants.ts"
+ * import { CORRECTIONS } from "@effect-ontology/Rdf/Constants"
  *
  * console.log(CORRECTIONS.Retraction.value)
  * ```
@@ -158,7 +160,7 @@ export const CORRECTIONS = {
  * **Example** (Inspect mention class term)
  *
  * ```ts
- * import { CORE } from "@effect-ontology/Rdf/Constants.ts"
+ * import { CORE } from "@effect-ontology/Rdf/Constants"
  *
  * console.log(CORE.Mention.value)
  * ```

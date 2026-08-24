@@ -7,7 +7,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { DirectedGraph, NodeIndex, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import * as Graph from "effect/Graph";
+import { Graph } from "effect";
 import * as S from "effect/Schema";
 import { Entity } from "./Entity.ts";
 import { EREdge, ERNode, ResolutionMethod } from "./EntityResolution.ts";
@@ -18,9 +18,9 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolutionGr
 /**
  * Re-export of the canonical entity-resolution method domain.
  *
- * @example
+ * **Example** (Use SimilarityEdgeFields)
  * ```ts
- * import { ResolutionMethod } from "@effect-ontology/Model/EntityResolutionGraph.ts"
+ * import { ResolutionMethod } from "@effect-ontology/Model/EntityResolutionGraph"
  *
  * console.log(ResolutionMethod.is.similarity("similarity")) // true
  * ```
@@ -30,22 +30,13 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolutionGr
  */
 export { ResolutionMethod } from "./EntityResolution.ts";
 
-const SimilarityEdgeFields = {
-  similarity: UnitInterval.annotateKey({
-    description: "Normalized similarity score between the two candidate entities.",
-  }),
-  method: ResolutionMethod.annotateKey({
-    description: "Evidence strategy that produced the similarity edge.",
-  }),
-} as const;
-
 /**
  * Weighted candidate edge used while clustering extracted entities.
  *
- * @example
+ * **Example** (Use SimilarityEdge)
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { SimilarityEdge } from "@effect-ontology/Model/EntityResolutionGraph.ts"
+ * import { SimilarityEdge } from "@effect-ontology/Model/EntityResolutionGraph"
  *
  * const edge = SimilarityEdge.make({
  *   similarity: UnitInterval.make(0.9),
@@ -58,84 +49,80 @@ const SimilarityEdgeFields = {
  * @since 0.0.0
  */
 export class SimilarityEdge extends S.Class<SimilarityEdge>($I`SimilarityEdge`)(
-  SimilarityEdgeFields,
+  {
+    similarity: UnitInterval.annotateKey({
+      description: "Normalized similarity score between the two candidate entities.",
+    }),
+    method: ResolutionMethod.annotateKey({
+      description: "Evidence strategy that produced the similarity edge.",
+    }),
+  },
   $I.annote("SimilarityEdge", {
     description: "Normalized similarity edge used by entity clustering.",
   })
 ) {}
 
-const EntityResolutionInfoFields = {
-  entityId: EntityId.annotateKey({
-    description: "Identifier of the original extracted entity.",
-  }),
-  similarity: UnitInterval.annotateKey({
-    description: "Similarity between the original and canonical entity.",
-  }),
-  method: ResolutionMethod.annotateKey({
-    description: "Evidence strategy that selected the canonical entity.",
-  }),
-} as const;
-
 /**
  * Explanation of how one extracted entity resolved to its canonical form.
  *
- * @example
+ * **Example** (Use EntityResolutionInfo)
  * ```ts
- * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { EntityId } from "@effect-ontology/Model/shared.ts"
- * import { EntityResolutionInfo } from "@effect-ontology/Model/EntityResolutionGraph.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EntityResolutionInfo } from "@effect-ontology/Model/EntityResolutionGraph"
  *
- * const info = EntityResolutionInfo.make({
- *   entityId: EntityId.fromUnknown("arsenal_fc"),
- *   similarity: UnitInterval.make(1),
+ * const info = S.decodeUnknownOption(EntityResolutionInfo)({
+ *   entityId: "arsenal_fc",
+ *   similarity: 1,
  *   method: "exact"
  * })
- * console.log(info.similarity) // 1
+ * console.log(O.map(info, (value) => value.similarity)) // Some(1)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class EntityResolutionInfo extends S.Class<EntityResolutionInfo>($I`EntityResolutionInfo`)(
-  EntityResolutionInfoFields,
+  {
+    entityId: EntityId.annotateKey({
+      description: "Identifier of the original extracted entity.",
+    }),
+    similarity: UnitInterval.annotateKey({
+      description: "Similarity between the original and canonical entity.",
+    }),
+    method: ResolutionMethod.annotateKey({
+      description: "Evidence strategy that selected the canonical entity.",
+    }),
+  },
   $I.annote("EntityResolutionInfo", {
     description: "Resolution evidence linking one extracted entity to its canonical entity.",
   })
 ) {}
 
-const EntityClusterFields = {
-  entities: S.NonEmptyArray(Entity).annotateKey({
-    description: "Non-empty set of extracted entities assigned to the cluster.",
-  }),
-  minSimilarity: UnitInterval.annotateKey({
-    description: "Minimum accepted pairwise similarity in the cluster.",
-  }),
-  methods: S.NonEmptyArray(ResolutionMethod).annotateKey({
-    description: "Resolution methods that contributed to the cluster.",
-  }),
-} as const;
-
 /**
  * Non-empty cluster of extracted entities representing one canonical entity.
  *
- * @example
+ * **Example** (Use EntityCluster)
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { Entity } from "@effect-ontology/Model/Entity.ts"
- * import { EntityCluster } from "@effect-ontology/Model/EntityResolutionGraph.ts"
+ * import { Entity } from "@effect-ontology/Model/Entity"
+ * import { EntityCluster } from "@effect-ontology/Model/EntityResolutionGraph"
  *
- * const entity = S.decodeUnknownSync(Entity)({
+ * const entity = S.decodeUnknownOption(Entity)({
  *   id: "arsenal_fc",
  *   mention: "Arsenal",
  *   types: ["https://schema.org/SportsTeam"]
  * })
- * const cluster = EntityCluster.make({
- *   entities: [entity],
- *   minSimilarity: UnitInterval.make(1),
- *   methods: ["exact"]
- * })
- * console.log(cluster.entities.length) // 1
+ * const cluster = O.map(entity, (value) =>
+ *   EntityCluster.make({
+ *     entities: [value],
+ *     minSimilarity: UnitInterval.make(1),
+ *     methods: ["exact"]
+ *   })
+ * )
+ * console.log(O.map(cluster, (value) => value.entities.length)) // { _tag: "Some", value: 1 }
  * ```
  *
  * @invariant Every cluster contains at least one entity and one supporting
@@ -144,29 +131,29 @@ const EntityClusterFields = {
  * @since 0.0.0
  */
 export class EntityCluster extends S.Class<EntityCluster>($I`EntityCluster`)(
-  EntityClusterFields,
+  {
+    entities: S.NonEmptyArray(Entity).annotateKey({
+      description: "Non-empty set of extracted entities assigned to the cluster.",
+    }),
+    minSimilarity: UnitInterval.annotateKey({
+      description: "Minimum accepted pairwise similarity in the cluster.",
+    }),
+    methods: S.NonEmptyArray(ResolutionMethod).annotateKey({
+      description: "Resolution methods that contributed to the cluster.",
+    }),
+  },
   $I.annote("EntityCluster", {
     description: "Non-empty cluster of extracted entities assigned to one canonical identity.",
   })
 ) {}
 
-const ClusteringResultFields = {
-  clusters: S.Array(EntityCluster).pipe(
-    SchemaUtils.withEmptyArrayDefaults<EntityCluster>(),
-    S.annotateKey({ description: "Entity clusters produced by the resolver." })
-  ),
-  embeddingMap: S.HashMap(EntityId, S.NonEmptyArray(S.Finite)).annotateKey({
-    description: "Finite embedding vector indexed by extracted entity identifier.",
-  }),
-} as const;
-
 /**
  * Clustering output together with the embeddings used to derive it.
  *
- * @example
+ * **Example** (Use ClusteringResult)
  * ```ts
  * import * as HashMap from "effect/HashMap"
- * import { ClusteringResult } from "@effect-ontology/Model/EntityResolutionGraph.ts"
+ * import { ClusteringResult } from "@effect-ontology/Model/EntityResolutionGraph"
  *
  * const result = ClusteringResult.make({ embeddingMap: HashMap.empty() })
  * console.log(result.clusters.length) // 0
@@ -176,49 +163,56 @@ const ClusteringResultFields = {
  * @since 0.0.0
  */
 export class ClusteringResult extends S.Class<ClusteringResult>($I`ClusteringResult`)(
-  ClusteringResultFields,
+  {
+    clusters: S.Array(EntityCluster).pipe(
+      SchemaUtils.withEmptyArrayDefaults<EntityCluster>(),
+      S.annotateKey({ description: "Entity clusters produced by the resolver." })
+    ),
+    embeddingMap: S.HashMap(EntityId, S.NonEmptyArray(S.Finite)).annotateKey({
+      description: "Finite embedding vector indexed by extracted entity identifier.",
+    }),
+  },
   $I.annote("ClusteringResult", {
     description: "Entity clusters and the finite vectors used by the clustering pass.",
   })
 ) {}
 
-const EntityResolutionStatsFields = {
-  mentionCount: NonNegativeInt.annotateKey({
-    description: "Number of immutable mention nodes.",
-  }),
-  resolvedCount: NonNegativeInt.annotateKey({
-    description: "Number of canonical resolved-entity nodes.",
-  }),
-  relationCount: NonNegativeInt.annotateKey({
-    description: "Number of canonical relation edges.",
-  }),
-  clusterCount: NonNegativeInt.annotateKey({
-    description: "Number of clusters produced by resolution.",
-  }),
-} as const;
-
 /**
  * Cardinality summary for an entity-resolution graph.
  *
- * @example
+ * **Example** (Use EntityResolutionStats)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph.ts"
+ * import { EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph"
  *
- * const stats = S.decodeUnknownSync(EntityResolutionStats)({
+ * const stats = S.decodeUnknownOption(EntityResolutionStats)({
  *   mentionCount: 2,
  *   resolvedCount: 1,
  *   relationCount: 0,
  *   clusterCount: 1
  * })
- * console.log(stats.resolvedCount) // 1
+ * console.log(O.map(stats, (value) => value.resolvedCount)) // 1
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class EntityResolutionStats extends S.Class<EntityResolutionStats>($I`EntityResolutionStats`)(
-  EntityResolutionStatsFields,
+  {
+    mentionCount: NonNegativeInt.annotateKey({
+      description: "Number of immutable mention nodes.",
+    }),
+    resolvedCount: NonNegativeInt.annotateKey({
+      description: "Number of canonical resolved-entity nodes.",
+    }),
+    relationCount: NonNegativeInt.annotateKey({
+      description: "Number of canonical relation edges.",
+    }),
+    clusterCount: NonNegativeInt.annotateKey({
+      description: "Number of clusters produced by resolution.",
+    }),
+  },
   $I.annote("EntityResolutionStats", {
     description: "Non-negative cardinality summary for an entity-resolution graph.",
   })
@@ -252,60 +246,62 @@ const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
   })
 );
 
-const EntityResolutionGraphFields = {
-  graph: ResolutionGraph.annotateKey({
-    description: "Immutable two-tier mention-to-canonical graph.",
-  }),
-  entityIndex: S.Record(EntityId, NodeIndex).annotateKey({
-    description: "Lookup from entity identifier to graph node index.",
-  }),
-  canonicalMap: S.Record(EntityId, EntityId).annotateKey({
-    description: "Lookup from extracted entity identifier to canonical identifier.",
-  }),
-  createdAt: S.DateTimeUtcFromString.annotateKey({
-    description: "UTC instant at which the graph snapshot was created.",
-  }),
-  stats: EntityResolutionStats.annotateKey({
-    description: "Cardinality summary for the graph snapshot.",
-  }),
-} as const;
-
 /**
  * Immutable entity-resolution graph with lookup indexes and statistics.
  *
- * @remarks
- * The graph uses the repository's schema-backed Effect `DirectedGraph`
+ * **Details**
+ *
+ * * The graph uses the repository's schema-backed Effect `DirectedGraph`
  * codec. Indexes are serialized records rather than mutable JavaScript maps,
  * preserving deterministic transport behavior.
  *
- * @example
+ * **Example** (Use EntityResolutionGraph)
  * ```ts
  * import { Graph } from "effect"
  * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { EntityResolutionGraph, EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph.ts"
+ * import { EntityResolutionGraph, EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph"
  *
- * const stats = S.decodeUnknownSync(EntityResolutionStats)({
+ * const stats = S.decodeUnknownOption(EntityResolutionStats)({
  *   mentionCount: 0,
  *   resolvedCount: 0,
  *   relationCount: 0,
  *   clusterCount: 0
  * })
- * const snapshot = EntityResolutionGraph.make({
- *   graph: Graph.directed(),
- *   entityIndex: {},
- *   canonicalMap: {},
- *   createdAt: DateTime.nowUnsafe(),
- *   stats
- * })
- * console.log(snapshot.stats.mentionCount) // 0
+ * const snapshot = O.map(stats, (value) =>
+ *   EntityResolutionGraph.make({
+ *     graph: Graph.directed(),
+ *     entityIndex: {},
+ *     canonicalMap: {},
+ *     createdAt: DateTime.nowUnsafe(),
+ *     stats: value
+ *   })
+ * )
+ * console.log(O.map(snapshot, (value) => value.stats.mentionCount)) // { _tag: "Some", value: 0 }
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class EntityResolutionGraph extends S.Class<EntityResolutionGraph>($I`EntityResolutionGraph`)(
-  EntityResolutionGraphFields,
+  {
+    graph: ResolutionGraph.annotateKey({
+      description: "Immutable two-tier mention-to-canonical graph.",
+    }),
+    entityIndex: S.Record(EntityId, NodeIndex).annotateKey({
+      description: "Lookup from entity identifier to graph node index.",
+    }),
+    canonicalMap: S.Record(EntityId, EntityId).annotateKey({
+      description: "Lookup from extracted entity identifier to canonical identifier.",
+    }),
+    createdAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant at which the graph snapshot was created.",
+    }),
+    stats: EntityResolutionStats.annotateKey({
+      description: "Cardinality summary for the graph snapshot.",
+    }),
+  },
   $I.annote("EntityResolutionGraph", {
     description: "Indexed immutable graph snapshot produced by entity resolution.",
   })

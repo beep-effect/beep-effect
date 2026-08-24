@@ -1,23 +1,28 @@
 /**
  * Service: Claim
  *
+ * **Details**
+ *
  * High-level service for claim management with RDF serialization.
  * Wraps ClaimRepository with additional business logic and RDF reification.
  *
- * @since 2.0.0
- * @module Service/Claim
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import type { PostgresDrizzle } from "@beep/postgres";
 import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
 import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { Context, DateTime, Effect, Layer } from "effect";
+import { NonNegativeInt } from "@beep/schema";
+import type { Config } from "effect";
+import { Context, DateTime, Effect, Layer, Random } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
+import * as S from "effect/Schema";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type { ClaimFilter } from "../Repository/Claim.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
@@ -74,37 +79,99 @@ const randomUuid = Effect.all([
 /**
  * Input for creating a new claim
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the CreateClaimInput contract)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CreateClaimInput } from "@effect-ontology/Service/Claim"
+ *
+ * console.log(S.is(CreateClaimInput)({})) // false
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface CreateClaimInput {
-  readonly subjectIri: string;
-  readonly predicateIri: string;
-  readonly objectValue: string;
-  readonly objectType: "iri" | "literal";
-  readonly articleId: string;
-  readonly ontologyId: string;
-  readonly confidence: Confidence;
-  readonly evidence?: {
-    readonly text: string;
-    readonly startOffset: number;
-    readonly endOffset: number;
-  };
-  readonly validFrom?: Date;
-  readonly validTo?: Date;
-}
+export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimInput`)(
+  {
+    subjectIri: S.NonEmptyString,
+    predicateIri: S.NonEmptyString,
+    objectValue: S.String,
+    objectType: S.Literals(["iri", "literal"]),
+    articleId: S.NonEmptyString,
+    ontologyId: S.NonEmptyString,
+    confidence: Confidence,
+    evidence: S.optionalKey(
+      S.Struct({
+        text: S.String,
+        startOffset: NonNegativeInt,
+        endOffset: NonNegativeInt,
+      })
+    ),
+    validFrom: S.optionalKey(S.Date),
+    validTo: S.optionalKey(S.Date),
+  },
+  $I.annote("CreateClaimInput", {
+    description: "Validated claim creation payload with optional evidence and temporal bounds.",
+  })
+) {}
 
 /**
  * Result of deprecating a claim
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the DeprecationResult contract)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DeprecationResult } from "@effect-ontology/Service/Claim"
+ *
+ * console.log(S.is(DeprecationResult)({})) // false
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface DeprecationResult {
-  readonly claimId: string;
-  readonly deprecatedAt: Date;
-  readonly reason: string;
-  readonly correctionId?: string;
+export class DeprecationResult extends S.Class<DeprecationResult>($I`DeprecationResult`)(
+  {
+    claimId: S.NonEmptyString,
+    deprecatedAt: S.Date,
+    reason: S.NonEmptyString,
+    correctionId: S.optionalKey(S.NonEmptyString),
+  },
+  $I.annote("DeprecationResult", {
+    description: "Claim deprecation outcome with an optional correcting claim identifier.",
+  })
+) {}
+
+interface ClaimServiceShape {
+  readonly createClaim: (input: CreateClaimInput) => ReturnType<ClaimRepository["Service"]["insertClaim"]>;
+  readonly getClaim: (claimId: string, ontologyId: string) => ReturnType<ClaimRepository["Service"]["getClaim"]>;
+  readonly getClaims: (filter: ClaimFilter) => ReturnType<ClaimRepository["Service"]["getClaims"]>;
+  readonly deprecateClaim: (
+    claimId: string,
+    ontologyId: string,
+    reason: string,
+    correctionId?: string
+  ) => Effect.Effect<DeprecationResult, Effect.Error<ReturnType<ClaimRepository["Service"]["deprecateClaim"]>>>;
+  readonly promoteToPreferred: (
+    claimId: string,
+    ontologyId: string
+  ) => ReturnType<ClaimRepository["Service"]["promoteToPreferred"]>;
+  readonly findConflicting: (
+    claim: ClaimRow | ClaimInsertRow
+  ) => ReturnType<ClaimRepository["Service"]["findConflictingClaims"]>;
+  readonly getClaimHistory: (
+    subjectIri: string,
+    predicateIri: string,
+    ontologyId: string
+  ) => ReturnType<ClaimRepository["Service"]["getClaimHistory"]>;
+  readonly toReifiedTriples: (claim: ClaimRow, graphUri?: string) => Effect.Effect<Array<Quad>>;
+  readonly addClaimToStore: (rdfStore: RdfStore, claim: ClaimRow, graphUri?: string) => Effect.Effect<Array<Quad>>;
+  readonly claimsToTurtle: (
+    claims: Array<ClaimRow>,
+    graphUri?: string
+  ) => ReturnType<RdfBuilder["Service"]["toTurtle"]>;
 }
 
 // =============================================================================
@@ -113,6 +180,8 @@ export interface DeprecationResult {
 
 /**
  * ClaimService - High-level claim management
+ *
+ * **Details**
  *
  * Provides claim lifecycle operations with RDF serialization support.
  * Uses ClaimRepository for persistence and generates reified RDF triples.
@@ -125,27 +194,19 @@ export interface DeprecationResult {
  * - `getClaimHistory`: Get all claims for a subject+predicate over time
  * - `toReifiedTriples`: Convert claim to reified RDF quads
  *
- * @example
- * ```typescript
- * Effect.gen(function*() {
- *   const claim = yield* ClaimService.createClaim({
- *     subjectIri: "http://example.org/person/123",
- *     predicateIri: "http://schema.org/name",
- *     objectValue: "John Doe",
- *     objectType: "literal",
- *     articleId: "article-001",
- *     confidence: 0.95
- *   })
+ * **Example** (Inspect the claim-service layer)
  *
- *   const quads = yield* ClaimService.toReifiedTriples(claim)
- *   // Generates reified RDF quads with CLAIMS vocabulary
- * }).pipe(Effect.provide(ClaimService.Default))
+ * ```ts
+ * import { Layer } from "effect"
+ * import { ClaimService } from "@effect-ontology/Service/Claim"
+ *
+ * console.log(Layer.isLayer(ClaimService.Default)) // true
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @category services
+ * @since 0.0.0
  */
-export class ClaimService extends Context.Service<ClaimService>()($I`ClaimService`, {
+export class ClaimService extends Context.Service<ClaimService, ClaimServiceShape>()($I`ClaimService`, {
   make: Effect.gen(function* () {
     const repo = yield* ClaimRepository;
     const rdf = yield* RdfBuilder;
@@ -159,7 +220,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Generates a unique claim ID and persists the claim with metadata.
      */
-    const createClaim = Effect.fn(function* (input: CreateClaimInput) {
+    const createClaim = Effect.fn("ClaimService.createClaim")(function* (input: CreateClaimInput) {
       const id = yield* randomUuid;
 
       const claimRow: ClaimInsertRow = {
@@ -188,17 +249,22 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Marks the claim as deprecated and optionally links to a correction.
      */
-    const deprecateClaim = Effect.fn(function* (claimId: string, reason: string, correctionId?: string) {
+    const deprecateClaim = Effect.fn("ClaimService.deprecateClaim")(function* (
+      claimId: string,
+      ontologyId: string,
+      reason: string,
+      correctionId?: string
+    ) {
       const now = yield* DateTime.now;
 
       const resolvedCorrectionId = P.isUndefined(correctionId) ? yield* randomUuid : correctionId;
-      yield* repo.deprecateClaim(claimId, resolvedCorrectionId);
+      yield* repo.deprecateClaim(claimId, resolvedCorrectionId, ontologyId);
 
       return {
         claimId,
         deprecatedAt: DateTime.toDate(now),
         reason,
-        correctionId,
+        ...(P.isUndefined(correctionId) ? {} : { correctionId }),
       };
     });
 
@@ -207,7 +273,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Sets the claim as the preferred value for its subject+predicate.
      */
-    const promoteToPreferred = (claimId: string) => repo.promoteToPreferred(claimId);
+    const promoteToPreferred = (claimId: string, ontologyId: string) => repo.promoteToPreferred(claimId, ontologyId);
 
     /**
      * Find claims that conflict with a given claim
@@ -222,13 +288,13 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Returns all claims (including deprecated) in chronological order.
      */
-    const getClaimHistory = (subjectIri: string, predicateIri: string) =>
-      repo.getClaimHistory(subjectIri, predicateIri);
+    const getClaimHistory = (subjectIri: string, predicateIri: string, ontologyId: string) =>
+      repo.getClaimHistory(subjectIri, predicateIri, ontologyId);
 
     /**
      * Get a claim by ID
      */
-    const getClaim = (claimId: string) => repo.getClaim(claimId);
+    const getClaim = (claimId: string, ontologyId: string) => repo.getClaim(claimId, ontologyId);
 
     /**
      * Query claims with filters
@@ -482,7 +548,11 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Convenience method that converts a claim to quads and adds them to a store.
      */
-    const addClaimToStore = Effect.fn(function* (_rdfStore: RdfStore, claim: ClaimRow, graphUri?: string) {
+    const addClaimToStore = Effect.fn("ClaimService.addClaimToStore")(function* (
+      _rdfStore: RdfStore,
+      claim: ClaimRow,
+      graphUri?: string
+    ) {
       // Add quads to store using low-level N3 operations
       // The RdfBuilder doesn't have a direct addQuads method, so we build manually
       return yield* toReifiedTriples(claim, graphUri);
@@ -493,7 +563,10 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Creates a new RDF store, adds all claims, and serializes to Turtle.
      */
-    const claimsToTurtle = Effect.fn(function* (claims: Array<ClaimRow>, graphUri?: string) {
+    const claimsToTurtle = Effect.fn("ClaimService.claimsToTurtle")(function* (
+      claims: Array<ClaimRow>,
+      graphUri?: string
+    ) {
       const store = yield* rdf.createStore;
 
       for (const claim of claims) {
@@ -527,7 +600,8 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
     };
   }),
 }) {
-  static readonly Default = Layer.effect(this, this.make).pipe(
-    Layer.provide([ClaimRepository.Default, RdfBuilder.Default])
-  );
+  static readonly Default: Layer.Layer<ClaimService, Config.ConfigError, PostgresDrizzle> = Layer.effect(
+    this,
+    this.make
+  ).pipe(Layer.provide([ClaimRepository.Default, RdfBuilder.Default]));
 }

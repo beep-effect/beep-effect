@@ -8,10 +8,10 @@
  * @since 0.0.0
  */
 
+import { Unknown } from "@beep/schema/Unknown";
 import { thunkEmptyStr } from "@beep/utils";
 import { Effect, SchemaGetter } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { DomainError } from "./errors/index.ts";
 
 const prettyGetter = SchemaGetter.stringifyJson({ space: 2 });
@@ -92,7 +92,7 @@ export const jsonStringifyCompact: (value: unknown) => Effect.Effect<string, Dom
  * @since 0.0.0
  */
 export const jsonParse: (input: string) => Effect.Effect<unknown, DomainError> = Effect.fn(function* (input) {
-  return yield* S.decodeEffect(S.fromJsonString(S.Unknown))(input).pipe(
+  return yield* Unknown.decodeEffectFromJsonString(input).pipe(
     Effect.mapError((e) => DomainError.make({ message: `JSON parse failed: ${e.message}`, cause: e }))
   );
 });

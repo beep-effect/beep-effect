@@ -58,6 +58,13 @@ export * from "./JsonLd.ts";
  */
 export * from "./Prov.ts";
 /**
+ * Pure PROV-O to RDF dataset codecs.
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export * from "./ProvRdf.ts";
+/**
  * RDF/JS schema models.
  *
  * @category models

@@ -7,10 +7,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import { Effect, flow, pipe } from "effect";
+import { Effect, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
-import * as Num from "effect/Number";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -19,6 +19,7 @@ import { ContentHash, GcsUri } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OntologyEmbeddings");
 const utf8Encoder = new TextEncoder();
+const encodeUtf8 = (text: string): Uint8Array => utf8Encoder.encode(text);
 
 const EmbeddingVector = S.NonEmptyArray(S.Finite)
   .annotate({
@@ -26,9 +27,17 @@ const EmbeddingVector = S.NonEmptyArray(S.Finite)
       fc
         .tuple(
           fc.double({ min: -1, max: 1, noNaN: true, noDefaultInfinity: true }),
-          fc.array(fc.double({ min: -1, max: 1, noNaN: true, noDefaultInfinity: true }), {
-            maxLength: 31,
-          })
+          fc.array(
+            fc.double({
+              min: -1,
+              max: 1,
+              noNaN: true,
+              noDefaultInfinity: true,
+            }),
+            {
+              maxLength: 31,
+            }
+          )
         )
         .map(([head, tail]) => [head, ...tail]),
   })
@@ -38,25 +47,13 @@ const EmbeddingVector = S.NonEmptyArray(S.Finite)
     })
   );
 
-const ElementEmbeddingFields = {
-  iri: IRI.annotateKey({
-    description: "IRI of the embedded ontology class or property.",
-  }),
-  text: S.NonEmptyString.annotateKey({
-    description: "Normalized semantic text supplied to the embedding model.",
-  }),
-  embedding: EmbeddingVector.annotateKey({
-    description: "Finite vector returned by the embedding model.",
-  }),
-} as const;
-
 /**
  * Embedding and source text for one ontology class or property.
  *
- * @example
+ * **Example** (Use ElementEmbedding)
  * ```ts
  * import * as O from "effect/Option"
- * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * const text = ElementEmbedding.buildText(
  *   "SportsTeam",
@@ -72,7 +69,17 @@ const ElementEmbeddingFields = {
  * @since 0.0.0
  */
 export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedding`)(
-  ElementEmbeddingFields,
+  {
+    iri: IRI.annotateKey({
+      description: "IRI of the embedded ontology class or property.",
+    }),
+    text: S.NonEmptyString.annotateKey({
+      description: "Normalized semantic text supplied to the embedding model.",
+    }),
+    embedding: EmbeddingVector.annotateKey({
+      description: "Finite vector returned by the embedding model.",
+    }),
+  },
   $I.annote("ElementEmbedding", {
     description: "Semantic text and finite embedding vector for one ontology element.",
   })
@@ -83,15 +90,11 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
   /**
    * Builds stable semantic text from a label, optional description, and aliases.
    *
-   * @param label Primary human-readable ontology label.
-   * @param description Already-normalized optional definition or comment.
-   * @param altLabels Alternative labels in preferred display order.
-   * @returns Period-delimited semantic text suitable for embedding.
+   * **Example** (Use OntologyEmbeddingsFields)
    *
-   * @example
    * ```ts
    * import * as O from "effect/Option"
-   * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+   * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings"
    *
    * const text = ElementEmbedding.buildText(
    *   "Person",
@@ -100,6 +103,11 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
    * )
    * console.log(text) // "Person. A human being.. Also known as: Human"
    * ```
+   *
+   * @param label - Primary human-readable ontology label.
+   * @param description - Already-normalized optional definition or comment.
+   * @param altLabels - Alternative labels in preferred display order.
+   * @returns Period-delimited semantic text suitable for embedding.
    */
   static buildText(label: string, description: O.Option<string>, altLabels: ReadonlyArray<string>): string {
     const aliasSentence = pipe(
@@ -112,43 +120,43 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
 
     return pipe(A.of(label), A.appendAll(O.toArray(description)), A.appendAll(O.toArray(aliasSentence)), A.join(". "));
   }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ElementEmbedding);
 }
 
-const OntologyEmbeddingsFields = {
-  ontologyUri: GcsUri.annotateKey({
-    description: "Canonical GCS URI of the ontology represented by this artifact.",
-  }),
-  version: ContentHash.annotateKey({
-    description: "Full content digest of the ontology bytes.",
-  }),
-  model: S.NonEmptyString.annotateKey({
-    description: "Embedding-model identifier used to compute every vector.",
-  }),
-  dimension: NonNegativeInt.check(
-    S.isGreaterThan(0, {
-      identifier: $I`EmbeddingDimensionPositiveCheck`,
-      title: "Positive Embedding Dimension",
-      description: "An embedding dimension must be a positive integer.",
-      message: "Embedding dimension must be greater than zero.",
-    })
-  ).annotateKey({
-    description: "Expected vector length for every embedded element.",
-  }),
-  createdAt: S.DateTimeUtcFromString.annotateKey({
-    description: "UTC instant at which the artifact was computed.",
-  }),
-  classes: S.Array(ElementEmbedding).pipe(
-    SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
-    S.annotateKey({ description: "Embeddings for ontology class definitions." })
-  ),
-  properties: S.Array(ElementEmbedding).pipe(
-    SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
-    S.annotateKey({ description: "Embeddings for ontology property definitions." })
-  ),
-} as const;
-
 class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsModel>($I`OntologyEmbeddingsFieldsModel`)(
-  OntologyEmbeddingsFields,
+  {
+    ontologyUri: GcsUri.annotateKey({
+      description: "Canonical GCS URI of the ontology represented by this artifact.",
+    }),
+    version: ContentHash.annotateKey({
+      description: "Full content digest of the ontology bytes.",
+    }),
+    model: S.NonEmptyString.annotateKey({
+      description: "Embedding-model identifier used to compute every vector.",
+    }),
+    dimension: NonNegativeInt.check(
+      S.isGreaterThan(0, {
+        identifier: $I`EmbeddingDimensionPositiveCheck`,
+        title: "Positive Embedding Dimension",
+        description: "An embedding dimension must be a positive integer.",
+        message: "Embedding dimension must be greater than zero.",
+      })
+    ).annotateKey({
+      description: "Expected vector length for every embedded element.",
+    }),
+    createdAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant at which the artifact was computed.",
+    }),
+    classes: S.Array(ElementEmbedding).pipe(
+      SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
+      S.annotateKey({ description: "Embeddings for ontology class definitions." })
+    ),
+    properties: S.Array(ElementEmbedding).pipe(
+      SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
+      S.annotateKey({ description: "Embeddings for ontology property definitions." })
+    ),
+  },
   $I.annote("OntologyEmbeddingsFieldsModel", {
     description: "Internal field model for a versioned ontology-embedding artifact.",
   })
@@ -156,7 +164,7 @@ class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsMode
 
 const hasConsistentEmbeddingDimension = (artifact: OntologyEmbeddingsFieldsModel): boolean =>
   A.every(A.appendAll(artifact.classes, artifact.properties), (element) =>
-    Num.Equivalence(A.length(element.embedding), artifact.dimension)
+    N.Equivalence(A.length(element.embedding), artifact.dimension)
   );
 
 const makeOntologyEmbeddingsArbitrary = (fc: typeof FastCheck) => {
@@ -203,9 +211,11 @@ const OntologyEmbeddingsDefinition = OntologyEmbeddingsFieldsModel.check(
   })
 );
 
-const computeOntologyVersion = Effect.fn("OntologyEmbeddings.computeVersion")(function* (ontologyContent: string) {
-  return yield* S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(ontologyContent));
-});
+const computeOntologyVersion = flow(
+  encodeUtf8,
+  Sha256HexFromBytes.decodeEffect,
+  Effect.withSpan("OntologyEmbeddings.computeVersion")
+);
 
 const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
   GcsUri.fromUnknown(
@@ -218,23 +228,23 @@ const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
 /**
  * Versioned embedding artifact for one ontology.
  *
- * @remarks
- * The schema enforces one vector dimension across all class and property
+ * **Details**
+ *
+ * * The schema enforces one vector dimension across all class and property
  * embeddings. `computeVersion` produces a full SHA-256 digest through the
  * repository crypto service instead of the upstream module's truncated
  * synchronous hash.
  *
- * @example
+ * **Example** (Use OntologyEmbeddings)
  * ```ts
  * import { Effect } from "effect"
- * import { GcsUri } from "@effect-ontology/Identity.ts"
- * import { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GcsUri } from "@effect-ontology/Identity"
+ * import { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings"
  *
- * console.log(
- *   OntologyEmbeddings.storagePathFor(
- *     GcsUri.fromUnknown("gs://beep-ontology/ontologies/football/ontology.ttl")
- *   )
- * ) // "gs://beep-ontology/ontologies/football/ontology-embeddings.json"
+ * const uri = S.decodeUnknownOption(GcsUri)("gs://beep-ontology/ontologies/football/ontology.ttl")
+ * console.log(O.map(uri, OntologyEmbeddings.storagePathFor))
  * console.log(Effect.isEffect(OntologyEmbeddings.computeVersion("@prefix ex: <https://example.com/> .")))
  * ```
  *
@@ -249,7 +259,7 @@ export const OntologyEmbeddings = OntologyEmbeddingsDefinition.annotate({
   $I.annoteSchema("OntologyEmbeddings", {
     description: "Versioned ontology embedding artifact with uniform finite vector dimensions.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withEffectCodecStatics,
   SchemaUtils.withStatics(() => ({
     computeVersion: computeOntologyVersion,
     storagePathFor: embeddingsPathFromOntology,
@@ -259,9 +269,9 @@ export const OntologyEmbeddings = OntologyEmbeddingsDefinition.annotate({
 /**
  * Runtime value decoded by {@link OntologyEmbeddings}.
  *
- * @example
+ * **Example** (Use OntologyEmbeddings)
  * ```ts
- * import type { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import type { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * const dimension = (artifact: OntologyEmbeddings): number => artifact.dimension
  * console.log(typeof dimension) // "function"
@@ -277,10 +287,10 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
 /**
  * JSON-text codec for {@link OntologyEmbeddings}.
  *
- * @example
+ * **Example** (Use OntologyEmbeddingsJson)
  * ```ts
  * import * as S from "effect/Schema"
- * import { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * console.log(S.isSchema(OntologyEmbeddingsJson)) // true
  * ```
@@ -289,6 +299,7 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
  * @since 0.0.0
  */
 export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("OntologyEmbeddingsJson", {
     description: "JSON string codec for versioned ontology-embedding artifacts.",
     toArbitrary: () => S.toArbitrary(OntologyEmbeddingsJsonDefinition),
@@ -298,9 +309,9 @@ export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
 /**
  * Runtime value decoded by {@link OntologyEmbeddingsJson}.
  *
- * @example
+ * **Example** (Use OntologyEmbeddingsJson)
  * ```ts
- * import type { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import type { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * const inspect = (value: OntologyEmbeddingsJson): number => value.dimension
  * console.log(typeof inspect) // "function"

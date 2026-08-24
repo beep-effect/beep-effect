@@ -193,7 +193,6 @@ const projectTimeline = (
                   tool_call: (item) =>
                     O.some(
                       ThreadStoreServer.Thread.TimelineToolCallItem.make({
-                        kind: "tool_call",
                         name: item.name,
                       })
                     ),

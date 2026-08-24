@@ -1,10 +1,10 @@
 /**
  * Batch State Bridge Service
  *
- * Bridges BatchStateHub (internal state changes) to EventBroadcastHub (WebSocket clients).
- * This unifies batch state updates with the WebSocket event stream, allowing the frontend
- * to receive all updates (batch states, extraction events, curation events) through a
- * single WebSocket connection.
+ * **Details**
+ *
+ * Bridges BatchStateHub updates into the canonical extraction EventLog group.
+ * EventBridge then forwards the validated journal entries to WebSocket clients.
  *
  * Architecture:
  * ```
@@ -12,20 +12,22 @@
  *                                              ↓
  *                                    BatchStateBridge (this service)
  *                                              ↓
- *                               EventBroadcastHub.broadcast()
+ *                              EventBusService.publishExtractionEvent()
+ *                                              ↓
+ *                              EventBridge → EventBroadcastHub
  *                                              ↓
  *                                    WebSocket clients
  * ```
  *
- * @since 2.0.0
- * @module Service/BatchStateBridge
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Fiber, Layer, PubSub, Stream } from "effect";
-import type { BatchState } from "../Domain/Model/BatchWorkflow.ts";
-import { broadcastDomainEvent } from "../Runtime/EventBroadcastRouter.ts";
+import { Cause, Context, Effect, Exit, Layer, PubSub, Ref, Stream } from "effect";
+import { OntologyName } from "../Domain/Identity.ts";
 import { BatchStateHub } from "./BatchState.ts";
+import { EventBusService } from "./EventBus.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/BatchStateBridge");
 
@@ -36,11 +38,15 @@ const $I = $ScratchpadId.create("effect-ontology/Service/BatchStateBridge");
 /**
  * BatchStateBridge service
  *
+ * **Details**
+ *
  * Manages the background fiber that bridges BatchStateHub to EventBroadcastHub.
  * The bridge starts automatically when the service is created and runs until
  * the scope is closed.
  *
- * @since 2.0.0
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface BatchStateBridgeShape {
   /**
@@ -49,132 +55,77 @@ export interface BatchStateBridgeShape {
   readonly isRunning: Effect.Effect<boolean>;
 }
 
-export class BatchStateBridge extends Context.Service<BatchStateBridge, BatchStateBridgeShape>()($I `BatchStateBridge`) {}
+/**
+ * Provides the batch state bridge service capability.
+ *
+ * **Example** (Inspect batch state bridge)
+ *
+ * ```ts
+ * import { BatchStateBridge } from "@effect-ontology/Service/BatchStateBridge"
+ *
+ * console.log(BatchStateBridge)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class BatchStateBridge extends Context.Service<BatchStateBridge, BatchStateBridgeShape>()(
+  $I`BatchStateBridge`
+) {}
 
 // =============================================================================
 // Implementation
 // =============================================================================
 
 /**
- * Convert a BatchState to a BroadcastEvent payload
- */
-const toBroadcastPayload = (state: BatchState) => ({
-  batchId: state.batchId,
-  ontologyId: state.ontologyId,
-  stage: state._tag,
-  manifestUri: state.manifestUri,
-  ontologyVersion: state.ontologyVersion,
-  createdAt: state.createdAt.toString(),
-  updatedAt: state.updatedAt.toString(),
-  // Include stage-specific details
-  ...getStageDetails(state),
-});
-
-/**
- * Extract stage-specific details for the broadcast payload
- */
-const getStageDetails = (state: BatchState): Record<string, unknown> => {
-  switch (state._tag) {
-    case "Pending":
-      return { documentCount: state.documentCount };
-
-    case "Preprocessing":
-      return {
-        documentsTotal: state.documentsTotal,
-        documentsClassified: state.documentsClassified,
-        documentsFailed: state.documentsFailed,
-        enrichedManifestUri: state.enrichedManifestUri,
-      };
-
-    case "Extracting":
-      return {
-        documentsTotal: state.documentsTotal,
-        documentsCompleted: state.documentsCompleted,
-        documentsFailed: state.documentsFailed,
-        currentDocumentId: state.currentDocumentId,
-        progress: state.documentsTotal > 0 ? Math.round((state.documentsCompleted / state.documentsTotal) * 100) : 0,
-      };
-
-    case "Resolving":
-      return {
-        extractionOutputUri: state.extractionOutputUri,
-        entitiesTotal: state.entitiesTotal,
-        clustersFormed: state.clustersFormed,
-      };
-
-    case "Validating":
-      return {
-        resolvedGraphUri: state.resolvedGraphUri,
-        validationStartedAt: state.validationStartedAt.toString(),
-      };
-
-    case "Ingesting":
-      return {
-        validatedGraphUri: state.validatedGraphUri,
-        triplesTotal: state.triplesTotal,
-        triplesIngested: state.triplesIngested,
-        progress: state.triplesTotal > 0 ? Math.round((state.triplesIngested / state.triplesTotal) * 100) : 0,
-      };
-
-    case "Complete":
-      return {
-        canonicalGraphUri: state.canonicalGraphUri,
-        stats: state.stats,
-        completedAt: state.completedAt.toString(),
-      };
-
-    case "Failed":
-      return {
-        failedAt: state.failedAt.toString(),
-        failedInStage: state.failedInStage,
-        error: state.error,
-        lastSuccessfulStage: state.lastSuccessfulStage,
-      };
-
-    default:
-      return {};
-  }
-};
-
-/**
  * Create the BatchStateBridge service
  *
- * Subscribes to BatchStateHub and broadcasts state changes to EventBroadcastHub.
+ * Subscribes to BatchStateHub and publishes canonical BatchStateChanged events.
  * The bridge runs as a background fiber and is automatically cleaned up when
  * the service scope closes.
  */
 const makeBatchStateBridge = Effect.gen(function* () {
   const batchStateHub = yield* BatchStateHub;
+  const eventBus = yield* EventBusService;
   const subscription = yield* PubSub.subscribe(batchStateHub);
-  let running = true;
-  const fiber = yield* Stream.fromSubscription(subscription).pipe(
+  const running = yield* Ref.make(true);
+  const bridge = Stream.fromSubscription(subscription).pipe(
     Stream.tap(
-      Effect.fn("BatchStateBridge.broadcastState")(function* (state) {
-        yield* Effect.logDebug("Bridging batch state to WebSocket", {
+      Effect.fn("BatchStateBridge.publishStateChanged")(function* (state) {
+        const ontologyId = yield* OntologyName.decodeEffect(state.ontologyId);
+        yield* Effect.logDebug("Publishing canonical batch state event", {
           batchId: state.batchId,
-          ontologyId: state.ontologyId,
+          ontologyId,
           stage: state._tag,
         });
-        yield* broadcastDomainEvent(state.ontologyId, {
-          event: "BatchStateChanged",
-          primaryKey: `batch:${state.batchId}`,
-          payload: toBroadcastPayload(state),
+        yield* eventBus.publishExtractionEvent("BatchStateChanged", {
+          batchId: state.batchId,
+          ontologyId,
+          state,
+          timestamp: state.updatedAt,
         });
       })
     ),
     Stream.runDrain,
-    Effect.forkChild
+    Effect.onExit((exit) =>
+      Exit.match(exit, {
+        onSuccess: () => Effect.logInfo("BatchStateBridge stream completed"),
+        onFailure: (cause) => {
+          if (Cause.hasInterruptsOnly(cause)) {
+            return Effect.logInfo("BatchStateBridge stopped");
+          }
+          return Effect.logError("BatchStateBridge failed", {
+            cause: Cause.pretty(cause),
+          });
+        },
+      })
+    ),
+    Effect.ensuring(Ref.set(running, false))
   );
-  yield* Effect.addFinalizer(
-    Effect.fn("BatchStateBridge.finalize")(function* () {
-      running = false;
-      yield* Fiber.interrupt(fiber);
-      yield* Effect.logInfo("BatchStateBridge stopped");
-    }, Effect.orDie)
-  );
+  yield* Effect.forkScoped(bridge);
   yield* Effect.logInfo("BatchStateBridge started");
   return BatchStateBridge.of({
-    isRunning: Effect.succeed(running),
+    isRunning: Ref.get(running),
   });
 });
 
@@ -185,25 +136,37 @@ const makeBatchStateBridge = Effect.gen(function* () {
 /**
  * Layer for BatchStateBridge
  *
- * Requires BatchStateHub and EventBroadcastHub to be provided.
+ * **Details**
+ *
+ * Requires BatchStateHub and EventBusService to be provided.
  * Runs as a scoped service - the bridge fiber is cleaned up when the layer scope closes.
  *
- * @example
+ * **Example** (Use BatchStateBridgeLive)
+ *
  * ```ts
- * const AppLayer = Layer.mergeAll(
- *   BatchStateHubLayer,
- *   EventBroadcastHubMemory,
- *   BatchStateBridgeLive
- * )
+ * import { Layer } from "effect"
+ * import { BatchStateBridgeLive } from "@effect-ontology/Service/BatchStateBridge"
+ *
+ * console.log(Layer.isLayer(BatchStateBridgeLive)) // true
  * ```
  *
- * @since 2.0.0
+ * @category layers
+ * @since 0.0.0
  */
 export const BatchStateBridgeLive = Layer.effect(BatchStateBridge, makeBatchStateBridge);
 
 /**
  * Default layer (alias for BatchStateBridgeLive)
  *
- * @since 2.0.0
+ * **Example** (Inspect batch state bridge default)
+ *
+ * ```ts
+ * import { BatchStateBridgeDefault } from "@effect-ontology/Service/BatchStateBridge"
+ *
+ * console.log(BatchStateBridgeDefault)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const BatchStateBridgeDefault = BatchStateBridgeLive;

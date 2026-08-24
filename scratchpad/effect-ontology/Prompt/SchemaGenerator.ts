@@ -55,8 +55,8 @@ const schemaIdentifierForStage = Match.type<RuleSet["stage"]>().pipe(
  * **Example** (Describe mention extraction)
  *
  * ```ts
- * import { generateSchemaDescription } from "@effect-ontology/Prompt/SchemaGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { generateSchemaDescription } from "@effect-ontology/Prompt/SchemaGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(generateSchemaDescription(makeMentionRuleSet()).startsWith("CRITICAL RULES:")) // true
  * ```
@@ -78,8 +78,8 @@ export const generateSchemaDescription = (ruleSet: RuleSet): string =>
  * **Example** (Title mention extraction)
  *
  * ```ts
- * import { generateSchemaTitle } from "@effect-ontology/Prompt/SchemaGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { generateSchemaTitle } from "@effect-ontology/Prompt/SchemaGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(generateSchemaTitle(makeMentionRuleSet())) // "Mention Extraction"
  * ```
@@ -97,8 +97,8 @@ export const generateSchemaTitle = (ruleSet: RuleSet): string => schemaTitleForS
  * **Example** (Identify relation output)
  *
  * ```ts
- * import { generateSchemaIdentifier } from "@effect-ontology/Prompt/SchemaGenerator.ts"
- * import { makeRelationRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { generateSchemaIdentifier } from "@effect-ontology/Prompt/SchemaGenerator"
+ * import { makeRelationRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(generateSchemaIdentifier(makeRelationRuleSet([], []))) // "RelationGraph"
  * ```
@@ -136,8 +136,8 @@ const ruleForField = (ruleSet: RuleSet, fieldPath: string): O.Option<ExtractionR
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { getFieldDescription } from "@effect-ontology/Prompt/SchemaGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { getFieldDescription } from "@effect-ontology/Prompt/SchemaGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(O.isSome(getFieldDescription(makeMentionRuleSet(), "mentions.id"))) // true
  * ```
@@ -163,8 +163,8 @@ export const getFieldDescription = dual2(
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { getFieldValidationTemplate } from "@effect-ontology/Prompt/SchemaGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { getFieldValidationTemplate } from "@effect-ontology/Prompt/SchemaGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(O.isSome(getFieldValidationTemplate(makeMentionRuleSet(), "mentions.id"))) // true
  * ```
@@ -189,7 +189,7 @@ export const getFieldValidationTemplate = dual2(
  * **Example** (Create generated annotations)
  *
  * ```ts
- * import { GeneratedSchemaAnnotations } from "@effect-ontology/Prompt/SchemaGenerator.ts"
+ * import { GeneratedSchemaAnnotations } from "@effect-ontology/Prompt/SchemaGenerator"
  *
  * const annotations = GeneratedSchemaAnnotations.make({
  *   identifier: "MentionGraph",
@@ -234,8 +234,8 @@ export class GeneratedSchemaAnnotations extends S.Class<GeneratedSchemaAnnotatio
  * **Example** (Generate mention annotations)
  *
  * ```ts
- * import { generateSchemaAnnotations } from "@effect-ontology/Prompt/SchemaGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { generateSchemaAnnotations } from "@effect-ontology/Prompt/SchemaGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(generateSchemaAnnotations(makeMentionRuleSet()).identifier) // "MentionGraph"
  * ```
@@ -258,8 +258,8 @@ export const generateSchemaAnnotations = (ruleSet: RuleSet): GeneratedSchemaAnno
  * **Example** (Find identifier rules)
  *
  * ```ts
- * import { findRulesByCategory } from "@effect-ontology/Prompt/SchemaGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { findRulesByCategory } from "@effect-ontology/Prompt/SchemaGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(findRulesByCategory(makeMentionRuleSet(), "id_format").length) // 1
  * ```
@@ -281,8 +281,8 @@ export const findRulesByCategory = dual2(
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { findRuleById } from "@effect-ontology/Prompt/SchemaGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { findRuleById } from "@effect-ontology/Prompt/SchemaGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(O.isSome(findRuleById(makeMentionRuleSet(), "mention-id-format"))) // true
  * ```

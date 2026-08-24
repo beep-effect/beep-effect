@@ -8,6 +8,7 @@
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -554,7 +555,7 @@ const decodeTaskAggregateRows = S.decodeUnknownEffect(S.Array(TaskAggregateRow))
 const decodeBenchmarkAggregateRows = S.decodeUnknownEffect(S.Array(BenchmarkAggregateRow));
 const decodeCoverageRows = S.decodeUnknownEffect(S.Array(CoverageCountsRow));
 const decodeExpectedChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.String)));
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const encodeLabelQueueJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsLabelQueueResult));
 const encodeOutcomeLabelJson = S.encodeUnknownEffect(S.fromJsonString(OutcomeLabel));
 const encodeBenchmarkCaseJson = S.encodeUnknownEffect(S.fromJsonString(BenchmarkCase));

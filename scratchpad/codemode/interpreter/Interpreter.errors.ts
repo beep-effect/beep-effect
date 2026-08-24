@@ -1,3 +1,4 @@
+import { Unknown } from "@beep/schema/Unknown";
 import type { SafeObject } from "@beep/schema/SafeObject";
 import { PosInt } from "@beep/schema";
 import { A, O, P, Str, pipe } from "@beep/utils";
@@ -79,7 +80,7 @@ export const normalizeError = (error: unknown): DiagnosticModel =>
             : P.isObject(value) && P.hasProperty(value, "message") && P.isString(value.message)
               ? value.message
               : pipe(
-                  S.encodeUnknownResult(S.fromJsonString(S.Unknown))(copyOut(value, "json")),
+                  Unknown.encodeUnknownResultFromJsonString(copyOut(value, "json")),
                   Result.getOrElse(() => renderUnknown(value))
                 );
         return DiagnosticModel.new("ExecutionFailure", `Uncaught: ${message}`);

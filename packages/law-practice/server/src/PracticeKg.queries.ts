@@ -160,9 +160,9 @@ SELECT iri, kind, natural_key AS "naturalKey", label, docket_family AS "docketFa
   client, epistemic_status AS "epistemicStatus", provenance_kind AS "provenanceKind",
   provenance_ref AS "provenanceRef", NULL::FLOAT8 AS count
 FROM kg_node
-WHERE ($1 IS NOT NULL AND iri = $1)
-   OR ($2 IS NOT NULL AND natural_key = $2)
-   OR ($3 IS NOT NULL AND natural_key = $3)
+WHERE (CAST($1 AS TEXT) IS NOT NULL AND iri = CAST($1 AS TEXT))
+   OR (CAST($2 AS TEXT) IS NOT NULL AND natural_key = CAST($2 AS TEXT))
+   OR (CAST($3 AS TEXT) IS NOT NULL AND natural_key = CAST($3 AS TEXT))
 ORDER BY kind, natural_key`,
   provenanceDocument: `
 SELECT d.digest, d.docket, d.docket_family AS family, d.organized_relative_path AS "organizedPath",

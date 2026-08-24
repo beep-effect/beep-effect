@@ -12,8 +12,9 @@ import { getRunIdFromText } from "../../Service/ExtractionRun.ts";
 import { createExtractionStarted, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
 
 describe("Round 5 canonical boundaries", () => {
-  it.effect("constructs progress event identity and time through canonical schemas", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "constructs progress event identity and time through canonical schemas",
+    Effect.fnUntraced(function* () {
       const runId = ExtractionRunId.make("doc-deadbeefcafe");
       const builder = yield* makeProgressBuilder(runId, PosInt.make(2));
       const event = yield* createExtractionStarted(builder, {

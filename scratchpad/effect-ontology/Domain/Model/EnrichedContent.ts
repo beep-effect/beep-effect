@@ -33,9 +33,9 @@ const LanguageCode = S.String.check(
 /**
  * Classification assigned to an ingested content source.
  *
- * @example
+ * **Example** (Use SourceType)
  * ```ts
- * import { SourceType } from "@effect-ontology/Model/EnrichedContent.ts"
+ * import { SourceType } from "@effect-ontology/Model/EnrichedContent"
  *
  * console.log(SourceType.is.academic("academic")) // true
  * console.log(SourceType.is.news("blog")) // false
@@ -57,9 +57,9 @@ export const SourceType = LiteralKit(["news", "blog", "press_release", "official
 /**
  * Runtime value accepted by {@link SourceType}.
  *
- * @example
+ * **Example** (Use SourceType)
  * ```ts
- * import type { SourceType } from "@effect-ontology/Model/EnrichedContent.ts"
+ * import type { SourceType } from "@effect-ontology/Model/EnrichedContent"
  *
  * const source: SourceType = "official"
  * console.log(source) // "official"
@@ -70,79 +70,30 @@ export const SourceType = LiteralKit(["news", "blog", "press_release", "official
  */
 export type SourceType = typeof SourceType.Type;
 
-const EnrichedContentFields = {
-  headline: S.NonEmptyString.annotateKey({
-    description: "Main title extracted from or generated for the source.",
-  }),
-  description: S.NonEmptyString.annotateKey({
-    description: "Short summary of the source's principal content.",
-  }),
-  sourceType: SourceType.annotateKey({
-    description: "Classification assigned to the source.",
-  }),
-  publishedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Original publication instant when the source provides one.",
-    })
-  ),
-  author: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Attributed author when one can be identified.",
-    })
-  ),
-  organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Publishing organization when one can be identified.",
-    })
-  ),
-  keyEntities: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({
-      description: "Prominent named entities detected in the source.",
-    })
-  ),
-  topics: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({
-      description: "Topic labels assigned to the source.",
-    })
-  ),
-  language: LanguageCode.pipe(
-    SchemaUtils.withKeyDefaults("en"),
-    S.annotateKey({
-      description: "Detected ISO 639-1 language code, defaulting to English.",
-    })
-  ),
-  wordCount: NonNegativeInt.annotateKey({
-    description: "Approximate number of words in the source.",
-  }),
-} as const;
-
 /**
  * AI-derived metadata for one ingested content source.
  *
- * @remarks
- * All source absence is normalized to `Option`, while collections and language
+ * **Details**
+ *
+ * * All source absence is normalized to `Option`, while collections and language
  * receive schema-level defaults. Consumers therefore never need nullish
  * fallback branches for enrichment metadata.
  *
- * @example
+ * **Example** (Use EnrichedContent)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
+ * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent"
  *
- * const content = S.decodeUnknownSync(EnrichedContent)({
+ * const content = S.decodeUnknownOption(EnrichedContent)({
  *   headline: "Council approves transit plan",
  *   description: "The measure funds a light-rail expansion.",
  *   sourceType: "news",
  *   wordCount: 847
  * })
  *
- * console.log(content.language) // "en"
- * console.log(content.hasAuthor) // false
+ * console.log(O.map(content, (value) => value.language)) // "en"
+ * console.log(O.map(content, (value) => value.hasAuthor)) // false
  * ```
  *
  * @invariant `wordCount` is a non-negative integer and `language` is a
@@ -151,7 +102,56 @@ const EnrichedContentFields = {
  * @since 0.0.0
  */
 export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent`)(
-  EnrichedContentFields,
+  {
+    headline: S.NonEmptyString.annotateKey({
+      description: "Main title extracted from or generated for the source.",
+    }),
+    description: S.NonEmptyString.annotateKey({
+      description: "Short summary of the source's principal content.",
+    }),
+    sourceType: SourceType.annotateKey({
+      description: "Classification assigned to the source.",
+    }),
+    publishedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Original publication instant when the source provides one.",
+      })
+    ),
+    author: S.OptionFromNullishOr(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Attributed author when one can be identified.",
+      })
+    ),
+    organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Publishing organization when one can be identified.",
+      })
+    ),
+    keyEntities: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({
+        description: "Prominent named entities detected in the source.",
+      })
+    ),
+    topics: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({
+        description: "Topic labels assigned to the source.",
+      })
+    ),
+    language: LanguageCode.pipe(
+      SchemaUtils.withKeyDefaults("en"),
+      S.annotateKey({
+        description: "Detected ISO 639-1 language code, defaulting to English.",
+      })
+    ),
+    wordCount: NonNegativeInt.annotateKey({
+      description: "Approximate number of words in the source.",
+    }),
+  },
   $I.annote("EnrichedContent", {
     description: "Normalized AI-derived metadata for search, filtering, provenance, and display.",
   })
@@ -165,18 +165,19 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
   /**
    * Whether this value carries non-empty author attribution.
    *
-   * @example
+   * **Example** (Use JinaContentFields)
    * ```ts
+   * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
-   * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
+   * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent"
    *
-   * const content = S.decodeUnknownSync(EnrichedContent)({
+   * const content = S.decodeUnknownOption(EnrichedContent)({
    *   headline: "Example",
    *   description: "Example description",
    *   sourceType: "news",
    *   wordCount: 2
    * })
-   * console.log(content.hasAuthor) // false
+   * console.log(O.map(content, (value) => value.hasAuthor)) // false
    * ```
    *
    * @returns `true` when normalized author attribution is present and non-empty.
@@ -188,15 +189,16 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
   /**
    * Whether this value carries an original publication instant.
    *
-   * @example
+   * **Example** (Use JinaContentFields)
    * ```ts
-   * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
+   * import { NonNegativeInt } from "@beep/schema"
+   * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent"
    *
    * const content = EnrichedContent.make({
    *   headline: "Example",
    *   description: "Example description",
    *   sourceType: "news",
-   *   wordCount: 2
+   *   wordCount: NonNegativeInt.make(2)
    * })
    * console.log(content.hasPublicationDate) // false
    * ```
@@ -208,74 +210,74 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
   }
 }
 
-const JinaContentFields = {
-  url: URLStr.annotateKey({
-    description: "Original URL fetched by the reader.",
-  }),
-  title: S.NonEmptyString.annotateKey({
-    description: "Page title reported or extracted by the reader.",
-  }),
-  content: S.String.annotateKey({
-    description: "Cleaned Markdown content returned by the reader.",
-  }),
-  length: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Reader-reported character count when available.",
-    })
-  ),
-  description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Page metadata description when available.",
-    })
-  ),
-  publishedDate: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Publication date text reported by the remote page.",
-    })
-  ),
-  siteName: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "OpenGraph or metadata site name when available.",
-    })
-  ),
-  image: S.OptionFromOptionalKey(URLStr).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Featured-image URL when provided by the page.",
-    })
-  ),
-} as const;
-
 /**
  * Cleaned page content returned by a Jina-compatible reader.
  *
- * @remarks
- * Optional transport fields are decoded directly into `Option`. `wordCount`
+ * **Details**
+ *
+ * * Optional transport fields are decoded directly into `Option`. `wordCount`
  * derives from the cleaned Markdown content and ignores runs of whitespace.
  *
- * @example
+ * **Example** (Use JinaContent)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
+ * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
  *
- * const page = S.decodeUnknownSync(JinaContent)({
+ * const page = S.decodeUnknownOption(JinaContent)({
  *   url: "https://example.com/article",
  *   title: "Example",
  *   content: "one  two\nthree"
  * })
  *
- * console.log(page.wordCount) // 3
+ * console.log(O.map(page, (value) => value.wordCount)) // 3
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
-  JinaContentFields,
+  {
+    url: URLStr.annotateKey({
+      description: "Original URL fetched by the reader.",
+    }),
+    title: S.NonEmptyString.annotateKey({
+      description: "Page title reported or extracted by the reader.",
+    }),
+    content: S.String.annotateKey({
+      description: "Cleaned Markdown content returned by the reader.",
+    }),
+    length: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Reader-reported character count when available.",
+      })
+    ),
+    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Page metadata description when available.",
+      })
+    ),
+    publishedDate: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Publication date text reported by the remote page.",
+      })
+    ),
+    siteName: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "OpenGraph or metadata site name when available.",
+      })
+    ),
+    image: S.OptionFromOptionalKey(URLStr).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Featured-image URL when provided by the page.",
+      })
+    ),
+  },
   $I.annote("JinaContent", {
     description: "Normalized cleaned Markdown response returned by a remote content reader.",
   })
@@ -289,17 +291,18 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
   /**
    * Approximate count of non-empty whitespace-delimited words.
    *
-   * @example
+   * **Example** (Use EnrichedContent)
    * ```ts
+   * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
-   * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
+   * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
    *
-   * const page = S.decodeUnknownSync(JinaContent)({
+   * const page = S.decodeUnknownOption(JinaContent)({
    *   url: "https://example.com",
    *   title: "Example",
    *   content: "one  two\nthree"
    * })
-   * console.log(page.wordCount) // 3
+   * console.log(O.map(page, (value) => value.wordCount)) // 3
    * ```
    *
    * @returns The number of non-empty whitespace-delimited segments.
@@ -311,12 +314,13 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
   /**
    * Reported character count, falling back to the cleaned content length.
    *
-   * @example
+   * **Example** (Use EnrichedContent)
    * ```ts
-   * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
+   * import { URLStr } from "@beep/schema/URL"
+   * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
    *
    * const page = JinaContent.make({
-   *   url: "https://example.com",
+   *   url: URLStr.make("https://example.com"),
    *   title: "Example",
    *   content: "hello"
    * })

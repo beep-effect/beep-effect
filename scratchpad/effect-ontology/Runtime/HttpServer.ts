@@ -1,16 +1,32 @@
+/**
+ * Public effect-ontology APIs for runtime/http server.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { DrizzleError } from "@beep/drizzle";
 import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { UUID } from "@beep/schema/String";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Cause, Effect, Layer } from "effect";
+import {
+  Cause,
+  DateTime,
+  Effect,
+  Equal,
+  HashSet,
+  Inspectable,
+  Layer,
+  MutableHashMap,
+  MutableHashSet,
+  Random,
+} from "effect";
 import * as A from "effect/Array";
-import * as DateTime from "effect/DateTime";
-import * as HashSet from "effect/HashSet";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
@@ -21,7 +37,7 @@ import type { BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../Domain/Schema/Batch.ts";
 import type { PreprocessingOptions } from "../Domain/Schema/BatchRequest.ts";
 import { BatchRequest } from "../Domain/Schema/BatchRequest.ts";
-import { ClaimId, ClaimRank, TextSpan } from "../Domain/Schema/KnowledgeModel.ts";
+import { ClaimRank, TextSpan } from "../Domain/Schema/KnowledgeModel.ts";
 import {
   ArticleSearchRequest,
   ArticleSearchResponse,
@@ -35,13 +51,17 @@ import {
   SuggestionQuery,
   SuggestionsResponse,
 } from "../Domain/Schema/Search.ts";
-import type { CorrectionSummary } from "../Domain/Schema/Timeline.ts";
 import {
   ArticleDetailResponse,
   ArticleSummary,
+  ClaimConflict,
   ClaimWithRank,
   ConflictsQuery,
   ConflictsResponse,
+  ConflictTransition,
+  CorrectionSummary,
+  PersistedClaimId,
+  PersistedCorrectionId,
   TimelineClaimsQuery,
   TimelineClaimsResponse,
   TimelineEntityQuery,
@@ -49,6 +69,8 @@ import {
 } from "../Domain/Schema/Timeline.ts";
 import { ArticleRepository } from "../Repository/Article.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
+import type { ConflictRecord } from "../Repository/Conflict.ts";
+import { ConflictRepository } from "../Repository/Conflict.ts";
 import type { ArticleRow, ClaimRow } from "../Repository/schema.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { OntologyService } from "../Service/Ontology.ts";
@@ -58,7 +80,12 @@ import { AssetRouter } from "./AssetRouter.ts";
 import { AuthRouter } from "./AuthRouter.ts";
 import { EventBroadcastRouter } from "./EventBroadcastRouter.ts";
 import { HealthCheckService } from "./HealthCheck.ts";
-import { makeAuthMiddleware, makeLoggingMiddleware, makeShutdownMiddleware } from "./HttpMiddleware.ts";
+import {
+  CurrentConflictActor,
+  makeAuthMiddleware,
+  makeLoggingMiddleware,
+  makeShutdownMiddleware,
+} from "./HttpMiddleware.ts";
 import { ImageRouter } from "./ImageRouter.ts";
 import { InferenceRouter } from "./InferenceRouter.ts";
 import { LinkIngestionRouter } from "./LinkIngestionRouter.ts";
@@ -84,7 +111,13 @@ const generateBatchId = randomIdFragment.pipe(Effect.map((fragment) => BatchId.m
 
 const generateDocumentId = randomIdFragment.pipe(Effect.map((fragment) => DocumentId.make(`doc-${fragment}`)));
 
-const createManifest = Effect.fn(function* (request: BatchRequest) {
+const OntologyScopeQuery = S.Struct({ ontologyId: S.NonEmptyString }).annotate({
+  identifier: "OntologyScopeQuery",
+  title: "Ontology Scope Query",
+  description: "Required ontology scope for repository-backed HTTP lookups.",
+});
+
+const createManifest = Effect.fn("HttpServer.createManifest")(function* (request: BatchRequest) {
   const storage = yield* StorageService;
   const now = yield* DateTime.now;
   const batchId = yield* O.match(request.batchId, {
@@ -102,12 +135,12 @@ const createManifest = Effect.fn(function* (request: BatchRequest) {
       const sizeBytes = yield* O.match(doc.sizeBytes, {
         onSome: Effect.succeed,
         onNone: () =>
-          storage.get(stripGsPrefix(doc.sourceUri)).pipe(
+          storage.getOption(stripGsPrefix(doc.sourceUri)).pipe(
             Effect.map((content) =>
-              O.match(O.fromNullishOr(content), {
-                onNone: () => NonNegativeInt.make(0),
-                onSome: (content) => NonNegativeInt.make(new TextEncoder().encode(content).length),
-              })
+              O.getOrElse(
+                O.map(content, (value) => NonNegativeInt.make(new TextEncoder().encode(value).length)),
+                () => NonNegativeInt.make(0)
+              )
             )
           ),
       });
@@ -133,11 +166,11 @@ const createManifest = Effect.fn(function* (request: BatchRequest) {
   });
 });
 
-const stageManifest = Effect.fn(function* (manifest: BatchManifest) {
+const stageManifest = Effect.fn("HttpServer.stageManifest")(function* (manifest: BatchManifest) {
   const storage = yield* StorageService;
   const config = yield* ConfigService;
 
-  const manifestJson = yield* S.encodeEffect(S.fromJsonString(BatchManifest))(manifest);
+  const manifestJson = yield* BatchManifest.encodeEffectFromJsonString(manifest);
   const manifestPath = PathLayout.batch.manifest(manifest.batchId);
 
   yield* storage.set(manifestPath, manifestJson);
@@ -175,9 +208,9 @@ const toPayload = (
 // Timeline API Helpers
 // =============================================================================
 
-const articleRowToArticleSummary = Effect.fn(function* (article: ArticleRow) {
+const articleRowToArticleSummary = Effect.fn("HttpServer.articleRowToArticleSummary")(function* (article: ArticleRow) {
   const now = yield* DateTime.now;
-  const uri = yield* S.decodeEffect(IRI)(article.uri);
+  const uri = yield* IRI.decodeEffect(article.uri);
   return ArticleSummary.make({
     id: article.id,
     uri,
@@ -188,15 +221,18 @@ const articleRowToArticleSummary = Effect.fn(function* (article: ArticleRow) {
   });
 });
 
-const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: ArticleRow) {
+const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(function* (
+  claim: ClaimRow,
+  article: ArticleRow
+) {
   const now = yield* DateTime.now;
-  const subject = yield* S.decodeEffect(IRI)(claim.subjectIri);
-  const predicate = yield* S.decodeEffect(IRI)(claim.predicateIri);
-  const rank = yield* S.decodeUnknownEffect(ClaimRank)(claim.rank);
+  const subject = yield* IRI.decodeEffect(claim.subjectIri);
+  const predicate = yield* IRI.decodeEffect(claim.predicateIri);
+  const rank = yield* ClaimRank.decodeEffect(claim.rank);
   const source = yield* articleRowToArticleSummary(article);
   const object =
     claim.objectType === "iri"
-      ? makeNamedNode(yield* S.decodeEffect(IRI)(claim.objectValue))
+      ? makeNamedNode(yield* IRI.decodeEffect(claim.objectValue))
       : makeLiteral(
           claim.objectValue,
           claim.objectDatatype ?? XSD_STRING.value,
@@ -211,7 +247,7 @@ const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: A
       : O.none();
   const confidence = yield* O.match(O.fromNullishOr(claim.confidenceScore), {
     onNone: () => Effect.succeed(O.none()),
-    onSome: (value) => S.decodeEffect(UnitInterval)(Number(value)).pipe(Effect.map(O.some)),
+    onSome: (value) => UnitInterval.decodeEffect(Number(value)).pipe(Effect.map(O.some)),
   });
   const evidence = yield* O.match(
     O.all({
@@ -221,12 +257,12 @@ const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: A
     }),
     {
       onNone: () => Effect.succeed(O.none()),
-      onSome: (span) => S.decodeEffect(TextSpan)(span).pipe(Effect.map(O.some)),
+      onSome: flow(TextSpan.decodeEffect, Effect.map(O.some)),
     }
   );
 
   return ClaimWithRank.make({
-    id: ClaimId.make(`claim-${Str.takeLeft(12)(Str.replace(/-/g, "")(claim.id))}`),
+    id: PersistedClaimId.make(claim.id),
     subject,
     predicate,
     object,
@@ -243,10 +279,86 @@ const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: A
   });
 });
 
+const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClaimConflict")(function* (
+  record: ConflictRecord
+) {
+  const articleRepo = yield* ArticleRepository;
+  const articleA = yield* articleRepo.getArticle(record.claimA.articleId, record.conflict.ontologyId);
+  const articleB = yield* articleRepo.getArticle(record.claimB.articleId, record.conflict.ontologyId);
+  const requireArticle = (article: O.Option<ArticleRow>, claimId: string) =>
+    Effect.fromOption(article, () =>
+      DrizzleError.fromUnknown("decodeRows", {
+        claimId,
+        reason: "Conflict references a claim whose article is unavailable in the ontology scope.",
+      })
+    );
+  const claimA = yield* claimRowToClaimWithRank(record.claimA, yield* requireArticle(articleA, record.claimA.id));
+  const claimB = yield* claimRowToClaimWithRank(record.claimB, yield* requireArticle(articleB, record.claimB.id));
+  const base = {
+    id: record.conflict.id,
+    ontologyId: record.conflict.ontologyId,
+    conflictType: record.conflict.conflictType,
+    claimA,
+    claimB,
+  };
+
+  if (Equal.equals(record.conflict.status, "pending")) {
+    return ClaimConflict.cases.pending.make(base);
+  }
+
+  const resolvedBy = yield* Effect.fromOption(O.fromNullishOr(record.conflict.resolvedBy), () =>
+    DrizzleError.fromUnknown("decodeRows", { conflictId: record.conflict.id, missing: "resolvedBy" })
+  );
+  const resolvedAt = yield* Effect.fromOption(O.fromNullishOr(record.conflict.resolvedAt), () =>
+    DrizzleError.fromUnknown("decodeRows", { conflictId: record.conflict.id, missing: "resolvedAt" })
+  );
+  if (Equal.equals(record.conflict.status, "ignored")) {
+    return ClaimConflict.cases.ignored.make({
+      ...base,
+      resolution: {
+        resolvedBy,
+        resolvedAt: DateTime.fromDateUnsafe(resolvedAt),
+        notes: O.fromNullishOr(record.conflict.resolutionNotes),
+      },
+    });
+  }
+
+  const strategy = yield* Effect.fromOption(O.fromNullishOr(record.conflict.resolutionStrategy), () =>
+    DrizzleError.fromUnknown("decodeRows", { conflictId: record.conflict.id, missing: "resolutionStrategy" })
+  );
+  const acceptedClaimId = yield* Effect.fromOption(O.fromNullishOr(record.conflict.acceptedClaimId), () =>
+    DrizzleError.fromUnknown("decodeRows", { conflictId: record.conflict.id, missing: "acceptedClaimId" })
+  );
+  return ClaimConflict.cases.resolved.make({
+    ...base,
+    resolution: {
+      strategy,
+      acceptedClaimId: Equal.equals(acceptedClaimId, record.claimA.id) ? claimA.id : claimB.id,
+      resolvedBy,
+      resolvedAt: DateTime.fromDateUnsafe(resolvedAt),
+      notes: O.fromNullishOr(record.conflict.resolutionNotes),
+    },
+  });
+});
+
 // =============================================================================
 // Timeline Router
 // =============================================================================
 
+/**
+ * Validates and represents timeline router values at runtime.
+ *
+ * **Example** (Inspect timeline router)
+ *
+ * ```ts
+ * import { TimelineRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(TimelineRouter)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const TimelineRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -263,26 +375,25 @@ export const TimelineRouter = HttpRouter.addAll([
           { status: 400 }
         );
       }
-      const decodedIri = yield* S.decodeEffect(IRI)(decodeURIComponent(iri));
-      const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineEntityQuery).pipe(
-        Effect.orElseSucceed(() => TimelineEntityQuery.make({}))
-      );
+      const decodedIri = yield* IRI.decodeEffect(decodeURIComponent(iri));
+      const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineEntityQuery);
 
       const claimRepo = yield* ClaimRepository;
       const articleRepo = yield* ArticleRepository;
 
       // Get claims for this entity
       const claims = yield* claimRepo.getClaims({
+        ontologyId: queryParams.ontologyId,
         subjectIri: decodedIri,
         includeDeprecated: queryParams.includeDeprecated,
-        limit: 100,
+        limit: PosInt.make(100),
       });
 
       // Get articles for each claim
       const claimsWithArticles = yield* Effect.forEach(
         claims,
-        Effect.fn(function* (claim) {
-          const articleOpt = yield* articleRepo.getArticle(claim.articleId);
+        Effect.fnUntraced(function* (claim) {
+          const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
           }
@@ -305,24 +416,48 @@ export const TimelineRouter = HttpRouter.addAll([
         return true;
       });
 
-      // Get corrections (simplified - would need correction repository)
-      const correctionsList: Array<CorrectionSummary> = [];
+      const correctionSourceClaims = queryParams.includeDeprecated
+        ? claims
+        : yield* claimRepo.getClaims({
+            ontologyId: queryParams.ontologyId,
+            subjectIri: decodedIri,
+            includeDeprecated: true,
+          });
+      const correctionEntries = yield* Effect.forEach(
+        correctionSourceClaims,
+        (claim) => claimRepo.getCorrectionChain(claim.id),
+        { concurrency: "unbounded" }
+      );
+      const correctionsList = A.map(
+        A.dedupeWith(A.flatten(correctionEntries), (left, right) =>
+          Equal.equals(left.correction.id, right.correction.id)
+        ),
+        (entry) =>
+          CorrectionSummary.make({
+            id: PersistedCorrectionId.make(entry.correction.id),
+            correctionType: entry.correction.correctionType,
+            reason: O.fromNullishOr(entry.correction.reason),
+            correctionDate: DateTime.fromDateUnsafe(entry.correction.correctionDate),
+            originalClaimId: PersistedClaimId.make(entry.originalClaimId),
+            newClaimId: O.map(entry.newClaimId, PersistedClaimId.make),
+          })
+      );
 
-      return yield* HttpServerResponse.schemaJson(TimelineEntityResponse)({
-        iri: decodedIri,
-        asOf: queryParams.asOf,
-        claims: validClaims,
-        corrections: correctionsList,
-      });
+      return yield* HttpServerResponse.schemaJson(TimelineEntityResponse)(
+        TimelineEntityResponse.make({
+          iri: decodedIri,
+          asOf: queryParams.asOf,
+          claims: validClaims,
+          corrections: correctionsList,
+        })
+      );
     })
   ),
   HttpRouter.route(
     "GET",
     "/v1/timeline/claims",
     Effect.gen(function* () {
-      const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineClaimsQuery).pipe(
-        Effect.orElseSucceed(() => TimelineClaimsQuery.make({}))
-      );
+      const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineClaimsQuery);
 
       const claimRepo = yield* ClaimRepository;
       const articleRepo = yield* ArticleRepository;
@@ -332,10 +467,11 @@ export const TimelineRouter = HttpRouter.addAll([
 
       // Get claims with filters
       const claims = yield* claimRepo.getClaims({
+        ontologyId: queryParams.ontologyId,
         ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
         ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
         ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
-        limit: limit + 1, // Fetch one extra to check hasMore
+        limit: PosInt.make(limit + 1), // Fetch one extra to check hasMore
         offset,
       });
 
@@ -345,8 +481,8 @@ export const TimelineRouter = HttpRouter.addAll([
       // Get articles for each claim
       const claimsWithArticles = yield* Effect.forEach(
         claimResults,
-        Effect.fn(function* (claim) {
-          const articleOpt = yield* articleRepo.getArticle(claim.articleId);
+        Effect.fnUntraced(function* (claim) {
+          const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
           }
@@ -362,18 +498,21 @@ export const TimelineRouter = HttpRouter.addAll([
 
       // Get total count
       const total = yield* claimRepo.countClaims({
+        ontologyId: queryParams.ontologyId,
         ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
         ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
         ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
       });
 
-      return yield* HttpServerResponse.schemaJson(TimelineClaimsResponse)({
-        claims: validClaims,
-        total: NonNegativeInt.make(total),
-        limit: PosInt.make(limit),
-        offset: NonNegativeInt.make(offset),
-        hasMore,
-      });
+      return yield* HttpServerResponse.schemaJson(TimelineClaimsResponse)(
+        TimelineClaimsResponse.make({
+          claims: validClaims,
+          total: NonNegativeInt.make(total),
+          limit: PosInt.make(limit),
+          offset: NonNegativeInt.make(offset),
+          hasMore,
+        })
+      );
     })
   ),
   HttpRouter.route(
@@ -394,9 +533,11 @@ export const TimelineRouter = HttpRouter.addAll([
 
       const articleRepo = yield* ArticleRepository;
       const claimRepo = yield* ClaimRepository;
+      const conflictRepo = yield* ConflictRepository;
+      const queryParams = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
 
       // Get article
-      const articleOpt = yield* articleRepo.getArticle(articleId);
+      const articleOpt = yield* articleRepo.getArticle(articleId, queryParams.ontologyId);
       if (O.isNone(articleOpt)) {
         return yield* HttpServerResponse.json(
           {
@@ -409,7 +550,7 @@ export const TimelineRouter = HttpRouter.addAll([
       const article = articleOpt.value;
 
       // Get all claims for this article
-      const claims = yield* claimRepo.getClaimsByArticle(articleId);
+      const claims = yield* claimRepo.getClaimsByArticle(articleId, queryParams.ontologyId);
 
       // Transform claims
       const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article));
@@ -417,31 +558,67 @@ export const TimelineRouter = HttpRouter.addAll([
       // Count unique entities (subjects)
       const uniqueSubjects = HashSet.fromIterable(A.map(claims, (claim) => claim.subjectIri));
 
-      // TODO: Count conflicts when ConflictRepository is implemented
-      const conflictCount = 0;
+      const conflictCounts = yield* conflictRepo.counts(
+        ConflictsQuery.make({ ontologyId: queryParams.ontologyId, articleId: O.some(UUID.make(articleId)) })
+      );
 
-      return yield* HttpServerResponse.schemaJson(ArticleDetailResponse)({
-        article: yield* articleRowToArticleSummary(article),
-        claims: claimsWithRank,
-        entityCount: NonNegativeInt.make(HashSet.size(uniqueSubjects)),
-        conflictCount: NonNegativeInt.make(conflictCount),
-      });
+      return yield* HttpServerResponse.schemaJson(ArticleDetailResponse)(
+        ArticleDetailResponse.make({
+          article: yield* articleRowToArticleSummary(article),
+          claims: claimsWithRank,
+          entityCount: NonNegativeInt.make(HashSet.size(uniqueSubjects)),
+          conflictCount: NonNegativeInt.make(conflictCounts.total),
+        })
+      );
     })
   ),
   HttpRouter.route(
     "GET",
     "/v1/timeline/conflicts",
     Effect.gen(function* () {
-      yield* HttpServerRequest.schemaSearchParams(ConflictsQuery).pipe(
-        Effect.orElseSucceed(() => ConflictsQuery.make({}))
+      const query = yield* HttpServerRequest.schemaSearchParams(ConflictsQuery);
+      const conflictRepo = yield* ConflictRepository;
+      const records = yield* conflictRepo.list(query);
+      const counts = yield* conflictRepo.counts(query);
+      return yield* HttpServerResponse.schemaJson(ConflictsResponse)(
+        ConflictsResponse.make({
+          conflicts: yield* Effect.forEach(records, conflictRecordToClaimConflict),
+          total: NonNegativeInt.make(counts.total),
+          pendingCount: NonNegativeInt.make(counts.pending),
+        })
       );
+    })
+  ),
+  HttpRouter.route(
+    "PATCH",
+    "/v1/timeline/conflicts/:id",
+    Effect.gen(function* () {
+      const params = yield* HttpRouter.params;
+      const id = yield* S.decodeUnknownEffect(UUID)(params.id);
+      const query = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
+      const action = yield* HttpServerRequest.schemaBodyJson(ConflictTransition);
+      const actor = yield* CurrentConflictActor;
+      const conflictRepo = yield* ConflictRepository;
+      const transitioned = yield* conflictRepo.transition(query.ontologyId, id, action, actor);
 
-      // For now, return empty conflicts (would need ConflictRepository)
-      // TODO: Use query parameters for filtering when ConflictRepository is implemented
-      return yield* HttpServerResponse.schemaJson(ConflictsResponse)({
-        conflicts: [],
-        total: NonNegativeInt.make(0),
-        pendingCount: NonNegativeInt.make(0),
+      if (O.isSome(transitioned)) {
+        return yield* HttpServerResponse.schemaJson(ClaimConflict)(
+          yield* conflictRecordToClaimConflict(transitioned.value)
+        );
+      }
+
+      const existing = yield* conflictRepo.get(query.ontologyId, id);
+      return yield* O.match(existing, {
+        onNone: () =>
+          HttpServerResponse.json(
+            { error: "NOT_FOUND", message: `Conflict "${id}" was not found in the requested ontology.` },
+            { status: 404 }
+          ),
+        onSome: () =>
+          HttpServerResponse.json(
+            { error: "CONFLICT_ALREADY_TERMINAL", message: `Conflict "${id}" is already resolved or ignored.` },
+            { status: 409 }
+          ),
       });
     })
   ),
@@ -451,6 +628,20 @@ export const TimelineRouter = HttpRouter.addAll([
 // Search Router
 // =============================================================================
 
+/**
+ * Validates and represents search router values at runtime.
+ *
+ * **Example** (Inspect search router)
+ *
+ * ```ts
+ * import { SearchRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(SearchRouter)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const SearchRouter = HttpRouter.addAll([
   HttpRouter.route(
     "POST",
@@ -461,11 +652,11 @@ export const SearchRouter = HttpRouter.addAll([
           HttpServerResponse.json(
             {
               error: "VALIDATION_ERROR",
-              message: error.toString(),
+              message: Inspectable.toStringUnknown(error, 0),
             },
             { status: 400 }
           ),
-        onSuccess: Effect.fn(function* (request) {
+        onSuccess: Effect.fnUntraced(function* (request) {
           const claimRepo = yield* ClaimRepository;
           const articleRepo = yield* ArticleRepository;
 
@@ -476,6 +667,7 @@ export const SearchRouter = HttpRouter.addAll([
           // Note: Full-text search would require pg_trgm or ts_vector
           // For now, we do a simple query and filter in memory
           const claims = yield* claimRepo.getClaims({
+            ontologyId: request.ontologyId,
             ...(O.isSome(request.rank) ? { rank: request.rank.value } : {}),
             includeDeprecated: false,
           });
@@ -491,7 +683,7 @@ export const SearchRouter = HttpRouter.addAll([
 
           const claimsWithArticles = yield* Effect.forEach(predicateMatched, (claim) =>
             Effect.gen(function* () {
-              const articleOpt = yield* articleRepo.getArticle(claim.articleId);
+              const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
               if (O.isNone(articleOpt)) {
                 return O.none<ClaimWithRank>();
               }
@@ -521,15 +713,17 @@ export const SearchRouter = HttpRouter.addAll([
           const validClaims = A.take(A.drop(filteredClaims, offset), limit);
           const hasMore = filteredClaims.length > offset + limit;
 
-          return yield* HttpServerResponse.schemaJson(ClaimSearchResponse)({
-            query: request.query,
-            claims: validClaims,
-            total: NonNegativeInt.make(filteredClaims.length),
-            limit,
-            offset,
-            hasMore,
-            facets: O.none(),
-          });
+          return yield* HttpServerResponse.schemaJson(ClaimSearchResponse)(
+            ClaimSearchResponse.make({
+              query: request.query,
+              claims: validClaims,
+              total: NonNegativeInt.make(filteredClaims.length),
+              limit,
+              offset,
+              hasMore,
+              facets: O.none(),
+            })
+          );
         }),
       })
     )
@@ -543,26 +737,31 @@ export const SearchRouter = HttpRouter.addAll([
           HttpServerResponse.json(
             {
               error: "VALIDATION_ERROR",
-              message: error.toString(),
+              message: Inspectable.toStringUnknown(error, 0),
             },
             { status: 400 }
           ),
-        onSuccess: Effect.fn(function* (request) {
+        onSuccess: Effect.fnUntraced(function* (request) {
           const claimRepo = yield* ClaimRepository;
 
           const limit = request.limit;
 
           // Get all claims to find unique subjects
           const claims = yield* claimRepo.getClaims({
+            ontologyId: request.ontologyId,
             includeDeprecated: false,
-            limit: 1000,
+            limit: PosInt.make(1000),
           });
 
           // Group by subject and filter by query
           const queryLower = Str.toLowerCase(request.query);
           const subjectMap = MutableHashMap.empty<
             string,
-            { iri: string; claimCount: number; types: MutableHashSet.MutableHashSet<string> }
+            {
+              iri: string;
+              claimCount: number;
+              types: MutableHashSet.MutableHashSet<string>;
+            }
           >();
 
           for (const claim of claims) {
@@ -600,8 +799,8 @@ export const SearchRouter = HttpRouter.addAll([
           );
           const entities = yield* Effect.forEach(entityCandidates, (entity) =>
             Effect.gen(function* () {
-              const iri = yield* S.decodeEffect(IRI)(entity.iri);
-              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type));
+              const iri = yield* IRI.decodeEffect(entity.iri);
+              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => IRI.decodeEffect(type));
               const label = O.filter(A.last(Str.split(/[#/]/)(entity.iri)), Str.isNonEmpty);
               return EntitySearchResult.make({
                 iri,
@@ -613,11 +812,13 @@ export const SearchRouter = HttpRouter.addAll([
             })
           );
 
-          return yield* HttpServerResponse.schemaJson(EntitySearchResponse)({
-            query: request.query,
-            entities,
-            total: NonNegativeInt.make(entities.length),
-          });
+          return yield* HttpServerResponse.schemaJson(EntitySearchResponse)(
+            EntitySearchResponse.make({
+              query: request.query,
+              entities,
+              total: NonNegativeInt.make(entities.length),
+            })
+          );
         }),
       })
     )
@@ -648,8 +849,9 @@ export const SearchRouter = HttpRouter.addAll([
 
       // Get claims and extract unique subjects
       const claims = yield* claimRepo.getClaims({
+        ontologyId: queryParams.ontologyId,
         includeDeprecated: false,
-        limit: 500,
+        limit: PosInt.make(500),
       });
 
       const prefixLower = Str.toLowerCase(queryParams.prefix);
@@ -669,7 +871,7 @@ export const SearchRouter = HttpRouter.addAll([
         }
       }
       const suggestionList = yield* Effect.forEach(suggestionIris, (suggestion) =>
-        S.decodeEffect(IRI)(suggestion.iri).pipe(
+        IRI.decodeEffect(suggestion.iri).pipe(
           Effect.map((iri) =>
             Suggestion.make({
               label: suggestion.label,
@@ -681,10 +883,12 @@ export const SearchRouter = HttpRouter.addAll([
         )
       );
 
-      return yield* HttpServerResponse.schemaJson(SuggestionsResponse)({
-        prefix: queryParams.prefix,
-        suggestions: suggestionList,
-      });
+      return yield* HttpServerResponse.schemaJson(SuggestionsResponse)(
+        SuggestionsResponse.make({
+          prefix: queryParams.prefix,
+          suggestions: suggestionList,
+        })
+      );
     })
   ),
   HttpRouter.route(
@@ -696,13 +900,14 @@ export const SearchRouter = HttpRouter.addAll([
           HttpServerResponse.json(
             {
               error: "VALIDATION_ERROR",
-              message: error.toString(),
+              message: Inspectable.toStringUnknown(error, 0),
             },
             { status: 400 }
           ),
-        onSuccess: Effect.fn(function* (request) {
+        onSuccess: Effect.fnUntraced(function* (request) {
           const articleRepo = yield* ArticleRepository;
           const claimRepo = yield* ClaimRepository;
+          const conflictRepo = yield* ConflictRepository;
 
           const limit = request.limit;
           const offset = request.offset;
@@ -711,6 +916,7 @@ export const SearchRouter = HttpRouter.addAll([
 
           // Get articles with filters
           const articles = yield* articleRepo.getArticles({
+            ontologyId: request.ontologyId,
             ...(O.isSome(request.dateRange)
               ? {
                   publishedAfter: DateTime.toDateUtc(request.dateRange.value.from),
@@ -742,29 +948,38 @@ export const SearchRouter = HttpRouter.addAll([
           // Get claim counts
           const results = yield* Effect.forEach(
             page,
-            Effect.fn(function* (article) {
+            Effect.fnUntraced(function* (article) {
               const claims = yield* claimRepo.getClaims({
+                ontologyId: request.ontologyId,
                 articleId: article.id,
                 includeDeprecated: true,
               });
+              const conflictCounts = yield* conflictRepo.counts(
+                ConflictsQuery.make({
+                  ontologyId: request.ontologyId,
+                  articleId: O.some(UUID.make(article.id)),
+                })
+              );
 
               return ArticleSearchResult.make({
                 article: yield* articleRowToArticleSummary(article),
                 claimCount: NonNegativeInt.make(claims.length),
-                conflictCount: NonNegativeInt.make(0), // Would need ConflictRepository
+                conflictCount: NonNegativeInt.make(conflictCounts.total),
               });
             })
           );
 
           const total = NonNegativeInt.make(filtered.length);
 
-          return yield* HttpServerResponse.schemaJson(ArticleSearchResponse)({
-            articles: results,
-            total: NonNegativeInt.make(total),
-            limit,
-            offset,
-            hasMore,
-          });
+          return yield* HttpServerResponse.schemaJson(ArticleSearchResponse)(
+            ArticleSearchResponse.make({
+              articles: results,
+              total: NonNegativeInt.make(total),
+              limit,
+              offset,
+              hasMore,
+            })
+          );
         }),
       })
     )
@@ -804,6 +1019,20 @@ const extractionRouteHandler = Effect.gen(function* () {
   return yield* startExtraction(decoded.value);
 });
 
+/**
+ * Exposes extraction router for composition by callers of this module.
+ *
+ * **Example** (Inspect extraction router)
+ *
+ * ```ts
+ * import { ExtractionRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(ExtractionRouter)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const ExtractionRouter = HttpRouter.addAll([
   HttpRouter.route("POST", "/v1/extract/batch", extractionRouteHandler),
   HttpRouter.route("POST", "/v1/extract", extractionRouteHandler),
@@ -821,13 +1050,33 @@ export const ExtractionRouter = HttpRouter.addAll([
       return yield* pollToBatchState(id).pipe(
         Effect.flatMap((state) => HttpServerResponse.json(state)),
         Effect.catch((error) =>
-          HttpServerResponse.json({ error: "NOT_FOUND", message: String(error) }, { status: 404 })
+          HttpServerResponse.json(
+            {
+              error: "NOT_FOUND",
+              message: Inspectable.toStringUnknown(error),
+            },
+            { status: 404 }
+          )
         )
       );
     })
   ),
 ]);
 
+/**
+ * Exposes health router for composition by callers of this module.
+ *
+ * **Example** (Inspect health router)
+ *
+ * ```ts
+ * import { HealthRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(HealthRouter)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const HealthRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -861,6 +1110,20 @@ export const HealthRouter = HttpRouter.addAll([
 // Ontology Router
 // =============================================================================
 
+/**
+ * Exposes ontology router for composition by callers of this module.
+ *
+ * **Example** (Inspect ontology router)
+ *
+ * ```ts
+ * import { OntologyRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(OntologyRouter)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const OntologyRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -878,7 +1141,10 @@ export const OntologyRouter = HttpRouter.addAll([
       return yield* O.match(entry, {
         onNone: () =>
           HttpServerResponse.json(
-            { error: "NOT_FOUND", message: `Ontology "${id}" not found in registry` },
+            {
+              error: "NOT_FOUND",
+              message: `Ontology "${id}" not found in registry`,
+            },
             { status: 404 }
           ),
         onSome: (value) => HttpServerResponse.json(value),
@@ -891,6 +1157,20 @@ export const OntologyRouter = HttpRouter.addAll([
 // Combined Router
 // =============================================================================
 
+/**
+ * Exposes api router for composition by callers of this module.
+ *
+ * **Example** (Inspect api router)
+ *
+ * ```ts
+ * import { ApiRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(ApiRouter)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ApiRouter = Layer.mergeAll(
   HealthRouter,
   ExtractionRouter,
@@ -905,6 +1185,20 @@ export const ApiRouter = Layer.mergeAll(
   AuthRouter
 );
 
+/**
+ * Exposes api router without repositories for composition by callers of this module.
+ *
+ * **Example** (Inspect api router without repositories)
+ *
+ * ```ts
+ * import { ApiRouterWithoutRepositories } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(ApiRouterWithoutRepositories)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ApiRouterWithoutRepositories = Layer.mergeAll(
   HealthRouter,
   ExtractionRouter,
@@ -928,7 +1222,10 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
         middleware: (app) =>
           app.pipe(
             Effect.catchCause(
-              Effect.fn(function* (cause) {
+              Effect.fnUntraced(function* (cause) {
+                if (Cause.hasInterrupts(cause)) {
+                  return yield* Effect.failCause(cause);
+                }
                 const requestId = Math.abs(yield* Random.nextInt).toString(16);
 
                 yield* Effect.logError("Unhandled error in HTTP handler", {
@@ -944,17 +1241,6 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
                       type: "defect",
                     },
                     { status: 500 }
-                  );
-                }
-
-                if (Cause.hasInterrupts(cause)) {
-                  return yield* HttpServerResponse.json(
-                    {
-                      error: "Request was cancelled",
-                      requestId,
-                      type: "interrupted",
-                    },
-                    { status: 503 }
                   );
                 }
 
@@ -978,6 +1264,34 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
     })
   );
 
+/**
+ * Provides the Effect layer for http server live dependencies.
+ *
+ * **Example** (Inspect http server live)
+ *
+ * ```ts
+ * import { HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(HttpServerLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const HttpServerLive = makeHttpServerLive(ApiRouter);
 
+/**
+ * Provides the Effect layer for http server without repositories live dependencies.
+ *
+ * **Example** (Inspect http server without repositories live)
+ *
+ * ```ts
+ * import { HttpServerWithoutRepositoriesLive } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(HttpServerWithoutRepositoriesLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const HttpServerWithoutRepositoriesLive = makeHttpServerLive(ApiRouterWithoutRepositories);

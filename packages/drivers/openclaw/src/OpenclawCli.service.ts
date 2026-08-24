@@ -14,6 +14,7 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { Context, Duration, Effect, flow, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -275,7 +276,7 @@ const decodeChannelAccount = S.decodeUnknownEffect(OpenclawChannelAccountStatus)
 const decodeChannelAccountEnvelope = S.decodeUnknownEffect(OpenclawChannelAccountEnvelopeWire);
 const decodeChannelsStatusWire = S.decodeUnknownEffect(S.fromJsonString(OpenclawChannelsStatusWire));
 const decodeGatewayHealthWire = S.decodeUnknownEffect(S.fromJsonString(OpenclawGatewayHealthWire));
-const decodeJsonDocument = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeJsonDocument = Unknown.decodeUnknownEffectFromJsonString;
 const decodeSecretsReloadOutput = S.decodeUnknownEffect(S.fromJsonString(OpenclawSecretsReloadOutput));
 const decodeSkillInventory = S.decodeUnknownEffect(S.fromJsonString(OpenclawSkillInventory));
 const decodeTelegramSendResult = S.decodeUnknownEffect(S.fromJsonString(OpenclawTelegramSendResult));

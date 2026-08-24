@@ -240,7 +240,7 @@ export const CitingApplicationIdentity = S.Union([UsptoCitingApplication, WipoCi
       "Law-owned union of the accepted citing-application representations: normalized USPTO and canonical WIPO ST.13.",
   }),
   S.toTaggedUnion("kind"),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**

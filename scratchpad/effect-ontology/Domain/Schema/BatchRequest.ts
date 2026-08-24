@@ -1,8 +1,9 @@
 /**
  * Public batch-submission request schemas.
  *
- * @remarks
- * Optional boundary fields decode to `Option`, and omitted preprocessing
+ * **Details**
+ *
+ * * Optional boundary fields decode to `Option`, and omitted preprocessing
  * configuration decodes to the complete canonical default.
  *
  * @packageDocumentation
@@ -19,25 +20,27 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/BatchRequest");
 /**
  * One stored source document submitted for batch extraction.
  *
- * @remarks
- * Server-generated identifiers, size observations, and real-world timestamps
+ * **Details**
+ *
+ * * Server-generated identifiers, size observations, and real-world timestamps
  * are represented as `Option`; downstream logic never inspects nullish values.
  *
- * @example
+ * **Example** (Use BatchRequestDocument)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BatchRequestDocument } from "@effect-ontology/Schema/BatchRequest.ts"
+ * import { BatchRequestDocument } from "@effect-ontology/Schema/BatchRequest"
  *
- * const document = S.decodeUnknownSync(BatchRequestDocument)({
+ * const document = S.decodeUnknownOption(BatchRequestDocument)({
  *   sourceUri: "gs://beep-input/documents/report.pdf",
  *   contentType: "application/pdf"
  * })
- * console.log(document.sourceUri)
+ * console.log(O.map(document, (value) => value.sourceUri))
  * ```
  *
  * @invariant Size, when present, is a non-negative integer and content type is
  * a recognized MIME type.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`BatchRequestDocument`)(
@@ -48,25 +51,29 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
     contentType: MimeType.annotateKey({
       description: "Recognized MIME type of the stored source document.",
     }),
-    sizeBytes: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    sizeBytes: NonNegativeInt.pipe(
+      S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Optional non-negative source size in bytes.",
       })
     ),
-    documentId: S.OptionFromOptionalKey(DocumentId).pipe(
+    documentId: DocumentId.pipe(
+      S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Optional caller-supplied document identifier; absence requests server derivation.",
       })
     ),
-    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
+    eventTime: S.DateTimeUtcFromString.pipe(
+      S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Optional UTC instant of the real-world event described by the document.",
       })
     ),
-    publishedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
+    publishedAt: S.DateTimeUtcFromString.pipe(
+      S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Optional UTC instant at which the original source was published.",
@@ -84,17 +91,19 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
 /**
  * Request to launch one ontology-scoped extraction batch.
  *
- * @remarks
- * At least one document is required. Omitting `preprocessing` supplies
+ * **Details**
+ *
+ * * At least one document is required. Omitting `preprocessing` supplies
  * {@link defaultPreprocessingOptions}; optional generated or derived fields are
  * normalized to `Option`.
  *
- * @example
+ * **Example** (Use BatchRequest)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest.ts"
+ * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest"
  *
- * const request = S.decodeUnknownSync(BatchRequest)({
+ * const request = S.decodeUnknownOption(BatchRequest)({
  *   ontologyId: "premier-league",
  *   ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
  *   ontologyVersion:
@@ -107,12 +116,12 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
  *     }
  *   ]
  * })
- * console.log(request.preprocessing.enabled) // true
+ * console.log(O.map(request, (value) => value.preprocessing.enabled)) // true
  * ```
  *
  * @invariant Contains at least one validated document and a complete
  * preprocessing policy.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
@@ -168,9 +177,9 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
    * @returns An Effect that succeeds with a complete request or fails with a
    * schema parse error.
    *
-   * @example
+   * **Example** (Use decode)
    * ```ts
-   * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest.ts"
+   * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest"
    *
    * const decode = BatchRequest.decode({
    *   ontologyId: "premier-league",
@@ -193,16 +202,16 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
   /** Derived runtime guard for validated batch requests. */
   static readonly is = S.is(BatchRequest);
 
-  static readonly decodeUnknownOption = S.decodeUnknownOption(BatchRequest)
+  static readonly decodeUnknownOption = S.decodeUnknownOption(BatchRequest);
 }
 
 export {
   /**
    * Canonical default preprocessing policy retained for source-path parity.
    *
-   * @example
+   * **Example** (Use BatchRequest)
    * ```ts
-   * import { defaultPreprocessingOptions } from "@effect-ontology/Schema/BatchRequest.ts"
+   * import { defaultPreprocessingOptions } from "@effect-ontology/Schema/BatchRequest"
    *
    * console.log(defaultPreprocessingOptions.enabled) // true
    * ```
@@ -214,12 +223,13 @@ export {
   /**
    * Schema-backed preprocessing policy retained for source-path parity.
    *
-   * @example
+   * **Example** (Use BatchRequest)
    * ```ts
+   * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
-   * import { PreprocessingOptions } from "@effect-ontology/Schema/BatchRequest.ts"
+   * import { PreprocessingOptions } from "@effect-ontology/Schema/BatchRequest"
    *
-   * console.log(S.decodeUnknownSync(PreprocessingOptions)({}).enabled) // true
+   * console.log(O.map(S.decodeUnknownOption(PreprocessingOptions)({}), (value) => value.enabled)) // true
    * ```
    *
    * @category configuration

@@ -1,15 +1,20 @@
 /**
  * Router: Asset Download API
  *
+ * **Details**
+ *
  * HTTP endpoints for downloading raw assets: documents, RDF graphs,
  * validation reports, and link content.
  *
- * @since 2.0.0
- * @module Runtime/AssetRouter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import { Effect, Option, Schema } from "effect";
+import { Unknown } from "@beep/schema/Unknown";
+import { Effect, Inspectable } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -20,6 +25,21 @@ import { StorageService } from "../Service/Storage.ts";
 // Asset Router
 // =============================================================================
 
+/**
+ * Validates and represents asset router values at runtime.
+ *
+ * **Example** (Validate asset router)
+ *
+ * ```ts
+ * import { Layer } from "effect"
+ * import { AssetRouter } from "@effect-ontology/Runtime/AssetRouter"
+ *
+ * console.log(Layer.isLayer(AssetRouter)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const AssetRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -48,21 +68,17 @@ export const AssetRouter = HttpRouter.addAll([
       const storage = yield* StorageService;
       const path = PathLayout.document.input(docId);
 
-      const content = yield* storage.get(path).pipe(
-        Effect.map((optContent) => optContent ?? null),
-        Effect.catch((error) =>
-          Effect.gen(function* () {
-            yield* Effect.logWarning("Storage error fetching document content", {
-              path,
-              docId,
-              error: String(error),
-            });
-            return null;
+      const content = yield* storage.getOption(path).pipe(
+        Effect.tapError((error) =>
+          Effect.logWarning("Storage error fetching document content", {
+            path,
+            docId,
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
 
-      if (content === null) {
+      if (O.isNone(content)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -72,7 +88,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      return HttpServerResponse.text(content, {
+      return HttpServerResponse.text(content.value, {
         headers: {
           "Content-Type": "text/plain; charset=utf-8",
           "Cache-Control": "public, max-age=86400", // 24 hours
@@ -107,21 +123,17 @@ export const AssetRouter = HttpRouter.addAll([
       const storage = yield* StorageService;
       const path = PathLayout.document.graph(docId);
 
-      const content = yield* storage.get(path).pipe(
-        Effect.map((optContent) => optContent ?? null),
-        Effect.catch(
-          Effect.fn(function* (error) {
-            yield* Effect.logWarning("Storage error fetching document graph", {
-              path,
-              docId,
-              error: String(error),
-            });
-            return null;
+      const content = yield* storage.getOption(path).pipe(
+        Effect.tapError((error) =>
+          Effect.logWarning("Storage error fetching document graph", {
+            path,
+            docId,
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
 
-      if (content === null) {
+      if (O.isNone(content)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -131,7 +143,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      return HttpServerResponse.text(content, {
+      return HttpServerResponse.text(content.value, {
         headers: {
           "Content-Type": "text/turtle; charset=utf-8",
           "Cache-Control": "public, max-age=31536000, immutable", // Immutable RDF
@@ -160,9 +172,9 @@ export const AssetRouter = HttpRouter.addAll([
       const storage = yield* StorageService;
 
       // Get the link to find the storage URI
-      const link = yield* linkService.getById(linkId).pipe(Effect.map((optLink) => Option.getOrNull(optLink)));
+      const link = yield* linkService.getById(linkId);
 
-      if (link === null) {
+      if (O.isNone(link)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -173,7 +185,7 @@ export const AssetRouter = HttpRouter.addAll([
       }
 
       // Verify ontology matches
-      if (link.ontologyId !== ontologyId) {
+      if (link.value.ontologyId !== ontologyId) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -184,21 +196,17 @@ export const AssetRouter = HttpRouter.addAll([
       }
 
       // Get the content from storage
-      const content = yield* storage.get(link.storageUri).pipe(
-        Effect.map((optContent) => optContent ?? null),
-        Effect.catch((error) =>
-          Effect.gen(function* () {
-            yield* Effect.logWarning("Storage error fetching link content", {
-              storageUri: link.storageUri,
-              linkId,
-              error: String(error),
-            });
-            return null;
+      const content = yield* storage.getOption(link.value.storageUri).pipe(
+        Effect.tapError((error) =>
+          Effect.logWarning("Storage error fetching link content", {
+            storageUri: link.value.storageUri,
+            linkId,
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
 
-      if (content === null) {
+      if (O.isNone(content)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -208,11 +216,11 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      return HttpServerResponse.text(content, {
+      return HttpServerResponse.text(content.value, {
         headers: {
           "Content-Type": "text/markdown; charset=utf-8",
           "Cache-Control": "public, max-age=31536000, immutable", // Content-addressed
-          ETag: `"${link.contentHash}"`,
+          ETag: `"${link.value.contentHash}"`,
         },
       });
     })
@@ -234,8 +242,8 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = Schema.decodeOption(BatchId)(rawBatchId);
-      if (Option.isNone(decodedBatchId)) {
+      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
+      if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
@@ -249,21 +257,17 @@ export const AssetRouter = HttpRouter.addAll([
       const storage = yield* StorageService;
       const path = PathLayout.batch.validationReport(validatedBatchId);
 
-      const content = yield* storage.get(path).pipe(
-        Effect.map((optContent) => optContent ?? null),
-        Effect.catch(
-          Effect.fn(function* (error) {
-            yield* Effect.logWarning("Storage error fetching validation report", {
-              path,
-              batchId: rawBatchId,
-              error: String(error),
-            });
-            return null;
+      const content = yield* storage.getOption(path).pipe(
+        Effect.tapError((error) =>
+          Effect.logWarning("Storage error fetching validation report", {
+            path,
+            batchId: rawBatchId,
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
 
-      if (content === null) {
+      if (O.isNone(content)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -274,11 +278,9 @@ export const AssetRouter = HttpRouter.addAll([
       }
 
       // Parse and return as JSON using Effect
-      const report = yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(content).pipe(
-        Effect.orElseSucceed(() => null)
-      );
+      const report = yield* Unknown.decodeEffectFromJsonString(content.value).pipe(Effect.option);
 
-      if (report === null) {
+      if (O.isNone(report)) {
         return yield* HttpServerResponse.json(
           {
             error: "PARSE_ERROR",
@@ -288,7 +290,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      return yield* HttpServerResponse.json(report, {
+      return yield* HttpServerResponse.json(report.value, {
         headers: {
           "Cache-Control": "public, max-age=86400", // 24 hours
         },
@@ -312,8 +314,8 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = Schema.decodeOption(BatchId)(rawBatchId);
-      if (Option.isNone(decodedBatchId)) {
+      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
+      if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
@@ -327,21 +329,17 @@ export const AssetRouter = HttpRouter.addAll([
       const storage = yield* StorageService;
       const path = PathLayout.batch.canonical(validatedBatchId);
 
-      const content = yield* storage.get(path).pipe(
-        Effect.map((content) => (P.isUndefined(content) ? null : content)),
-        Effect.catch(
-          Effect.fn(function* (error) {
-            yield* Effect.logWarning("Storage error fetching canonical graph", {
-              path,
-              batchId: rawBatchId,
-              error: String(error),
-            });
-            return null;
+      const content = yield* storage.getOption(path).pipe(
+        Effect.tapError((error) =>
+          Effect.logWarning("Storage error fetching canonical graph", {
+            path,
+            batchId: rawBatchId,
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
 
-      if (content === null) {
+      if (O.isNone(content)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -351,7 +349,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      return HttpServerResponse.text(content, {
+      return HttpServerResponse.text(content.value, {
         headers: {
           "Content-Type": "text/turtle; charset=utf-8",
           "Cache-Control": "public, max-age=31536000, immutable",

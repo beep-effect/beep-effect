@@ -6,11 +6,11 @@
  * @since 0.0.0
  */
 
+import { Unknown } from "@beep/schema/Unknown";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const decodeJsonTextOption = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
+const decodeJsonTextOption = Unknown.decodeUnknownOptionFromJsonString;
 
 const characterAt = (text: string, index: number): string | undefined => O.getOrUndefined(Str.charAt(text, index));
 

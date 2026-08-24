@@ -1,11 +1,13 @@
 /**
  * Service: Assertion
  *
+ * **Details**
+ *
  * High-level service for managing curated assertions derived from claims.
  * Assertions represent accepted facts in the knowledge base after curation.
  *
- * @since 2.0.0
- * @module Service/Assertion
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -15,12 +17,12 @@ import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNod
 import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { Context, Data, DateTime, Effect, HashMap, Layer, Option, Ref } from "effect";
-import * as Clock from "effect/Clock";
+import { Clock, Context, DateTime, Effect, HashMap, Layer, Order, Random, Ref } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
 import * as S from "effect/Schema";
+import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { ContentHash } from "../Domain/Identity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type { AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
@@ -69,10 +71,23 @@ const canonicalQuad = (input: {
 /**
  * Input for creating an assertion from claims
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the CreateAssertionInput contract)
+ *
+ * ```ts
+ * import type { CreateAssertionInput } from "@effect-ontology/Service/Assertion"
+ *
+ * const acceptsCreateAssertionInput = (_value: CreateAssertionInput): void => undefined
+ *
+ * console.log(acceptsCreateAssertionInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CreateAssertionInput {
+  /** Ontology scope shared by all source claims */
+  readonly ontologyId: string;
   /** Claim IDs this assertion is derived from */
   readonly claimIds: ReadonlyArray<string>;
   /** How the assertion was created */
@@ -93,8 +108,19 @@ export interface CreateAssertionInput {
 /**
  * Filter for querying assertions
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the AssertionFilter contract)
+ *
+ * ```ts
+ * import type { AssertionFilter } from "@effect-ontology/Service/Assertion"
+ *
+ * const acceptsAssertionFilter = (_value: AssertionFilter): void => undefined
+ *
+ * console.log(acceptsAssertionFilter)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface AssertionFilter {
   readonly subjectIri?: string;
@@ -108,8 +134,19 @@ export interface AssertionFilter {
 /**
  * Assertion with full provenance information
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the AssertionWithProvenance contract)
+ *
+ * ```ts
+ * import type { AssertionWithProvenance } from "@effect-ontology/Service/Assertion"
+ *
+ * const acceptsAssertionWithProvenance = (_value: AssertionWithProvenance): void => undefined
+ *
+ * console.log(acceptsAssertionWithProvenance)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface AssertionWithProvenance {
   readonly assertion: AssertionRow;
@@ -119,11 +156,23 @@ export interface AssertionWithProvenance {
 /**
  * Internal assertion row type (matches what we store)
  *
- * @since 2.0.0
- * @category Types
+ *
+ * **Example** (Use the AssertionRow contract)
+ *
+ * ```ts
+ * import type { AssertionRow } from "@effect-ontology/Service/Assertion"
+ *
+ * const acceptsAssertionRow = (_value: AssertionRow): void => undefined
+ *
+ * console.log(acceptsAssertionRow)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface AssertionRow {
   readonly id: string;
+  readonly ontologyId: string;
   readonly subjectIri: string;
   readonly predicateIri: string;
   readonly objectValue: string;
@@ -139,11 +188,36 @@ export interface AssertionRow {
   readonly rejectionReason: string | null;
 }
 
-/** Typed failure for assertion lifecycle operations. */
-export class AssertionError extends Data.TaggedError("AssertionError")<{
-  readonly operation: "create" | "reject";
-  readonly message: string;
-}> {}
+/**
+ *  Typed failure for assertion lifecycle operations.
+ *
+ * **Example** (Inspect assertion error)
+ *
+ * ```ts
+ * import { AssertionError } from "@effect-ontology/Service/Assertion"
+ *
+ * console.log(AssertionError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class AssertionError extends S.TaggedError<AssertionError>($I`AssertionError`)(
+  "AssertionError",
+  {
+    operation: S.Literals(["create", "reject"]).annotateKey({
+      description: "Assertion lifecycle operation that failed.",
+    }),
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable assertion failure diagnostic.",
+    }),
+  },
+  $I.annote("AssertionError", {
+    description: "Typed failure for assertion lifecycle operations.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 // =============================================================================
 // Vocabulary Constants for Assertions
@@ -154,19 +228,19 @@ export class AssertionError extends Data.TaggedError("AssertionError")<{
  * Extends CLAIMS vocabulary with assertion-specific terms
  */
 const ASSERTIONS = {
-  namespace: "http://effect-ontology.dev/assertions#",
-  Assertion: IRI.fromUnknown("http://effect-ontology.dev/assertions#Assertion"),
-  assertedAt: IRI.fromUnknown("http://effect-ontology.dev/assertions#assertedAt"),
-  curatedBy: IRI.fromUnknown("http://effect-ontology.dev/assertions#curatedBy"),
-  derivedFromClaim: IRI.fromUnknown("http://effect-ontology.dev/assertions#derivedFromClaim"),
-  decision: IRI.fromUnknown("http://effect-ontology.dev/assertions#decision"),
-  Status: IRI.fromUnknown("http://effect-ontology.dev/assertions#Status"),
-  Accepted: IRI.fromUnknown("http://effect-ontology.dev/assertions#Accepted"),
-  Rejected: IRI.fromUnknown("http://effect-ontology.dev/assertions#Rejected"),
-  Pending: IRI.fromUnknown("http://effect-ontology.dev/assertions#Pending"),
-  rejectedAt: IRI.fromUnknown("http://effect-ontology.dev/assertions#rejectedAt"),
-  rejectionReason: IRI.fromUnknown("http://effect-ontology.dev/assertions#rejectionReason"),
-} as const;
+  namespace: "https://effect-ontology.dev/assertions#",
+  Assertion: IRI.fromUnknown("https://effect-ontology.dev/assertions#Assertion"),
+  assertedAt: IRI.fromUnknown("https://effect-ontology.dev/assertions#assertedAt"),
+  curatedBy: IRI.fromUnknown("https://effect-ontology.dev/assertions#curatedBy"),
+  derivedFromClaim: IRI.fromUnknown("https://effect-ontology.dev/assertions#derivedFromClaim"),
+  decision: IRI.fromUnknown("https://effect-ontology.dev/assertions#decision"),
+  Status: IRI.fromUnknown("https://effect-ontology.dev/assertions#Status"),
+  Accepted: IRI.fromUnknown("https://effect-ontology.dev/assertions#Accepted"),
+  Rejected: IRI.fromUnknown("https://effect-ontology.dev/assertions#Rejected"),
+  Pending: IRI.fromUnknown("https://effect-ontology.dev/assertions#Pending"),
+  rejectedAt: IRI.fromUnknown("https://effect-ontology.dev/assertions#rejectedAt"),
+  rejectionReason: IRI.fromUnknown("https://effect-ontology.dev/assertions#rejectionReason"),
+};
 
 // =============================================================================
 // Service
@@ -174,6 +248,8 @@ const ASSERTIONS = {
 
 /**
  * AssertionService - Curated fact management
+ *
+ * **Details**
  *
  * Provides assertion lifecycle operations for curating claims into accepted facts.
  * Assertions are the canonical facts in the knowledge base after human or automated curation.
@@ -186,22 +262,17 @@ const ASSERTIONS = {
  * - `reject`: Soft-delete an assertion with reason
  * - `toTriples`: Convert assertion to RDF quads
  *
- * @example
- * ```typescript
- * Effect.gen(function*() {
- *   // Accept a claim as fact
- *   const assertion = yield* AssertionService.createAssertion({
- *     claimIds: ["claim-abc123def456"],
- *     decision: "accept"
- *   })
+ * **Example** (Inspect the assertion-service layer)
  *
- *   // Convert to RDF
- *   const quads = yield* AssertionService.toTriples(assertion)
- * }).pipe(Effect.provide(AssertionService.Default))
+ * ```ts
+ * import { Layer } from "effect"
+ * import { AssertionService } from "@effect-ontology/Service/Assertion"
+ *
+ * console.log(Layer.isLayer(AssertionService.Default)) // true
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @category services
+ * @since 0.0.0
  */
 export class AssertionService extends Context.Service<AssertionService>()($I`AssertionService`, {
   make: Effect.gen(function* () {
@@ -224,13 +295,13 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       const now = yield* DateTime.now;
       const sourceClaims: Array<ClaimRow> = [];
       for (const claimId of input.claimIds) {
-        const claim = yield* claimRepo.getClaim(claimId);
-        if (Option.isSome(claim)) {
+        const claim = yield* claimRepo.getClaim(claimId, input.ontologyId);
+        if (O.isSome(claim)) {
           sourceClaims.push(claim.value);
         }
       }
       if (sourceClaims.length === 0) {
-        return yield* new AssertionError({
+        return yield* AssertionError.make({
           operation: "create",
           message: "No valid claims found for assertion",
         });
@@ -239,27 +310,35 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       const subjectIri = input.override?.subject ?? baseClaim.subjectIri;
       const predicateIri = input.override?.predicate ?? baseClaim.predicateIri;
       const objectValue = input.override?.object ?? baseClaim.objectValue;
-      const objectType = input.override?.objectType ?? (baseClaim.objectType as "iri" | "literal") ?? "literal";
+      const objectType = input.override?.objectType ?? (baseClaim.objectType === "iri" ? "iri" : "literal");
       const meanConfidence =
         sourceClaims.reduce((sum, c) => sum + parseFloat(c.confidenceScore ?? "0.5"), 0) / sourceClaims.length;
       const avgConfidence =
         input.confidence ??
-        (yield* S.decodeEffect(Confidence)(meanConfidence).pipe(
-          Effect.mapError(
-            () =>
-              new AssertionError({
-                operation: "create",
-                message: "Source claims contain an invalid confidence score",
-              })
+        (yield* Confidence.decodeEffect(meanConfidence).pipe(
+          Effect.mapError(() =>
+            AssertionError.make({
+              operation: "create",
+              message: "Source claims contain an invalid confidence score",
+            })
           )
         ));
       const randomSuffix = Math.abs(yield* Random.nextInt)
         .toString(36)
         .slice(0, 6);
       const uniqueSuffix = `${(yield* Clock.currentTimeMillis).toString(36)}${randomSuffix}`;
-      const id = AssertionId.fromContentHash(ContentHash.make(yield* sha256(uniqueSuffix)));
+      const hash = yield* sha256(uniqueSuffix).pipe(
+        Effect.mapError(() =>
+          AssertionError.make({
+            operation: "create",
+            message: "Failed to compute the assertion identifier",
+          })
+        )
+      );
+      const id = AssertionId.fromContentHash(ContentHash.make(hash));
       const assertionRow: AssertionRow = {
         id,
+        ontologyId: input.ontologyId,
         subjectIri,
         predicateIri,
         objectValue,
@@ -283,18 +362,18 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
      */
     const getAssertion = Effect.fn("getAssertion")(function* (id: string) {
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = AssertionId.is(id) ? HashMap.get(assertions, id) : Option.none();
-      if (Option.isNone(assertion)) {
-        return Option.none<AssertionWithProvenance>();
+      const assertion = AssertionId.is(id) ? HashMap.get(assertions, id) : O.none();
+      if (O.isNone(assertion)) {
+        return O.none<AssertionWithProvenance>();
       }
       const sourceClaims: Array<ClaimRow> = [];
       for (const claimId of assertion.value.derivedFrom) {
-        const claim = yield* claimRepo.getClaim(claimId);
-        if (Option.isSome(claim)) {
+        const claim = yield* claimRepo.getClaim(claimId, assertion.value.ontologyId);
+        if (O.isSome(claim)) {
           sourceClaims.push(claim.value);
         }
       }
-      return Option.some({
+      return O.some({
         assertion: assertion.value,
         sourceClaims,
       });
@@ -305,7 +384,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
      */
     const query = Effect.fn("query")(function* (filter: AssertionFilter) {
       const assertions = yield* Ref.get(assertionsRef);
-      let results = Array.from(HashMap.values(assertions));
+      let results = A.fromIterable(HashMap.values(assertions));
       if (P.isNotUndefined(filter.subjectIri)) {
         results = results.filter((a) => a.subjectIri === filter.subjectIri);
       }
@@ -318,7 +397,10 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       if (P.isNotUndefined(filter.curatedBy)) {
         results = results.filter((a) => a.curatedBy === filter.curatedBy);
       }
-      results.sort((a, b) => b.assertedAt.getTime() - a.assertedAt.getTime());
+      results = A.sort(
+        results,
+        Order.mapInput(Order.flip(Order.Number), (assertion: AssertionRow) => assertion.assertedAt.getTime())
+      );
       if (P.isNotUndefined(filter.offset)) {
         results = results.slice(filter.offset);
       }
@@ -333,14 +415,14 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
      */
     const getSupportingClaims = Effect.fn("getSupportingClaims")(function* (assertionId: string) {
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = AssertionId.is(assertionId) ? HashMap.get(assertions, assertionId) : Option.none();
-      if (Option.isNone(assertion)) {
+      const assertion = AssertionId.is(assertionId) ? HashMap.get(assertions, assertionId) : O.none();
+      if (O.isNone(assertion)) {
         return [];
       }
       const claims: Array<ClaimRow> = [];
       for (const claimId of assertion.value.derivedFrom) {
-        const claim = yield* claimRepo.getClaim(claimId);
-        if (Option.isSome(claim)) {
+        const claim = yield* claimRepo.getClaim(claimId, assertion.value.ontologyId);
+        if (O.isSome(claim)) {
           claims.push(claim.value);
         }
       }
@@ -355,9 +437,9 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
     const reject = Effect.fn("reject")(function* (assertionId: string, reason: string) {
       const now = yield* DateTime.now;
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = AssertionId.is(assertionId) ? HashMap.get(assertions, assertionId) : Option.none();
-      if (Option.isNone(assertion)) {
-        return yield* new AssertionError({
+      const assertion = AssertionId.is(assertionId) ? HashMap.get(assertions, assertionId) : O.none();
+      if (O.isNone(assertion)) {
+        return yield* AssertionError.make({
           operation: "reject",
           message: `Assertion not found: ${assertionId}`,
         });
@@ -573,7 +655,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
     /**
      * Get count of assertions matching filter
      */
-    const count = Effect.fn(function* (filter: AssertionFilter) {
+    const count = Effect.fn("Assertion.count")(function* (filter: AssertionFilter) {
       const results = yield* query(filter);
       return results.length;
     });
@@ -595,6 +677,17 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
 /**
  * Default layer for production use.
  * Includes ClaimRepository and RdfBuilder dependencies.
+ *
+ * **Example** (Inspect assertion service live)
+ *
+ * ```ts
+ * import { AssertionServiceLive } from "@effect-ontology/Service/Assertion"
+ *
+ * console.log(AssertionServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const AssertionServiceLive = AssertionService.Default.pipe(
   Layer.provide(ClaimRepository.Default),

@@ -1,7 +1,7 @@
 import * as Checker from "@beep/repo-docgen/Checker";
 import * as Configuration from "@beep/repo-docgen/Configuration";
 import * as Parser from "@beep/repo-docgen/Parser";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
 import * as ast from "ts-morph";
@@ -61,7 +61,79 @@ const failureTest = <A>(
   );
 
 describe("Checker", () => {
-  describe("checkFunctions", () =>
+  describe("kind-aware example enforcement", () => {
+    it.layer(
+      makeTestLayer(
+        `
+/**
+ * Returns a stable value.
+ *
+ * @since 1.0.0
+ */
+export const stableValue = 1
+        `,
+        { enforceExamples: true }
+      )
+    )("value-level exports", (it) => {
+      it.effect(
+        "rejects a value-level export without an Example",
+        Effect.fnUntraced(function* () {
+          const constants = yield* Parser.parseConstants;
+          const errors = yield* Checker.checkConstants(constants);
+
+          expect(errors).toHaveLength(1);
+          expect(errors[0]).toContain("Missing examples");
+        })
+      );
+    });
+
+    it.layer(
+      makeTestLayer(
+        `
+/**
+ * Pure compile-time shape for a named value.
+ *
+ * @since 1.0.0
+ */
+export interface NamedValue { readonly name: string }
+
+/**
+ * Pure compile-time identifier.
+ *
+ * @since 1.0.0
+ */
+export type Identifier = string
+
+/**
+ * Compile-time declarations grouped under one name.
+ *
+ * @since 1.0.0
+ */
+export namespace Contracts {
+  /**
+   * Nested compile-time identifier.
+   *
+   * @since 1.0.0
+   */
+  export type NestedIdentifier = string
+}
+        `,
+        { enforceExamples: true }
+      )
+    )("pure type-level exports", (it) => {
+      it.effect(
+        "accepts interfaces, type aliases, and namespaces without Examples",
+        Effect.fnUntraced(function* () {
+          const module = yield* Parser.parseModule;
+          const errors = yield* Checker.checkModule(module);
+
+          expect(errors).toEqual([]);
+        })
+      );
+    });
+  });
+
+  describe("checkFunctions", () => {
     failureTest(
       "should raise an error if `@since` tag is missing",
       {},
@@ -83,17 +155,71 @@ export function b() {}
           "    | ^\n" +
           "  7 |         ",
       ]
-    ));
+    );
 
-  describe("checkExports", () =>
-    failureTest(
-      "should raise an error if `@since` tag is missing",
-      {},
-      "export { a }",
-      Parser.parseExports,
-      Checker.checkExports,
-      ["Missing `@since` tag in file /test.ts:\n" + "\n" + "> 1 | export { a }\n" + "    |          ^"]
-    ));
+    it.layer(
+      makeTestLayer(
+        `
+/**
+ * Documented function.
+ *
+ * **Example** (Call the function)
+ *
+ * \`\`\`ts
+ * import { documented } from "test"
+ * console.log(documented())
+ * \`\`\`
+ *
+ * @since 1.0.0
+ */
+export function documented() { return true }
+        `,
+        { enforceExamples: true }
+      )
+    )("titled example sections", (it) => {
+      it.effect("accepts the repository's titled Example grammar", () =>
+        Parser.parseFunctions.pipe(
+          Effect.flatMap(Checker.checkFunctions),
+          Effect.flatMap((actual) => expectEqual(actual, []))
+        )
+      );
+    });
+  });
+
+  describe("checkExports", () => {
+    it.layer(
+      makeTestLayer("export { a }", {
+        enforceDescriptions: true,
+        enforceExamples: true,
+        enforceVersion: true,
+      })
+    )("re-export edge documentation", (it) => {
+      it.effect("treats a re-export as a graph edge rather than a documentation owner", () =>
+        Parser.parseExports.pipe(
+          Effect.flatMap(Checker.checkExports),
+          Effect.flatMap((actual) => expectEqual(actual, []))
+        )
+      );
+    });
+
+    it.layer(
+      makeTestLayer("/** Owner description. */\nexport const owner = 1\nexport { owner as alias }", {
+        enforceDescriptions: false,
+        enforceExamples: false,
+        enforceVersion: true,
+      })
+    )("re-export owner documentation", (it) => {
+      it.effect("validates an aliased re-export only through its owning declaration", () =>
+        Effect.gen(function* () {
+          const module = yield* Parser.parseModule;
+          const actual = yield* Checker.checkModule(module);
+
+          expect(actual).toHaveLength(1);
+          expect(actual[0]).toContain("Missing `@since` tag");
+        })
+      );
+    });
+  });
 
   describe("checkNamespaces", () => {
     failureTest(

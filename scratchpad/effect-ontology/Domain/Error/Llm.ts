@@ -1,8 +1,9 @@
 /**
  * Schema-backed failures raised by large-language-model operations.
  *
- * @remarks
- * Timeout and retry metadata are decoded to `Option` values, keeping absence
+ * **Details**
+ *
+ * * Timeout and retry metadata are decoded to `Option` values, keeping absence
  * out of downstream branching and preserving exhaustive `_tag` handling.
  *
  * @packageDocumentation
@@ -10,32 +11,28 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
-import {
-  ErrorMessage,
-  makeOntologyErrorClass,
-  OptionalErrorCause,
-  OptionalErrorMessage,
-  OptionalMilliseconds,
-} from "./Base.ts";
+import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage, OptionalMilliseconds } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Llm");
 
 /**
  * General LLM provider failure without a more precise recovery category.
  *
- * @example
+ * **Example** (Use LlmError)
  * ```ts
- * import { LlmError } from "@effect-ontology/Error/Llm.ts"
+ * import { LlmError } from "@effect-ontology/Error/Llm"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = LlmError.make({ message: "Provider request failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(LlmError)({
+ *   _tag: "LlmError", message: "Provider request failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const LlmError = makeOntologyErrorClass.make(
-  $I`LlmError`,
+export class LlmError extends S.TaggedError<LlmError>($I`LlmError`)(
   "LlmError",
   {
     message: ErrorMessage.annotateKey({
@@ -48,44 +45,31 @@ export const LlmError = makeOntologyErrorClass.make(
   $I.annote("LlmError", {
     description: "General LLM provider failure without a more precise recovery category.",
   })
-);
-
-/**
- * Runtime value decoded by {@link LlmError}.
- *
- * @example
- * ```ts
- * import { LlmError, type LlmError as LlmFailure } from "@effect-ontology/Error/Llm.ts"
- *
- * const error: LlmFailure = LlmError.make({ message: "Provider failed." })
- * console.log(error.message)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type LlmError = typeof LlmError.Type;
+) {}
 
 /**
  * Indicates that an LLM call exceeded its configured deadline.
  *
- * @remarks
- * The deadline may be unavailable when a provider owns timeout policy; the
+ * **Details**
+ *
+ * * The deadline may be unavailable when a provider owns timeout policy; the
  * decoded value is still always an `Option`.
  *
- * @example
+ * **Example** (Use LlmTimeout)
  * ```ts
- * import { LlmTimeout } from "@effect-ontology/Error/Llm.ts"
+ * import { LlmTimeout } from "@effect-ontology/Error/Llm"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = LlmTimeout.make({ message: "Generation timed out." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(LlmTimeout)({
+ *   _tag: "LlmTimeout", message: "Generation timed out." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const LlmTimeout = makeOntologyErrorClass.make(
-  $I`LlmTimeout`,
+export class LlmTimeout extends S.TaggedError<LlmTimeout>($I`LlmTimeout`)(
   "LlmTimeout",
   {
     message: ErrorMessage.annotateKey({
@@ -101,40 +85,28 @@ export const LlmTimeout = makeOntologyErrorClass.make(
   $I.annote("LlmTimeout", {
     description: "LLM call failure caused by exceeding a configured deadline.",
   })
-);
-
-/**
- * Runtime value decoded by {@link LlmTimeout}.
- *
- * @example
- * ```ts
- * import { LlmTimeout, type LlmTimeout as Timeout } from "@effect-ontology/Error/Llm.ts"
- *
- * const error: Timeout = LlmTimeout.make({ message: "Timed out." })
- * console.log(error._tag)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type LlmTimeout = typeof LlmTimeout.Type;
+) {
+  static readonly is = S.is(LlmTimeout);
+}
 
 /**
  * Indicates that an LLM provider rejected work because of a rate limit.
  *
- * @example
+ * **Example** (Use LlmRateLimit)
  * ```ts
- * import { LlmRateLimit } from "@effect-ontology/Error/Llm.ts"
+ * import { LlmRateLimit } from "@effect-ontology/Error/Llm"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = LlmRateLimit.make({ message: "Request quota exhausted." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(LlmRateLimit)({
+ *   _tag: "LlmRateLimit", message: "Request quota exhausted." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const LlmRateLimit = makeOntologyErrorClass.make(
-  $I`LlmRateLimit`,
+export class LlmRateLimit extends S.TaggedError<LlmRateLimit>($I`LlmRateLimit`)(
   "LlmRateLimit",
   {
     message: ErrorMessage.annotateKey({
@@ -150,44 +122,33 @@ export const LlmRateLimit = makeOntologyErrorClass.make(
   $I.annote("LlmRateLimit", {
     description: "LLM request rejected because the provider rate limit was exhausted.",
   })
-);
-
-/**
- * Runtime value decoded by {@link LlmRateLimit}.
- *
- * @example
- * ```ts
- * import { LlmRateLimit, type LlmRateLimit as RateLimited } from "@effect-ontology/Error/Llm.ts"
- *
- * const error: RateLimited = LlmRateLimit.make({ message: "Quota exhausted." })
- * console.log(error._tag)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type LlmRateLimit = typeof LlmRateLimit.Type;
+) {
+  static readonly is = S.is(LlmRateLimit);
+}
 
 /**
  * Indicates that an LLM response could not be interpreted.
  *
- * @remarks
- * A diagnostic excerpt may be retained, but callers should truncate or redact
+ * **Details**
+ *
+ * * A diagnostic excerpt may be retained, but callers should truncate or redact
  * provider output before crossing this boundary.
  *
- * @example
+ * **Example** (Use LlmInvalidResponse)
  * ```ts
- * import { LlmInvalidResponse } from "@effect-ontology/Error/Llm.ts"
+ * import { LlmInvalidResponse } from "@effect-ontology/Error/Llm"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = LlmInvalidResponse.make({ message: "Response was not valid JSON." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(LlmInvalidResponse)({
+ *   _tag: "LlmInvalidResponse", message: "Response was not valid JSON." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const LlmInvalidResponse = makeOntologyErrorClass.make(
-  $I`LlmInvalidResponse`,
+export class LlmInvalidResponse extends S.TaggedError<LlmInvalidResponse>($I`LlmInvalidResponse`)(
   "LlmInvalidResponse",
   {
     message: ErrorMessage.annotateKey({
@@ -203,23 +164,7 @@ export const LlmInvalidResponse = makeOntologyErrorClass.make(
   $I.annote("LlmInvalidResponse", {
     description: "LLM response failure caused by invalid or unparseable provider output.",
   })
-);
-
-/**
- * Runtime value decoded by {@link LlmInvalidResponse}.
- *
- * @example
- * ```ts
- * import { LlmInvalidResponse, type LlmInvalidResponse as InvalidResponse } from "@effect-ontology/Error/Llm.ts"
- *
- * const error: InvalidResponse = LlmInvalidResponse.make({ message: "Invalid JSON." })
- * console.log(error.message)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type LlmInvalidResponse = typeof LlmInvalidResponse.Type;
+) {}
 
 const AnyLlmErrorDefinition = S.Union([LlmError, LlmTimeout, LlmRateLimit, LlmInvalidResponse]).pipe(
   S.toTaggedUnion("_tag")
@@ -228,11 +173,14 @@ const AnyLlmErrorDefinition = S.Union([LlmError, LlmTimeout, LlmRateLimit, LlmIn
 /**
  * Exhaustive tagged union of LLM operation failures.
  *
- * @example
+ * **Example** (Use AnyLlmError)
  * ```ts
- * import { AnyLlmError, LlmTimeout } from "@effect-ontology/Error/Llm.ts"
+ * import { AnyLlmError, LlmTimeout } from "@effect-ontology/Error/Llm"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = LlmTimeout.make({ message: "Timed out." })
+ * const error = S.decodeUnknownOption(LlmTimeout)({
+ *   _tag: "LlmTimeout", message: "Timed out." })
  * console.log(AnyLlmError.guards.LlmTimeout(error)) // true
  * ```
  *
@@ -242,16 +190,16 @@ const AnyLlmErrorDefinition = S.Union([LlmError, LlmTimeout, LlmRateLimit, LlmIn
 export const AnyLlmError = AnyLlmErrorDefinition.pipe(
   $I.annoteSchema("AnyLlmError", {
     description: "Exhaustive tagged union of LLM operation failures.",
-  toArbitrary: () => S.toArbitrary(AnyLlmErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyLlmErrorDefinition),
   })
 );
 
 /**
  * Runtime failure decoded by {@link AnyLlmError}.
  *
- * @example
+ * **Example** (Use AnyLlmError)
  * ```ts
- * import { LlmError, type AnyLlmError } from "@effect-ontology/Error/Llm.ts"
+ * import { LlmError, type AnyLlmError } from "@effect-ontology/Error/Llm"
  *
  * const error: AnyLlmError = LlmError.make({ message: "Failed." })
  * console.log(error._tag)

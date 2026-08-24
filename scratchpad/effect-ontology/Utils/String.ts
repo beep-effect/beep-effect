@@ -1,54 +1,65 @@
 /**
  * String Utilities
  *
+ * **Details**
+ *
  * Pure utility functions for string operations:
  * - Similarity calculations (Levenshtein, Jaccard, containment)
  * - Normalization and canonicalization
  * - Token-based operations
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 import * as Str from "@beep/utils/Str";
+import { HashSet } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
-import * as HashSet from "effect/HashSet";
 
 /**
  * Normalize a string for comparison
+ *
+ * **Details**
  *
  * Converts to lowercase, trims whitespace, and normalizes internal spacing.
  *
  * **Example** (Normalize A String)
  *
  * ```ts
+ * import { normalizeString } from "@effect-ontology/Utils/String"
+ *
  * normalizeString("  Hello   World  ")
  * // => "hello world"
  * ```
  *
- * @category combinators
- * @since 0.0.0
  * @param text - Input string
  * @returns Normalized string
+ * @category normalization
+ * @since 0.0.0
  */
 export const normalizeString = flow(Str.toLowerCase, Str.trim, Str.replace(/\s+/g, " "));
 
 /**
  * Calculate Levenshtein edit distance between two strings
  *
+ * **Details**
+ *
  * Uses dynamic programming for O(mn) time and O(min(m,n)) space.
  *
  * **Example** (Levenshtein Distance between 'kitten' & 'sitting')
  *
  * ```ts
+ * import { levenshteinDistance } from "@effect-ontology/Utils/String"
+ *
  * levenshteinDistance("kitten", "sitting")
  * // => 3
  * ```
- * @category combinators
- * @since 0.0.0
+ *
  * @param a - First string
  * @param b - Second string
  * @returns Number of edits (insertions, deletions, substitutions)
+ * @category utilities
+ * @since 0.0.0
  */
 export const levenshteinDistance: {
   (a: string, b: string): number;
@@ -64,7 +75,7 @@ export const levenshteinDistance: {
   }
 
   // Use two rows instead of full matrix
-  let prevRow = Array.from({ length: a.length + 1 }, (_, i) => i);
+  let prevRow: Array<number> = A.makeBy(a.length + 1, (index) => index);
   let currRow = new Array<number>(a.length + 1);
 
   for (let j = 1; j <= b.length; j++) {
@@ -86,20 +97,24 @@ export const levenshteinDistance: {
 /**
  * Calculate normalized Levenshtein similarity (0.0 to 1.0)
  *
+ * **Details**
+ *
  * Returns 1.0 for identical strings, 0.0 for completely different strings.
  *
- * **Example** ()
+ * **Example** (Inspect levenshtein similarity)
  *
  * ```ts
+ * import { levenshteinSimilarity } from "@effect-ontology/Utils/String"
+ *
  * levenshteinSimilarity("hello", "hallo")
  * // => 0.8 (1 edit out of 5 chars)
  * ```
  *
- * @category combinators
- * @since 0.0.0
  * @param a - First string
  * @param b - Second string
  * @returns Similarity score between 0.0 and 1.0
+ * @category utilities
+ * @since 0.0.0
  */
 export const levenshteinSimilarity: {
   (a: string, b: string): number;
@@ -116,17 +131,20 @@ export const levenshteinSimilarity: {
 /**
  * Check if one string contains another (case-insensitive)
  *
- * **Example** ()
+ * **Example** (Inspect contains ignore case)
  *
  * ```ts
+ * import { containsIgnoreCase } from "@effect-ontology/Utils/String"
+ *
  * containsIgnoreCase("Eberechi Eze", "Eze")
  * // => true
  * ```
- * @category combinators
- * @since 0.0.0
+ *
  * @param text - Text to search in
  * @param substring - Substring to search for
  * @returns True if text contains substring
+ * @category utilities
+ * @since 0.0.0
  */
 export const containsIgnoreCase: {
   (text: string, substring: string): boolean;
@@ -138,20 +156,25 @@ export const containsIgnoreCase: {
 /**
  * Check bidirectional containment between two strings
  *
+ * **Details**
+ *
  * Returns true if either string contains the other.
  * Useful for matching "Eze" with "Eberechi Eze".
  *
- * **Example** ()
+ * **Example** (Inspect has bidirectional containment)
+ *
  * ```ts
+ * import { hasBidirectionalContainment } from "@effect-ontology/Utils/String"
+ *
  * hasBidirectionalContainment("Eze", "Eberechi Eze")
  * // => true
  * ```
  *
- * @category combinators
- * @since 0.0.0
  * @param a - First string
  * @param b - Second string
  * @returns True if either contains the other
+ * @category predicates
+ * @since 0.0.0
  */
 export const hasBidirectionalContainment: {
   (a: string, b: string): boolean;
@@ -161,20 +184,24 @@ export const hasBidirectionalContainment: {
 /**
  * Calculate Jaccard similarity between two token sets
  *
+ * **Details**
+ *
  * Jaccard = |intersection| / |union|
  *
- * **Example**
+ * **Example** (Inspect jaccard similarity)
  *
  * ```ts
+ * import { jaccardSimilarity } from "@effect-ontology/Utils/String"
+ *
  * jaccardSimilarity(["hello", "world"], ["hello", "there"])
  * // => 0.333 (1 common out of 3 unique)
  * ```
  *
- * @category combinators
- * @since 0.0.0
  * @param tokensA - First token set
  * @param tokensB - Second token set
  * @returns Similarity score between 0.0 and 1.0
+ * @category utilities
+ * @since 0.0.0
  */
 export const jaccardSimilarity: {
   (tokensA: ReadonlyArray<string>, tokensB: ReadonlyArray<string>): number;
@@ -200,40 +227,48 @@ export const jaccardSimilarity: {
 /**
  * Tokenize a string into words (simple whitespace split)
  *
+ * **Details**
+ *
  * Splits on whitespace and filters empty tokens.
  * For more advanced tokenization, use NlpService.
  *
- * **Example**
+ * **Example** (Inspect simple tokenize)
  *
  * ```ts
+ * import { simpleTokenize } from "@effect-ontology/Utils/String"
+ *
  * simpleTokenize("Hello, World!")
  * // => ["Hello,", "World!"]
  * ```
  *
- * @category combinators
- * @since 0.0.0
  * @param text - Input text
  * @returns Array of tokens
+ * @category utilities
+ * @since 0.0.0
  */
 export const simpleTokenize = flow(Str.split(/\s+/), A.filter(Str.isNonEmpty));
 
 /**
  * Calculate token-based similarity using Jaccard
  *
+ * **Details**
+ *
  * Tokenizes both strings and computes Jaccard similarity.
  *
- * **Example**
+ * **Example** (Inspect token similarity)
  *
  * ```ts
+ * import { tokenSimilarity } from "@effect-ontology/Utils/String"
+ *
  * tokenSimilarity("Arsenal FC", "Arsenal Football Club")
  * // => 0.333 (1 common token out of 4 unique)
  * ```
  *
- * @category combinators
- * @since 0.0.0
  * @param a - First string
  * @param b - Second string
  * @returns Similarity score between 0.0 and 1.0
+ * @category utilities
+ * @since 0.0.0
  */
 export const tokenSimilarity: {
   (a: string, b: string): number;
@@ -243,12 +278,16 @@ export const tokenSimilarity: {
 /**
  * Calculate combined similarity score
  *
+ * **Details**
+ *
  * Combines Levenshtein similarity and containment check
  * for robust entity matching.
  *
- * **Example** ()
+ * **Example** (Inspect combined similarity)
  *
  * ```ts
+ * import { combinedSimilarity } from "@effect-ontology/Utils/String"
+ *
  * combinedSimilarity("Eze", "Eberechi Eze")
  * // => 1.0 (containment match)
  *
@@ -256,11 +295,11 @@ export const tokenSimilarity: {
  * // => ~0.86 (high Levenshtein similarity)
  * ```
  *
- * @category combinators
- * @since 0.0.0
  * @param a - First string
  * @param b - Second string
  * @returns Similarity score between 0.0 and 1.0
+ * @category utilities
+ * @since 0.0.0
  */
 export const combinedSimilarity: {
   (a: string, b: string): number;
@@ -279,20 +318,24 @@ export const combinedSimilarity: {
 /**
  * Calculate overlap ratio between two arrays
  *
+ * **Details**
+ *
  * Returns the ratio of shared elements to the smaller array size.
  *
- * **Example**
+ * **Example** (Inspect overlap ratio)
  *
  * ```ts
+ * import { overlapRatio } from "@effect-ontology/Utils/String"
+ *
  * overlapRatio(["Player", "Person"], ["Player", "Athlete"])
  * // => 0.5 (1 shared out of min(2, 2))
  * ```
  *
- * @category combinators
- * @since 0.0.0
  * @param arrA - First array
  * @param arrB - Second array
  * @returns Overlap ratio between 0.0 and 1.0
+ * @category utilities
+ * @since 0.0.0
  */
 export const overlapRatio: {
   <T>(arrA: ReadonlyArray<T>, arrB: ReadonlyArray<T>): number;

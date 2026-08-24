@@ -13,19 +13,20 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Inference");
 /**
  * Reasoning strategy applied to an input RDF graph.
  *
- * @remarks
- * `custom` identifies runs whose rule material is supplied through
+ * **Details**
+ *
+ * * `custom` identifies runs whose rule material is supplied through
  * `InferenceRunRequest.customRules`; the other values select built-in profiles.
  *
- * @example
+ * **Example** (Use ReasoningProfile)
  * ```ts
- * import { ReasoningProfile } from "@effect-ontology/Schema/Inference.ts"
+ * import { ReasoningProfile } from "@effect-ontology/Schema/Inference"
  *
  * console.log(ReasoningProfile.is.rdfs("rdfs")) // true
  * console.log(ReasoningProfile.is.custom("owl-sameas")) // false
  * ```
  *
- * @category literals
+ * @category schemas
  * @since 0.0.0
  */
 export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"])
@@ -41,9 +42,9 @@ export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas
 /**
  * Runtime value accepted by {@link ReasoningProfile}.
  *
- * @example
+ * **Example** (Use ReasoningProfile)
  * ```ts
- * import type { ReasoningProfile } from "@effect-ontology/Schema/Inference.ts"
+ * import type { ReasoningProfile } from "@effect-ontology/Schema/Inference"
  *
  * const profile: ReasoningProfile = "rdfs"
  * console.log(profile)
@@ -67,25 +68,27 @@ const InferenceGraphFormat = LiteralKit(["turtle", "trig"])
 /**
  * Measurements collected from one inference run.
  *
- * @remarks
- * Counts and elapsed time are constrained to non-negative values. The
+ * **Details**
+ *
+ * * Counts and elapsed time are constrained to non-negative values. The
  * `inferenceRatio` may exceed one because one source triple can entail several
  * derived triples.
  *
- * @example
+ * **Example** (Use InferenceStats)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { InferenceStats } from "@effect-ontology/Schema/Inference.ts"
+ * import { InferenceStats } from "@effect-ontology/Schema/Inference"
  *
- * const stats = S.decodeUnknownSync(InferenceStats)({
+ * const stats = S.decodeUnknownOption(InferenceStats)({
  *   originalTriples: 10,
  *   enrichedTriples: 13,
  *   inferredTriples: 3,
  *   inferenceRatio: 0.3,
- *   predicateBreakdown: { "http://www.w3.org/2000/01/rdf-schema#type": 3 },
+ *   predicateBreakdown: { "https://www.w3.org/2000/01/rdf-schema#type": 3 },
  *   durationMs: 8
  * })
- * console.log(stats.inferredTriples) // 3
+ * console.log(O.map(stats, (value) => value.inferredTriples)) // 3
  * ```
  *
  * @invariant Every count, ratio, and duration is finite and non-negative.
@@ -118,30 +121,35 @@ export class InferenceStats extends S.Class<InferenceStats>($I`InferenceStats`)(
   })
 ) {
   static readonly is = S.is(InferenceStats);
+
+  static readonly decodeEffect = S.decodeEffect(InferenceStats);
 }
 
 /**
  * Request to run inference over one serialized RDF graph.
  *
- * @remarks
- * Defaults are codec-owned: omitted format decodes to Turtle, omitted profile
+ * **Details**
+ *
+ * * Defaults are codec-owned: omitted format decodes to Turtle, omitted profile
  * decodes to full RDFS, omitted `returnDeltaOnly` decodes to `true`, and
  * omitted custom rules decode to `Option.none()`.
  *
- * @example
+ * **Example** (Use InferenceRunRequest)
  * ```ts
- * import { InferenceRunRequest } from "@effect-ontology/Schema/Inference.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { InferenceRunRequest } from "@effect-ontology/Schema/Inference"
  *
- * const request = InferenceRunRequest.fromUnknown({
+ * const request = S.decodeUnknownOption(InferenceRunRequest)({
  *   inputGraph: "@prefix ex: <https://example.com/> . ex:a ex:p ex:b ."
  * })
- * console.log(request.profile) // "rdfs"
- * console.log(request.returnDeltaOnly) // true
+ * console.log(O.map(request, (value) => value.profile)) // Some("rdfs")
+ * console.log(O.map(request, (value) => value.returnDeltaOnly)) // Some(true)
  * ```
  *
  * @invariant The input graph is non-empty and all optional behavior has an
  * explicit decoded representation.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class InferenceRunRequest extends S.Class<InferenceRunRequest>($I`InferenceRunRequest`)(
@@ -181,21 +189,20 @@ export class InferenceRunRequest extends S.Class<InferenceRunRequest>($I`Inferen
   })
 ) {
   static readonly is = S.is(InferenceRunRequest);
-  static readonly fromUnknown = S.decodeUnknownSync(InferenceRunRequest);
   static readonly decodeOption = S.decodeUnknownOption(InferenceRunRequest);
 }
 
 /**
  * Lifecycle status reported for an inference job.
  *
- * @example
+ * **Example** (Use InferenceStatus)
  * ```ts
- * import { InferenceStatus } from "@effect-ontology/Schema/Inference.ts"
+ * import { InferenceStatus } from "@effect-ontology/Schema/Inference"
  *
  * console.log(InferenceStatus.is.processing("processing")) // true
  * ```
  *
- * @category literals
+ * @category schemas
  * @since 0.0.0
  */
 export const InferenceStatus = LiteralKit(["complete", "processing", "failed"])
@@ -211,9 +218,9 @@ export const InferenceStatus = LiteralKit(["complete", "processing", "failed"])
 /**
  * Runtime value accepted by {@link InferenceStatus}.
  *
- * @example
+ * **Example** (Use InferenceStatus)
  * ```ts
- * import type { InferenceStatus } from "@effect-ontology/Schema/Inference.ts"
+ * import type { InferenceStatus } from "@effect-ontology/Schema/Inference"
  *
  * const status: InferenceStatus = "complete"
  * console.log(status)
@@ -227,23 +234,26 @@ export type InferenceStatus = typeof InferenceStatus.Type;
 /**
  * Result envelope for a submitted inference run.
  *
- * @remarks
- * Optional output, statistics, and diagnostic fields decode to `Option`, so
+ * **Details**
+ *
+ * * Optional output, statistics, and diagnostic fields decode to `Option`, so
  * downstream matching follows the job status instead of inspecting nullish
  * values.
  *
- * @example
+ * **Example** (Use InferenceRunResponse)
  * ```ts
- * import { InferenceRunResponse } from "@effect-ontology/Schema/Inference.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { InferenceRunResponse } from "@effect-ontology/Schema/Inference"
  *
- * const response = InferenceRunResponse.fromUnknown({
+ * const response = S.decodeUnknownOption(InferenceRunResponse)({
  *   jobId: "inference-42",
  *   status: "processing"
  * })
- * console.log(response.status) // "processing"
+ * console.log(O.map(response, (value) => value.status)) // Some("processing")
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class InferenceRunResponse extends S.Class<InferenceRunResponse>($I`InferenceRunResponse`)(
@@ -278,24 +288,25 @@ export class InferenceRunResponse extends S.Class<InferenceRunResponse>($I`Infer
   })
 ) {
   static readonly is = S.is(InferenceRunResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(InferenceRunResponse);
 }
 
 /**
  * Polling response for one inference job.
  *
- * @example
+ * **Example** (Use InferenceStatusResponse)
  * ```ts
- * import { InferenceStatusResponse } from "@effect-ontology/Schema/Inference.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { InferenceStatusResponse } from "@effect-ontology/Schema/Inference"
  *
- * const status = InferenceStatusResponse.fromUnknown({
+ * const status = S.decodeUnknownOption(InferenceStatusResponse)({
  *   jobId: "inference-42",
  *   status: "processing"
  * })
- * console.log(status.status) // "processing"
+ * console.log(O.map(status, (value) => value.status)) // Some("processing")
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class InferenceStatusResponse extends S.Class<InferenceStatusResponse>($I`InferenceStatusResponse`)(
@@ -318,5 +329,4 @@ export class InferenceStatusResponse extends S.Class<InferenceStatusResponse>($I
   })
 ) {
   static readonly is = S.is(InferenceStatusResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(InferenceStatusResponse);
 }

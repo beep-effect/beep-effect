@@ -1,13 +1,14 @@
 /**
  * Schema Module
  *
+ * **Details**
+ *
  * Dynamic Effect Schema generation from ontology vocabularies with JSON Schema export
  * for LLM tool calling APIs.
  *
- * @module Schema
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-export { type EntityGraphSchema, type EntityGraphType, makeEntitySchema } from "./EntityFactory.ts";
-export { EmptyVocabularyError } from "./Errors.ts";
-export { makeRelationSchema, type RelationGraphSchema, type RelationGraphType } from "./RelationFactory.ts";
+export { type EntityGraph, type EntityGraphSchema, makeEntitySchema } from "./EntityFactory.ts";
+export { makeRelationSchema, type RelationGraph, type RelationGraphSchema } from "./RelationFactory.ts";

@@ -1,8 +1,9 @@
 /**
  * Effect v4 EventLog groups for curation and extraction events.
  *
- * @remarks
- * Payload schemas are the event-journal boundary: they normalize optional
+ * **Details**
+ *
+ * * Payload schemas are the event-journal boundary: they normalize optional
  * values, constrain counts and identities, and carry explicit arbitraries
  * before EventLog persistence or remote distribution.
  *
@@ -14,8 +15,8 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 import * as EventGroup from "effect/unstable/eventlog/EventGroup";
 import { BatchId, GcsUri, OntologyName } from "../Identity.ts";
 import { BatchState } from "../Model/index.ts";
@@ -104,18 +105,19 @@ const EntityLinkedPayload = EntityLinkedPayloadDefinition.annotate({
 /**
  * EventLog definitions emitted after successful curation operations.
  *
- * @remarks
- * Primary keys encode the ontology scope and affected domain identity, making
+ * **Details**
+ *
+ * * Primary keys encode the ontology scope and affected domain identity, making
  * replay idempotency stable across retries of the same curation result.
  *
- * @example
+ * **Example** (Use CurationEventGroup)
  * ```ts
- * import { CurationEventGroup } from "@effect-ontology/Schema/EventSchema.ts"
+ * import { CurationEventGroup } from "@effect-ontology/Schema/EventSchema"
  *
  * console.log(Object.keys(CurationEventGroup.events).length) // 5
  * ```
  *
- * @category event-groups
+ * @category events
  * @since 0.0.0
  */
 export const CurationEventGroup = EventGroup.empty
@@ -148,9 +150,9 @@ export const CurationEventGroup = EventGroup.empty
 /**
  * Event definitions contained by {@link CurationEventGroup}.
  *
- * @example
+ * **Example** (Use CurationEvent)
  * ```ts
- * import type { CurationEvent } from "@effect-ontology/Schema/EventSchema.ts"
+ * import type { CurationEvent } from "@effect-ontology/Schema/EventSchema"
  *
  * const acceptEvent = (_event: CurationEvent) => undefined
  * console.log(acceptEvent)
@@ -220,17 +222,121 @@ const BatchStateChangedPayload = BatchStateChangedPayloadDefinition.annotate({
   })
 );
 
+const EventEntryFields = {
+  id: S.NonEmptyString,
+  primaryKey: S.NonEmptyString,
+  createdAt: S.DateTimeUtc,
+};
+
+const ClaimCorrectedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ClaimCorrected"),
+  payload: ClaimCorrectedPayload,
+});
+const ClaimDeprecatedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ClaimDeprecated"),
+  payload: ClaimDeprecatedPayload,
+});
+const AliasAddedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("AliasAdded"),
+  payload: AliasAddedPayload,
+});
+const ClaimPromotedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ClaimPromoted"),
+  payload: ClaimPromotedPayload,
+});
+const EntityLinkedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("EntityLinked"),
+  payload: EntityLinkedPayload,
+});
+const ExtractionCompletedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ExtractionCompleted"),
+  payload: ExtractionCompletedPayload,
+});
+const ValidationFailedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ValidationFailed"),
+  payload: ValidationFailedPayload,
+});
+const BatchStateChangedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("BatchStateChanged"),
+  payload: BatchStateChangedPayload,
+});
+
+type OntologyEventEntryValue =
+  | typeof ClaimCorrectedEventEntry.Type
+  | typeof ClaimDeprecatedEventEntry.Type
+  | typeof AliasAddedEventEntry.Type
+  | typeof ClaimPromotedEventEntry.Type
+  | typeof EntityLinkedEventEntry.Type
+  | typeof ExtractionCompletedEventEntry.Type
+  | typeof ValidationFailedEventEntry.Type
+  | typeof BatchStateChangedEventEntry.Type;
+
+const OntologyEventEntryDefinition = S.Union([
+  ClaimCorrectedEventEntry,
+  ClaimDeprecatedEventEntry,
+  AliasAddedEventEntry,
+  ClaimPromotedEventEntry,
+  EntityLinkedEventEntry,
+  ExtractionCompletedEventEntry,
+  ValidationFailedEventEntry,
+  BatchStateChangedEventEntry,
+]).pipe(S.toTaggedUnion("event"));
+
+/**
+ * Canonical journal entry pairing every ontology event tag with its payload schema.
+ *
+ * **Example** (Inspect canonical ontology event cases)
+ * ```ts
+ * import { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(typeof S.is(OntologyEventEntry)) // "function"
+ * ```
+ *
+ * @category events
+ * @since 0.0.0
+ */
+export const OntologyEventEntry: S.Codec<OntologyEventEntryValue, unknown> = OntologyEventEntryDefinition.pipe(
+  $I.annoteSchema("OntologyEventEntry", {
+    description: "Schema-validated journal entry whose event tag determines its canonical payload.",
+    toArbitrary: () => S.toArbitrary(OntologyEventEntryDefinition),
+  })
+);
+
+/**
+ * Runtime journal entry decoded by {@link OntologyEventEntry}.
+ *
+ * **Example** (Use the OntologyEventEntry contract)
+ * ```ts
+ * import type { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
+ * const eventName = (entry: OntologyEventEntry) => entry.event
+ * console.log(eventName)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OntologyEventEntry = OntologyEventEntryValue;
+
 /**
  * EventLog definitions emitted by extraction and batch workflows.
  *
- * @example
+ * **Example** (Use ExtractionEventGroup)
  * ```ts
- * import { ExtractionEventGroup } from "@effect-ontology/Schema/EventSchema.ts"
+ * import { ExtractionEventGroup } from "@effect-ontology/Schema/EventSchema"
  *
  * console.log(Object.keys(ExtractionEventGroup.events).length) // 3
  * ```
  *
- * @category event-groups
+ * @category events
  * @since 0.0.0
  */
 export const ExtractionEventGroup = EventGroup.empty
@@ -253,9 +359,9 @@ export const ExtractionEventGroup = EventGroup.empty
 /**
  * Event definitions contained by {@link ExtractionEventGroup}.
  *
- * @example
+ * **Example** (Use ExtractionEvent)
  * ```ts
- * import type { ExtractionEvent } from "@effect-ontology/Schema/EventSchema.ts"
+ * import type { ExtractionEvent } from "@effect-ontology/Schema/EventSchema"
  *
  * const acceptEvent = (_event: ExtractionEvent) => undefined
  * console.log(acceptEvent)
@@ -269,9 +375,9 @@ export type ExtractionEvent = EventGroup.Events<typeof ExtractionEventGroup>;
 /**
  * Immutable tuple of all effect-ontology EventLog groups.
  *
- * @example
+ * **Example** (Use OntologyEventGroups)
  * ```ts
- * import { OntologyEventGroups } from "@effect-ontology/Schema/EventSchema.ts"
+ * import { OntologyEventGroups } from "@effect-ontology/Schema/EventSchema"
  *
  * console.log(OntologyEventGroups.length) // 2
  * ```
@@ -284,9 +390,9 @@ export const OntologyEventGroups = Tuple.make(CurationEventGroup, ExtractionEven
 /**
  * Union of every effect-ontology EventLog event definition.
  *
- * @example
+ * **Example** (Use OntologyEvent)
  * ```ts
- * import type { OntologyEvent } from "@effect-ontology/Schema/EventSchema.ts"
+ * import type { OntologyEvent } from "@effect-ontology/Schema/EventSchema"
  *
  * const acceptEvent = (_event: OntologyEvent) => undefined
  * console.log(acceptEvent)

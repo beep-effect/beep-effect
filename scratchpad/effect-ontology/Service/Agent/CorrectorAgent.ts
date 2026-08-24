@@ -1,6 +1,8 @@
 /**
  * Service: CorrectorAgent
  *
+ * **Details**
+ *
  * Multi-agent component that corrects SHACL violations via LLM-powered
  * value generation and graph modification. Part of the validation-correction
  * refinement loop.
@@ -12,22 +14,17 @@
  * 4. **Domain/range mismatch**: Re-classify entity or update relation
  * 5. **Pattern violation**: Reformat value to match pattern
  *
- * @example
- * ```typescript
- * Effect.gen(function*() {
- *   const corrector = yield* CorrectorAgent
+ * **Example** (Inspect the correction layer)
  *
- *   const result = yield* corrector.correct(violation, store, ontologyContext)
- *   console.log(`Applied ${result.correction.strategy} correction`)
+ * ```ts
+ * import { Layer } from "effect"
+ * import { CorrectorAgent } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
- *   // Or correct all violations in a report
- *   const batchResult = yield* corrector.correctAll(report, store, ontologyContext)
- *   console.log(`Fixed ${batchResult.correctedCount} of ${batchResult.totalViolations}`)
- * })
+ * console.log(Layer.isLayer(CorrectorAgent.Default)) // true
  * ```
  *
- * @since 2.0.0
- * @module Service/Agent/CorrectorAgent
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -36,15 +33,19 @@ import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegNum } from "@beep/schema/Number";
-import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
+import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import type { Config } from "effect";
+import { Clock, Context, Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
+import { OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import type { Agent } from "../../Domain/Model/Agent.ts";
 import { AgentId, AgentMetadata, ValidationResult } from "../../Domain/Model/Agent.ts";
 import type { OntologyContext } from "../../Domain/Model/Ontology.ts";
@@ -57,139 +58,315 @@ import type { ShaclValidationReport } from "../Shacl.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/CorrectorAgent");
 
 // =============================================================================
+// Domain Models
+// =============================================================================
+
+/**
+ * Correction strategies accepted from LLM output.
+ *
+ * **Example** (Validate a correction strategy)
+ *
+ * ```ts
+ * import { CorrectionStrategy } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CorrectionStrategy)("generate-value")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CorrectionStrategy = LiteralKit([
+  "generate-value", // Missing required property
+  "coerce-datatype", // Wrong datatype
+  "remove-excess", // Too many values
+  "reclassify-entity", // Wrong type/class
+  "reformat-value", // Pattern mismatch
+  "skip", // Cannot be corrected automatically
+]);
+
+/**
+ * Correction strategy based on violation type
+ *
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CorrectionStrategy = typeof CorrectionStrategy.Type;
+
+class CorrectionBase extends S.Class<CorrectionBase>($I`CorrectionBase`)(
+  {
+    /**
+     * Focus node (entity) being corrected
+     */
+    focusNode: S.String.annotateKey({
+      description: "Focus node (entity) being corrected",
+    }),
+
+    /**
+     * Explanation of the correction
+     */
+    explanation: S.String.annotateKey({
+      description: "Explanation of the correction",
+    }),
+
+    /**
+     * Confidence in the correction (0-1)
+     */
+    confidence: Confidence.annotateKey({
+      description: "Confidence in the correction (0-1)",
+    }),
+  },
+  $I.annote("CorrectionBase", {
+    description: "Correction strategy based on violation type",
+  })
+) {}
+
+const CorrectionValue = S.Union([S.String, S.Finite, S.Boolean]);
+
+const ValueCorrectionFields = {
+  path: S.String.annotateKey({
+    description: "Property path being corrected",
+  }),
+  originalValue: CorrectionValue.pipe(
+    S.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Original value, when the violation reported one",
+    })
+  ),
+  newValue: CorrectionValue.annotateKey({
+    description: "Replacement value to write",
+  }),
+};
+
+class GenerateValueStrategy extends CorrectionBase.extend<GenerateValueStrategy>($I`GenerateValueStrategy`)(
+  {
+    strategy: S.tag(CorrectionStrategy.Enum["generate-value"]),
+    ...ValueCorrectionFields,
+  },
+  $I.annote("GenerateValueStrategy", {
+    description: "Generate a new value for a property",
+  })
+) {}
+
+class CoerceDatatypeStrategy extends CorrectionBase.extend<CoerceDatatypeStrategy>($I`CoerceDatatypeStrategy`)(
+  {
+    strategy: S.tag(CorrectionStrategy.Enum["coerce-datatype"]),
+    ...ValueCorrectionFields,
+  },
+  $I.annote("CoerceDatatypeStrategy", {
+    description: "Coerce a value to a different datatype",
+  })
+) {}
+
+class RemoveExcessStrategy extends CorrectionBase.extend<RemoveExcessStrategy>($I`RemoveExcessStrategy`)(
+  {
+    strategy: S.tag(CorrectionStrategy.Enum["remove-excess"]),
+    path: S.String.annotateKey({
+      description: "Property path whose excess values require manual review",
+    }),
+  },
+  $I.annote("RemoveExcessStrategy", {
+    description: "Remove excess values from a property",
+  })
+) {}
+
+class ReclassifyEntityStrategy extends CorrectionBase.extend<ReclassifyEntityStrategy>($I`ReclassifyEntityStrategy`)(
+  {
+    strategy: S.tag(CorrectionStrategy.Enum["reclassify-entity"]),
+    newType: S.String.annotateKey({
+      description: "Replacement RDF type IRI",
+    }),
+  },
+  $I.annote("ReclassifyEntityStrategy", {
+    description: "Reclassify an entity",
+  })
+) {}
+
+class ReformatValueStrategy extends CorrectionBase.extend<ReformatValueStrategy>($I`ReformatValueStrategy`)(
+  {
+    strategy: S.tag(CorrectionStrategy.Enum["reformat-value"]),
+    ...ValueCorrectionFields,
+  },
+  $I.annote("ReformatValueStrategy", {
+    description: "Reformat a value",
+  })
+) {}
+
+type ValueCorrection = GenerateValueStrategy | CoerceDatatypeStrategy | ReformatValueStrategy;
+
+class SkipStrategy extends CorrectionBase.extend<SkipStrategy>($I`SkipStrategy`)(
+  {
+    strategy: S.tag(CorrectionStrategy.Enum.skip),
+  },
+  $I.annote("SkipStrategy", {
+    description: "Skip a correction",
+  })
+) {}
+
+/**
+ * Generated correction action.
+ *
+ * **Example** (Construct a skipped correction)
+ *
+ * ```ts
+ * import { Correction } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ *
+ * const correction = Correction.cases.skip.make({
+ *   focusNode: "https://example.com/entity/1",
+ *   explanation: "Manual review is required.",
+ *   confidence: Confidence.make(1),
+ * })
+ *
+ * console.log(correction.strategy) // "skip"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Correction = S.Union([
+  GenerateValueStrategy,
+  CoerceDatatypeStrategy,
+  RemoveExcessStrategy,
+  ReclassifyEntityStrategy,
+  ReformatValueStrategy,
+  SkipStrategy,
+]).pipe(
+  S.toTaggedUnion("strategy"),
+  $I.annoteSchema("Correction", {
+    description: "A schema-backed correction whose required fields are determined by its strategy.",
+  })
+);
+
+/**
+ * Decoded correction value produced by {@link Correction}.
+ *
+ * **Example** (Accept a correction value)
+ *
+ * ```ts
+ * import type { Correction } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ *
+ * const strategy = (correction: Correction): Correction["strategy"] => correction.strategy
+ * console.log(strategy)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Correction = typeof Correction.Type;
+
+const meetsConfidenceThreshold = (correction: CorrectionBase): boolean => correction.confidence >= 0.5;
+
+/**
+ * Determines whether a generated correction clears the automatic-application threshold.
+ *
+ * **Example** (Reject a skipped correction)
+ *
+ * ```ts
+ * import { Correction, correctionShouldApply } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ *
+ * const correction = Correction.cases.skip.make({
+ *   focusNode: "https://example.com/entity/1",
+ *   explanation: "Manual review is required.",
+ *   confidence: Confidence.make(1),
+ * })
+ *
+ * console.log(correctionShouldApply(correction)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const correctionShouldApply: (correction: Correction) => boolean = Correction.match({
+  "generate-value": meetsConfidenceThreshold,
+  "coerce-datatype": meetsConfidenceThreshold,
+  "remove-excess": meetsConfidenceThreshold,
+  "reclassify-entity": meetsConfidenceThreshold,
+  "reformat-value": meetsConfidenceThreshold,
+  skip: () => false,
+});
+
+// =============================================================================
 // Error Types
 // =============================================================================
 
 /**
  * Error: Failed to generate correction
  *
- * @since 2.0.0
- * @category Errors
+ * **Example** (Inspect correction error)
+ *
+ * ```ts
+ * import { CorrectionError } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ *
+ * console.log(CorrectionError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-export class CorrectionError extends Data.TaggedError("CorrectionError")<{
-  readonly message: string;
-  readonly violation: ShaclValidationViolation;
-  readonly strategy: CorrectionStrategy;
-  readonly cause?: unknown;
-}> {}
+export class CorrectionError extends S.TaggedError<CorrectionError>($I`CorrectionError`)(
+  "CorrectionError",
+  {
+    message: S.NonEmptyString,
+    violation: ShaclValidationViolation,
+    strategy: CorrectionStrategy,
+    cause: OptionalErrorCause,
+  },
+  $I.annote("CorrectionError", {
+    description: "Failure to generate a correction for a SHACL violation.",
+  })
+) {}
 
 /**
  * Error: Failed to apply correction to graph
  *
- * @since 2.0.0
- * @category Errors
- */
-export class CorrectionApplicationError extends Data.TaggedError("CorrectionApplicationError")<{
-  readonly message: string;
-  readonly correction: Correction;
-  readonly cause?: unknown;
-}> {}
-
-// =============================================================================
-// Domain Models
-// =============================================================================
-
-/**
- * Correction strategy based on violation type
+ * **Example** (Inspect correction application error)
  *
- * @since 2.0.0
- * @category Types
- */
-export type CorrectionStrategy =
-  | "generate-value" // Missing required property
-  | "coerce-datatype" // Wrong datatype
-  | "remove-excess" // Too many values
-  | "reclassify-entity" // Wrong type/class
-  | "reformat-value" // Pattern mismatch
-  | "skip"; // Cannot be corrected automatically
-
-/**
- * CorrectionStrategySchema for LLM output
+ * ```ts
+ * import { CorrectionApplicationError } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
- * @since 2.0.0
- * @category Schemas
- */
-export const CorrectionStrategySchema = Schema.Literals([
-  "generate-value",
-  "coerce-datatype",
-  "remove-excess",
-  "reclassify-entity",
-  "reformat-value",
-  "skip",
-]);
-
-/**
- * Generated correction action
+ * console.log(CorrectionApplicationError)
+ * ```
  *
- * @since 2.0.0
- * @category Models
+ * @category errors
+ * @since 0.0.0
  */
-export class Correction extends Schema.Class<Correction>("Correction")({
-  /**
-   * Strategy used for this correction
-   */
-  strategy: CorrectionStrategySchema,
-
-  /**
-   * Focus node (entity) being corrected
-   */
-  focusNode: Schema.String,
-
-  /**
-   * Property path being corrected (if applicable)
-   */
-  path: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-
-  /**
-   * Original value (if any)
-   */
-  originalValue: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]).pipe(
-    Schema.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
-
-  /**
-   * New value to set
-   */
-  newValue: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]).pipe(
-    Schema.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
-
-  /**
-   * New type IRI (for reclassification)
-   */
-  newType: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-
-  /**
-   * Explanation of the correction
-   */
-  explanation: Schema.String,
-
-  /**
-   * Confidence in the correction (0-1)
-   */
-  confidence: Confidence,
-}) {
-  /**
-   * Whether this correction should be applied
-   */
-  get shouldApply(): boolean {
-    return this.strategy !== "skip" && this.confidence >= 0.5;
-  }
-}
+export class CorrectionApplicationError extends S.TaggedError<CorrectionApplicationError>(
+  $I`CorrectionApplicationError`
+)(
+  "CorrectionApplicationError",
+  {
+    message: S.NonEmptyString,
+    correction: Correction,
+    cause: OptionalErrorCause,
+  },
+  $I.annote("CorrectionApplicationError", {
+    description: "Failure to apply a generated correction to an RDF graph.",
+  })
+) {}
 
 /**
  * Result of correcting a single violation
  *
- * @since 2.0.0
- * @category Models
+ * **Example** (Inspect correction result)
+ *
+ * ```ts
+ * import { CorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ *
+ * console.log(CorrectionResult)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export class CorrectionResult extends Schema.Class<CorrectionResult>("CorrectionResult")({
+export class CorrectionResult extends S.Class<CorrectionResult>("CorrectionResult")({
   /**
    * The original violation
    */
-  violation: Schema.Any, // ShaclValidationViolation
+  violation: ShaclValidationViolation,
 
   /**
    * The correction that was generated
@@ -199,7 +376,7 @@ export class CorrectionResult extends Schema.Class<CorrectionResult>("Correction
   /**
    * Whether the correction was applied
    */
-  applied: Schema.Boolean,
+  applied: S.Boolean,
 
   /**
    * Time taken in milliseconds
@@ -210,14 +387,22 @@ export class CorrectionResult extends Schema.Class<CorrectionResult>("Correction
 /**
  * Result of correcting all violations in a report
  *
- * @since 2.0.0
- * @category Models
+ * **Example** (Inspect batch correction result)
+ *
+ * ```ts
+ * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ *
+ * console.log(BatchCorrectionResult)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export class BatchCorrectionResult extends Schema.Class<BatchCorrectionResult>("BatchCorrectionResult")({
+export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>("BatchCorrectionResult")({
   /**
    * Individual correction results
    */
-  results: Schema.Array(CorrectionResult),
+  results: S.Array(CorrectionResult),
 
   /**
    * Total violations processed
@@ -241,6 +426,16 @@ export class BatchCorrectionResult extends Schema.Class<BatchCorrectionResult>("
 }) {
   /**
    * Success rate (corrected / total)
+   *
+   * **Example** (Inspect batch correction result.success rate)
+   *
+   * ```ts
+   * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
+   *
+   * console.log(BatchCorrectionResult)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   get successRate(): number {
     return this.totalViolations > 0 ? this.correctedCount / this.totalViolations : 1;
@@ -248,6 +443,16 @@ export class BatchCorrectionResult extends Schema.Class<BatchCorrectionResult>("
 
   /**
    * Whether all violations were corrected
+   *
+   * **Example** (Inspect batch correction result.all corrected)
+   *
+   * ```ts
+   * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
+   *
+   * console.log(BatchCorrectionResult)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   get allCorrected(): boolean {
     return this.correctedCount === this.totalViolations;
@@ -257,13 +462,60 @@ export class BatchCorrectionResult extends Schema.Class<BatchCorrectionResult>("
 /**
  * Input for CorrectorAgent execution
  *
- * @since 2.0.0
- * @category Models
+ *
+ * **Example** (Use the CorrectorInput contract)
+ *
+ * ```ts
+ * import type { CorrectorInput } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ *
+ * const acceptsCorrectorInput = (_value: CorrectorInput): void => undefined
+ *
+ * console.log(acceptsCorrectorInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CorrectorInput {
   readonly report: ShaclValidationReport;
   readonly store: RdfStore;
   readonly ontologyContext: OntologyContext;
+}
+
+interface CorrectOperation {
+  (
+    violation: ShaclValidationViolation,
+    store: RdfStore,
+    ontologyContext: OntologyContext
+  ): Effect.Effect<CorrectionResult, CorrectionError | CorrectionApplicationError>;
+  (
+    store: RdfStore,
+    ontologyContext: OntologyContext
+  ): (
+    violation: ShaclValidationViolation
+  ) => Effect.Effect<CorrectionResult, CorrectionError | CorrectionApplicationError>;
+}
+
+interface CorrectorAgentShape {
+  readonly classifyViolation: (violation: ShaclValidationViolation) => CorrectionStrategy;
+  readonly generateCorrection: (
+    violation: ShaclValidationViolation,
+    store: RdfStore,
+    ontologyContext: OntologyContext
+  ) => Effect.Effect<Correction, CorrectionError>;
+  readonly applyCorrection: (
+    correction: Correction,
+    store: RdfStore
+  ) => Effect.Effect<void, CorrectionApplicationError>;
+  readonly correct: CorrectOperation;
+  readonly correctAll: (
+    report: ShaclValidationReport,
+    store: RdfStore,
+    ontologyContext: OntologyContext,
+    options?: { readonly concurrency?: number }
+  ) => Effect.Effect<BatchCorrectionResult, CorrectionError | CorrectionApplicationError>;
+  readonly metadata: AgentMetadata;
+  readonly asAgent: () => Agent<CorrectorInput, BatchCorrectionResult, CorrectionError | CorrectionApplicationError>;
 }
 
 // =============================================================================
@@ -275,22 +527,8 @@ export interface CorrectorInput {
  *
  * @internal
  */
-const CorrectionResponseSchema = Schema.Struct({
-  strategy: CorrectionStrategySchema.annotate({
-    title: "Strategy",
-    description: "The correction strategy to apply",
-  }),
-  newValue: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean])
-    .pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-    .annotate({
-      title: "New Value",
-      description: "The value to set (for generate-value, coerce-datatype, reformat-value)",
-    }),
-  newType: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
-    title: "New Type",
-    description: "The new type IRI (for reclassify-entity)",
-  }),
-  explanation: Schema.String.annotate({
+const CorrectionResponseFields = {
+  explanation: S.String.annotate({
     title: "Explanation",
     description: "Why this correction is appropriate",
   }),
@@ -298,7 +536,103 @@ const CorrectionResponseSchema = Schema.Struct({
     title: "Confidence",
     description: "Confidence in this correction (0-1)",
   }),
-});
+};
+
+const CorrectionResponse = S.Union([
+  S.Struct({
+    strategy: S.tag(CorrectionStrategy.Enum["generate-value"]),
+    newValue: CorrectionValue.annotate({
+      title: "New Value",
+      description: "The generated value to set",
+    }),
+    ...CorrectionResponseFields,
+  }),
+  S.Struct({
+    strategy: S.tag(CorrectionStrategy.Enum["coerce-datatype"]),
+    newValue: CorrectionValue.annotate({
+      title: "New Value",
+      description: "The value coerced to the required datatype",
+    }),
+    ...CorrectionResponseFields,
+  }),
+  S.Struct({
+    strategy: S.tag(CorrectionStrategy.Enum["remove-excess"]),
+    ...CorrectionResponseFields,
+  }),
+  S.Struct({
+    strategy: S.tag(CorrectionStrategy.Enum["reclassify-entity"]),
+    newType: S.String.annotate({
+      title: "New Type",
+      description: "The replacement RDF type IRI",
+    }),
+    ...CorrectionResponseFields,
+  }),
+  S.Struct({
+    strategy: S.tag(CorrectionStrategy.Enum["reformat-value"]),
+    newValue: CorrectionValue.annotate({
+      title: "New Value",
+      description: "The value reformatted to satisfy the required pattern",
+    }),
+    ...CorrectionResponseFields,
+  }),
+  S.Struct({
+    strategy: S.tag(CorrectionStrategy.Enum.skip),
+    ...CorrectionResponseFields,
+  }),
+]).pipe(S.toTaggedUnion("strategy"));
+
+type CorrectionResponse = typeof CorrectionResponse.Type;
+
+const correctionFromResponse: (response: CorrectionResponse) => (violation: ShaclValidationViolation) => Correction =
+  CorrectionResponse.match({
+    "generate-value": (response) => (violation: ShaclValidationViolation) =>
+      Correction.cases["generate-value"].make({
+        focusNode: violation.focusNode,
+        path: violation.path.value,
+        originalValue: O.map(violation.value, (value) => value.value),
+        newValue: response.newValue,
+        explanation: response.explanation,
+        confidence: response.confidence,
+      }),
+    "coerce-datatype": (response) => (violation: ShaclValidationViolation) =>
+      Correction.cases["coerce-datatype"].make({
+        focusNode: violation.focusNode,
+        path: violation.path.value,
+        originalValue: O.map(violation.value, (value) => value.value),
+        newValue: response.newValue,
+        explanation: response.explanation,
+        confidence: response.confidence,
+      }),
+    "remove-excess": (response) => (violation: ShaclValidationViolation) =>
+      Correction.cases["remove-excess"].make({
+        focusNode: violation.focusNode,
+        path: violation.path.value,
+        explanation: response.explanation,
+        confidence: response.confidence,
+      }),
+    "reclassify-entity": (response) => (violation: ShaclValidationViolation) =>
+      Correction.cases["reclassify-entity"].make({
+        focusNode: violation.focusNode,
+        newType: response.newType,
+        explanation: response.explanation,
+        confidence: response.confidence,
+      }),
+    "reformat-value": (response) => (violation: ShaclValidationViolation) =>
+      Correction.cases["reformat-value"].make({
+        focusNode: violation.focusNode,
+        path: violation.path.value,
+        originalValue: O.map(violation.value, (value) => value.value),
+        newValue: response.newValue,
+        explanation: response.explanation,
+        confidence: response.confidence,
+      }),
+    skip: (response) => (violation: ShaclValidationViolation) =>
+      Correction.cases.skip.make({
+        focusNode: violation.focusNode,
+        explanation: response.explanation,
+        confidence: response.confidence,
+      }),
+  });
 
 // =============================================================================
 // Service Definition
@@ -307,23 +641,27 @@ const CorrectionResponseSchema = Schema.Struct({
 /**
  * CorrectorAgent - LLM-powered SHACL violation correction
  *
+ * **Details**
+ *
  * Uses structured LLM output to generate corrections for SHACL violations.
  * Corrections can add missing values, fix datatypes, remove excess values,
  * or reclassify entities.
  *
- * @since 2.0.0
- * @category Services
+ * **Example** (Inspect corrector agent)
+ *
+ * ```ts
+ * import { CorrectorAgent } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ *
+ * console.log(CorrectorAgent)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
-export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`CorrectorAgent`, {
+export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAgentShape>()($I`CorrectorAgent`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
-    const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) =>
-        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))
-      ),
-      Schedule.jittered
-    );
     const classifyViolation = (violation: ShaclValidationViolation): CorrectionStrategy => {
       const message = Str.toLowerCase(violation.message);
       if (
@@ -351,6 +689,38 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       }
       return "skip";
     };
+    const strategyGuidanceFor = Match.type<CorrectionStrategy>().pipe(
+      Match.when("generate-value", () => [
+        "Generate a plausible value for the missing required property.",
+        "The value should be consistent with:",
+        "- The entity's existing properties",
+        "- The property's expected datatype",
+        "- Common patterns in the ontology",
+        "",
+      ]),
+      Match.when("coerce-datatype", () => [
+        "Convert the current value to the correct datatype.",
+        "If conversion is not possible, generate a valid default value.",
+        "",
+      ]),
+      Match.when("remove-excess", () => [
+        "This violation requires removing excess values.",
+        "Set strategy to 'skip' as this requires domain knowledge to decide which values to keep.",
+        "",
+      ]),
+      Match.when("reclassify-entity", () => [
+        "Determine the correct type/class for this entity based on its properties.",
+        "Return the new type IRI in the 'newType' field.",
+        "",
+      ]),
+      Match.when("reformat-value", () => ["Reformat the value to match the required pattern.", ""]),
+      Match.when("skip", () => [
+        "This violation cannot be automatically corrected.",
+        "Set strategy to 'skip' with an explanation.",
+        "",
+      ]),
+      Match.exhaustive
+    );
     const buildCorrectionPrompt = (
       violation: ShaclValidationViolation,
       strategy: CorrectionStrategy,
@@ -370,48 +740,8 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
         `## Correction Strategy: ${strategy}`,
         "",
       ];
-      switch (strategy) {
-        case "generate-value":
-          parts.push(
-            "Generate a plausible value for the missing required property.",
-            "The value should be consistent with:",
-            "- The entity's existing properties",
-            "- The property's expected datatype",
-            "- Common patterns in the ontology",
-            ""
-          );
-          break;
-        case "coerce-datatype":
-          parts.push(
-            "Convert the current value to the correct datatype.",
-            "If conversion is not possible, generate a valid default value.",
-            ""
-          );
-          break;
-        case "remove-excess":
-          parts.push(
-            "This violation requires removing excess values.",
-            "Set strategy to 'skip' as this requires domain knowledge to decide which values to keep.",
-            ""
-          );
-          break;
-        case "reclassify-entity":
-          parts.push(
-            "Determine the correct type/class for this entity based on its properties.",
-            "Return the new type IRI in the 'newType' field.",
-            ""
-          );
-          break;
-        case "reformat-value":
-          parts.push("Reformat the value to match the required pattern.", "");
-          break;
-        default:
-          parts.push(
-            "This violation cannot be automatically corrected.",
-            "Set strategy to 'skip' with an explanation.",
-            ""
-          );
-      }
+      const strategyGuidance = strategyGuidanceFor(strategy);
+      parts.push(...strategyGuidance);
       if (P.isTruthy(entityContext)) {
         parts.push("## Entity Context (Current Properties)", "```turtle", entityContext, "```", "");
       }
@@ -443,15 +773,18 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       );
       return parts.filter((p) => p !== "").join("\n");
     };
-    const getEntityContext = (store: RdfStore, focusNode: string): string => {
-      const quads = rdfStoreQuads(store, { subject: makeNamedNode(focusNode) });
-      if (quads.length === 0) return "";
-      const lines = quads.map((q) => {
+    const getEntityContext = Effect.fn("CorrectorAgent.getEntityContext")(function* (
+      store: RdfStore,
+      focusNode: string
+    ) {
+      const quads = yield* rdfStoreQuads(store, { subject: makeNamedNode(focusNode) });
+      if (A.isReadonlyArrayEmpty(quads)) return "";
+      const lines = A.map(quads, (q) => {
         const obj = q.object.termType === "Literal" ? `"${q.object.value}"` : `<${q.object.value}>`;
         return `<${q.subject.value}> <${q.predicate.value}> ${obj} .`;
       });
-      return lines.join("\n");
-    };
+      return A.join(lines, "\n");
+    });
     const generateCorrection = Effect.fn("CorrectorAgent.generateCorrection")(function* (
       violation: ShaclValidationViolation,
       store: RdfStore,
@@ -463,135 +796,163 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
         path: O.some(violation.path.value),
         strategy,
       });
-      const entityContext = getEntityContext(store, violation.focusNode);
+      const entityContext = yield* getEntityContext(store, violation.focusNode).pipe(
+        Effect.mapError((error) =>
+          CorrectionError.make({
+            message: `Failed to read correction context: ${error.message}`,
+            violation,
+            strategy,
+            cause: O.some(error),
+          })
+        )
+      );
       const prompt = buildCorrectionPrompt(violation, strategy, entityContext, ontologyContext);
-      const response = yield* generateObjectWithFeedback(llm, {
+      const response = yield* generateObjectWithFeedback({
         prompt,
-        schema: CorrectionResponseSchema,
+        schema: CorrectionResponse,
         objectName: "CorrectionResponse",
-        maxAttempts: config.runtime.retryMaxAttempts,
         serviceName: "CorrectorAgent",
-        timeoutMs: config.llm.timeoutMs,
-        retrySchedule,
+        retryPolicy: config.llm.retryPolicy,
       }).pipe(
-        Effect.mapError(
-          (error) =>
-            new CorrectionError({
-              message: `Failed to generate correction: ${error._tag}`,
-              violation,
-              strategy,
-              cause: error,
-            })
+        Effect.provideService(LanguageModel.LanguageModel, llm),
+        Effect.mapError((error) =>
+          CorrectionError.make({
+            message: `Failed to generate correction: ${error._tag}`,
+            violation,
+            strategy,
+            cause: O.some(error),
+          })
         )
       );
       const result = response.value;
       yield* Effect.logInfo("CorrectorAgent.generateCorrection complete", {
         strategy: result.strategy,
         confidence: result.confidence,
-        hasNewValue: O.isSome(result.newValue),
       });
-      return Correction.make({
-        strategy: result.strategy,
-        focusNode: violation.focusNode,
-        path: O.some(violation.path.value),
-        originalValue: O.map(violation.value, (value) => value.value),
-        newValue: result.newValue,
-        newType: result.newType,
-        explanation: result.explanation,
-        confidence: result.confidence,
+      return correctionFromResponse(result)(violation);
+    });
+    const applyValueCorrection = Effect.fn("CorrectorAgent.applyValueCorrection")(function* (
+      correction: ValueCorrection,
+      store: RdfStore
+    ) {
+      const focusNode = makeNamedNode(correction.focusNode);
+      const predicate = makeNamedNode(correction.path);
+      if (O.isSome(correction.originalValue)) {
+        const oldQuads = yield* rdfStoreQuads(store, {
+          subject: focusNode,
+          predicate,
+        }).pipe(
+          Effect.mapError((error) =>
+            CorrectionApplicationError.make({
+              message: `Failed to read values for correction: ${error.message}`,
+              correction,
+              cause: O.some(error),
+            })
+          )
+        );
+        rdfStoreRemoveQuads(store, oldQuads);
+      }
+      const newObject = makeLiteral(`${correction.newValue}`, XSD_STRING.value);
+      rdfStoreAddQuad(store, makeQuad(focusNode, predicate, newObject));
+      yield* Effect.logInfo("CorrectorAgent: Applied value correction", {
+        focusNode: correction.focusNode,
+        path: correction.path,
+        newValue: correction.newValue,
       });
     });
-    const applyCorrection = (
-      correction: Correction,
+    const applyReclassification = Effect.fn("CorrectorAgent.applyReclassification")(function* (
+      correction: ReclassifyEntityStrategy,
       store: RdfStore
-    ): Effect.Effect<void, CorrectionApplicationError> =>
-      Effect.gen(function* () {
-        if (!correction.shouldApply) {
-          yield* Effect.logDebug("CorrectorAgent: Skipping correction", {
-            focusNode: correction.focusNode,
-            strategy: correction.strategy,
-            confidence: correction.confidence,
-          });
-          return;
-        }
-        const focusNode = makeNamedNode(correction.focusNode);
-        switch (correction.strategy) {
-          case "generate-value":
-          case "coerce-datatype":
-          case "reformat-value": {
-            if (O.isNone(correction.newValue) || O.isNone(correction.path)) {
-              return;
-            }
-            const predicate = makeNamedNode(correction.path.value);
-            if (O.isSome(correction.originalValue)) {
-              const oldQuads = rdfStoreQuads(store, { subject: focusNode, predicate });
-              rdfStoreRemoveQuads(store, oldQuads);
-            }
-            const newObject = makeLiteral(`${correction.newValue.value}`, XSD_STRING.value);
-            rdfStoreAddQuad(store, makeQuad(focusNode, predicate, newObject));
-            yield* Effect.logInfo("CorrectorAgent: Applied value correction", {
-              focusNode: correction.focusNode,
-              path: correction.path,
-              newValue: correction.newValue,
-            });
-            break;
-          }
-          case "reclassify-entity": {
-            if (O.isNone(correction.newType)) return;
-            const typePredicate = makeNamedNode(RDF_TYPE.value);
-            const oldTypeQuads = rdfStoreQuads(store, { subject: focusNode, predicate: typePredicate });
-            rdfStoreRemoveQuads(store, oldTypeQuads);
-            const newTypeNode = makeNamedNode(correction.newType.value);
-            rdfStoreAddQuad(store, makeQuad(focusNode, typePredicate, newTypeNode));
-            yield* Effect.logInfo("CorrectorAgent: Applied reclassification", {
-              focusNode: correction.focusNode,
-              newType: correction.newType,
-            });
-            break;
-          }
-          case "remove-excess": {
-            yield* Effect.logWarning("CorrectorAgent: remove-excess requires manual review", {
-              focusNode: correction.focusNode,
-              path: correction.path,
-            });
-            break;
-          }
-          default:
-            yield* Effect.logDebug("CorrectorAgent: Skipped correction", {
-              focusNode: correction.focusNode,
-              reason: correction.explanation,
-            });
-        }
+    ) {
+      const focusNode = makeNamedNode(correction.focusNode);
+      const typePredicate = makeNamedNode(RDF_TYPE.value);
+      const oldTypeQuads = yield* rdfStoreQuads(store, {
+        subject: focusNode,
+        predicate: typePredicate,
       }).pipe(
-        Effect.mapError(
-          (error) =>
-            new CorrectionApplicationError({
-              message: `Failed to apply correction: ${String(error)}`,
-              correction,
-              cause: error,
-            })
+        Effect.mapError((error) =>
+          CorrectionApplicationError.make({
+            message: `Failed to read types for reclassification: ${error.message}`,
+            correction,
+            cause: O.some(error),
+          })
         )
       );
-    const correct = Effect.fn("CorrectorAgent.correct")(function* (
-      violation: ShaclValidationViolation,
-      store: RdfStore,
-      ontologyContext: OntologyContext
-    ): Effect.fn.Return<CorrectionResult, CorrectionError | CorrectionApplicationError> {
-      const startTime = yield* Clock.currentTimeMillis;
-      const correction = yield* generateCorrection(violation, store, ontologyContext);
-      let applied = false;
-      if (correction.shouldApply) {
-        yield* applyCorrection(correction, store);
-        applied = true;
-      }
-      const durationMs = (yield* Clock.currentTimeMillis) - startTime;
-      return CorrectionResult.make({
-        violation,
-        correction,
-        applied,
-        durationMs,
+      rdfStoreRemoveQuads(store, oldTypeQuads);
+      const newTypeNode = makeNamedNode(correction.newType);
+      rdfStoreAddQuad(store, makeQuad(focusNode, typePredicate, newTypeNode));
+      yield* Effect.logInfo("CorrectorAgent: Applied reclassification", {
+        focusNode: correction.focusNode,
+        newType: correction.newType,
       });
     });
+    const applyCorrectionByStrategy: (
+      correction: Correction
+    ) => (store: RdfStore) => Effect.Effect<void, CorrectionApplicationError> = Correction.match({
+      "generate-value": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
+      "coerce-datatype": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
+      "remove-excess": (correction) => () =>
+        Effect.logWarning("CorrectorAgent: remove-excess requires manual review", {
+          focusNode: correction.focusNode,
+          path: correction.path,
+        }),
+      "reclassify-entity": (correction) => (store: RdfStore) => applyReclassification(correction, store),
+      "reformat-value": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
+      skip: (correction) => () =>
+        Effect.logDebug("CorrectorAgent: Skipped correction", {
+          focusNode: correction.focusNode,
+          reason: correction.explanation,
+        }),
+    });
+    const applyCorrection = Effect.fn("CorrectorAgent.applyCorrection")(function* (
+      correction: Correction,
+      store: RdfStore
+    ): Effect.fn.Return<void, CorrectionApplicationError> {
+      if (!correctionShouldApply(correction)) {
+        yield* Effect.logDebug("CorrectorAgent: Skipping correction", {
+          focusNode: correction.focusNode,
+          strategy: correction.strategy,
+          confidence: correction.confidence,
+        });
+        return;
+      }
+      yield* applyCorrectionByStrategy(correction)(store);
+    });
+    const correct: {
+      (
+        violation: ShaclValidationViolation,
+        store: RdfStore,
+        ontologyContext: OntologyContext
+      ): Effect.Effect<CorrectionResult, CorrectionError | CorrectionApplicationError>;
+      (
+        store: RdfStore,
+        ontologyContext: OntologyContext
+      ): (
+        violation: ShaclValidationViolation
+      ) => Effect.Effect<CorrectionResult, CorrectionError | CorrectionApplicationError>;
+    } = dual(
+      3,
+      Effect.fn("CorrectorAgent.correct")(function* (
+        violation: ShaclValidationViolation,
+        store: RdfStore,
+        ontologyContext: OntologyContext
+      ): Effect.fn.Return<CorrectionResult, CorrectionError | CorrectionApplicationError> {
+        const startTime = yield* Clock.currentTimeMillis;
+        const correction = yield* generateCorrection(violation, store, ontologyContext);
+        let applied = false;
+        if (correctionShouldApply(correction)) {
+          yield* applyCorrection(correction, store);
+          applied = true;
+        }
+        const durationMs = (yield* Clock.currentTimeMillis) - startTime;
+        return CorrectionResult.make({
+          violation,
+          correction,
+          applied,
+          durationMs,
+        });
+      })
+    );
     const correctAll = Effect.fn("CorrectorAgent.correctAll")(function* (
       report: ShaclValidationReport,
       store: RdfStore,
@@ -614,10 +975,8 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
               Effect.succeed(
                 CorrectionResult.make({
                   violation,
-                  correction: Correction.make({
-                    strategy: "skip",
+                  correction: Correction.cases.skip.make({
                     focusNode: violation.focusNode,
-                    path: O.some(violation.path.value),
                     explanation: `Error: ${error.message}`,
                     confidence: Confidence.make(0),
                   }),
@@ -684,7 +1043,10 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
     };
   }),
 }) {
-  static readonly Default = Layer.effect(this, this.make).pipe(
+  static readonly Default: Layer.Layer<CorrectorAgent, Config.ConfigError, LanguageModel.LanguageModel> = Layer.effect(
+    this,
+    this.make
+  ).pipe(
     Layer.provide([
       ConfigServiceDefault,
       // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)

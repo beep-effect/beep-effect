@@ -1,53 +1,53 @@
 /**
  * CLI: Reconcile Command
  *
+ * **Details**
+ *
  * Analyze entities in a batch for potential duplicates and display statistics.
  * For full cross-batch resolution with persistent registry, use the API endpoint.
  *
- * @since 2.0.0
- * @module Cli/Commands/Reconcile
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import { makeNamedNode } from "@beep/rdf";
+import { Subject } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
-import { Chunk, Console, Effect, FileSystem, Option, Schema } from "effect";
+import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg";
+import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
-import { Command, Flag as Options } from "effect/unstable/cli";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as Str from "effect/String";
+import { Command, Flag } from "effect/unstable/cli";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
 
-const SCHEMA_NAME = makeNamedNode("http://schema.org/name");
-
 // =============================================================================
 // Command Options
 // =============================================================================
 
-const batchIdOption = Options.string("batch-id").pipe(
-  Options.withAlias("b"),
-  Options.withDescription("Batch ID to analyze")
+const batchIdOption = Flag.string("batch-id").pipe(Flag.withAlias("b"), Flag.withDescription("Batch ID to analyze"));
+const TypeCountOrder = Order.mapInput(Order.flip(Order.Number), (entry: readonly [string, number]) => entry[1]);
+
+const manifestOption = Flag.file("manifest").pipe(
+  Flag.withAlias("m"),
+  Flag.optional,
+  Flag.withDescription("Path to batch manifest JSON (alternative to batch-id)")
 );
 
-const manifestOption = Options.file("manifest").pipe(
-  Options.withAlias("m"),
-  Options.optional,
-  Options.withDescription("Path to batch manifest JSON (alternative to batch-id)")
+const thresholdOption = Flag.float("threshold").pipe(
+  Flag.withAlias("t"),
+  Flag.withDefault(0.8),
+  Flag.withDescription("Similarity threshold for duplicate detection (0-1)")
 );
 
-const thresholdOption = Options.float("threshold").pipe(
-  Options.withAlias("t"),
-  Options.withDefault(0.8),
-  Options.withDescription("Similarity threshold for duplicate detection (0-1)")
-);
-
-const verboseOption = Options.boolean("verbose").pipe(
-  Options.withAlias("v"),
-  Options.withDefault(false),
-  Options.withDescription("Show detailed entity information")
+const verboseOption = Flag.boolean("verbose").pipe(
+  Flag.withAlias("v"),
+  Flag.withDefault(false),
+  Flag.withDescription("Show detailed entity information")
 );
 
 // =============================================================================
@@ -58,17 +58,17 @@ const verboseOption = Options.boolean("verbose").pipe(
  * Simple string similarity using normalized Levenshtein distance
  */
 const stringSimilarity = (a: string, b: string): number => {
-  const aLower = a.toLowerCase().trim();
-  const bLower = b.toLowerCase().trim();
+  const aLower = pipe(a, Str.toLowerCase, Str.trim);
+  const bLower = pipe(b, Str.toLowerCase, Str.trim);
 
   if (aLower === bLower) return 1.0;
-  if (aLower.length === 0 || bLower.length === 0) return 0.0;
+  if (Str.isEmpty(aLower) || Str.isEmpty(bLower)) return 0.0;
 
   // Simple Jaccard similarity on character n-grams
   const ngrams = (s: string, n: number = 2): MutableHashSet.MutableHashSet<string> => {
     const result = MutableHashSet.empty<string>();
     for (let i = 0; i <= s.length - n; i++) {
-      MutableHashSet.add(result, s.substring(i, i + n));
+      MutableHashSet.add(result, Str.substring(i, i + n)(s));
     }
     return result;
   };
@@ -98,7 +98,7 @@ interface ExtractedEntity {
 
 const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   batchId: string,
-  manifest: Option.Option<string>,
+  manifest: O.Option<string>,
   threshold: number,
   verbose: boolean
 ) {
@@ -107,40 +107,40 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   yield* Console.log(`Analyzing entities for batch: ${batchId}`);
   yield* Console.log(`Similarity threshold: ${threshold}`);
   let manifestData: BatchManifest;
-  if (Option.isSome(manifest)) {
+  if (O.isSome(manifest)) {
     const fs = yield* FileSystem.FileSystem;
     const content = yield* fs.readFileString(manifest.value);
-    manifestData = yield* Schema.decodeEffect(Schema.fromJsonString(BatchManifest))(content);
+    manifestData = yield* BatchManifest.decodeEffectFromJsonString(content);
   } else {
     const manifestKey = `batches/${batchId}/manifest.json`;
-    const contentOpt = yield* storage.get(manifestKey);
-    if (contentOpt === undefined) {
+    const contentOpt = yield* storage.getOption(manifestKey);
+    if (O.isNone(contentOpt)) {
       yield* Console.error(`Manifest not found: ${manifestKey}`);
       yield* Console.log("Use --manifest to specify a local manifest file");
       return;
     }
-    manifestData = yield* Schema.decodeEffect(Schema.fromJsonString(BatchManifest))(contentOpt);
+    manifestData = yield* BatchManifest.decodeEffectFromJsonString(contentOpt.value);
   }
   yield* Console.log(`Found ${manifestData.documents.length} documents in batch`);
   const allEntities: Array<ExtractedEntity> = [];
   for (const doc of manifestData.documents) {
     const graphKey = `batches/${batchId}/graphs/${doc.documentId}.ttl`;
-    const graphContentOpt = yield* storage.get(graphKey);
-    if (graphContentOpt === undefined) {
+    const graphContentOpt = yield* storage.getOption(graphKey);
+    if (O.isNone(graphContentOpt)) {
       if (verbose) {
         yield* Console.log(`  No graph found for: ${doc.documentId}`);
       }
       continue;
     }
-    const store = yield* rdf.parseTurtle(graphContentOpt);
+    const store = yield* rdf.parseTurtle(graphContentOpt.value);
     const typeQuads = yield* rdf.queryStore(store, {
       predicate: RDF_TYPE,
     });
     const entityTypes = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
     for (const quad of typeQuads) {
-      if (quad.subject.termType === "NamedNode") {
+      if (Subject.guards.NamedNode(quad.subject)) {
         const iri = quad.subject.value;
-        const types = Option.getOrElse(MutableHashMap.get(entityTypes, iri), () => {
+        const types = O.getOrElse(MutableHashMap.get(entityTypes, iri), () => {
           const created = MutableHashSet.empty<string>();
           MutableHashMap.set(entityTypes, iri, created);
           return created;
@@ -157,14 +157,16 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     });
     const entityLabels = MutableHashMap.empty<string, string>();
     for (const quad of Chunk.toArray(rdfsLabelQuads).concat(Chunk.toArray(schemaNameQuads))) {
-      if (quad.subject.termType === "NamedNode" && !MutableHashMap.has(entityLabels, quad.subject.value)) {
+      if (Subject.guards.NamedNode(quad.subject) && !MutableHashMap.has(entityLabels, quad.subject.value)) {
         const subject = quad.subject.value;
         const label = quad.object.value;
         MutableHashMap.set(entityLabels, subject, label);
       }
     }
     for (const [iri, types] of entityTypes) {
-      const label = Option.getOrElse(MutableHashMap.get(entityLabels, iri), () => iri.split(/[#/]/).pop() ?? iri);
+      const label = O.getOrElse(MutableHashMap.get(entityLabels, iri), () =>
+        O.getOrElse(A.last(Str.split(/[#/]/)(iri)), () => iri)
+      );
       allEntities.push({
         iri,
         types: A.fromIterable(types),
@@ -177,7 +179,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     }
   }
   yield* Console.log(`\nTotal entities found: ${allEntities.length}`);
-  if (allEntities.length === 0) {
+  if (A.isReadonlyArrayEmpty(allEntities)) {
     yield* Console.log("No entities to analyze. Run extraction first.");
     return;
   }
@@ -201,9 +203,12 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
       }
     }
   }
-  duplicatePairs.sort((a, b) => b.similarity - a.similarity);
+  const sortedDuplicatePairs = A.sort(
+    duplicatePairs,
+    Order.mapInput(Order.flip(Order.Number), (pair: (typeof duplicatePairs)[number]) => pair.similarity)
+  );
   const uniqueInDuplicates = MutableHashSet.empty<string>();
-  for (const pair of duplicatePairs) {
+  for (const pair of sortedDuplicatePairs) {
     MutableHashSet.add(uniqueInDuplicates, pair.entity1.iri);
     MutableHashSet.add(uniqueInDuplicates, pair.entity2.iri);
   }
@@ -216,7 +221,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   );
   if (duplicatePairs.length > 0) {
     yield* Console.log("\n--- Top Potential Duplicates ---");
-    const topPairs = duplicatePairs.slice(0, 10);
+    const topPairs = A.take(sortedDuplicatePairs, 10);
     for (const pair of topPairs) {
       yield* Console.log(
         `[${(pair.similarity * 100).toFixed(1)}%] "${pair.entity1.label}" <-> "${pair.entity2.label}"`
@@ -237,18 +242,16 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   const typeDistribution = MutableHashMap.empty<string, number>();
   for (const entity of allEntities) {
     for (const type of entity.types) {
-      const shortType = type.split(/[#/]/).pop() ?? type;
+      const shortType = O.getOrElse(A.last(Str.split(/[#/]/)(type)), () => type);
       MutableHashMap.set(
         typeDistribution,
         shortType,
-        Option.getOrElse(MutableHashMap.get(typeDistribution, shortType), () => 0) + 1
+        O.getOrElse(MutableHashMap.get(typeDistribution, shortType), () => 0) + 1
       );
     }
   }
   yield* Console.log("\n--- Entity Type Distribution ---");
-  const sortedTypes = A.fromIterable(typeDistribution)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
+  const sortedTypes = A.take(A.sort(A.fromIterable(typeDistribution), TypeCountOrder), 10);
   for (const [type, count] of sortedTypes) {
     yield* Console.log(`  ${type}: ${count}`);
   }
@@ -257,7 +260,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     MutableHashMap.set(
       docDistribution,
       entity.sourceDoc,
-      Option.getOrElse(MutableHashMap.get(docDistribution, entity.sourceDoc), () => 0) + 1
+      O.getOrElse(MutableHashMap.get(docDistribution, entity.sourceDoc), () => 0) + 1
     );
   }
   yield* Console.log("\n--- Entities per Document ---");
@@ -270,6 +273,20 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
 // Command Definition
 // =============================================================================
 
+/**
+ * Exposes reconcile command for composition by callers of this module.
+ *
+ * **Example** (Inspect reconcile command)
+ *
+ * ```ts
+ * import { reconcileCommand } from "@effect-ontology/Cli/Commands/Reconcile"
+ *
+ * console.log(reconcileCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const reconcileCommand = Command.make(
   "reconcile",
   {

@@ -1,5 +1,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { describe, expect, it } from "@effect/vitest";
+import { Redacted } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { TerminationCondition } from "../../../Domain/Model/Agent.ts";
@@ -53,7 +54,7 @@ describe("canonical numeric boundaries", () => {
       port: 70_000,
       database: "workflow",
       username: "workflow",
-      password: "secret",
+      password: Redacted.make("secret"),
       ssl: false,
     });
 

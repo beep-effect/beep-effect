@@ -1,6 +1,7 @@
 import { LabsListRow, labsCommand } from "@beep/repo-cli/commands/Labs";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { FsUtilsLive } from "@beep/repo-utils";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -18,7 +19,7 @@ const LabsTestLayer = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 const runLabs = Command.runWith(labsCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const decodeLabsListRows = S.decodeUnknownEffect(S.fromJsonString(S.Array(LabsListRow)));
 
 const withLabsRepo = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>

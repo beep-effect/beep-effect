@@ -1,19 +1,22 @@
 /**
  * CLI: Link Command
  *
+ * **Details**
+ *
  * Create owl:sameAs links between local entities and Wikidata entities.
  *
- * @since 2.0.0
- * @module Cli/Commands/Link
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
-import { IRI } from "@beep/rdf";
-import { Console, Effect, FileSystem } from "effect";
+import { IRI } from "@beep/rdf/Iri";
+import { PosInt } from "@beep/schema/Int";
+import { Console, Effect, FileSystem, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import { Command, Flag as Options } from "effect/unstable/cli";
+import * as Str from "effect/String";
+import * as Command from "effect/unstable/cli/Command";
+import * as Flag from "effect/unstable/cli/Flag";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { WikidataClient } from "../../Service/WikidataClient.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
@@ -22,44 +25,41 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 // Command Options
 // =============================================================================
 
-const entityIriOption = Options.string("entity-id").pipe(
-  Options.withAlias("e"),
-  Options.withDescription("Entity IRI to link")
+const entityIriOption = Flag.string("entity-id").pipe(Flag.withAlias("e"), Flag.withDescription("Entity IRI to link"));
+
+const wikidataIdOption = Flag.string("wikidata-id").pipe(
+  Flag.withAlias("w"),
+  Flag.withDescription("Wikidata Q-ID (e.g., Q42)")
 );
 
-const wikidataIdOption = Options.string("wikidata-id").pipe(
-  Options.withAlias("w"),
-  Options.withDescription("Wikidata Q-ID (e.g., Q42)")
+const graphOption = Flag.file("graph").pipe(
+  Flag.withAlias("g"),
+  Flag.optional,
+  Flag.withDescription("RDF graph file to add the link to (Turtle)")
 );
 
-const graphOption = Options.file("graph").pipe(
-  Options.withAlias("g"),
-  Options.optional,
-  Options.withDescription("RDF graph file to add the link to (Turtle)")
+const outputOption = Flag.file("output").pipe(
+  Flag.withAlias("o"),
+  Flag.optional,
+  Flag.withDescription("Output file for updated graph (default: stdout)")
 );
 
-const outputOption = Options.file("output").pipe(
-  Options.withAlias("o"),
-  Options.optional,
-  Options.withDescription("Output file for updated graph (default: stdout)")
+const searchOption = Flag.string("search").pipe(
+  Flag.withAlias("s"),
+  Flag.optional,
+  Flag.withDescription("Search Wikidata for candidates instead of linking")
 );
 
-const searchOption = Options.string("search").pipe(
-  Options.withAlias("s"),
-  Options.optional,
-  Options.withDescription("Search Wikidata for candidates instead of linking")
+const limitOption = Flag.integer("limit").pipe(
+  Flag.withAlias("l"),
+  Flag.withDefault(10),
+  Flag.withDescription("Maximum search results (default: 10)")
 );
 
-const limitOption = Options.integer("limit").pipe(
-  Options.withAlias("l"),
-  Options.withDefault(10),
-  Options.withDescription("Maximum search results (default: 10)")
-);
-
-const dryRunOption = Options.boolean("dry-run").pipe(
-  Options.withAlias("n"),
-  Options.withDefault(false),
-  Options.withDescription("Validate without creating the link")
+const dryRunOption = Flag.boolean("dry-run").pipe(
+  Flag.withAlias("n"),
+  Flag.withDefault(false),
+  Flag.withDescription("Validate without creating the link")
 );
 
 // =============================================================================
@@ -80,7 +80,7 @@ const linkHandler = Effect.fn("linkHandler")(function* (
   if (O.isSome(search)) {
     yield* Console.log(`Searching Wikidata for: "${search.value}"`);
     yield* Console.log("");
-    const candidates = yield* wikidata.searchEntities(search.value, { limit });
+    const candidates = yield* wikidata.searchEntities(search.value, { limit: PosInt.make(limit) });
     if (A.isReadonlyArrayEmpty(candidates)) {
       yield* Console.log("No candidates found.");
       return;
@@ -106,40 +106,40 @@ To create a link, run:`);
     yield* Console.log("Q-IDs should match the pattern: Q followed by digits (e.g., Q42)");
     return;
   }
-  const entityIriResult = S.decodeResult(IRI)(entityIri);
-  if (entityIriResult._tag === "Failure") {
+  const entityIriResult = IRI.decodeResult(entityIri);
+  if (Result.isFailure(entityIriResult)) {
     yield* Console.error(`Invalid entity IRI: ${entityIri}`);
     return;
   }
   yield* Console.log(`Verifying Wikidata entity: ${wikidataId}`);
   const wikidataEntity = yield* wikidata.getEntity(wikidataId);
-  if (P.isNull(wikidataEntity)) {
+  if (O.isNone(wikidataEntity)) {
     yield* Console.error(`Wikidata entity not found: ${wikidataId}`);
     return;
   }
-  yield* Console.log(`  Found: ${wikidataEntity.label}`);
-  if (O.isSome(wikidataEntity.description)) {
-    yield* Console.log(`  Description: ${wikidataEntity.description}`);
+  yield* Console.log(`  Found: ${wikidataEntity.value.label}`);
+  if (O.isSome(wikidataEntity.value.description)) {
+    yield* Console.log(`  Description: ${wikidataEntity.value.description.value}`);
   }
-  yield* Console.log(`  URI: ${wikidataEntity.conceptUri}`);
+  yield* Console.log(`  URI: ${wikidataEntity.value.conceptUri}`);
   yield* Console.log("");
   if (dryRun) {
     yield* Console.log("Dry run - link not created");
     yield* Console.log(`Would create owl:sameAs link:`);
-    yield* Console.log(`  ${entityIri} owl:sameAs ${wikidataEntity.conceptUri}`);
+    yield* Console.log(`  ${entityIri} owl:sameAs ${wikidataEntity.value.conceptUri}`);
     return;
   }
   const sameAsTriple = `
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix owl: <https://www.w3.org/2002/07/owl#> .
 
-<${entityIri}> owl:sameAs <${wikidataEntity.conceptUri}> .
+<${entityIri}> owl:sameAs <${wikidataEntity.value.conceptUri}> .
 `;
   if (O.isSome(graph)) {
     const fs = yield* FileSystem.FileSystem;
     const graphContent = yield* fs.readFileString(graph.value);
     const store = yield* rdf.parseTurtle(graphContent);
     yield* rdf.addSameAsLinks(store, {
-      [entityIri]: wikidataEntity.conceptUri,
+      [entityIri]: wikidataEntity.value.conceptUri,
     });
     const updatedGraph = yield* rdf.toTurtle(store);
     if (O.isSome(output)) {
@@ -152,7 +152,7 @@ To create a link, run:`);
   } else {
     if (O.isSome(output)) {
       const fs = yield* FileSystem.FileSystem;
-      yield* fs.writeFileString(output.value, sameAsTriple.trim());
+      yield* fs.writeFileString(output.value, Str.trim(sameAsTriple));
       yield* Console.log(`Link written to: ${output.value}`);
     } else {
       yield* Console.log("Created owl:sameAs link:");
@@ -166,6 +166,20 @@ To create a link, run:`);
 // Command Definition
 // =============================================================================
 
+/**
+ * Exposes link command for composition by callers of this module.
+ *
+ * **Example** (Inspect link command)
+ *
+ * ```ts
+ * import { linkCommand } from "@effect-ontology/Cli/Commands/Link"
+ *
+ * console.log(linkCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const linkCommand = Command.make(
   "link",
   {

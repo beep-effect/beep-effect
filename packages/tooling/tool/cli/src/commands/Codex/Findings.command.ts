@@ -11,9 +11,9 @@
  */
 
 import { findRepoRoot } from "@beep/repo-utils";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
-import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { dryRunFlag, forceFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printJsonOrLines, printLines } from "../../internal/cli/Printer.ts";
@@ -67,8 +67,8 @@ export const captureDateFromFileName = (fileName: string): O.Option<string> => {
   return match === null ? O.none() : O.fromUndefinedOr(match[1]);
 };
 
-const encodePayload = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
-const parseJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodePayload = Unknown.encodeUnknownSyncFromJsonString;
+const parseJsonText = Unknown.decodeUnknownEffectFromJsonString;
 
 const readPriorIds = Effect.fnUntraced(function* (packetDir: string) {
   const fs = yield* FileSystem.FileSystem;

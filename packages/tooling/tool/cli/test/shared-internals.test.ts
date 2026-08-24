@@ -32,6 +32,7 @@ import {
   isUnresolvedSecretReference,
   JsonStringCodec,
   jsonText,
+  LocalEnvStep,
   localEnvOpRunStep,
   nextCursor,
   readOptionalConfigString,
@@ -40,7 +41,9 @@ import {
   SchemaFirstPolicyIssuePrefix,
   SchemaFirstPolicySeverity,
   turboEnvOverrides,
+  withLocalEnv,
 } from "@beep/repo-cli/test/SharedInternals";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Data, Effect, Layer } from "effect";
 import * as O from "effect/Option";
@@ -272,6 +275,13 @@ describe("EnvConfig readers", () => {
     expect(wrapped.command).toBe("op");
     expect(wrapped.args).toEqual(["run", "--env-file=.env", "--", "bun", "test"]);
     expect(wrapped.label).toBe("test (op run)");
+  });
+
+  it.effect("withLocalEnv leaves an unrequested step unchanged", () => {
+    const step = LocalEnvStep.make({ label: "test", command: "bun", args: ["test"], cwd: "/repo" });
+    return Effect.gen(function* () {
+      expect(yield* withLocalEnv(step).pipe(provideScopedLayer(NodeServices.layer))).toBe(step);
+    });
   });
 });
 

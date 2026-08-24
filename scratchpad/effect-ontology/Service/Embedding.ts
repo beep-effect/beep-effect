@@ -1,16 +1,20 @@
 /**
  * Service: Embedding
  *
+ * **Details**
+ *
  * Provider-agnostic embedding service with caching and Effect Request API batching.
  * Supports Nomic (local) and Voyage (API) providers via EmbeddingProvider interface.
  *
- * @since 2.0.0
- * @module Service/Embedding
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Effect, Layer, Option } from "effect";
+import { Clock, Context, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
+import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
 import { hashVersionedEmbeddingKey } from "../Utils/Hash.ts";
 import { EmbeddingCache } from "./EmbeddingCache.ts";
@@ -27,10 +31,13 @@ export type { NomicTaskType } from "./NomicNlp.ts";
 /**
  * EmbeddingService interface
  *
+ * **Details**
+ *
  * Provider-agnostic embedding operations with caching.
  *
- * @since 2.0.0
- * @category Service
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface EmbeddingServiceMethods {
   /**
@@ -78,8 +85,16 @@ export interface EmbeddingServiceMethods {
 /**
  * EmbeddingService service tag
  *
- * @since 2.0.0
- * @category Service
+ * **Example** (Inspect embedding service)
+ *
+ * ```ts
+ * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
+ *
+ * console.log(EmbeddingService)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export class EmbeddingService extends Context.Service<EmbeddingService, EmbeddingServiceMethods>()(
   $I`EmbeddingService`
@@ -88,13 +103,23 @@ export class EmbeddingService extends Context.Service<EmbeddingService, Embeddin
 /**
  * EmbeddingService implementation with provider abstraction and Request API
  *
+ * **Details**
+ *
  * Uses:
  * - EmbeddingProvider for provider-agnostic embeddings
  * - EmbeddingCache with versioned keys (includes model/dimension)
  * - Effect Request API for automatic batching via RequestResolver
  *
- * @since 2.0.0
- * @category Layers
+ * **Example** (Inspect embedding service live)
+ *
+ * ```ts
+ * import { EmbeddingServiceLive } from "@effect-ontology/Service/Embedding"
+ *
+ * console.log(EmbeddingServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingServiceLive: Layer.Layer<
   EmbeddingService,
@@ -118,11 +143,19 @@ export const EmbeddingServiceLive: Layer.Layer<
         const startTime = yield* Clock.currentTimeMillis;
 
         // Generate versioned cache key (includes provider/model/dimension)
-        const hash = yield* hashVersionedEmbeddingKey(text, taskType, metadata);
+        const hash = yield* hashVersionedEmbeddingKey(text, taskType, metadata).pipe(
+          Effect.mapError((cause) =>
+            EmbeddingError.make({
+              message: "Failed to compute the embedding cache key",
+              provider: metadata.providerId,
+              cause: O.some(cause),
+            })
+          )
+        );
 
         // Check cache first
         const cached = yield* cache.get(hash);
-        if (Option.isSome(cached)) {
+        if (O.isSome(cached)) {
           const latencyMs = (yield* Clock.currentTimeMillis) - startTime;
           yield* metrics.recordCacheHit(latencyMs);
           return cached.value;
@@ -147,7 +180,7 @@ export const EmbeddingServiceLive: Layer.Layer<
       ),
       embedBatch: Effect.fn("EmbeddingService.embedBatch")(function* (texts, taskType = "search_document") {
         if (texts.length === 0) {
-          return [] as Array<Embedding>;
+          return [];
         }
         return yield* Effect.forEach(texts, (text) => embedWithCache(text, taskType), {
           concurrency: "unbounded",
@@ -162,11 +195,21 @@ export const EmbeddingServiceLive: Layer.Layer<
 /**
  * EmbeddingService with all dependencies
  *
+ * **Details**
+ *
  * Provides complete embedding infrastructure including provider,
  * cache, and metrics.
  *
- * @since 2.0.0
- * @category Layers
+ * **Example** (Inspect embedding service default)
+ *
+ * ```ts
+ * import { EmbeddingServiceDefault } from "@effect-ontology/Service/Embedding"
+ *
+ * console.log(EmbeddingServiceDefault)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingServiceDefault: Layer.Layer<
   EmbeddingService,
@@ -185,7 +228,7 @@ export const EmbeddingServiceDefault: Layer.Layer<
  * Prefer EmbeddingServiceLive with EmbeddingProvider for new code.
  *
  * @deprecated Use EmbeddingServiceLive with EmbeddingProvider instead
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export { NomicNlpService, NomicNlpServiceLive } from "./NomicNlp.ts";

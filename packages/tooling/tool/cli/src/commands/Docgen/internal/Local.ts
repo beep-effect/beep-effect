@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Console, Duration, Effect, flow, Order, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -92,7 +93,7 @@ class TurboDryRunDocument extends S.Class<TurboDryRunDocument>($I`TurboDryRunDoc
 ) {}
 
 const decodeTurboDryRunDocument = S.decodeUnknownEffect(S.fromJsonString(TurboDryRunDocument));
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 type DocgenLocalEnvironment = FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
 type DocgenLocalOptions = {

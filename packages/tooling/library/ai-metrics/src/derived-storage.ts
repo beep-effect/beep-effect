@@ -9,6 +9,7 @@ import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
@@ -854,7 +855,7 @@ export class AiMetricsDerivedStorageWriteResult extends S.Class<AiMetricsDerived
   })
 ) {}
 
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const derivedFailure = (message: string, cause: unknown): AiMetricsDerivedStorageError =>
   AiMetricsDerivedStorageError.make({ cause, message });

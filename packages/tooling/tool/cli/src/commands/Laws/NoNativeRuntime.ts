@@ -37,7 +37,12 @@ import type {
 
 const $I = $RepoCliId.create("commands/Laws/NoNativeRuntime");
 
-const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
+const INCLUDED_GLOBS = [
+  "apps/**/*.{ts,tsx}",
+  "packages/**/*.{ts,tsx}",
+  "infra/**/*.ts",
+  "scratchpad/effect-ontology/**/*.{ts,tsx}",
+] as const;
 const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
 const ALLOWLIST_PATH = "standards/effect-laws.allowlist.jsonc";
 const NO_NATIVE_RUNTIME_RULE_ID = "beep-laws/no-native-runtime";
