@@ -38,6 +38,54 @@ Graduation status: `packet-control-plane-core` was created at ratification
 (2026-08-17); candidates 2–5 remain named by slug only (prospective-path rule)
 until their gates fire and reopen this packet at decompose.
 
+## Pre-close amendments (2026-08-24)
+
+Recorded at the `packet-control-plane-core` pre-close review (five-lens
+adversarial review, operator-grilled 2026-08-24) through this MAP's amendment
+path while the goal is still open — the Amendment C precedent. None adds a
+significant symbol to the candidate-1 ledger: D and E amend event-contract
+rules candidates 2–3 build on, F re-scopes a projection, G stages repair
+machinery and bounds stream opt-in.
+
+- **Amendment D — tolerant reader + raw-canonical digest.** Event identity
+  binds to file content, not schema knowledge: digest verification recomputes
+  sha-256 over the raw parsed JSON's canonical encoding (byte-identical to
+  the current decoded-re-encode for every well-formed event, and it makes
+  injected unknown keys detectable). A reader that encounters an event whose
+  `type` postdates its vocabulary preserves it as an opaque chain link —
+  digest verified, seq/parent linkage honored, body excluded from
+  derivations — surfaces an advisory `unknown-event-type` finding, and
+  refuses writes past an opaque tip with an honest "stream requires a newer
+  CLI" error, never a fake integrity issue. The digest rule lands in the
+  goal's pre-close hardening rung; opaque handling lands with the first
+  vocabulary growth (candidate 2).
+- **Amendment E — dual-stage genesis + no-backfill law.** `packet-created`
+  gains optional `furthestStage`/`furthestOrdinal` (pair-checked, with the
+  furthest ordinal floored at the resume ordinal) so a stream adopted after
+  a sanctioned loop-back expresses both D3 derived values without loss.
+  Absent keys stay omitted from canonical encoding, so every existing event
+  and fixture keeps its digest. Law: genesis is an honest adoption-time
+  snapshot — synthesizing `stage-entered`/`status-set` history for a
+  packet's pre-adoption life is forbidden (fabricated actors and CAS
+  ordering); prior history stays in git log and reflections. Implementation
+  lands with the fleet campaign's genesis seeder, its first consumer.
+- **Amendment F — tip-only committed trace.** The committed `ops/trace.json`
+  re-scopes from the full verbatim timeline (projector v2) to a
+  constant-size derived snapshot: source tip, revision, status,
+  furthest/resume stages, risk-tier override, fork count. The timeline stays
+  derivable on demand from the event files. This keeps the PR-diff review
+  signal, staleness detection, and the fork-loud merge conflict on parallel
+  transitions while removing event byte-duplication and whole-file rewrite
+  churn at fleet scale. Lands as the next projector bump, before the fleet
+  campaign's bulk seeder writes traces at scale.
+- **Amendment G — fork-repair applier staging + opt-in freeze.** A
+  single-packet repair applier (`repair-fork --preview|--apply`, executing
+  the shipped `planForkRepair`) is the fleet convention-migration campaign's
+  first rung, proven by repairing the committed fork fixture end-to-end in
+  CI. Until it ships, no packet beyond the D9 pilot may opt into
+  `ops/events/`. Candidate 3 owns only the fleet-scale repair *flow* (bulk
+  repair, advisory-to-blocking ratchet), never the applier itself.
+
 ## Candidate Goal Packets
 
 | Order | Proposed slug | Mission | Dependencies | Live capability composition |

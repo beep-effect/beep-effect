@@ -98,6 +98,23 @@ projection-migration candidate's scope). Proof: the committed fork fixture
 plans deterministically, and applying the plan in memory folds linear at
 revision 4 with zero forks/issues and a 4-entry timeline — nothing lost.
 
+**Rung 4 — pre-close hardening (PLANNED, grilled 2026-08-24).** Six proven
+gaps from the pre-close adversarial review, one small PR, none weakening the
+P1 fixtures: (1) digest verification recomputed over the raw parsed JSON's
+canonical encoding (parent MAP Amendment D) so identity binds file content
+and injected unknown keys become detectable; (2) `readEventFile` compares
+event `packet`/`root` against the locator — new `packet-mismatch` chain
+issue, so a copied `ops/events/` directory can no longer inherit a foreign
+history silently; (3) `explore --check` gains an advisory
+`packet-status-drift` finding comparing stream-derived status with manifest
+`initiative.status` — the missing advisory-mode observability; (4) the
+queued idempotent-skip: `set-status` to the current derived status becomes a
+no-op outcome instead of appending a self-transition; (5) writer request
+schemas reuse `PacketEventActor`/`PacketEventTimestamp` so invalid actor or
+timestamp input fails at request decode instead of as a defect mid-plan;
+(6) fork verdicts sort by a seq-then-digest total order and the check keys
+fork findings by parent digest, not `parentSeq`.
+
 ## P4 — Yeet: PR to mergeable
 
 `bun run beep yeet repair → verify → publish --pr → monitor` until
@@ -121,6 +138,12 @@ merely to pass this packet.
 
 ## Current blockers
 
-None. P1, P2, and all three ratified P3 rungs shipped 2026-08-17. The
-queued idempotent-skip refinement for self-transitions remains an optional
-rung; otherwise P5 close is next.
+None. P1, P2, and P3 rungs 1–3 shipped 2026-08-17. The 2026-08-24 pre-close
+review locked the close train: (1) docs PR recording parent MAP Amendments
+D–G (landed with this PLAN update), (2) P3 rung 4 — pre-close hardening,
+which absorbs the queued idempotent-skip refinement, (3) P5 close: `/reflect`
+closeout plus the `completed-retained` flip executed through the guarded
+writer in one PR. The fleet convention-migration campaign charter (this
+PLAN's post-close campaign, P5 above) is grilled separately before any
+scaffolding; per MAP Amendment G, no packet beyond this pilot opts into
+`ops/events/` until the campaign's repair applier ships.
