@@ -21,8 +21,9 @@ Grilled round three (operator-ratified):
 4. **Drift fixes in scope:** packet README next-open-question rewrite;
    `research/SOURCES.md` gains the binding `goals/oppold-corpus-pipeline`
    predecessor; `explorations/README.md`'s citation of the retired
-   `standards/repo-exports.catalog.md` is replaced with live-source/package-
-   barrel language. `CAPTURE.md` stays untouched (append-only).
+   repo-exports catalog (removed from `standards/`) is replaced with
+   live-source/package-barrel language. `CAPTURE.md` stays untouched
+   (append-only).
 
 ## 2026-08-24 — Four stop conditions ratified (align closed)
 
@@ -69,7 +70,7 @@ Grilled round (grill-with-docs session; the T7 salvage drive was mounted
    build the minimal streaming copy-while-hashing tool first and run the
    archive op as soon as it exists, before any transformation work. The
    removable-drive exposure window closes on bar-v2 semantics, not ad hoc.
-3. **Archive destination:** `~/data-home/oppold-corpus/raw/t7-salvage-2026-08-10/`
+3. **Archive destination:** the corpus home's `raw/t7-salvage-2026-08-10/`,
    beside the existing `raw/` trees; `oppold-corpus.zip` archived verbatim as
    its own object; `raw/provenance.jsonl` extended. T7 remains the redundant
    second copy; the old PC carries forward as the third until verification
