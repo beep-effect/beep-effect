@@ -1,8 +1,8 @@
 # P1 spot revert — on-demand baseline measurement
 
-Status: measuring. The revert is gated on a calm on-demand week; the window
-cannot close before **2026-08-18** (cutover to on-demand landed with the
-fleet endgame merges on 2026-08-11).
+Status: closed. The revert deployed 2026-08-16 and the tripwire week ran
+calm (decision 2026-08-24 below; evidence in
+p1-tripwire-week-evidence.md).
 
 ## Decision (dated)
 
@@ -69,3 +69,29 @@ the week. Measurement at decision time:
 - Tripwire re-armed: >2 interruption-attributed re-runs/week returns the
   longest lanes to on-demand. Monitor through 2026-08-23 with the same
   recipe, attributing before counting.
+
+## Decision (2026-08-24): TRIPWIRE WEEK CALM — P1 complete
+
+The monitored week (revert deploy 2026-08-16T23:30Z through 2026-08-23)
+closed with **zero interruption-attributed re-runs** against the >2/week
+tripwire. Full attribution in `p1-tripwire-week-evidence.md`:
+
+- 16 re-runs in the fetch window; 3 pre-deploy, 12 in-window, 1 after.
+- All 12 in-window re-runs attribute to non-interruption classes with
+  explicit fingerprints: code/type failures, `setup-bun` /
+  action-archive download HTTP 429/502/503 storms (2026-08-17), operator
+  cancels, and lane max-execution-time timeouts. No self-hosted job in
+  the window failed with zero failed steps, and none carries a
+  runner-loss annotation.
+- The first genuine interruption fingerprint appeared **outside** the
+  window: run 32688837330 (2026-08-24T04:07Z, Docgen, "The self-hosted
+  runner lost communication with the server", attempt 2 success). It
+  validates the baseline's premise — interruptions surface distinctly
+  against the noise floor — and at 1/week the tripwire remains far under
+  threshold.
+
+Posture: fleet stays on diversified spot, price-capacity-optimized, with
+the termination watcher on. The tripwire (>2 interruption-attributed
+re-runs/week → longest lanes to on-demand) stands as the ongoing
+operational rule from the runner endgame decision record; it is no longer
+packet-gated work.
