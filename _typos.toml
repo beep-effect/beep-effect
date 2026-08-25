@@ -84,6 +84,10 @@ metalness = "metalness"
 
 [files]
 extend-exclude = [
+  # Vendored upstream API documents drivers generate from (OpenAPI / JSON Schema);
+  # kept byte-faithful to upstream, so their spelling is not ours to fix.
+  "packages/drivers/*/openapi.json",
+  "packages/drivers/*/spec/*.json",
   # Generated Pulumi terraform-module bridge SDK — vendored upstream text.
   "infra/ci-runners/sdks/**",
   # Exploration capture files are verbatim, append-only human dumps

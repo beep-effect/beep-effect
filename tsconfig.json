@@ -1930,7 +1930,11 @@
       ],
       "@beep/skill-contract/*": [
         "./packages/foundation/modeling/skill-contract/src/*"
-      ]
+      ],
+      "@beep/codegen-kit": [
+        "./packages/tooling/library/codegen-kit/src/index.ts"
+      ],
+      "@beep/codegen-kit/*": ["./packages/tooling/library/codegen-kit/src/*"]
     }
   }
 }

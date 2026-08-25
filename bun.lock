@@ -2409,6 +2409,17 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/library/codegen-kit": {
+      "name": "@beep/codegen-kit",
+      "version": "0.0.0",
+      "dependencies": {
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
     "packages/tooling/library/qa-capture": {
       "name": "@beep/qa-capture",
       "version": "0.0.0",
@@ -3154,6 +3165,8 @@
     "@beep/box": ["@beep/box@workspace:packages/drivers/box"],
 
     "@beep/chalk": ["@beep/chalk@workspace:packages/foundation/capability/chalk"],
+
+    "@beep/codegen-kit": ["@beep/codegen-kit@workspace:packages/tooling/library/codegen-kit"],
 
     "@beep/colors": ["@beep/colors@workspace:packages/foundation/capability/colors"],
 
