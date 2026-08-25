@@ -207,6 +207,18 @@ const computeSelectionState = (): SelectionState => {
  * read fn registers the update + selection-change listeners (torn down via the
  * atom finalizer) and pushes new snapshots with `get.setSelf`.
  *
+ * **Example** (Read the initial snapshot for a headless editor)
+ *
+ * ```ts
+ * import { toolbarSelectionAtom } from "@beep/editor/chat/toolbar"
+ * import { createHeadlessEditor } from "@lexical/headless"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ *
+ * const editor = createHeadlessEditor({ namespace: "example" })
+ * const registry = AtomRegistry.make()
+ * console.log(registry.get(toolbarSelectionAtom(editor)).blockType) // "paragraph"
+ * ```
+ *
  * @category atoms
  * @since 0.0.0
  */
