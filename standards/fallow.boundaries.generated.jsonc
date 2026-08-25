@@ -126,6 +126,12 @@
         ]
       },
       {
+        "name": "@beep/codegen-kit",
+        "patterns": [
+          "packages/tooling/library/codegen-kit/src/**"
+        ]
+      },
+      {
         "name": "@beep/colors",
         "patterns": [
           "packages/foundation/capability/colors/src/**"
@@ -803,6 +809,7 @@
         "from": "@beep/acp",
         "allow": [
           "@beep/acp",
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils",
@@ -810,6 +817,7 @@
         ],
         "allowTypeOnly": [
           "@beep/acp",
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils",
@@ -1198,6 +1206,21 @@
         ]
       },
       {
+        "from": "@beep/codegen-kit",
+        "allow": [
+          "@beep/codegen-kit",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/codegen-kit",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/colors",
         "allow": [
           "@beep/colors",
@@ -1459,6 +1482,7 @@
         "from": "@beep/ecfr",
         "allow": [
           "@beep/api-transport",
+          "@beep/codegen-kit",
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
@@ -1467,6 +1491,7 @@
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
+          "@beep/codegen-kit",
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
@@ -1798,6 +1823,7 @@
         "from": "@beep/govinfo",
         "allow": [
           "@beep/api-transport",
+          "@beep/codegen-kit",
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
@@ -1806,6 +1832,7 @@
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
+          "@beep/codegen-kit",
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
@@ -2960,12 +2987,14 @@
       {
         "from": "@beep/runpod",
         "allow": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",

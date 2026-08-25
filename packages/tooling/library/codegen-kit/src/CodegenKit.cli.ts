@@ -30,7 +30,7 @@ export interface GenerateCliOptions {
 
 const incompatibleFlags = CodegenGenerateError.make({
   message: "--check is offline and cannot be combined with --refresh",
-  cause: new globalThis.Error("incompatible codegen flags"),
+  cause: "incompatible codegen flags",
 });
 
 const isGenerateConfig = S.is(GenerateConfigSchema);

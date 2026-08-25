@@ -40,6 +40,12 @@ export {
   EcfrVersionerParams,
   EcfrVersionsParams,
 } from "./Ecfr.service.ts";
+/**
+ * Type-level contracts exposed by the eCFR service.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type { EcfrShape, SearchResult } from "./Ecfr.service.ts";
 
 /**

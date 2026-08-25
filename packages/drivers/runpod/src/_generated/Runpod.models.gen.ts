@@ -1,5 +1,5 @@
 /**
- * Generated schemas source for @beep/runpod.
+ * Generated schemas source for \@beep/runpod.
  *
  * @packageDocumentation
  * @since 0.0.0

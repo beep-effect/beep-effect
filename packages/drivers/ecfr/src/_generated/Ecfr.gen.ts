@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 
+import { $EcfrId } from "@beep/identity";
 import * as S from "effect/Schema";
 import {
   HttpApi,
@@ -15,9 +16,11 @@ import {
   HttpApiSchema,
   OpenApi,
 } from "effect/unstable/httpapi";
+
+const $I = $EcfrId.create("_generated/Ecfr.gen");
 // non-recursive definitions
 /**
- * Generated AgenciesResponse declaration for @beep/ecfr.
+ * Generated AgenciesResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -47,7 +50,7 @@ export type AgenciesResponse = {
   }>;
 };
 /**
- * Generated AgenciesResponse declaration for @beep/ecfr.
+ * Generated AgenciesResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect AgenciesResponse)
  *
@@ -144,12 +147,18 @@ export const AgenciesResponse = S.Struct({
         "A top-level agency represented in the CFR, including child agencies and CFR references.",
     }),
   ).annotate({ description: "Top-level agencies in name order." }),
-}).annotate({
-  description: "Response envelope containing the agency roster.",
-  identifier: "AgenciesResponse",
-});
+})
+  .annotate({
+    description: "Response envelope containing the agency roster.",
+    identifier: "AgenciesResponse",
+  })
+  .pipe(
+    $I.annoteSchema("AgenciesResponse", {
+      description: "Generated ECFR schema for AgenciesResponse.",
+    }),
+  );
 /**
- * Generated CorrectionsResponse declaration for @beep/ecfr.
+ * Generated CorrectionsResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -182,7 +191,7 @@ export type CorrectionsResponse = {
   }>;
 };
 /**
- * Generated CorrectionsResponse declaration for @beep/ecfr.
+ * Generated CorrectionsResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect CorrectionsResponse)
  *
@@ -310,12 +319,18 @@ export const CorrectionsResponse = S.Struct({
         "An eCFR editorial correction and its affected CFR locations.",
     }),
   ).annotate({ description: "Correction records matching the request." }),
-}).annotate({
-  description: "Response envelope containing eCFR correction records.",
-  identifier: "CorrectionsResponse",
-});
+})
+  .annotate({
+    description: "Response envelope containing eCFR correction records.",
+    identifier: "CorrectionsResponse",
+  })
+  .pipe(
+    $I.annoteSchema("CorrectionsResponse", {
+      description: "Generated ECFR schema for CorrectionsResponse.",
+    }),
+  );
 /**
- * Generated SearchResultsResponse declaration for @beep/ecfr.
+ * Generated SearchResultsResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -340,7 +355,7 @@ export type SearchResultsResponse = {
   };
 };
 /**
- * Generated SearchResultsResponse declaration for @beep/ecfr.
+ * Generated SearchResultsResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchResultsResponse)
  *
@@ -426,12 +441,18 @@ export const SearchResultsResponse = S.Struct({
   }).annotate({
     description: "Pagination and score metadata for eCFR search results.",
   }),
-}).annotate({
-  description: "Paginated eCFR search-results envelope.",
-  identifier: "SearchResultsResponse",
-});
+})
+  .annotate({
+    description: "Paginated eCFR search-results envelope.",
+    identifier: "SearchResultsResponse",
+  })
+  .pipe(
+    $I.annoteSchema("SearchResultsResponse", {
+      description: "Generated ECFR schema for SearchResultsResponse.",
+    }),
+  );
 /**
- * Generated SearchCountResponse declaration for @beep/ecfr.
+ * Generated SearchCountResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -441,7 +462,7 @@ export type SearchCountResponse = {
   readonly total_count?: number;
 };
 /**
- * Generated SearchCountResponse declaration for @beep/ecfr.
+ * Generated SearchCountResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchCountResponse)
  *
@@ -467,12 +488,18 @@ export const SearchCountResponse = S.Struct({
         "Total matching result count when supplied under the paginated-result field name.",
     }),
   ),
-}).annotate({
-  description: "Conservative envelope for the eCFR search count endpoint.",
-  identifier: "SearchCountResponse",
-});
+})
+  .annotate({
+    description: "Conservative envelope for the eCFR search count endpoint.",
+    identifier: "SearchCountResponse",
+  })
+  .pipe(
+    $I.annoteSchema("SearchCountResponse", {
+      description: "Generated ECFR schema for SearchCountResponse.",
+    }),
+  );
 /**
- * Generated SearchSummaryResponse declaration for @beep/ecfr.
+ * Generated SearchSummaryResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -482,7 +509,7 @@ export type SearchSummaryResponse = {
   readonly count?: number;
 };
 /**
- * Generated SearchSummaryResponse declaration for @beep/ecfr.
+ * Generated SearchSummaryResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchSummaryResponse)
  *
@@ -502,13 +529,19 @@ export const SearchSummaryResponse = S.Struct({
   count: S.optionalKey(
     S.Int.annotate({ description: "Matching result count when included." }),
   ),
-}).annotate({
-  description:
-    "Conservative envelope for eCFR search summary details; all known fields remain optional because the official spec leaves the response schema unspecified.",
-  identifier: "SearchSummaryResponse",
-});
+})
+  .annotate({
+    description:
+      "Conservative envelope for eCFR search summary details; all known fields remain optional because the official spec leaves the response schema unspecified.",
+    identifier: "SearchSummaryResponse",
+  })
+  .pipe(
+    $I.annoteSchema("SearchSummaryResponse", {
+      description: "Generated ECFR schema for SearchSummaryResponse.",
+    }),
+  );
 /**
- * Generated SearchDailyCountsResponse declaration for @beep/ecfr.
+ * Generated SearchDailyCountsResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -520,7 +553,7 @@ export type SearchDailyCountsResponse = {
   }>;
 };
 /**
- * Generated SearchDailyCountsResponse declaration for @beep/ecfr.
+ * Generated SearchDailyCountsResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchDailyCountsResponse)
  *
@@ -553,12 +586,18 @@ export const SearchDailyCountsResponse = S.Struct({
       }),
     ).annotate({ description: "Daily result-count buckets when supplied." }),
   ),
-}).annotate({
-  description: "Conservative envelope for daily eCFR search counts.",
-  identifier: "SearchDailyCountsResponse",
-});
+})
+  .annotate({
+    description: "Conservative envelope for daily eCFR search counts.",
+    identifier: "SearchDailyCountsResponse",
+  })
+  .pipe(
+    $I.annoteSchema("SearchDailyCountsResponse", {
+      description: "Generated ECFR schema for SearchDailyCountsResponse.",
+    }),
+  );
 /**
- * Generated SearchTitleCountsResponse declaration for @beep/ecfr.
+ * Generated SearchTitleCountsResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -570,7 +609,7 @@ export type SearchTitleCountsResponse = {
   }>;
 };
 /**
- * Generated SearchTitleCountsResponse declaration for @beep/ecfr.
+ * Generated SearchTitleCountsResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchTitleCountsResponse)
  *
@@ -604,12 +643,18 @@ export const SearchTitleCountsResponse = S.Struct({
       description: "Per-title result-count buckets when supplied.",
     }),
   ),
-}).annotate({
-  description: "Conservative envelope for per-title eCFR search counts.",
-  identifier: "SearchTitleCountsResponse",
-});
+})
+  .annotate({
+    description: "Conservative envelope for per-title eCFR search counts.",
+    identifier: "SearchTitleCountsResponse",
+  })
+  .pipe(
+    $I.annoteSchema("SearchTitleCountsResponse", {
+      description: "Generated ECFR schema for SearchTitleCountsResponse.",
+    }),
+  );
 /**
- * Generated SearchHierarchyCountsResponse declaration for @beep/ecfr.
+ * Generated SearchHierarchyCountsResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -622,7 +667,7 @@ export type SearchHierarchyCountsResponse = {
   }>;
 };
 /**
- * Generated SearchHierarchyCountsResponse declaration for @beep/ecfr.
+ * Generated SearchHierarchyCountsResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchHierarchyCountsResponse)
  *
@@ -658,12 +703,19 @@ export const SearchHierarchyCountsResponse = S.Struct({
       description: "Hierarchy result-count buckets when supplied.",
     }),
   ),
-}).annotate({
-  description: "Conservative envelope for hierarchy-level eCFR search counts.",
-  identifier: "SearchHierarchyCountsResponse",
-});
+})
+  .annotate({
+    description:
+      "Conservative envelope for hierarchy-level eCFR search counts.",
+    identifier: "SearchHierarchyCountsResponse",
+  })
+  .pipe(
+    $I.annoteSchema("SearchHierarchyCountsResponse", {
+      description: "Generated ECFR schema for SearchHierarchyCountsResponse.",
+    }),
+  );
 /**
- * Generated SearchSuggestionsResponse declaration for @beep/ecfr.
+ * Generated SearchSuggestionsResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -672,7 +724,7 @@ export type SearchSuggestionsResponse = {
   readonly suggestions?: ReadonlyArray<string>;
 };
 /**
- * Generated SearchSuggestionsResponse declaration for @beep/ecfr.
+ * Generated SearchSuggestionsResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchSuggestionsResponse)
  *
@@ -691,12 +743,18 @@ export const SearchSuggestionsResponse = S.Struct({
       description: "Suggested search strings when supplied.",
     }),
   ),
-}).annotate({
-  description: "Conservative envelope for eCFR search suggestions.",
-  identifier: "SearchSuggestionsResponse",
-});
+})
+  .annotate({
+    description: "Conservative envelope for eCFR search suggestions.",
+    identifier: "SearchSuggestionsResponse",
+  })
+  .pipe(
+    $I.annoteSchema("SearchSuggestionsResponse", {
+      description: "Generated ECFR schema for SearchSuggestionsResponse.",
+    }),
+  );
 /**
- * Generated AncestryResponse declaration for @beep/ecfr.
+ * Generated AncestryResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -711,7 +769,7 @@ export type AncestryResponse = ReadonlyArray<{
   readonly section_range?: string;
 }>;
 /**
- * Generated AncestryResponse declaration for @beep/ecfr.
+ * Generated AncestryResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect AncestryResponse)
  *
@@ -756,13 +814,19 @@ export const AncestryResponse = S.Array(
   }).annotate({
     description: "A CFR hierarchy node returned in an ancestry response.",
   }),
-).annotate({
-  description:
-    "Ordered CFR hierarchy nodes from title through the requested leaf.",
-  identifier: "AncestryResponse",
-});
+)
+  .annotate({
+    description:
+      "Ordered CFR hierarchy nodes from title through the requested leaf.",
+    identifier: "AncestryResponse",
+  })
+  .pipe(
+    $I.annoteSchema("AncestryResponse", {
+      description: "Generated ECFR schema for AncestryResponse.",
+    }),
+  );
 /**
- * Generated StructureNode declaration for @beep/ecfr.
+ * Generated StructureNode declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -786,7 +850,7 @@ export type StructureNode = {
   }>;
 };
 /**
- * Generated StructureNode declaration for @beep/ecfr.
+ * Generated StructureNode declaration for \@beep/ecfr.
  *
  * **Example** (Inspect StructureNode)
  *
@@ -863,12 +927,18 @@ export const StructureNode = S.Struct({
         "Direct child nodes. Deeper tree parsing is intentionally conservative in v1.",
     }),
   ),
-}).annotate({
-  description: "Root of a CFR title structure tree without regulation text.",
-  identifier: "StructureNode",
-});
+})
+  .annotate({
+    description: "Root of a CFR title structure tree without regulation text.",
+    identifier: "StructureNode",
+  })
+  .pipe(
+    $I.annoteSchema("StructureNode", {
+      description: "Generated ECFR schema for StructureNode.",
+    }),
+  );
 /**
- * Generated TitlesResponse declaration for @beep/ecfr.
+ * Generated TitlesResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -889,7 +959,7 @@ export type TitlesResponse = {
   };
 };
 /**
- * Generated TitlesResponse declaration for @beep/ecfr.
+ * Generated TitlesResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect TitlesResponse)
  *
@@ -957,13 +1027,19 @@ export const TitlesResponse = S.Struct({
         "Import status metadata accompanying the CFR titles catalog.",
     }),
   ),
-}).annotate({
-  description:
-    "Response envelope containing the CFR titles catalog and import metadata.",
-  identifier: "TitlesResponse",
-});
+})
+  .annotate({
+    description:
+      "Response envelope containing the CFR titles catalog and import metadata.",
+    identifier: "TitlesResponse",
+  })
+  .pipe(
+    $I.annoteSchema("TitlesResponse", {
+      description: "Generated ECFR schema for TitlesResponse.",
+    }),
+  );
 /**
- * Generated VersionsResponse declaration for @beep/ecfr.
+ * Generated VersionsResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -990,7 +1066,7 @@ export type VersionsResponse = {
   };
 };
 /**
- * Generated VersionsResponse declaration for @beep/ecfr.
+ * Generated VersionsResponse declaration for \@beep/ecfr.
  *
  * **Example** (Inspect VersionsResponse)
  *
@@ -1084,21 +1160,27 @@ export const VersionsResponse = S.Struct({
   }).annotate({
     description: "Query and currency metadata for a content-version response.",
   }),
-}).annotate({
-  description:
-    "Response envelope containing CFR content versions and query metadata.",
-  identifier: "VersionsResponse",
-});
+})
+  .annotate({
+    description:
+      "Response envelope containing CFR content versions and query metadata.",
+    identifier: "VersionsResponse",
+  })
+  .pipe(
+    $I.annoteSchema("VersionsResponse", {
+      description: "Generated ECFR schema for VersionsResponse.",
+    }),
+  );
 // schemas
 /**
- * Generated ListAgencies200 declaration for @beep/ecfr.
+ * Generated ListAgencies200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type ListAgencies200 = AgenciesResponse;
 /**
- * Generated ListAgencies200 declaration for @beep/ecfr.
+ * Generated ListAgencies200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListAgencies200)
  *
@@ -1113,7 +1195,7 @@ export type ListAgencies200 = AgenciesResponse;
  */
 export const ListAgencies200 = AgenciesResponse;
 /**
- * Generated ListCorrectionsParams declaration for @beep/ecfr.
+ * Generated ListCorrectionsParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1124,7 +1206,7 @@ export type ListCorrectionsParams = {
   readonly error_corrected_date?: string;
 };
 /**
- * Generated ListCorrectionsParams declaration for @beep/ecfr.
+ * Generated ListCorrectionsParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListCorrectionsParams)
  *
@@ -1141,9 +1223,13 @@ export const ListCorrectionsParams = S.Struct({
   date: S.optionalKey(S.String.annotate({ format: "date" })),
   title: S.optionalKey(S.String),
   error_corrected_date: S.optionalKey(S.String.annotate({ format: "date" })),
-});
+}).pipe(
+  $I.annoteSchema("ListCorrectionsParams", {
+    description: "Generated ECFR schema for ListCorrectionsParams.",
+  }),
+);
 /**
- * Generated ListCorrectionsQuery declaration for @beep/ecfr.
+ * Generated ListCorrectionsQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1154,7 +1240,7 @@ export type ListCorrectionsQuery = {
   readonly error_corrected_date?: string;
 };
 /**
- * Generated ListCorrectionsQuery declaration for @beep/ecfr.
+ * Generated ListCorrectionsQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListCorrectionsQuery)
  *
@@ -1171,16 +1257,20 @@ export const ListCorrectionsQuery = S.Struct({
   date: S.optionalKey(S.String.annotate({ format: "date" })),
   title: S.optionalKey(S.String),
   error_corrected_date: S.optionalKey(S.String.annotate({ format: "date" })),
-});
+}).pipe(
+  $I.annoteSchema("ListCorrectionsQuery", {
+    description: "Generated ECFR schema for ListCorrectionsQuery.",
+  }),
+);
 /**
- * Generated ListCorrections200 declaration for @beep/ecfr.
+ * Generated ListCorrections200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type ListCorrections200 = CorrectionsResponse;
 /**
- * Generated ListCorrections200 declaration for @beep/ecfr.
+ * Generated ListCorrections200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListCorrections200)
  *
@@ -1195,14 +1285,14 @@ export type ListCorrections200 = CorrectionsResponse;
  */
 export const ListCorrections200 = CorrectionsResponse;
 /**
- * Generated ListTitleCorrectionsPathParams declaration for @beep/ecfr.
+ * Generated ListTitleCorrectionsPathParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type ListTitleCorrectionsPathParams = { readonly title: string };
 /**
- * Generated ListTitleCorrectionsPathParams declaration for @beep/ecfr.
+ * Generated ListTitleCorrectionsPathParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListTitleCorrectionsPathParams)
  *
@@ -1215,16 +1305,22 @@ export type ListTitleCorrectionsPathParams = { readonly title: string };
  * @category tools
  * @since 0.0.0
  */
-export const ListTitleCorrectionsPathParams = S.Struct({ title: S.String });
+export const ListTitleCorrectionsPathParams = S.Struct({
+  title: S.String,
+}).pipe(
+  $I.annoteSchema("ListTitleCorrectionsPathParams", {
+    description: "Generated ECFR schema for ListTitleCorrectionsPathParams.",
+  }),
+);
 /**
- * Generated ListTitleCorrections200 declaration for @beep/ecfr.
+ * Generated ListTitleCorrections200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type ListTitleCorrections200 = CorrectionsResponse;
 /**
- * Generated ListTitleCorrections200 declaration for @beep/ecfr.
+ * Generated ListTitleCorrections200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListTitleCorrections200)
  *
@@ -1239,7 +1335,7 @@ export type ListTitleCorrections200 = CorrectionsResponse;
  */
 export const ListTitleCorrections200 = CorrectionsResponse;
 /**
- * Generated SearchResultsParams declaration for @beep/ecfr.
+ * Generated SearchResultsParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1264,7 +1360,7 @@ export type SearchResultsParams = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchResultsParams declaration for @beep/ecfr.
+ * Generated SearchResultsParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchResultsParams)
  *
@@ -1298,9 +1394,13 @@ export const SearchResultsParams = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchResultsParams", {
+    description: "Generated ECFR schema for SearchResultsParams.",
+  }),
+);
 /**
- * Generated SearchResultsQuery declaration for @beep/ecfr.
+ * Generated SearchResultsQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1325,7 +1425,7 @@ export type SearchResultsQuery = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchResultsQuery declaration for @beep/ecfr.
+ * Generated SearchResultsQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchResultsQuery)
  *
@@ -1359,16 +1459,20 @@ export const SearchResultsQuery = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchResultsQuery", {
+    description: "Generated ECFR schema for SearchResultsQuery.",
+  }),
+);
 /**
- * Generated SearchResults200 declaration for @beep/ecfr.
+ * Generated SearchResults200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type SearchResults200 = SearchResultsResponse;
 /**
- * Generated SearchResults200 declaration for @beep/ecfr.
+ * Generated SearchResults200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchResults200)
  *
@@ -1383,7 +1487,7 @@ export type SearchResults200 = SearchResultsResponse;
  */
 export const SearchResults200 = SearchResultsResponse;
 /**
- * Generated SearchCountParams declaration for @beep/ecfr.
+ * Generated SearchCountParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1408,7 +1512,7 @@ export type SearchCountParams = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchCountParams declaration for @beep/ecfr.
+ * Generated SearchCountParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchCountParams)
  *
@@ -1442,9 +1546,13 @@ export const SearchCountParams = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchCountParams", {
+    description: "Generated ECFR schema for SearchCountParams.",
+  }),
+);
 /**
- * Generated SearchCountQuery declaration for @beep/ecfr.
+ * Generated SearchCountQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1469,7 +1577,7 @@ export type SearchCountQuery = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchCountQuery declaration for @beep/ecfr.
+ * Generated SearchCountQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchCountQuery)
  *
@@ -1503,16 +1611,20 @@ export const SearchCountQuery = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchCountQuery", {
+    description: "Generated ECFR schema for SearchCountQuery.",
+  }),
+);
 /**
- * Generated SearchCount200 declaration for @beep/ecfr.
+ * Generated SearchCount200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type SearchCount200 = SearchCountResponse;
 /**
- * Generated SearchCount200 declaration for @beep/ecfr.
+ * Generated SearchCount200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchCount200)
  *
@@ -1527,7 +1639,7 @@ export type SearchCount200 = SearchCountResponse;
  */
 export const SearchCount200 = SearchCountResponse;
 /**
- * Generated SearchSummaryParams declaration for @beep/ecfr.
+ * Generated SearchSummaryParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1552,7 +1664,7 @@ export type SearchSummaryParams = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchSummaryParams declaration for @beep/ecfr.
+ * Generated SearchSummaryParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchSummaryParams)
  *
@@ -1586,9 +1698,13 @@ export const SearchSummaryParams = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchSummaryParams", {
+    description: "Generated ECFR schema for SearchSummaryParams.",
+  }),
+);
 /**
- * Generated SearchSummaryQuery declaration for @beep/ecfr.
+ * Generated SearchSummaryQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1613,7 +1729,7 @@ export type SearchSummaryQuery = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchSummaryQuery declaration for @beep/ecfr.
+ * Generated SearchSummaryQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchSummaryQuery)
  *
@@ -1647,16 +1763,20 @@ export const SearchSummaryQuery = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchSummaryQuery", {
+    description: "Generated ECFR schema for SearchSummaryQuery.",
+  }),
+);
 /**
- * Generated SearchSummary200 declaration for @beep/ecfr.
+ * Generated SearchSummary200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type SearchSummary200 = SearchSummaryResponse;
 /**
- * Generated SearchSummary200 declaration for @beep/ecfr.
+ * Generated SearchSummary200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchSummary200)
  *
@@ -1671,7 +1791,7 @@ export type SearchSummary200 = SearchSummaryResponse;
  */
 export const SearchSummary200 = SearchSummaryResponse;
 /**
- * Generated SearchDailyCountsParams declaration for @beep/ecfr.
+ * Generated SearchDailyCountsParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1696,7 +1816,7 @@ export type SearchDailyCountsParams = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchDailyCountsParams declaration for @beep/ecfr.
+ * Generated SearchDailyCountsParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchDailyCountsParams)
  *
@@ -1730,9 +1850,13 @@ export const SearchDailyCountsParams = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchDailyCountsParams", {
+    description: "Generated ECFR schema for SearchDailyCountsParams.",
+  }),
+);
 /**
- * Generated SearchDailyCountsQuery declaration for @beep/ecfr.
+ * Generated SearchDailyCountsQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1757,7 +1881,7 @@ export type SearchDailyCountsQuery = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchDailyCountsQuery declaration for @beep/ecfr.
+ * Generated SearchDailyCountsQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchDailyCountsQuery)
  *
@@ -1791,16 +1915,20 @@ export const SearchDailyCountsQuery = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchDailyCountsQuery", {
+    description: "Generated ECFR schema for SearchDailyCountsQuery.",
+  }),
+);
 /**
- * Generated SearchDailyCounts200 declaration for @beep/ecfr.
+ * Generated SearchDailyCounts200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type SearchDailyCounts200 = SearchDailyCountsResponse;
 /**
- * Generated SearchDailyCounts200 declaration for @beep/ecfr.
+ * Generated SearchDailyCounts200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchDailyCounts200)
  *
@@ -1815,7 +1943,7 @@ export type SearchDailyCounts200 = SearchDailyCountsResponse;
  */
 export const SearchDailyCounts200 = SearchDailyCountsResponse;
 /**
- * Generated SearchTitleCountsParams declaration for @beep/ecfr.
+ * Generated SearchTitleCountsParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1840,7 +1968,7 @@ export type SearchTitleCountsParams = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchTitleCountsParams declaration for @beep/ecfr.
+ * Generated SearchTitleCountsParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchTitleCountsParams)
  *
@@ -1874,9 +2002,13 @@ export const SearchTitleCountsParams = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchTitleCountsParams", {
+    description: "Generated ECFR schema for SearchTitleCountsParams.",
+  }),
+);
 /**
- * Generated SearchTitleCountsQuery declaration for @beep/ecfr.
+ * Generated SearchTitleCountsQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1901,7 +2033,7 @@ export type SearchTitleCountsQuery = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchTitleCountsQuery declaration for @beep/ecfr.
+ * Generated SearchTitleCountsQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchTitleCountsQuery)
  *
@@ -1935,16 +2067,20 @@ export const SearchTitleCountsQuery = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchTitleCountsQuery", {
+    description: "Generated ECFR schema for SearchTitleCountsQuery.",
+  }),
+);
 /**
- * Generated SearchTitleCounts200 declaration for @beep/ecfr.
+ * Generated SearchTitleCounts200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type SearchTitleCounts200 = SearchTitleCountsResponse;
 /**
- * Generated SearchTitleCounts200 declaration for @beep/ecfr.
+ * Generated SearchTitleCounts200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchTitleCounts200)
  *
@@ -1959,7 +2095,7 @@ export type SearchTitleCounts200 = SearchTitleCountsResponse;
  */
 export const SearchTitleCounts200 = SearchTitleCountsResponse;
 /**
- * Generated SearchHierarchyCountsParams declaration for @beep/ecfr.
+ * Generated SearchHierarchyCountsParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -1984,7 +2120,7 @@ export type SearchHierarchyCountsParams = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchHierarchyCountsParams declaration for @beep/ecfr.
+ * Generated SearchHierarchyCountsParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchHierarchyCountsParams)
  *
@@ -2018,9 +2154,13 @@ export const SearchHierarchyCountsParams = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchHierarchyCountsParams", {
+    description: "Generated ECFR schema for SearchHierarchyCountsParams.",
+  }),
+);
 /**
- * Generated SearchHierarchyCountsQuery declaration for @beep/ecfr.
+ * Generated SearchHierarchyCountsQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2045,7 +2185,7 @@ export type SearchHierarchyCountsQuery = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchHierarchyCountsQuery declaration for @beep/ecfr.
+ * Generated SearchHierarchyCountsQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchHierarchyCountsQuery)
  *
@@ -2079,16 +2219,20 @@ export const SearchHierarchyCountsQuery = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchHierarchyCountsQuery", {
+    description: "Generated ECFR schema for SearchHierarchyCountsQuery.",
+  }),
+);
 /**
- * Generated SearchHierarchyCounts200 declaration for @beep/ecfr.
+ * Generated SearchHierarchyCounts200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type SearchHierarchyCounts200 = SearchHierarchyCountsResponse;
 /**
- * Generated SearchHierarchyCounts200 declaration for @beep/ecfr.
+ * Generated SearchHierarchyCounts200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchHierarchyCounts200)
  *
@@ -2103,7 +2247,7 @@ export type SearchHierarchyCounts200 = SearchHierarchyCountsResponse;
  */
 export const SearchHierarchyCounts200 = SearchHierarchyCountsResponse;
 /**
- * Generated SearchSuggestionsParams declaration for @beep/ecfr.
+ * Generated SearchSuggestionsParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2128,7 +2272,7 @@ export type SearchSuggestionsParams = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchSuggestionsParams declaration for @beep/ecfr.
+ * Generated SearchSuggestionsParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchSuggestionsParams)
  *
@@ -2162,9 +2306,13 @@ export const SearchSuggestionsParams = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchSuggestionsParams", {
+    description: "Generated ECFR schema for SearchSuggestionsParams.",
+  }),
+);
 /**
- * Generated SearchSuggestionsQuery declaration for @beep/ecfr.
+ * Generated SearchSuggestionsQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2189,7 +2337,7 @@ export type SearchSuggestionsQuery = {
   readonly last_modified_on_or_before?: string;
 };
 /**
- * Generated SearchSuggestionsQuery declaration for @beep/ecfr.
+ * Generated SearchSuggestionsQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchSuggestionsQuery)
  *
@@ -2223,16 +2371,20 @@ export const SearchSuggestionsQuery = S.Struct({
   last_modified_before: S.optionalKey(S.String),
   last_modified_on_or_after: S.optionalKey(S.String),
   last_modified_on_or_before: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("SearchSuggestionsQuery", {
+    description: "Generated ECFR schema for SearchSuggestionsQuery.",
+  }),
+);
 /**
- * Generated SearchSuggestions200 declaration for @beep/ecfr.
+ * Generated SearchSuggestions200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type SearchSuggestions200 = SearchSuggestionsResponse;
 /**
- * Generated SearchSuggestions200 declaration for @beep/ecfr.
+ * Generated SearchSuggestions200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect SearchSuggestions200)
  *
@@ -2247,7 +2399,7 @@ export type SearchSuggestions200 = SearchSuggestionsResponse;
  */
 export const SearchSuggestions200 = SearchSuggestionsResponse;
 /**
- * Generated GetAncestryParams declaration for @beep/ecfr.
+ * Generated GetAncestryParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2262,7 +2414,7 @@ export type GetAncestryParams = {
   readonly appendix?: string;
 };
 /**
- * Generated GetAncestryParams declaration for @beep/ecfr.
+ * Generated GetAncestryParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetAncestryParams)
  *
@@ -2283,9 +2435,13 @@ export const GetAncestryParams = S.Struct({
   subpart: S.optionalKey(S.String),
   section: S.optionalKey(S.String),
   appendix: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("GetAncestryParams", {
+    description: "Generated ECFR schema for GetAncestryParams.",
+  }),
+);
 /**
- * Generated GetAncestryPathParams declaration for @beep/ecfr.
+ * Generated GetAncestryPathParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2295,7 +2451,7 @@ export type GetAncestryPathParams = {
   readonly title: string;
 };
 /**
- * Generated GetAncestryPathParams declaration for @beep/ecfr.
+ * Generated GetAncestryPathParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetAncestryPathParams)
  *
@@ -2311,9 +2467,13 @@ export type GetAncestryPathParams = {
 export const GetAncestryPathParams = S.Struct({
   date: S.String.annotate({ format: "date" }),
   title: S.String,
-});
+}).pipe(
+  $I.annoteSchema("GetAncestryPathParams", {
+    description: "Generated ECFR schema for GetAncestryPathParams.",
+  }),
+);
 /**
- * Generated GetAncestryQuery declaration for @beep/ecfr.
+ * Generated GetAncestryQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2328,7 +2488,7 @@ export type GetAncestryQuery = {
   readonly appendix?: string;
 };
 /**
- * Generated GetAncestryQuery declaration for @beep/ecfr.
+ * Generated GetAncestryQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetAncestryQuery)
  *
@@ -2349,16 +2509,20 @@ export const GetAncestryQuery = S.Struct({
   subpart: S.optionalKey(S.String),
   section: S.optionalKey(S.String),
   appendix: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("GetAncestryQuery", {
+    description: "Generated ECFR schema for GetAncestryQuery.",
+  }),
+);
 /**
- * Generated GetAncestry200 declaration for @beep/ecfr.
+ * Generated GetAncestry200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type GetAncestry200 = AncestryResponse;
 /**
- * Generated GetAncestry200 declaration for @beep/ecfr.
+ * Generated GetAncestry200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetAncestry200)
  *
@@ -2373,7 +2537,7 @@ export type GetAncestry200 = AncestryResponse;
  */
 export const GetAncestry200 = AncestryResponse;
 /**
- * Generated GetFullTitleXmlParams declaration for @beep/ecfr.
+ * Generated GetFullTitleXmlParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2388,7 +2552,7 @@ export type GetFullTitleXmlParams = {
   readonly appendix?: string;
 };
 /**
- * Generated GetFullTitleXmlParams declaration for @beep/ecfr.
+ * Generated GetFullTitleXmlParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetFullTitleXmlParams)
  *
@@ -2409,9 +2573,13 @@ export const GetFullTitleXmlParams = S.Struct({
   subpart: S.optionalKey(S.String),
   section: S.optionalKey(S.String),
   appendix: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("GetFullTitleXmlParams", {
+    description: "Generated ECFR schema for GetFullTitleXmlParams.",
+  }),
+);
 /**
- * Generated GetFullTitleXmlPathParams declaration for @beep/ecfr.
+ * Generated GetFullTitleXmlPathParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2421,7 +2589,7 @@ export type GetFullTitleXmlPathParams = {
   readonly title: string;
 };
 /**
- * Generated GetFullTitleXmlPathParams declaration for @beep/ecfr.
+ * Generated GetFullTitleXmlPathParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetFullTitleXmlPathParams)
  *
@@ -2437,9 +2605,13 @@ export type GetFullTitleXmlPathParams = {
 export const GetFullTitleXmlPathParams = S.Struct({
   date: S.String.annotate({ format: "date" }),
   title: S.String,
-});
+}).pipe(
+  $I.annoteSchema("GetFullTitleXmlPathParams", {
+    description: "Generated ECFR schema for GetFullTitleXmlPathParams.",
+  }),
+);
 /**
- * Generated GetFullTitleXmlQuery declaration for @beep/ecfr.
+ * Generated GetFullTitleXmlQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2454,7 +2626,7 @@ export type GetFullTitleXmlQuery = {
   readonly appendix?: string;
 };
 /**
- * Generated GetFullTitleXmlQuery declaration for @beep/ecfr.
+ * Generated GetFullTitleXmlQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetFullTitleXmlQuery)
  *
@@ -2475,16 +2647,20 @@ export const GetFullTitleXmlQuery = S.Struct({
   subpart: S.optionalKey(S.String),
   section: S.optionalKey(S.String),
   appendix: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("GetFullTitleXmlQuery", {
+    description: "Generated ECFR schema for GetFullTitleXmlQuery.",
+  }),
+);
 /**
- * Generated GetFullTitleXml200TextXml declaration for @beep/ecfr.
+ * Generated GetFullTitleXml200TextXml declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type GetFullTitleXml200TextXml = string;
 /**
- * Generated GetFullTitleXml200TextXml declaration for @beep/ecfr.
+ * Generated GetFullTitleXml200TextXml declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetFullTitleXml200TextXml)
  *
@@ -2501,7 +2677,7 @@ export const GetFullTitleXml200TextXml = S.String.annotate({
   description: "Raw XML payload.",
 });
 /**
- * Generated GetStructureParams declaration for @beep/ecfr.
+ * Generated GetStructureParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2516,7 +2692,7 @@ export type GetStructureParams = {
   readonly appendix?: string;
 };
 /**
- * Generated GetStructureParams declaration for @beep/ecfr.
+ * Generated GetStructureParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetStructureParams)
  *
@@ -2537,9 +2713,13 @@ export const GetStructureParams = S.Struct({
   subpart: S.optionalKey(S.String),
   section: S.optionalKey(S.String),
   appendix: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("GetStructureParams", {
+    description: "Generated ECFR schema for GetStructureParams.",
+  }),
+);
 /**
- * Generated GetStructurePathParams declaration for @beep/ecfr.
+ * Generated GetStructurePathParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2549,7 +2729,7 @@ export type GetStructurePathParams = {
   readonly title: string;
 };
 /**
- * Generated GetStructurePathParams declaration for @beep/ecfr.
+ * Generated GetStructurePathParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetStructurePathParams)
  *
@@ -2565,9 +2745,13 @@ export type GetStructurePathParams = {
 export const GetStructurePathParams = S.Struct({
   date: S.String.annotate({ format: "date" }),
   title: S.String,
-});
+}).pipe(
+  $I.annoteSchema("GetStructurePathParams", {
+    description: "Generated ECFR schema for GetStructurePathParams.",
+  }),
+);
 /**
- * Generated GetStructureQuery declaration for @beep/ecfr.
+ * Generated GetStructureQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2582,7 +2766,7 @@ export type GetStructureQuery = {
   readonly appendix?: string;
 };
 /**
- * Generated GetStructureQuery declaration for @beep/ecfr.
+ * Generated GetStructureQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetStructureQuery)
  *
@@ -2603,16 +2787,20 @@ export const GetStructureQuery = S.Struct({
   subpart: S.optionalKey(S.String),
   section: S.optionalKey(S.String),
   appendix: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("GetStructureQuery", {
+    description: "Generated ECFR schema for GetStructureQuery.",
+  }),
+);
 /**
- * Generated GetStructure200 declaration for @beep/ecfr.
+ * Generated GetStructure200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type GetStructure200 = StructureNode;
 /**
- * Generated GetStructure200 declaration for @beep/ecfr.
+ * Generated GetStructure200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect GetStructure200)
  *
@@ -2627,14 +2815,14 @@ export type GetStructure200 = StructureNode;
  */
 export const GetStructure200 = StructureNode;
 /**
- * Generated ListTitles200 declaration for @beep/ecfr.
+ * Generated ListTitles200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type ListTitles200 = TitlesResponse;
 /**
- * Generated ListTitles200 declaration for @beep/ecfr.
+ * Generated ListTitles200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListTitles200)
  *
@@ -2649,7 +2837,7 @@ export type ListTitles200 = TitlesResponse;
  */
 export const ListTitles200 = TitlesResponse;
 /**
- * Generated ListVersionsParams declaration for @beep/ecfr.
+ * Generated ListVersionsParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2668,7 +2856,7 @@ export type ListVersionsParams = {
   readonly page?: number;
 };
 /**
- * Generated ListVersionsParams declaration for @beep/ecfr.
+ * Generated ListVersionsParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListVersionsParams)
  *
@@ -2693,16 +2881,20 @@ export const ListVersionsParams = S.Struct({
   "issue_date[lte]": S.optionalKey(S.String.annotate({ format: "date" })),
   "issue_date[gte]": S.optionalKey(S.String.annotate({ format: "date" })),
   page: S.optionalKey(S.Int),
-});
+}).pipe(
+  $I.annoteSchema("ListVersionsParams", {
+    description: "Generated ECFR schema for ListVersionsParams.",
+  }),
+);
 /**
- * Generated ListVersionsPathParams declaration for @beep/ecfr.
+ * Generated ListVersionsPathParams declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type ListVersionsPathParams = { readonly title: string };
 /**
- * Generated ListVersionsPathParams declaration for @beep/ecfr.
+ * Generated ListVersionsPathParams declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListVersionsPathParams)
  *
@@ -2715,9 +2907,13 @@ export type ListVersionsPathParams = { readonly title: string };
  * @category tools
  * @since 0.0.0
  */
-export const ListVersionsPathParams = S.Struct({ title: S.String });
+export const ListVersionsPathParams = S.Struct({ title: S.String }).pipe(
+  $I.annoteSchema("ListVersionsPathParams", {
+    description: "Generated ECFR schema for ListVersionsPathParams.",
+  }),
+);
 /**
- * Generated ListVersionsQuery declaration for @beep/ecfr.
+ * Generated ListVersionsQuery declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
@@ -2736,7 +2932,7 @@ export type ListVersionsQuery = {
   readonly page?: number;
 };
 /**
- * Generated ListVersionsQuery declaration for @beep/ecfr.
+ * Generated ListVersionsQuery declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListVersionsQuery)
  *
@@ -2761,16 +2957,20 @@ export const ListVersionsQuery = S.Struct({
   "issue_date[lte]": S.optionalKey(S.String.annotate({ format: "date" })),
   "issue_date[gte]": S.optionalKey(S.String.annotate({ format: "date" })),
   page: S.optionalKey(S.Int),
-});
+}).pipe(
+  $I.annoteSchema("ListVersionsQuery", {
+    description: "Generated ECFR schema for ListVersionsQuery.",
+  }),
+);
 /**
- * Generated ListVersions200 declaration for @beep/ecfr.
+ * Generated ListVersions200 declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
 export type ListVersions200 = VersionsResponse;
 /**
- * Generated ListVersions200 declaration for @beep/ecfr.
+ * Generated ListVersions200 declaration for \@beep/ecfr.
  *
  * **Example** (Inspect ListVersions200)
  *
@@ -2925,7 +3125,7 @@ class DefaultGroup extends HttpApiGroup.make("default", { topLevel: true }).add(
 ) {}
 
 /**
- * Generated EcfrApi declaration for @beep/ecfr.
+ * Generated EcfrApi declaration for \@beep/ecfr.
  *
  * **Example** (Inspect EcfrApi)
  *

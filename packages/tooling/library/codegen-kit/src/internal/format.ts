@@ -1,7 +1,4 @@
-import { Effect } from "effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Path from "effect/Path";
-import * as Stream from "effect/Stream";
+import { Effect, FileSystem, Path, Stream } from "effect";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { CodegenFormatError } from "../CodegenKit.errors.ts";
@@ -49,7 +46,7 @@ export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* () 
     if (exitCode !== 0) {
       return yield* formatFailure(
         `Biome failed for ${filePath} with exit code ${exitCode}`,
-        new globalThis.Error(`Biome exit code ${exitCode}`)
+        `Biome exit code ${exitCode}`
       );
     }
   });
@@ -82,10 +79,7 @@ export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* () 
       )
       .pipe(Effect.mapError((cause) => formatFailure(`Biome could not format ${outputPath}`, cause)));
     if (Str.isEmpty(formatted)) {
-      return yield* formatFailure(
-        `Biome returned empty output for ${outputPath}`,
-        new globalThis.Error("Biome returned empty output")
-      );
+      return yield* formatFailure(`Biome returned empty output for ${outputPath}`, "Biome returned empty output");
     }
     return formatted;
   });

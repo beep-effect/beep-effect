@@ -86,6 +86,7 @@
   "devDependencies": {
     "@beep/codegen-kit": "workspace:^",
     "@beep/test-utils": "workspace:^",
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"

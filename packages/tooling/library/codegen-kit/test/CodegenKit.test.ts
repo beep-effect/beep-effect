@@ -255,10 +255,13 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
         output: { path: "http.gen.ts" },
       });
       const raw = [
-        'import { Effect, Schema } from "effect";',
+        'import { Effect } from "effect";',
+        'import * as Schema from "effect/Schema";',
         'import { HttpApi, HttpApiSchema } from "effect/unstable/httpapi";',
         'import { unused } from "fixture";',
         'export class Api extends HttpApi.make("fixture") {}',
+        "export type Payload = { readonly value: string };",
+        "export const Payload = Schema.Struct({ value: Schema.String });",
         "export const make = Effect.succeed(Api);",
         "export const NotFound = HttpApiSchema.Empty(404);",
       ].join("\n");
@@ -266,8 +269,12 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
 
       expect(output).toContain("@packageDocumentation");
       expect(output).toContain("Do not edit manually");
+      expect(output).toContain("\\@beep/codegen-kit-fixture");
       expect(output).toContain('import { Effect } from "effect";');
+      expect(output).toContain('import { $CodegenKitId } from "@beep/identity";');
       expect(output).not.toContain('from "fixture"');
+      expect(output).toContain('const $I = $CodegenKitId.create("fixture/http.gen");');
+      expect(output).toContain('$I.annoteSchema("Payload"');
       expect(output).toContain("**Example** (Inspect Api)");
       expect(output).toContain("**Example** (Inspect make)");
       expect(output).toContain("**Example** (Inspect NotFound)");

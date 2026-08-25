@@ -6,7 +6,7 @@ import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import openApiPatchInput from "../openapi.patch.json" with { type: "json" };
-import { renderRunpodOperations } from "./internal/operations.renderer.ts";
+import { renderRunpodOperations } from "./operations.renderer.ts";
 
 const packageRoot = `${import.meta.dirname}/..`;
 // The extra renderer decodes this input as an Effect and fails before writes.

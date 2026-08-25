@@ -10,12 +10,20 @@ import { A, Str } from "@beep/utils";
 import { make as makeJsonSchemaGenerator } from "@effect/openapi-generator/JsonSchemaGenerator";
 import * as OpenApiGenerator from "@effect/openapi-generator/OpenApiGenerator";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
-import { Console, Context, Effect, Layer, Match, MutableList, pipe } from "effect";
-import * as FileSystem from "effect/FileSystem";
-import * as N from "effect/Number";
+import {
+  Console,
+  Context,
+  Effect,
+  FileSystem,
+  Layer,
+  Match,
+  MutableList,
+  Number as N,
+  Order,
+  Path,
+  pipe,
+} from "effect";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
-import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -100,7 +108,7 @@ const handleWarnings = Effect.fn("CodegenKit.handleWarnings")(function* (
   if (config.onWarning === "fail") {
     return yield* generateError(
       `OpenAPI generation warnings for ${config.packageName}:\n${rendered}`,
-      new globalThis.Error("OpenAPI generation warning")
+      "OpenAPI generation warning"
     );
   }
   yield* Console.error(rendered);
@@ -231,7 +239,7 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
   const refreshJson = Effect.fn("CodegenKit.refreshJson")(function* (source: SpecSource) {
     const maybeUrl = sourceUrl(source);
     if (O.isNone(maybeUrl)) {
-      return yield* fetchError("Only URL sources can be refreshed", new globalThis.Error("file source"));
+      return yield* fetchError("Only URL sources can be refreshed", "file source");
     }
     const url = maybeUrl.value;
     const cachePath = sourcePath(source);
@@ -345,10 +353,7 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
       Effect.fnUntraced(function* (extra) {
         const maybeRenderer = R.get(extraRenderers, extra.renderer);
         if (O.isNone(maybeRenderer)) {
-          return yield* postProcessError(
-            `No extra renderer registered as ${extra.renderer}`,
-            new globalThis.Error("missing renderer")
-          );
+          return yield* postProcessError(`No extra renderer registered as ${extra.renderer}`, "missing renderer");
         }
         const renderer = maybeRenderer.value;
         const content = yield* renderer(config, refresh, fetch);
@@ -436,6 +441,8 @@ export class CodegenKit extends Context.Service<CodegenKit, Effect.Success<Retur
    * console.log(CodegenKit.layer())
    * ```
    *
+   * @param extraRenderers - Package-specific renderers keyed by configured renderer name.
+   * @returns A layer that provides the code-generation service and its platform requirements.
    * @category layers
    * @since 0.0.0
    */

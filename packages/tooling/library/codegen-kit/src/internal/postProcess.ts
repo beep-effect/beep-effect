@@ -1,8 +1,7 @@
-import { Match, pipe } from "effect";
+import { Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
@@ -46,7 +45,7 @@ const expressionSuffix = ";";
 const propertyIdentifierPattern = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 
 const outputError = (message: string): CodegenPostProcessError =>
-  CodegenPostProcessError.make({ message, cause: new globalThis.Error(message) });
+  CodegenPostProcessError.make({ message, cause: message });
 
 const parseExpression = (expression: string) => {
   const source = `${expressionPrefix}${expression}${expressionSuffix}`;
@@ -518,7 +517,7 @@ const defaultHeader = (config: GenerateConfig): string =>
   pipe(
     [
       "/**",
-      ` * Generated ${config.format} source for ${config.packageName}.`,
+      ` * Generated ${config.format} source for ${Str.replaceAll("@", "\\@")(config.packageName)}.`,
       " *",
       " * @packageDocumentation",
       " * @since 0.0.0",
@@ -590,7 +589,7 @@ const renderGenericDoc = (name: string, typeOnly: boolean, config: GenerateConfi
   pipe(
     [
       "/**",
-      ` * Generated ${name} declaration for ${config.packageName}.`,
+      ` * Generated ${name} declaration for ${Str.replaceAll("@", "\\@")(config.packageName)}.`,
       ...(typeOnly
         ? []
         : [
@@ -610,6 +609,67 @@ const renderGenericDoc = (name: string, typeOnly: boolean, config: GenerateConfi
     ],
     A.join("\n")
   );
+
+const generatedSchemaInitializerPattern =
+  /^S\.(?:String|Number|Boolean|BigInt|Symbol|Object|Unknown|Any|Never|Void|Null|Undefined|Date|Array|Record|Struct|Union|Literal|TemplateLiteral|Tuple|Class|Enums|OptionFrom|NullOr|TaggedStruct|TaggedError)(?:\s*(?:[({[;,]|$)|\.pipe\s*\()/;
+
+const exportedSchemaDeclaration = (
+  statement: ts.Statement,
+  sourceFile: ts.SourceFile
+): O.Option<readonly [name: string, initializer: ts.Expression]> =>
+  pipe(
+    O.some(statement),
+    O.filter(ts.isVariableStatement),
+    O.filter(isExported),
+    O.flatMap((variableStatement) => A.get(A.fromIterable(variableStatement.declarationList.declarations), 0)),
+    O.flatMap((declaration) =>
+      pipe(
+        O.all({
+          initializer: O.fromUndefinedOr(declaration.initializer),
+          name: pipe(O.some(declaration.name), O.filter(ts.isIdentifier)),
+        }),
+        O.filter(({ initializer }) => generatedSchemaInitializerPattern.test(initializer.getText(sourceFile))),
+        O.map(({ initializer, name }) => [name.text, initializer] as const)
+      )
+    )
+  );
+
+const addIdentityContext = (source: string, config: GenerateConfig): string => {
+  const withImport = `import { ${config.identity.composer} } from "@beep/identity";\n${source}`;
+  const sourceFile = ts.createSourceFile("generated.ts", withImport, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const insertionPoint = pipe(
+    A.fromIterable(sourceFile.statements),
+    A.filter(ts.isImportDeclaration),
+    A.last,
+    O.map((declaration) => declaration.getEnd()),
+    O.getOrElse(() => 0)
+  );
+  const identity = `\n\nconst $I = ${config.identity.composer}.create("${config.identity.moduleId}");`;
+  return `${Str.slice(0, insertionPoint)(withImport)}${identity}${Str.slice(insertionPoint)(withImport)}`;
+};
+
+const annotateExportedSchemas = (source: string, config: GenerateConfig): string => {
+  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const replacements = pipe(
+    A.fromIterable(sourceFile.statements),
+    A.flatMap((statement) =>
+      pipe(
+        exportedSchemaDeclaration(statement, sourceFile),
+        O.map(([name, initializer]) => [
+          new Replacement(
+            initializer.getStart(sourceFile),
+            initializer.getEnd(),
+            `${initializer.getText(sourceFile)}.pipe(\n${renderAnnotation(name, [], config)}\n)`
+          ),
+        ]),
+        O.getOrElse(A.empty<Replacement>)
+      )
+    )
+  );
+  return A.isReadonlyArrayEmpty(replacements)
+    ? source
+    : addIdentityContext(applyReplacements(source, replacements), config);
+};
 
 const addExportDocs = (source: string, config: GenerateConfig): string => {
   const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -703,7 +763,7 @@ const prunedImportClause = (clause: ts.ImportClause, used: ReadonlyArray<string>
     O.orElse(() => O.map(name, (keptName) => ({ name: keptName, namedBindings: undefined }))),
     O.orElse(() => O.map(namedBindings, (keptBindings) => ({ name: undefined, namedBindings: keptBindings }))),
     O.map(({ name: keptName, namedBindings: keptBindings }) =>
-      ts.factory.updateImportClause(clause, clause.isTypeOnly, keptName, keptBindings)
+      ts.factory.updateImportClause(clause, clause.phaseModifier, keptName, keptBindings)
     )
   );
 };
@@ -742,6 +802,7 @@ const normalizeModule = (source: string, config: GenerateConfig): string =>
     (text) => normalizeNumberSchemas(text, config),
     normalizePipeableSchemas,
     stripUnusedImports,
+    (text) => annotateExportedSchemas(text, config),
     (text) => addExportDocs(text, config),
     (text) => prependHeader(text, config)
   );

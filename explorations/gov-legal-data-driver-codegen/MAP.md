@@ -77,7 +77,8 @@ or is marked **NET-NEW**.
   (151 KB) + `packages/drivers/runpod/scripts/generate.ts` (27 KB). The Q1 tier-2 /
   CourtListener-DOL path.
 - **Generated vs hand-authored transport split** —
-  `packages/drivers/runpod/src/_generated/Runpod.generated.ts` vs
+  `packages/drivers/runpod/src/_generated/Runpod.models.gen.ts` and
+  `packages/drivers/runpod/src/_generated/Runpod.operations.gen.ts` vs
   `packages/drivers/runpod/src/Runpod.service.ts` + `Runpod.config.ts`. The Q2
   boundary precedent; govinfo P0 mirrors it.
 - **Raw-request escape hatch** — `RunpodRawRequest` in

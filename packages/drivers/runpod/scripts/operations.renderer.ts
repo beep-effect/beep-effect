@@ -9,10 +9,10 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import openApiPatchInput from "../../openapi.patch.json" with { type: "json" };
+import openApiPatchInput from "../openapi.patch.json" with { type: "json" };
 import type { ExtraRenderer, GenerateConfig } from "@beep/codegen-kit";
 
-const $I = $RunpodId.create("scripts/internal/operations.renderer");
+const $I = $RunpodId.create("scripts/operations.renderer");
 
 const RunpodGeneratorHttpMethod = MappedLiteralKit([
   ["get", "GET"],
@@ -211,7 +211,7 @@ const renderOperations: ExtraRenderer = Effect.fn("RunpodGenerator.renderOperati
  * **Example** (Register the renderer)
  *
  * ```ts
- * import { renderRunpodOperations } from "./internal/operations.renderer.ts"
+ * import { renderRunpodOperations } from "./operations.renderer.ts"
  *
  * console.log(renderRunpodOperations)
  * ```
