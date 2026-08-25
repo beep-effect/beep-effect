@@ -159,6 +159,17 @@ jobs:
             fi
           fi
 
+          if [[ "${{ matrix.id }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            base_ref="origin/${GITHUB_BASE_REF:-main}"
+            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+              git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+            fi
+            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+            if ! grep -Eq '(^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\.json|spec/|scripts/|src/_generated/)|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^packages/_internal/db-admin/drizzle/|^apps/professional-desktop/(package\.json|scripts/sync-migration-bundle\.ts|src/runtime/Migrations\.gen\.ts)$)' <<< "$changed_files"; then
+              should_run=false
+            fi
+          fi
+
           # lab-apps-lifecycle P2 (ratified row 10): PR runs of the labs lane
           # only fire for direct labs-path or shared-toolchain changes; push
           # events always run the full labs set.
