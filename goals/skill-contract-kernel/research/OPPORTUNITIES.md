@@ -25,3 +25,27 @@ Receipts recorded when work is slower or riskier than the repo workflow should m
 - **Doing:** first `yeet publish --pr` proof for the P1(c) judge retrofit, while two sibling checkouts ran their own proofs (load average ~28 on the same box).
 - **Evidence:** `quality:build` reported no-location `error TS2589` from `@beep/ui`, `@beep/xai`, and `@beep/box` — packages the PR does not touch; the quarantine reran and logged `lane rerun failed with exit 2; keeping failure hard`, so the whole ~25 min proof was lost to one environment-only class. `bunx turbo run build --filter=@beep/ui --filter=@beep/xai --filter=@beep/box --force --concurrency=1` then passed 11/11 at the same commit.
 - **Prevented by:** the quarantine rerunning the attributed packages at `--concurrency=1` (the disproof that always passes) instead of a full-lane rerun that inherits the same scheduling pressure, or a load-aware pre-flight that defers the full proof when the box is above a threshold.
+
+## 2026-08-25: the PR-3 exact Turbo test lane repeats the fork-worker timeout
+
+- **Doing:** running the required two-package `turbo run test` proof after adding the SKILL.md projection and repo CLI consumer gate.
+- **Evidence:** all eight `@beep/skill-contract` fork workers reported `[vitest-pool-runner]: Timeout waiting for worker to respond` before test collection. The projection suite passed 6/6, the consumer parity file passed 16/16, and the full contract package passed 45/45 with 100% Istanbul coverage when constrained to one thread worker.
+- **Prevented by:** a managed-sandbox test profile that selects the Vitest thread pool and one worker without requiring each package command to carry bespoke fallback flags.
+
+## 2026-08-25: workspace dependency lock refresh requires unavailable temp and network access
+
+- **Doing:** refreshing `bun.lock` after adding the local `@beep/md` workspace dependency to `@beep/skill-contract`.
+- **Evidence:** the default install failed with `EROFS accessing temporary directory`; writable `BUN_TMPDIR` and `BUN_INSTALL` moved past that failure, but registry resolution then failed because DNS/network access was unavailable.
+- **Prevented by:** an offline lockfile-only workspace dependency updater that can modify an existing workspace entry without resolving unchanged registry dependencies.
+
+## 2026-08-25: JSDoc quality has no affected-package lane
+
+- **Doing:** proving the new exported projection API against the repository JSDoc grammar and sort-tag rules.
+- **Evidence:** `quality jsdoc-quality` only supports repo-wide `--all` analysis and exited 1 on 11,416 inherited missing-example failures. The focused ESLint check, JSDoc ratchet, module-tag guard, and package docgen all passed.
+- **Prevented by:** a package or changed-file scope for `quality jsdoc-quality`, aligned with `docgen:local -- --package`.
+
+## 2026-08-25: coverage ignore hints depend on which runner measured
+
+- **Doing:** shipping `SkillProjection.ts` with one unreachable `RenderError` arm annotated `/* istanbul ignore next */`, after the Codex sandbox proved 100% coverage with the Istanbul provider (`vitest.config.ts` picks Istanbul under Bun).
+- **Evidence:** the hosted `Heavy / Coverage Regression` lane measures with the v8 provider (`vitest.shared.ts`), which ignores Istanbul hints, so the new-file rule failed on #817's first head; the `@beep/html` precedent is `/* v8 ignore next -- reason */`.
+- **Prevented by:** one provider for local and hosted coverage (or a lint that rejects `istanbul ignore` when the ratchet provider is v8), so an ignore hint proven locally is the hint the lane honours.

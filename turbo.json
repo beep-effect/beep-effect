@@ -224,9 +224,12 @@
       ],
       "outputLogs": "new-only"
     },
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
     "docgen": {
       "cache": true,
-      "dependsOn": ["^docgen"],
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
       "outputs": ["docs/**", ".beep/docgen/**"]
     },

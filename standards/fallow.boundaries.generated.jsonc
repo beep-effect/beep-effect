@@ -3177,12 +3177,14 @@
         "from": "@beep/skill-contract",
         "allow": [
           "@beep/identity",
+          "@beep/md",
           "@beep/schema",
           "@beep/skill-contract",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/md",
           "@beep/schema",
           "@beep/skill-contract",
           "@beep/test-utils"

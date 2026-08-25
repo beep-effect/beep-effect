@@ -43,6 +43,7 @@ jobs:
             timeout_minutes: 60
             uses_turbo: "false"
             install_typos: "false"
+            docgen_concurrency: 6
     env:
       # Pull requests stay local-only even when repository secrets are
       # available. Trusted main pushes receive read-write remote-cache access.
@@ -50,6 +51,7 @@ jobs:
       TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
       TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
       TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
+      BEEP_DOCGEN_CONCURRENCY: ${{ matrix.docgen_concurrency || 3 }}
       # Stream task logs line-by-line so a wedged lane task shows its last
       # live output instead of buffering everything behind a group header.
       TURBO_LOG_ORDER: stream
@@ -132,6 +134,20 @@ jobs:
           cache-turbo: ${{ matrix.uses_turbo }}
           cache-write: "false"
 
+      # PRs may read main's local Docgen cache but never save it. This keeps
+      # untrusted code restore-only and satisfies CSF-014 without exposing any
+      # TURBO_TOKEN, TURBO_API, or TURBO_TEAM credential to pull requests.
+      - name: Restore main Docgen Turbo cache
+        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'pull_request'
+        id: docgen-turbo-cache-restore
+        continue-on-error: true
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-
+
       - name: Install typos
         if: steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'
         uses: taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c # v2.85.9
@@ -189,6 +205,16 @@ jobs:
               fi
               ;;
           esac
+
+      # Only trusted main pushes publish a cache entry. Pull requests have no
+      # save step, so restored main artifacts cannot be poisoned by PR code.
+      - name: Save main Docgen Turbo cache
+        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push'
+        continue-on-error: true
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}
 
       - name: Append Turbo summary
         if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()

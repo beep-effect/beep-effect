@@ -1924,6 +1924,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/md": "workspace:^",
         "@beep/schema": "workspace:^",
         "effect": "catalog:",
       },
