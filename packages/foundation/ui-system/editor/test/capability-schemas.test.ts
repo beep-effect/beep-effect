@@ -1,5 +1,6 @@
 import {
   CapabilityCatalog,
+  CapabilityClassification,
   CapabilityDescriptor,
   CapabilityId,
   CapabilityRegistrations,
@@ -8,12 +9,14 @@ import {
   EditorProfile,
   KeyChordFromString,
   ProfileId,
+  ResolvedCapability,
   ResolvedEditorProfile,
 } from "@beep/editor/capability/schemas";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Exit } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { NodeRegistrationKey } from "@beep/editor/capability/schemas";
 
 const descriptorInput = {
@@ -142,4 +145,24 @@ describe("capability schemas", () => {
       expect(CapabilityDescriptor.make).toBeDefined();
     })
   );
+});
+
+describe("capability schema arbitraries", () => {
+  // Schema-derived property coverage: every generated value survives an
+  // encode → decode round trip structurally (S.Class instances are Equal).
+  const roundTrips = <A, I>(schema: S.Codec<A, I>): void =>
+    fc.assert(
+      fc.property(S.toArbitrary(schema)(fc), (value) =>
+        Equal.equals(S.decodeSync(schema)(S.encodeSync(schema)(value)), value)
+      ),
+      { numRuns: 25 }
+    );
+
+  it("round-trips generated classifications", () => {
+    roundTrips(CapabilityClassification);
+  });
+
+  it("round-trips generated resolved capabilities", () => {
+    roundTrips(ResolvedCapability);
+  });
 });
