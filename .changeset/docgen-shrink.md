@@ -6,7 +6,7 @@
 "@beep/provenance": patch
 "@beep/rdf": patch
 "@beep/repo-cli": patch
-"@beep/repo-docgen": patch
+"@beep/repo-docgen": minor
 "@beep/shacl": patch
 ---
 

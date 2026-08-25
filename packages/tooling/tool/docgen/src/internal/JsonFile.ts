@@ -33,7 +33,7 @@ import * as Domain from "../Domain.ts";
  * console.log(typeof program) // "object"
  * ```
  *
- * @category filesystem
+ * @category decoding
  * @since 0.0.0
  */
 export const readDecodedJsonFile = Effect.fn("InternalJsonFile.readDecodedJsonFile")(function* <A, E>(
