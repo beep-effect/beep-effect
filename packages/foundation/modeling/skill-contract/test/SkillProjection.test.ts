@@ -164,6 +164,35 @@ describe("@beep/skill-contract SkillProjection", () => {
     })
   );
 
+  it.effect("refuses allowed verdicts that lack both passed checks and denied verdicts without a failure", () =>
+    Effect.gen(function* () {
+      const passedRender = { check: "rerender-byte-equality", detail: "ok", outcome: "passed" };
+      const passedFrontmatter = { check: "frontmatter-contract-equality", detail: "ok", outcome: "passed" };
+      const failedRender = { check: "rerender-byte-equality", detail: "differs", outcome: "failed" };
+      const decode = S.decodeUnknownEffect(SkillArtifactVerdict);
+
+      const contradictory = yield* decode({ checks: [failedRender, passedFrontmatter], verdict: "allowed" }).pipe(
+        Effect.flip
+      );
+      const incomplete = yield* decode({ checks: [passedRender], verdict: "allowed" }).pipe(Effect.flip);
+      const swapped = yield* decode({ checks: [passedFrontmatter, passedRender], verdict: "allowed" }).pipe(
+        Effect.flip
+      );
+      const deniedWithoutFailure = yield* decode({
+        checks: [passedRender, passedFrontmatter],
+        reasons: ["rerender-mismatch"],
+        verdict: "denied",
+      }).pipe(Effect.flip);
+      const complete = yield* decode({ checks: [passedRender, passedFrontmatter], verdict: "allowed" });
+
+      expect(contradictory.message).toContain("passed rerender-byte-equality");
+      expect(incomplete.message).toContain('["checks"]');
+      expect(swapped.message).toContain("passed rerender-byte-equality");
+      expect(deniedWithoutFailure.message).toContain("at least one failed artifact check");
+      expect(complete.verdict).toBe("allowed");
+    })
+  );
+
   it("allows every schema-derived contract after render and verification", () =>
     fc.assert(
       fc.property(S.toArbitrary(SkillContract)(fc), (candidate) => {

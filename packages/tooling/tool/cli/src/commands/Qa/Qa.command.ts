@@ -224,7 +224,12 @@ const runJudgeSkillCommand = Effect.fn("QaCommand.judgeSkill")(function* (option
 }) {
   const markdown = yield* Effect.fromResult(renderSkillMarkdown(QaJudgeContract));
   yield* O.match(options.write, {
-    onNone: () => printLines([markdown]),
+    // Raw bytes, not the line printer: the committed artifact has no trailing
+    // newline, so `judge-skill > SKILL.md` must reproduce the renderer output exactly.
+    onNone: () =>
+      Effect.sync(() => {
+        process.stdout.write(markdown);
+      }),
     onSome: Effect.fn(function* (outputPath) {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;

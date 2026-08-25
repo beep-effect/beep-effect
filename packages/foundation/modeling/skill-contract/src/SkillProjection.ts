@@ -132,6 +132,32 @@ export class SkillArtifactCheck extends S.Class<SkillArtifactCheck>($I`SkillArti
   })
 ) {}
 
+const AllowedChecksAreComplete = S.makeFilter(
+  (checks: readonly [SkillArtifactCheck, SkillArtifactCheck]) =>
+    artifactCheckName.is["rerender-byte-equality"](checks[0].check) &&
+    artifactCheckOutcome.is.passed(checks[0].outcome) &&
+    artifactCheckName.is["frontmatter-contract-equality"](checks[1].check) &&
+    artifactCheckOutcome.is.passed(checks[1].outcome),
+  {
+    identifier: $I`AllowedChecksAreComplete`,
+    title: "Allowed artifact checks are complete",
+    description: "An allowed verdict records exactly the passed re-render and frontmatter checks, in that order.",
+    message:
+      "Expected the passed rerender-byte-equality check followed by the passed frontmatter-contract-equality check",
+  }
+);
+
+const DeniedChecksRecordAFailure = S.makeFilter(
+  (checks: A.NonEmptyReadonlyArray<SkillArtifactCheck>) =>
+    A.some(checks, (check) => artifactCheckOutcome.is.failed(check.outcome)),
+  {
+    identifier: $I`DeniedChecksRecordAFailure`,
+    title: "Denied artifact checks record a failure",
+    description: "A denied verdict records at least one failed check.",
+    message: "Expected at least one failed artifact check",
+  }
+);
+
 /**
  * Allowed artifact verdict carrying successful audit observations.
  *
@@ -148,7 +174,7 @@ export class SkillArtifactCheck extends S.Class<SkillArtifactCheck>($I`SkillArti
  */
 export class SkillArtifactAllowed extends S.Class<SkillArtifactAllowed>($I`SkillArtifactAllowed`)(
   {
-    checks: S.NonEmptyArray(SkillArtifactCheck),
+    checks: S.Tuple([SkillArtifactCheck, SkillArtifactCheck]).check(AllowedChecksAreComplete),
     verdict: S.tag("allowed"),
   },
   $I.annote("SkillArtifactAllowed", {
@@ -174,7 +200,7 @@ export class SkillArtifactAllowed extends S.Class<SkillArtifactAllowed>($I`Skill
  */
 export class SkillArtifactDenied extends S.Class<SkillArtifactDenied>($I`SkillArtifactDenied`)(
   {
-    checks: S.NonEmptyArray(SkillArtifactCheck),
+    checks: S.NonEmptyArray(SkillArtifactCheck).check(DeniedChecksRecordAFailure),
     reasons: S.NonEmptyArray(SkillArtifactDenialReason),
     verdict: S.tag("denied"),
   },
@@ -524,7 +550,7 @@ export const verifySkillArtifact = Effect.fn("SkillProjection.verifySkillArtifac
     Effect.sync(() => {
       const renderCheck = checkForRender(renderSkillMarkdown(input.contract), input.committed);
       const frontmatterCheck = checkForFrontmatter(decodeSkillFrontmatter(input.committed), input.contract);
-      const checks = A.make(renderCheck[0], frontmatterCheck[0]);
+      const checks = Tuple.make(renderCheck[0], frontmatterCheck[0]);
       const reasons = A.getSomes(A.make(renderCheck[1], frontmatterCheck[1]));
 
       return A.match(reasons, {

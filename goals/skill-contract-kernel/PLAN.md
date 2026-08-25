@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `pending`
+Status: `completed-retained` (closed 2026-08-25; see `README.md` §Latest Evidence)
 
 ## Phases
 
