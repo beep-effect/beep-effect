@@ -96,9 +96,9 @@ team (run `32893112867` on `4764cdb4ba`) passed Gates A through J, L, and the
 new M JIT-replay gate exactly once each, with `AMI_PIN`, a live
 `METADATA_DISABLED (disabled applied)` sample, scoped deregistration, and EC2
 termination one second after completion. GitHub refused the replayed one-use
-JIT configuration with `A session for this runner already exists.` The live
-runner-group and AWS state were re-read and match the committed controller
-source. P5 through P7 closed the same day: every remediation PR is merged, the
+JIT configuration with `A session for this runner already exists.` (concurrent
+replay only; post-release replay is exception E1). The live runner-group and
+AWS state were re-read and match the committed controller source. P5 through P7 closed the same day: every remediation PR is merged, the
 six exact Codex IDs are closed as Already fixed with the ledger in
 [`ops/closures.json`](./ops/closures.json), and the reflection is retained.
 Evidence: [`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md).
@@ -111,10 +111,13 @@ J, L, and M exactly once, `AMI_PIN (ami-0738c1b69711969bc)`, live
 termination after 1 second, ending `REDTEAM: PASS`. The #812 push run
 `32892496750` placed `Build` and all five `Heavy / ...` jobs on group-4
 runners through `check.yml@refs/heads/main` and `heavy.yml@refs/heads/main`.
-Residuals retained for other owners: the serving image is stale against the
-post-#812 lockfile (re-bake owned by `ci-fleet-endgame`), 74 inert
-pre-cutover repository registrations, and the by-construction JIT argv
-residue bounded by the one-job VM.
+Two exceptions are recorded in [`SPEC.md`](./SPEC.md#exception-ledger): E1,
+the replay probe proves concurrent-replay rejection only and post-release
+replay is untested (the packet's open security residual, owned by
+`ci-fleet-endgame`); E2, four IDs were closed on 2026-08-24 by operator
+authority before the P4 re-proof. Other residuals: the serving image is stale
+against the post-#812 lockfile (re-bake owned by `ci-fleet-endgame`) and 74
+inert pre-cutover repository registrations.
 
 ## Notes
 

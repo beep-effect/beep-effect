@@ -2,10 +2,12 @@
 
 Date: 2026-08-25
 
-Status: complete. The full deployed red-team matrix, including the
-operator-controlled JIT replay probe, passed on the final head. The live
-runner-group and AWS state were re-read after the P3 rollout, and all six
-packet-owned Codex IDs are closure-ready. Identifiers follow the packet's
+Status: complete with two recorded exceptions. The full deployed red-team
+matrix, including the operator-controlled JIT replay probe, passed on the
+final head; the replay probe proves concurrent-replay rejection only
+(exception E1). The live runner-group and AWS state were re-read after the P3
+rollout, and all six packet-owned Codex IDs are mapped to evidence, four of
+them having been closed on 2026-08-24 before this re-proof (exception E2). Identifiers follow the packet's
 public sanitization convention: run and job ids, instance ids, group ids,
 image ids, and timestamps only. The JIT configuration value was never printed
 and is not retained.
@@ -83,11 +85,18 @@ value while the first is alive?
   organization and repository runner lists gained no entry.
 
 The rejection is a session-level refusal by GitHub for a runner that already
-holds a session. It closes the P2 residual as a replay-of-live-session
-exposure: the visible argv does not let job code take over or duplicate the
-runner. The value remains visible on the host until the VM terminates; P2's
-one-job VM lifecycle and teardown, re-proved here, bound that residue to the
-job's own lifetime.
+holds a session. It proves that job code cannot duplicate the runner while
+the original listener is connected. It does **not** prove that the
+configuration is consumed or unusable once the original session ends: the
+probe never stopped the original listener, and job code runs as `ec2-user`
+with passwordless sudo, so it can read the value, send it off the host, or
+kill the listener before replaying. The shim powers the VM off on listener
+exit and the registration is ephemeral, but a root attacker can also stop the
+shim, and stale registrations are not reaped before GitHub's one-day
+ephemeral cleanup. Post-release replay, on the host and from another host,
+is therefore untested and is recorded as exception E1 in
+[`SPEC.md`](../SPEC.md#exception-ledger). The SPEC acceptance item for replay
+stays unchecked; this packet claims concurrent-replay rejection only.
 
 ## Lifecycle on the final head
 
@@ -160,9 +169,14 @@ push runs:
   GitHub removes an ephemeral runner that has not connected for more than one
   day. The verifier scopes deregistration to the executing runner, so they do
   not affect proof accounting.
-- **JIT argv residue.** `JIT residue: visible` remains true by construction of
-  the pinned module. Replay of a live session is rejected (this record); the
-  value's exposure is bounded to the one-job VM lifetime.
+- **JIT argv residue and post-release replay (E1).** `JIT residue: visible`
+  remains true by construction of the pinned module. Replay against a live
+  session is rejected (this record). Replay after the original listener is
+  stopped, from the host or from another host, is untested; that gap is
+  exception E1 and is the packet's open security residual. The next probe
+  should stop the original listener in a disposable setup, replay from both
+  places, and require a server-side rejection; alternatively the controller
+  should deregister the runner on abnormal listener exit.
 - **Other-instance denial.** `IMDS_EDGE other_disable` stays inconclusive
   (`InvalidInstanceID.Malformed`), unchanged from P2; the self-only allow is
   proven by the live self edges and the boundary Deny.
@@ -171,8 +185,14 @@ push runs:
 
 ## Merge-gate reading
 
-The SPEC orders dashboard closure after the remediation PR merge gate. Every
-remediation PR is merged: #783 (repo-side CSF-003 and CSF-009 fixes), #796
+The SPEC orders dashboard closure after the remediation PR merge gate and
+after P4 marks every ID closure-ready. Four IDs were closed earlier: the
+operator authorized closing `c799c226…`, `33cd94a1…`, `94594101…`, and
+`d1f026de…` on 2026-08-24 after #796 and #800 merged, on their `P1` and P2
+evidence, before P3 and P4 existed. That sequencing deviation is recorded as
+exception E2 in [`SPEC.md`](../SPEC.md#exception-ledger); the final-head run
+re-passed every gate mapped to those IDs except the post-release half of the
+replay probe (E1). Every remediation PR is merged: #783 (repo-side CSF-003 and CSF-009 fixes), #796
 (P1 deployment proof and verifier), #800 (P2 workload-identity code and
 policy), #805 and #808 (P3 reusable workflow and cutover), and #814 (P3
 evidence). The P4 proof above ran on the merged head. The closeout PR that
@@ -192,18 +212,19 @@ IDs are mapped here for the first time.
 | --- | --- | --- | --- |
 | `08ee74d0eb18819187fd02f570b4d57c` | CSF-001, "PR code now runs on self-hosted EC2 CI lanes" | The fleet is a non-privileged runner class: Gates A through M and `METADATA_DISABLED` on run `32893112867` prove no usable ambient credentials for ordinary, sudo, root, host-network, or privileged-container code, and one-job-one-VM teardown. Admission is defense in depth: [`P3-EVIDENCE.md`](./P3-EVIDENCE.md) proofs 1 through 4 and the #812 push run above. | Closure-ready |
 | `a3a281b2a3d881919fdcbf68ee2364f0` | CSF-004, "PR code now runs on owned EC2 CI runners" | Same deployed proof as CSF-001, plus `AMI_PIN` binding the worker to the sealed serving image and the lockfile-keyed rejection of the stale fast path on the final head. | Closure-ready |
-| `c799c2269d748191997ff176ce4bfd48` | CSF-005, "Shadow runner exposes AWS role creds to job code" | [`P2-EVIDENCE.md`](./P2-EVIDENCE.md) closure-ready mapping, re-proved on the final head by Gates A, B, D, F, G, H, I, L and the live `disabled applied` sample. | Closure-ready |
-| `33cd94a12d788191afbec1edc25c433f` | CSF-006, "Red-team gate misses sudo IMDS credential path" | [`P2-EVIDENCE.md`](./P2-EVIDENCE.md) closure-ready mapping; Gates F through L re-passed on the final head, and Gate M closes the replay question P2 left open. | Closure-ready |
-| `9459410104b881919cd820b97c673b67` | CSF-003, "Baked runner trusts mutable Bun binary" | [`P1-EVIDENCE.md`](./P1-EVIDENCE.md) closure-ready mapping; the final head shows the integrity check refusing the stale image after #812 changed the lockfile. | Closure-ready |
-| `d1f026deb21881919d853e63780734fe` | CSF-009, "IMDS hook can silently remain unarmed" | [`P1-EVIDENCE.md`](./P1-EVIDENCE.md) closure-ready mapping; `E_RUNNER_IMDS_HOOK` and `J_HOOK_STILL_ARMED` each one PASS on the final head with `AMI_PIN` binding them to the serving image. | Closure-ready |
+| `c799c2269d748191997ff176ce4bfd48` | CSF-005, "Shadow runner exposes AWS role creds to job code" | [`P2-EVIDENCE.md`](./P2-EVIDENCE.md) closure-ready mapping, re-proved on the final head by Gates A, B, D, F, G, H, I, L and the live `disabled applied` sample. Gate M proves concurrent replay rejection only; post-release replay is exception E1. | Closure-ready for the credential path; replay half under E1; closed 2026-08-24 under E2 |
+| `33cd94a12d788191afbec1edc25c433f` | CSF-006, "Red-team gate misses sudo IMDS credential path" | [`P2-EVIDENCE.md`](./P2-EVIDENCE.md) closure-ready mapping; Gates F through L re-passed on the final head. Gate M answers the concurrent half of the replay question P2 left open; the post-release half is exception E1. | Closure-ready for the sudo path; replay half under E1; closed 2026-08-24 under E2 |
+| `9459410104b881919cd820b97c673b67` | CSF-003, "Baked runner trusts mutable Bun binary" | [`P1-EVIDENCE.md`](./P1-EVIDENCE.md) closure-ready mapping; the final head shows the integrity check refusing the stale image after #812 changed the lockfile. | Closure-ready; closed 2026-08-24 under E2 |
+| `d1f026deb21881919d853e63780734fe` | CSF-009, "IMDS hook can silently remain unarmed" | [`P1-EVIDENCE.md`](./P1-EVIDENCE.md) closure-ready mapping; `E_RUNNER_IMDS_HOOK` and `J_HOOK_STILL_ARMED` each one PASS on the final head with `AMI_PIN` binding them to the serving image. | Closure-ready; closed 2026-08-24 under E2 |
 
 ## Dashboard closure
 
 Read-only capture before any action, 2026-08-25 (signed-in browser lane, all
 severities, repository scope): 2 open, 418 closed. The four `P1` and P2 IDs
 (`c799c226…`, `33cd94a1…`, `94594101…`, `d1f026de…`) were already closed as
-Already fixed on 2026-08-24 after #796 and #800 merged, each carrying an
-additional-context note that cites its remediation PR and evidence record;
+Already fixed on 2026-08-24 after #796 and #800 merged (exception E2), each
+carrying an additional-context note that cites its remediation PR and
+evidence record;
 the two admission IDs were the only open findings, and no open finding
 outside the allowlist existed. The dashboard does not display a closure
 timestamp on archived findings.

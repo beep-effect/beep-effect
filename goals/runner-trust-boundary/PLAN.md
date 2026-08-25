@@ -224,7 +224,8 @@ ratified in
    `M_JIT_REPLAY` verifier routing without logging the JIT value.
 5. [x] Run the replay probe. GitHub rejected the second listener with
    `A session for this runner already exists.`; the probe scrubbed the value
-   and recorded only the rejection class and timestamps. See
+   and recorded only the rejection class and timestamps. This proves
+   concurrent replay only; post-release replay is SPEC exception E1. See
    [§ JIT replay probe](./research/P4-EVIDENCE.md#jit-replay-probe).
 6. [x] Re-read the live runner-group state and deployed AWS state after
    rollout. See
@@ -243,8 +244,9 @@ ratified in
    each closed this way and merged with operator authority; the closeout PR
    follows the same path.
 2. [x] Treat merge as a hard gate before every dashboard action. Every
-   remediation PR was merged before its findings were closed; the closeout PR
-   carries no remediation code. See
+   remediation PR was merged before its findings were closed; four IDs were
+   closed on 2026-08-24 before the P4 re-proof under SPEC exception E2; the
+   closeout PR carries no remediation code. See
    [`research/P4-EVIDENCE.md` § Merge-gate reading](./research/P4-EVIDENCE.md#merge-gate-reading).
 3. [x] Close the six exact Codex IDs as Already fixed and reconcile the live
    dashboard against the allowlist. Ledger:

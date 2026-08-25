@@ -15,7 +15,8 @@
         "closed": 420
       },
       "openOutsideAllowlist": 0
-    }
+    },
+    "exceptions": "SPEC.md exception ledger: E1 post-release JIT replay untested; E2 four IDs closed on 2026-08-24 before the P4 re-proof."
   },
   "closures": [
     {
@@ -64,7 +65,8 @@
         "pullRequests": [800],
         "runs": [32786883010, 32787722297, 32893112867],
         "records": ["research/P2-EVIDENCE.md", "research/P4-EVIDENCE.md"]
-      }
+      },
+      "exceptions": ["E1", "E2"]
     },
     {
       "codexId": "33cd94a12d788191afbec1edc25c433f",
@@ -78,7 +80,8 @@
         "pullRequests": [800],
         "runs": [32786883010, 32787722297, 32893112867],
         "records": ["research/P2-EVIDENCE.md", "research/P4-EVIDENCE.md"]
-      }
+      },
+      "exceptions": ["E1", "E2"]
     },
     {
       "codexId": "9459410104b881919cd820b97c673b67",
@@ -92,7 +95,8 @@
         "pullRequests": [783, 796],
         "runs": [32763957629, 32763957329, 32761137404],
         "records": ["research/P1-EVIDENCE.md", "research/P4-EVIDENCE.md"]
-      }
+      },
+      "exceptions": ["E2"]
     },
     {
       "codexId": "d1f026deb21881919d853e63780734fe",
@@ -106,7 +110,8 @@
         "pullRequests": [783, 796, 800],
         "runs": [32763957629, 32893112867],
         "records": ["research/P1-EVIDENCE.md", "research/P4-EVIDENCE.md"]
-      }
+      },
+      "exceptions": ["E2"]
     }
   ],
   "historicalClosed": [

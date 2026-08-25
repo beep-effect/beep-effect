@@ -44,11 +44,11 @@ Execution:
    without fallback. Do not repeat the cutover or the redeploy.
 5. P4 Boundary verification: complete 2026-08-25. Treat
    `research/P4-EVIDENCE.md` as the final-head proof of record: run
-   `32893112867` passed Gates A through M (JIT replay rejected), `AMI_PIN`,
-   live `METADATA_DISABLED`, scoped deregistration, and EC2 teardown. Do not
-   rerun it unless the fleet changes.
-6. P5 merge gate: complete. Remediation PRs #796, #800, #805, #808, and #814
-   merged with operator authority before any dashboard closure.
+   `32893112867` passed Gates A through M (concurrent JIT replay rejected),
+   `AMI_PIN`, live `METADATA_DISABLED`, scoped deregistration, and EC2
+   teardown. Post-release replay is untested: SPEC exception E1.
+6. P5 merge gate: complete. Each remediation PR (#796, #800, #805, #808,
+   #814) merged with operator authority before its findings were closed.
 7. P6 and P7: complete 2026-08-25. The six exact IDs are closed as Already
    fixed (`ops/closures.json`); the reflection is under `history/`.
 
@@ -65,8 +65,8 @@ pins support mechanical rollback only. Restoring IMDS-enabled status quo needs
 an explicit operator command and is not a successful security rollback.
 
 Stop on missing authority, failed integrity or security proof, a credential
-path reachable by job-controlled privilege, a hosted-heavy-lane proposal, or
-fleet-packet ownership collision.
+path reachable by job privilege, a hosted-heavy-lane proposal, or fleet-packet
+ownership collision.
 
-Done: deployed proof, required checks, zero review threads, merges,
-exact-ID closure, and a valid reflection are all retained.
+Done: deployed proof, green checks, zero review threads, merges, exact-ID
+closure, and a valid reflection are retained.

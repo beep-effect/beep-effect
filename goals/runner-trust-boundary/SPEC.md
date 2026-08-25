@@ -264,10 +264,12 @@ manifest, and index state together.
       obtain usable ambient application instance-role credentials.
 - [x] The role allow, boundary Deny, live canary, Gate L, and live external
       sample prove one-way, self-only metadata disable before runner startup.
-- [x] P4 proves that replay of the one-use JIT configuration is rejected and
+- [ ] P4 proves that replay of the one-use JIT configuration is rejected and
       scrubs the operator-retained probe value. P2 records the visible argv
-      residue without claiming replay rejection. Proven 2026-08-25 in
-      `research/P4-EVIDENCE.md` (run `32893112867`, `M_JIT_REPLAY: PASS`).
+      residue without claiming replay rejection. Partially proven 2026-08-25
+      in `research/P4-EVIDENCE.md` (run `32893112867`, `M_JIT_REPLAY: PASS`):
+      concurrent replay is rejected and the value was scrubbed; replay after
+      the original session ends is untested and recorded as exception E1.
 - [x] Runner-group controls use the default-branch reusable workflow, match the
       selected-repository and four-workflow design, and cannot fall back.
       Proven 2026-08-25 in `research/P3-EVIDENCE.md` (proofs 1 through 4,
@@ -282,7 +284,8 @@ manifest, and index state together.
       `research/P4-EVIDENCE.md` § Merge-gate reading.
 - [x] After merge, all six open Codex IDs are closed with exact deployed
       evidence; the three older closed identities are not reopened or
-      reclassified without proof. Ledger: `ops/closures.json`.
+      reclassified without proof. Ledger: `ops/closures.json`. Four closed on
+      2026-08-24 before the P4 re-proof under exception E2.
 - [x] Fleet packet ownership remains unchanged.
 - [x] Yeet reports `merge-ready: yes`, review threads are zero, the PR is merged,
       and the closeout reflection validates
@@ -326,4 +329,5 @@ manifest, and index state together.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| E1 Post-release JIT replay untested | The replay half of `c799c2269d748191997ff176ce4bfd48` and `33cd94a12d788191afbec1edc25c433f`; SPEC acceptance item "P4 proves that replay of the one-use JIT configuration is rejected" | `ci-fleet-endgame` (probe change lands in `fleet-shadow-check.yml` on `main`) | P4 proved that GitHub rejects a second listener while the original session is alive (`A session for this runner already exists.`). It did not test replay after the original listener is stopped, nor replay from another host after the VM is gone. Job code runs as `ec2-user` with passwordless sudo and can read, exfiltrate, or kill the listener; the shim powers the VM off on listener exit, but a root attacker can also stop the shim, and stale registrations are not reaped before GitHub's one-day ephemeral cleanup. Recorded 2026-08-25 at closeout; the packet does not claim post-release rejection. | A disposable-runner probe that stops the original listener, replays the configuration from the host and from another host, and records a server-side rejection; or a controller change that deregisters the runner on abnormal listener exit, proven live. |
+| E2 Four IDs closed before the P4 re-proof | `c799c2269d748191997ff176ce4bfd48`, `33cd94a12d788191afbec1edc25c433f`, `9459410104b881919cd820b97c673b67`, `d1f026deb21881919d853e63780734fe` | Operator | The operator authorized closing these four on 2026-08-24 after #796 and #800 merged, on their individual `P1` and P2 evidence, before P3 and P4 existed. `P2-DESIGN.md` mapped the P4 JIT replay probe to both workload-identity IDs; that probe ran on 2026-08-25 and passed for concurrent replay only (E1). The final-head run `32893112867` re-passed every other mapped gate. The closures were not reversed. | Operator reopens the two workload-identity IDs on the dashboard, or E1 is removed. |
