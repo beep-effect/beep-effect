@@ -19,3 +19,9 @@ Receipts recorded when work is slower or riskier than the repo workflow should m
 - **Doing:** running the generated package's exact Turbo test task for the first-slice proof.
 - **Evidence:** both default fork workers timed out after 60 seconds before collecting either test file; the same seven tests completed immediately with `--pool=threads`, and the package coverage command then reported 100% for statements, branches, functions, and lines.
 - **Prevented by:** a repo-supported sandbox test profile that selects Vitest threads when child-process workers cannot start, while leaving ordinary local and CI defaults unchanged.
+
+## 2026-08-25: the TS2589 quarantine's lane rerun fails under peer-session load
+
+- **Doing:** first `yeet publish --pr` proof for the P1(c) judge retrofit, while two sibling checkouts ran their own proofs (load average ~28 on the same box).
+- **Evidence:** `quality:build` reported no-location `error TS2589` from `@beep/ui`, `@beep/xai`, and `@beep/box` — packages the PR does not touch; the quarantine reran and logged `lane rerun failed with exit 2; keeping failure hard`, so the whole ~25 min proof was lost to one environment-only class. `bunx turbo run build --filter=@beep/ui --filter=@beep/xai --filter=@beep/box --force --concurrency=1` then passed 11/11 at the same commit.
+- **Prevented by:** the quarantine rerunning the attributed packages at `--concurrency=1` (the disproof that always passes) instead of a full-lane rerun that inherits the same scheduling pressure, or a load-aware pre-flight that defers the full proof when the box is above a threshold.

@@ -94,6 +94,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(git show:*)",
   "Bash(git branch:*)",
   "Bash(git worktree list:*)",
+  "Bash(git worktree prune:*)",
   "Bash(gh pr view:*)",
   "Bash(gh pr checks:*)",
   "Bash(gh pr list:*)",
@@ -132,7 +133,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 46-value Bash grant domain approved for this repository, including named read-only GitHub queries and intentional Yeet publication commands.",
+      "Exact 47-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and stale-worktree cleanup.",
   })
 );
 
@@ -146,7 +147,6 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
   "Bash(git stash clear:*)",
   "Bash(git stash drop:*)",
   "Bash(git stash pop:*)",
-  "Bash(git worktree prune:*)",
   "Bash(git worktree remove --force:*)",
   "Bash(bun run beep worktree remove --force:*)",
   "Bash(git clean:*)",
@@ -161,7 +161,7 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("RequiredClaudeRepoDenyPermission", {
     description:
-      "Exact 19-value Claude deny domain required to block destructive Git, admin, deletion, and protected-file operations.",
+      "Exact 18-value Claude deny domain required to block history rewrites, forced worktree removal, stash destruction, admin merges, repository deletion, and protected-file edits.",
   })
 );
 
