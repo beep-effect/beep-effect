@@ -340,7 +340,12 @@ it("derives valid agent sessions from the schema", () => fc.assert(AgentSessionS
 
 it("rejects impossible line and measurement values at construction", () => {
   expect(() =>
-    AgentTurn.make({ eventName: "event_msg", lineNumber: 0, sourceKind: "codex", sourcePathHash: "source" })
+    AgentTurn.make({
+      eventName: "event_msg",
+      lineNumber: 0,
+      sourceKind: "codex",
+      sourcePathHash: "source",
+    })
   ).toThrow();
   expect(() =>
     ModelCall.make({
@@ -376,6 +381,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
 
       const summary = yield* summarizeTranscriptText({
         content,
+        hashSalt: O.none(),
         sourceKind: AiMetricsTranscriptSource.Enum.codex,
         sourcePath: "codex.jsonl",
       });
@@ -401,6 +407,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
 
       const summary = yield* summarizeTranscriptText({
         content,
+        hashSalt: O.none(),
         sourceKind: AiMetricsTranscriptSource.Enum.claude,
         sourcePath: "claude.jsonl",
       });
@@ -510,8 +517,16 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(result.turnCount).toBe(3);
             expect(result.sourceCoverage).toEqual(
               expect.arrayContaining([
-                expect.objectContaining({ candidateFileCount: 1, includedFileCount: 1, sourceKind: "codex" }),
-                expect.objectContaining({ candidateFileCount: 1, includedFileCount: 1, sourceKind: "claude" }),
+                expect.objectContaining({
+                  candidateFileCount: 1,
+                  includedFileCount: 1,
+                  sourceKind: "codex",
+                }),
+                expect.objectContaining({
+                  candidateFileCount: 1,
+                  includedFileCount: 1,
+                  sourceKind: "claude",
+                }),
               ])
             );
             expect(yield* forwarderRunResultToJson(result)).toContain(result.ingestRunId);
@@ -539,7 +554,10 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(archiveText).not.toContain("secret-value");
 
             const envelope = yield* readEncryptedRawArchiveEnvelope(archivePath);
-            const plaintext = yield* decryptEncryptedRawArchiveEnvelope({ envelope, rawArchiveKey });
+            const plaintext = yield* decryptEncryptedRawArchiveEnvelope({
+              envelope,
+              rawArchiveKey,
+            });
             expect(plaintext).toContain("secret-value");
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
@@ -1333,7 +1351,9 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
     "adds Phoenix OTLP contracts and renders a dedicated local compose file",
     Effect.fn(function* () {
       const spec = yield* makeAiMetricsInstallSpec(
-        AiMetricsInstallInput.make({ dataRoot: O.some("/srv/data/ai-metrics") })
+        AiMetricsInstallInput.make({
+          dataRoot: O.some("/srv/data/ai-metrics"),
+        })
       );
       const phoenix = phoenixService(spec);
       expect(O.isSome(phoenix)).toBe(true);
@@ -1550,7 +1570,7 @@ volumes:
             repoRoot: "/tmp/repo",
             target: AiMetricsDeployTarget.Enum.dankserver,
           })
-        )
+        ).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))))
       );
 
       expect(error.message).toContain("non-local forwarder runs require a resolved hash salt value");
@@ -2073,7 +2093,10 @@ volumes:
     Effect.fn(function* () {
       yield* Effect.acquireUseRelease(
         Effect.sync(() => {
-          const requests: Array<{ readonly body: string; readonly contentType: string }> = [];
+          const requests: Array<{
+            readonly body: string;
+            readonly contentType: string;
+          }> = [];
           const server = Bun.serve({
             // Continuation-passing rather than `async`/`await`: this repo represents async
             // control flow with Effect, and a bare `async function` here trips the
@@ -2114,7 +2137,10 @@ volumes:
           // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
           const projections = A.makeBy(1200, (index) =>
             AiMetricsOtlpSpanProjection.make({
-              attributes: { "ai_metrics.line_number": index + 1, "openinference.span.kind": "CHAIN" },
+              attributes: {
+                "ai_metrics.line_number": index + 1,
+                "openinference.span.kind": "CHAIN",
+              },
               parentSpanId: O.some("aabbccddeeff0011"),
               spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
               spanName: "ai_metrics.agent.turn",
@@ -2194,7 +2220,9 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const dataRoot = path.join(tmpDir, "metrics");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          yield* fs.makeDirectory(path.dirname(duckDbPath), { recursive: true });
+          yield* fs.makeDirectory(path.dirname(duckDbPath), {
+            recursive: true,
+          });
 
           yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
@@ -2227,7 +2255,11 @@ volumes:
             );
             yield* Effect.forEach(
               [
-                { ingestRunId: "run-early", lineNumber: 1, turnId: "turn-early" },
+                {
+                  ingestRunId: "run-early",
+                  lineNumber: 1,
+                  turnId: "turn-early",
+                },
                 { ingestRunId: "run-late", lineNumber: 2, turnId: "turn-late" },
               ],
               Effect.fnUntraced(function* (turn) {
@@ -2248,7 +2280,10 @@ volumes:
 
           // Prune only run-early.
           yield* runAiMetricsRetentionDelete(
-            AiMetricsRetentionSelector.make({ beforeEpochMillis: O.some(50), dataRoot }),
+            AiMetricsRetentionSelector.make({
+              beforeEpochMillis: O.some(50),
+              dataRoot,
+            }),
             false
           );
 
@@ -2271,7 +2306,10 @@ volumes:
           // again once its last turn goes -- an empty session row surviving forever and
           // pinning its agent task alive through the task GC.
           yield* runAiMetricsRetentionDelete(
-            AiMetricsRetentionSelector.make({ beforeEpochMillis: O.some(200), dataRoot }),
+            AiMetricsRetentionSelector.make({
+              beforeEpochMillis: O.some(200),
+              dataRoot,
+            }),
             false
           );
 
@@ -2315,15 +2353,26 @@ volumes:
             // never reaches this shape, and getting it wrong violates the primary key.
             yield* Effect.forEach(
               [
-                { agentSessionId: contentSessionId, ingestRunId: "run-new", turnId: "turn-new" },
-                { agentSessionId: legacySessionId, ingestRunId: "run-old", turnId: "turn-old" },
+                {
+                  agentSessionId: contentSessionId,
+                  ingestRunId: "run-new",
+                  turnId: "turn-new",
+                },
+                {
+                  agentSessionId: legacySessionId,
+                  ingestRunId: "run-old",
+                  turnId: "turn-old",
+                },
               ],
               Effect.fnUntraced(function* (row) {
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_sessions (
                      agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
                    ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'mixed-transcript', 'primary', 'snapshot')`,
-                  { agentSessionId: row.agentSessionId, ingestRunId: row.ingestRunId }
+                  {
+                    agentSessionId: row.agentSessionId,
+                    ingestRunId: row.ingestRunId,
+                  }
                 );
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_turns (
@@ -2413,7 +2462,12 @@ volumes:
                      $turnId, $ingestRunId, $agentSessionId, 'codex', 'grown-transcript',
                      'primary', $lineNumber, 'event', $turnId, NULL
                    )`,
-                  { agentSessionId, ingestRunId: row.ingestRunId, lineNumber: row.lineNumber, turnId: row.turnId }
+                  {
+                    agentSessionId,
+                    ingestRunId: row.ingestRunId,
+                    lineNumber: row.lineNumber,
+                    turnId: row.turnId,
+                  }
                 );
               }),
               { discard: true }
@@ -2640,8 +2694,18 @@ volumes:
             // that column.
             yield* Effect.forEach(
               [
-                { agentSessionId: "session-run-1", ingestRunId: "run-1", lineNumber: 1, turnId: "turn-1" },
-                { agentSessionId: "session-run-2", ingestRunId: "run-2", lineNumber: 2, turnId: "turn-2" },
+                {
+                  agentSessionId: "session-run-1",
+                  ingestRunId: "run-1",
+                  lineNumber: 1,
+                  turnId: "turn-1",
+                },
+                {
+                  agentSessionId: "session-run-2",
+                  ingestRunId: "run-2",
+                  lineNumber: 2,
+                  turnId: "turn-2",
+                },
               ],
               Effect.fnUntraced(function* (row) {
                 yield* duckdb.run(
@@ -2654,7 +2718,10 @@ volumes:
                   `INSERT INTO ai_metrics_sessions (
                      agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
                    ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'same-transcript-hash', 'primary', 'snapshot')`,
-                  { agentSessionId: row.agentSessionId, ingestRunId: row.ingestRunId }
+                  {
+                    agentSessionId: row.agentSessionId,
+                    ingestRunId: row.ingestRunId,
+                  }
                 );
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_turns (
@@ -2750,7 +2817,10 @@ volumes:
 
           const snapshotDir = path.join(tmpDir, ".beep/ai-metrics/config-snapshots");
           const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: tmpDir }));
-          yield* writeAiMetricsConfigSnapshotArtifacts({ outputDir: snapshotDir, result });
+          yield* writeAiMetricsConfigSnapshotArtifacts({
+            outputDir: snapshotDir,
+            result,
+          });
           const again = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: tmpDir }));
           const json = yield* configSnapshotToJson(result);
 
@@ -2797,7 +2867,13 @@ volumes:
             yield* Unknown.encodeUnknownEffectFromJsonString({
               excludedDirectoryNames: [],
               fileCount: 1,
-              files: [{ contentHash: "legacy-hash", relativePath: "AGENTS.md", sizeBytes: 18 }],
+              files: [
+                {
+                  contentHash: "legacy-hash",
+                  relativePath: "AGENTS.md",
+                  sizeBytes: 18,
+                },
+              ],
               snapshot: {
                 changedPaths: ["AGENTS.md"],
                 configHash: "legacy-hash",
@@ -2878,7 +2954,7 @@ volumes:
                 repoRoot,
                 target: AiMetricsDeployTarget.Enum.local,
               })
-            )
+            ).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))))
           );
           const snapshotDir = path.join(dataRoot, "config-snapshots");
           const snapshotFiles = yield* fs.readDirectory(snapshotDir);
@@ -2931,9 +3007,21 @@ volumes:
           expect(result.discoveredFileCount).toBe(3);
           expect(result.sources).toEqual(
             expect.arrayContaining([
-              expect.objectContaining({ fileCount: 1, sourceKind: "codex", status: "available" }),
-              expect.objectContaining({ fileCount: 1, sourceKind: "claude", status: "available" }),
-              expect.objectContaining({ fileCount: 1, sourceKind: "openclaw", status: "available" }),
+              expect.objectContaining({
+                fileCount: 1,
+                sourceKind: "codex",
+                status: "available",
+              }),
+              expect.objectContaining({
+                fileCount: 1,
+                sourceKind: "claude",
+                status: "available",
+              }),
+              expect.objectContaining({
+                fileCount: 1,
+                sourceKind: "openclaw",
+                status: "available",
+              }),
             ])
           );
           expect(json).toContain("gateway_metadata");
@@ -3551,7 +3639,10 @@ volumes:
             );
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
-          const selector = AiMetricsRetentionSelector.make({ beforeEpochMillis: O.some(beforeEpochMillis), dataRoot });
+          const selector = AiMetricsRetentionSelector.make({
+            beforeEpochMillis: O.some(beforeEpochMillis),
+            dataRoot,
+          });
           const compactResult = yield* runAiMetricsRetentionCompact(selector, false);
           expect(compactResult.dryRun).toBe(false);
           expect(compactResult.deletedDerivedExportCount).toBe(1);

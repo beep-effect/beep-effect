@@ -797,7 +797,7 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
 }: {
   readonly content: string;
   readonly hashSalt: O.Option<string>;
-  readonly relativePath: O.Option<string>;
+  readonly relativePath?: O.Option<string>;
   readonly sourcePath: string;
   readonly summary: TranscriptIngestSummary;
 }) {
@@ -870,30 +870,16 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
  * @category constructors
  * @since 0.0.0
  */
-export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetricsPrivacyCheckResult")(function* ({
-  content,
-  hashSalt,
-  relativePath,
-  sourcePath,
-  summary,
-}: {
-  readonly content: string;
-  readonly hashSalt: O.Option<string>;
-  readonly relativePath: O.Option<string>;
-  readonly sourcePath: string;
-  readonly summary: TranscriptIngestSummary;
-}) {
+export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetricsPrivacyCheckResult")(function* (
+  input: Parameters<typeof makeSanitizedTranscript>[0]
+) {
+  const { content, hashSalt, sourcePath, summary } = input;
+
   return AiMetricsPrivacyCheckResult.make({
     hashSaltStatus: resolveAiMetricsHashSaltStatus(hashSalt),
     inputPathHash: yield* hashPrivateIdentifier(sourcePath, hashSalt),
     redaction: redactionResultFor(content),
-    sanitized: yield* makeSanitizedTranscript({
-      content,
-      relativePath,
-      sourcePath,
-      summary,
-      hashSalt,
-    }),
+    sanitized: yield* makeSanitizedTranscript(input),
     sourceKind: summary.sourceKind,
   });
 });

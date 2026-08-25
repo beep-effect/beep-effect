@@ -28,7 +28,7 @@ import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
 import { fileSizeBytes, modifiedAtMillis } from "./internal/file-info.ts";
 import { collectJsonlFiles, statOption } from "./internal/jsonl-discovery.ts";
-import { normalizedRelativePath, repoPathToClaudeProjectName } from "./internal/transcript-utils.ts";
+import { normalizedRelativePath, resolveTranscriptSourceRoots } from "./internal/transcript-utils.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
 import { shellQuote } from "./shell.ts";
@@ -881,12 +881,7 @@ const discoverForwarderSourceFiles = Effect.fn("AiMetrics.forwarder.discoverSour
   input: AiMetricsForwarderInput
 ) {
   const pathApi = yield* Path.Path;
-  const repoRoot = pathApi.resolve(input.repoRoot);
-  const homeDir = pathApi.resolve(input.homeDir);
-  const codexRoot = O.getOrElse(input.codexSessionsRoot, () => pathApi.join(homeDir, ".codex/sessions"));
-  const claudeRoot = O.getOrElse(input.claudeProjectsRoot, () =>
-    pathApi.join(homeDir, ".claude/projects", repoPathToClaudeProjectName(repoRoot))
-  );
+  const { claudeRoot, codexRoot } = resolveTranscriptSourceRoots(input, pathApi);
   const [codexFiles, claudeFiles, openClawFiles] = yield* Effect.all(
     [
       jsonlSourceFiles(input, codexRoot, AiMetricsTranscriptSource.Enum.codex),

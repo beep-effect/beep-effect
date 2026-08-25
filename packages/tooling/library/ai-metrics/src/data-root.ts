@@ -50,6 +50,15 @@ const AiMetricsAbsoluteDataRootCheck = S.makeFilter(
 /**
  * Branded absolute, non-root filesystem path safe for AI metrics persistence.
  *
+ * **Example** (Decode a data root)
+ *
+ * ```ts
+ * import { AiMetricsAbsoluteDataRoot } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(AiMetricsAbsoluteDataRoot)("/var/lib/beep/ai-metrics"))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

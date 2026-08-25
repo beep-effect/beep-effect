@@ -23,6 +23,14 @@ const mirrorStatusSchemaVersion = "beep.ai_metrics.mirror_status.v1";
 /**
  * Version identifiers accepted by persisted mirror contracts.
  *
+ * **Example** (Read the bundle version)
+ *
+ * ```ts
+ * import { AiMetricsMirrorSchemaVersion } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_bundle.v1"])
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -42,6 +50,14 @@ export type AiMetricsMirrorSchemaVersion = typeof AiMetricsMirrorSchemaVersion.T
 
 /**
  * Synchronization states persisted beside a mirror bundle.
+ *
+ * **Example** (Read the initial sync status)
+ *
+ * ```ts
+ * import { AiMetricsMirrorSyncStatus } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsMirrorSyncStatus.Enum.not_synced)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -63,6 +79,14 @@ export type AiMetricsMirrorSyncStatus = typeof AiMetricsMirrorSyncStatus.Type;
 /**
  * Source data class accepted by deploy-safe mirror manifests.
  *
+ * **Example** (Read the source data class)
+ *
+ * ```ts
+ * import { AiMetricsMirrorSourceDataClass } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsMirrorSourceDataClass.Enum.workstation_local_sanitized_derived_storage)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -82,6 +106,14 @@ export type AiMetricsMirrorSourceDataClass = typeof AiMetricsMirrorSourceDataCla
 
 /**
  * Sensitive data classes deliberately omitted from mirror bundles.
+ *
+ * **Example** (Check an omitted data class)
+ *
+ * ```ts
+ * import { AiMetricsMirrorOmittedDataClass } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsMirrorOmittedDataClass.is.raw_transcript_bodies("raw_transcript_bodies"))
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -313,6 +345,16 @@ const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.String));
 /**
  * Test whether a JSON payload contains a string value beginning with a forbidden path.
  *
+ * **Example** (Find a forbidden path prefix)
+ *
+ * ```ts
+ * import { aiMetricsMirrorPayloadContainsJsonStringPrefix } from "@beep/repo-ai-metrics"
+ * import { Effect } from "effect"
+ *
+ * const found = Effect.runSync(aiMetricsMirrorPayloadContainsJsonStringPrefix('{"path":"/private/data"}', "/private"))
+ * console.log(found) // true
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -367,6 +409,15 @@ export class AiMetricsMirrorError extends S.TaggedError<AiMetricsMirrorError>($I
 
 /**
  * Local pointer to the latest sanitized mirror bundle.
+ *
+ * **Example** (Create a latest-bundle pointer)
+ *
+ * ```ts
+ * import { AiMetricsMirrorLatestPointer } from "@beep/repo-ai-metrics"
+ *
+ * const pointer = AiMetricsMirrorLatestPointer.make({ bundleDir: "/srv/mirror/bundle-1", bundleId: "bundle-1" })
+ * console.log(pointer.bundleId)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -512,6 +563,23 @@ export class AiMetricsMirrorPrivacyProof extends S.Class<AiMetricsMirrorPrivacyP
 
 /**
  * Persisted synchronization status for one sanitized mirror bundle.
+ *
+ * **Example** (Create mirror status)
+ *
+ * ```ts
+ * import { AiMetricsMirrorStatus } from "@beep/repo-ai-metrics"
+ *
+ * const status = AiMetricsMirrorStatus.make({
+ *   bundleId: "bundle-1",
+ *   createdAtEpochMillis: 0,
+ *   mirrorStatusSchemaVersion: "beep.ai_metrics.mirror_status.v1",
+ *   remoteRoot: "/srv/data/ai-metrics",
+ *   rowCounts: {},
+ *   syncStatus: "not_synced",
+ *   target: "dankserver"
+ * })
+ * console.log(status.syncStatus)
+ * ```
  *
  * @category models
  * @since 0.0.0

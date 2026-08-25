@@ -14,9 +14,10 @@ import {
   CodexTranscriptEventName,
   OpenClawTranscriptEventName,
 } from "../models.ts";
+import { repoPathToClaudeProjectName } from "../shell.ts";
 import type { AiMetricsTranscriptEventName } from "../models.ts";
 
-export { repoPathToClaudeProjectName } from "../shell.ts";
+export { repoPathToClaudeProjectName };
 
 import type { Path } from "effect";
 
@@ -29,6 +30,44 @@ const isEventNameForSource = (
     codex: () => CodexTranscriptEventName.isAny(value),
     openclaw: () => OpenClawTranscriptEventName.isAny(value),
   });
+
+type TranscriptSourceRootInput = {
+  readonly claudeProjectsRoot: O.Option<string>;
+  readonly codexSessionsRoot: O.Option<string>;
+  readonly homeDir: string;
+  readonly repoRoot: string;
+};
+
+type TranscriptSourceRoots = {
+  readonly claudeRoot: string;
+  readonly codexRoot: string;
+  readonly homeDir: string;
+  readonly repoRoot: string;
+};
+
+/**
+ * Resolve the canonical local roots shared by transcript discovery workflows.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveTranscriptSourceRoots: {
+  (input: TranscriptSourceRootInput, pathApi: Path.Path): TranscriptSourceRoots;
+  (pathApi: Path.Path): (input: TranscriptSourceRootInput) => TranscriptSourceRoots;
+} = dual(2, (input: TranscriptSourceRootInput, pathApi: Path.Path): TranscriptSourceRoots => {
+  const repoRoot = pathApi.resolve(input.repoRoot);
+  const homeDir = pathApi.resolve(input.homeDir);
+
+  return {
+    claudeRoot: O.getOrElse(input.claudeProjectsRoot, () =>
+      pathApi.join(homeDir, ".claude/projects", repoPathToClaudeProjectName(repoRoot))
+    ),
+    codexRoot: O.getOrElse(input.codexSessionsRoot, () => pathApi.join(homeDir, ".codex/sessions")),
+    homeDir,
+    repoRoot,
+  };
+});
 
 /**
  * Trim transcript JSONL text into non-empty lines.

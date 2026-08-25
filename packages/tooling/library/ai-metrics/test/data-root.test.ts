@@ -34,7 +34,14 @@ const makeDataRootInput = ({
   readonly homeDir?: O.Option<string>;
   readonly stateHome?: O.Option<string>;
   readonly target?: AiMetricsDeployTarget;
-} = {}) => AiMetricsDataRootInput.make({ envDataRoot, flagDataRoot, homeDir, stateHome, target });
+} = {}) =>
+  AiMetricsDataRootInput.make({
+    envDataRoot,
+    flagDataRoot,
+    homeDir,
+    stateHome,
+    target,
+  });
 
 const resolveRoot = (input: AiMetricsDataRootInput) =>
   O.getOrThrowWith(resolveAiMetricsDataRoot(input), () => new Error("expected a resolvable AI metrics data root"));
@@ -75,7 +82,12 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
   });
 
   it("honours XDG_STATE_HOME when it is set", () => {
-    const resolved = resolveRoot(makeDataRootInput({ homeDir: O.some(homeDir), stateHome: O.some("/custom/state") }));
+    const resolved = resolveRoot(
+      makeDataRootInput({
+        homeDir: O.some(homeDir),
+        stateHome: O.some("/custom/state"),
+      })
+    );
 
     expect(resolved.path).toBe("/custom/state/beep/ai-metrics");
     expect(resolved.source).toBe(AiMetricsDataRootSource.Enum["xdg-state-home"]);
@@ -83,7 +95,10 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
 
   it("uses the server-owned root for the dankserver target", () => {
     const resolved = resolveRoot(
-      makeDataRootInput({ homeDir: O.some(homeDir), target: AiMetricsDeployTarget.Enum.dankserver })
+      makeDataRootInput({
+        homeDir: O.some(homeDir),
+        target: AiMetricsDeployTarget.Enum.dankserver,
+      })
     );
 
     expect(resolved.path).toBe("/srv/data/ai-metrics");
@@ -102,7 +117,10 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
   // that refusal is only possible if it is still recognisably relative here.
   it("returns a relative flag value unchanged instead of absolutizing it", () => {
     const resolved = resolveRoot(
-      makeDataRootInput({ flagDataRoot: O.some("./store/ai-metrics"), homeDir: O.some(homeDir) })
+      makeDataRootInput({
+        flagDataRoot: O.some("./store/ai-metrics"),
+        homeDir: O.some(homeDir),
+      })
     );
 
     expect(resolved.path).toBe("./store/ai-metrics");
@@ -127,9 +145,14 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
     expect(resolveRoot(decodeDataRootInput({ homeDir: "", stateHome: "/custom/state" })).path).toBe(
       "/custom/state/beep/ai-metrics"
     );
-    expect(resolveRoot(decodeDataRootInput({ homeDir: "", target: AiMetricsDeployTarget.Enum.dankserver })).path).toBe(
-      "/srv/data/ai-metrics"
-    );
+    expect(
+      resolveRoot(
+        decodeDataRootInput({
+          homeDir: "",
+          target: AiMetricsDeployTarget.Enum.dankserver,
+        })
+      ).path
+    ).toBe("/srv/data/ai-metrics");
   });
 
   it("never resolves to the clone-relative store for any input combination", () => {
@@ -137,8 +160,14 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
       makeDataRootInput({ homeDir: O.some(homeDir) }),
       decodeDataRootInput({ envDataRoot: "", flagDataRoot: "", homeDir }),
       decodeDataRootInput({ homeDir, stateHome: "" }),
-      makeDataRootInput({ homeDir: O.some(homeDir), target: AiMetricsDeployTarget.Enum.dankserver }),
-      makeDataRootInput({ homeDir: O.some(homeDir), stateHome: O.some("/custom/state") }),
+      makeDataRootInput({
+        homeDir: O.some(homeDir),
+        target: AiMetricsDeployTarget.Enum.dankserver,
+      }),
+      makeDataRootInput({
+        homeDir: O.some(homeDir),
+        stateHome: O.some("/custom/state"),
+      }),
     ];
 
     for (const input of inputs) {
@@ -150,7 +179,10 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
   });
 
   it("keeps the ai-metrics store a sibling of the hook-pulse agent-evidence store", () => {
-    const stateHome = O.getOrThrowWith(aiMetricsStateHome({ homeDir }), () => new Error("expected a state home"));
+    const stateHome = O.getOrThrowWith(
+      aiMetricsStateHome({ homeDir: O.some(homeDir), stateHome: O.none() }),
+      () => new Error("expected a state home")
+    );
     const metricsRoot = aiMetricsStateRoot(stateHome);
     const evidenceRoot = agentEvidenceRoot(stateHome);
 
@@ -200,7 +232,11 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
   it.effect("fails an unresolvable local install spec instead of falling back to the clone", () =>
     Effect.gen(function* () {
       const failure = yield* Effect.flip(
-        makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ target: AiMetricsDeployTarget.Enum.local }))
+        makeAiMetricsInstallSpec(
+          AiMetricsInstallInput.make({
+            target: AiMetricsDeployTarget.Enum.local,
+          })
+        )
       );
 
       expect(failure._tag).toBe("AiMetricsInstallConfigurationError");

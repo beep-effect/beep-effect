@@ -41,7 +41,9 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const runAiMetricsCommand = Command.runWith(aiMetricsCommand, { version: "0.0.0" });
+const runAiMetricsCommand = Command.runWith(aiMetricsCommand, {
+  version: "0.0.0",
+});
 const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 const decodeForwarderResult = S.decodeUnknownEffect(S.fromJsonString(AiMetricsForwarderRunResult));
 const decodeInstallApplyDryRun = S.decodeUnknownEffect(S.fromJsonString(AiMetricsInstallApplyDryRunResult));
@@ -52,11 +54,6 @@ const decodeMirrorBundle = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirro
 const decodeOtlpExportResult = S.decodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
 const decodeSourceDiscovery = S.decodeUnknownEffect(S.fromJsonString(AiMetricsSourceDiscoveryResult));
 const decodeWeeklyReport = S.decodeUnknownEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
-const encodeForwarderResult = S.encodeUnknownEffect(S.fromJsonString(AiMetricsForwarderRunResult));
-const encodeLabelQueue = S.encodeUnknownEffect(S.fromJsonString(AiMetricsLabelQueueResult));
-const encodeMirrorBundle = S.encodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleResult));
-const encodeOtlpExportResult = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
-const encodeWeeklyReport = S.encodeUnknownEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
 const decodeForwarderResultResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsForwarderRunResult));
 const decodeLabelQueueResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsLabelQueueResult));
 const decodeMirrorBundleResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsMirrorBundleResult));

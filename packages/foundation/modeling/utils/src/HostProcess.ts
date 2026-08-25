@@ -1,6 +1,8 @@
 /**
  * Host process runtime references.
  *
+ * **Details**
+ *
  * This module holds the sole sanctioned direct reads of the host platform and
  * architecture (the `beep/no-global-process-runtime` lint rule allowlists it).
  * Effect code injects {@link HostProcessPlatform} or
@@ -21,7 +23,7 @@ const $I = $RepoUtilsId.create("HostProcess");
  *
  * **When to use**
  *
- * Use from sync code and tests that branch on the real host platform and have
+ * Use when sync code or tests branch on the real host platform and have
  * no Effect runtime to inject {@link HostProcessPlatform} into.
  *
  * **Example** (Branch on the current platform)
@@ -42,7 +44,7 @@ export const currentHostPlatform: string = process.platform;
  *
  * **When to use**
  *
- * Use from sync code and tests that branch on the real host architecture and
+ * Use when sync code or tests branch on the real host architecture and
  * have no Effect runtime to inject {@link HostProcessArchitecture} into.
  *
  * **Example** (Branch on the current architecture)
@@ -63,7 +65,7 @@ export const currentHostArchitecture: string = process.arch;
  *
  * **When to use**
  *
- * Yield it inside Effect code instead of reading `process.platform`; tests
+ * Use to read the platform inside Effect code instead of reading `process.platform`; tests
  * override it with `Effect.provideService` to pin a platform.
  *
  * **Example** (Read the platform inside an Effect)
@@ -76,7 +78,7 @@ export const currentHostArchitecture: string = process.arch;
  * console.log(typeof platform) // "string"
  * ```
  *
- * @category references
+ * @category services
  * @since 0.0.0
  */
 export const HostProcessPlatform = Context.Reference<string>($I`HostProcessPlatform`, {
@@ -88,7 +90,7 @@ export const HostProcessPlatform = Context.Reference<string>($I`HostProcessPlatf
  *
  * **When to use**
  *
- * Yield it inside Effect code instead of reading `process.arch`; tests
+ * Use to read the architecture inside Effect code instead of reading `process.arch`; tests
  * override it with `Effect.provideService` to pin an architecture.
  *
  * **Example** (Read the architecture inside an Effect)
@@ -101,7 +103,7 @@ export const HostProcessPlatform = Context.Reference<string>($I`HostProcessPlatf
  * console.log(typeof architecture) // "string"
  * ```
  *
- * @category references
+ * @category services
  * @since 0.0.0
  */
 export const HostProcessArchitecture = Context.Reference<string>($I`HostProcessArchitecture`, {

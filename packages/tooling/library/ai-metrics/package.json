@@ -76,7 +76,6 @@
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",
     "@beep/test-utils": "workspace:^",
-    "@beep/types": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"

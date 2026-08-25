@@ -241,7 +241,10 @@ const alreadyHashedRawEventFixture = {
 const alreadyHashedRawInput = {
   ...baseRawInputFixture,
   ts: "2026-08-01T09:10:00.000Z",
-  event: { ...alreadyHashedRawEventFixture, hook_event_name: HookPulseEvent.Enum.Stop },
+  event: {
+    ...alreadyHashedRawEventFixture,
+    hook_event_name: HookPulseEvent.Enum.Stop,
+  },
 };
 
 // Distinct per rung so a digest can name which variable it came from. Neither is
@@ -350,7 +353,10 @@ describe("HookPulseV1", () => {
 
   it.effect("derives a total wait reason for arbitrary raw events", () =>
     Effect.forEach(
-      fc.sample(S.toArbitrary(HookPulseRawEvent)(fc), { numRuns: 50, seed: 804 }),
+      fc.sample(S.toArbitrary(HookPulseRawEvent)(fc), {
+        numRuns: 50,
+        seed: 804,
+      }),
       Effect.fnUntraced(function* (event) {
         const encodedEvent = yield* encodeRawHookPulse(event);
         const decoded = yield* withSaltEnv(
@@ -694,7 +700,11 @@ describe("HookPulseV1", () => {
       const expectedTiers = ["derived", "derived", "heuristic", "unknown"];
       const decoded = yield* Effect.forEach(
         inputTiers,
-        (evidenceTier) => decodeHookPulseFromRaw({ ...approvedToolPermissionRequest, evidenceTier }),
+        (evidenceTier) =>
+          decodeHookPulseFromRaw({
+            ...approvedToolPermissionRequest,
+            evidenceTier,
+          }),
         { concurrency: 1 }
       );
       const encoded = yield* Effect.forEach(
@@ -834,14 +844,35 @@ describe("HookPulseV1", () => {
         readonly expectedSalt: string | undefined;
       }> = [
         { env: {}, expectedSalt: undefined },
-        { env: { BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT }, expectedSalt: AI_RUNG_SALT },
-        { env: { BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT }, expectedSalt: HOOK_RUNG_SALT },
         {
-          env: { BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT, BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT },
+          env: { BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT },
+          expectedSalt: AI_RUNG_SALT,
+        },
+        {
+          env: { BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT },
           expectedSalt: HOOK_RUNG_SALT,
         },
-        { env: { BEEP_HOOK_PULSE_HASH_SALT: "", BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT }, expectedSalt: AI_RUNG_SALT },
-        { env: { BEEP_HOOK_PULSE_HASH_SALT: "   ", BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT }, expectedSalt: "   " },
+        {
+          env: {
+            BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT,
+            BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT,
+          },
+          expectedSalt: HOOK_RUNG_SALT,
+        },
+        {
+          env: {
+            BEEP_HOOK_PULSE_HASH_SALT: "",
+            BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT,
+          },
+          expectedSalt: AI_RUNG_SALT,
+        },
+        {
+          env: {
+            BEEP_HOOK_PULSE_HASH_SALT: "   ",
+            BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT,
+          },
+          expectedSalt: "   ",
+        },
       ];
       // Compared as digests of a fixed probe, never as salts. A `withSaltEnv`
       // that ever stopped providing its literal record would resolve this
@@ -858,9 +889,11 @@ describe("HookPulseV1", () => {
           ),
         { concurrency: 1 }
       );
-      const expected = yield* Effect.forEach(cases, ({ expectedSalt }) => hashPrivateIdentifier(probe, expectedSalt), {
-        concurrency: 1,
-      });
+      const expected = yield* Effect.forEach(
+        cases,
+        ({ expectedSalt }) => hashPrivateIdentifier(probe, O.fromUndefinedOr(expectedSalt)),
+        { concurrency: 1 }
+      );
 
       expect(resolved).toEqual(expected);
       // The rungs are genuinely distinguishable: without this a codec that
@@ -875,18 +908,24 @@ describe("HookPulseV1", () => {
     Effect.fn("HookPulseTest.hashesWithResolvedSalt")(function* () {
       const decoded = yield* withSaltEnv(
         { BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT },
-        decodeHookPulseFromRaw(rawInput("2026-08-01T09:00:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+        decodeHookPulseFromRaw(
+          rawInput("2026-08-01T09:00:00.000Z", {
+            hook_event_name: HookPulseEvent.Enum.Stop,
+          })
+        )
       );
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, HOOK_RUNG_SALT));
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, HOOK_RUNG_SALT));
+      expect(decoded.sessionId).toBe(
+        yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.some(HOOK_RUNG_SALT))
+      );
+      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.some(HOOK_RUNG_SALT)));
       expect(decoded.transcriptPath).toEqual(
-        O.some(yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, HOOK_RUNG_SALT))
+        O.some(yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.some(HOOK_RUNG_SALT)))
       );
       // Non-vacuity: every shape assertion elsewhere in this file is satisfied
       // by a codec that ignored the salt entirely, because the library default
       // is what such a codec would have used anyway.
-      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, undefined));
+      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
     })
   );
 
@@ -897,11 +936,17 @@ describe("HookPulseV1", () => {
       // as every other ai-metrics producer on a machine that exports one salt.
       const decoded = yield* withSaltEnv(
         { BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT },
-        decodeHookPulseFromRaw(rawInput("2026-08-01T09:01:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+        decodeHookPulseFromRaw(
+          rawInput("2026-08-01T09:01:00.000Z", {
+            hook_event_name: HookPulseEvent.Enum.Stop,
+          })
+        )
       );
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, AI_RUNG_SALT));
-      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, undefined));
+      expect(decoded.sessionId).toBe(
+        yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.some(AI_RUNG_SALT))
+      );
+      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
     })
   );
 
@@ -913,13 +958,17 @@ describe("HookPulseV1", () => {
       // corpus and to every pre-cutover row.
       const decoded = yield* withSaltEnv(
         {},
-        decodeHookPulseFromRaw(rawInput("2026-08-01T09:02:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+        decodeHookPulseFromRaw(
+          rawInput("2026-08-01T09:02:00.000Z", {
+            hook_event_name: HookPulseEvent.Enum.Stop,
+          })
+        )
       );
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, undefined));
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, undefined));
+      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
+      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.none()));
       expect(decoded.transcriptPath).toEqual(
-        O.some(yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, undefined))
+        O.some(yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.none()))
       );
     })
   );
@@ -932,11 +981,15 @@ describe("HookPulseV1", () => {
       // same input.
       const decoded = yield* withSaltEnv(
         { BEEP_HOOK_PULSE_HASH_SALT: "   " },
-        decodeHookPulseFromRaw(rawInput("2026-08-01T09:03:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+        decodeHookPulseFromRaw(
+          rawInput("2026-08-01T09:03:00.000Z", {
+            hook_event_name: HookPulseEvent.Enum.Stop,
+          })
+        )
       );
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, undefined));
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, undefined));
+      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
+      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.none()));
     })
   );
 
@@ -964,10 +1017,12 @@ describe("HookPulseV1", () => {
         decodeHookPulseFromLegacy(legacy)
       );
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(legacy.sessionId, AI_RUNG_SALT));
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(legacy.cwd, AI_RUNG_SALT));
-      expect(decoded.transcriptPath).toEqual(O.some(yield* hashPrivateIdentifier(legacy.transcriptPath, AI_RUNG_SALT)));
-      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(legacy.sessionId, undefined));
+      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(legacy.sessionId, O.some(AI_RUNG_SALT)));
+      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(legacy.cwd, O.some(AI_RUNG_SALT)));
+      expect(decoded.transcriptPath).toEqual(
+        O.some(yield* hashPrivateIdentifier(legacy.transcriptPath, O.some(AI_RUNG_SALT)))
+      );
+      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(legacy.sessionId, O.none()));
     })
   );
 

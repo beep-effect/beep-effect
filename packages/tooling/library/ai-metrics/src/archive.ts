@@ -112,6 +112,14 @@ const AiMetricsRawArchiveObjectId = S.String.check(
 /**
  * Encryption algorithm used by every raw AI metrics archive envelope.
  *
+ * **Example** (Read the archive algorithm)
+ *
+ * ```ts
+ * import { AiMetricsArchiveAlgorithm } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsArchiveAlgorithm.Enum["AES-256-GCM"])
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

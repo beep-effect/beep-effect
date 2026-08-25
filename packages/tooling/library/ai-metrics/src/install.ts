@@ -65,36 +65,42 @@ const requireInstallDataRoot = Effect.fn("AiMetrics.requireInstallDataRoot")(fun
   return resolved.value.path;
 });
 
-const requireHashSaltSecretRef = Effect.fn("AiMetrics.requireHashSaltSecretRef")(function* (
+const requireSecretRef = Effect.fn("AiMetrics.requireSecretRef")(function* (
   target: AiMetricsDeployTarget,
-  hashSaltSecretRef: O.Option<string>
+  secretRef: O.Option<string>,
+  missingMessage: string
 ) {
-  const ref = O.filter(hashSaltSecretRef, flow(Str.trim, Str.isNonEmpty));
+  const ref = O.filter(secretRef, flow(Str.trim, Str.isNonEmpty));
   if (target === AiMetricsDeployTarget.Enum.local || O.isSome(ref)) {
     return ref;
   }
 
   return yield* AiMetricsInstallConfigurationError.make({
     cause: { target },
-    message:
-      "AI metrics non-local installs require hashSaltSecretRef so private identifier hashing never uses the local smoke salt.",
+    message: missingMessage,
   });
+});
+
+const requireHashSaltSecretRef = Effect.fn("AiMetrics.requireHashSaltSecretRef")(function* (
+  target: AiMetricsDeployTarget,
+  hashSaltSecretRef: O.Option<string>
+) {
+  return yield* requireSecretRef(
+    target,
+    hashSaltSecretRef,
+    "AI metrics non-local installs require hashSaltSecretRef so private identifier hashing never uses the local smoke salt."
+  );
 });
 
 const requireRawArchiveKeySecretRef = Effect.fn("AiMetrics.requireRawArchiveKeySecretRef")(function* (
   target: AiMetricsDeployTarget,
   rawArchiveKeySecretRef: O.Option<string>
 ) {
-  const ref = O.filter(rawArchiveKeySecretRef, flow(Str.trim, Str.isNonEmpty));
-  if (target === AiMetricsDeployTarget.Enum.local || O.isSome(ref)) {
-    return ref;
-  }
-
-  return yield* AiMetricsInstallConfigurationError.make({
-    cause: { target },
-    message:
-      "AI metrics non-local installs require rawArchiveKeySecretRef so encrypted raw transcripts never depend on inline operator input.",
-  });
+  return yield* requireSecretRef(
+    target,
+    rawArchiveKeySecretRef,
+    "AI metrics non-local installs require rawArchiveKeySecretRef so encrypted raw transcripts never depend on inline operator input."
+  );
 });
 
 /**

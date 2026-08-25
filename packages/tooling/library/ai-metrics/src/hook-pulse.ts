@@ -75,6 +75,16 @@ export const hookPulseLedgerDir = (evidenceRoot: string): string => `${evidenceR
 /**
  * Resolve the current disarm sentinel beneath an agent-evidence root.
  *
+ * **Example** (Resolve the sentinel path)
+ *
+ * ```ts
+ * import { hookPulseDisarmSentinelPath } from "@beep/repo-ai-metrics"
+ *
+ * console.log(hookPulseDisarmSentinelPath("/var/lib/beep/agent-evidence"))
+ * ```
+ *
+ * @param evidenceRoot - Agent-evidence root containing the hook-pulse control files.
+ * @returns Absolute path to the current disarm sentinel.
  * @category utilities
  * @since 0.0.0
  */
@@ -83,6 +93,16 @@ export const hookPulseDisarmSentinelPath = (evidenceRoot: string): string => `${
 /**
  * Resolve the append-only disarm-window ledger beneath an agent-evidence root.
  *
+ * **Example** (Resolve the disarm-window ledger)
+ *
+ * ```ts
+ * import { hookPulseDisarmWindowsPath } from "@beep/repo-ai-metrics"
+ *
+ * console.log(hookPulseDisarmWindowsPath("/var/lib/beep/agent-evidence"))
+ * ```
+ *
+ * @param evidenceRoot - Agent-evidence root containing the hook-pulse control files.
+ * @returns Absolute path to the append-only disarm-window ledger.
  * @category utilities
  * @since 0.0.0
  */
@@ -91,6 +111,14 @@ export const hookPulseDisarmWindowsPath = (evidenceRoot: string): string =>
 
 /**
  * Version tag stamped on every hook-pulse disarm-window row.
+ *
+ * **Example** (Read the disarm-window version)
+ *
+ * ```ts
+ * import { HookPulseDisarmWindowSchemaVersion } from "@beep/repo-ai-metrics"
+ *
+ * console.log(HookPulseDisarmWindowSchemaVersion.Enum["hook-pulse-disarm-window/v1"])
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -347,6 +375,19 @@ export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
 /**
  * Current disarm state written by the hook-pulse operator switch.
  *
+ * **Example** (Create a disarm sentinel)
+ *
+ * ```ts
+ * import { HookPulseDisarmSentinel } from "@beep/repo-ai-metrics"
+ *
+ * const sentinel = HookPulseDisarmSentinel.make({
+ *   disarmedAt: "2026-08-25T12:00:00.000Z",
+ *   evidenceTier: "unknown",
+ *   reason: "maintenance"
+ * })
+ * console.log(sentinel.reason)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -368,6 +409,22 @@ export class HookPulseDisarmSentinel extends S.Class<HookPulseDisarmSentinel>($I
 
 /**
  * Closed interval during which hook-pulse collection was disarmed.
+ *
+ * **Example** (Decode a disarm window)
+ *
+ * ```ts
+ * import { HookPulseDisarmWindow } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const window = S.decodeUnknownSync(HookPulseDisarmWindow)({
+ *   disarmedAt: "2026-08-25T12:00:00.000Z",
+ *   evidenceTier: "unknown",
+ *   reason: "maintenance",
+ *   rearmedAt: "2026-08-25T12:05:00.000Z",
+ *   schemaVersion: "hook-pulse-disarm-window/v1"
+ * })
+ * console.log(window.rearmedAt)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -752,7 +809,9 @@ const filterHookPulseEventOwnedField = <A>(
 // `Option`s that will not unify. The invariant below only asks whether a value is
 // present, so it reads through this presence-only accessor rather than widening
 // the union at each call site.
-type HookPulseEventOwnedFieldValues = { readonly [Field in HookPulseEventOwnedField]: O.Option<unknown> };
+type HookPulseEventOwnedFieldValues = {
+  readonly [Field in HookPulseEventOwnedField]: O.Option<unknown>;
+};
 
 const hookPulseEventOwnedFieldValue = (
   input: HookPulseEventOwnedFieldValues,

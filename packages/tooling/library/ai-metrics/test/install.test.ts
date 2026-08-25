@@ -3,6 +3,7 @@ import {
   AiMetricsInstallInput,
   AiMetricsInstallPlan,
   AiMetricsInstallPlanStep,
+  AiMetricsInstallPlanStepKind,
   aiMetricsInstallPlanToJson,
   makeAiMetricsInstallApplyDryRunResult,
   makeAiMetricsInstallPlan,
@@ -30,7 +31,7 @@ describe("@beep/repo-ai-metrics install contracts", () => {
       const stepInput = {
         command: "beep-cli ai-metrics config snapshot",
         description: "Capture the active agent configuration.",
-        kind: "config_snapshot",
+        kind: AiMetricsInstallPlanStepKind.Enum.config_snapshot,
         mutatesHost: false,
         order: 10,
         requiresRemote: false,
@@ -92,10 +93,14 @@ describe("@beep/repo-ai-metrics install contracts", () => {
   it.effect("round-trips install plan JSON through the colocated class codec", () =>
     Effect.gen(function* () {
       const plan = yield* makeAiMetricsInstallPlan(
-        AiMetricsInstallInput.make({ dataRoot: O.some("/tmp/ai-metrics-install-test") })
+        AiMetricsInstallInput.make({
+          dataRoot: O.some("/tmp/ai-metrics-install-test"),
+        })
       );
       const apply = yield* makeAiMetricsInstallApplyDryRunResult(
-        AiMetricsInstallInput.make({ dataRoot: O.some("/tmp/ai-metrics-install-test") })
+        AiMetricsInstallInput.make({
+          dataRoot: O.some("/tmp/ai-metrics-install-test"),
+        })
       );
       const encoded = yield* aiMetricsInstallPlanToJson(plan);
       const decoded = yield* decodeInstallPlanJson(encoded);

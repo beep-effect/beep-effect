@@ -66,7 +66,7 @@ const OPERATOR_SALT = "hook-pulse-writer-operator-salt";
 // wrong. Recomputing the expected digest with the same `hashPrivateIdentifier`
 // the codecs use is what makes the two halves provably agree, exactly as the
 // `HookPulseWaitReasonInvariant` filter does for the wait derivation.
-const privateDigest = (value: string) => hashPrivateIdentifier(value, undefined);
+const privateDigest = (value: string) => hashPrivateIdentifier(value, O.none());
 
 // One salt for the writer child and the codec provider alike, so a parity case
 // reads as "both halves were told the same thing" rather than as two constants
@@ -162,7 +162,9 @@ const runWriter = Effect.fnUntraced(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const stateHome = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-" });
+  const stateHome = yield* fs.makeTempDirectoryScoped({
+    prefix: "beep-hook-pulse-",
+  });
   const evidenceRoot = agentEvidenceRoot(stateHome);
   const storeDir = hookPulseLedgerDir(evidenceRoot);
 
@@ -217,7 +219,7 @@ const runWriter = Effect.fnUntraced(function* (
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
-      // unconfigured clone byte-identical to `hashPrivateIdentifier(value, undefined)`.
+      // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
       // The second rung is settable so the codec-parity cases can prove both
       // halves walk the *same* chain rather than only its first link.
       BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
@@ -657,11 +659,13 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // at all, because the insecure default is what such a writer would have
         // used anyway. Only a run under an operator salt separates "resolves the
         // salt" from "hardcodes the fallback".
-        const run = yield* runWriter(encodeJson(preToolUsePayload), { hashSalt: OPERATOR_SALT });
+        const run = yield* runWriter(encodeJson(preToolUsePayload), {
+          hashSalt: OPERATOR_SALT,
+        });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-        expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(session, OPERATOR_SALT));
-        expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, OPERATOR_SALT));
+        expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(session, O.some(OPERATOR_SALT)));
+        expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, O.some(OPERATOR_SALT)));
         expect(decoded.sessionId).not.toBe(yield* privateDigest(session));
       })
     )
@@ -674,7 +678,9 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // `resolveAiMetricsHashSaltValue` trims first and falls back. That lone
         // input is where the two halves can disagree with both looking correct,
         // so the shell trims too and this pins it.
-        const run = yield* runWriter(encodeJson(preToolUsePayload), { hashSalt: "   " });
+        const run = yield* runWriter(encodeJson(preToolUsePayload), {
+          hashSalt: "   ",
+        });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.sessionId).toBe(yield* privateDigest(session));
@@ -784,10 +790,16 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     [
       { label: "unparseable stdin", stdin: "not json at all {{{" },
       { label: "empty stdin", stdin: "" },
-      { label: "a payload with no session_id", stdin: encodeJson({ ...stopPayload, session_id: undefined }) },
+      {
+        label: "a payload with no session_id",
+        stdin: encodeJson({ ...stopPayload, session_id: undefined }),
+      },
       {
         label: "a payload with an unknown hook_event_name",
-        stdin: encodeJson({ ...stopPayload, hook_event_name: "SomeFutureEvent" }),
+        stdin: encodeJson({
+          ...stopPayload,
+          hook_event_name: "SomeFutureEvent",
+        }),
       },
     ],
     ({ label, stdin }) => {
@@ -845,7 +857,9 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // With BEEP_AGENT_EVIDENCE_ROOT cleared, the writer must land in the
         // same directory `agentEvidenceRoot`/`hookPulseLedgerDir` compute — the
         // runner reads back from exactly that derived path.
-        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload), { viaXdgFallback: true });
+        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload), {
+          viaXdgFallback: true,
+        });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum["plan-approval"]);
@@ -861,11 +875,19 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   // either salt was exported.
   const codecParityCases: ReadonlyArray<{
     readonly label: string;
-    readonly writerOptions: { readonly aiMetricsHashSalt?: string; readonly hashSalt?: string };
+    readonly writerOptions: {
+      readonly aiMetricsHashSalt?: string;
+      readonly hashSalt?: string;
+    };
     readonly codecEnv: Record<string, string>;
     readonly expectedSalt: string | undefined;
   }> = [
-    { label: "neither salt configured", writerOptions: {}, codecEnv: {}, expectedSalt: undefined },
+    {
+      label: "neither salt configured",
+      writerOptions: {},
+      codecEnv: {},
+      expectedSalt: undefined,
+    },
     {
       label: "the hook-pulse rung",
       writerOptions: { hashSalt: CODEC_PARITY_SALT },
@@ -909,8 +931,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           // what separates "reproduces the writer" from "both hardcode the
           // default", and it fails on the salted rows if either half stops
           // reading its variable.
-          expect(codecRow.sessionId).toBe(yield* hashPrivateIdentifier(session, expectedSalt));
-          expect(codecRow.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, expectedSalt));
+          expect(codecRow.sessionId).toBe(yield* hashPrivateIdentifier(session, O.fromUndefinedOr(expectedSalt)));
+          expect(codecRow.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, O.fromUndefinedOr(expectedSalt)));
         })
       )
     );
@@ -951,8 +973,9 @@ interface SwitchStore {
 // temp root per call, as `runWriter` does, could not express it at all.
 const makeSwitchStore = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const stateHome = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-switch-" });
+  const stateHome = yield* fs.makeTempDirectoryScoped({
+    prefix: "beep-hook-pulse-switch-",
+  });
   const evidenceRoot = agentEvidenceRoot(stateHome);
 
   return {

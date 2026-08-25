@@ -10,8 +10,9 @@ import { FastCheck as fc } from "effect/testing";
 
 const decodeArchiveEnvelope = AiMetricsEncryptedRawArchiveEnvelope.decodeUnknownResultFromJsonString;
 const encodeArchiveEnvelope = AiMetricsEncryptedRawArchiveEnvelope.encodeUnknownResultFromJsonString;
-const decodeUnknownJson = S.decodeUnknownResult(S.UnknownFromJsonString);
-const encodeUnknownJson = S.encodeUnknownResult(S.UnknownFromJsonString);
+const JsonRecord = S.fromJsonString(S.Record(S.String, S.Unknown));
+const decodeUnknownJson = S.decodeUnknownResult(JsonRecord);
+const encodeUnknownJson = S.encodeUnknownResult(JsonRecord);
 const ArchiveEnvelopeArbitrary = S.toArbitrary(AiMetricsEncryptedRawArchiveEnvelope)(fc);
 
 const currentEncoderFixture =
@@ -53,7 +54,10 @@ describe("AI metrics encrypted raw archive envelope", () => {
 
       for (const key of ["not base64", "AAAAAAAAAAAAAAAA"]) {
         const failure = yield* Effect.flip(
-          decryptEncryptedRawArchiveEnvelope({ envelope, rawArchiveKey: Redacted.make(key) })
+          decryptEncryptedRawArchiveEnvelope({
+            envelope,
+            rawArchiveKey: Redacted.make(key),
+          })
         );
         expect(failure.message).toContain("valid base64 and decode to exactly 32 bytes");
       }

@@ -129,7 +129,10 @@ describe("@beep/repo-ai-metrics identity registry", () => {
           AiMetricsCanonicalRootInput.make({ hashSalt, rootPath: clonePath })
         );
         const worktree = yield* makeAiMetricsCanonicalRoot(
-          AiMetricsCanonicalRootInput.make({ hashSalt, rootPath: worktreePath })
+          AiMetricsCanonicalRootInput.make({
+            hashSalt,
+            rootPath: worktreePath,
+          })
         );
 
         expect(worktree.kind).toBe(AiMetricsRootKind.Enum["linked-worktree"]);
@@ -153,7 +156,10 @@ describe("@beep/repo-ai-metrics identity registry", () => {
           AiMetricsCanonicalRootInput.make({ hashSalt, rootPath: clonePath })
         );
         const worktree = yield* makeAiMetricsCanonicalRoot(
-          AiMetricsCanonicalRootInput.make({ hashSalt, rootPath: worktreePath })
+          AiMetricsCanonicalRootInput.make({
+            hashSalt,
+            rootPath: worktreePath,
+          })
         );
 
         expect(worktree.repositoryIdHash).toBe(clone.repositoryIdHash);
@@ -171,8 +177,12 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         const second = pathApi.join(tmpDir, "second");
         const other = pathApi.join(tmpDir, "other");
         yield* makeClone(first);
-        yield* makeClone(second, { originUrl: "https://GitHub.com/beep-effect/beep-effect" });
-        yield* makeClone(other, { originUrl: "git@github.com:beep-effect/other.git" });
+        yield* makeClone(second, {
+          originUrl: "https://GitHub.com/beep-effect/beep-effect",
+        });
+        yield* makeClone(other, {
+          originUrl: "git@github.com:beep-effect/other.git",
+        });
 
         const firstRoot = yield* makeAiMetricsCanonicalRoot(
           AiMetricsCanonicalRootInput.make({ hashSalt, rootPath: first })
@@ -239,7 +249,7 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         const root = yield* makeAiMetricsCanonicalRoot(
           AiMetricsCanonicalRootInput.make({ hashSalt, rootPath: clonePath })
         );
-        const repoRootHash = yield* hashPrivateIdentifier(pathApi.resolve(clonePath), hashSalt);
+        const repoRootHash = yield* hashPrivateIdentifier(pathApi.resolve(clonePath), O.some(hashSalt));
 
         expect(root.cloneIdHash).toBe(repoRootHash);
       })
@@ -319,7 +329,9 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         const dataRoot = pathApi.join(tmpDir, "store");
         const registryPath = pathApi.join(dataRoot, "identity/registry.json");
         yield* makeClone(firstClonePath);
-        yield* makeClone(secondClonePath, { originUrl: "git@github.com:beep-effect/other.git" });
+        yield* makeClone(secondClonePath, {
+          originUrl: "git@github.com:beep-effect/other.git",
+        });
 
         const current = yield* upsertRoot(dataRoot, firstClonePath, pathApi.join(tmpDir, "first-home"));
         const legacy = AiMetricsIdentityRegistry.make({
@@ -352,7 +364,9 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         const otherHomeDir = pathApi.join(tmpDir, "other-home");
         const registryPath = pathApi.join(dataRoot, "identity/registry.json");
         yield* makeClone(clonePath);
-        yield* makeClone(otherClonePath, { originUrl: "git@github.com:beep-effect/other.git" });
+        yield* makeClone(otherClonePath, {
+          originUrl: "git@github.com:beep-effect/other.git",
+        });
 
         const current = yield* upsertRoot(dataRoot, clonePath, homeDir);
         const unrelated = yield* upsertRoot(pathApi.join(tmpDir, "other-store"), otherClonePath, otherHomeDir);
@@ -603,7 +617,9 @@ describe("@beep/repo-ai-metrics identity registry", () => {
 
         expect(A.length(normalized.sourceInstances)).toBe(1);
         expect(A.length(trailingSlash.sourceInstances)).toBe(1);
-        expect(normalized.sourceInstances[0]?.homeDirHash).toBe(yield* hashPrivateIdentifier(homeDir, hashSalt));
+        expect(normalized.sourceInstances[0]?.homeDirHash).toBe(
+          yield* hashPrivateIdentifier(homeDir, O.some(hashSalt))
+        );
         expect(trailingSlash.sourceInstances[0]?.homeDirHash).toBe(normalized.sourceInstances[0]?.homeDirHash);
         expect(trailingSlash.sourceInstances[0]?.instanceIdHash).toBe(normalized.sourceInstances[0]?.instanceIdHash);
       })
@@ -695,7 +711,9 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         const homeDir = pathApi.join(tmpDir, "home");
         const writesRef = yield* Ref.make<ReadonlyArray<string>>(A.empty());
         const clonePaths = A.map(A.range(1, 3), (index) => pathApi.join(tmpDir, `clone-${index}`));
-        yield* Effect.forEach(clonePaths, (clonePath) => makeClone(clonePath), { discard: true });
+        yield* Effect.forEach(clonePaths, (clonePath) => makeClone(clonePath), {
+          discard: true,
+        });
 
         yield* Effect.forEach(clonePaths, (clonePath) => upsertRoot(dataRoot, clonePath, homeDir), {
           discard: true,
@@ -766,8 +784,18 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         yield* writeText(pathApi.join(plainPath, "AGENTS.md"), "guidance\n");
 
         expect(yield* isNestedGitRoot({ dirPath: clonePath, scanRoot: clonePath })).toBe(false);
-        expect(yield* isNestedGitRoot({ dirPath: worktreePath, scanRoot: clonePath })).toBe(true);
-        expect(yield* isNestedGitRoot({ dirPath: vendorPath, scanRoot: clonePath })).toBe(true);
+        expect(
+          yield* isNestedGitRoot({
+            dirPath: worktreePath,
+            scanRoot: clonePath,
+          })
+        ).toBe(true);
+        expect(
+          yield* isNestedGitRoot({
+            dirPath: vendorPath,
+            scanRoot: clonePath,
+          })
+        ).toBe(true);
         expect(yield* isNestedGitRoot({ dirPath: plainPath, scanRoot: clonePath })).toBe(false);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))

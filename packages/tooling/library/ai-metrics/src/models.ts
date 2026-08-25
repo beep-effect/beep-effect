@@ -176,6 +176,14 @@ export type AiMetricsCoverageGap = typeof AiMetricsCoverageGap.Type;
 /**
  * Event names accepted from Codex transcript records.
  *
+ * **Example** (Read a Codex event name)
+ *
+ * ```ts
+ * import { CodexTranscriptEventName } from "@beep/repo-ai-metrics"
+ *
+ * console.log(CodexTranscriptEventName.Enum.assistant_message)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -205,6 +213,14 @@ export type CodexTranscriptEventName = typeof CodexTranscriptEventName.Type;
 /**
  * Event names accepted from Claude transcript records.
  *
+ * **Example** (Read a Claude event name)
+ *
+ * ```ts
+ * import { ClaudeTranscriptEventName } from "@beep/repo-ai-metrics"
+ *
+ * console.log(ClaudeTranscriptEventName.Enum.assistant)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -233,6 +249,14 @@ export type ClaudeTranscriptEventName = typeof ClaudeTranscriptEventName.Type;
 
 /**
  * Event names accepted from OpenClaw transcript records.
+ *
+ * **Example** (Read an OpenClaw event name)
+ *
+ * ```ts
+ * import { OpenClawTranscriptEventName } from "@beep/repo-ai-metrics"
+ *
+ * console.log(OpenClawTranscriptEventName.Enum.tool_call)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -264,6 +288,15 @@ export type OpenClawTranscriptEventName = typeof OpenClawTranscriptEventName.Typ
 
 /**
  * Normalized event-name vocabulary shared by transcript turns.
+ *
+ * **Example** (Validate a normalized event name)
+ *
+ * ```ts
+ * import { AiMetricsTranscriptEventName } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AiMetricsTranscriptEventName)("assistant_message")) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -493,6 +526,15 @@ export type AiMetricsQualityGateStatus = typeof AiMetricsQualityGateStatus.Type;
 /**
  * Integer rating accepted by AI metrics outcome labels.
  *
+ * **Example** (Decode a rating)
+ *
+ * ```ts
+ * import { AiMetricsRating } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(AiMetricsRating)(5))
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -514,6 +556,15 @@ export const AiMetricsRating = S.Int.check(
 
 /**
  * Non-negative integer used by AI metrics counts and elapsed durations.
+ *
+ * **Example** (Decode a non-negative count)
+ *
+ * ```ts
+ * import { AiMetricsNonNegativeInteger } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(AiMetricsNonNegativeInteger)(0))
+ * ```
  *
  * @category schemas
  * @since 0.0.0

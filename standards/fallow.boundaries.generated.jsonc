@@ -2824,6 +2824,7 @@
         "from": "@beep/repo-ai-metrics",
         "allow": [
           "@beep/duckdb",
+          "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/phoenix",
@@ -2834,6 +2835,7 @@
         ],
         "allowTypeOnly": [
           "@beep/duckdb",
+          "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/phoenix",

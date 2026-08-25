@@ -43,7 +43,10 @@ const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E,
 
 it("enforces retention policy, window, version, and Parquet-table invariants at construction or decode", () => {
   expect(() =>
-    AiMetricsRetentionEnforcementPolicy.make({ dataRoot: "/tmp/metrics", maxSnapshotExports: -1 })
+    AiMetricsRetentionEnforcementPolicy.make({
+      dataRoot: "/tmp/metrics",
+      maxSnapshotExports: -1,
+    })
   ).toThrow();
   expect(() =>
     AiMetricsRetentionMutationResult.make({
@@ -74,7 +77,10 @@ it("enforces retention policy, window, version, and Parquet-table invariants at 
     })
   ).toThrow();
   expect(() =>
-    AiMetricsRetentionEnforcementPolicy.make({ dataRoot: "/tmp/metrics", maxSnapshotExports: 1.5 })
+    AiMetricsRetentionEnforcementPolicy.make({
+      dataRoot: "/tmp/metrics",
+      maxSnapshotExports: 1.5,
+    })
   ).toThrow();
   expect(() =>
     AiMetricsRetentionSelector.make({
@@ -196,7 +202,10 @@ it.effect(
         }).pipe(provideScopedLayer(duckDbLayer));
 
         yield* runAiMetricsRetentionDelete(
-          AiMetricsRetentionSelector.make({ beforeEpochMillis: O.some(4_102_444_800_000), dataRoot }),
+          AiMetricsRetentionSelector.make({
+            beforeEpochMillis: O.some(4_102_444_800_000),
+            dataRoot,
+          }),
           false
         ).pipe(provideScopedLayer(duckDbLayer));
 
@@ -206,6 +215,6 @@ it.effect(
         }).pipe(provideScopedLayer(duckDbLayer));
         expect(globalThis.Number(rows[0]?.count)).toBe(1);
       })
-    ).pipe(Effect.provide(NodeServices.layer));
+    ).pipe(provideScopedLayer(NodeServices.layer));
   })
 );

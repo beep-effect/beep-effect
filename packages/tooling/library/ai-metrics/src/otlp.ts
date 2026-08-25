@@ -79,7 +79,23 @@ export const AiMetricsOtlpAttributeKey = LiteralKit([
 );
 
 /**
+ * Runtime type for {@link AiMetricsOtlpAttributeKey}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsOtlpAttributeKey = typeof AiMetricsOtlpAttributeKey.Type;
+
+/**
  * OTLP attribute keys approved for export, preserved as the package's public readonly list.
+ *
+ * **Example** (Check an approved attribute)
+ *
+ * ```ts
+ * import { AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST.includes("session.id")) // true
+ * ```
  *
  * @category constants
  * @since 0.0.0

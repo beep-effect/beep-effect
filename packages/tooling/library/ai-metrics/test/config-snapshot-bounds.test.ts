@@ -8,6 +8,7 @@ import {
   AiMetricsConfigSnapshotTruncationReason,
   makeAiMetricsConfigSnapshot,
 } from "@beep/repo-ai-metrics/config-snapshot";
+import { ConfigSnapshot } from "@beep/repo-ai-metrics/models";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -19,7 +20,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const encodeConfigSnapshotBoundsReport = S.encodeUnknownEffect(AiMetricsConfigSnapshotBoundsReport);
 const encodeConfigSnapshotInput = S.encodeUnknownEffect(AiMetricsConfigSnapshotInput);
-const encodeUnknownJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const legitimatePaths = [
   ".claude/settings.json",
@@ -31,12 +32,25 @@ const legitimatePaths = [
 ];
 
 const legacyLatest = {
-  diff: { addedPaths: [], modifiedPaths: [], removedPaths: [], unchangedPaths: [] },
+  diff: {
+    addedPaths: [],
+    modifiedPaths: [],
+    removedPaths: [],
+    unchangedPaths: [],
+  },
   excludedDirectoryNames: [".git", "node_modules"],
   fileCount: 2,
   files: [
-    { contentHash: "legacy-agents-hash", relativePath: "AGENTS.md", sizeBytes: 9 },
-    { contentHash: "legacy-gone-hash", relativePath: ".claude/worktrees/wt1/AGENTS.md", sizeBytes: 5 },
+    {
+      contentHash: "legacy-agents-hash",
+      relativePath: "AGENTS.md",
+      sizeBytes: 9,
+    },
+    {
+      contentHash: "legacy-gone-hash",
+      relativePath: ".claude/worktrees/wt1/AGENTS.md",
+      sizeBytes: 5,
+    },
   ],
   snapshot: {
     changedPaths: [],
@@ -347,7 +361,10 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
         yield* writeText(previousSnapshotPath, yield* encodeUnknownJson(legacyLatest));
 
         const result = yield* makeAiMetricsConfigSnapshot(
-          AiMetricsConfigSnapshotInput.make({ previousSnapshotPath: O.some(previousSnapshotPath), repoRoot })
+          AiMetricsConfigSnapshotInput.make({
+            previousSnapshotPath: O.some(previousSnapshotPath),
+            repoRoot,
+          })
         );
 
         expect(result.previousSnapshotId).toEqual(O.some("config-legacy"));
@@ -363,7 +380,12 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
       const input = AiMetricsConfigSnapshotInput.make({ repoRoot: "/repo" });
       const encodedInput = yield* encodeConfigSnapshotInput(input);
       expect(encodedInput).toEqual({
-        budget: { maxDepth: 8, maxFileBytes: 524288, maxFiles: 1000, maxTotalBytes: 8388608 },
+        budget: {
+          maxDepth: 8,
+          maxFileBytes: 524288,
+          maxFiles: 1000,
+          maxTotalBytes: 8388608,
+        },
         label: "repo-local-agent-config",
         repoRoot: "/repo",
       });
@@ -375,7 +397,12 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
         truncated: false,
       });
       expect(yield* encodeConfigSnapshotBoundsReport(bounds)).toEqual({
-        budget: { maxDepth: 8, maxFileBytes: 524288, maxFiles: 1000, maxTotalBytes: 8388608 },
+        budget: {
+          maxDepth: 8,
+          maxFileBytes: 524288,
+          maxFiles: 1000,
+          maxTotalBytes: 8388608,
+        },
         excludedNestedRootPaths: [],
         skippedOversizeFileCount: 0,
         totalBytes: 0,
@@ -392,12 +419,12 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
         },
         fileCount: 0,
         files: [],
-        snapshot: {
+        snapshot: ConfigSnapshot.make({
           changedPaths: [],
           configHash: "config-hash",
           label: "repo-local-agent-config",
           snapshotId: "config-1",
-        },
+        }),
       });
       expect(yield* AiMetricsConfigSnapshotResult.encodeJsonEffect(result)).not.toContain('"previousSnapshotId"');
     })

@@ -23,10 +23,6 @@ const decodeAnnotationCheckReport = S.decodeUnknownEffect(S.fromJsonString(Agent
 const decodeDatasetBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));
 const decodePhoenixSyncResult = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
 const decodePromptBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
-const encodeDoctorReport = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
-const encodeAnnotationCheckReport = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
-const encodePhoenixSyncResult = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
-const encodePromptBundle = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
 const decodeDoctorReportResult = S.decodeUnknownResult(S.fromJsonString(AgentEffectivenessDoctorReport));
 const decodeAnnotationCheckReportResult = S.decodeUnknownResult(
   S.fromJsonString(AgentEffectivenessAnnotationCheckReport)
