@@ -3,12 +3,15 @@
 import { $RunpodId } from "@beep/identity";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, Struct } from "@beep/utils";
-import { BunRuntime } from "@effect/platform-bun";
-import { Effect, Match, Order, pipe } from "effect";
+import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
+import * as BunRuntime from "@effect/platform-bun/BunRuntime";
+import * as BunServices from "@effect/platform-bun/BunServices";
+import { Effect, Layer, Match, Order, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RunpodId.create("scripts/generate");
 
@@ -136,8 +139,18 @@ class OpenApiDocument extends S.Class<OpenApiDocument>($I`OpenApiDocument`)(
     description: "Runpod OpenAPI document subset consumed by the generator.",
   })
 ) {
-  static readonly decodeJsonEffect = S.decodeEffect(S.fromJsonString(OpenApiDocument));
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(OpenApiDocument);
 }
+
+class RunpodGeneratorError extends S.TaggedError<RunpodGeneratorError>($I`RunpodGeneratorError`)(
+  "RunpodGeneratorError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<RunpodGeneratorError>("RunpodGeneratorError", {
+    description: "A Runpod code-generation step failed.",
+  })
+) {}
 
 type Operation = {
   readonly descriptorName: string;
@@ -169,9 +182,12 @@ type Component = {
 };
 
 const repoRoot = new URL("../../..", import.meta.url);
+const workspaceRoot = new URL("../../../../", import.meta.url).pathname;
 const packageRoot = new URL("../", import.meta.url);
 const openApiPath = new URL("openapi.json", packageRoot);
+const openApiPatchPath = new URL("openapi.patch.json", packageRoot);
 const generatedPath = new URL("src/_generated/Runpod.generated.ts", packageRoot);
+const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Json));
 
 const HTTP_METHODS = RunpodGeneratorHttpMethod.From.Options;
 const DYNAMIC_ENUM_HINTS = [
@@ -188,22 +204,60 @@ let advisoryEnums: Record<string, readonly string[]> = {};
 
 const main = Effect.gen(function* () {
   const raw = yield* Effect.tryPromise(() => Bun.file(openApiPath).text());
-  const document = yield* OpenApiDocument.decodeJsonEffect(raw);
+  const spec = yield* decodeJson(raw);
+  const patch = yield* OpenApiPatch.parsePatchInput(openApiPatchPath.pathname);
+  const patchedSpec = yield* OpenApiPatch.applyPatches([{ source: "openapi.patch.json", patch }], spec);
+  const document = yield* OpenApiDocument.decodeUnknownEffect(patchedSpec);
   const components = document.components?.schemas ?? {};
   const operations = buildOperations(document);
-  const code = renderGeneratedFile({
+  const rendered = renderGeneratedFile({
     components: pipe(
       Struct.entries(components),
       A.map(([name, schema]) => renderComponent(name, schema))
     ),
     operations,
   });
+  const code = yield* formatWithBiome(rendered);
+  const check = pipe(Bun.argv, A.contains("--check"));
+
+  if (check) {
+    const current = yield* Effect.tryPromise(() => Bun.file(generatedPath).text());
+    if (!Str.Equivalence(current, code)) {
+      return yield* RunpodGeneratorError.make({
+        message: "Generated Runpod module is stale. Run `bun run generate`.",
+      });
+    }
+    return yield* Effect.log("Runpod generated module is current.");
+  }
 
   yield* Effect.tryPromise(() => Bun.write(generatedPath, code));
   yield* Effect.log(
     `Generated ${A.length(operations)} Runpod operations at ${pipe(generatedPath.pathname, Str.replace(repoRoot.pathname, ""))}`
   );
 }).pipe(Effect.withSpan("Runpod.generate"));
+
+const formatWithBiome = Effect.fn("RunpodGenerator.formatWithBiome")(function* (source: string) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const formatted = yield* spawner
+    .string(
+      ChildProcess.make("biome", ["check", "--write", "--unsafe", "--stdin-file-path", generatedPath.pathname], {
+        cwd: workspaceRoot,
+        stdin: Stream.make(source).pipe(Stream.encodeText),
+        stderr: "inherit",
+        stdout: "pipe",
+      })
+    )
+    .pipe(
+      Effect.mapError((error) =>
+        RunpodGeneratorError.make({ message: `Biome failed for Runpod.generated.ts: ${error.message}` })
+      )
+    );
+
+  if (Str.isEmpty(formatted)) {
+    return yield* RunpodGeneratorError.make({ message: "Biome returned empty Runpod generator output." });
+  }
+  return formatted;
+});
 
 const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
   let methodCounts: Record<string, number> = {};
@@ -233,6 +287,7 @@ const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
       const requestBodyRequired = operation.requestBody?.required === true;
       const requestFields = renderRequestFields(parameters, bodySchema, requestBodyRequired);
       const response = chooseResponse(methodName, operation.responses);
+      const operationId = stableOperationId(operation.operationId, method, path);
 
       operations = A.append(operations, {
         descriptorName,
@@ -242,7 +297,7 @@ const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
         ),
         method,
         methodName,
-        operationId: operation.operationId,
+        operationId,
         path,
         requestBodyRequired,
         requestClassName,
@@ -259,6 +314,11 @@ const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
 
   return operations;
 };
+
+const stableOperationId = (operationId: string, method: HttpMethod, path: string): string =>
+  method === "POST" && pipe(path, Str.endsWith("/update")) && pipe(operationId, Str.endsWith("ViaPost"))
+    ? pipe(operationId, Str.slice(0, -"ViaPost".length))
+    : operationId;
 
 const disambiguateMethodName = (input: {
   readonly baseMethodName: string;
@@ -1064,4 +1124,14 @@ const upperFirst = Str.capitalize;
 
 const unique = <Value>(values: readonly Value[]): readonly Value[] => A.dedupe(values);
 
-BunRuntime.runMain(main);
+const program = Effect.scoped(
+  Layer.build(BunServices.layer).pipe(
+    Effect.flatMap(
+      Effect.fnUntraced(function* (context) {
+        return yield* main.pipe(Effect.provide(context));
+      })
+    )
+  )
+);
+
+BunRuntime.runMain(program);

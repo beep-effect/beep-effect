@@ -72,11 +72,11 @@
               }
             }
           },
-          "404": {
-            "description": "No Content found for a given search criteria"
-          },
           "400": {
             "description": "When the input request criteria is not following the spec"
+          },
+          "404": {
+            "description": "No Content found for a given search criteria"
           },
           "500": {
             "description": "Any system failure while processing the search request /query"
