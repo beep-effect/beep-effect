@@ -2,7 +2,8 @@
 
 ## Status
 
-Lifecycle: `active`; P2 complete 2026-08-24, P3 complete 2026-08-25
+Lifecycle: `completed-retained`; P1 and P2 complete 2026-08-24, P3 through P7
+complete 2026-08-25
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -74,48 +75,53 @@ Use this command for execution-capable sessions:
 11. [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md) - cutover
     timeline, deployed group state, admission probes, and the retained P3
     residual.
-12. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 and P2
-    friction receipts and prevention notes.
-12. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
+12. [`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md) - final-head
+    red team with the JIT replay rejection, lifecycle, live state, merge-gate
+    reading, and the closure-ready mapping for all six IDs.
+13. [`ops/closures.json`](./ops/closures.json) - sanitized exact-ID
+    dashboard closure ledger.
+14. [`history/reflections/2026-08-25-claude.md`](./history/reflections/2026-08-25-claude.md)
+    - closeout reflection.
+15. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 through
+    P4 friction receipts and prevention notes.
+16. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
     ledger.
-13. The three source packets named in the transfer table.
-14. The fleet packet evidence named above.
+17. The three source packets named in the transfer table.
+18. The fleet packet evidence named above.
 
 ## Current Phase
 
-P2 Workload identity boundary completed on 2026-08-24 with closure-ready
-evidence retained in
-[`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md). Launch-template v13
-remains the fleet default after a clean canary and deployed red-team proof. P3
-Admission defense in depth cut over on 2026-08-25: #805 staged `heavy.yml`
-through a local reusable-workflow call, the five required contexts were renamed
-to their `Heavy / ...` forms, and #808 pinned the call to `heavy.yml@main` while
-organization group `beep-ec2-heavy` was restricted to the four protected
-default-branch workflows. The controller's organization registration first
-failed closed on a missing installation permission (which itself proved the
-no-fallback half of the admission design) and rolled back; after the
-permission was accepted it redeployed, the fleet drained, and the admission
-probes passed: a pull-request heavy job reached a group runner through
-`heavy.yml@refs/heads/main`, and a fleet-labelled dispatch from a non-default
-branch stayed queued beside an idle group runner. P3 is complete. Evidence:
-[`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md). P4 owns the live JIT
-replay run; its operator-controlled probe is implemented.
+Closed. P4 Boundary verification completed on 2026-08-25: the final-head red
+team (run `32893112867` on `4764cdb4ba`) passed Gates A through J, L, and the
+new M JIT-replay gate exactly once each, with `AMI_PIN`, a live
+`METADATA_DISABLED (disabled applied)` sample, scoped deregistration, and EC2
+termination one second after completion. GitHub refused the replayed one-use
+JIT configuration with `A session for this runner already exists.` The live
+runner-group and AWS state were re-read and match the committed controller
+source. P5 through P7 closed the same day: every remediation PR is merged, the
+six exact Codex IDs are closed as Already fixed with the ledger in
+[`ops/closures.json`](./ops/closures.json), and the reflection is retained.
+Evidence: [`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md).
 
 ## Latest Evidence
 
-On 2026-08-24, red-team run `32786883010` passed Gates A through J and L
-exactly once, `AMI_PIN`, live `METADATA_DISABLED (disabled applied)`, scoped
-deregistration, and EC2 termination after 1 second. The sample stream captured
-`disabled applied running` before guest poweroff. The test-integration lane
-probe kept the sealed Bun `1.4.0` fast path keyed to lockfile digest
-`f81ab29f…`. The two P2 workload-identity findings are closure-ready and remain
-open until the P5 merge gate; P6 owns dashboard closure.
+On 2026-08-25 at `20:03Z`, red-team run `32893112867` passed Gates A through
+J, L, and M exactly once, `AMI_PIN (ami-0738c1b69711969bc)`, live
+`METADATA_DISABLED (disabled applied)`, scoped deregistration, and EC2
+termination after 1 second, ending `REDTEAM: PASS`. The #812 push run
+`32892496750` placed `Build` and all five `Heavy / ...` jobs on group-4
+runners through `check.yml@refs/heads/main` and `heavy.yml@refs/heads/main`.
+Residuals retained for other owners: the serving image is stale against the
+post-#812 lockfile (re-bake owned by `ci-fleet-endgame`), 74 inert
+pre-cutover repository registrations, and the by-construction JIT argv
+residue bounded by the one-job VM.
 
 ## Notes
 
 - Changing the ratified mechanism, moving heavy pull-request lanes to hosted
   runners, or making admission the primary boundary requires a new operator
-  decision.
+  decision. The packet is completed-retained; reopen it only for such a
+  decision or for a fleet change that invalidates the deployed proof.
 - `P1` evidence is retained in `research/P1-EVIDENCE.md`. Every later lockfile
   change on `main` re-stales the image until a new bake is deployed.
 - Never store raw finding bodies, credentials, email addresses, machine IDs, or

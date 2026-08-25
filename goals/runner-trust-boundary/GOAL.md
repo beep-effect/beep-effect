@@ -1,14 +1,14 @@
 # GOAL: prove the runner trust boundary
 
-Repo root is the current working directory. All paths are repo-relative.
+Repo root is the working directory; paths are repo-relative.
 
 Outcome: keep heavy pull-request work on EC2 while replacing the fleet's
 ambient privilege with a sealed, digest-verified, one-job-one-VM runner class
 that exposes no usable instance-role credentials to job code.
 
-Read `SPEC.md`, `PLAN.md`, `ops/manifest.json`, `research/P0-GRILL.md`, and
-`research/P0-FACTS.md` first. Then read repo law and the evidence named by the
-spec. Repo law outranks packet prose.
+Read `SPEC.md`, `PLAN.md`, `ops/manifest.json`, and `research/P0-GRILL.md`
+first, then repo law and the evidence the spec names. Repo law outranks
+packet prose.
 
 Ratified posture: **DEFANG THE FLEET, KEEP PRS ON IT.** PR code remains on EC2.
 Keep the boundary-capped role only for root bootstrap, consume JIT from tmpfs,
@@ -29,8 +29,8 @@ Execution:
    `research/P1-EVIDENCE.md` as the fresh bake, deployed pin, red-team,
    fast-path, teardown, and closure-ready record. Codex IDs
    `9459410104b881919cd820b97c673b67` and
-   `d1f026deb21881919d853e63780734fe` remain open until the P5 merge gate;
-   P6 owns dashboard closure.
+   `d1f026deb21881919d853e63780734fe` closed 2026-08-24 after #783 and #796
+   merged (`ops/closures.json`).
 3. P2 Workload identity boundary: complete 2026-08-24. Treat
    `research/P2-EVIDENCE.md` as the canary, current-state IAM, deployed
    A-through-J-plus-L, lane, and closure-ready record. The self-only Allow
@@ -42,17 +42,22 @@ Execution:
    `beep-ec2-heavy` admits only the four protected `refs/heads/main`
    workflows; the controller registers at organization scope and fails closed
    without fallback. Do not repeat the cutover or the redeploy.
-5. P4 Boundary verification: run the operator-controlled JIT replay probe,
-   rerun the complete deployed proof, and mark all six exact Codex IDs
-   closure-ready.
-6. P5 Yeet publish, review, and merge gate: reach `merge-ready: yes`, resolve
-   every thread, and merge only with explicit authority.
-7. P6 Dashboard closure and P7 Close: after merge, close the six exact IDs,
-   reconcile the dashboard, write the reflection, and update packet state.
+5. P4 Boundary verification: complete 2026-08-25. Treat
+   `research/P4-EVIDENCE.md` as the final-head proof of record: run
+   `32893112867` passed Gates A through M (JIT replay rejected), `AMI_PIN`,
+   live `METADATA_DISABLED`, scoped deregistration, and EC2 teardown. Do not
+   rerun it unless the fleet changes.
+6. P5 merge gate: complete. Remediation PRs #796, #800, #805, #808, and #814
+   merged with operator authority before any dashboard closure.
+7. P6 and P7: complete 2026-08-25. The six exact IDs are closed as Already
+   fixed (`ops/closures.json`); the reflection is under `history/`.
 
-Acceptance requires every `SPEC.md` criterion, the ratified grill record, fresh
-`P1` deployment evidence, no usable workload credential path, exact-head proof,
-and exact-ID dashboard reconciliation. Run every manifest command.
+The packet is completed-retained; reopen only for a new operator decision or
+a fleet change that invalidates the deployed proof.
+
+Acceptance requires every `SPEC.md` criterion, the grill record, deployment
+evidence, no usable workload credential path, exact-head proof, and exact-ID
+dashboard reconciliation. Run every manifest command.
 
 On rollout failure, stop new admission, drain, and terminate candidates. Heavy
 lanes queue. Do not reroute to hosted runners. Prior launch-template and AMI
@@ -63,5 +68,5 @@ Stop on missing authority, failed integrity or security proof, a credential
 path reachable by job-controlled privilege, a hosted-heavy-lane proposal, or
 fleet-packet ownership collision.
 
-Done only after deployed proof, required checks, zero review threads, merge,
-post-merge exact-ID closure, and a valid reflection.
+Done: deployed proof, required checks, zero review threads, merges,
+exact-ID closure, and a valid reflection are all retained.
