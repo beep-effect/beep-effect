@@ -1,7 +1,7 @@
 /**
  * Declaration equivalence hook adopting the declared field struct.
  *
- * @internal
+ * @since 0.0.0
  */
 import type { Equivalence } from "effect/Equivalence";
 
@@ -12,6 +12,8 @@ import type { Equivalence } from "effect/Equivalence";
  * extends the struct type), so the assertion is sound.
  *
  * @internal
+ * @category equivalence
+ * @since 0.0.0
  */
 export const declaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>
   typeParameters[0] as Equivalence<Self>;

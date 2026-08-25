@@ -6,7 +6,7 @@ const $I = make("probe").$ProbeId.create("Widget");
 
 class WidgetError extends S.TaggedError<WidgetError>($I`WidgetError`)(
   "WidgetError",
-  { reason: S.String, attempts: S.Number },
+  { reason: S.String, attempts: S.Finite },
   $I.annoteError<WidgetError>("WidgetError", { description: "Widget failed." })
 ) {}
 

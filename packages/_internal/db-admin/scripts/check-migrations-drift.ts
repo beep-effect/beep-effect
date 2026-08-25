@@ -19,7 +19,7 @@ import type { Equivalence } from "effect/Equivalence";
 const declaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>
   typeParameters[0] as Equivalence<Self>;
 
-class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()(
+class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>("@beep/db-admin/MigrationsDriftError")(
   "MigrationsDriftError",
   {
     message: S.String,
@@ -30,7 +30,9 @@ class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()(
   }
 ) {}
 
-class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>()(
+class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>(
+  "@beep/db-admin/MigrationGenerationError"
+)(
   "MigrationGenerationError",
   {
     exitCode: S.Int,
