@@ -226,7 +226,6 @@
     },
     "docgen": {
       "cache": true,
-      "dependsOn": ["^docgen"],
       "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
       "outputs": ["docs/**", ".beep/docgen/**"]
     },

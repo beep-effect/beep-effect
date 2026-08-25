@@ -849,12 +849,24 @@ const verifyPackageProofManifest = (pkg: DocgenWorkspacePackage) =>
     )
   );
 
-const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot: string) {
-  // The full proof shells out to `bunx turbo run docgen && bun run docs:aggregate`,
-  // so it carries the same stall exposure as the scoped path plus the resident
-  // `bunx` wrapper the scoped path deliberately avoids. Its budget is much
-  // larger because a cold full proof legitimately runs for tens of minutes.
-  yield* runStepWithStallWatchdog("full docgen", "bun", ["run", "docgen"], repoRoot, fullDocgenStepBudget);
+const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot: string, parallel: number) {
+  // Run Turbo directly so the typed lane concurrency setting governs full and
+  // affected proofs through the same local command surface. The full budget is
+  // much larger because a cold full proof legitimately runs for tens of minutes.
+  yield* runStepWithStallWatchdog(
+    "full turbo docgen",
+    turboBinaryPath(repoRoot),
+    ["run", "docgen", `--concurrency=${localParallel(parallel)}`],
+    repoRoot,
+    fullDocgenStepBudget
+  );
+  yield* runStepWithStallWatchdog(
+    "full docs aggregate",
+    "bun",
+    ["run", "docs:aggregate"],
+    repoRoot,
+    fullDocgenStepBudget
+  );
 });
 
 // Spawn the turbo binary directly: `bunx turbo` leaves a resident bun wrapper
@@ -1209,7 +1221,7 @@ export const runDocgenLocal: (
     if (plan.mode === "full-required") {
       if (options.allowFull) {
         yield* Console.log("docgen:local: full docgen proof required; executing it (--allow-full).");
-        yield* runFullDocgen(repoRoot);
+        yield* runFullDocgen(repoRoot, plan.parallel);
         return plan;
       }
       yield* Console.error('docgen:local: full docgen proof required; re-run with "--full" to execute it.');
@@ -1222,7 +1234,7 @@ export const runDocgenLocal: (
     }
 
     if (plan.mode === "full") {
-      yield* runFullDocgen(repoRoot);
+      yield* runFullDocgen(repoRoot, plan.parallel);
       return plan;
     }
 
