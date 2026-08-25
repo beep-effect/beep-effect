@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Goals/Goals.errors");
@@ -31,7 +32,7 @@ export class GoalPacketNotFoundError extends S.TaggedError<GoalPacketNotFoundErr
     slug: S.String,
     message: S.String,
   },
-  $I.annote("GoalPacketNotFoundError", {
+  $I.annoteError<GoalPacketNotFoundError>("GoalPacketNotFoundError", {
     description: "A goal packet directory or its manifest could not be found.",
   })
 ) {
@@ -70,7 +71,7 @@ export class GoalManifestInvalidError extends S.TaggedError<GoalManifestInvalidE
     slug: S.String,
     message: S.String,
   },
-  $I.annote("GoalManifestInvalidError", {
+  $I.annoteError<GoalManifestInvalidError>("GoalManifestInvalidError", {
     description: "A goal manifest failed JSON parsing or GoalManifest decoding.",
   })
 ) {
@@ -109,7 +110,7 @@ export class GoalReadmeStatusLineError extends S.TaggedError<GoalReadmeStatusLin
     slug: S.String,
     message: S.String,
   },
-  $I.annote("GoalReadmeStatusLineError", {
+  $I.annoteError<GoalReadmeStatusLineError>("GoalReadmeStatusLineError", {
     description: "A packet README lacks a recognizable Lifecycle: status line to rewrite.",
   })
 ) {
@@ -150,7 +151,7 @@ export class GoalsGitError extends S.TaggedError<GoalsGitError>($I`GoalsGitError
   {
     message: S.String,
   },
-  $I.annote("GoalsGitError", {
+  $I.annoteError<GoalsGitError>("GoalsGitError", {
     description: "A git command backing a goals-doctor advisory failed (recovered, never blocking).",
   })
 ) {
@@ -179,7 +180,7 @@ export class GoalStatusInputError extends S.TaggedError<GoalStatusInputError>($I
   {
     message: S.String,
   },
-  $I.annote("GoalStatusInputError", {
+  $I.annoteError<GoalStatusInputError>("GoalStatusInputError", {
     description: "Invalid argument input for a beep goals writer command (set-status, set-risk-tier).",
   })
 ) {
@@ -215,7 +216,7 @@ export class GoalPlanInputError extends S.TaggedError<GoalPlanInputError>($I`Goa
   {
     message: S.String,
   },
-  $I.annote("GoalPlanInputError", {
+  $I.annoteError<GoalPlanInputError>("GoalPlanInputError", {
     description: "Invalid input for beep goals bootstrap/adopt plan compilation.",
   })
 ) {
@@ -248,9 +249,9 @@ export class GoalPlanOperationalError extends S.TaggedError<GoalPlanOperationalE
   "GoalPlanOperationalError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("GoalPlanOperationalError", {
+  $I.annoteError<GoalPlanOperationalError>("GoalPlanOperationalError", {
     description: "A packet-snapshot read failure that must fail plan compilation closed.",
   })
 ) {

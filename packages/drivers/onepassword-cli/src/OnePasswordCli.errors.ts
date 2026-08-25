@@ -6,7 +6,7 @@
  */
 
 import { $OnepasswordCliId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
 import { OnePasswordCliDiagnosticText, OnePasswordCliExitCode } from "./OnePasswordCli.models.ts";
 
 const $I = $OnepasswordCliId.create("OnePasswordCli.errors");
-const OnePasswordCliDefect = S.Defect({ includeStack: true });
+const OnePasswordCliDefect = Defect({ includeStack: true });
 const isOnePasswordCliDefect = S.is(OnePasswordCliDefect);
 
 type OnePasswordCliErrorContextInput = {
@@ -81,19 +81,6 @@ export class OnePasswordCliErrorOptions extends S.Class<OnePasswordCliErrorOptio
   })
 ) {}
 
-const OnePasswordCliErrorFields = {
-  ...OnePasswordCliProcessContextFields,
-  message: S.NonEmptyString.annotateKey({
-    description: "Redacted human-readable failure summary.",
-  }),
-  operation: S.NonEmptyString.annotateKey({
-    description: "Driver operation that emitted the failure.",
-  }),
-} satisfies S.Struct.Fields;
-const sameOnePasswordCliErrorFields = S.toEquivalence(S.TaggedStruct("OnePasswordCliError", OnePasswordCliErrorFields));
-const sameOnePasswordCliError = (self: OnePasswordCliError, that: OnePasswordCliError): boolean =>
-  sameOnePasswordCliErrorFields(self, that);
-
 /**
  * Technical failure raised by the `@beep/onepassword-cli` driver boundary.
  *
@@ -110,13 +97,17 @@ const sameOnePasswordCliError = (self: OnePasswordCliError, that: OnePasswordCli
  */
 export class OnePasswordCliError extends S.TaggedError<OnePasswordCliError>($I`OnePasswordCliError`)(
   "OnePasswordCliError",
-  OnePasswordCliErrorFields,
-  $I.annoteClass<
-    S.declare<OnePasswordCliError>,
-    readonly [S.TaggedStruct<"OnePasswordCliError", typeof OnePasswordCliErrorFields>]
-  >("OnePasswordCliError", {
+  {
+    ...OnePasswordCliProcessContextFields,
+    message: S.NonEmptyString.annotateKey({
+      description: "Redacted human-readable failure summary.",
+    }),
+    operation: S.NonEmptyString.annotateKey({
+      description: "Driver operation that emitted the failure.",
+    }),
+  },
+  $I.annoteError<OnePasswordCliError>("OnePasswordCliError", {
     description: "Redacted technical failure emitted by the 1Password CLI driver.",
-    toEquivalence: () => sameOnePasswordCliError,
   })
 ) {
   /**

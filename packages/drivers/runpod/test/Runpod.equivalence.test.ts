@@ -13,4 +13,18 @@ describe("Runpod declared-field equivalence", () => {
     expect(sameRunpodDocsError(a, b)).toBe(true);
     expect(sameRunpodDocsError(a, c)).toBe(false);
   });
+
+  it("treats defect-only differences as equivalent", () => {
+    const a = RunpodDocsError.fromReason("transport", {
+      cause: new Error("first failure"),
+      url: "https://docs.runpod.io",
+    });
+    const b = RunpodDocsError.fromReason("transport", {
+      cause: new Error("second failure"),
+      url: "https://docs.runpod.io",
+    });
+
+    // the defect cause is payload, never identity
+    expect(sameRunpodDocsError(a, b)).toBe(true);
+  });
 });

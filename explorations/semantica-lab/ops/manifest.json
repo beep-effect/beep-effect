@@ -3,19 +3,12 @@
   "exploration": {
     "slug": "semantica-lab",
     "title": "Semantica Port Atlas & Lab",
-    "status": "active",
-    "stage": "decompose",
-    "openQuestions": [
-      "Land the tracker sweep: after #794 merges, branch from main, publish docs PR (8 packet files + benchmarks-vocab + HermiT/Pellet issue draft), babysit to merge-ready",
-      "Decompose: draft MAP.md \u2014 canary C0-C2 = Goal 1 (first vertical slice = C0 on F1 + one W1 paper), @beep/openai driver as a pre-C1 slice, storage-inversion + NET-NEW reasoning spikes, two O4 OSS gates (queued), atlas-sync candidate (queued, O3); capability check every row",
-      "Rosetta: ratify research/glossary-rosetta-draft.md (36 tbd cells) before Notion write",
-      "Benjamin reviews draft artifacts before anything posts: research/drafts/repo-issues.md + upstream-contributions.md (dedupe status now on the drafts: post as-is / comment on #1090 / rewrite doc issue 3)",
-      "Atlas sub-page template exemplars ratified (one per kind; FileIngestor = Model exemplar) \u2014 gated behind canary (O3)",
-      "Explorer/UI milestone shape (deferred to goal packet per D16)"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/semantica-canary", "goals/openai-driver"],
       "docs": [],
       "supersededBy": null
     },

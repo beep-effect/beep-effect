@@ -11,10 +11,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("CsvError");
-const CsvErrorFields = {
-  message: S.String,
-  offset: S.optionalKey(S.Finite),
-} satisfies S.Struct.Fields;
+
 /**
  * Raised when CSV parsing, header validation, or formatting fails.
  *
@@ -32,8 +29,11 @@ const CsvErrorFields = {
  */
 export class CsvError extends S.TaggedError<CsvError>($I`CsvError`)(
   "CsvError",
-  CsvErrorFields,
-  $I.annote("CsvError", {
+  {
+    message: S.String,
+    offset: S.optionalKey(S.Finite),
+  },
+  $I.annoteError<CsvError>("CsvError", {
     description: "Raised when CSV parsing, header validation, or formatting fails.",
   })
 ) {}

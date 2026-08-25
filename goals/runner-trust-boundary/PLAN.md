@@ -4,7 +4,10 @@
 
 Status: `active`. P0 was ratified on 2026-08-24 in
 [`research/P0-GRILL.md`](./research/P0-GRILL.md). `P1` completed on 2026-08-24
-with closure-ready evidence retained. P2 Workload identity boundary is next.
+with closure-ready evidence retained. P2 completed on 2026-08-24 with
+closure-ready evidence retained in
+[`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md). P3 Admission defense in
+depth is in progress.
 
 ## Phases
 
@@ -12,8 +15,8 @@ with closure-ready evidence retained. P2 Workload identity boundary is next.
 | --- | --- | --- | --- |
 | P0 Posture validation and grill gate | ratified 2026-08-24 | Validate the posture against live GitHub, AWS, AMI, identity, lifecycle, and lane-placement facts; ratify mechanism, sequencing, rollback, and proof. | The sanitized facts, threat model, mechanism, and operator grill record exist. |
 | P1 08-24 CSF-003/CSF-009 deployment proof | complete 2026-08-24 (closure-ready evidence retained) | Bake and deploy a fresh sealed image before the bootstrap rewrite, prove the setup fast path, run all five red-team gates, and prove teardown. | Every `SPEC.md` deployment-proof requirement passes; closure-ready evidence exists for the two held exact IDs. |
-| P2 Workload identity boundary | pending | Keep the boundary-capped role for root-owned bootstrap, then disable IMDS fail-closed before runner startup. | No ordinary or privileged probe can obtain usable application role credentials; bootstrap, registration, and teardown still work. |
-| P3 Admission defense in depth | pending | Move the five heavy lanes to a default-branch reusable workflow and admit them through the selected organization runner group. | Group policy, workflow refs, membership, and fail-closed registration match the ratified design. |
+| P2 Workload identity boundary | complete 2026-08-24 (closure-ready evidence retained) | Keep the boundary-capped role for root-owned bootstrap, then disable IMDS fail-closed before runner startup. | No ordinary or privileged probe can obtain usable application role credentials; bootstrap, registration, and teardown still work. |
+| P3 Admission defense in depth | in progress | Move the five heavy lanes to a default-branch reusable workflow and admit them through the selected organization runner group. | Group policy, workflow refs, membership, and fail-closed registration match the ratified design. |
 | P4 Boundary verification | pending | Run the complete deployed threat matrix and prepare exact-ID reconciliation. | Admission, identity, AMI, lifecycle, red-team, and teardown evidence satisfy `SPEC.md`; all six packet-owned open IDs are closure-ready. |
 | P5 Yeet publish, review, and merge gate | pending | Publish through Yeet, close required checks and review threads, and merge with explicit operator authority. | Yeet reports `merge-ready: yes`, unresolved review threads are zero, and the remediation PR is merged. |
 | P6 Dashboard closure | pending | Close the six exact Codex IDs only after the P5 merge gate. | All six IDs are closed as Already fixed with sanitized per-ID evidence, and the live dashboard reconciles to the allowlist. |
@@ -68,59 +71,106 @@ with closure-ready evidence retained. P2 Workload identity boundary is next.
 - Drain every pre-flip instance before the acceptance pair, then dispatch a
   lane probe on `main` and require `Baked fast path: true`.
 
-P2 Workload identity boundary is next. Every `bun.lock` change on `main`
+P2 Workload identity boundary is complete. Every `bun.lock` change on `main`
 re-stales the serving image until a matching re-bake is deployed.
 
 ## P2 Workload identity boundary checklist
 
-- Retain `beep-ci-runner-profile` only during root-owned bootstrap.
-- Fetch the one-use JIT configuration into root-only tmpfs, delete its
-  per-instance Parameter Store value, and keep the runner offline.
-- Add a one-shot root helper that calls
+- [x] Record the realized module seam, IAM statements, shutdown path, residual
+  capabilities, proof mapping, rollback, and operator sequence in
+  [`research/P2-DESIGN.md`](./research/P2-DESIGN.md).
+- [x] Retain `beep-ci-runner-profile` only during root-owned bootstrap and keep
+  launch-time `runner_metadata_options.http_endpoint` enabled.
+- [x] Add a one-shot root helper that calls
   `ec2:ModifyInstanceMetadataOptions` on its own instance with
   `HttpEndpoint=disabled`, then exits before runner startup.
-- Add the role allow scoped to `${ec2:SourceInstanceARN}` with
-  `ec2:MetadataHttpEndpoint = disabled`.
-- Add an explicit `beep-ci-fleet-boundary` Deny for
-  `ec2:ModifyInstanceMetadataOptions` when the endpoint value is anything
-  other than `disabled`.
-- Prove the self-only allow, all re-enable denials, and boundary ceiling through
-  IAM dry runs before deployment. If one-way self-only disable cannot be
-  proved, stop and use Alternative 2 from `research/P0-MECHANISM.md`.
-- Wait fail-closed until host probes against both IPv4 and IPv6 IMDS fail.
-  Do not treat a pending metadata-options response as completion.
-- Scrub the tmpfs JIT buffer and run a root-owned pre-job residue probe across
-  arguments, environment, `/proc`, files, logs, cloud-init data, swap, and the
-  runner work directory before starting the runner.
-- Probe ordinary user, sudo, UID 0, privileged-container, host-network, direct
-  IMDS, delayed teardown, and JIT replay paths.
-- Keep the owner firewall, sealed AMI, one-job VM, external teardown, and stale
-  reaper as secondary controls.
+- [x] Install the fail-closed `run.sh` shim and guest poweroff path through
+  `userdata_post_install`, with exact validated sudoers entries.
+- [x] Add the role allow scoped to `${ec2:SourceInstanceARN}` with
+  current `ec2:MetadataHttpEndpoint = enabled`.
+- [x] Add an explicit `beep-ci-fleet-boundary` Deny for
+  `ec2:ModifyInstanceMetadataOptions` once current endpoint state is
+  `disabled`.
+- [x] Add the three-case read-only IAM simulation harness for the boundary v4
+  current-state edges, using an unrestricted stand-in identity policy.
+- [x] Wait fail-closed until host probes against both IPv4 and IPv6 IMDS fail.
+- [x] Add root, host-network, privileged-container, root STS, owner-hook,
+  pre-disable live IAM-edge dry-runs (Gate L), JIT residue, and external
+  applied-metadata assertions while keeping Gate E.
+- [x] Run the boundary simulator live with the corrected v4 document: current
+  `disabled` is `explicitDeny`; current `enabled` and a missing endpoint key
+  are `allowed`. The IAM simulator does not resolve
+  `${ec2:SourceInstanceARN}` and therefore does not prove the self-scoped
+  allow.
+- [x] Correct the condition-key model with Access Analyzer and throwaway-role
+  dry-runs. For `ModifyInstanceMetadataOptions`, the metadata condition keys
+  describe current resource state, not the requested value. See
+  [`P2-EVIDENCE.md` § Condition-key semantics](./research/P2-EVIDENCE.md#condition-key-semantics).
+- [x] Run `pulumi preview`, apply boundary v4, deploy with refresh, and drain
+  every pre-flip worker according to the design's operator sequence.
+- [x] Run the live A-through-J-plus-L red team, `AMI_PIN`,
+  `METADATA_DISABLED`, lane, scoped deregistration, and EC2 teardown proof.
+  Run `32786883010` is the proof of record. See
+  [`P2-EVIDENCE.md` § Proof of record](./research/P2-EVIDENCE.md#proof-of-record).
+- [x] Record informational K without the JIT value and transfer the
+  operator-controlled replay probe to P4. Both P2 runs reported
+  `JIT residue: visible`; P2 does not claim replay rejection.
+- [x] Keep the owner firewall, sealed AMI, one-job VM, external teardown, and
+  stale reaper as secondary controls.
+- [x] Retain per-ID closure-ready mappings while leaving both findings open
+  through the P5 merge gate. See
+  [`P2-EVIDENCE.md` § Closure-ready mapping](./research/P2-EVIDENCE.md#closure-ready-mapping).
+
+### P2/P3 canary-window recipe
+
+Use this sequence for a security-sensitive launch-template or admission
+change that lacks per-job version pinning:
+
+1. Announce the controlled window and the exact rollback target.
+2. Deploy one candidate version for the window.
+3. Dispatch one operator probe and do not admit a second proof job.
+4. Capture the candidate's decisive console and hosted-run output.
+5. Automatically restore the prior target unless every required edge is
+   clean. Keep the candidate only after the operator records the clean result.
+
+The recipe bounded launch-template v11 and v12 failures and allowed v13 to
+remain only after the clean canary. Apply the same discipline to P3 admission
+changes. P3 is in progress.
 
 ## P3 Admission defense in depth checklist
 
-- Obtain a classic token with `admin:org`, a fine-grained token with
-  organization self-hosted-runner write, or the GitHub App permission
-  `organization_self_hosted_runners` before any organization-group mutation.
-- Before refactoring `check.yml`, prove live that GitHub accepts a selected
-  reusable workflow at `refs/heads/main` when its caller runs from a
-  pull-request merge ref. Stop if ref matching differs from the ratified model.
-- Create reusable `heavy.yml` on `main` and move the five heavy pull-request
-  lanes into it. Keep `check.yml` as the caller with
-  `uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main`.
-- Create the organization group `beep-ec2-heavy` with
-  `allows_public_repositories: true`, `visibility: selected`, only
-  `beep-effect/beep-effect`, and `restricted_to_workflows: true`.
-- Select only `heavy.yml`, `fleet-shadow-check.yml`, and
-  `fleet-lane-probe.yml`, each at `refs/heads/main`.
-- Change the controller to organization-scoped registration using
-  `enable_organization_runners` and `runner_group_name`.
-- Prove a missing or rejecting named group fails registration. Never fall back
-  to `Default` or repository-level registration.
-- Prove pull-request content cannot change the EC2 job definitions or widen
-  repository/workflow admission. Keep the heavy lanes on EC2.
-- Record the residual exposure already removed by `P2`; runner-group policy
-  remains defense in depth.
+- [x] Obtain GitHub App organization self-hosted-runner read/write permission.
+- [x] Create organization group `beep-ec2-heavy` with public-repository
+      allowance, `visibility: selected`, and only `beep-effect/beep-effect`.
+- [x] Move the five heavy lanes into reusable `heavy.yml` with the existing
+      matrix names, step behavior, timeouts, push conditions, and EC2 label.
+- [x] Stage the first PR with the local reusable-workflow call because the
+      `@main` target cannot resolve until `heavy.yml` lands on `main`.
+- [x] Change the controller to organization-scoped registration using
+      `enable_organization_runners` and `runner_group_name`, while retaining
+      `repository_white_list`.
+- [x] Record the two-PR cutover, exact ruleset context renames, residual
+      exposure, rollback, replay rule, and proof plan in
+      [`research/P3-DESIGN.md`](./research/P3-DESIGN.md).
+- [x] Rename the five required ruleset contexts to their `Heavy / ...` forms
+      before merging the first PR; renamed through the rulesets API on
+      2026-08-25 at `04:32:29Z`, after #803 merged and before #805.
+- [x] Merge the first PR (#805, `05:03:27Z`), then change only the caller to
+      `beep-effect/beep-effect/.github/workflows/heavy.yml@main` (#808).
+- [x] At that follow-up cutover, enable `restricted_to_workflows` and select
+      only `heavy.yml`, `fleet-shadow-check.yml`, `fleet-lane-probe.yml`, and
+      `check.yml` (for the push-only `Build` job) at `refs/heads/main`; applied
+      to organization group id 4 before #808 opened. The controller's
+      organization registration deployed at `05:11:47Z`, failed on a missing
+      installation permission, and rolled back at `05:36:51Z`. See
+      [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md).
+- [ ] Accept the organization self-hosted-runners permission on the
+      fleet-controller installation, redeploy the committed controller source,
+      and drain pre-deploy runners.
+- [ ] Prove a PR heavy job runs from the protected reusable workflow and a
+      non-allowlisted workflow remains queued without runner assignment.
+- [ ] Prove a missing or rejecting named group fails registration without
+      `Default` or repository fallback.
 
 ## Rollback posture
 
@@ -141,9 +191,14 @@ re-stales the serving image until a matching re-bake is deployed.
 2. Prove one-job-one-VM registration, pickup, deregistration, and EC2 teardown.
 3. Prove the AMI and setup fast path reject every tested digest, owner, or mode
    mismatch.
-4. Re-read the live runner-group state and deployed AWS state after rollout.
-5. Map the final evidence to each of the six open Codex IDs in `SPEC.md`.
-6. Mark each exact ID closure-ready after its individual evidence passes. Do
+4. [x] Add the operator-controlled one-use JIT replay probe and conditional
+   `M_JIT_REPLAY` verifier routing without logging the JIT value.
+5. [ ] Run the replay probe. Require the second registration to be rejected,
+   scrub the retained value, and record only the rejection class and
+   timestamps.
+6. Re-read the live runner-group state and deployed AWS state after rollout.
+7. Map the final evidence to each of the six open Codex IDs in `SPEC.md`.
+8. Mark each exact ID closure-ready after its individual evidence passes. Do
    not close any ID before the `P5` merge gate.
 
 ## P5 Yeet publish, review, and merge through P7 Close

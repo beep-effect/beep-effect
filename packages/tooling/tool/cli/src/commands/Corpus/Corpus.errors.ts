@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Sha256Hex } from "@beep/schema";
+import { Defect, Sha256Hex } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -32,9 +32,9 @@ export class CorpusCommandError extends S.TaggedError<CorpusCommandError>($I`Cor
   "CorpusCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("CorpusCommandError", {
+  $I.annoteError<CorpusCommandError>("CorpusCommandError", {
     description: "A failure raised while preparing or applying a corpus curation operation.",
   })
 ) {
@@ -79,7 +79,7 @@ export class CorpusArchiveMoveUncoveredFileError extends S.TaggedError<CorpusArc
     originPath: S.NonEmptyString,
     sourcePath: S.NonEmptyString,
   },
-  $I.annote("CorpusArchiveMoveUncoveredFileError", {
+  $I.annoteError<CorpusArchiveMoveUncoveredFileError>("CorpusArchiveMoveUncoveredFileError", {
     title: "Corpus Archive Move Uncovered File Error",
     description: "A source file selected for archive-move was not covered by the provided provenance manifests.",
   })
@@ -118,7 +118,7 @@ export class CorpusArchiveMoveDigestMismatchError extends S.TaggedError<CorpusAr
     originPath: S.NonEmptyString,
     rawPath: S.NonEmptyString,
   },
-  $I.annote("CorpusArchiveMoveDigestMismatchError", {
+  $I.annoteError<CorpusArchiveMoveDigestMismatchError>("CorpusArchiveMoveDigestMismatchError", {
     title: "Corpus Archive Move Digest Mismatch Error",
     description: "A raw file referenced by archive-move provenance did not hash to the recorded SHA-256 digest.",
   })
@@ -152,7 +152,7 @@ export class CorpusArchiveMoveDestinationConflictError extends S.TaggedError<Cor
     message: S.String,
     sourcePath: S.NonEmptyString,
   },
-  $I.annote("CorpusArchiveMoveDestinationConflictError", {
+  $I.annoteError<CorpusArchiveMoveDestinationConflictError>("CorpusArchiveMoveDestinationConflictError", {
     title: "Corpus Archive Move Destination Conflict Error",
     description: "An archive-move destination already exists or is duplicated by another selected source.",
   })

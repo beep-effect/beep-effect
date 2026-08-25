@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`; P1 complete 2026-08-24, P2 next
+Lifecycle: `active`; P2 complete 2026-08-24, P3 cut over 2026-08-25
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -64,29 +64,49 @@ Use this command for execution-capable sessions:
 6. [`research/P0-FACTS.md`](./research/P0-FACTS.md) - sanitized live inventory.
 7. [`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md) - fresh bake,
    deployment, red-team, fast-path, teardown, and closure-ready proof.
-8. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 friction
-   receipts and prevention notes.
-9. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
-   ledger.
-10. The three source packets named in the transfer table.
-11. The fleet packet evidence named above.
+8. [`research/P2-DESIGN.md`](./research/P2-DESIGN.md) - workload identity
+   realization, IAM edges, boot handoff, proof plan, and operator steps.
+9. [`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md) - rollout incident,
+   canaries, IAM semantics, deployed proof, residuals, and closure-ready maps.
+10. [`research/P3-DESIGN.md`](./research/P3-DESIGN.md) - organization
+    admission, reusable-workflow cutover, check contexts, replay probe, and
+    proof plan.
+11. [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md) - cutover
+    timeline, deployed group state, admission probes, and the retained P3
+    residual.
+12. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 and P2
+    friction receipts and prevention notes.
+12. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
+    ledger.
+13. The three source packets named in the transfer table.
+14. The fleet packet evidence named above.
 
 ## Current Phase
 
-`P1 08-24 CSF-003/CSF-009 deployment proof` completed on 2026-08-24 with
-closure-ready evidence retained in
-[`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md). P2 Workload identity
-boundary is next, followed by P3 Admission defense in depth.
+P2 Workload identity boundary completed on 2026-08-24 with closure-ready
+evidence retained in
+[`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md). Launch-template v13
+remains the fleet default after a clean canary and deployed red-team proof. P3
+Admission defense in depth cut over on 2026-08-25: #805 staged `heavy.yml`
+through a local reusable-workflow call, the five required contexts were renamed
+to their `Heavy / ...` forms, and #808 pinned the call to `heavy.yml@main` while
+organization group `beep-ec2-heavy` was restricted to the four protected
+default-branch workflows. The controller's organization registration deployed,
+failed closed on a missing installation permission (which itself proved the
+no-fallback half of the admission design), and rolled back; accepting the
+permission and redeploying is the remaining P3 step. Evidence:
+[`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md). P4 owns the live JIT
+replay run; its operator-controlled probe is implemented.
 
 ## Latest Evidence
 
-On 2026-08-24, bake #3 produced a sealed Bun `1.4.0` image keyed to `main`'s
-`f81ab29f…` lockfile digest. SSM AMI-pin version 7 serves that image. Final
-red-team run `32763957629` passed Gates A through E, `AMI_PIN`, scoped
-deregistration, and EC2 termination. Lane probe `32763957329` admitted the
-baked fast path only after the digest, owner, mode, and symlink checks passed.
-The two held findings are closure-ready and remain open until the P5 merge
-gate.
+On 2026-08-24, red-team run `32786883010` passed Gates A through J and L
+exactly once, `AMI_PIN`, live `METADATA_DISABLED (disabled applied)`, scoped
+deregistration, and EC2 termination after 1 second. The sample stream captured
+`disabled applied running` before guest poweroff. The test-integration lane
+probe kept the sealed Bun `1.4.0` fast path keyed to lockfile digest
+`f81ab29f…`. The two P2 workload-identity findings are closure-ready and remain
+open until the P5 merge gate; P6 owns dashboard closure.
 
 ## Notes
 

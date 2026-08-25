@@ -1,4 +1,5 @@
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -8,9 +9,9 @@ export class RegistrationGeometryError extends S.TaggedError<RegistrationGeometr
   "RegistrationGeometryError",
   {
     message: S.NonEmptyString,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("RegistrationGeometryError", {
+  $I.annoteError<RegistrationGeometryError>("RegistrationGeometryError", {
     description: "Typed failure to resolve, plan, inspect, or apply registration geometry.",
   })
 ) {

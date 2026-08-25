@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { Defect, LiteralKit, Sha256Hex } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Clock, Effect, Encoding, FileSystem, Path, Redacted, Result } from "effect";
 import * as S from "effect/Schema";
@@ -149,10 +149,10 @@ export type AiMetricsArchiveAlgorithm = typeof AiMetricsArchiveAlgorithm.Type;
 export class AiMetricsArchiveError extends S.TaggedError<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
   "AiMetricsArchiveError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsArchiveError", {
+  $I.annoteError<AiMetricsArchiveError>("AiMetricsArchiveError", {
     description: "Typed failure raised while encrypting or reading AI metrics raw archive objects.",
   })
 ) {}

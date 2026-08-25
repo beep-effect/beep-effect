@@ -32,7 +32,7 @@ export class TsconfigSyncDriftError extends S.TaggedError<TsconfigSyncDriftError
     fileCount: S.Finite,
     summary: S.String,
   },
-  $I.annote("TsconfigSyncDriftError", {
+  $I.annoteError<TsconfigSyncDriftError>("TsconfigSyncDriftError", {
     title: "Tsconfig Sync Drift Error",
     description: "Raised when tsconfig-sync --check detects one or more files that are out of sync.",
   })
@@ -80,7 +80,7 @@ export class TsconfigSyncCycleError extends S.TaggedError<TsconfigSyncCycleError
     cycles: S.String.pipe(S.Array, S.Array),
     message: S.String,
   },
-  $I.annote("TsconfigSyncCycleError", {
+  $I.annoteError<TsconfigSyncCycleError>("TsconfigSyncCycleError", {
     title: "Tsconfig Sync Cycle Error",
     description: "Raised when workspace dependency graph contains one or more cycles.",
   })
@@ -128,7 +128,7 @@ export class TsconfigSyncFilterError extends S.TaggedError<TsconfigSyncFilterErr
     filter: S.String,
     message: S.String,
   },
-  $I.annote("TsconfigSyncFilterError", {
+  $I.annoteError<TsconfigSyncFilterError>("TsconfigSyncFilterError", {
     title: "Tsconfig Sync Filter Error",
     description: "Raised when tsconfig-sync filter does not match any workspace package name or path.",
   })

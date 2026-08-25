@@ -90,7 +90,7 @@ export class SyncCursorRepositoryUnavailable extends S.TaggedError<SyncCursorRep
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("SyncCursorRepositoryUnavailable", {
+  $I.annoteError<SyncCursorRepositoryUnavailable>("SyncCursorRepositoryUnavailable", {
     title: "SyncCursor repository unavailable",
     description: "The SyncCursor repository could not serve the request.",
   })

@@ -10,17 +10,6 @@ import * as S from "effect/Schema";
 
 const $I = $AnthropicId.create("Anthropic.errors");
 
-const RepairErrorFields = {
-  message: S.NonEmptyString.annotateKey({
-    description: "Non-empty diagnostic message describing the repair helper failure.",
-  }),
-  operation: S.NonEmptyString.annotateKey({
-    description: "Repair helper operation that raised the failure.",
-  }),
-} satisfies S.Struct.Fields;
-const sameRepairErrorFields = S.toEquivalence(S.TaggedStruct("RepairError", RepairErrorFields));
-const sameRepairError = (self: RepairError, that: RepairError): boolean => sameRepairErrorFields(self, that);
-
 /**
  * Recoverable technical failure raised while running an Anthropic repair helper.
  *
@@ -49,12 +38,15 @@ const sameRepairError = (self: RepairError, that: RepairError): boolean => sameR
  */
 export class RepairError extends S.TaggedError<RepairError>($I`RepairError`)(
   "RepairError",
-  RepairErrorFields,
-  $I.annoteClass<S.declare<RepairError>, readonly [S.TaggedStruct<"RepairError", typeof RepairErrorFields>]>(
-    "RepairError",
-    {
-      description: "Technical Anthropic driver failure raised while running repair helper calls.",
-      toEquivalence: () => sameRepairError,
-    }
-  )
+  {
+    message: S.NonEmptyString.annotateKey({
+      description: "Non-empty diagnostic message describing the repair helper failure.",
+    }),
+    operation: S.NonEmptyString.annotateKey({
+      description: "Repair helper operation that raised the failure.",
+    }),
+  },
+  $I.annoteError<RepairError>("RepairError", {
+    description: "Technical Anthropic driver failure raised while running repair helper calls.",
+  })
 ) {}

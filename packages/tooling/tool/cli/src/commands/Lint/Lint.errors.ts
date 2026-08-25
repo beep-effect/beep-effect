@@ -35,7 +35,7 @@ export class LintCircularAnalysisError extends S.TaggedError<LintCircularAnalysi
   {
     message: S.String,
   },
-  $I.annote("LintCircularAnalysisError", {
+  $I.annoteError<LintCircularAnalysisError>("LintCircularAnalysisError", {
     description: "Circular dependency analysis failed for a target directory.",
   })
 ) {
@@ -68,7 +68,7 @@ export class LintFileDiscoveryError extends S.TaggedError<LintFileDiscoveryError
     root: S.String,
     path: S.String,
   },
-  $I.annote("LintFileDiscoveryError", {
+  $I.annoteError<LintFileDiscoveryError>("LintFileDiscoveryError", {
     description: "TypeScript file discovery failed for a lint root.",
   })
 ) {
@@ -122,7 +122,7 @@ export class TestTypecheckBaselineError extends S.TaggedError<TestTypecheckBasel
   {
     message: S.String,
   },
-  $I.annote("TestTypecheckBaselineError", {
+  $I.annoteError<TestTypecheckBaselineError>("TestTypecheckBaselineError", {
     description: "Raised when the committed test-typecheck blind-spot baseline cannot be read, decoded, or written.",
   })
 ) {
@@ -164,7 +164,7 @@ export class SchemaFirstInventoryReadError extends S.TaggedError<SchemaFirstInve
   {
     message: S.String,
   },
-  $I.annote("SchemaFirstInventoryReadError", {
+  $I.annoteError<SchemaFirstInventoryReadError>("SchemaFirstInventoryReadError", {
     description: "Raised when the committed schema-first inventory cannot be parsed or decoded.",
   })
 ) {

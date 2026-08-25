@@ -33,7 +33,7 @@ export class ChatActionError extends S.TaggedError<ChatActionError>($I`ChatActio
   {
     message: S.String,
   },
-  $I.annote("ChatActionError", {
+  $I.annoteError<ChatActionError>("ChatActionError", {
     description: "Client-safe failure raised when a chat action cannot be completed.",
   })
 ) {

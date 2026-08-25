@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 /**
  * Code generator for the exhaustive HTML AST.
@@ -56,10 +56,10 @@ const $I = $HtmlId.create("scripts/generate");
 class HtmlGenerationError extends S.TaggedError<HtmlGenerationError>($I`HtmlGenerationError`)(
   "HtmlGenerationError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.optionalKey),
+    cause: Defect({ includeStack: true }).pipe(S.optionalKey),
     message: S.String,
   },
-  $I.annote("HtmlGenerationError", {
+  $I.annoteError<HtmlGenerationError>("HtmlGenerationError", {
     description: "Typed failure raised when pinned HTML metadata cannot produce a valid deterministic model.",
   })
 ) {}

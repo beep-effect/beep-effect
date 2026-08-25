@@ -10,6 +10,7 @@ import { Err } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { commandErrorFields } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/Runners/Runners.errors");
 
@@ -30,13 +31,10 @@ const $I = $RepoCliId.create("commands/Runners/Runners.errors");
  */
 export class RunnersCommandError extends S.TaggedError<RunnersCommandError>($I`RunnersCommandError`)(
   "RunnersCommandError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("RunnersCommandError", { description: "Failure raised by the runner AMI bake command family." })
+  commandErrorFields,
+  $I.annoteError<RunnersCommandError>("RunnersCommandError", {
+    description: "Failure raised by the runner AMI bake command family.",
+  })
 ) {
   /**
    * Exit status returned when the error reaches the CLI runtime.

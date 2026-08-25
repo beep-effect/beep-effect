@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
@@ -153,10 +153,10 @@ export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Typ
 export class AiMetricsOtlpExportError extends S.TaggedError<AiMetricsOtlpExportError>($I`AiMetricsOtlpExportError`)(
   "AiMetricsOtlpExportError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsOtlpExportError", {
+  $I.annoteError<AiMetricsOtlpExportError>("AiMetricsOtlpExportError", {
     description: "Typed failure raised while projecting or exporting redacted AI metrics OTLP spans.",
   })
 ) {}

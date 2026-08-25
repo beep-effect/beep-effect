@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, N, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -53,10 +53,10 @@ const $I = $RepoAiMetricsId.create("scorecard");
 export class AiMetricsScorecardError extends S.TaggedError<AiMetricsScorecardError>($I`AiMetricsScorecardError`)(
   "AiMetricsScorecardError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsScorecardError", {
+  $I.annoteError<AiMetricsScorecardError>("AiMetricsScorecardError", {
     description: "Typed failure raised by AI metrics label, benchmark, and scorecard workflows.",
   })
 ) {}

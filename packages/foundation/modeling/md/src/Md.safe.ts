@@ -235,7 +235,7 @@ export class ScalarSafetyViolation extends S.TaggedError<ScalarSafetyViolation>(
   {
     path: S.Array(DocumentSafetyPathSegment),
   },
-  $I.annote("ScalarSafetyViolation", {
+  $I.annoteError<ScalarSafetyViolation>("ScalarSafetyViolation", {
     description: "Path-located NUL code point or lone UTF-16 surrogate rejected before safe HTML projection.",
   })
 ) {}
@@ -267,7 +267,7 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
     identifier: FootnoteIdentifier,
     path: S.Array(DocumentSafetyPathSegment),
   },
-  $I.annote("DuplicateFootnoteDefinitionSafetyViolation", {
+  $I.annoteError<DuplicateFootnoteDefinitionSafetyViolation>("DuplicateFootnoteDefinitionSafetyViolation", {
     description: "Path-located repeated footnote definition rejected before safe HTML projection.",
   })
 ) {}

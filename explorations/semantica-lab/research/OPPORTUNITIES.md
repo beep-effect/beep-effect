@@ -132,3 +132,9 @@ ratifies.
   disposition changes on one row, regenerate every derived count from the inventory (`jq`) rather
   than hand-editing prose; treat counts in prose as generated text.
 
+- **2026-08-24 — Two shell gotchas cost two parallel read batches during the MAP session.** The
+  Bash tool's working directory persists across calls, so a relative `cd explorations/<slug>` in
+  one call made the next three parallel calls fail with `no such file or directory` (they started
+  inside the packet). Separately, zsh aborted `grep -r --include=*.ts` with `no matches found`
+  because the unquoted glob is expanded by the shell. Prevention: always use absolute paths in
+  tool calls; quote `--include='*.ts'`; both are the same class as the `nullglob` receipt above.

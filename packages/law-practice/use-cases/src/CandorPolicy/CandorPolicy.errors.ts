@@ -73,7 +73,7 @@ export class CandorRecordReadError extends S.TaggedError<CandorRecordReadError>(
     message: S.String,
     reason: CandorRecordReadReason,
   },
-  $I.annote("CandorRecordReadError", {
+  $I.annoteError<CandorRecordReadError>("CandorRecordReadError", {
     description: "Failure raised when recorded candor events or dispositions cannot be read for a filing.",
   })
 ) {

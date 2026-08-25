@@ -501,7 +501,7 @@ export class ContradictionActionError extends S.TaggedError<ContradictionActionE
       description: "Sanitized reason the requested contradiction action could not complete.",
     }),
   },
-  $I.annote("ContradictionActionError", {
+  $I.annoteError<ContradictionActionError>("ContradictionActionError", {
     description: "Sanitized failure for client-visible contradiction triage actions.",
   })
 ) {

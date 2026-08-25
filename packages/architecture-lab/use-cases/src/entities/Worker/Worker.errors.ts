@@ -60,7 +60,7 @@ export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFo
   {
     workerId: ArchitectureLabIdentity.WorkerId,
   },
-  $I.annote("WorkerNotFound", {
+  $I.annoteError<WorkerNotFound>("WorkerNotFound", {
     title: "Worker not found",
     description: "The requested architecture lab Worker does not exist.",
   })
@@ -98,7 +98,7 @@ export class WorkerConflict extends S.TaggedError<WorkerConflict>($I`WorkerConfl
       description: "Non-empty public conflict reason.",
     }),
   },
-  $I.annote("WorkerConflict", {
+  $I.annoteError<WorkerConflict>("WorkerConflict", {
     title: "Worker conflict",
     description: "The requested Worker command conflicts with persisted state.",
   })
@@ -127,7 +127,7 @@ export class WorkerActionFailed extends S.TaggedError<WorkerActionFailed>($I`Wor
       description: "Non-empty public failure reason with internal repository details redacted.",
     }),
   },
-  $I.annote("WorkerActionFailed", {
+  $I.annoteError<WorkerActionFailed>("WorkerActionFailed", {
     title: "Worker action failed",
     description: "The Worker use-case action could not be completed.",
   })

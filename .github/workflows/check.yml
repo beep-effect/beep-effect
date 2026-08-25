@@ -44,6 +44,13 @@ jobs:
               labels: [label]
             });
             await core.summary.addRaw(`Changed files: ${count}; applied label: ${label}`).write();
+  heavy:
+    name: Heavy
+    permissions:
+      contents: read
+    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
+    secrets: inherit
+
   verify:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
@@ -61,23 +68,11 @@ jobs:
             timeout_minutes: 60
             uses_turbo: "true"
             install_typos: "true"
-          - id: lint-policy
-            name: Lint Policy
-            runner: beep-ec2-heavy
-            timeout_minutes: 50
-            uses_turbo: "false"
-            install_typos: "true"
           - id: repo-sanity
             name: Repo Sanity
             runner: ubuntu-24.04
             timeout_minutes: 30
             uses_turbo: "false"
-            install_typos: "false"
-          - id: check
-            name: Check
-            runner: beep-ec2-heavy
-            timeout_minutes: 120
-            uses_turbo: "true"
             install_typos: "false"
           - id: test-unit
             name: Test Unit
@@ -85,28 +80,10 @@ jobs:
             timeout_minutes: 60
             uses_turbo: "true"
             install_typos: "false"
-          - id: test-integration
-            name: Test Integration
-            runner: beep-ec2-heavy
-            timeout_minutes: 40
-            uses_turbo: "true"
-            install_typos: "false"
           - id: ecosystem
             name: Ecosystem Contracts
             runner: ubuntu-24.04
             timeout_minutes: 30
-            uses_turbo: "false"
-            install_typos: "false"
-          - id: coverage
-            name: Coverage Regression
-            runner: beep-ec2-heavy
-            timeout_minutes: 80
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: docgen
-            name: Docgen
-            runner: beep-ec2-heavy
-            timeout_minutes: 60
             uses_turbo: "false"
             install_typos: "false"
           - id: codegen

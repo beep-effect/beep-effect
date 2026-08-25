@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -45,10 +45,10 @@ const $I = $RepoAiMetricsId.create("ingest");
 export class AiMetricsIngestError extends S.TaggedError<AiMetricsIngestError>($I`AiMetricsIngestError`)(
   "AiMetricsIngestError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsIngestError", {
+  $I.annoteError<AiMetricsIngestError>("AiMetricsIngestError", {
     description: "Typed failure raised by AI metrics transcript ingest helpers.",
   })
 ) {}

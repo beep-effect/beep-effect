@@ -31,22 +31,34 @@ Use the package's `$I` composer when a distinct namespaced schema identifier is
 wanted. When no distinct identifier is needed, omit it with
 `S.TaggedError<Self>()("Tag", fields)`; never pass a bare identifier equal to
 the tag. Cause-carrying errors declare
-`cause: S.Defect({ includeStack: true })` explicitly.
+`cause: Defect({ includeStack: true })` explicitly with the `Defect` wrapper
+from `@beep/schema` (see "Declared field equivalence" below).
 
 ### Declared field equivalence
 
-Every `S.TaggedError` declaration carries a fields-only `toEquivalence`
-annotation. The comparator covers declared diagnostic identity and ignores the
-`Error` runtime metadata inherited by the class. The direct schema-derived
-form lives in `packages/drivers/tika/src/Tika.errors.ts`; fields that need typed
-projections use the hand-composed form in
-`packages/drivers/m365/src/M365.errors.ts`.
+Every `S.TaggedError` declaration adopts its declared field struct as its
+equivalence by passing `$I.annoteError<Self>(identifier, extras?)` as its
+annotations. Effect calls a declaration's `toEquivalence` hook with the derived
+equivalence of its type parameters, and for a tagged error that single
+parameter is the declared `TaggedStruct`; the record returned by `annoteError`
+hands that equivalence back, so `S.toEquivalence(ErrorClass)` compares declared
+diagnostic identity and ignores the `Error` runtime metadata the class
+inherits. Nothing is derived by hand at the class: no field constants, no
+comparator functions, no explicit schema type arguments. Packages that cannot
+depend on `@beep/identity` write the same hook through a module-level
+`declaredFieldsEquivalence<Self>` helper, passed as
+`toEquivalence: (typeParameters) => declaredFieldsEquivalence<X>(typeParameters)`
+on the annotation object
+(`packages/ecosystem/effect-drizzle/src/core/repository.ts`,
+`packages/_internal/db-admin/scripts/check-migrations-drift.ts`).
 
-Opaque fields modeled with `S.Defect(...)`, including optional defect fields,
-remain payload but stay out of the comparator. Two errors may therefore be
-equivalent even when their opaque defects differ. The comparator and its
-annotation live beside the class declaration. Tests consume
-`S.toEquivalence(ErrorClass)` and never install test-local overrides.
+Opaque payloads declare their own identity rule at the schema layer: `Defect`
+from `@beep/schema` is Effect's `S.Defect(options)` annotated with an
+always-true equivalence, so a `cause` field stays payload and two errors that
+differ only in their defect compare equal. Excluding a field from equivalence at
+the class is not a pattern; the field's schema says whether it participates.
+Tests consume `S.toEquivalence(ErrorClass)` and never install test-local
+overrides.
 
 ## 2. Translation contract
 
@@ -83,6 +95,7 @@ The full chain. Each block is one boundary.
 ````ts
 // packages/drivers/postgres/src/Postgres.errors.ts (excerpt)
 import { $PostgresId } from "@beep/identity";
+import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PostgresId.create("Postgres.errors");
@@ -101,9 +114,9 @@ export class PostgresError extends S.TaggedError<PostgresError>(
     operation: S.String,
     sqlState: S.OptionFromOptionalKey(S.String),
     query: S.OptionFromOptionalKey(S.String),
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
-  $I.annote("PostgresError", {
+  $I.annoteError<PostgresError>("PostgresError", {
     description: "Technical Postgres driver failure scoped to a driver operation.",
   })
 ) {}
@@ -132,7 +145,7 @@ export class MembershipRepositoryNotFound extends S.TaggedError<MembershipReposi
 )(
   "MembershipRepositoryNotFound",
   { membershipId: MembershipId },
-  $I.annote("MembershipRepositoryNotFound", {
+  $I.annoteError<MembershipRepositoryNotFound>("MembershipRepositoryNotFound", {
     description: "The requested membership does not exist.",
   })
 ) {}
@@ -148,7 +161,7 @@ export class MembershipRepositoryUnavailable extends S.TaggedError<MembershipRep
 )(
   "MembershipRepositoryUnavailable",
   { reason: S.String },
-  $I.annote("MembershipRepositoryUnavailable", {
+  $I.annoteError<MembershipRepositoryUnavailable>("MembershipRepositoryUnavailable", {
     description: "The membership repository is temporarily unreachable.",
   })
 ) {}

@@ -124,7 +124,7 @@ class MissingBuilderMetadataError extends S.TaggedError<MissingBuilderMetadataEr
   {
     message: S.String,
   },
-  $I.annote("MissingBuilderMetadataError", {
+  $I.annoteError<MissingBuilderMetadataError>("MissingBuilderMetadataError", {
     description: "Raised when Chalk builder metadata is unexpectedly unavailable.",
   })
 ) {}

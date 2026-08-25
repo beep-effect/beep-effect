@@ -8,7 +8,7 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -716,10 +716,10 @@ export class AiMetricsDerivedStorageError extends S.TaggedError<AiMetricsDerived
 )(
   "AiMetricsDerivedStorageError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsDerivedStorageError", {
+  $I.annoteError<AiMetricsDerivedStorageError>("AiMetricsDerivedStorageError", {
     description: "Typed failure raised while projecting AI metrics records into DuckDB derived storage.",
   })
 ) {}

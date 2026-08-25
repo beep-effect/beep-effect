@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -90,10 +90,10 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
 export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderError>($I`AiMetricsForwarderError`)(
   "AiMetricsForwarderError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsForwarderError", {
+  $I.annoteError<AiMetricsForwarderError>("AiMetricsForwarderError", {
     description: "Typed failure raised by the durable AI metrics forwarder.",
   })
 ) {}

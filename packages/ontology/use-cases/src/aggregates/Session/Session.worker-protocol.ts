@@ -370,7 +370,7 @@ export class OntologyWorkerUndecodableCommand extends S.TaggedError<OntologyWork
 )(
   "OntologyWorkerUndecodableCommand",
   { reason: S.String },
-  $I.annote("OntologyWorkerUndecodableCommand", {
+  $I.annoteError<OntologyWorkerUndecodableCommand>("OntologyWorkerUndecodableCommand", {
     description: "The graph worker received a message it could not decode as a WorkerCommand.",
   })
 ) {}

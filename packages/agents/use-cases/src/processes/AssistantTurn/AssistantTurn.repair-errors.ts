@@ -31,7 +31,7 @@ export class BlockRepairFailed extends S.TaggedError<BlockRepairFailed>($I`Block
   {
     message: S.String,
   },
-  $I.annote("BlockRepairFailed", {
+  $I.annoteError<BlockRepairFailed>("BlockRepairFailed", {
     description: "Raised when the assistant-turn block repair adapter cannot complete its repair call.",
   })
 ) {

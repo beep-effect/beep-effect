@@ -293,7 +293,7 @@ export class SparqlQueryError extends S.TaggedError<SparqlQueryError>($I`SparqlQ
     reason: SparqlQueryErrorReason,
     message: S.String,
   },
-  $I.annote("SparqlQueryError", {
+  $I.annoteError<SparqlQueryError>("SparqlQueryError", {
     description: "Typed SPARQL query error.",
     semanticSchemaMetadata: serviceContractMetadata("SparqlQueryError", "Typed SPARQL query error."),
   })

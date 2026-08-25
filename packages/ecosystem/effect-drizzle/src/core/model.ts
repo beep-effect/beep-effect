@@ -6,7 +6,9 @@
  *
  * @since 0.0.0
  */
+
 import { String as StringSchema, TaggedError } from "effect/Schema";
+import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 import type * as Field from "./Field.ts";
 import type * as Meta from "./Meta.ts";
 
@@ -38,9 +40,13 @@ import type * as Meta from "./Meta.ts";
  */
 export class ModelInvariantError extends TaggedError<ModelInvariantError>("@beep/effect-drizzle/ModelInvariantError")(
   "ModelInvariantError",
-  { message: StringSchema, fieldName: StringSchema },
+  {
+    message: StringSchema,
+    fieldName: StringSchema,
+  },
   {
     description: "An @beep/effect-drizzle model declaration violates a SQL invariant.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<ModelInvariantError>(typeParameters),
   }
 ) {}
 

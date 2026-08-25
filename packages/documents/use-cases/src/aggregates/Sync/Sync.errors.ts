@@ -44,7 +44,7 @@ export class DmsMirrorUnavailable extends S.TaggedError<DmsMirrorUnavailable>($I
       description: "Whether retrying the remote operation may succeed.",
     }),
   },
-  $I.annote("DmsMirrorUnavailable", {
+  $I.annoteError<DmsMirrorUnavailable>("DmsMirrorUnavailable", {
     description: "The DMS mirror adapter could not complete a remote operation.",
   })
 ) {}
@@ -71,7 +71,7 @@ export class VaultScanFailed extends S.TaggedError<VaultScanFailed>($I`VaultScan
       description: "Non-empty vault scan failure diagnostic.",
     }),
   },
-  $I.annote("VaultScanFailed", {
+  $I.annoteError<VaultScanFailed>("VaultScanFailed", {
     description: "Scanning the local workspace vault failed.",
   })
 ) {}
@@ -96,7 +96,7 @@ export class VaultSyncActionError extends S.TaggedError<VaultSyncActionError>($I
   {
     message: S.String,
   },
-  $I.annote("VaultSyncActionError", {
+  $I.annoteError<VaultSyncActionError>("VaultSyncActionError", {
     description: "Client-safe failure raised when a vault sync action cannot complete.",
   })
 ) {

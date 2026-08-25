@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Match, Order, Path, pipe } from "effect";
@@ -275,10 +275,10 @@ const validateRawArchivePath = (
 export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionError>($I`AiMetricsRetentionError`)(
   "AiMetricsRetentionError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsRetentionError", {
+  $I.annoteError<AiMetricsRetentionError>("AiMetricsRetentionError", {
     description: "Typed failure raised by AI metrics retention, restore, delete, and compaction workflows.",
   })
 ) {}

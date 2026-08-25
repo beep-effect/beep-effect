@@ -19,7 +19,7 @@
 
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { Defect, LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { Effect, FileSystem, HashSet, MutableHashSet, Path } from "effect";
 import * as Eq from "effect/Equal";
@@ -89,14 +89,14 @@ class ContainedTarget extends S.Class<ContainedTarget>($I`ContainedTarget`)(
 export class FsGuardError extends S.TaggedError<FsGuardError>($I`FsGuardError`)(
   "FsGuardError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
     message: S.String,
     path: S.String,
     reason: FsGuardFailureReason,
     root: S.String,
     target: S.String,
   },
-  $I.annote("FsGuardError", {
+  $I.annoteError<FsGuardError>("FsGuardError", {
     description: "Typed refusal from a root-contained filesystem operation that never accepts symlink entries.",
   })
 ) {}

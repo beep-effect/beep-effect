@@ -765,14 +765,14 @@ const schemaAnnotationGaps = (name: string, node: Node, sourceFile: SourceFile):
   const gaps: Array<DocumentationIssue> = [];
   const text = getDocNode(node).getText();
   const hasAnnotation =
-    /\$I\.annote(?:Schema|Class)?\s*(?:<[\s\S]*?>)?\s*\(/.test(text) ||
+    /\$I\.annote(?:Schema|Class|Error)?\s*(?:<[\s\S]*?>)?\s*\(/.test(text) ||
     /\.annotate\s*\(/.test(text) ||
     /\bS\.annotate\s*\(/.test(text);
 
   if (!hasAnnotation) {
     A.appendInPlace(gaps, {
       rule: "missing-schema-annotation",
-      detail: "Exported schemas should carry $I.annote, $I.annoteClass, or $I.annoteSchema metadata.",
+      detail: "Exported schemas should carry $I.annote, $I.annoteClass, $I.annoteError, or $I.annoteSchema metadata.",
     });
   }
 

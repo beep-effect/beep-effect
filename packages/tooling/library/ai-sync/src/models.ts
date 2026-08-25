@@ -6,7 +6,7 @@
  */
 
 import { $AiSyncId } from "@beep/identity/packages";
-import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -778,16 +778,6 @@ export class AiSyncValidationResult extends S.Class<AiSyncValidationResult>($I`A
   })
 ) {}
 
-const AiSyncErrorFields = {
-  message: S.String,
-  sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  cause: S.Defect({ includeStack: true }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-} satisfies S.Struct.Fields;
-const sameAiSyncErrorFields = S.toEquivalence(S.TaggedStruct("AiSyncError", AiSyncErrorFields));
-const sameAiSyncError = (self: AiSyncError, that: AiSyncError): boolean => sameAiSyncErrorFields(self, that);
-
 /**
  * Typed AI sync operational error.
  *
@@ -804,14 +794,16 @@ const sameAiSyncError = (self: AiSyncError, that: AiSyncError): boolean => sameA
  */
 export class AiSyncError extends S.TaggedError<AiSyncError>($I`AiSyncError`)(
   "AiSyncError",
-  AiSyncErrorFields,
-  $I.annoteClass<S.declare<AiSyncError>, readonly [S.TaggedStruct<"AiSyncError", typeof AiSyncErrorFields>]>(
-    "AiSyncError",
-    {
-      description: "Typed operational error for AI sync generation, drift checks, transforms, and validation.",
-      toEquivalence: () => sameAiSyncError,
-    }
-  )
+  {
+    message: S.String,
+    sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    cause: Defect({ includeStack: true }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annoteError<AiSyncError>("AiSyncError", {
+    description: "Typed operational error for AI sync generation, drift checks, transforms, and validation.",
+  })
 ) {}
 
 /**

@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -31,9 +32,9 @@ export class QaCommandError extends S.TaggedError<QaCommandError>($I`QaCommandEr
   "QaCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("QaCommandError", {
+  $I.annoteError<QaCommandError>("QaCommandError", {
     description: "A failure raised while recording, extracting, or judging a QA capture round.",
   })
 ) {

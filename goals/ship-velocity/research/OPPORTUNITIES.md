@@ -539,3 +539,85 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   (new files held to the package tier, package regression requiring `uncovered` to rise, 4-dp
   floors) recorded in `standards/architecture/DECISIONS.md`; (5) B4 publish-time coverage only
   after (1)–(3), or it produces false greens on exactly this class.
+
+## 2026-08-24 — B10: the pull-request coverage scope could not see the row it broke
+
+- What was happening: executing step 2 of the coverage-lane plan (dependents in PR scope)
+  after B9 removed the self-inflicted floor class. The remaining inherited-red class came from
+  the planner's direct-owners-only selection (`CoverageScope.ts`): #780 changed `@beep/md`,
+  measured `@beep/md` alone in 110 s, went green, and `main`'s full run then failed on the
+  dependent `@beep/pandoc-ast` — 7 red `main` pushes and 3 inherited PR reds until #783 hand-
+  fixed the row.
+- Evidence: a closure census over the live workspace graph (132 packages, 128 coverage owners;
+  edges = every workspace name in the four `package.json` buckets, root excluded) shows the
+  shape the planner must handle: 25 owners have no dependents, 48 have 1–2, 26 have 3–5,
+  9 have 6–10, 9 have 11–25, 4 have 26–50, and the seven foundation packages (`types`,
+  `identity`, `fc-runs`, `utils`, `data`, `schema`, `test-utils`) close over ≥111 of 128.
+  `@beep/md` alone closes over 17 dependents (1,472 s of planner weight, including
+  `@beep/repo-cli` at 720 s and `@beep/professional-desktop` at 279 s), so "just add the
+  dependents to the `--filter` list" would have handed one Turbo invocation at
+  `--concurrency=4` and uncapped Vitest workers a set the hosted memory ceiling was never
+  proven against. The width guard therefore routes selections above 300 s of planner weight
+  (every one of the 45 hosted scoped jobs in the B9 sweep finished under 300 s wall-clock on
+  the single-invocation path) through the full lane's prebuild-plus-capped-shard executor.
+- Proof (local, `CI=true`, `TURBO_SCM_BASE=HEAD`, one dirty source file each): a `@beep/nlp`
+  touch selected 8 owners (7 dependents, 311 s) → `coverage:selected` prebuild once (39 tasks,
+  0.33 s, fully cached) then 8 concurrent shards of 6–42 s, ratchet `ok: compared 8
+  package(s)`, about one minute wall-clock; a `@beep/openai-compat` touch selected 3 owners
+  (`venice-ai`, `xai` as dependents, 37 s) and stayed one `turbo run coverage --concurrency=4`
+  invocation, ratchet `ok: compared 3 package(s)`. The live planner probe also confirmed the
+  target: a `@beep/md` source path now selects 18 owners including `@beep/pandoc-ast`; a
+  `@beep/schema` test path selects only `@beep/schema`.
+- Friction, three receipts: (1) the first live proof silently planned `full` because the
+  dirty tree also held the planner's own source files (all `COVERAGE_FULL_INPUT_*`) and an
+  untracked probe script inside `packages/tooling/tool/cli/` — a dirty checkout is part of the
+  changed-file set, so every proof of this planner must run from a committed tree with exactly
+  one dirty path; (2) the second attempt planned `full` on
+  `standards/architecture/DECISIONS.md: no current workspace owner` — a decision-log edit is
+  documentation and belongs in `COVERAGE_NOOP_PREFIXES` alongside `docs/` (step 7 of the plan,
+  now with a concrete path); (3) the repository root (`@beep/root`, path `.`) sat in the shared
+  owner inventory with a `coverage` script and a workspace dependency, which would have made it
+  a dependent of nearly everything and recursed into the aggregate task — caught by reading
+  `discoverWorkspacePackages` before trusting the inventory, not by a test.
+- Would have prevented it: a planner probe subcommand (`beep quality coverage plan --files …`)
+  that prints the scope for hypothetical paths without a run, and a `COVERAGE_NOOP_PREFIXES`
+  entry for `standards/` non-baseline documentation.
+- Still open after B10: adoption on a scoped `--write-baseline` stays the direct owners, so a
+  dependent's legitimate drop is fixed by hand-pinning the row (decision deferred to the
+  comparator-policy step); the seven foundation packages still cost a near-full run on any
+  source change, which is correct but makes step 7's no-op widening and step 4's comparator
+  rules the next wins.
+
+## 2026-08-25 — B11: the ratchet pointed every drop at the repo-wide writer
+
+- What was happening: step 3 of the coverage-lane plan. After B9 (deterministic runtime) and
+  B10 (dependents in scope), the remaining self-inflicted cost was the regeneration loop
+  itself: the ratchet's failure output named no fix at all, and the only command an agent could
+  find was the baseline header's `bun run coverage:baseline:write` — a 128-package run to change
+  one row — whose resulting baseline commit was then a global input that forced the 9–15 minute
+  full fallback on the PR. 39 baseline commits in 90 days, each paying twice.
+- Evidence: the scoped write path already existed and was never advertised — a `--filter`/
+  `--affected` run with `--write-baseline` merges exactly the rows it measured
+  (`CoverageRegression.ts` scoped branch of `writeCoverageRegressionBaseline`). B10's own PR
+  demonstrated the loop: adding covered branches to `CoverageScope.ts` dropped its branch
+  percentage 92.85→92.1 with the same three uncovered arms, and the fix was two tests, not a
+  regen; nothing in the output said which of the two to do or how.
+- Proof (local, `CI=true`, `TURBO_SCM_BASE=HEAD`, committed tree, one dirty file): editing
+  only `@beep/pandoc-ast`'s baseline row (lines floor 85.21→100, uncovered 127→0) planned
+  `coverage:affected: standards/coverage.regression-baseline.jsonc changed only the row(s) for
+  @beep/pandoc-ast; measuring those instead of the full workspace`, ran one package in 24.5 s
+  of turbo time, and failed the ratchet with the new block:
+  `remediation: … bun run coverage -- --filter=@beep/pandoc-ast --write-baseline`. A
+  `standards/architecture/DECISIONS.md`-only edit planned `no coverage-bearing inputs changed`.
+- Friction, two receipts: (1) `compareCoverageRegressionSnapshotsForTesting` is `dual(3)` — a
+  two-argument call silently returns the data-last function, and a fixture with unchanged
+  `uncovered` counts is a "deletion", not a regression, so the first remediation test asserted
+  on a function and then on an empty result before the fixture carried an uncovered rise;
+  (2) `standards/` mixes 25 executable policy inputs (`*.jsonc` baselines and inventories that
+  tests read) with 28 Markdown files, so the no-op rule had to be a suffix rule, not a prefix.
+- Would have prevented it: a remediation line on day one of the ratchet — every other gate in
+  the lane prints its repair command; and a planner probe subcommand (still the top ask from
+  B10) to see the scope a hypothetical change set gets without running it.
+- Still open: step 4 (comparator policy — the percentage treadmill that bit B10, and whether
+  new files are held to the package tier), step 5 (B4 publish-time coverage), 6 (laws text),
+  7 (remaining no-op prefixes: `.claude/`, `scripts/`, root config files).

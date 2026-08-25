@@ -5,24 +5,14 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Inspectable } from "effect";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/SyncDataToTs.errors");
-
-const causeMessage = (cause: unknown): string => {
-  if (P.isError(cause)) {
-    return cause.message;
-  }
-  if (P.hasProperty(cause, "message") && P.isString(cause.message)) {
-    return cause.message;
-  }
-  return Inspectable.toStringUnknown(cause, 0);
-};
 
 /**
  * Operational error during source fetch, parsing, projection, or file writes.
@@ -45,9 +35,9 @@ export class SyncDataToTsError extends S.TaggedError<SyncDataToTsError>($I`SyncD
     message: S.String,
     targetId: S.optionalKey(S.String),
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("SyncDataToTsError", {
+  $I.annoteError<SyncDataToTsError>("SyncDataToTsError", {
     title: "Sync Data To TypeScript Error",
     description: "Failed to fetch, decode, normalize, render, or write synced data.",
   })
@@ -74,7 +64,7 @@ export class SyncDataToTsError extends S.TaggedError<SyncDataToTsError>($I`SyncD
   static readonly mapError = Err.mapCauseError<SyncDataToTsError, [message: string, targetId?: string, file?: string]>(
     (cause, message, targetId, file) =>
       SyncDataToTsError.make({
-        message: `${message}: ${causeMessage(cause)}`,
+        message: messageWithCause(message, cause),
         cause,
         ...O.getSomesStruct({
           targetId: O.fromUndefinedOr(targetId),
@@ -105,7 +95,7 @@ export class SyncDataToTsDriftError extends S.TaggedError<SyncDataToTsDriftError
     message: S.String,
     driftCount: S.Finite,
   },
-  $I.annote("SyncDataToTsDriftError", {
+  $I.annoteError<SyncDataToTsDriftError>("SyncDataToTsDriftError", {
     title: "Sync Data To TypeScript Drift Error",
     description: "Generated data drift was detected while running in check mode.",
   })

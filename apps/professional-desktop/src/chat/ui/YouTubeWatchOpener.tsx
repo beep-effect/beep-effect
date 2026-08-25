@@ -8,6 +8,7 @@
 
 import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-embed";
 import { $ProfessionalDesktopId } from "@beep/identity";
+import { Defect } from "@beep/schema";
 import { O, thunkNull, thunkUndefined } from "@beep/utils";
 import { useAtom, useAtomMount } from "@effect/atom-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -21,17 +22,36 @@ const $I = $ProfessionalDesktopId.create("chat/ui/YouTubeWatchOpener");
 
 const hasTauriRuntime = (): boolean => "__TAURI_INTERNALS__" in globalThis;
 
-class YouTubeWatchOpenFailed extends S.TaggedError<YouTubeWatchOpenFailed>($I`YouTubeWatchOpenFailed`)(
+/**
+ * Failure raised when the Tauri native opener rejects a validated YouTube watch request.
+ *
+ * **Example** (Create a retryable opener failure)
+ *
+ * ```ts
+ * import { YouTubeWatchRequest } from "@beep/editor/youtube-embed"
+ * import { YouTubeWatchOpenFailed } from "@/chat/ui/YouTubeWatchOpener"
+ *
+ * const error = YouTubeWatchOpenFailed.make({
+ *   request: YouTubeWatchRequest.make({ url: "https://www.youtube.com/watch?v=M7lc1UVf-VE" }),
+ *   cause: new Error("native opener unavailable")
+ * })
+ * console.log(error.request.url)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class YouTubeWatchOpenFailed extends S.TaggedError<YouTubeWatchOpenFailed>($I`YouTubeWatchOpenFailed`)(
   "YouTubeWatchOpenFailed",
   {
     request: YouTubeWatchRequest.annotateKey({
       description: "Validated canonical YouTube watch request that can be retried.",
     }),
-    cause: S.Defect({ includeStack: true }).annotateKey({
+    cause: Defect({ includeStack: true }).annotateKey({
       description: "Native opener defect retained for structured diagnostics only.",
     }),
   },
-  $I.annote("YouTubeWatchOpenFailed", {
+  $I.annoteError<YouTubeWatchOpenFailed>("YouTubeWatchOpenFailed", {
     description: "The Tauri native opener rejected a validated YouTube watch request.",
   })
 ) {}

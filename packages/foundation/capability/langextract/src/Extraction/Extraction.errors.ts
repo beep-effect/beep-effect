@@ -79,7 +79,7 @@ export class LangExtractError extends S.TaggedError<LangExtractError>($I`LangExt
     message: S.String,
     reason: LangExtractErrorReason,
   },
-  $I.annote("LangExtractError", {
+  $I.annoteError<LangExtractError>("LangExtractError", {
     description: "Sanitized error emitted by provider-neutral LangExtract operations.",
   })
 ) {

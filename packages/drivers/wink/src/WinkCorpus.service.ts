@@ -8,7 +8,7 @@
 import { $WinkId } from "@beep/identity";
 import { Document, DocumentId } from "@beep/nlp/Core/Document";
 import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector, PositiveNumber } from "@beep/nlp/Core/Vectorization";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Defect, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, thunk0, thunkEffectVoid } from "@beep/utils";
 import { Chunk, Clock, Context, Effect, HashMap, HashSet, Layer, pipe, Ref } from "effect";
@@ -313,22 +313,6 @@ const removeCorpusSession = (
   return [exists, HashMap.remove(sessions, corpusId)];
 };
 
-const CorpusManagerErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
-  corpusId: S.OptionFromOptionalKey(S.String),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const CorpusManagerErrorEquivalenceFields = {
-  corpusId: CorpusManagerErrorFields.corpusId,
-  message: CorpusManagerErrorFields.message,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameCorpusManagerErrorFields = S.toEquivalence(
-  S.TaggedStruct("CorpusManagerError", CorpusManagerErrorEquivalenceFields)
-);
-const sameCorpusManagerError = (self: CorpusManagerError, that: CorpusManagerError): boolean =>
-  sameCorpusManagerErrorFields(self, that);
-
 /**
  * Typed failure for creating, learning, querying, or inspecting a managed corpus.
  *
@@ -346,13 +330,13 @@ const sameCorpusManagerError = (self: CorpusManagerError, that: CorpusManagerErr
  */
 export class CorpusManagerError extends S.TaggedError<CorpusManagerError>($I`CorpusManagerError`)(
   "CorpusManagerError",
-  CorpusManagerErrorFields,
-  $I.annoteClass<
-    S.declare<CorpusManagerError>,
-    readonly [S.TaggedStruct<"CorpusManagerError", typeof CorpusManagerErrorFields>]
-  >("CorpusManagerError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    corpusId: S.OptionFromOptionalKey(S.String),
+    message: S.String,
+  },
+  $I.annoteError<CorpusManagerError>("CorpusManagerError", {
     description: "Failure raised while managing a stateful wink BM25 corpus.",
-    toEquivalence: () => sameCorpusManagerError,
   })
 ) {
   /**

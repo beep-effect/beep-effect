@@ -6,6 +6,7 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
+import { OpaqueUnknown } from "@beep/schema";
 import { Result } from "effect";
 import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
@@ -14,14 +15,17 @@ import * as EntityId from "./EntityId.ts";
 const $I = $SharedDomainId.create("entity/EntityRef");
 const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;
 
+const EntityRefInvariantErrorFields = {
+  actualEntityType: S.String,
+  actualId: OpaqueUnknown,
+  entityType: S.String,
+} satisfies S.Struct.Fields;
+// actualId is opaque unknown: equivalence is declared diagnostic identity, actualId stays payload.
+
 class EntityRefInvariantError extends S.TaggedError<EntityRefInvariantError>($I`EntityRefInvariantError`)(
   "EntityRefInvariantError",
-  {
-    actualEntityType: S.String,
-    actualId: S.Unknown,
-    entityType: S.String,
-  },
-  $I.annote("EntityRefInvariantError", {
+  EntityRefInvariantErrorFields,
+  $I.annoteError<EntityRefInvariantError>("EntityRefInvariantError", {
     description: "EntityRef runtime invariant failure.",
   })
 ) {}
