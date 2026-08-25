@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Match, Order, Path, pipe } from "effect";
@@ -33,7 +33,6 @@ import { AiMetricsDeployTarget, AiMetricsTranscriptSource, ConfigSnapshot } from
 import { hashPrivateIdentifier, hashPublicTextSha256, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("retention");
-
 const retentionSchemaVersion = "beep.ai_metrics.retention_inventory.v1";
 const retentionMutationSchemaVersion = "beep.ai_metrics.retention_mutation.v1";
 const retentionEnforcementSchemaVersion = "beep.ai_metrics.retention_enforcement.v1";
@@ -212,10 +211,10 @@ const validateRawArchivePath = (
 export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionError>($I`AiMetricsRetentionError`)(
   "AiMetricsRetentionError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsRetentionError", {
+  $I.annoteError<AiMetricsRetentionError>("AiMetricsRetentionError", {
     description: "Typed failure raised by AI metrics retention, restore, delete, and compaction workflows.",
   })
 ) {}

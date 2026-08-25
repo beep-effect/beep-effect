@@ -33,7 +33,7 @@ export class VaultDirectoryPickError extends S.TaggedError<VaultDirectoryPickErr
   {
     message: S.String,
   },
-  $I.annote("VaultDirectoryPickError", {
+  $I.annoteError<VaultDirectoryPickError>("VaultDirectoryPickError", {
     description: "Client-safe native vault directory picker failure.",
   })
 ) {

@@ -98,7 +98,7 @@ const defaultGraph = DefaultGraph.make({ termType: "DefaultGraph", value: "" });
 export class ProvRdfCodecError extends S.TaggedError<ProvRdfCodecError>($I`ProvRdfCodecError`)(
   "ProvRdfCodecError",
   { message: S.String },
-  $I.annote("ProvRdfCodecError", {
+  $I.annoteError<ProvRdfCodecError>("ProvRdfCodecError", {
     description: "Typed failure returned when a PROV bundle cannot be projected without loss.",
   })
 ) {}

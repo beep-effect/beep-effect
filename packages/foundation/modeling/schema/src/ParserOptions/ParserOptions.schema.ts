@@ -13,6 +13,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { BuffEncoding } from "../BufferEncoding.ts";
 import { NonNegativeInt } from "../Int.ts";
+import { Defect } from "../Opaque.ts";
 import { RegExpFromStr } from "../RegExp.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
@@ -37,11 +38,6 @@ const SingleCharacterText = S.String.check(
 );
 
 const decodeRegExpResult = S.decodeResult(RegExpFromStr);
-const ParserOptionsErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
-  message: S.String,
-} satisfies S.Struct.Fields;
-
 /**
  * A parser header configuration input.
  *
@@ -89,8 +85,11 @@ export type HeaderValueInput = typeof HeaderValueInput.Type;
  */
 export class ParserOptionsError extends S.TaggedError<ParserOptionsError>($I.make("ParserOptionsError"))(
   "ParserOptionsError",
-  ParserOptionsErrorFields,
-  $I.annote("ParserOptionsError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    message: S.String,
+  },
+  $I.annoteError<ParserOptionsError>("ParserOptionsError", {
     description: "Raised when CSV parser options cannot be decoded or normalized.",
   })
 ) {}

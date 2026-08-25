@@ -27,16 +27,51 @@ import type { JSX } from "react";
 
 const $I = $ProfessionalDesktopId.create("spikes/CosmosSpike");
 
-class CosmosWorkerInitializationError extends S.TaggedError<CosmosWorkerInitializationError>(
+const CosmosWorkerInitializationErrorFields = {
+  cause: S.Unknown,
+  message: S.NonEmptyString,
+} satisfies S.Struct.Fields;
+const CosmosWorkerInitializationErrorEquivalenceFields = {
+  message: CosmosWorkerInitializationErrorFields.message,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameCosmosWorkerInitializationErrorFields = S.toEquivalence(
+  S.TaggedStruct("CosmosWorkerInitializationError", CosmosWorkerInitializationErrorEquivalenceFields)
+);
+const sameCosmosWorkerInitializationError = (
+  self: CosmosWorkerInitializationError,
+  that: CosmosWorkerInitializationError
+): boolean => sameCosmosWorkerInitializationErrorFields(self, that);
+
+/**
+ * Failure raised when the Cosmos spike projection worker cannot initialize.
+ *
+ * **Example** (Create a worker initialization failure)
+ *
+ * ```ts
+ * import { CosmosWorkerInitializationError } from "@/spikes/CosmosSpike"
+ *
+ * const error = CosmosWorkerInitializationError.make({
+ *   cause: new Error("worker unavailable"),
+ *   message: "The graph worker could not start."
+ * })
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class CosmosWorkerInitializationError extends S.TaggedError<CosmosWorkerInitializationError>(
   $I`CosmosWorkerInitializationError`
 )(
   "CosmosWorkerInitializationError",
-  {
-    cause: S.Unknown,
-    message: S.NonEmptyString,
-  },
-  $I.annote("CosmosWorkerInitializationError", {
+  CosmosWorkerInitializationErrorFields,
+  $I.annoteClass<
+    S.declare<CosmosWorkerInitializationError>,
+    readonly [S.TaggedStruct<"CosmosWorkerInitializationError", typeof CosmosWorkerInitializationErrorFields>]
+  >("CosmosWorkerInitializationError", {
     description: "The Cosmos spike projection worker could not be initialized.",
+    toEquivalence: () => sameCosmosWorkerInitializationError,
   })
 ) {}
 

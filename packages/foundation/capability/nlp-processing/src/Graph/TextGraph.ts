@@ -84,7 +84,7 @@ export class GraphCycleError extends S.TaggedError<GraphCycleError>($I`GraphCycl
   {
     parentIndex: S.Finite,
   },
-  $I.annote("GraphCycleError", {
+  $I.annoteError<GraphCycleError>("GraphCycleError", {
     description: "Raised when a text-graph mutation would create a cycle.",
   })
 ) {}

@@ -142,7 +142,9 @@ export class OntologyCasConflict extends S.TaggedError<OntologyCasConflict>($I`O
     guidance: S.NonEmptyString,
     recoverable: S.Literal(true),
   },
-  $I.annote("OntologyCasConflict", { description: "Recoverable rdfc-1.0 compare-and-set conflict." })
+  $I.annoteError<OntologyCasConflict>("OntologyCasConflict", {
+    description: "Recoverable rdfc-1.0 compare-and-set conflict.",
+  })
 ) {}
 
 /** Recoverable static budget refusal.
@@ -163,7 +165,7 @@ export class OntologyBudgetRefusal extends S.TaggedError<OntologyBudgetRefusal>(
     guidance: S.NonEmptyString,
     recoverable: S.Literal(true),
   },
-  $I.annote("OntologyBudgetRefusal", {
+  $I.annoteError<OntologyBudgetRefusal>("OntologyBudgetRefusal", {
     description: "Recoverable refusal when a server-owned ontology budget is exceeded.",
   })
 ) {}
@@ -187,7 +189,7 @@ export class OntologyReasonerDriftRefusal extends S.TaggedError<OntologyReasoner
     guidance: S.NonEmptyString,
     recoverable: S.Literal(true),
   },
-  $I.annote("OntologyReasonerDriftRefusal", {
+  $I.annoteError<OntologyReasonerDriftRefusal>("OntologyReasonerDriftRefusal", {
     description: "Recoverable refusal that prevents an unbounded reasoner recompute.",
   })
 ) {}
@@ -204,8 +206,11 @@ export class OntologyReasonerDriftRefusal extends S.TaggedError<OntologyReasoner
  */
 export class OntologyNoOpRefusal extends S.TaggedError<OntologyNoOpRefusal>($I`OntologyNoOpRefusal`)(
   "OntologyNoOpRefusal",
-  { guidance: S.NonEmptyString, recoverable: S.Literal(true) },
-  $I.annote("OntologyNoOpRefusal", {
+  {
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyNoOpRefusal>("OntologyNoOpRefusal", {
     description: "Visible refusal for an ontology mutation that would have no effect.",
   })
 ) {}
@@ -224,8 +229,11 @@ export class OntologyActorIdentityRefusal extends S.TaggedError<OntologyActorIde
   $I`OntologyActorIdentityRefusal`
 )(
   "OntologyActorIdentityRefusal",
-  { guidance: S.NonEmptyString, recoverable: S.Literal(true) },
-  $I.annote("OntologyActorIdentityRefusal", {
+  {
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyActorIdentityRefusal>("OntologyActorIdentityRefusal", {
     description: "Recoverable refusal when authenticated caller identity is unavailable for mutation attribution.",
   })
 ) {}
@@ -242,8 +250,11 @@ export class OntologyActorIdentityRefusal extends S.TaggedError<OntologyActorIde
  */
 export class OntologyTierGateRefusal extends S.TaggedError<OntologyTierGateRefusal>($I`OntologyTierGateRefusal`)(
   "OntologyTierGateRefusal",
-  { guidance: S.NonEmptyString, recoverable: S.Literal(true) },
-  $I.annote("OntologyTierGateRefusal", {
+  {
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyTierGateRefusal>("OntologyTierGateRefusal", {
     description: "Recoverable fail-closed refusal returned when TierGate does not approve an ontology mutation.",
   })
 ) {}
@@ -262,8 +273,14 @@ export class OntologyToolExecutionError extends S.TaggedError<OntologyToolExecut
   $I`OntologyToolExecutionError`
 )(
   "OntologyToolExecutionError",
-  { operation: S.NonEmptyString, message: S.NonEmptyString, recoverable: S.Boolean },
-  $I.annote("OntologyToolExecutionError", { description: "Typed safe execution failure returned by an ontology tool." })
+  {
+    operation: S.NonEmptyString,
+    message: S.NonEmptyString,
+    recoverable: S.Boolean,
+  },
+  $I.annoteError<OntologyToolExecutionError>("OntologyToolExecutionError", {
+    description: "Typed safe execution failure returned by an ontology tool.",
+  })
 ) {}
 
 /** Returned ontology tool failure union.

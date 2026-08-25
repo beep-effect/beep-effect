@@ -6,37 +6,17 @@
  */
 
 import { $PgliteId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $PgliteId.create("Pglite.errors");
 
-const decodeDefectOption = S.decodeUnknownOption(S.Defect({ includeStack: true }));
+const decodeDefectOption = S.decodeUnknownOption(Defect({ includeStack: true }));
 const decodeMessageOption = S.decodeUnknownOption(S.NonEmptyString);
 
 const getErrorMessage = (value: unknown): O.Option<string> =>
   value instanceof Error ? decodeMessageOption(value.message) : O.none();
-
-const PgliteErrorFields = {
-  operation: S.NonEmptyString.annotateKey({
-    description: "Driver operation that failed.",
-  }),
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Original native or third-party defect when one was available.",
-    })
-  ),
-  message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Non-empty message extracted from the originating failure.",
-    })
-  ),
-} satisfies S.Struct.Fields;
-const samePgliteErrorFields = S.toEquivalence(S.TaggedStruct("PgliteError", PgliteErrorFields));
-const samePgliteError = (self: PgliteError, that: PgliteError): boolean => samePgliteErrorFields(self, that);
 
 /**
  * Technical failure raised by the `@beep/pglite` driver boundary.
@@ -62,14 +42,26 @@ const samePgliteError = (self: PgliteError, that: PgliteError): boolean => sameP
  */
 export class PgliteError extends S.TaggedError<PgliteError>($I`PgliteError`)(
   "PgliteError",
-  PgliteErrorFields,
-  $I.annoteClass<S.declare<PgliteError>, readonly [S.TaggedStruct<"PgliteError", typeof PgliteErrorFields>]>(
-    "PgliteError",
-    {
-      description: "Technical PGlite driver failure scoped to a driver operation.",
-      toEquivalence: () => samePgliteError,
-    }
-  )
+  {
+    operation: S.NonEmptyString.annotateKey({
+      description: "Driver operation that failed.",
+    }),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Original native or third-party defect when one was available.",
+      })
+    ),
+    message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Non-empty message extracted from the originating failure.",
+      })
+    ),
+  },
+  $I.annoteError<PgliteError>("PgliteError", {
+    description: "Technical PGlite driver failure scoped to a driver operation.",
+  })
 ) {
   /**
    * Normalize an unknown PGlite-adjacent failure into a {@link PgliteError}.

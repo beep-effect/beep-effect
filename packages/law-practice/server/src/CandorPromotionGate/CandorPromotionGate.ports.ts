@@ -90,7 +90,7 @@ export class CandorPromotionSubjectResolutionError extends S.TaggedError<CandorP
       description: "Tenant-bound opaque subject that could not be resolved.",
     }),
   },
-  $I.annote("CandorPromotionSubjectResolutionError", {
+  $I.annoteError<CandorPromotionSubjectResolutionError>("CandorPromotionSubjectResolutionError", {
     description: "The law-practice adapter could not resolve an opaque promotion subject to a filing scope.",
   })
 ) {}

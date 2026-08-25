@@ -5,16 +5,15 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Inspectable, Runtime } from "effect";
+import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { commandErrorFields, messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/Quality/Quality.errors");
-
-const messageWithCause = (message: string, cause: unknown): string =>
-  `${message}: ${Inspectable.toStringUnknown(cause, 0)}`;
 
 type QualityScriptCommandErrorOptions =
   | undefined
@@ -45,9 +44,9 @@ export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError>($I`C
   {
     message: S.String,
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("ChangesetGraphError", {
+  $I.annoteError<ChangesetGraphError>("ChangesetGraphError", {
     description: "Failure raised while validating changeset package references.",
   })
 ) {
@@ -96,9 +95,9 @@ export class ChangesetStatusError extends S.TaggedError<ChangesetStatusError>($I
   {
     message: S.String,
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("ChangesetStatusError", {
+  $I.annoteError<ChangesetStatusError>("ChangesetStatusError", {
     description: "Failure raised while running the path-aware changeset status wrapper.",
   })
 ) {
@@ -140,13 +139,8 @@ export class ChangesetStatusError extends S.TaggedError<ChangesetStatusError>($I
  */
 export class QualityScriptCommandError extends S.TaggedError<QualityScriptCommandError>($I`QualityScriptCommandError`)(
   "QualityScriptCommandError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("QualityScriptCommandError", {
+  commandErrorFields,
+  $I.annoteError<QualityScriptCommandError>("QualityScriptCommandError", {
     description: "Failure raised while running a migrated repo operational command.",
   })
 ) {
@@ -201,7 +195,7 @@ export class QualityTaskFailed extends S.TaggedError<QualityTaskFailed>($I`Quali
     command: S.String,
     exitCode: S.Finite,
   },
-  $I.annote("QualityTaskFailed", {
+  $I.annoteError<QualityTaskFailed>("QualityTaskFailed", {
     description: "A quality subprocess exited with a non-zero status code.",
   })
 ) {
@@ -257,7 +251,7 @@ export class QualityTaskGroupFailed extends S.TaggedError<QualityTaskGroupFailed
     exitCode: S.Finite,
     failures: S.Array(QualityTaskFailed),
   },
-  $I.annote("QualityTaskGroupFailed", {
+  $I.annoteError<QualityTaskGroupFailed>("QualityTaskGroupFailed", {
     description: "A bounded quality task group completed with one or more failed subprocesses.",
   })
 ) {
@@ -306,7 +300,7 @@ export class QualityTaskConfigurationError extends S.TaggedError<QualityTaskConf
   {
     message: S.String,
   },
-  $I.annote("QualityTaskConfigurationError", {
+  $I.annoteError<QualityTaskConfigurationError>("QualityTaskConfigurationError", {
     description: "Quality task configuration could not be resolved.",
   })
 ) {
@@ -340,7 +334,7 @@ export class UnexpectedQualityTaskFailure extends S.TaggedError<UnexpectedQualit
   {
     message: S.String,
   },
-  $I.annote("UnexpectedQualityTaskFailure", {
+  $I.annoteError<UnexpectedQualityTaskFailure>("UnexpectedQualityTaskFailure", {
     description: "Unexpected quality task failure preserved for the process runtime boundary.",
   })
 ) {

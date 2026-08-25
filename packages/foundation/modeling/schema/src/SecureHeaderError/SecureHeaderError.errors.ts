@@ -6,13 +6,14 @@
 import { $SchemaId } from "@beep/identity";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
+import { Defect } from "../Opaque.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SecureHeader } from "../SecureHeader/index.ts";
 
 const $I = $SchemaId.create("SecureHeaderError");
 const commonFields = {
   message: S.String,
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+  cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
 } satisfies S.Struct.Fields;
 
 /**
@@ -34,7 +35,7 @@ const commonFields = {
 export class CspError extends S.TaggedError<CspError>($I.make("CspError"))(
   SecureHeader.Enum.CONTENT_SECURITY_POLICY,
   commonFields,
-  $I.annote("CspError", { description: "A CSP error." })
+  $I.annoteError<CspError>("CspError", { description: "A CSP error." })
 ) {}
 
 /**
@@ -56,7 +57,9 @@ export class CspError extends S.TaggedError<CspError>($I.make("CspError"))(
 export class ForceHttpsRedirectError extends S.TaggedError<ForceHttpsRedirectError>($I.make("ForceHttpsRedirectError"))(
   SecureHeader.Enum.FORCE_HTTPS_REDIRECT,
   commonFields,
-  $I.annote("ForceHttpsRedirectError", { description: "A force HTTPS redirect error." })
+  $I.annoteError<ForceHttpsRedirectError>("ForceHttpsRedirectError", {
+    description: "A force HTTPS redirect error.",
+  })
 ) {}
 
 /**
@@ -78,7 +81,7 @@ export class ForceHttpsRedirectError extends S.TaggedError<ForceHttpsRedirectErr
 export class XssProtectionError extends S.TaggedError<XssProtectionError>($I.make("XssProtectionError"))(
   SecureHeader.Enum.XSS_PROTECTION,
   commonFields,
-  $I.annote("XssProtectionError", { description: "An XSS protection error." })
+  $I.annoteError<XssProtectionError>("XssProtectionError", { description: "An XSS protection error." })
 ) {}
 
 /**
@@ -100,7 +103,7 @@ export class XssProtectionError extends S.TaggedError<XssProtectionError>($I.mak
 export class ReferrerPolicyError extends S.TaggedError<ReferrerPolicyError>($I.make("ReferrerPolicyError"))(
   SecureHeader.Enum.REFERRER_POLICY,
   commonFields,
-  $I.annote("ReferrerPolicyError", { description: "A referrer policy error." })
+  $I.annoteError<ReferrerPolicyError>("ReferrerPolicyError", { description: "A referrer policy error." })
 ) {}
 
 /**
@@ -122,7 +125,7 @@ export class ReferrerPolicyError extends S.TaggedError<ReferrerPolicyError>($I.m
 export class NoSniffError extends S.TaggedError<NoSniffError>($I.make("NoSniffError"))(
   SecureHeader.Enum.NO_SNIFF,
   commonFields,
-  $I.annote("NoSniffError", { description: "A no sniff error." })
+  $I.annoteError<NoSniffError>("NoSniffError", { description: "A no sniff error." })
 ) {}
 
 /**
@@ -144,7 +147,7 @@ export class NoSniffError extends S.TaggedError<NoSniffError>($I.make("NoSniffEr
 export class NoOpenError extends S.TaggedError<NoOpenError>($I.make("NoOpenError"))(
   SecureHeader.Enum.NO_OPEN,
   commonFields,
-  $I.annote("NoOpenError", { description: "A no open error." })
+  $I.annoteError<NoOpenError>("NoOpenError", { description: "A no open error." })
 ) {}
 
 /**
@@ -166,7 +169,7 @@ export class NoOpenError extends S.TaggedError<NoOpenError>($I.make("NoOpenError
 export class FrameGuardError extends S.TaggedError<FrameGuardError>($I.make("FrameGuardError"))(
   SecureHeader.Enum.FRAME_GUARD,
   commonFields,
-  $I.annote("FrameGuardError", { description: "A frame guard error." })
+  $I.annoteError<FrameGuardError>("FrameGuardError", { description: "A frame guard error." })
 ) {}
 
 /**
@@ -188,7 +191,7 @@ export class FrameGuardError extends S.TaggedError<FrameGuardError>($I.make("Fra
 export class ExpectCtError extends S.TaggedError<ExpectCtError>($I.make("ExpectCtError"))(
   SecureHeader.Enum.EXPECT_CT,
   commonFields,
-  $I.annote("ExpectCtError", { description: "An Expect-CT error." })
+  $I.annoteError<ExpectCtError>("ExpectCtError", { description: "An Expect-CT error." })
 ) {}
 
 /**
@@ -210,7 +213,9 @@ export class ExpectCtError extends S.TaggedError<ExpectCtError>($I.make("ExpectC
 export class PermissionsPolicyError extends S.TaggedError<PermissionsPolicyError>($I.make("PermissionsPolicyError"))(
   SecureHeader.Enum.PERMISSIONS_POLICY,
   commonFields,
-  $I.annote("PermissionsPolicyError", { description: "A permissions policy error." })
+  $I.annoteError<PermissionsPolicyError>("PermissionsPolicyError", {
+    description: "A permissions policy error.",
+  })
 ) {}
 
 /**
@@ -234,7 +239,9 @@ export class CrossOriginOpenerPolicyError extends S.TaggedError<CrossOriginOpene
 )(
   SecureHeader.Enum.CROSS_ORIGIN_OPENER_POLICY,
   commonFields,
-  $I.annote("CrossOriginOpenerPolicyError", { description: "A cross-origin opener policy error." })
+  $I.annoteError<CrossOriginOpenerPolicyError>("CrossOriginOpenerPolicyError", {
+    description: "A cross-origin opener policy error.",
+  })
 ) {}
 
 /**
@@ -258,7 +265,9 @@ export class CrossOriginEmbedderPolicyError extends S.TaggedError<CrossOriginEmb
 )(
   SecureHeader.Enum.CROSS_ORIGIN_EMBEDDER_POLICY,
   commonFields,
-  $I.annote("CrossOriginEmbedderPolicyError", { description: "A cross-origin embedder policy error." })
+  $I.annoteError<CrossOriginEmbedderPolicyError>("CrossOriginEmbedderPolicyError", {
+    description: "A cross-origin embedder policy error.",
+  })
 ) {}
 
 /**
@@ -282,7 +291,9 @@ export class CrossOriginResourcePolicyError extends S.TaggedError<CrossOriginRes
 )(
   SecureHeader.Enum.CROSS_ORIGIN_RESOURCE_POLICY,
   commonFields,
-  $I.annote("CrossOriginResourcePolicyError", { description: "A cross-origin resource policy error." })
+  $I.annoteError<CrossOriginResourcePolicyError>("CrossOriginResourcePolicyError", {
+    description: "A cross-origin resource policy error.",
+  })
 ) {}
 
 /**
@@ -306,7 +317,9 @@ export class PermittedCrossDomainPoliciesError extends S.TaggedError<PermittedCr
 )(
   SecureHeader.Enum.PERMITTED_CROSS_DOMAIN_POLICIES,
   commonFields,
-  $I.annote("PermittedCrossDomainPoliciesError", { description: "A permitted cross-domain policies error." })
+  $I.annoteError<PermittedCrossDomainPoliciesError>("PermittedCrossDomainPoliciesError", {
+    description: "A permitted cross-domain policies error.",
+  })
 ) {}
 
 /**
@@ -328,7 +341,7 @@ export class PermittedCrossDomainPoliciesError extends S.TaggedError<PermittedCr
 export class CoreError extends S.TaggedError<CoreError>($I.make("CoreError"))(
   SecureHeader.Enum.CORE,
   commonFields,
-  $I.annote("CoreError", { description: "A core error." })
+  $I.annoteError<CoreError>("CoreError", { description: "A core error." })
 ) {}
 
 /**

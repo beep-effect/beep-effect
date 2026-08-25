@@ -178,7 +178,7 @@ export class TurtleCodecError extends S.TaggedError<TurtleCodecError>($I`TurtleC
     reason: TurtleCodecErrorReason,
     message: S.String,
   },
-  $I.annote("TurtleCodecError", {
+  $I.annoteError<TurtleCodecError>("TurtleCodecError", {
     description: "Typed Turtle codec error exposed at the use-case boundary.",
   })
 ) {}
@@ -399,7 +399,7 @@ export class OntologyFileStoreError extends S.TaggedError<OntologyFileStoreError
     path: OntologyFilePath,
     message: S.String,
   },
-  $I.annote("OntologyFileStoreError", {
+  $I.annoteError<OntologyFileStoreError>("OntologyFileStoreError", {
     description: "Typed sidecar file-store error.",
   })
 ) {}

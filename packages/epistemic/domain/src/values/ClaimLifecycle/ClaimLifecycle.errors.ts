@@ -34,7 +34,7 @@ export class ClaimInvalidTransition extends S.TaggedError<ClaimInvalidTransition
     from: ClaimLifecycle,
     to: ClaimLifecycle,
   },
-  $I.annote("ClaimInvalidTransition", {
+  $I.annoteError<ClaimInvalidTransition>("ClaimInvalidTransition", {
     title: "Claim invalid transition",
     description: "The requested lifecycle transition is not a legal forward step for the current claim state.",
   })

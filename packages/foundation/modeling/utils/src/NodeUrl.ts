@@ -18,7 +18,7 @@ class NodeUrlUnavailableError extends S.TaggedError<NodeUrlUnavailableError>($I`
   {
     module: S.Literal("node:url"),
   },
-  $I.annote("NodeUrlUnavailableError", {
+  $I.annoteError<NodeUrlUnavailableError>("NodeUrlUnavailableError", {
     description: "Thrown when node:url is unavailable to URL conversion helpers.",
   })
 ) {}

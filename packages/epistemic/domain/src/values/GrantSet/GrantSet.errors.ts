@@ -39,7 +39,7 @@ export class GrantRevisionMismatch extends S.TaggedError<GrantRevisionMismatch>(
     setRevision: PolicyRevision,
     grantRevision: PolicyRevision,
   },
-  $I.annote("GrantRevisionMismatch", {
+  $I.annoteError<GrantRevisionMismatch>("GrantRevisionMismatch", {
     title: "Grant revision mismatch",
     description: "A grant's policy revision does not match the revision its grant set is pinned to.",
   })

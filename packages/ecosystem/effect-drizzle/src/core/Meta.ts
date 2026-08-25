@@ -10,6 +10,7 @@
 import { taggedEnum } from "effect/Data";
 import { hasProperty, isString, isUndefined } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";
+import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 import type { SQL } from "drizzle-orm";
 import type { TaggedEnum } from "effect/Data";
 
@@ -17,8 +18,14 @@ import type { TaggedEnum } from "effect/Data";
 /** @internal */
 class SqlExpressionError extends TaggedError<SqlExpressionError>("@beep/effect-drizzle/SqlExpressionError")(
   "SqlExpressionError",
-  { message: StringSchema, context: StringSchema },
-  { description: "A schema-level SQL expression contains bound parameters." }
+  {
+    message: StringSchema,
+    context: StringSchema,
+  },
+  {
+    description: "A schema-level SQL expression contains bound parameters.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<SqlExpressionError>(typeParameters),
+  }
 ) {}
 
 /**

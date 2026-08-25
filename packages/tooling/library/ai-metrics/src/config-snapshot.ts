@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Random, Ref } from "effect";
 import * as O from "effect/Option";
@@ -16,7 +16,6 @@ import { ConfigSnapshot } from "./models.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("config-snapshot");
-
 const CONFIG_ROOTS = [".codex", ".claude", ".ai", ".aiassistant"] as const;
 const AGENT_DOC_NAMES = ["AGENTS.md", "CLAUDE.md"] as const;
 const SESSION_SCOPE_PATHS: ReadonlyArray<string> = [
@@ -553,10 +552,10 @@ export class AiMetricsConfigSnapshotError extends S.TaggedError<AiMetricsConfigS
 )(
   "AiMetricsConfigSnapshotError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsConfigSnapshotError", {
+  $I.annoteError<AiMetricsConfigSnapshotError>("AiMetricsConfigSnapshotError", {
     description: "Typed failure raised while building an AI metrics config snapshot.",
   })
 ) {}

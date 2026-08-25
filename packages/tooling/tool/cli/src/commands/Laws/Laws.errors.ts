@@ -36,7 +36,7 @@ export class EffectImportRulesPersistenceError extends S.TaggedError<EffectImpor
   {
     message: S.String,
   },
-  $I.annote("EffectImportRulesPersistenceError", {
+  $I.annoteError<EffectImportRulesPersistenceError>("EffectImportRulesPersistenceError", {
     description: "Effect import rules could not be persisted to disk.",
   })
 ) {
@@ -70,7 +70,7 @@ export class NoNativeRuntimeRulesExecutionError extends S.TaggedError<NoNativeRu
   {
     message: S.String,
   },
-  $I.annote("NoNativeRuntimeRulesExecutionError", {
+  $I.annoteError<NoNativeRuntimeRulesExecutionError>("NoNativeRuntimeRulesExecutionError", {
     description: "Repo-local native runtime checks failed unexpectedly.",
   })
 ) {
@@ -104,7 +104,7 @@ export class TerseEffectRulesPersistenceError extends S.TaggedError<TerseEffectR
   {
     message: S.String,
   },
-  $I.annote("TerseEffectRulesPersistenceError", {
+  $I.annoteError<TerseEffectRulesPersistenceError>("TerseEffectRulesPersistenceError", {
     description: "Terse Effect rule updates could not be persisted to disk.",
   })
 ) {

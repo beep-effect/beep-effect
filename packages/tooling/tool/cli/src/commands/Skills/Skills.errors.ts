@@ -5,25 +5,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
-import { Inspectable } from "effect";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.errors");
-
-const causeMessage = (cause: unknown): string => {
-  if (P.isError(cause)) {
-    return cause.message;
-  }
-  if (P.hasProperty(cause, "message") && P.isString(cause.message)) {
-    return cause.message;
-  }
-  return Inspectable.toStringUnknown(cause, 0);
-};
-
-const messageWithCause = (message: string, cause: unknown): string => `${message}: ${causeMessage(cause)}`;
 
 const makeSkillsCommandError = (cause: unknown, message: string, file?: string, skill?: string): SkillsCommandError => {
   const fields: {
@@ -65,9 +53,9 @@ export class SkillsCommandError extends S.TaggedError<SkillsCommandError>($I`Ski
     message: S.String,
     file: S.optionalKey(S.String),
     skill: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("SkillsCommandError", {
+  $I.annoteError<SkillsCommandError>("SkillsCommandError", {
     title: "Skills Command Error",
     description: "Failed to read, fetch, hash, or write repo-local skill configuration.",
   })
@@ -112,7 +100,7 @@ export class SkillsDriftError extends S.TaggedError<SkillsDriftError>($I`SkillsD
     message: S.String,
     driftCount: S.Finite,
   },
-  $I.annote("SkillsDriftError", {
+  $I.annoteError<SkillsDriftError>("SkillsDriftError", {
     title: "Skills Drift Error",
     description: "Repo-local skill drift was detected while running in check mode.",
   })

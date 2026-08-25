@@ -6,7 +6,7 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -147,18 +147,6 @@ export const RunpodDocsErrorReason = RunpodDocsErrorReasonBase.pipe(
  */
 export type RunpodDocsErrorReason = typeof RunpodDocsErrorReason.Type;
 
-const RunpodErrorFields = {
-  cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  method: S.OptionFromOptionalKey(RunpodHttpMethod).pipe(SchemaUtils.withNoneDefault),
-  methodName: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  operationId: S.OptionFromOptionalKey(RunpodOperationId).pipe(SchemaUtils.withNoneDefault),
-  path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  reason: RunpodErrorReason,
-  status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
-} satisfies S.Struct.Fields;
-const sameRunpodErrorFields = S.toEquivalence(S.TaggedStruct("RunpodError", RunpodErrorFields));
-const sameRunpodError = (self: RunpodError, that: RunpodError): boolean => sameRunpodErrorFields(self, that);
-
 /**
  * Technical failure raised by the Runpod REST API driver boundary.
  *
@@ -176,14 +164,18 @@ const sameRunpodError = (self: RunpodError, that: RunpodError): boolean => sameR
  */
 export class RunpodError extends S.TaggedError<RunpodError>($I`RunpodError`)(
   "RunpodError",
-  RunpodErrorFields,
-  $I.annoteClass<S.declare<RunpodError>, readonly [S.TaggedStruct<"RunpodError", typeof RunpodErrorFields>]>(
-    "RunpodError",
-    {
-      description: "Redacted technical failure raised by the Runpod REST API driver boundary.",
-      toEquivalence: () => sameRunpodError,
-    }
-  )
+  {
+    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    method: S.OptionFromOptionalKey(RunpodHttpMethod).pipe(SchemaUtils.withNoneDefault),
+    methodName: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    operationId: S.OptionFromOptionalKey(RunpodOperationId).pipe(SchemaUtils.withNoneDefault),
+    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    reason: RunpodErrorReason,
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annoteError<RunpodError>("RunpodError", {
+    description: "Redacted technical failure raised by the Runpod REST API driver boundary.",
+  })
 ) {
   static readonly is = S.is(RunpodError);
 
@@ -241,16 +233,6 @@ export class RunpodError extends S.TaggedError<RunpodError>($I`RunpodError`)(
     });
 }
 
-const RunpodDocsErrorFields = {
-  cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  reason: RunpodDocsErrorReason,
-  status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
-  url: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-} satisfies S.Struct.Fields;
-const sameRunpodDocsErrorFields = S.toEquivalence(S.TaggedStruct("RunpodDocsError", RunpodDocsErrorFields));
-const sameRunpodDocsError = (self: RunpodDocsError, that: RunpodDocsError): boolean =>
-  sameRunpodDocsErrorFields(self, that);
-
 /**
  * Technical failure raised by the Runpod documentation index driver boundary.
  *
@@ -268,13 +250,14 @@ const sameRunpodDocsError = (self: RunpodDocsError, that: RunpodDocsError): bool
  */
 export class RunpodDocsError extends S.TaggedError<RunpodDocsError>($I`RunpodDocsError`)(
   "RunpodDocsError",
-  RunpodDocsErrorFields,
-  $I.annoteClass<
-    S.declare<RunpodDocsError>,
-    readonly [S.TaggedStruct<"RunpodDocsError", typeof RunpodDocsErrorFields>]
-  >("RunpodDocsError", {
+  {
+    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    reason: RunpodDocsErrorReason,
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+    url: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annoteError<RunpodDocsError>("RunpodDocsError", {
     description: "Redacted technical failure raised by the Runpod documentation index boundary.",
-    toEquivalence: () => sameRunpodDocsError,
   })
 ) {
   /**
@@ -326,7 +309,7 @@ export class RunpodErrorOptions extends S.Class<RunpodErrorOptions>($I`RunpodErr
 
 class RunpodErrorOptionsInput extends S.Class<RunpodErrorOptionsInput>($I`RunpodErrorOptionsInput`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
     status: S.optionalKey(RunpodHttpStatusCode),
   },
   $I.annote("RunpodErrorOptionsInput", {
@@ -355,7 +338,7 @@ class RunpodErrorOptionsInput extends S.Class<RunpodErrorOptionsInput>($I`Runpod
  */
 export class RunpodRawErrorOptions extends S.Class<RunpodRawErrorOptions>($I`RunpodRawErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
     method: RunpodHttpMethod,
     path: S.String,
     reason: RunpodErrorReason,
@@ -400,7 +383,7 @@ export class RunpodDocsErrorOptions extends S.Class<RunpodDocsErrorOptions>($I`R
 
 class RunpodDocsErrorOptionsInput extends S.Class<RunpodDocsErrorOptionsInput>($I`RunpodDocsErrorOptionsInput`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
     status: S.optionalKey(RunpodHttpStatusCode),
     url: S.optionalKey(S.String),
   },

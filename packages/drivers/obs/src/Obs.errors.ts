@@ -6,13 +6,13 @@
  */
 
 import { $ObsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $ObsId.create("Obs.errors");
-const ObsDefect = S.Defect({ includeStack: true });
+const ObsDefect = Defect({ includeStack: true });
 const isObsDefect = S.is(ObsDefect);
 
 /**
@@ -122,61 +122,6 @@ const causeFromUnknown = (cause: unknown): O.Option<typeof ObsDefect.Type> =>
 
 const existingObsError = (cause: unknown): O.Option<ObsError> => (ObsError.is(cause) ? O.some(cause) : O.none());
 
-const ObsErrorFields = {
-  cause: S.OptionFromOptionalKey(ObsDefect).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("ObsError.cause", {
-      description: "Inspectable originating defect, when available.",
-    })
-  ),
-  closeCode: S.OptionFromOptionalKey(ObsWebSocketCloseCode).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("ObsError.closeCode", {
-      description: "WebSocket close code observed when the obs-websocket connection dropped, when available.",
-    })
-  ),
-  message: S.String.pipe(
-    $I.annoteKey("ObsError.message", {
-      description: "Human-readable obs-websocket driver failure summary.",
-    })
-  ),
-  operation: S.String.pipe(
-    $I.annoteKey("ObsError.operation", {
-      description: "Driver operation that emitted the failure.",
-    })
-  ),
-  requestStatusCode: S.OptionFromOptionalKey(ObsRequestStatusCode).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("ObsError.requestStatusCode", {
-      description: "obs-websocket RequestStatus code returned by a failed request, when available.",
-    })
-  ),
-  requestStatusComment: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("ObsError.requestStatusComment", {
-      description: "obs-websocket RequestStatus comment returned by a failed request, when available.",
-    })
-  ),
-  requestType: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("ObsError.requestType", {
-      description: "obs-websocket request type involved in the failure, when available.",
-    })
-  ),
-} satisfies S.Struct.Fields;
-const sameObsErrorFields = S.toEquivalence(
-  S.TaggedStruct("ObsError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    closeCode: ObsErrorFields.closeCode,
-    message: ObsErrorFields.message,
-    operation: ObsErrorFields.operation,
-    requestStatusCode: ObsErrorFields.requestStatusCode,
-    requestStatusComment: ObsErrorFields.requestStatusComment,
-    requestType: ObsErrorFields.requestType,
-  })
-);
-const sameObsError = (self: ObsError, that: ObsError): boolean => sameObsErrorFields(self, that);
-
 /**
  * Technical failure raised by the `@beep/obs` driver boundary.
  *
@@ -201,10 +146,50 @@ const sameObsError = (self: ObsError, that: ObsError): boolean => sameObsErrorFi
  */
 export class ObsError extends S.TaggedError<ObsError>($I`ObsError`)(
   "ObsError",
-  ObsErrorFields,
-  $I.annoteClass<S.declare<ObsError>, readonly [S.TaggedStruct<"ObsError", typeof ObsErrorFields>]>("ObsError", {
+  {
+    cause: S.OptionFromOptionalKey(ObsDefect).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("ObsError.cause", {
+        description: "Inspectable originating defect, when available.",
+      })
+    ),
+    closeCode: S.OptionFromOptionalKey(ObsWebSocketCloseCode).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("ObsError.closeCode", {
+        description: "WebSocket close code observed when the obs-websocket connection dropped, when available.",
+      })
+    ),
+    message: S.String.pipe(
+      $I.annoteKey("ObsError.message", {
+        description: "Human-readable obs-websocket driver failure summary.",
+      })
+    ),
+    operation: S.String.pipe(
+      $I.annoteKey("ObsError.operation", {
+        description: "Driver operation that emitted the failure.",
+      })
+    ),
+    requestStatusCode: S.OptionFromOptionalKey(ObsRequestStatusCode).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("ObsError.requestStatusCode", {
+        description: "obs-websocket RequestStatus code returned by a failed request, when available.",
+      })
+    ),
+    requestStatusComment: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("ObsError.requestStatusComment", {
+        description: "obs-websocket RequestStatus comment returned by a failed request, when available.",
+      })
+    ),
+    requestType: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("ObsError.requestType", {
+        description: "obs-websocket request type involved in the failure, when available.",
+      })
+    ),
+  },
+  $I.annoteError<ObsError>("ObsError", {
     description: "Technical obs-websocket driver failure scoped to a driver operation.",
-    toEquivalence: () => sameObsError,
   })
 ) {
   static readonly is = S.is(ObsError);

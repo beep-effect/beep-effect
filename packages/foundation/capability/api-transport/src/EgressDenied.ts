@@ -46,7 +46,7 @@ const $I = $ApiTransportId.create("EgressDenied");
 export class EgressDenied extends S.TaggedError<EgressDenied>($I`EgressDenied`)(
   "EgressDenied",
   {},
-  $I.annote("EgressDenied", {
+  $I.annoteError<EgressDenied>("EgressDenied", {
     description: "A governed egress boundary refused the request's destination; deliberately reason-free.",
   })
 ) {

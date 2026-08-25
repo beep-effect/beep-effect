@@ -15,7 +15,7 @@
 
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -112,7 +112,7 @@ export const EdgeWriteOperation = EdgeWriteOperationBase.pipe(
 export type EdgeWriteOperation = typeof EdgeWriteOperation.Type;
 
 const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+  S.OptionFromOptionalKey(Defect({ includeStack: true }))
     .pipe(SchemaUtils.withNoneDefault)
     .annotateKey({
       description,
@@ -161,7 +161,7 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
       description: "Version actually found at the open head; absent when no open head could be read.",
     }),
   },
-  $I.annote("SupersessionConflict", {
+  $I.annoteError<SupersessionConflict>("SupersessionConflict", {
     title: "Supersession conflict",
     description: "A supersession could not be applied to the version the caller named.",
   })
@@ -282,7 +282,7 @@ export class EdgeConstraintViolation extends S.TaggedError<EdgeConstraintViolati
       description: "Write operation that was rejected.",
     }),
   },
-  $I.annote("EdgeConstraintViolation", {
+  $I.annoteError<EdgeConstraintViolation>("EdgeConstraintViolation", {
     title: "Edge constraint violation",
     description: "A named database constraint rejected a bitemporal edge write.",
   })
@@ -337,7 +337,7 @@ export class EdgeRepositoryUnavailable extends S.TaggedError<EdgeRepositoryUnava
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("EdgeRepositoryUnavailable", {
+  $I.annoteError<EdgeRepositoryUnavailable>("EdgeRepositoryUnavailable", {
     title: "Edge repository unavailable",
     description: "The bitemporal edge repository could not serve the request.",
   })

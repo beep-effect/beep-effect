@@ -104,7 +104,7 @@ export class SyncConflictRepositoryNotFound extends S.TaggedError<SyncConflictRe
       description: "SyncConflict identity that could not be found.",
     }),
   },
-  $I.annote("SyncConflictRepositoryNotFound", {
+  $I.annoteError<SyncConflictRepositoryNotFound>("SyncConflictRepositoryNotFound", {
     title: "SyncConflict repository not found",
     description: "The SyncConflict repository could not find the requested entity.",
   })
@@ -136,7 +136,7 @@ export class SyncConflictRepositoryUnavailable extends S.TaggedError<SyncConflic
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("SyncConflictRepositoryUnavailable", {
+  $I.annoteError<SyncConflictRepositoryUnavailable>("SyncConflictRepositoryUnavailable", {
     title: "SyncConflict repository unavailable",
     description: "The SyncConflict repository could not serve the request.",
   })

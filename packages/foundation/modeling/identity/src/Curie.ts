@@ -18,7 +18,6 @@ import { CoreVocab } from "./Vocab.ts";
 import type { Curie, Expand, Predicate, VocabShape } from "./Vocab.ts";
 
 const $I = $IdentityId.create("Curie");
-
 // Internal invariant guard for the literal-preserving `expand`/`contract`
 // overloads: the CURIE/IRI is asserted registered by its literal type, so the
 // unresolved branch is type-level unreachable. Modeled as a S.TaggedError
@@ -28,8 +27,10 @@ class CurieCodecInvariantError extends S.TaggedError<CurieCodecInvariantError>(
   "@beep/identity/errors/CurieCodecInvariantError"
 )(
   "CurieCodecInvariantError",
-  { value: S.String },
-  $I.annote("@beep/identity/errors/CurieCodecInvariantError", {
+  {
+    value: S.String,
+  },
+  $I.annoteError<CurieCodecInvariantError>("@beep/identity/errors/CurieCodecInvariantError", {
     description:
       "A CURIE/IRI asserted registered by its literal type failed to resolve (type-level-unreachable invariant).",
   })

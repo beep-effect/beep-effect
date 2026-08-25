@@ -865,14 +865,14 @@ describe("schema-first lint command", { concurrent: false }, () => {
             expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
             expect(errorLines).toContain("[schema-first] untracked live findings:");
             expect(errorLines).toContain(
-              '- packages/example/src/Example.ts :: WorkerError [schema-policy-advisory] S.TaggedError declaration "WorkerError" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.'
+              '- packages/example/src/Example.ts :: WorkerError [schema-policy-advisory] S.TaggedError declaration "WorkerError" must declare fields-only equivalence at the class declaration: pass $I.annoteError<WorkerError>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.'
             );
             const structuredIssueLine =
               '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-tagged-error-equivalence",' +
               '"severity":"warning","file":"packages/example/src/Example.ts","line":2,' +
               '"symbol":"WorkerError",' +
-              '"message":"S.TaggedError declaration \\"WorkerError\\" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.",' +
-              '"remediation":"Add a declaration-level fields-only toEquivalence annotation using the packages/drivers/tika/src/Tika.errors.ts pattern; exclude opaque S.Defect fields from the comparator."}';
+              '"message":"S.TaggedError declaration \\"WorkerError\\" must declare fields-only equivalence at the class declaration: pass $I.annoteError<WorkerError>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.",' +
+              '"remediation":"Annotate the class with $I.annoteError<Self>(...) so it adopts the declared struct equivalence; opaque causes use Defect from @beep/schema, which declares its own always-equal equivalence."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -903,7 +903,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
             expect(errorLines).toContain(
-              '- packages/ecosystem/effect-drizzle/src/Example.ts :: WorkerError [schema-policy-advisory] S.TaggedError declaration "WorkerError" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.'
+              '- packages/ecosystem/effect-drizzle/src/Example.ts :: WorkerError [schema-policy-advisory] S.TaggedError declaration "WorkerError" must declare fields-only equivalence at the class declaration: pass $I.annoteError<WorkerError>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.'
             );
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -953,6 +953,29 @@ describe("schema-first lint command", { concurrent: false }, () => {
               '  $I.annoteClass("TaskError", taskErrorAnnotations)',
               ") {}",
               "void TaskError;",
+              "",
+            ]);
+
+            yield* runSchemaFirstAndExpectNoErrors();
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "accepts annoteError tagged-error annotations",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "export class WorkerError extends S.TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: S.String },",
+              '  $I.annoteError<WorkerError>("WorkerError", { description: "Worker execution failed." })',
+              ") {}",
               "",
             ]);
 

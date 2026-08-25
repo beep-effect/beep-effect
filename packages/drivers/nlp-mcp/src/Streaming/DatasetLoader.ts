@@ -14,7 +14,7 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
@@ -341,29 +341,6 @@ export class DatasetLoadJsonOptions extends S.Class<DatasetLoadJsonOptions>($I`D
  */
 export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.Schema<A>>>>;
 
-const DatasetLoadErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description: "Underlying platform, HTTP, timeout, or schema failure when available.",
-    }),
-  message: S.String.annotateKey({
-    description: "Safe diagnostic message for the dataset load failure.",
-  }),
-  location: S.String.annotateKey({
-    description: "File path or URL that failed to load or decode.",
-  }),
-} satisfies S.Struct.Fields;
-const sameDatasetLoadErrorFields = S.toEquivalence(
-  S.TaggedStruct("DatasetLoadError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: DatasetLoadErrorFields.message,
-    location: DatasetLoadErrorFields.location,
-  })
-);
-const sameDatasetLoadError = (self: DatasetLoadError, that: DatasetLoadError): boolean =>
-  sameDatasetLoadErrorFields(self, that);
-
 /**
  * Structured failure raised when a remote fetch or JSON decode fails.
  *
@@ -381,13 +358,21 @@ const sameDatasetLoadError = (self: DatasetLoadError, that: DatasetLoadError): b
  */
 export class DatasetLoadError extends S.TaggedError<DatasetLoadError>($I`DatasetLoadError`)(
   "DatasetLoadError",
-  DatasetLoadErrorFields,
-  $I.annoteClass<
-    S.declare<DatasetLoadError>,
-    readonly [S.TaggedStruct<"DatasetLoadError", typeof DatasetLoadErrorFields>]
-  >("DatasetLoadError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Underlying platform, HTTP, timeout, or schema failure when available.",
+      }),
+    message: S.String.annotateKey({
+      description: "Safe diagnostic message for the dataset load failure.",
+    }),
+    location: S.String.annotateKey({
+      description: "File path or URL that failed to load or decode.",
+    }),
+  },
+  $I.annoteError<DatasetLoadError>("DatasetLoadError", {
     description: "Structured failure raised when a remote fetch or JSON decode fails.",
-    toEquivalence: () => sameDatasetLoadError,
   })
 ) {}
 

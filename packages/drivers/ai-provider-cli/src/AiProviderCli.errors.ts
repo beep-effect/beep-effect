@@ -12,33 +12,6 @@ import { AiProviderCliExitCode, AiProviderCliProvider } from "./AiProviderCli.mo
 
 const $I = $AiProviderCliId.create("AiProviderCli.errors");
 
-const AiProviderCliErrorFields = {
-  command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Executable command used for the provider CLI status probe, when available.",
-  }),
-  exitCode: S.OptionFromOptionalKey(AiProviderCliExitCode).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Provider CLI process exit status, when the process returned one.",
-  }),
-  message: S.NonEmptyString.annotateKey({
-    description: "Redacted human-readable failure summary.",
-  }),
-  operation: S.NonEmptyString.annotateKey({
-    description: "Driver operation that emitted the failure.",
-  }),
-  provider: AiProviderCliProvider.annotateKey({
-    description: "Provider CLI whose auth status probe failed.",
-  }),
-  stderr: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Redacted standard error captured from the provider CLI status command, when available.",
-  }),
-  stdout: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Redacted standard output captured from the provider CLI status command, when available.",
-  }),
-} satisfies S.Struct.Fields;
-const sameAiProviderCliErrorFields = S.toEquivalence(S.TaggedStruct("AiProviderCliError", AiProviderCliErrorFields));
-const sameAiProviderCliError = (self: AiProviderCliError, that: AiProviderCliError): boolean =>
-  sameAiProviderCliErrorFields(self, that);
-
 /**
  * Redacted technical failure from a provider CLI status probe.
  *
@@ -71,12 +44,30 @@ const sameAiProviderCliError = (self: AiProviderCliError, that: AiProviderCliErr
  */
 export class AiProviderCliError extends S.TaggedError<AiProviderCliError>($I`AiProviderCliError`)(
   "AiProviderCliError",
-  AiProviderCliErrorFields,
-  $I.annoteClass<
-    S.declare<AiProviderCliError>,
-    readonly [S.TaggedStruct<"AiProviderCliError", typeof AiProviderCliErrorFields>]
-  >("AiProviderCliError", {
+  {
+    command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Executable command used for the provider CLI status probe, when available.",
+    }),
+    exitCode: S.OptionFromOptionalKey(AiProviderCliExitCode).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Provider CLI process exit status, when the process returned one.",
+    }),
+    message: S.NonEmptyString.annotateKey({
+      description: "Redacted human-readable failure summary.",
+    }),
+    operation: S.NonEmptyString.annotateKey({
+      description: "Driver operation that emitted the failure.",
+    }),
+    provider: AiProviderCliProvider.annotateKey({
+      description: "Provider CLI whose auth status probe failed.",
+    }),
+    stderr: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Redacted standard error captured from the provider CLI status command, when available.",
+    }),
+    stdout: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Redacted standard output captured from the provider CLI status command, when available.",
+    }),
+  },
+  $I.annoteError<AiProviderCliError>("AiProviderCliError", {
     description: "Redacted technical failure emitted by Claude or Codex CLI status probes.",
-    toEquivalence: () => sameAiProviderCliError,
   })
 ) {}

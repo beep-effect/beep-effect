@@ -221,7 +221,7 @@ export class ContradictionQaSeedError extends S.TaggedError<ContradictionQaSeedE
     message: S.NonEmptyString,
     reason: ContradictionQaSeedErrorReason,
   },
-  $I.annote("ContradictionQaSeedError", {
+  $I.annoteError<ContradictionQaSeedError>("ContradictionQaSeedError", {
     description: "Fail-closed collision or availability failure from the contradiction browser-QA seed.",
   })
 ) {

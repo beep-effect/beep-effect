@@ -200,7 +200,7 @@ export class HtmlConformanceError extends S.TaggedError<HtmlConformanceError>($I
   {
     issues: S.NonEmptyArray(HtmlConformanceIssue),
   },
-  $I.annote("HtmlConformanceError", {
+  $I.annoteError<HtmlConformanceError>("HtmlConformanceError", {
     description: "The HTML AST failed one or more conformance rules.",
   })
 ) {}

@@ -31,7 +31,7 @@ export class TurnGenerationError extends S.TaggedError<TurnGenerationError>($I`T
   {
     message: S.String,
   },
-  $I.annote("TurnGenerationError", {
+  $I.annoteError<TurnGenerationError>("TurnGenerationError", {
     description: "Raised when an assistant turn cannot be generated from the supplied history.",
   })
 ) {

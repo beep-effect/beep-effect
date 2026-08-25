@@ -7,7 +7,7 @@
 
 import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -76,7 +76,7 @@ export class ContradictionRepositoryUnavailable extends S.TaggedError<Contradict
 )(
   "ContradictionRepositoryUnavailable",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "Optional driver defect retained for boundary diagnostics." })
     ),
@@ -87,7 +87,7 @@ export class ContradictionRepositoryUnavailable extends S.TaggedError<Contradict
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("ContradictionRepositoryUnavailable", {
+  $I.annoteError<ContradictionRepositoryUnavailable>("ContradictionRepositoryUnavailable", {
     description: "The contradiction repository could not serve an operation.",
   })
 ) {
@@ -190,7 +190,7 @@ export class ContradictionReviewConflict extends S.TaggedError<ContradictionRevi
       description: "Why the optimistic review no longer applies.",
     }),
   },
-  $I.annote("ContradictionReviewConflict", {
+  $I.annoteError<ContradictionReviewConflict>("ContradictionReviewConflict", {
     description: "An optimistic contradiction review no longer applies to current persisted state.",
   })
 ) {
@@ -281,7 +281,7 @@ export class ContradictionSubmissionConflict extends S.TaggedError<Contradiction
       description: "Bounded immutable-submission conflict reason.",
     }),
   },
-  $I.annote("ContradictionSubmissionConflict", {
+  $I.annoteError<ContradictionSubmissionConflict>("ContradictionSubmissionConflict", {
     description: "A contradiction submission tried to mutate an identity or reuse a receipt inconsistently.",
   })
 ) {
