@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/runner-trust-boundary",
   "lifecycle": "active",
-  "statusNote": "P0 was ratified and P1 plus P2 completed on 2026-08-24 with closure-ready evidence retained. All four P1/P2 findings remain open through the P5 merge gate. P3 Admission defense in depth cut over on 2026-08-25: heavy lanes route through heavy.yml@main, organization group beep-ec2-heavy is restricted to the four protected default-branch workflows, the controller deployment for organization registration failed closed on a missing installation permission and was rolled back pending its acceptance and redeploy (the remaining P3 step), alongside the JIT replay probe, which is implemented but not yet run.",
+  "statusNote": "P0 was ratified and P1 plus P2 completed on 2026-08-24 with closure-ready evidence retained. All four P1/P2 findings remain open through the P5 merge gate. P3 Admission defense in depth completed on 2026-08-25: heavy lanes route through heavy.yml@main, organization group beep-ec2-heavy is restricted to the four protected default-branch workflows, the controller registers runners only in that group after the installation permission was accepted and the controller redeployed, and the admission probes passed (a pull-request heavy job reached a group runner; a non-allowlisted fleet-labelled dispatch stayed queued with no runner). P4 owns the JIT replay probe, which is implemented but not yet run.",
   "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -89,7 +89,7 @@
     {
       "id": "P3",
       "name": "Admission defense in depth",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",

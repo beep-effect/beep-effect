@@ -2,12 +2,12 @@
 
 Date: 2026-08-24
 
-Status: cut over on 2026-08-25. #805 staged the reusable workflow and the
+Status: complete on 2026-08-25. #805 staged the reusable workflow and the
 controller's organization registration; #808 switched the caller to the
 default-branch reference and the runner group's workflow restriction is on.
-The controller change deployed, failed on a missing installation permission,
-and rolled back; the redeploy is the remaining P3 step. Evidence:
-[`P3-EVIDENCE.md`](./P3-EVIDENCE.md).
+The controller change first failed on a missing installation permission and
+rolled back, then redeployed after acceptance; admission proofs 1 through 4
+passed. Evidence: [`P3-EVIDENCE.md`](./P3-EVIDENCE.md).
 
 ## Admission rule
 
