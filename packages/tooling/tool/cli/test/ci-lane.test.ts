@@ -268,16 +268,7 @@ describe("ciLaneStepsForTesting", () => {
     const affected = firstOf(
       ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }))
     );
-    expect([...affected.args]).toEqual([
-      "run",
-      "docgen:local",
-      "--",
-      "--base",
-      "origin/main",
-      "--head",
-      "HEAD",
-      "--parallel=3",
-    ]);
+    expect([...affected.args]).toEqual(["run", "docgen:local", "--", "--base", "origin/main", "--head", "HEAD"]);
 
     const full = firstOf(
       ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "full" }))
