@@ -204,3 +204,22 @@ schema-first advisory in ~3 minutes instead of ~30.
 audit`) that `yeet repair` runs and reports together before the full proof,
 and a documented generator for `vitest.aliases.generated.json` so alias
 drift is a one-command fix.
+
+## 2026-08-25 — A yeet run in another checkout interrupts this checkout's proof
+
+**What was happening:** the eighth full `bun run beep yeet verify` for the
+closeout PR, launched detached in this checkout at 16:52.
+
+**Evidence:** the proof died inside `pre-push:security`
+(`bun run beep quality github-checks security`) with `All fibers interrupted
+without error` and exit 130 at 16:54:09 — the same second a `bun run beep
+yeet verify` started in the sibling checkout `~/YeeBois/projects/beep-effect10`
+(`ps -o lstart` on that process), while a third checkout
+(`beep-effect2-worktrees/docgen-shrink`) was mid `yeet publish --amend`.
+Nothing in this checkout sent a signal; the verdict recorded no failing
+gate.
+
+**What would have prevented it:** a per-checkout (or per-run) lock scope for
+the `github-checks` steps instead of whatever machine-global resource they
+contend on, and a `yeet verify` preflight that names other live yeet runs on
+the machine and waits (or refuses) instead of dying mid-proof.
