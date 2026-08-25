@@ -38,8 +38,8 @@ posting of `research/drafts/*` (O1/O2/T3) and the Rosetta ratification
 4. [`DECISIONS.md`](./DECISIONS.md) - open with the Current law table; the dated log below it
    is history. Terminology table lives there too.
 5. [`research/criteria-rubric.md`](./research/criteria-rubric.md) - v2.0, ratified.
-6. [`research/workload-contract.md`](./research/workload-contract.md) - v1.3 budgets, corpus, stop rule.
-7. [`research/shared-schema.md`](./research/shared-schema.md) - v1.3 schema contract.
+6. [`research/workload-contract.md`](./research/workload-contract.md) - v1.4 budgets, corpus, stop rule.
+7. [`research/shared-schema.md`](./research/shared-schema.md) - v1.4 schema contract.
 8. [`RESEARCH.md`](./RESEARCH.md) - grounding sweep and what landed (stage 1).
 9. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - opportunity/friction ledger
    with dispositions.
@@ -50,6 +50,10 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-08-24 (PR #802 review closeout): openclaw caught two stale MAP spellings (fixed in
+  93f6f0b48e); Codex's three P1s became review amendments R1–R3 — report/telemetry split, full-W1
+  gate per stage, `G-projection` before rebuild identity — applied to BRIEF, MAP, shared-schema
+  v1.4, contract v1.4 and the `semantica-canary` packet.
 - 2026-08-24 (MAP grill + graduation): `/grill-with-docs` over MAP v0.1's five challenges plus one
   doctrine collision, grounded by a ten-agent fact-find (six finders, four skeptics; every verdict
   held). Live source moved two calls: `@beep/doc-text` returns one normalized string, and the
