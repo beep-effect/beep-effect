@@ -401,6 +401,16 @@ describe("commands/Qa complete judge contract parity", () => {
       expect(wrongCount.verdict).toBe("denied");
       expect(emptyEvidence.audit.reason).toContain("rejected the judge inventory");
       expect(wrongCount.audit.reason).toContain("requiredCount equals the P0+P1 count");
+
+      const deniedDetail = (verdict: JudgeOutputInventoryDecodesVerdict) =>
+        JudgeOutputInventoryDecodesVerdict.match(verdict, {
+          allowed: () => O.none(),
+          denied: ({ audit }) => O.some(audit.detail),
+        });
+      expect(O.map(deniedDetail(malformed), (detail) => detail.failure)).toEqual(O.some("malformed-json"));
+      expect(O.map(deniedDetail(wrongCount), (detail) => detail.failure)).toEqual(O.some("inventory-schema-rejected"));
+      expect(O.exists(deniedDetail(malformed), (detail) => S.is(S.NonEmptyString)(detail.issue))).toBe(true);
+      expect(O.exists(deniedDetail(wrongCount), (detail) => S.is(S.NonEmptyString)(detail.issue))).toBe(true);
     })
   );
 

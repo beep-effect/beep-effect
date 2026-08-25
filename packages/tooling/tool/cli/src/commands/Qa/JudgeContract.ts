@@ -32,8 +32,8 @@ import {
   SkillContract,
   SkillContractId,
 } from "@beep/skill-contract";
-import { A, O } from "@beep/utils";
-import { DateTime, Effect, HashSet } from "effect";
+import { A } from "@beep/utils";
+import { DateTime, Effect, HashSet, Result } from "effect";
 import * as S from "effect/Schema";
 import { CitedArtifactExistsGate, CitedArtifactExistsVerdict } from "./CitedArtifactExistsGate.ts";
 import { decodeQaInventory, QaInventory } from "./Inventory.schemas.ts";
@@ -562,9 +562,14 @@ const JudgeOutputDecodeFailure = LiteralKit(["malformed-json", "inventory-schema
 class JudgeOutputInventoryDecodesDenied extends S.Class<JudgeOutputInventoryDecodesDenied>(
   $I`JudgeOutputInventoryDecodesDenied`
 )(
-  { failure: JudgeOutputDecodeFailure },
+  {
+    failure: JudgeOutputDecodeFailure,
+    issue: S.String.annotateKey({
+      description: "Rendered parser or schema issue that denied the candidate, kept for diagnostics.",
+    }),
+  },
   $I.annote("JudgeOutputInventoryDecodesDenied", {
-    description: "Decode stage that denied an extracted judge-output inventory candidate.",
+    description: "Decode stage and rendered issue that denied an extracted judge-output inventory candidate.",
   })
 ) {}
 
@@ -624,11 +629,12 @@ export const JudgeOutputInventoryDecodesGate = GateDeclaration.make({
 
 const outputDecodeDenial = (
   failure: typeof JudgeOutputDecodeFailure.Type,
+  issue: string,
   occurredAt: ISOStr
 ): JudgeOutputInventoryDecodesVerdict =>
   JudgeOutputInventoryDecodesVerdict.cases.denied.make({
     audit: {
-      detail: JudgeOutputInventoryDecodesDenied.make({ failure }),
+      detail: JudgeOutputInventoryDecodesDenied.make({ failure, issue }),
       evaluator: "@beep/repo-cli/qa/judge-output-inventory-decodes",
       gateId: judgeOutputInventoryDecodesGateId,
       occurredAt,
@@ -646,8 +652,10 @@ const outputDecodeDenial = (
  *
  * **Details**
  *
- * Malformed JSON and inventory-schema rejection are denied verdict values.
- * The adapter retains the existing `QaCommandError` messages.
+ * Malformed JSON and inventory-schema rejection are denied verdict values that
+ * carry the rendered decoder issue, so adapters keep the parser or schema
+ * detail as the error cause. The adapter retains the existing `QaCommandError`
+ * messages.
  *
  * **Example** (Build an output-decode evaluation)
  *
@@ -674,16 +682,16 @@ export const evaluateJudgeOutputInventoryDecodes: GateEvaluator<
   input: JudgeOutputInventoryDecodesInput
 ): Effect.fn.Return<JudgeOutputInventoryDecodesVerdict> {
   const occurredAt = yield* auditTimestamp;
-  const parsed = yield* Effect.option(Unknown.decodeEffectFromJsonString(input.candidate));
+  const parsed = yield* Effect.result(Unknown.decodeEffectFromJsonString(input.candidate));
 
-  return yield* O.match(parsed, {
-    onNone: () => Effect.succeed(outputDecodeDenial("malformed-json", occurredAt)),
-    onSome: (value) =>
-      Effect.option(decodeQaInventory(value)).pipe(
+  return yield* Result.match(parsed, {
+    onFailure: (issue) => Effect.succeed(outputDecodeDenial("malformed-json", issue.message, occurredAt)),
+    onSuccess: (value) =>
+      Effect.result(decodeQaInventory(value)).pipe(
         Effect.map(
-          O.match({
-            onNone: () => outputDecodeDenial("inventory-schema-rejected", occurredAt),
-            onSome: (inventory) =>
+          Result.match({
+            onFailure: (issue) => outputDecodeDenial("inventory-schema-rejected", issue.message, occurredAt),
+            onSuccess: (inventory) =>
               JudgeOutputInventoryDecodesVerdict.cases.allowed.make({
                 audit: {
                   detail: JudgeOutputInventoryDecodesAllowed.make({ inventory }),

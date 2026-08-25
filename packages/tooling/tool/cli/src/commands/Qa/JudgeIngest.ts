@@ -134,7 +134,7 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
   );
   return yield* JudgeOutputInventoryDecodesVerdict.match(verdict, {
     allowed: ({ audit }) => Effect.succeed(audit.detail.inventory),
-    denied: ({ audit }) => Effect.fail(QaCommandError.make({ message: audit.reason })),
+    denied: ({ audit }) => Effect.fail(QaCommandError.make({ cause: audit.detail.issue, message: audit.reason })),
   });
 });
 
