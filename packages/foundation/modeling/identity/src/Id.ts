@@ -661,8 +661,10 @@ export type DeclarationAnnotationExtras<
  * ```ts
  * import type { ErrorAnnotationRecord } from "@beep/identity"
  *
- * declare class WidgetError { readonly _tag: "WidgetError" }
+ * class WidgetError { readonly _tag = "WidgetError" }
  * type Record = ErrorAnnotationRecord<WidgetError>
+ * const identifierOf = (record: Record): string => record.identifier
+ * console.log(identifierOf.length)
  * ```
  *
  * @category models

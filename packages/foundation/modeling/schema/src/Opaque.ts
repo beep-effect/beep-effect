@@ -95,3 +95,20 @@ export const OpaqueUnknown = S.Unknown.pipe(
     toEquivalence: alwaysEquivalent,
   })
 );
+
+/**
+ * Runtime type of {@link OpaqueUnknown}: the payload stays `unknown`.
+ *
+ * **Example** (Carry an opaque payload through a helper)
+ *
+ * ```ts
+ * import type { OpaqueUnknown } from "@beep/schema"
+ *
+ * const carry = (payload: OpaqueUnknown): OpaqueUnknown => payload
+ * console.log(carry.length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpaqueUnknown = typeof OpaqueUnknown.Type;
