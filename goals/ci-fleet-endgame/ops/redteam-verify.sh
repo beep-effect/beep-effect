@@ -24,7 +24,7 @@ readonly max_run_polls=60
 readonly teardown_limit=300
 readonly describe_attempt_limit=6
 readonly describe_retry_seconds=5
-readonly required_gates=(
+typeset -a required_gates=(
   A_APP_SECRET_SSM
   B_S3
   C_TAILNET_LAN
@@ -37,6 +37,13 @@ readonly required_gates=(
   J_HOOK_STILL_ARMED
   L_IAM_EDGES
 )
+jit_replay=0
+if [[ "${REDTEAM_JIT_REPLAY:-0}" == 1 ]]; then
+  jit_replay=1
+  required_gates+=(M_JIT_REPLAY)
+fi
+readonly -a required_gates
+readonly jit_replay
 
 branch="${1:-${REDTEAM_REF:-}}"
 if [[ -z "${branch}" ]]; then
@@ -118,8 +125,13 @@ describe_instance_field() {
 
 gh run list --workflow="${workflow}" --branch="${branch}" --limit 100 \
   --json databaseId --jq '.[].databaseId' > "${existing_run_ids}"
-echo "dispatching ${workflow} on ${branch} with redteam=true"
-gh workflow run "${workflow}" --ref "${branch}" -f redteam=true
+typeset -a dispatch_fields=(-f redteam=true)
+if (( jit_replay == 1 )); then
+  dispatch_fields+=(-f jit_replay=true)
+fi
+readonly -a dispatch_fields
+echo "dispatching ${workflow} on ${branch} with redteam=true jit_replay=$(( jit_replay == 1 ))"
+gh workflow run "${workflow}" --ref "${branch}" "${dispatch_fields[@]}"
 
 run_id=""
 for _ in {1..30}; do
