@@ -14,7 +14,6 @@ import { ISOStr } from "@beep/schema/Timestamp";
 import { Unknown } from "@beep/schema/Unknown";
 import {
   AlwaysGateApplicability,
-  ConditionalGateApplicability,
   EvidenceDigest,
   EvidenceLadderReceiptTypes,
   EvidencePredicateType,
@@ -553,11 +552,42 @@ class JudgeOutputInventoryDecodesAllowed extends S.Class<JudgeOutputInventoryDec
   })
 ) {}
 
-const JudgeOutputDecodeFailure = LiteralKit(["malformed-json", "inventory-schema-rejected"]).pipe(
+/**
+ * Decode stage that denies a judge-output inventory candidate.
+ *
+ * **Details**
+ *
+ * Adapters match on this domain to restore their flow-specific operator
+ * messages (`judge-ingest` and `judge-lint` word the same failure differently)
+ * while the gate reason itself stays flow-neutral.
+ *
+ * **Example** (Match a decode failure)
+ *
+ * ```ts
+ * import { JudgeOutputDecodeFailure } from "@beep/repo-cli/commands/Qa"
+ *
+ * console.log(JudgeOutputDecodeFailure.$match("malformed-json", {
+ *   "inventory-schema-rejected": () => "schema",
+ *   "malformed-json": () => "json"
+ * })) // "json"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const JudgeOutputDecodeFailure = LiteralKit(["malformed-json", "inventory-schema-rejected"]).pipe(
   $I.annoteSchema("JudgeOutputDecodeFailure", {
-    description: "Fail-closed reasons emitted after judge-output extraction succeeds.",
+    description: "Fail-closed decode stages that deny a judge-output inventory candidate.",
   })
 );
+
+/**
+ * Runtime type decoded by {@link JudgeOutputDecodeFailure}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type JudgeOutputDecodeFailure = typeof JudgeOutputDecodeFailure.Type;
 
 class JudgeOutputInventoryDecodesDenied extends S.Class<JudgeOutputInventoryDecodesDenied>(
   $I`JudgeOutputInventoryDecodesDenied`
@@ -602,33 +632,33 @@ export const JudgeOutputInventoryDecodesVerdict = GateVerdict(
 export type JudgeOutputInventoryDecodesVerdict = typeof JudgeOutputInventoryDecodesVerdict.Type;
 
 /**
- * Conditional blocking declaration for extracted judge-output inventory decode.
+ * Blocking declaration for judge-output inventory decode.
+ *
+ * **Details**
+ *
+ * The gate is always applicable: `judge-ingest` feeds it the JSON block
+ * extracted from raw judge output and `judge-lint` feeds it the committed
+ * inventory file, so both flows run every declared gate and the kernel's
+ * completion evaluator never sees an unverifiable conditional blocker.
  *
  * **Example** (Inspect decode gate applicability)
  *
  * ```ts
  * import { JudgeOutputInventoryDecodesGate } from "@beep/repo-cli/commands/Qa"
  *
- * console.log(JudgeOutputInventoryDecodesGate.applicability.kind) // "conditional"
+ * console.log(JudgeOutputInventoryDecodesGate.applicability.kind) // "always"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const JudgeOutputInventoryDecodesGate = GateDeclaration.make({
-  applicability: ConditionalGateApplicability.make({
-    condition: SchemaReference.make({
-      schemaId: SchemaReferenceId.make("https://beep-effect.dev/qa/conditions/qa-source-kind/v1"),
-    }),
-  }),
-  evidence: GateEvidenceRequirement.make({ predicateType: judgeOutputInventoryPredicateType }),
-  id: judgeOutputInventoryDecodesGateId,
-  remediationOwner,
-  severity: "blocking",
-});
+export const JudgeOutputInventoryDecodesGate = alwaysBlockingGate(
+  judgeOutputInventoryDecodesGateId,
+  judgeOutputInventoryPredicateType
+);
 
 const outputDecodeDenial = (
-  failure: typeof JudgeOutputDecodeFailure.Type,
+  failure: JudgeOutputDecodeFailure,
   issue: string,
   occurredAt: ISOStr
 ): JudgeOutputInventoryDecodesVerdict =>
@@ -640,9 +670,8 @@ const outputDecodeDenial = (
       occurredAt,
       outcome: "denied",
       reason: JudgeOutputDecodeFailure.$match(failure, {
-        "inventory-schema-rejected": () =>
-          "qa judge-ingest rejected the judge inventory. Check schemaVersion, finding ids (R<round>-<nn>), lens values, and that requiredCount equals the P0+P1 count.",
-        "malformed-json": () => "qa judge-ingest could not parse the judge's final JSON block.",
+        "inventory-schema-rejected": () => "The judge output candidate does not decode as qa-inventory/v1.",
+        "malformed-json": () => "The judge output candidate does not parse as JSON.",
       }),
     },
   });
@@ -654,8 +683,8 @@ const outputDecodeDenial = (
  *
  * Malformed JSON and inventory-schema rejection are denied verdict values that
  * carry the rendered decoder issue, so adapters keep the parser or schema
- * detail as the error cause. The adapter retains the existing `QaCommandError`
- * messages.
+ * detail as the error cause and match the failure stage to restore their
+ * existing `QaCommandError` messages.
  *
  * **Example** (Build an output-decode evaluation)
  *
@@ -747,10 +776,12 @@ export const QaJudgeContractSubject = EvidenceSubject.make({
  *
  * **Details**
  *
- * Declaration order is observable and matches judge execution: artifact and
- * event leaves, round coherence, aggregate settlement, then conditional output
- * decode. The output-decode declaration is conditional because lint starts
- * from a committed JSON inventory rather than raw judge output.
+ * Declaration order is observable and matches the executable dependency order
+ * shared by `judge-ingest` and `judge-lint`: output decode first (its allowed
+ * detail is the inventory every later gate reads), round coherence, the
+ * artifact and event leaves, then aggregate settlement. Every declaration is
+ * always applicable, so the kernel's completion evaluator can settle this
+ * contract from a gate summary.
  *
  * **Example** (Inspect gate order)
  *
@@ -768,11 +799,11 @@ export const QaJudgeContract = SkillContract.make({
   evidenceSubject: QaJudgeContractSubject,
   gates: GateRegistry.make({
     declarations: [
+      JudgeOutputInventoryDecodesGate,
+      DeclaredRoundCoherentGate,
       CitedArtifactExistsGate,
       CitedEventIdExistsGate,
-      DeclaredRoundCoherentGate,
       EvidenceCrossCheckCleanGate,
-      JudgeOutputInventoryDecodesGate,
     ],
   }),
   id: qaJudgeContractId,

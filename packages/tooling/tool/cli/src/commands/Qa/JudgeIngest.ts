@@ -24,6 +24,7 @@ import {
   DeclaredRoundCoherentVerdict,
   evaluateDeclaredRoundCoherent,
   evaluateJudgeOutputInventoryDecodes,
+  JudgeOutputDecodeFailure,
   JudgeOutputInventoryDecodesInput,
   JudgeOutputInventoryDecodesVerdict,
 } from "./JudgeContract.ts";
@@ -134,7 +135,17 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
   );
   return yield* JudgeOutputInventoryDecodesVerdict.match(verdict, {
     allowed: ({ audit }) => Effect.succeed(audit.detail.inventory),
-    denied: ({ audit }) => Effect.fail(QaCommandError.make({ cause: audit.detail.issue, message: audit.reason })),
+    denied: ({ audit }) =>
+      Effect.fail(
+        QaCommandError.make({
+          cause: audit.detail.issue,
+          message: JudgeOutputDecodeFailure.$match(audit.detail.failure, {
+            "inventory-schema-rejected": () =>
+              "qa judge-ingest rejected the judge inventory. Check schemaVersion, finding ids (R<round>-<nn>), lens values, and that requiredCount equals the P0+P1 count.",
+            "malformed-json": () => "qa judge-ingest could not parse the judge's final JSON block.",
+          }),
+        })
+      ),
   });
 });
 

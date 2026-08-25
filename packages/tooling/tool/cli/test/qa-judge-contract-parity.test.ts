@@ -17,6 +17,8 @@ import {
   evaluateDeclaredRoundCoherent,
   evaluateEvidenceCrossCheckClean,
   evaluateJudgeOutputInventoryDecodes,
+  evidenceCrossCheckVerdictToCrossCheck,
+  JudgeOutputInventoryDecodesGate,
   JudgeOutputInventoryDecodesInput,
   JudgeOutputInventoryDecodesVerdict,
   QaEventLog,
@@ -28,20 +30,37 @@ import {
   raiseCrossCheckFailure,
   renderCrossCheckFailure,
 } from "@beep/repo-cli/commands/Qa";
-import { Sha256HexFromBytes } from "@beep/schema/Sha256";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { Unknown } from "@beep/schema/Unknown";
-import { GateRegistry, SkillContract } from "@beep/skill-contract";
+import { URLStr } from "@beep/schema/URL";
+import {
+  AttestationResource,
+  EvaluateSkillCompletionInput,
+  EvidenceDigest,
+  EvidenceReceiptReference,
+  EvidenceSubject,
+  evaluateSkillCompletion,
+  GateRegistry,
+  GateResultSummary,
+  GateSummary,
+  GateSummaryPredicateType,
+  GateSummaryReceipt,
+  GateSummaryVerifier,
+  SemanticallyApplied,
+  SkillContract,
+} from "@beep/skill-contract";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
+import { Effect, Equal, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import type { EvidencePredicateType, GateDeclaration } from "@beep/skill-contract";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
@@ -255,11 +274,11 @@ describe("commands/Qa complete judge contract parity", () => {
   it("composes the five declarations from the single ordered gate-id registry", () => {
     expect(QaJudgeContract.id).toBe("https://beep-effect.dev/contracts/qa-inventory/v1");
     expect(A.map(QaJudgeContract.gates.declarations, (gate) => gate.id)).toEqual([
+      "judge-output-inventory-decodes",
+      "declared-round-coherent",
       "cited-artifact-exists",
       "cited-event-id-exists",
-      "declared-round-coherent",
       "evidence-cross-check-clean",
-      "judge-output-inventory-decodes",
     ]);
     expect(A.map(QaJudgeContract.gates.declarations, (gate) => gate.severity)).toEqual([
       "blocking",
@@ -273,7 +292,7 @@ describe("commands/Qa complete judge contract parity", () => {
       "always",
       "always",
       "always",
-      "conditional",
+      "always",
     ]);
   });
 
@@ -396,11 +415,11 @@ describe("commands/Qa complete judge contract parity", () => {
 
       expect(allowed.verdict).toBe("allowed");
       expect(malformed.verdict).toBe("denied");
-      expect(malformed.audit.reason).toBe("qa judge-ingest could not parse the judge's final JSON block.");
+      expect(malformed.audit.reason).toBe("The judge output candidate does not parse as JSON.");
       expect(emptyEvidence.verdict).toBe("denied");
       expect(wrongCount.verdict).toBe("denied");
-      expect(emptyEvidence.audit.reason).toContain("rejected the judge inventory");
-      expect(wrongCount.audit.reason).toContain("requiredCount equals the P0+P1 count");
+      expect(emptyEvidence.audit.reason).toBe("The judge output candidate does not decode as qa-inventory/v1.");
+      expect(wrongCount.audit.reason).toBe("The judge output candidate does not decode as qa-inventory/v1.");
 
       const deniedDetail = (verdict: JudgeOutputInventoryDecodesVerdict) =>
         JudgeOutputInventoryDecodesVerdict.match(verdict, {
@@ -468,4 +487,116 @@ describe("commands/Qa complete judge contract parity", () => {
       }),
       fcRuns(25)
     ));
+});
+
+describe("commands/Qa judge contract completion through the kernel evaluator", () => {
+  const digest = EvidenceDigest.make({
+    sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+  });
+  const outputSubject = EvidenceSubject.make({ digest, name: "qa/rounds/1/inventory.json" });
+  const summarySubject = EvidenceSubject.make({ digest, name: "qa/rounds/1/gate-summary.json" });
+  const reference = (
+    predicateType: EvidencePredicateType,
+    subjects: A.NonEmptyReadonlyArray<EvidenceSubject> = [summarySubject]
+  ) => EvidenceReceiptReference.make({ predicateType, receipt: summarySubject, subjects });
+  const ladderTypes = QaJudgeContract.receiptTypes.ladder;
+  const ladder = SemanticallyApplied.make({
+    accepted: reference(ladderTypes.accepted),
+    delivered: reference(ladderTypes.delivered),
+    persisted: reference(ladderTypes.persisted),
+    semanticallyApplied: reference(ladderTypes.semanticallyApplied, [outputSubject]),
+  });
+  const gateResult = (declaration: GateDeclaration, outcome: "allowed" | "denied") =>
+    GateResultSummary.make({
+      applicable: true,
+      evidenceSubjects: [summarySubject],
+      evidenceType: declaration.evidence.predicateType,
+      gateId: declaration.id,
+      outcome,
+      severity: declaration.severity,
+    });
+  const summaryFor = (gateResults: ReadonlyArray<GateResultSummary>) => {
+    const passed = A.every(gateResults, (result) => result.outcome === "allowed");
+    return GateSummaryReceipt.make({
+      predicate: GateSummary.make({
+        contractSubject: QaJudgeContractSubject,
+        gateResults,
+        inputAttestations: [
+          AttestationResource.make({ digest, uri: URLStr.make("https://beep-effect.dev/qa/attestations/input/v1") }),
+        ],
+        policy: AttestationResource.make({ digest, uri: URLStr.make("https://beep-effect.dev/qa/policy/judge/v1") }),
+        resourceUri: URLStr.make("https://beep-effect.dev/qa/rounds/1/inventory.json"),
+        timeVerified: ISOStr.make("2026-08-25T00:00:00.000Z"),
+        verificationResult: passed ? "PASSED" : "FAILED",
+        verifiedLevels: passed ? ["BEEP_SKILL_CONTRACT_BLOCKING_GATES"] : ["FAILED"],
+        verifier: GateSummaryVerifier.make({
+          id: URLStr.make("https://beep-effect.dev/qa/verifier/judge/v1"),
+          version: { kernel: "1.0.0" },
+        }),
+      }),
+      predicateType: GateSummaryPredicateType,
+      subject: [summarySubject],
+    });
+  };
+  const evaluate = (gateResults: ReadonlyArray<GateResultSummary>) =>
+    evaluateSkillCompletion(
+      EvaluateSkillCompletionInput.make({
+        contract: QaJudgeContract,
+        gateSummary: summaryFor(gateResults),
+        ladder,
+        outputSubjects: [outputSubject],
+      })
+    );
+
+  it.effect("reaches live completion once every declared gate is allowed", () =>
+    Effect.gen(function* () {
+      const evaluation = yield* evaluate(
+        A.map(QaJudgeContract.gates.declarations, (declaration) => gateResult(declaration, "allowed"))
+      );
+
+      expect(evaluation.verdict).toBe("allowed");
+    })
+  );
+
+  it.effect("denies completion as a verdict value when the decode gate is denied", () =>
+    Effect.gen(function* () {
+      const evaluation = yield* evaluate(
+        A.map(QaJudgeContract.gates.declarations, (declaration) =>
+          gateResult(
+            declaration,
+            Equal.equals(declaration.id, JudgeOutputInventoryDecodesGate.id) ? "denied" : "allowed"
+          )
+        )
+      );
+
+      expect(evaluation.verdict).toBe("denied");
+    })
+  );
+});
+
+describe("commands/Qa aggregate cross-check settlement", () => {
+  it.effect("denies on missing event ids alone and refuses a denied detail with nothing missing", () =>
+    withTempDir(
+      Effect.fnUntraced(function* (root) {
+        const artifactVerdict = yield* evaluateCitedArtifactExists(
+          CitedArtifactExistsInput.make({ citedPaths: [], roundRoot: root })
+        );
+        const eventIdVerdict = yield* evaluateCitedEventIdExists(
+          CitedEventIdExistsInput.make({ citedEventIds: [3], knownEventIds: [] })
+        );
+        const aggregate = yield* evaluateEvidenceCrossCheckClean(
+          EvidenceCrossCheckCleanInput.make({ artifactVerdict, eventIdVerdict })
+        );
+        const nothingMissing = yield* S.decodeUnknownEffect(EvidenceCrossCheckCleanVerdict)({
+          audit: { ...aggregate.audit, detail: { missingEventIds: [], missingPaths: [] } },
+          verdict: "denied",
+        }).pipe(Effect.flip);
+
+        expect(artifactVerdict.verdict).toBe("allowed");
+        expect(aggregate.verdict).toBe("denied");
+        expect(evidenceCrossCheckVerdictToCrossCheck(aggregate)).toEqual({ missingEventIds: [3], missingPaths: [] });
+        expect(nothingMissing.message).toContain("Expected at least one missing artifact path or event id");
+      })
+    )
+  );
 });
