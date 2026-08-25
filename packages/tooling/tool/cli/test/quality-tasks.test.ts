@@ -17,6 +17,7 @@ import {
 import {
   baselineEntriesLostByReplacement,
   CoverageBaselineChangeSet,
+  CoverageBaselineRowDelta,
   CoverageComparisonFailure,
   CoverageFileBaseline,
   CoveragePackageBaseline,
@@ -2597,10 +2598,13 @@ describe("quality task adapter", () => {
         "@beep/c": coveragePackageBaseline("packages/c", 50),
       });
 
-      expect(coverageBaselineRowDelta(previous, previous)).toEqual(O.some([]));
-      expect(coverageBaselineRowDelta(previous, provenanceOnly)).toEqual(O.some([]));
-      expect(coverageBaselineRowDelta(previous, oneRowChanged)).toEqual(O.some(["@beep/a"]));
-      expect(coverageBaselineRowDelta(previous, rowAddedAndRemoved)).toEqual(O.some(["@beep/a", "@beep/c"]));
+      const delta = (present: ReadonlyArray<string>, removed: ReadonlyArray<string> = []) =>
+        O.some(CoverageBaselineRowDelta.make({ present, removed }));
+
+      expect(coverageBaselineRowDelta(previous, previous)).toEqual(delta([]));
+      expect(coverageBaselineRowDelta(previous, provenanceOnly)).toEqual(delta([]));
+      expect(coverageBaselineRowDelta(previous, oneRowChanged)).toEqual(delta(["@beep/a"]));
+      expect(coverageBaselineRowDelta(previous, rowAddedAndRemoved)).toEqual(delta(["@beep/c"], ["@beep/a"]));
     });
 
     it("refuses to scope when a non-row field changed", () => {
@@ -2653,10 +2657,12 @@ describe("quality task adapter", () => {
 
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
-            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.some([]));
+            const delta = (present: ReadonlyArray<string>) =>
+              O.some(CoverageBaselineRowDelta.make({ present, removed: [] }));
+            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(delta([]));
 
             yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a", 61) }));
-            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.some(["@beep/a"]));
+            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(delta(["@beep/a"]));
 
             yield* fs.writeFileString(baselinePath, "{ not jsonc");
             expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.none());
@@ -2678,7 +2684,7 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["commit", "-m", "trunk adds z"]);
             yield* runGit(repoRoot, ["checkout", "-q", "feature"]);
             yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a", 61) }));
-            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "trunk")).toEqual(O.some(["@beep/a"]));
+            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "trunk")).toEqual(delta(["@beep/a"]));
           })
         )
       ));
@@ -2696,29 +2702,44 @@ describe("quality task adapter", () => {
       ];
       const baseline = "standards/coverage.regression-baseline.jsonc";
 
+      const delta = (present: ReadonlyArray<string>, removed: ReadonlyArray<string> = []) =>
+        O.some(CoverageBaselineRowDelta.make({ present, removed }));
+
       expect(planCoverageAffectedScope(owners, [baseline])).toMatchObject({ _tag: "full" });
       expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.none())).toMatchObject({ _tag: "full" });
-      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.some([]))).toEqual({ _tag: "noop" });
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], delta([]))).toEqual({ _tag: "noop" });
       // A row edit measures its package but does not widen to dependents: no code changed.
-      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.some(["@beep/a"]))).toEqual({
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], delta(["@beep/a"]))).toEqual({
         _tag: "selected",
         packageNames: ["@beep/a"],
         dependentPackageNames: [],
       });
-      // A row for a package that left the workspace is pruned by the writer; nothing to measure.
-      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.some(["@beep/gone"]))).toEqual({
-        _tag: "noop",
+      // A present row must name a measurable package: an unknown name is a typo
+      // that main's unscoped run would otherwise fail as a missing summary.
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], delta(["@beep/typo"]))).toEqual({
+        _tag: "full",
+        reasons: [`${baseline}: row for @beep/typo names no workspace package`],
       });
-      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.some(["@beep/b"]))).toEqual({
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], delta(["@beep/b"]))).toEqual({
         _tag: "full",
         reasons: [`${baseline}: row for @beep/b names a package that cannot be measured`],
       });
+      // A removed row for a package that left the workspace is pruned by the
+      // writer; a removed row for a package that still exists is re-measured.
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], delta([], ["@beep/gone"]))).toEqual({
+        _tag: "noop",
+      });
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], delta([], ["@beep/c"]))).toEqual({
+        _tag: "selected",
+        packageNames: ["@beep/c"],
+        dependentPackageNames: [],
+      });
       // Combined with a code change the usual rules still apply to the other paths.
       expect(
-        planCoverageAffectedScopeWithBaseline(owners, [baseline, "packages/a/src/A.ts"], O.some(["@beep/c"]))
+        planCoverageAffectedScopeWithBaseline(owners, [baseline, "packages/a/src/A.ts"], delta(["@beep/c"]))
       ).toEqual({ _tag: "selected", packageNames: ["@beep/a", "@beep/c"], dependentPackageNames: [] });
       expect(
-        planCoverageAffectedScopeWithBaseline(owners, [baseline, "package.json"], O.some(["@beep/a"]))
+        planCoverageAffectedScopeWithBaseline(owners, [baseline, "package.json"], delta(["@beep/a"]))
       ).toMatchObject({ _tag: "full" });
     });
 

@@ -40,7 +40,12 @@ import { enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import { resolveGitCommit, resolveGitMergeBase, runGitRawOutput } from "../../../internal/repo-run/GitExec.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
-import { changedCoverageOwners, planCoverageAffectedScope, workspaceCoverageScopeOwners } from "./CoverageScope.ts";
+import {
+  CoverageBaselineRowDelta,
+  changedCoverageOwners,
+  planCoverageAffectedScope,
+  workspaceCoverageScopeOwners,
+} from "./CoverageScope.ts";
 import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
@@ -1326,21 +1331,21 @@ const rationaleRecordEquivalence = S.toEquivalence(S.Record(S.String, S.NonEmpty
  *     packages: { "@beep/example": row(value) }
  *   })
  *
- * console.log(coverageBaselineRowDelta(document(50), document(60))) // Some(["@beep/example"])
+ * console.log(coverageBaselineRowDelta(document(50), document(60))) // Some({ present: ["@beep/example"], removed: [] })
  * ```
  *
  * @param previous - Baseline document at the comparison base.
  * @param current - Baseline document under test.
- * @returns Sorted package names with added, removed, or changed rows; `None` when a non-row field changed.
+ * @returns Sorted present (added or changed) and removed row package names; `None` when a non-row field changed.
  * @category utilities
  * @since 0.0.0
  */
 export const coverageBaselineRowDelta: {
-  (current: CoverageRegressionBaseline): (previous: CoverageRegressionBaseline) => O.Option<ReadonlyArray<string>>;
-  (previous: CoverageRegressionBaseline, current: CoverageRegressionBaseline): O.Option<ReadonlyArray<string>>;
+  (current: CoverageRegressionBaseline): (previous: CoverageRegressionBaseline) => O.Option<CoverageBaselineRowDelta>;
+  (previous: CoverageRegressionBaseline, current: CoverageRegressionBaseline): O.Option<CoverageBaselineRowDelta>;
 } = dual(
   2,
-  (previous: CoverageRegressionBaseline, current: CoverageRegressionBaseline): O.Option<ReadonlyArray<string>> => {
+  (previous: CoverageRegressionBaseline, current: CoverageRegressionBaseline): O.Option<CoverageBaselineRowDelta> => {
     if (
       previous.epsilon !== current.epsilon ||
       !tieredMinimumEquivalence(previous.minimum, current.minimum) ||
@@ -1350,14 +1355,28 @@ export const coverageBaselineRowDelta: {
       return O.none();
     }
 
-    const rowDiffers = (packageName: string): boolean =>
-      O.match(O.all([R.get(previous.packages, packageName), R.get(current.packages, packageName)]), {
+    // A present row is added or changed relative to the base; a removed row
+    // exists only at the base.
+    const presentDiffers = ([packageName, after]: readonly [string, CoveragePackageBaseline]): boolean =>
+      O.match(R.get(previous.packages, packageName), {
         onNone: thunkTrue,
-        onSome: ([before, after]) => !packageBaselineEquivalence(before, after),
+        onSome: (before) => !packageBaselineEquivalence(before, after),
       });
 
     return O.some(
-      pipe(A.union(R.keys(previous.packages), R.keys(current.packages)), A.filter(rowDiffers), A.sort(Order.String))
+      CoverageBaselineRowDelta.make({
+        present: pipe(
+          R.toEntries(current.packages),
+          A.filter(presentDiffers),
+          A.map(([packageName]) => packageName),
+          A.sort(Order.String)
+        ),
+        removed: pipe(
+          R.keys(previous.packages),
+          A.filter((packageName) => !R.has(current.packages, packageName)),
+          A.sort(Order.String)
+        ),
+      })
     );
   }
 );
@@ -1393,7 +1412,7 @@ export const coverageBaselineRowDeltaFromBase = Effect.fn("CoverageRegression.co
     repoRoot: string,
     base: string
   ): Effect.fn.Return<
-    O.Option<ReadonlyArray<string>>,
+    O.Option<CoverageBaselineRowDelta>,
     never,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > {
