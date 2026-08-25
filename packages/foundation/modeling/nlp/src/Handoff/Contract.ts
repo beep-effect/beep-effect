@@ -256,7 +256,8 @@ export const Span = SpanFields.check(
   })
   .pipe(
     $I.annoteSchema("Span", {
-      description: "A half-open character span [start, end) into the source text (zero-based offsets).",
+      description:
+        "A half-open span [start, end) into the source text, measured in zero-based UTF-16 code units (the unit `String.length` and `slice` use).",
     }),
     SchemaUtils.withCodecStatics
   );
@@ -475,8 +476,15 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
 
 /**
  * The top-level handoff envelope: a fully annotated document — its chunks,
- * entities, and relations — emitted by `@beep/nlp` for downstream consumption.
- * The `version` pins the contract revision.
+ * mentions, entities, and relations — emitted by `@beep/nlp` for downstream
+ * consumption. The `version` pins the contract revision.
+ *
+ * **Details**
+ *
+ * `mentions` carries every {@link Mention} an {@link Entity} refers to by id, so
+ * the per-occurrence character `span` survives the handoff instead of being
+ * dropped at the boundary. `nlp-ir/1.1` added the field; `nlp-ir/1.0`
+ * envelopes carried entities whose `mentions` ids resolved to nothing.
  *
  * **Example** (Make empty document)
  *
@@ -487,11 +495,12 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
  * const document = AnnotatedDocument.make({
  *   chunks: [],
  *   entities: [],
+ *   mentions: [],
  *   provenance,
  *   relations: [],
- *   version: "nlp-ir/1.0"
+ *   version: "nlp-ir/1.1"
  * })
- * console.log(document.version) // "nlp-ir/1.0"
+ * console.log(document.version) // "nlp-ir/1.1"
  * ```
  *
  * @category models
@@ -501,12 +510,14 @@ export class AnnotatedDocument extends S.Class<AnnotatedDocument>($I`AnnotatedDo
   {
     chunks: S.Array(TextChunk),
     entities: S.Array(Entity),
+    mentions: S.Array(Mention),
     provenance: Provenance,
     relations: S.Array(Relation),
-    version: S.Literal("nlp-ir/1.0"),
+    version: S.Literal("nlp-ir/1.1"),
   },
   $I.annote("AnnotatedDocument", {
-    description: "The top-level handoff envelope: a fully annotated document (chunks + entities + relations).",
+    description:
+      "The top-level handoff envelope: a fully annotated document (chunks + mentions + entities + relations).",
   })
 ) {}
 

@@ -15079,7 +15079,7 @@
       "kind": "schema-class",
       "owner": "@beep/nlp",
       "identity": "AnnotatedDocument",
-      "description": "The top-level handoff envelope: a fully annotated document (chunks + entities + relations)."
+      "description": "The top-level handoff envelope: a fully annotated document (chunks + mentions + entities + relations)."
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",

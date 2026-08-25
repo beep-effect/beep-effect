@@ -218,6 +218,12 @@
   },
   "overrides": [
     {
+      "includes": [
+        "goals/lexical-playground-capability-atlas/research/capability-atlas.json"
+      ],
+      "files": { "maxSize": 2097152 }
+    },
+    {
       // @beep/lint-rules no-native-error: replaces `beep lint tooling-tagged-errors`,
       // scoped to tooling source roots only (advisory "warn"; flips to error in P2).
       "includes": ["packages/tooling/**/src/**"],

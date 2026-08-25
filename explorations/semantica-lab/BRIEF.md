@@ -1,9 +1,10 @@
 # Brief — Semantica Port Atlas & Lab
 
 <!-- Stage 3. Shape Up pitch at fat-marker fidelity. v1.0 ratified 2026-08-24; review
-amendments S7/S8 applied during PR #794 closeout. -->
+amendments S7/S8 applied during PR #794 closeout; v1.1 = MAP-grill amendments M1–M6 (Parser and
+Canonicalizer rows, rabbit holes 1–2, graduation targets) applied 2026-08-24. -->
 
-Status: **v1.0 — RATIFIED by Benjamin 2026-08-24** ("matches the picture"; S1–S6 folded in) — synthesized from `CAPTURE.md`, `RESEARCH.md`, and the `DECISIONS.md`
+Status: **v1.1 — v1.0 RATIFIED by Benjamin 2026-08-24** ("matches the picture"; S1–S6 folded in; M1–M6 amendments applied the same day, see Review status) — synthesized from `CAPTURE.md`, `RESEARCH.md`, and the `DECISIONS.md`
 Current law table (D1–D18, A1–A9, B1–B6, G1–G7, O1–O5). Where this brief and the law table
 disagree, the table wins; where this brief adds something new it is marked **⚠ Challenge** and
 is open for review.
@@ -28,7 +29,7 @@ proof DAG as data — has no incumbent. The v3 archive already holds a working r
 with a 46-test oracle to build against.
 
 Why now: the bake-off research is done and converged; five family sheets exist as candidate
-screens; the shared schema (v1.2) and workload contract (v1.3) are ratified; the reviewers'
+screens; the shared schema (v1.3) and workload contract (v1.3) are ratified; the reviewers'
 falsifications (winners named before prerequisites existed; five composition seams) are
 reconciled. What is missing is the one thing that turns screens into verdicts: **a running,
 replayable chain over real papers**. Every further hour of desk research is now lower-value
@@ -81,8 +82,8 @@ it exports nothing reusable — earned code graduates by extraction to a durable
 flowchart LR
     subgraph C0 ["C0 — the spine (days)"]
         direction LR
-        SD["SourceDocument<br/>sha256 · origin · media type"] --> P["Parse<br/>@beep/file-processing · PDF.js/MuPDF tie"]
-        P --> CT["CanonicalText<br/>UTF-16 offsets · loss map<br/>single span owner"]
+        SD["SourceDocument<br/>sha256 · origin · media type"] --> P["Parse<br/>@beep/file-processing · @beep/doc-text first"]
+        P --> CT["CanonicalText = ResolvedSourceText<br/>SourceTextIdentity · TextAnchor spans<br/>single span owner"]
         CT --> CH["Chunk<br/>span against CanonicalText"]
         CH --> EX["Extract (hosted)<br/>EvidenceBatch of EvidenceClaims<br/>spans · confidence · model identity"]
         EX --> L[("Ledger — PGlite<br/>append-only ProvenanceEvents<br/>+ EvidenceBatches (SoR)")]
@@ -104,9 +105,10 @@ flowchart LR
 ```
 
 - **C0** proves the spine: F1 fixtures + the three G-relation W1 papers (which also carry
-  G-structure and G-entity labels), parsed to a `CanonicalText` with a monotone loss map,
-  chunked with spans, extracted by a hosted model into an `EvidenceBatch`, appended atomically
-  to the PGlite ledger with its `ProvenanceEvent`s, and scored into a schema-validated
+  G-structure and G-entity labels), parsed to a `CanonicalText` (= `ResolvedSourceText`; spans
+  as `TextAnchor`s, no loss map — M1), chunked with spans, extracted by a hosted model into an
+  `EvidenceBatch`, appended atomically to the PGlite ledger with its `ProvenanceEvent`s, and
+  scored into a schema-validated
   `EvalReport` over G-structure, G-entity **and G-relation** (S7: the relation-drop tripwire
   runs in the same stage that writes the Extractor verdict). **Pass** = second run with the
   network disabled reproduces the EvalReport bytes from the provider cache (G7); every span
@@ -138,8 +140,8 @@ decompose refines it into the MAP capability table.
 | Contract (lab-local, promotion-shaped) | Stage | First-probe Layer | Cited brick | Parked alternates |
 | --- | --- | --- | --- | --- |
 | `DocumentSource` | C0 | local file + committed fixture | `@beep/file-processing` | URL ingest (gate 6 SSRF policy first) |
-| `Parser` (per media type) | C0 | PDF.js **or** MuPDF (tie, probe both), MD, HTML | `@beep/md`, `@beep/html`, `@beep/tika`, `@beep/pandoc-ast` | OCR, DOCX |
-| `Canonicalizer` → `CanonicalText` | C0 | NET-NEW (UTF-16 offsets + loss map) | `VerifiedSpan` semantics in `@beep/langextract` (`@beep/langextract/VerifiedSpan`) | — |
+| `Parser` (per media type) | C0 | PDF: `@beep/doc-text` (unpdf/PDF.js) first, direct `unpdf` text items in the lab as the breaker's single retry (M1); MD, HTML | `@beep/doc-text`, `@beep/md`, `@beep/html`, `@beep/tika`, `@beep/pandoc-ast` | MuPDF (AGPL), OCR, DOCX |
+| `Canonicalizer` → `CanonicalText` | C0 | compose (M1): `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text; spans = `@beep/provenance` `TextAnchor`; tripwire = `verifyTextAnchor`; no loss map | `@beep/file-processing`, `@beep/provenance`, `VerifiedSpan` locators in `@beep/langextract` | — |
 | `Chunker` | C0 | span-preserving sentence/section splitter | `@beep/nlp` | semantic chunking |
 | `Extractor` → `EvidenceBatch` | C0 | hosted LLM (LangExtract shape) **and** pattern (Wink) under one gold probe | `@beep/langextract`, `@beep/nlp-processing` (both carry known defects — see rabbit holes) | local models |
 | `Ledger` (system of record) | C0 | PGlite, append-only | `@beep/pglite`, `@beep/postgres`, `@beep/provenance` | — |
@@ -175,25 +177,33 @@ then in the atlas.
   the D5 render/diff sync pipeline (queued MAP candidate; re-entry trigger semantica 0.6.7+).
 - **OSS gates** (O4): standalone reasoning package; publishable evals harness.
 - **Window / explorer** (D12, D16): thin workbench vs defer, decided in the goal packet.
-- **Graduation targets**: `Canonicalizer`/`CanonicalText` and `EvidenceBatch` smell like
-  `@beep/nlp`-family modeling; the ledger and `InferenceEvent` smell like `@beep/provenance`
-  extensions; `EmbeddingProvider` smells like a driver-family contract. Named now, decided at
-  promotion.
+- **Graduation targets**: `CanonicalText` is already composed from `@beep/file-processing` +
+  `@beep/provenance` (M1, nothing to promote); `EvidenceBatch`/`ConflictWitness` smell like
+  `@beep/epistemic-domain` extensions (`ContradictionCandidate`, `Activity`/`UsageRecord`
+  precedents); the ledger and `InferenceEvent` smell like `@beep/provenance` extensions;
+  `ModelIdentity` has no in-repo carrier and smells like a driver-family contract. Named now,
+  decided at promotion.
 
 ## Rabbit Holes
 
 Each is patched here or graduates as an explicit constraint the goal packet inherits.
 
-1. **Span canonicalization drift.** Every bake-off review found no sheet named the thing spans
-   address. Patch: `CanonicalText` is the single owner of span meaning (UTF-16 code-unit
-   offsets, matching live `VerifiedSpan`); every stage maps spans or declares itself lossy in
-   the type. C0's pass criterion "every span slices back to its text" is the tripwire.
+1. **Span canonicalization drift (amended M1).** Every bake-off review found no sheet named the
+   thing spans address. The repo already does: `SourceTextIdentity` (textDigest + extractor
+   name/version) + `TextAnchor` (UTF-16 half-open, width-checked) + `verifyTextAnchor` own span
+   meaning, and `goals/citation-verified-span-substrate` constraint 4 makes the extracted raw text
+   canonical with normalization locator-only. Patch: `CanonicalText` = `ResolvedSourceText`; no
+   raw→canonical loss map (a second normalized text would make spans unprovable); every stage
+   maps spans as `TextAnchor`s or declares itself lossy in the type. C0's pass criterion is
+   `verifyTextAnchor` succeeding for every span.
 2. **Known defects in our own bricks.** `@beep/nlp-processing`'s WinkBackend fabricates a
    zero-based span on an `indexOf` miss; the `@beep/langextract` handoff drops relations; the
    Oxigraph adapter ignores `timeoutMs`; `shacl-engine` hangs on a violating fixture (B6, drafts
    in `research/drafts/repo-issues.md`). Patch: the lab decodes brick output at its boundary
    into typed degraded states and must not inherit a fabricated span or a silent drop; fixes
-   ride cleanup-on-touch, not this packet (O1). Constraint inherited: the C0 extraction probe
+   ride cleanup-on-touch, not this packet (O1) — with one exception: the `@beep/nlp` Handoff
+   envelope's mention/span drop (mints unresolvable `MentionId`s, never reads the aligned span) is
+   fixed now in its own PR as `nlp-ir/1.1` (M2). Constraint inherited: the C0 extraction probe
    must detect both defects if they leak (a span that does not slice back; a relation count of
    zero on the G-relation papers is a failure, not a score).
 3. **Gold-label circularity (settled, S2).** If the same provider family proposes the gold and
@@ -298,4 +308,7 @@ read (`research/effect-ontology-map.md`, 159 rows, skeptic-flagged rows kept) ch
 schema to v1.2: `ModelIdentity` gains `taskType`; the provider cache key is a contract; five
 families anchor on live `@beep/*` symbols; `QuadDelta` becomes C1's rebuild-identity witness;
 three more success-shaped anti-patterns are forbidden by construction. Benjamin confirmed the brief matches
-the picture in his head on 2026-08-24; the packet moved to decompose.
+the picture in his head on 2026-08-24; the packet moved to decompose. The MAP grill (M1–M6,
+same day) amended the Parser and Canonicalizer rows, rabbit holes 1–2 and the graduation targets
+from live source: `@beep/doc-text` is the first PDF probe, `CanonicalText` composes
+`ResolvedSourceText` + `TextAnchor` with no loss map, and the Handoff span drop is fixed in PR A.

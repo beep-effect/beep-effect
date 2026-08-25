@@ -39,14 +39,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
-- [`semantica-lab`](./semantica-lab/README.md) — decompose
-  (2026-08-24): Semantica (MIT Python KG framework) port atlas +
-  future apps/labs/semantica Tauri lab. Rubric v2.0 ratified; five family sheets
-  are candidate slates (park-pending-canary); construction-vs-consumption
-  charter split with trustgraph-workbench. Notion page `@beep/semantica`
-  mirrors facts; the packet owns decisions.
-  BRIEF v1.0 ratified (staged canary C0–C2 = Goal 1, probe-denominated stop rule,
-  S1–S6 settled). Next: MAP.md → graduate → scaffold lab.
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
   (digest-named global protocol type + projections + journal-audited
@@ -238,6 +230,19 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`semantica-lab`](./semantica-lab/README.md) — graduated 2026-08-24 into
+  [`goals/semantica-canary`](../goals/semantica-canary/README.md) (the staged
+  Semantica-port canary C0→C1→C2 in the future apps/labs/semantica Tauri lab,
+  headless-first, probe-denominated stop rule) and
+  [`goals/openai-driver`](../goals/openai-driver/README.md) (thin `@beep/openai`
+  driver over `@effect/ai-openai`, C1's embeddings Layer). BRIEF v1.1, MAP v1.0
+  (M1–M6: doc-text-first PDF, `CanonicalText` composed from
+  `ResolvedSourceText` + `TextAnchor`, Handoff span fix as PR A, own driver
+  packet, atlas per O3, three-PR delivery, ROADMAP lab-canary clause). Queued
+  re-entries: `semantica-storage-inversion` and `semantica-reasoning-spike`
+  (behind C2), `semantica-atlas-sync` (semantica 0.6.7+ or atlas-edit need),
+  OSS gates `reasoning-package` and `evals-harness`. A fired gate reopens the
+  packet at `decompose`. Notion page `@beep/semantica` mirrors facts.
 - [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — graduated
   2026-08-24 with
   [`goals/oppold-corpus-salvage-restoration`](../goals/oppold-corpus-salvage-restoration/README.md)
