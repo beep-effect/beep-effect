@@ -64,6 +64,9 @@ export type Step = Readonly<
       query?: Query;
     }
   | {
+      action: "reload";
+    }
+  | {
       action: "click";
       locator: LocatorSpec;
       options?: ClickOptions;
@@ -123,6 +126,13 @@ export type Step = Readonly<
       }>;
     }
   | {
+      action: "file-paste";
+      dataUri: string;
+      fileName: string;
+      locator: LocatorSpec;
+      mimeType: string;
+    }
+  | {
       action: "clipboard-verify";
       locator: LocatorSpec;
     }
@@ -138,6 +148,11 @@ export type Step = Readonly<
       action: "set-viewport";
       height: number;
       width: number;
+    }
+  | {
+      action: "touch-swipe";
+      delta: Readonly<{ x: number; y: number }>;
+      locator: LocatorSpec;
     }
   | {
       action: "mark-manual";
@@ -190,6 +205,7 @@ export const placeholder = (value: string, nth?: number): LocatorSpec => ({
 export const testId = (id: string, nth?: number): LocatorSpec => css(`[data-test-id="${id}"]`, nth);
 
 export const goto = (path = "/", query?: Query): Step => ({ action: "goto", path, query });
+export const reload = (): Step => ({ action: "reload" });
 export const click = (locator: LocatorSpec, options?: ClickOptions): Step => ({ action: "click", locator, options });
 export const hover = (locator: LocatorSpec): Step => ({ action: "hover", locator });
 export const drag = (
@@ -225,10 +241,19 @@ export const clipboardPaste = (
   locator: LocatorSpec,
   payload?: Readonly<{ mimeType: "text/html" | "text/plain"; text: string }>
 ): Step => ({ action: "clipboard-paste", locator, payload });
+export const filePaste = (
+  locator: LocatorSpec,
+  payload: Readonly<{ dataUri: string; fileName: string; mimeType: string }>
+): Step => ({ action: "file-paste", locator, ...payload });
 export const clipboardVerify = (locator: LocatorSpec): Step => ({ action: "clipboard-verify", locator });
 export const pasteVerify = (locator: LocatorSpec): Step => ({ action: "paste-verify", locator });
 export const exportVerify = (downloadSlot: string): Step => ({ action: "export-verify", downloadSlot });
 export const setViewport = (width: number, height: number): Step => ({ action: "set-viewport", height, width });
+export const touchSwipe = (locator: LocatorSpec, delta: Readonly<{ x: number; y: number }>): Step => ({
+  action: "touch-swipe",
+  delta,
+  locator,
+});
 export const markManual = (reason: string): Step => ({ action: "mark-manual", reason });
 
 export const defineScenario = (scenario: Scenario): Scenario => scenario;

@@ -1,6 +1,6 @@
 import { click, expectSelector, expectText, keyboard, type } from "./dsl.ts";
 import { GROUP, scenario, surfaceLifecycle } from "./helpers.ts";
-import { EDITOR, FIND_KEY, FIND_REPLACE, KEY } from "./sourced.ts";
+import { EDITOR, FIND_KEY, FIND_REPLACE, KEY, OUTPUT, TOOLBAR_BUTTON } from "./sourced.ts";
 
 export const scenarios = [
   scenario({
@@ -23,12 +23,24 @@ export const scenarios = [
     title: "Find and replace",
   }),
   scenario({
-    activationExercise: "Edit content, undo with Ctrl+Z, then redo with Ctrl+Y.",
+    activationExercise: "Edit content, undo and redo with Ctrl+Z/Ctrl+Y, then repeat through the toolbar.",
     group: GROUP.keyboard,
     id: "extension.history",
     steps: surfaceLifecycle(
-      [type(EDITOR, " history"), keyboard(KEY.undo, EDITOR), keyboard(KEY.redo, EDITOR), expectText(EDITOR, "history")],
-      { seed: "Evidence" }
+      [
+        type(EDITOR, " history"),
+        keyboard(KEY.undo, EDITOR),
+        keyboard(KEY.redo, EDITOR),
+        expectText(EDITOR, "history"),
+        keyboard("Control+A", EDITOR),
+        click(TOOLBAR_BUTTON.bold),
+        expectSelector(OUTPUT.bold),
+        click(TOOLBAR_BUTTON.undo),
+        expectSelector(OUTPUT.bold, "detached"),
+        click(TOOLBAR_BUTTON.redo),
+        expectSelector(OUTPUT.bold),
+      ],
+      { afterScreenshotLabel: "toolbar", seed: "Evidence" }
     ),
     title: "History",
   }),

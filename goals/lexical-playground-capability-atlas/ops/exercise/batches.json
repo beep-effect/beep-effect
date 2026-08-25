@@ -508,6 +508,10 @@
     "group": "settings-panel",
     "scripted": true
   },
+  "setting.tree-view": {
+    "group": "settings-panel",
+    "scripted": true
+  },
   "setting.visible-non-printing": {
     "group": "settings-panel",
     "scripted": true

@@ -732,6 +732,19 @@ describe("commands/Qa judge output parsing", () => {
       expect(malformed.message).toContain("no parseable JSON inventory object (fenced or unfenced)");
     })
   );
+
+  it.effect("preserves malformed-JSON and schema-rejection adapter messages", () =>
+    Effect.gen(function* () {
+      const invalidInventory = yield* encodeJson({});
+      const malformed = yield* Effect.flip(parseJudgeOutput(`${fence}json\n{\n${fence}\n`));
+      const rejected = yield* Effect.flip(parseJudgeOutput(`${fence}json\n${invalidInventory}\n${fence}\n`));
+
+      expect(malformed.message).toBe("qa judge-ingest could not parse the judge's final JSON block.");
+      expect(rejected.message).toBe(
+        "qa judge-ingest rejected the judge inventory. Check schemaVersion, finding ids (R<round>-<nn>), lens values, and that requiredCount equals the P0+P1 count."
+      );
+    })
+  );
 });
 
 describe("commands/Qa extract --dry-run driver isolation", () => {

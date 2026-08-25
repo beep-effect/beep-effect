@@ -1,4 +1,4 @@
-import { click, expectAttr, expectSelector, keyboard, role, type } from "./dsl.ts";
+import { click, css, expectAttr, expectSelector, keyboard, role, type } from "./dsl.ts";
 import {
   ALIGN_ITEM,
   baseLifecycle,
@@ -19,6 +19,7 @@ import {
   FONT_SIZE,
   KEY,
   MAIN_TOOLBAR,
+  MARKDOWN,
   modal,
   OUTPUT,
   PAGE_SETUP,
@@ -31,31 +32,74 @@ const FLOATING_BOLD = role("button", "Format text as bold", {
   exact: true,
   scope: '[role="toolbar"][aria-label="Floating text format toolbar"]',
 });
+const FOURTH_BOLD = css(".PlaygroundEditorTheme__textBold", 3);
+const FOURTH_ITALIC = css(".PlaygroundEditorTheme__textItalic", 3);
+
+type MarkdownFormatPath = Readonly<{
+  assertion: LocatorSpec;
+  sources: ReadonlyArray<string>;
+}>;
+
+const markdownFormatActivation = ({ assertion, sources }: MarkdownFormatPath): ReadonlyArray<Step> => [
+  ...sources.flatMap((source, index) => [
+    type(EDITOR, source),
+    ...(index === sources.length - 1 ? [] : [keyboard("Enter", EDITOR)]),
+  ]),
+  expectSelector(assertion),
+];
 
 const selected = (steps: ReadonlyArray<Step>): ReadonlyArray<Step> => [
   type(EDITOR, "Evidence"),
   keyboard("Control+A", EDITOR),
   ...steps,
 ];
-const directFormat = (id: string, title: string, button: LocatorSpec, key: string, output: LocatorSpec) =>
+const directFormat = (
+  id: string,
+  title: string,
+  button: LocatorSpec,
+  key: string,
+  output: LocatorSpec,
+  markdown?: MarkdownFormatPath
+) =>
   scenario({
-    activationExercise: `Invoke ${title} from the main toolbar and through its pinned keyboard binding.`,
+    activationExercise: `Invoke ${title} from the main toolbar and through its pinned keyboard binding${markdown === undefined ? "." : " and Markdown transformers."}`,
     group: GROUP.toolbar,
     id,
-    steps: multiPathLifecycle([selected([click(button)]), selected([keyboard(key, EDITOR)])], output),
+    steps: multiPathLifecycle(
+      [
+        selected([click(button)]),
+        selected([keyboard(key, EDITOR)]),
+        ...(markdown === undefined ? [] : [markdownFormatActivation(markdown)]),
+      ],
+      output,
+      markdown === undefined
+        ? {}
+        : { screenshotLabels: ["activation-path-1", "activation-path-2", "markdown-shortcut"] }
+    ),
     title,
   });
-const moreFormat = (id: string, title: string, item: LocatorSpec, key: string, output: LocatorSpec) =>
+const moreFormat = (
+  id: string,
+  title: string,
+  item: LocatorSpec,
+  key: string,
+  output: LocatorSpec,
+  markdown?: MarkdownFormatPath
+) =>
   scenario({
-    activationExercise: `Invoke ${title} from the additional text styles menu, floating selection surface, and pinned keyboard binding.`,
+    activationExercise: `Invoke ${title} from the additional text styles menu, floating selection surface, and pinned keyboard binding${markdown === undefined ? "." : " and Markdown transformer."}`,
     group: GROUP.toolbar,
     id,
     steps: multiPathLifecycle(
       [
         selected([click(TOOLBAR_BUTTON.moreStyles), click(item)]),
         selected([expectSelector(FLOATING_TOOLBAR), keyboard(key, EDITOR)]),
+        ...(markdown === undefined ? [] : [markdownFormatActivation(markdown)]),
       ],
-      output
+      output,
+      markdown === undefined
+        ? {}
+        : { screenshotLabels: ["activation-path-1", "activation-path-2", "markdown-shortcut"] }
     ),
     title,
   });
@@ -141,7 +185,10 @@ export const scenarios = [
     ),
     title: "Main toolbar",
   }),
-  directFormat("format.bold", "Bold", TOOLBAR_BUTTON.bold, KEY.bold, OUTPUT.bold),
+  directFormat("format.bold", "Bold", TOOLBAR_BUTTON.bold, KEY.bold, OUTPUT.bold, {
+    assertion: FOURTH_BOLD,
+    sources: [MARKDOWN.boldStar, MARKDOWN.boldUnderscore, MARKDOWN.boldItalicStar, MARKDOWN.boldItalicUnderscore],
+  }),
   moreFormat("format.capitalize", "Capitalize", MORE_STYLE_ITEM.capitalize, KEY.capitalize, OUTPUT.capitalize),
   scenario({
     activationExercise: "Apply Bold, clear it from the toolbar, then apply Bold and clear it with Ctrl+Backslash.",
@@ -163,15 +210,33 @@ export const scenarios = [
     ),
     title: "Clear formatting",
   }),
-  directFormat("format.inline-code", "Inline code", TOOLBAR_BUTTON.inlineCode, KEY.inlineCode, OUTPUT.inlineCode),
-  directFormat("format.italic", "Italic", TOOLBAR_BUTTON.italic, KEY.italic, OUTPUT.italic),
+  directFormat("format.inline-code", "Inline code", TOOLBAR_BUTTON.inlineCode, KEY.inlineCode, OUTPUT.inlineCode, {
+    assertion: OUTPUT.inlineCode,
+    sources: [MARKDOWN.inlineCode],
+  }),
+  directFormat("format.italic", "Italic", TOOLBAR_BUTTON.italic, KEY.italic, OUTPUT.italic, {
+    assertion: FOURTH_ITALIC,
+    sources: [MARKDOWN.italicStar, MARKDOWN.italicUnderscore, MARKDOWN.boldItalicStar, MARKDOWN.boldItalicUnderscore],
+  }),
   moreFormat("format.lowercase", "Lowercase", MORE_STYLE_ITEM.lowercase, KEY.lowercase, OUTPUT.lowercase),
   scenario({
     activationExercise:
-      "Invoke semantic highlight from the additional styles menu and exercise history/clipboard/serialization.",
+      "Invoke semantic highlight from the additional styles menu and through the HIGHLIGHT Markdown transformer.",
     group: GROUP.toolbar,
     id: "format.semantic-highlight",
-    steps: baseLifecycle([click(TOOLBAR_BUTTON.moreStyles), click(MORE_STYLE_ITEM.highlight)], OUTPUT.highlight),
+    steps: baseLifecycle(
+      [
+        click(TOOLBAR_BUTTON.moreStyles),
+        click(MORE_STYLE_ITEM.highlight),
+        expectSelector(OUTPUT.highlight),
+        keyboard("Control+Z", EDITOR),
+        keyboard("Control+A", EDITOR),
+        keyboard("Backspace", EDITOR),
+        type(EDITOR, MARKDOWN.highlight),
+      ],
+      OUTPUT.highlight,
+      { activatedScreenshotLabel: "markdown-shortcut" }
+    ),
     title: "Semantic highlight",
   }),
   moreFormat(
@@ -179,7 +244,8 @@ export const scenarios = [
     "Strikethrough",
     MORE_STYLE_ITEM.strikethrough,
     KEY.strikethrough,
-    OUTPUT.strikethrough
+    OUTPUT.strikethrough,
+    { assertion: OUTPUT.strikethrough, sources: [MARKDOWN.strikethrough] }
   ),
   moreFormat("format.subscript", "Subscript", MORE_STYLE_ITEM.subscript, KEY.subscript, OUTPUT.subscript),
   moreFormat("format.superscript", "Superscript", MORE_STYLE_ITEM.superscript, KEY.superscript, OUTPUT.superscript),

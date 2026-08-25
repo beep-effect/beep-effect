@@ -76,6 +76,18 @@ before the lifecycle continues; `paste-verify` polls for the settled document.
 A 1 s pause or one typed character also resyncs Lexical, so this is a harness
 cadence artifact, not a Playground defect.
 
+Synthetic clipboard steps focus the target contenteditable and clear the
+system clipboard before dispatch. `file-paste` builds a `File` from an inline
+data URI, adds it to a page-owned `DataTransfer`, and dispatches a bubbling,
+cancelable `ClipboardEvent` on the target. `clipboard-paste` uses the same
+page-owned event path for `text/plain` and `text/html` payloads.
+
+The browser context starts with `hasTouch: true`. `touch-swipe` dispatches
+paired `touchstart` and `touchend` events on its locator using the requested
+x/y delta. `reload` reloads the current URL, including its query string and
+hash, and waits for `domcontentloaded`; scenarios must add a selector wait for
+application state restored asynchronously after mount.
+
 Requests to `fonts.googleapis.com`, `fonts.gstatic.com`, and
 `va.vercel-scripts.com` are expected Playground defaults from D9/D14. The
 harness records them as passing `baseline-egress` rows and excludes them from
