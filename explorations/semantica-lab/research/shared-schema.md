@@ -1,5 +1,5 @@
-# Shared Schema One-Pager — v1.2 (S6 effect-ontology fold-in 2026-08-24; v1.1 post-bake-off-review
-additions; v1.0 RATIFIED 2026-08-24) (A7)
+# Shared Schema One-Pager — v1.3 (M1 compose-not-build 2026-08-24; v1.2 S6 effect-ontology fold-in;
+v1.1 post-bake-off-review additions; v1.0 RATIFIED 2026-08-24) (A7)
 
 The distinctions every bake-off winner must preserve. Fat-marker contract, not final code: names
 and shapes indicate the schema-first families the lab will define (Effect v4 `S.Class` / tagged
@@ -11,14 +11,17 @@ compatibility round checks composition.
 
 - **SourceDocument** — content-addressed identity (`sha256` brand), media type (LiteralKit),
   tagged origin (`LocalFile | Url | Fixture`), byte length; acquisition ProvenanceEvent ref.
-- **CanonicalText** *(added v1.1 — both bake-off reviews found no sheet named the thing spans
-  address)* — the single named canonicalization every downstream span is against: content-
-  addressed id, source document ref, producing parser + version, **UTF-16 code-unit offsets**
-  (matching live `VerifiedSpan` semantics in `@beep/langextract`), and a monotone raw→canonical loss map (or a typed
-  lossy-segment declaration). One per document per parse; there is exactly one owner of span
-  meaning.
-- **Chunk / TextUnit** — CanonicalText ref + **span** (`{start, end}` UTF-16 offsets against
-  that CanonicalText) + producing-stage ProvenanceEvent ref. Text is NEVER divorced from its
+- **CanonicalText** *(added v1.1; re-scoped v1.3 by M1 — compose, do not build)* — the single
+  named text every downstream span is against. It IS the live `ResolvedSourceText`
+  (`@beep/file-processing` `SourceText`): `@beep/provenance` `SourceTextIdentity` (content-addressed
+  `textDigest`, source ref/locator/digest, producing `SourceTextExtractor { name, version }`)
+  + the exact extracted text. Raw extracted text is canonical; normalization is locator-only,
+  never evidence text (`goals/citation-verified-span-substrate` constraint 4); there is **no**
+  raw→canonical loss map — a second normalized text would make spans unprovable by
+  `verifyTextAnchor`. One per document per parse; exactly one owner of span meaning.
+- **Chunk / TextUnit** — CanonicalText ref + **span** as a `@beep/provenance` `TextAnchor`
+  (UTF-16 code-unit half-open offsets against that text, width-checked) + producing-stage
+  ProvenanceEvent ref. Text is NEVER divorced from its
   span; every stage (parse, normalize, split) maps spans, or declares itself lossy in the type.
 - **EvidenceBatch / EvidenceClaim** *(added v1.1 — the extraction sheet depended on it; it now
   lives here, not in a family sheet)* — the ONLY write model for observed knowledge: a batch of
@@ -60,6 +63,11 @@ compatibility round checks composition.
 | Family need | Live symbol | Package |
 | --- | --- | --- |
 | span anchor decoded at boundaries | `TextAnchor` | `@beep/provenance` |
+| canonical text identity + producing extractor (M1) | `SourceTextIdentity`, `SourceTextExtractor` | `@beep/provenance` |
+| resolved canonical text + resolver service (M1) | `ResolvedSourceText`, `SourceTextResolver` | `@beep/file-processing` `SourceText` |
+| verified span + receipt = the C0 tripwire (M1) | `VerifiedTextAnchor`, `verifyTextAnchor`, `TextAnchorVerificationReceipt` | `@beep/provenance` |
+| conflict-witness precedent (M1) | `ContradictionCandidate` (candidateKey/digest, matchBasis, bitemporal) | `@beep/epistemic-domain` |
+| provenance write-model precedent (M1) | `Activity`, `UsageRecord` (provider/model + activityId) | `@beep/epistemic-domain` |
 | branded confidence | `Confidence` | `@beep/epistemic-domain` |
 | RDF object position, PROV refs/bundles/activities | `ObjectTerm`, Prov `ObjectRef`/`ProvBundle`/`Activity`/`Entity` | `@beep/rdf` |
 | SHACL outcomes | `ShaclValidationResult` family | `@beep/semantic-web` |

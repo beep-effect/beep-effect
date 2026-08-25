@@ -57,10 +57,10 @@ invent closure reasons for the three IDs absent from the six-open inventory.
 | `2026-08-10` CSF-001; `2026-08-13` CSF-001; `2026-08-24` CSF-001 | `08ee74d0eb18819187fd02f570b4d57c` | PR code now runs on self-hosted EC2 CI lanes | admission | Open; transferred |
 | `2026-08-10` CSF-002; `2026-08-13` CSF-002 | `382c538bc3c8819195f83b4a36b002fb` | Non-ephemeral CI runners expose PR jobs to trusted push secrets | historical fleet lifecycle | Closed; absent from the exact six-open inventory |
 | `2026-08-10` CSF-003; `2026-08-13` CSF-003; `2026-08-24` CSF-004 | `a3a281b2a3d881919fdcbf68ee2364f0` | PR code now runs on owned EC2 CI runners | admission | Open; transferred |
-| `2026-08-10` CSF-004; `2026-08-13` CSF-004; `2026-08-24` CSF-005 | `c799c2269d748191997ff176ce4bfd48` | Shadow runner exposes AWS role creds to job code | workload identity | Open; transferred |
+| `2026-08-10` CSF-004; `2026-08-13` CSF-004; `2026-08-24` CSF-005 | `c799c2269d748191997ff176ce4bfd48` | Shadow runner exposes AWS role creds to job code | workload identity | Open; transferred — closure-ready |
 | `2026-08-13` CSF-005 | `ca9a4a0353e481919011a7d8380f5068` | CI runner IMDS firewall rollback exposes AWS role creds | historical workload identity | Closed; absent from the exact six-open inventory |
 | `2026-08-13` CSF-006 | `e841bb5393c08191a74ff574c0108bd8` | PR code can steal EC2 runner IAM credentials | historical admission and identity | Closed; absent from the exact six-open inventory |
-| `2026-08-13` CSF-008; `2026-08-24` CSF-006 | `33cd94a12d788191afbec1edc25c433f` | Red-team gate misses sudo IMDS credential path | workload identity | Open; transferred |
+| `2026-08-13` CSF-008; `2026-08-24` CSF-006 | `33cd94a12d788191afbec1edc25c433f` | Red-team gate misses sudo IMDS credential path | workload identity | Open; transferred — closure-ready |
 | `2026-08-24` CSF-003 | `9459410104b881919cd820b97c673b67` | Baked runner trusts mutable Bun binary | `P1` deployment proof | Open; held — closure-ready |
 | `2026-08-24` CSF-009 | `d1f026deb21881919d853e63780734fe` | IMDS hook can silently remain unarmed | `P1` deployment proof | Open; held — closure-ready |
 
@@ -158,24 +158,43 @@ all requirements against the fresh serving image:
 
 ### P2 Workload identity boundary
 
-Retain `beep-ci-runner-profile` only for root-owned bootstrap. Fetch the one-use
-JIT configuration into root-only tmpfs, delete its Parameter Store value, and
-keep the runner offline. A one-shot root helper must call
-`ec2:ModifyInstanceMetadataOptions` on its own instance with
-`HttpEndpoint=disabled`, then exit. Bootstrap waits fail-closed until host
-probes against both IPv4 and IPv6 IMDS fail.
+Status: `complete 2026-08-24 (closure-ready evidence retained)`. The deployed
+proof is in
+[`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md).
 
-Add the role allow scoped to `${ec2:SourceInstanceARN}` and
-`ec2:MetadataHttpEndpoint = disabled`. Add a boundary Deny for the same action
-when the endpoint value is anything other than `disabled`. Dry-run proof must
-cover both edges before deployment. If self-only one-way disable cannot be
-proved, the no-profile controller-broker alternative becomes mandatory.
+1. [x] `beep-ci-runner-profile` remains available only during root-owned
+   bootstrap. The runner stays offline until the one-shot helper disables its
+   own metadata endpoint and both IPv4 and IPv6 probes fail five consecutive
+   times.
+2. [x] Managed policy `beep-ci-runner-imds-disable` uses
+   `DisableOwnMetadataEndpointWhileEnabled`: `ArnEquals` scopes the target to
+   `${ec2:SourceInstanceARN}` and the endpoint condition requires current
+   state `enabled`.
+3. [x] Boundary v4 uses `DenyMetadataOptionsOnceDisabled`, which denies every
+   later metadata-options change after the target reaches state `disabled`.
+   Access Analyzer, throwaway-role dry-runs, canary 3, and Gate L prove the
+   current-state semantics and live self edges. See
+   [`P2-EVIDENCE.md` § Condition-key semantics](./research/P2-EVIDENCE.md#condition-key-semantics).
+4. [x] Run `32786883010` has exactly one PASS for Gates A through J and L,
+   `AMI_PIN: PASS`, a live `METADATA_DISABLED: PASS (disabled applied)` sample,
+   scoped deregistration, and EC2 teardown after 1 second. See
+   [`P2-EVIDENCE.md` § Proof of record](./research/P2-EVIDENCE.md#proof-of-record).
+5. [x] Ordinary, sudo, root, ordinary-container, host-network-container, and
+   privileged-container probes cannot obtain a usable ambient application
+   role credential path. Gate E remains a secondary owner control; it is not
+   the root-resistant boundary.
+6. [x] The sealed fast path remains active for real lane work on a locked
+   worker: Bun `1.4.0` and lockfile digest `f81ab29f…` passed the lane probe.
+7. [x] The two workload-identity Codex IDs have individual closure-ready
+   mappings in
+   [`P2-EVIDENCE.md`](./research/P2-EVIDENCE.md#closure-ready-mapping). Both
+   remain open through P5; P6 owns dashboard closure.
 
-Before runner startup, scrub the JIT buffer and prove no residue survives in
-arguments, environment, `/proc`, files, logs, cloud-init data, swap, or the
-runner work directory. Prove ordinary, sudo, root, privileged-container,
-host-network, direct IMDS, delayed teardown, and replay paths. Gate E remains a
-second control, not a claim that a UID rule withstands root.
+Informational probe K reports `JIT residue: visible`: the one-use JIT
+configuration is readable in `/proc/*/cmdline` by the job user. P2 does not
+claim replay rejection. P4 owns the operator-only replay probe, scrub, and
+rejection record. `other_disable` also remains inconclusive because EC2 checks
+the malformed disposable target id before authorization.
 
 ### P3 Admission defense in depth
 
@@ -231,22 +250,27 @@ manifest, and index state together.
 - [x] `P1` satisfies every deployment-proof requirement and records
       closure-ready evidence for the two held exact IDs in
       `research/P1-EVIDENCE.md`.
-- [ ] Heavy PR lanes remain on EC2, with their placement rationale retained.
-- [ ] Every job uses a fresh VM from a sealed digest-verified AMI.
-- [ ] No ordinary, sudo, root, privileged-container, or host-network path can
+- [x] Heavy PR lanes remain on EC2, with their placement rationale retained.
+- [x] The P2 proof and lane probe each use a fresh VM from the sealed
+      digest-verified AMI.
+- [x] No ordinary, sudo, root, privileged-container, or host-network path can
       obtain usable ambient application instance-role credentials.
-- [ ] The role allow and boundary Deny prove one-way, self-only metadata
-      disable; the JIT residue and replay probes pass before runner startup.
+- [x] The role allow, boundary Deny, live canary, Gate L, and live external
+      sample prove one-way, self-only metadata disable before runner startup.
+- [ ] P4 proves that replay of the one-use JIT configuration is rejected and
+      scrubs the operator-retained probe value. P2 records the visible argv
+      residue without claiming replay rejection.
 - [ ] Runner-group controls use the default-branch reusable workflow, match the
       selected-repository and three-workflow design, and cannot fall back.
-- [ ] The complete red-team matrix, runner deregistration, and EC2 teardown pass
-      against the deployed configuration.
+- [ ] The complete final-head red-team matrix, runner deregistration, and EC2
+      teardown pass after P3. P2's deployed A-through-J-plus-L proof is retained
+      in `research/P2-EVIDENCE.md`.
 - [ ] The remediation PR is published, reviewed, `merge-ready: yes`, and merged
       before any of the six dashboard IDs are closed.
 - [ ] After merge, all six open Codex IDs are closed with exact deployed
       evidence; the three older closed identities are not reopened or
       reclassified without proof.
-- [ ] Fleet packet ownership remains unchanged.
+- [x] Fleet packet ownership remains unchanged.
 - [ ] Yeet reports `merge-ready: yes`, review threads are zero, the PR is merged,
       and the closeout reflection validates.
 
