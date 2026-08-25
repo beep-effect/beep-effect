@@ -192,7 +192,7 @@ const generatedComposers = $I.compose(
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
-const generatedLabComposers = $I.compose("trustgraph-workbench");
+const generatedLabComposers = $I.compose("semantica", "trustgraph-workbench");
 // GENERATED LAB COMPOSERS END
 
 const composers = {
@@ -202,6 +202,23 @@ const composers = {
 };
 
 // GENERATED LAB EXPORTS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
+
+/**
+ * Identity composer for `@beep/semantica`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts
+ * import { $SemanticaId } from "@beep/identity"
+ *
+ * const id = $SemanticaId.make("Semantica")
+ * void id
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = composers.$SemanticaId;
 
 /**
  * Identity composer for `@beep/trustgraph-workbench`.
