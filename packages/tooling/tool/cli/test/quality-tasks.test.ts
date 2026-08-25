@@ -29,12 +29,15 @@ import {
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageBaselineRowDelta,
+  coverageBaselineRowDeltaFromBase,
   coverageBaselineWriterChangedFiles,
   coverageBaselineWriteSummary,
   coverageDependentOwners,
   coverageDispositionGapsForTesting,
   coverageFullStepsForTesting,
   coveragePackageBaselineFromSummaryForTesting,
+  coverageScopedBaselineWriteCommand,
   coverageScopeWeightSeconds,
   coverageSelectedStepsForTesting,
   detectQualityProfileForTesting,
@@ -58,6 +61,7 @@ import {
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
   planCoverageAffectedScope,
+  planCoverageAffectedScopeWithBaseline,
   planCoverageBaselineWrite,
   planCoverageFullShards,
   planWorkspaceCoverageAffectedScope,
@@ -67,6 +71,7 @@ import {
   QualityTaskStep,
   qualityProfileConfigForTesting,
   renderCoverageFailuresForTesting,
+  renderCoverageRemediation,
   reviewFixDocgenLocalArgsForTesting,
   rootLintPolicyStepsForTesting,
   rootQualityStepsForTesting,
@@ -2566,6 +2571,190 @@ describe("quality task adapter", () => {
         "coverage:shard-2",
       ]);
       expect(A.every(A.drop(writeSteps, 1), (step) => step.env?.VITEST_COVERAGE_REPORT_ONLY === "1")).toBe(true);
+    });
+  });
+
+  describe("baseline row delta and scoped remediation", () => {
+    const withRows = (packages: Record<string, CoveragePackageBaseline>) =>
+      CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, packages });
+
+    it("names only the packages whose rows changed and ignores provenance", () => {
+      const previous = withRows({
+        "@beep/a": coveragePackageBaseline("packages/a", 50),
+        "@beep/b": coveragePackageBaseline("packages/b", 50),
+      });
+      const provenanceOnly = CoverageRegressionBaseline.make({
+        ...previous,
+        generated_at: "2026-08-25T00:00:00.000Z",
+        git_sha: "other-sha",
+      });
+      const oneRowChanged = withRows({
+        "@beep/a": coveragePackageBaseline("packages/a", 60),
+        "@beep/b": coveragePackageBaseline("packages/b", 50),
+      });
+      const rowAddedAndRemoved = withRows({
+        "@beep/b": coveragePackageBaseline("packages/b", 50),
+        "@beep/c": coveragePackageBaseline("packages/c", 50),
+      });
+
+      expect(coverageBaselineRowDelta(previous, previous)).toEqual(O.some([]));
+      expect(coverageBaselineRowDelta(previous, provenanceOnly)).toEqual(O.some([]));
+      expect(coverageBaselineRowDelta(previous, oneRowChanged)).toEqual(O.some(["@beep/a"]));
+      expect(coverageBaselineRowDelta(previous, rowAddedAndRemoved)).toEqual(O.some(["@beep/a", "@beep/c"]));
+    });
+
+    it("refuses to scope when a non-row field changed", () => {
+      const previous = withRows({ "@beep/a": coveragePackageBaseline("packages/a") });
+
+      expect(
+        coverageBaselineRowDelta(
+          previous,
+          CoverageRegressionBaseline.make({ ...previous, minimum: coveragePercentages(1) })
+        )
+      ).toEqual(O.none());
+      expect(
+        coverageBaselineRowDelta(
+          previous,
+          CoverageRegressionBaseline.make({ ...previous, exemptions: { "@beep/x": "user-excluded" } })
+        )
+      ).toEqual(O.none());
+      expect(
+        coverageBaselineRowDelta(
+          previous,
+          CoverageRegressionBaseline.make({ ...previous, follow_ups: { "@beep/a": "needs tests" } })
+        )
+      ).toEqual(O.none());
+    });
+
+    it("diffs the committed base against the working copy through git", () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+            const writeBaseline = (document: CoverageRegressionBaseline) =>
+              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+                Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+              );
+
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            yield* runGit(repoRoot, ["init"]);
+            yield* runGit(repoRoot, ["config", "user.email", "coverage-delta@example.test"]);
+            yield* runGit(repoRoot, ["config", "user.name", "Coverage Delta Test"]);
+
+            // The base has no baseline at all: nothing can be diffed.
+            yield* fs.writeFileString(path.join(repoRoot, "README.md"), "# fixture\n");
+            yield* runGit(repoRoot, ["add", "--all"]);
+            yield* runGit(repoRoot, ["commit", "-m", "initial"]);
+            yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a") }));
+            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.none());
+
+            yield* runGit(repoRoot, ["add", "--all"]);
+            yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
+            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.some([]));
+
+            yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a", 61) }));
+            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.some(["@beep/a"]));
+
+            yield* fs.writeFileString(baselinePath, "{ not jsonc");
+            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.none());
+          })
+        )
+      ));
+
+    it("selects the packages named by a row-only baseline edit instead of the full workspace", () => {
+      const owners = [
+        CoverageScopeOwner.make({ packageName: "@beep/a", packagePath: "packages/a", hasCoverage: true }),
+        CoverageScopeOwner.make({ packageName: "@beep/b", packagePath: "packages/b", hasCoverage: false }),
+        CoverageScopeOwner.make({
+          packageName: "@beep/c",
+          packagePath: "packages/c",
+          hasCoverage: true,
+          workspaceDependencies: ["@beep/a"],
+        }),
+      ];
+      const baseline = "standards/coverage.regression-baseline.jsonc";
+
+      expect(planCoverageAffectedScope(owners, [baseline])).toMatchObject({ _tag: "full" });
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.none())).toMatchObject({ _tag: "full" });
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.some([]))).toEqual({ _tag: "noop" });
+      // A row edit measures its package but does not widen to dependents: no code changed.
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.some(["@beep/a"]))).toEqual({
+        _tag: "selected",
+        packageNames: ["@beep/a"],
+        dependentPackageNames: [],
+      });
+      // A row for a package that left the workspace is pruned by the writer; nothing to measure.
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.some(["@beep/gone"]))).toEqual({
+        _tag: "noop",
+      });
+      expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.some(["@beep/b"]))).toEqual({
+        _tag: "full",
+        reasons: [`${baseline}: row for @beep/b names a package that cannot be measured`],
+      });
+      // Combined with a code change the usual rules still apply to the other paths.
+      expect(
+        planCoverageAffectedScopeWithBaseline(owners, [baseline, "packages/a/src/A.ts"], O.some(["@beep/c"]))
+      ).toEqual({ _tag: "selected", packageNames: ["@beep/a", "@beep/c"], dependentPackageNames: [] });
+      expect(
+        planCoverageAffectedScopeWithBaseline(owners, [baseline, "package.json"], O.some(["@beep/a"]))
+      ).toMatchObject({ _tag: "full" });
+    });
+
+    it("treats standards documentation as coverage-inert but keeps policy inputs global", () => {
+      const owners = [
+        CoverageScopeOwner.make({ packageName: "@beep/a", packagePath: "packages/a", hasCoverage: true }),
+      ];
+
+      expect(planCoverageAffectedScope(owners, ["standards/architecture/DECISIONS.md"])).toEqual({ _tag: "noop" });
+      expect(planCoverageAffectedScope(owners, ["standards/ARCHITECTURE.md", "packages/a/src/A.ts"])).toEqual({
+        _tag: "selected",
+        packageNames: ["@beep/a"],
+        dependentPackageNames: [],
+      });
+      expect(planCoverageAffectedScope(owners, ["standards/knip.regression-baseline.jsonc"])).toMatchObject({
+        _tag: "full",
+      });
+    });
+
+    it("prints the scoped regeneration command for exactly the regressed packages", () => {
+      const baseline = withRows({
+        "@beep/a": coveragePackageBaseline("packages/a", 50),
+        "@beep/b": coveragePackageBaseline("packages/b", 50),
+        "@beep/ok": coveragePackageBaseline("packages/ok", 50),
+      });
+      // A drop with more uncovered units is a regression; a drop with the same
+      // uncovered count reads as deleted covered code and is not.
+      const regressed = (path: string) =>
+        CoveragePackageBaseline.make({ path, ...coveragePercentages(40), uncovered: coverageUncovered(6), files: {} });
+      const result = compareCoverageRegressionSnapshotsForTesting(
+        baseline,
+        [
+          { packageName: "@beep/b", baseline: regressed("packages/b") },
+          { packageName: "@beep/a", baseline: regressed("packages/a") },
+          { packageName: "@beep/ok", baseline: coveragePackageBaseline("packages/ok", 50) },
+        ],
+        false
+      );
+
+      expect(coverageScopedBaselineWriteCommand(["@beep/md", "@beep/pandoc-ast"])).toBe(
+        "bun run coverage -- --filter=@beep/md --filter=@beep/pandoc-ast --write-baseline"
+      );
+      const lines = renderCoverageRemediation(result);
+      expect(lines[0]).toContain("[coverage-ratchet] remediation:");
+      expect(lines[1]).toBe("  bun run coverage -- --filter=@beep/a --filter=@beep/b --write-baseline");
+      expect(lines[2]).toContain("never run bun run coverage:baseline:write for a per-package drop");
+      expect(
+        renderCoverageRemediation(
+          compareCoverageRegressionSnapshotsForTesting(
+            baseline,
+            [{ packageName: "@beep/ok", baseline: coveragePackageBaseline("packages/ok", 50) }],
+            false
+          )
+        )
+      ).toEqual([]);
     });
   });
 

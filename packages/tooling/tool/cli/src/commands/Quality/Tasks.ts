@@ -62,6 +62,8 @@ import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import {
   cleanCoverageRegressionOutputs,
   compareCoverageRegressionBaseline,
+  coverageBaselineRowDeltaFromBase,
+  coverageRegressionBaselinePath,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
 import {
@@ -673,7 +675,21 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
     QualityTaskConfigurationError.mapError(`Failed to collect affected coverage files from ${base}...HEAD.`)
   );
-  const scope = yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles);
+  // A row-only baseline edit is validated by measuring the packages whose rows
+  // changed; anything else in the document keeps the baseline a global input.
+  const baselineRowPackages = A.contains(changedFiles, coverageRegressionBaselinePath)
+    ? yield* coverageBaselineRowDeltaFromBase(repoRoot, base)
+    : O.none<ReadonlyArray<string>>();
+  yield* O.match(baselineRowPackages, {
+    onNone: () => Effect.void,
+    onSome: (packageNames) =>
+      Console.log(
+        A.isReadonlyArrayNonEmpty(packageNames)
+          ? `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} changed only the row(s) for ${A.join(packageNames, ", ")}; measuring those instead of the full workspace`
+          : `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} changed only provenance fields; no package row needs measuring`
+      ),
+  });
+  const scope = yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles, baselineRowPackages);
   const passthroughArgs = withoutCoverageAffectedArg(args);
 
   return yield* Match.value(scope).pipe(
