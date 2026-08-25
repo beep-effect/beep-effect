@@ -180,6 +180,64 @@ export const NumberPolicy = LiteralKit(["finite", "number"]).annotate(
  */
 export type NumberPolicy = typeof NumberPolicy.Type;
 
+/**
+ * Rendering styles for generated object schemas.
+ *
+ * **Example** (Choose class models)
+ *
+ * ```ts
+ * import { SchemaStyle } from "@beep/codegen-kit"
+ *
+ * console.log(SchemaStyle.Enum.class)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const SchemaStyle = LiteralKit(["struct", "class"]).annotate(
+  $I.annote("SchemaStyle", {
+    description: "Rendering style for generated object schemas.",
+  })
+);
+
+/**
+ * Runtime schema rendering style represented by {@link SchemaStyle}.
+ *
+ * @see {@link SchemaStyle} for the supported values.
+ * @category configuration
+ * @since 0.0.0
+ */
+export type SchemaStyle = typeof SchemaStyle.Type;
+
+/**
+ * Policies for non-fatal warnings reported by the upstream generator.
+ *
+ * **Example** (Inspect the strict policy)
+ *
+ * ```ts
+ * import { WarningPolicy } from "@beep/codegen-kit"
+ *
+ * console.log(WarningPolicy.Enum.fail)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const WarningPolicy = LiteralKit(["fail", "log"]).annotate(
+  $I.annote("WarningPolicy", {
+    description: "Policy deciding whether OpenAPI generator warnings fail or are logged.",
+  })
+);
+
+/**
+ * Runtime warning policy represented by {@link WarningPolicy}.
+ *
+ * @see {@link WarningPolicy} for the supported values.
+ * @category configuration
+ * @since 0.0.0
+ */
+export type WarningPolicy = typeof WarningPolicy.Type;
+
 class GenerateIdentity extends S.Class<GenerateIdentity>($I`GenerateIdentity`)(
   {
     composer: S.NonEmptyString,
@@ -223,6 +281,8 @@ class ExtraModule extends S.Class<ExtraModule>($I`ExtraModule`)(
 const emptyPatches = Effect.succeed(A.empty<GeneratePatch>());
 const emptyTransforms = Effect.succeed(A.empty<NamedTransform>());
 const emptyModules = Effect.succeed(A.empty<ExtraModule>());
+const defaultSchemaStyle = Effect.succeed(SchemaStyle.Enum.struct);
+const defaultWarningPolicy = Effect.succeed(WarningPolicy.Enum.fail);
 
 /**
  * Complete configuration for one deterministic code-generation pipeline.
@@ -249,6 +309,7 @@ const emptyModules = Effect.succeed(A.empty<ExtraModule>());
 export class GenerateConfig extends S.Class<GenerateConfig>($I`GenerateConfig`)(
   {
     packageName: S.NonEmptyString,
+    name: S.optionalKey(S.NonEmptyString),
     identity: GenerateIdentity,
     source: SpecSource,
     dialect: SpecDialect,
@@ -265,6 +326,14 @@ export class GenerateConfig extends S.Class<GenerateConfig>($I`GenerateConfig`)(
     numberPolicy: NumberPolicy.pipe(
       S.withConstructorDefault(Effect.succeed(NumberPolicy.Enum.finite)),
       S.withDecodingDefaultKey(Effect.succeed(NumberPolicy.Enum.finite))
+    ),
+    schemaStyle: SchemaStyle.pipe(
+      S.withConstructorDefault(defaultSchemaStyle),
+      S.withDecodingDefaultKey(defaultSchemaStyle)
+    ),
+    onWarning: WarningPolicy.pipe(
+      S.withConstructorDefault(defaultWarningPolicy),
+      S.withDecodingDefaultKey(defaultWarningPolicy)
     ),
     output: GenerateOutput,
     extraModules: S.Array(ExtraModule).pipe(

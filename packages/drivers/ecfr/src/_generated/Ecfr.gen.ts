@@ -7,9 +7,21 @@
  * @since 0.0.0
  */
 
-import * as Schema from "effect/Schema";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi";
+import * as S from "effect/Schema";
+import {
+  HttpApi,
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+  OpenApi,
+} from "effect/unstable/httpapi";
 // non-recursive definitions
+/**
+ * Generated AgenciesResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type AgenciesResponse = {
   readonly agencies: ReadonlyArray<{
     readonly name: string;
@@ -23,59 +35,125 @@ export type AgenciesResponse = {
       readonly display_name?: string;
       readonly sortable_name?: string;
       readonly slug: string;
-      readonly cfr_references?: ReadonlyArray<{ readonly title: number; readonly chapter: string }>;
+      readonly cfr_references?: ReadonlyArray<{
+        readonly title: number;
+        readonly chapter: string;
+      }>;
     }>;
-    readonly cfr_references?: ReadonlyArray<{ readonly title: number; readonly chapter: string }>;
+    readonly cfr_references?: ReadonlyArray<{
+      readonly title: number;
+      readonly chapter: string;
+    }>;
   }>;
 };
-export const AgenciesResponse = Schema.Struct({
-  agencies: Schema.Array(
-    Schema.Struct({
-      name: Schema.String.annotate({ description: "Full official agency name." }),
-      short_name: Schema.optionalKey(Schema.String.annotate({ description: "Agency abbreviation when supplied." })),
-      display_name: Schema.optionalKey(Schema.String.annotate({ description: "Human-readable agency display name." })),
-      sortable_name: Schema.optionalKey(
-        Schema.String.annotate({ description: "Agency name normalized for alphabetical sorting." })
+/**
+ * Generated AgenciesResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect AgenciesResponse)
+ *
+ * ```ts
+ * import { AgenciesResponse } from "@beep/ecfr"
+ *
+ * console.log(AgenciesResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const AgenciesResponse = S.Struct({
+  agencies: S.Array(
+    S.Struct({
+      name: S.String.annotate({ description: "Full official agency name." }),
+      short_name: S.optionalKey(
+        S.String.annotate({
+          description: "Agency abbreviation when supplied.",
+        }),
       ),
-      slug: Schema.String.annotate({ description: "URL-safe agency identifier." }),
-      children: Schema.optionalKey(
-        Schema.Array(
-          Schema.Struct({
-            name: Schema.String.annotate({ description: "Full official agency name." }),
-            short_name: Schema.optionalKey(
-              Schema.String.annotate({ description: "Agency abbreviation when supplied." })
-            ),
-            display_name: Schema.optionalKey(
-              Schema.String.annotate({ description: "Human-readable agency display name." })
-            ),
-            sortable_name: Schema.optionalKey(
-              Schema.String.annotate({ description: "Agency name normalized for alphabetical sorting." })
-            ),
-            slug: Schema.String.annotate({ description: "URL-safe agency identifier." }),
-            cfr_references: Schema.optionalKey(
-              Schema.Array(
-                Schema.Struct({
-                  title: Schema.Int.annotate({ description: "CFR title number." }),
-                  chapter: Schema.String.annotate({ description: "Chapter identifier within the title." }),
-                }).annotate({ description: "A CFR title and chapter reference associated with an agency." })
-              ).annotate({ description: "CFR chapters assigned to the child agency." })
-            ),
-          }).annotate({ description: "A child agency represented in the CFR agency roster." })
-        ).annotate({ description: "Child agencies in name order." })
+      display_name: S.optionalKey(
+        S.String.annotate({
+          description: "Human-readable agency display name.",
+        }),
       ),
-      cfr_references: Schema.optionalKey(
-        Schema.Array(
-          Schema.Struct({
-            title: Schema.Int.annotate({ description: "CFR title number." }),
-            chapter: Schema.String.annotate({ description: "Chapter identifier within the title." }),
-          }).annotate({ description: "A CFR title and chapter reference associated with an agency." })
-        ).annotate({ description: "CFR chapters assigned directly to the agency." })
+      sortable_name: S.optionalKey(
+        S.String.annotate({
+          description: "Agency name normalized for alphabetical sorting.",
+        }),
+      ),
+      slug: S.String.annotate({ description: "URL-safe agency identifier." }),
+      children: S.optionalKey(
+        S.Array(
+          S.Struct({
+            name: S.String.annotate({
+              description: "Full official agency name.",
+            }),
+            short_name: S.optionalKey(
+              S.String.annotate({
+                description: "Agency abbreviation when supplied.",
+              }),
+            ),
+            display_name: S.optionalKey(
+              S.String.annotate({
+                description: "Human-readable agency display name.",
+              }),
+            ),
+            sortable_name: S.optionalKey(
+              S.String.annotate({
+                description: "Agency name normalized for alphabetical sorting.",
+              }),
+            ),
+            slug: S.String.annotate({
+              description: "URL-safe agency identifier.",
+            }),
+            cfr_references: S.optionalKey(
+              S.Array(
+                S.Struct({
+                  title: S.Int.annotate({ description: "CFR title number." }),
+                  chapter: S.String.annotate({
+                    description: "Chapter identifier within the title.",
+                  }),
+                }).annotate({
+                  description:
+                    "A CFR title and chapter reference associated with an agency.",
+                }),
+              ).annotate({
+                description: "CFR chapters assigned to the child agency.",
+              }),
+            ),
+          }).annotate({
+            description: "A child agency represented in the CFR agency roster.",
+          }),
+        ).annotate({ description: "Child agencies in name order." }),
+      ),
+      cfr_references: S.optionalKey(
+        S.Array(
+          S.Struct({
+            title: S.Int.annotate({ description: "CFR title number." }),
+            chapter: S.String.annotate({
+              description: "Chapter identifier within the title.",
+            }),
+          }).annotate({
+            description:
+              "A CFR title and chapter reference associated with an agency.",
+          }),
+        ).annotate({
+          description: "CFR chapters assigned directly to the agency.",
+        }),
       ),
     }).annotate({
-      description: "A top-level agency represented in the CFR, including child agencies and CFR references.",
-    })
+      description:
+        "A top-level agency represented in the CFR, including child agencies and CFR references.",
+    }),
   ).annotate({ description: "Top-level agencies in name order." }),
-}).annotate({ description: "Response envelope containing the agency roster.", identifier: "AgenciesResponse" });
+}).annotate({
+  description: "Response envelope containing the agency roster.",
+  identifier: "AgenciesResponse",
+});
+/**
+ * Generated CorrectionsResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type CorrectionsResponse = {
   readonly ecfr_corrections: ReadonlyArray<{
     readonly id: number;
@@ -103,64 +181,145 @@ export type CorrectionsResponse = {
     readonly last_modified?: string;
   }>;
 };
-export const CorrectionsResponse = Schema.Struct({
-  ecfr_corrections: Schema.Array(
-    Schema.Struct({
-      id: Schema.Int.annotate({ description: "Stable correction record identifier." }),
-      cfr_references: Schema.optionalKey(
-        Schema.Array(
-          Schema.Struct({
-            cfr_reference: Schema.String.annotate({
-              description: "Human-readable CFR citation for the corrected content.",
+/**
+ * Generated CorrectionsResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect CorrectionsResponse)
+ *
+ * ```ts
+ * import { CorrectionsResponse } from "@beep/ecfr"
+ *
+ * console.log(CorrectionsResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const CorrectionsResponse = S.Struct({
+  ecfr_corrections: S.Array(
+    S.Struct({
+      id: S.Int.annotate({
+        description: "Stable correction record identifier.",
+      }),
+      cfr_references: S.optionalKey(
+        S.Array(
+          S.Struct({
+            cfr_reference: S.String.annotate({
+              description:
+                "Human-readable CFR citation for the corrected content.",
             }),
-            hierarchy: Schema.Struct({
-              title: Schema.optionalKey(Schema.String.annotate({ description: "CFR title identifier." })),
-              subtitle: Schema.optionalKey(
-                Schema.String.annotate({ description: "Subtitle identifier when present." })
+            hierarchy: S.Struct({
+              title: S.optionalKey(
+                S.String.annotate({ description: "CFR title identifier." }),
               ),
-              chapter: Schema.optionalKey(Schema.String.annotate({ description: "Chapter identifier when present." })),
-              subchapter: Schema.optionalKey(
-                Schema.String.annotate({ description: "Subchapter identifier when present." })
+              subtitle: S.optionalKey(
+                S.String.annotate({
+                  description: "Subtitle identifier when present.",
+                }),
               ),
-              part: Schema.optionalKey(Schema.String.annotate({ description: "Part identifier when present." })),
-              subpart: Schema.optionalKey(Schema.String.annotate({ description: "Subpart identifier when present." })),
-              section: Schema.optionalKey(Schema.String.annotate({ description: "Section identifier when present." })),
-              appendix: Schema.optionalKey(
-                Schema.String.annotate({ description: "Appendix identifier when present." })
+              chapter: S.optionalKey(
+                S.String.annotate({
+                  description: "Chapter identifier when present.",
+                }),
               ),
-            }).annotate({ description: "Known CFR hierarchy identifiers locating corrected content." }),
-          }).annotate({ description: "Human-readable and structured CFR location for a correction." })
-        ).annotate({ description: "CFR locations affected by the correction." })
+              subchapter: S.optionalKey(
+                S.String.annotate({
+                  description: "Subchapter identifier when present.",
+                }),
+              ),
+              part: S.optionalKey(
+                S.String.annotate({
+                  description: "Part identifier when present.",
+                }),
+              ),
+              subpart: S.optionalKey(
+                S.String.annotate({
+                  description: "Subpart identifier when present.",
+                }),
+              ),
+              section: S.optionalKey(
+                S.String.annotate({
+                  description: "Section identifier when present.",
+                }),
+              ),
+              appendix: S.optionalKey(
+                S.String.annotate({
+                  description: "Appendix identifier when present.",
+                }),
+              ),
+            }).annotate({
+              description:
+                "Known CFR hierarchy identifiers locating corrected content.",
+            }),
+          }).annotate({
+            description:
+              "Human-readable and structured CFR location for a correction.",
+          }),
+        ).annotate({
+          description: "CFR locations affected by the correction.",
+        }),
       ),
-      corrective_action: Schema.optionalKey(
-        Schema.String.annotate({ description: "Description of the corrective editorial action." })
+      corrective_action: S.optionalKey(
+        S.String.annotate({
+          description: "Description of the corrective editorial action.",
+        }),
       ),
-      error_corrected: Schema.optionalKey(
-        Schema.String.annotate({ description: "Date the error was corrected.", format: "date" })
+      error_corrected: S.optionalKey(
+        S.String.annotate({
+          description: "Date the error was corrected.",
+          format: "date",
+        }),
       ),
-      error_occurred: Schema.optionalKey(
-        Schema.String.annotate({ description: "Date the error entered the eCFR material.", format: "date" })
+      error_occurred: S.optionalKey(
+        S.String.annotate({
+          description: "Date the error entered the eCFR material.",
+          format: "date",
+        }),
       ),
-      fr_citation: Schema.optionalKey(
-        Schema.String.annotate({ description: "Federal Register citation associated with the correction." })
+      fr_citation: S.optionalKey(
+        S.String.annotate({
+          description:
+            "Federal Register citation associated with the correction.",
+        }),
       ),
-      position: Schema.optionalKey(
-        Schema.Int.annotate({ description: "Display order among corrections for the same source." })
+      position: S.optionalKey(
+        S.Int.annotate({
+          description: "Display order among corrections for the same source.",
+        }),
       ),
-      display_in_toc: Schema.optionalKey(
-        Schema.Boolean.annotate({ description: "Whether the correction is displayed in the table of contents." })
+      display_in_toc: S.optionalKey(
+        S.Boolean.annotate({
+          description:
+            "Whether the correction is displayed in the table of contents.",
+        }),
       ),
-      title: Schema.Int.annotate({ description: "Affected CFR title number." }),
-      year: Schema.optionalKey(Schema.Int.annotate({ description: "Calendar year associated with the correction." })),
-      last_modified: Schema.optionalKey(
-        Schema.String.annotate({ description: "Date the correction record was last modified.", format: "date" })
+      title: S.Int.annotate({ description: "Affected CFR title number." }),
+      year: S.optionalKey(
+        S.Int.annotate({
+          description: "Calendar year associated with the correction.",
+        }),
       ),
-    }).annotate({ description: "An eCFR editorial correction and its affected CFR locations." })
+      last_modified: S.optionalKey(
+        S.String.annotate({
+          description: "Date the correction record was last modified.",
+          format: "date",
+        }),
+      ),
+    }).annotate({
+      description:
+        "An eCFR editorial correction and its affected CFR locations.",
+    }),
   ).annotate({ description: "Correction records matching the request." }),
 }).annotate({
   description: "Response envelope containing eCFR correction records.",
   identifier: "CorrectionsResponse",
 });
+/**
+ * Generated SearchResultsResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchResultsResponse = {
   readonly results: ReadonlyArray<{
     readonly title?: number;
@@ -180,132 +339,368 @@ export type SearchResultsResponse = {
     readonly max_date?: string;
   };
 };
-export const SearchResultsResponse = Schema.Struct({
-  results: Schema.Array(
-    Schema.Struct({
-      title: Schema.optionalKey(Schema.Int.annotate({ description: "CFR title number containing the match." })),
-      type: Schema.optionalKey(Schema.String.annotate({ description: "Hierarchy node type of the matching content." })),
-      hierarchy_headings: Schema.optionalKey(
-        Schema.Array(Schema.String).annotate({
-          description: "Ordered headings locating the match in the CFR hierarchy.",
-        })
+/**
+ * Generated SearchResultsResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchResultsResponse)
+ *
+ * ```ts
+ * import { SearchResultsResponse } from "@beep/ecfr"
+ *
+ * console.log(SearchResultsResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchResultsResponse = S.Struct({
+  results: S.Array(
+    S.Struct({
+      title: S.optionalKey(
+        S.Int.annotate({
+          description: "CFR title number containing the match.",
+        }),
       ),
-      headings: Schema.optionalKey(
-        Schema.Array(Schema.String).annotate({ description: "Headings associated with the matching content." })
+      type: S.optionalKey(
+        S.String.annotate({
+          description: "Hierarchy node type of the matching content.",
+        }),
       ),
-      full_text_excerpt: Schema.optionalKey(
-        Schema.String.annotate({ description: "Highlighted excerpt surrounding the matching text." })
+      hierarchy_headings: S.optionalKey(
+        S.Array(S.String).annotate({
+          description:
+            "Ordered headings locating the match in the CFR hierarchy.",
+        }),
       ),
-      score: Schema.optionalKey(
-        Schema.Int.annotate({ description: "Search relevance score when supplied." }).check(
-          Schema.isFinite().annotate({ expected: "a finite number" })
-        )
+      headings: S.optionalKey(
+        S.Array(S.String).annotate({
+          description: "Headings associated with the matching content.",
+        }),
       ),
-    }).annotate({ description: "A section or appendix matching an eCFR search." })
+      full_text_excerpt: S.optionalKey(
+        S.String.annotate({
+          description: "Highlighted excerpt surrounding the matching text.",
+        }),
+      ),
+      score: S.optionalKey(
+        S.Finite.annotate({
+          description: "Search relevance score when supplied.",
+        }).check(S.isFinite().annotate({ expected: "a finite number" })),
+      ),
+    }).annotate({
+      description: "A section or appendix matching an eCFR search.",
+    }),
   ).annotate({ description: "Sections and appendices matching the request." }),
-  meta: Schema.Struct({
-    description: Schema.optionalKey(
-      Schema.String.annotate({ description: "Human-readable description of the search results." })
+  meta: S.Struct({
+    description: S.optionalKey(
+      S.String.annotate({
+        description: "Human-readable description of the search results.",
+      }),
     ),
-    current_page: Schema.Finite.annotate({ description: "One-based current result page." }),
-    total_count: Schema.Int.annotate({ description: "Total number of matching results across all pages." }),
-    total_pages: Schema.Int.annotate({ description: "Total number of result pages." }),
-    max_score: Schema.optionalKey(
-      Schema.Finite.annotate({ description: "Maximum relevance score among matches." }).check(
-        Schema.isFinite().annotate({ expected: "a finite number" })
-      )
+    current_page: S.Int.annotate({
+      description: "One-based current result page.",
+    }),
+    total_count: S.Int.annotate({
+      description: "Total number of matching results across all pages.",
+    }),
+    total_pages: S.Int.annotate({
+      description: "Total number of result pages.",
+    }),
+    max_score: S.optionalKey(
+      S.Finite.annotate({
+        description: "Maximum relevance score among matches.",
+      }).check(S.isFinite().annotate({ expected: "a finite number" })),
     ),
-    min_date: Schema.optionalKey(
-      Schema.String.annotate({ description: "Minimum result date when paginating by date.", format: "date" })
+    min_date: S.optionalKey(
+      S.String.annotate({
+        description: "Minimum result date when paginating by date.",
+        format: "date",
+      }),
     ),
-    max_date: Schema.optionalKey(
-      Schema.String.annotate({ description: "Maximum result date when paginating by date.", format: "date" })
+    max_date: S.optionalKey(
+      S.String.annotate({
+        description: "Maximum result date when paginating by date.",
+        format: "date",
+      }),
     ),
-  }).annotate({ description: "Pagination and score metadata for eCFR search results." }),
-}).annotate({ description: "Paginated eCFR search-results envelope.", identifier: "SearchResultsResponse" });
-export type SearchCountResponse = { readonly count?: number; readonly total_count?: number };
-export const SearchCountResponse = Schema.Struct({
-  count: Schema.optionalKey(
-    Schema.Int.annotate({ description: "Number of matching search results when supplied by the service." })
+  }).annotate({
+    description: "Pagination and score metadata for eCFR search results.",
+  }),
+}).annotate({
+  description: "Paginated eCFR search-results envelope.",
+  identifier: "SearchResultsResponse",
+});
+/**
+ * Generated SearchCountResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SearchCountResponse = {
+  readonly count?: number;
+  readonly total_count?: number;
+};
+/**
+ * Generated SearchCountResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchCountResponse)
+ *
+ * ```ts
+ * import { SearchCountResponse } from "@beep/ecfr"
+ *
+ * console.log(SearchCountResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchCountResponse = S.Struct({
+  count: S.optionalKey(
+    S.Int.annotate({
+      description:
+        "Number of matching search results when supplied by the service.",
+    }),
   ),
-  total_count: Schema.optionalKey(
-    Schema.Int.annotate({
-      description: "Total matching result count when supplied under the paginated-result field name.",
-    })
+  total_count: S.optionalKey(
+    S.Int.annotate({
+      description:
+        "Total matching result count when supplied under the paginated-result field name.",
+    }),
   ),
 }).annotate({
   description: "Conservative envelope for the eCFR search count endpoint.",
   identifier: "SearchCountResponse",
 });
-export type SearchSummaryResponse = { readonly description?: string; readonly count?: number };
-export const SearchSummaryResponse = Schema.Struct({
-  description: Schema.optionalKey(Schema.String.annotate({ description: "Human-readable search summary." })),
-  count: Schema.optionalKey(Schema.Int.annotate({ description: "Matching result count when included." })),
+/**
+ * Generated SearchSummaryResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SearchSummaryResponse = {
+  readonly description?: string;
+  readonly count?: number;
+};
+/**
+ * Generated SearchSummaryResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchSummaryResponse)
+ *
+ * ```ts
+ * import { SearchSummaryResponse } from "@beep/ecfr"
+ *
+ * console.log(SearchSummaryResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchSummaryResponse = S.Struct({
+  description: S.optionalKey(
+    S.String.annotate({ description: "Human-readable search summary." }),
+  ),
+  count: S.optionalKey(
+    S.Int.annotate({ description: "Matching result count when included." }),
+  ),
 }).annotate({
   description:
     "Conservative envelope for eCFR search summary details; all known fields remain optional because the official spec leaves the response schema unspecified.",
   identifier: "SearchSummaryResponse",
 });
+/**
+ * Generated SearchDailyCountsResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchDailyCountsResponse = {
-  readonly counts?: ReadonlyArray<{ readonly date?: string; readonly count?: number }>;
+  readonly counts?: ReadonlyArray<{
+    readonly date?: string;
+    readonly count?: number;
+  }>;
 };
-export const SearchDailyCountsResponse = Schema.Struct({
-  counts: Schema.optionalKey(
-    Schema.Array(
-      Schema.Struct({
-        date: Schema.optionalKey(
-          Schema.String.annotate({ description: "ISO date represented by the bucket.", format: "date" })
+/**
+ * Generated SearchDailyCountsResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchDailyCountsResponse)
+ *
+ * ```ts
+ * import { SearchDailyCountsResponse } from "@beep/ecfr"
+ *
+ * console.log(SearchDailyCountsResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchDailyCountsResponse = S.Struct({
+  counts: S.optionalKey(
+    S.Array(
+      S.Struct({
+        date: S.optionalKey(
+          S.String.annotate({
+            description: "ISO date represented by the bucket.",
+            format: "date",
+          }),
         ),
-        count: Schema.optionalKey(Schema.Int.annotate({ description: "Number of matches in the date bucket." })),
-      }).annotate({ description: "Search-result count associated with one date." })
-    ).annotate({ description: "Daily result-count buckets when supplied." })
+        count: S.optionalKey(
+          S.Int.annotate({
+            description: "Number of matches in the date bucket.",
+          }),
+        ),
+      }).annotate({
+        description: "Search-result count associated with one date.",
+      }),
+    ).annotate({ description: "Daily result-count buckets when supplied." }),
   ),
 }).annotate({
   description: "Conservative envelope for daily eCFR search counts.",
   identifier: "SearchDailyCountsResponse",
 });
+/**
+ * Generated SearchTitleCountsResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchTitleCountsResponse = {
-  readonly counts?: ReadonlyArray<{ readonly title?: number; readonly count?: number }>;
+  readonly counts?: ReadonlyArray<{
+    readonly title?: number;
+    readonly count?: number;
+  }>;
 };
-export const SearchTitleCountsResponse = Schema.Struct({
-  counts: Schema.optionalKey(
-    Schema.Array(
-      Schema.Struct({
-        title: Schema.optionalKey(Schema.Int.annotate({ description: "CFR title number represented by the bucket." })),
-        count: Schema.optionalKey(Schema.Int.annotate({ description: "Number of matches in the title bucket." })),
-      }).annotate({ description: "Search-result count associated with one CFR title." })
-    ).annotate({ description: "Per-title result-count buckets when supplied." })
+/**
+ * Generated SearchTitleCountsResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchTitleCountsResponse)
+ *
+ * ```ts
+ * import { SearchTitleCountsResponse } from "@beep/ecfr"
+ *
+ * console.log(SearchTitleCountsResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchTitleCountsResponse = S.Struct({
+  counts: S.optionalKey(
+    S.Array(
+      S.Struct({
+        title: S.optionalKey(
+          S.Int.annotate({
+            description: "CFR title number represented by the bucket.",
+          }),
+        ),
+        count: S.optionalKey(
+          S.Int.annotate({
+            description: "Number of matches in the title bucket.",
+          }),
+        ),
+      }).annotate({
+        description: "Search-result count associated with one CFR title.",
+      }),
+    ).annotate({
+      description: "Per-title result-count buckets when supplied.",
+    }),
   ),
 }).annotate({
   description: "Conservative envelope for per-title eCFR search counts.",
   identifier: "SearchTitleCountsResponse",
 });
+/**
+ * Generated SearchHierarchyCountsResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchHierarchyCountsResponse = {
-  readonly counts?: ReadonlyArray<{ readonly label?: string; readonly identifier?: string; readonly count?: number }>;
+  readonly counts?: ReadonlyArray<{
+    readonly label?: string;
+    readonly identifier?: string;
+    readonly count?: number;
+  }>;
 };
-export const SearchHierarchyCountsResponse = Schema.Struct({
-  counts: Schema.optionalKey(
-    Schema.Array(
-      Schema.Struct({
-        label: Schema.optionalKey(Schema.String.annotate({ description: "Human-readable hierarchy label." })),
-        identifier: Schema.optionalKey(Schema.String.annotate({ description: "Hierarchy node identifier." })),
-        count: Schema.optionalKey(Schema.Int.annotate({ description: "Number of matches in the hierarchy bucket." })),
-      }).annotate({ description: "Search-result count associated with one CFR hierarchy node." })
-    ).annotate({ description: "Hierarchy result-count buckets when supplied." })
+/**
+ * Generated SearchHierarchyCountsResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchHierarchyCountsResponse)
+ *
+ * ```ts
+ * import { SearchHierarchyCountsResponse } from "@beep/ecfr"
+ *
+ * console.log(SearchHierarchyCountsResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchHierarchyCountsResponse = S.Struct({
+  counts: S.optionalKey(
+    S.Array(
+      S.Struct({
+        label: S.optionalKey(
+          S.String.annotate({ description: "Human-readable hierarchy label." }),
+        ),
+        identifier: S.optionalKey(
+          S.String.annotate({ description: "Hierarchy node identifier." }),
+        ),
+        count: S.optionalKey(
+          S.Int.annotate({
+            description: "Number of matches in the hierarchy bucket.",
+          }),
+        ),
+      }).annotate({
+        description:
+          "Search-result count associated with one CFR hierarchy node.",
+      }),
+    ).annotate({
+      description: "Hierarchy result-count buckets when supplied.",
+    }),
   ),
 }).annotate({
   description: "Conservative envelope for hierarchy-level eCFR search counts.",
   identifier: "SearchHierarchyCountsResponse",
 });
-export type SearchSuggestionsResponse = { readonly suggestions?: ReadonlyArray<string> };
-export const SearchSuggestionsResponse = Schema.Struct({
-  suggestions: Schema.optionalKey(
-    Schema.Array(Schema.String).annotate({ description: "Suggested search strings when supplied." })
+/**
+ * Generated SearchSuggestionsResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SearchSuggestionsResponse = {
+  readonly suggestions?: ReadonlyArray<string>;
+};
+/**
+ * Generated SearchSuggestionsResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchSuggestionsResponse)
+ *
+ * ```ts
+ * import { SearchSuggestionsResponse } from "@beep/ecfr"
+ *
+ * console.log(SearchSuggestionsResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchSuggestionsResponse = S.Struct({
+  suggestions: S.optionalKey(
+    S.Array(S.String).annotate({
+      description: "Suggested search strings when supplied.",
+    }),
   ),
 }).annotate({
   description: "Conservative envelope for eCFR search suggestions.",
   identifier: "SearchSuggestionsResponse",
 });
+/**
+ * Generated AncestryResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type AncestryResponse = ReadonlyArray<{
   readonly type: string;
   readonly label: string;
@@ -315,22 +710,63 @@ export type AncestryResponse = ReadonlyArray<{
   readonly reserved?: boolean;
   readonly section_range?: string;
 }>;
-export const AncestryResponse = Schema.Array(
-  Schema.Struct({
-    type: Schema.String.annotate({ description: "Hierarchy level such as title, chapter, part, or section." }),
-    label: Schema.String.annotate({ description: "Complete human-readable node label." }),
-    label_level: Schema.optionalKey(Schema.String.annotate({ description: "Hierarchy level portion of the label." })),
-    label_description: Schema.optionalKey(Schema.String.annotate({ description: "Descriptive portion of the label." })),
-    identifier: Schema.String.annotate({ description: "Identifier within the node's hierarchy level." }),
-    reserved: Schema.optionalKey(Schema.Boolean.annotate({ description: "Whether the hierarchy node is reserved." })),
-    section_range: Schema.optionalKey(
-      Schema.String.annotate({ description: "Section range covered by the node when supplied." })
+/**
+ * Generated AncestryResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect AncestryResponse)
+ *
+ * ```ts
+ * import { AncestryResponse } from "@beep/ecfr"
+ *
+ * console.log(AncestryResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const AncestryResponse = S.Array(
+  S.Struct({
+    type: S.String.annotate({
+      description: "Hierarchy level such as title, chapter, part, or section.",
+    }),
+    label: S.String.annotate({
+      description: "Complete human-readable node label.",
+    }),
+    label_level: S.optionalKey(
+      S.String.annotate({
+        description: "Hierarchy level portion of the label.",
+      }),
     ),
-  }).annotate({ description: "A CFR hierarchy node returned in an ancestry response." })
+    label_description: S.optionalKey(
+      S.String.annotate({ description: "Descriptive portion of the label." }),
+    ),
+    identifier: S.String.annotate({
+      description: "Identifier within the node's hierarchy level.",
+    }),
+    reserved: S.optionalKey(
+      S.Boolean.annotate({
+        description: "Whether the hierarchy node is reserved.",
+      }),
+    ),
+    section_range: S.optionalKey(
+      S.String.annotate({
+        description: "Section range covered by the node when supplied.",
+      }),
+    ),
+  }).annotate({
+    description: "A CFR hierarchy node returned in an ancestry response.",
+  }),
 ).annotate({
-  description: "Ordered CFR hierarchy nodes from title through the requested leaf.",
+  description:
+    "Ordered CFR hierarchy nodes from title through the requested leaf.",
   identifier: "AncestryResponse",
 });
+/**
+ * Generated StructureNode declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type StructureNode = {
   readonly type: string;
   readonly label: string;
@@ -349,41 +785,94 @@ export type StructureNode = {
     readonly section_range?: string;
   }>;
 };
-export const StructureNode = Schema.Struct({
-  type: Schema.String.annotate({ description: "Hierarchy level of the root node." }),
-  label: Schema.String.annotate({ description: "Complete human-readable root label." }),
-  label_level: Schema.optionalKey(
-    Schema.String.annotate({ description: "Hierarchy level portion of the root label." })
+/**
+ * Generated StructureNode declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect StructureNode)
+ *
+ * ```ts
+ * import { StructureNode } from "@beep/ecfr"
+ *
+ * console.log(StructureNode)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const StructureNode = S.Struct({
+  type: S.String.annotate({ description: "Hierarchy level of the root node." }),
+  label: S.String.annotate({
+    description: "Complete human-readable root label.",
+  }),
+  label_level: S.optionalKey(
+    S.String.annotate({
+      description: "Hierarchy level portion of the root label.",
+    }),
   ),
-  label_description: Schema.optionalKey(
-    Schema.String.annotate({ description: "Descriptive portion of the root label." })
+  label_description: S.optionalKey(
+    S.String.annotate({
+      description: "Descriptive portion of the root label.",
+    }),
   ),
-  identifier: Schema.String.annotate({ description: "Identifier within the hierarchy level." }),
-  reserved: Schema.optionalKey(Schema.Boolean.annotate({ description: "Whether the root node is reserved." })),
-  section_range: Schema.optionalKey(Schema.String.annotate({ description: "Section range covered by the root node." })),
-  children: Schema.optionalKey(
-    Schema.Array(
-      Schema.Struct({
-        type: Schema.String.annotate({ description: "Hierarchy level of the child node." }),
-        label: Schema.String.annotate({ description: "Complete human-readable child label." }),
-        label_level: Schema.optionalKey(
-          Schema.String.annotate({ description: "Hierarchy level portion of the child label." })
+  identifier: S.String.annotate({
+    description: "Identifier within the hierarchy level.",
+  }),
+  reserved: S.optionalKey(
+    S.Boolean.annotate({ description: "Whether the root node is reserved." }),
+  ),
+  section_range: S.optionalKey(
+    S.String.annotate({
+      description: "Section range covered by the root node.",
+    }),
+  ),
+  children: S.optionalKey(
+    S.Array(
+      S.Struct({
+        type: S.String.annotate({
+          description: "Hierarchy level of the child node.",
+        }),
+        label: S.String.annotate({
+          description: "Complete human-readable child label.",
+        }),
+        label_level: S.optionalKey(
+          S.String.annotate({
+            description: "Hierarchy level portion of the child label.",
+          }),
         ),
-        label_description: Schema.optionalKey(
-          Schema.String.annotate({ description: "Descriptive portion of the child label." })
+        label_description: S.optionalKey(
+          S.String.annotate({
+            description: "Descriptive portion of the child label.",
+          }),
         ),
-        identifier: Schema.String.annotate({ description: "Identifier within the hierarchy level." }),
-        reserved: Schema.optionalKey(Schema.Boolean.annotate({ description: "Whether the child node is reserved." })),
-        section_range: Schema.optionalKey(
-          Schema.String.annotate({ description: "Section range covered by the child node." })
+        identifier: S.String.annotate({
+          description: "Identifier within the hierarchy level.",
+        }),
+        reserved: S.optionalKey(
+          S.Boolean.annotate({
+            description: "Whether the child node is reserved.",
+          }),
         ),
-      }).annotate({ description: "A direct child in an eCFR structure tree." })
-    ).annotate({ description: "Direct child nodes. Deeper tree parsing is intentionally conservative in v1." })
+        section_range: S.optionalKey(
+          S.String.annotate({
+            description: "Section range covered by the child node.",
+          }),
+        ),
+      }).annotate({ description: "A direct child in an eCFR structure tree." }),
+    ).annotate({
+      description:
+        "Direct child nodes. Deeper tree parsing is intentionally conservative in v1.",
+    }),
   ),
 }).annotate({
   description: "Root of a CFR title structure tree without regulation text.",
   identifier: "StructureNode",
 });
+/**
+ * Generated TitlesResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type TitlesResponse = {
   readonly titles: ReadonlyArray<{
     readonly number: number;
@@ -394,40 +883,91 @@ export type TitlesResponse = {
     readonly reserved: boolean;
     readonly processing_in_progress?: boolean;
   }>;
-  readonly meta?: { readonly date?: string; readonly import_in_progress?: boolean };
+  readonly meta?: {
+    readonly date?: string;
+    readonly import_in_progress?: boolean;
+  };
 };
-export const TitlesResponse = Schema.Struct({
-  titles: Schema.Array(
-    Schema.Struct({
-      number: Schema.Int.annotate({ description: "CFR title number, from 1 through 50." }),
-      name: Schema.String.annotate({ description: "Official CFR title name." }),
-      latest_amended_on: Schema.optionalKey(
-        Schema.String.annotate({ description: "Most recent amendment date.", format: "date" })
+/**
+ * Generated TitlesResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect TitlesResponse)
+ *
+ * ```ts
+ * import { TitlesResponse } from "@beep/ecfr"
+ *
+ * console.log(TitlesResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const TitlesResponse = S.Struct({
+  titles: S.Array(
+    S.Struct({
+      number: S.Int.annotate({
+        description: "CFR title number, from 1 through 50.",
+      }),
+      name: S.String.annotate({ description: "Official CFR title name." }),
+      latest_amended_on: S.optionalKey(
+        S.String.annotate({
+          description: "Most recent amendment date.",
+          format: "date",
+        }),
       ),
-      latest_issue_date: Schema.optionalKey(
-        Schema.String.annotate({ description: "Most recent published issue date.", format: "date" })
+      latest_issue_date: S.optionalKey(
+        S.String.annotate({
+          description: "Most recent published issue date.",
+          format: "date",
+        }),
       ),
-      up_to_date_as_of: Schema.optionalKey(
-        Schema.String.annotate({ description: "Date through which the title is confirmed current.", format: "date" })
+      up_to_date_as_of: S.optionalKey(
+        S.String.annotate({
+          description: "Date through which the title is confirmed current.",
+          format: "date",
+        }),
       ),
-      reserved: Schema.Boolean.annotate({ description: "Whether the title number is reserved." }),
-      processing_in_progress: Schema.optionalKey(
-        Schema.Boolean.annotate({ description: "Whether title processing is currently in progress." })
+      reserved: S.Boolean.annotate({
+        description: "Whether the title number is reserved.",
+      }),
+      processing_in_progress: S.optionalKey(
+        S.Boolean.annotate({
+          description: "Whether title processing is currently in progress.",
+        }),
       ),
-    }).annotate({ description: "A CFR title with currency and processing metadata." })
+    }).annotate({
+      description: "A CFR title with currency and processing metadata.",
+    }),
   ).annotate({ description: "CFR titles and their currency metadata." }),
-  meta: Schema.optionalKey(
-    Schema.Struct({
-      date: Schema.optionalKey(Schema.String.annotate({ description: "Metadata snapshot date.", format: "date" })),
-      import_in_progress: Schema.optionalKey(
-        Schema.Boolean.annotate({ description: "Whether an eCFR title import is in progress." })
+  meta: S.optionalKey(
+    S.Struct({
+      date: S.optionalKey(
+        S.String.annotate({
+          description: "Metadata snapshot date.",
+          format: "date",
+        }),
       ),
-    }).annotate({ description: "Import status metadata accompanying the CFR titles catalog." })
+      import_in_progress: S.optionalKey(
+        S.Boolean.annotate({
+          description: "Whether an eCFR title import is in progress.",
+        }),
+      ),
+    }).annotate({
+      description:
+        "Import status metadata accompanying the CFR titles catalog.",
+    }),
   ),
 }).annotate({
-  description: "Response envelope containing the CFR titles catalog and import metadata.",
+  description:
+    "Response envelope containing the CFR titles catalog and import metadata.",
   identifier: "TitlesResponse",
 });
+/**
+ * Generated VersionsResponse declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type VersionsResponse = {
   readonly content_versions: ReadonlyArray<{
     readonly date?: string;
@@ -449,85 +989,272 @@ export type VersionsResponse = {
     readonly latest_issue_date?: string;
   };
 };
-export const VersionsResponse = Schema.Struct({
-  content_versions: Schema.Array(
-    Schema.Struct({
-      date: Schema.optionalKey(
-        Schema.String.annotate({
-          description: "Deprecated alias of amendment_date retained by the API.",
+/**
+ * Generated VersionsResponse declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect VersionsResponse)
+ *
+ * ```ts
+ * import { VersionsResponse } from "@beep/ecfr"
+ *
+ * console.log(VersionsResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const VersionsResponse = S.Struct({
+  content_versions: S.Array(
+    S.Struct({
+      date: S.optionalKey(
+        S.String.annotate({
+          description:
+            "Deprecated alias of amendment_date retained by the API.",
           format: "date",
-        })
+        }),
       ),
-      amendment_date: Schema.optionalKey(
-        Schema.String.annotate({ description: "Date the content was amended.", format: "date" })
+      amendment_date: S.optionalKey(
+        S.String.annotate({
+          description: "Date the content was amended.",
+          format: "date",
+        }),
       ),
-      issue_date: Schema.optionalKey(
-        Schema.String.annotate({ description: "Issue date on which this content version appeared.", format: "date" })
+      issue_date: S.optionalKey(
+        S.String.annotate({
+          description: "Issue date on which this content version appeared.",
+          format: "date",
+        }),
       ),
-      identifier: Schema.String.annotate({ description: "Section or appendix identifier." }),
-      name: Schema.optionalKey(Schema.String.annotate({ description: "Human-readable content name." })),
-      part: Schema.optionalKey(Schema.String.annotate({ description: "Containing CFR part identifier." })),
-      substantive: Schema.optionalKey(Schema.Boolean.annotate({ description: "Whether the change is substantive." })),
-      removed: Schema.optionalKey(
-        Schema.Boolean.annotate({ description: "Whether the content was removed in this version." })
+      identifier: S.String.annotate({
+        description: "Section or appendix identifier.",
+      }),
+      name: S.optionalKey(
+        S.String.annotate({ description: "Human-readable content name." }),
       ),
-      subpart: Schema.optionalKey(
-        Schema.String.annotate({ description: "Containing subpart identifier when present." })
+      part: S.optionalKey(
+        S.String.annotate({ description: "Containing CFR part identifier." }),
       ),
-      title: Schema.String.annotate({ description: "Containing CFR title identifier." }),
-      type: Schema.String.annotate({ description: "Content type, normally section or appendix." }),
-    }).annotate({ description: "A dated version of one CFR section or appendix." })
+      substantive: S.optionalKey(
+        S.Boolean.annotate({
+          description: "Whether the change is substantive.",
+        }),
+      ),
+      removed: S.optionalKey(
+        S.Boolean.annotate({
+          description: "Whether the content was removed in this version.",
+        }),
+      ),
+      subpart: S.optionalKey(
+        S.String.annotate({
+          description: "Containing subpart identifier when present.",
+        }),
+      ),
+      title: S.String.annotate({
+        description: "Containing CFR title identifier.",
+      }),
+      type: S.String.annotate({
+        description: "Content type, normally section or appendix.",
+      }),
+    }).annotate({
+      description: "A dated version of one CFR section or appendix.",
+    }),
   ).annotate({ description: "Content versions matching the request." }),
-  meta: Schema.Struct({
-    title: Schema.optionalKey(Schema.String.annotate({ description: "Requested CFR title identifier." })),
-    result_count: Schema.optionalKey(
-      Schema.String.annotate({ description: "Number of content versions returned, as encoded by the upstream API." })
+  meta: S.Struct({
+    title: S.optionalKey(
+      S.String.annotate({ description: "Requested CFR title identifier." }),
     ),
-    latest_amendment_date: Schema.optionalKey(
-      Schema.String.annotate({ description: "Latest amendment date among returned versions.", format: "date" })
+    result_count: S.optionalKey(
+      S.String.annotate({
+        description:
+          "Number of content versions returned, as encoded by the upstream API.",
+      }),
     ),
-    latest_issue_date: Schema.optionalKey(
-      Schema.String.annotate({ description: "Latest issue date among returned versions.", format: "date" })
+    latest_amendment_date: S.optionalKey(
+      S.String.annotate({
+        description: "Latest amendment date among returned versions.",
+        format: "date",
+      }),
     ),
-  }).annotate({ description: "Query and currency metadata for a content-version response." }),
+    latest_issue_date: S.optionalKey(
+      S.String.annotate({
+        description: "Latest issue date among returned versions.",
+        format: "date",
+      }),
+    ),
+  }).annotate({
+    description: "Query and currency metadata for a content-version response.",
+  }),
 }).annotate({
-  description: "Response envelope containing CFR content versions and query metadata.",
+  description:
+    "Response envelope containing CFR content versions and query metadata.",
   identifier: "VersionsResponse",
 });
 // schemas
+/**
+ * Generated ListAgencies200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListAgencies200 = AgenciesResponse;
+/**
+ * Generated ListAgencies200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListAgencies200)
+ *
+ * ```ts
+ * import { ListAgencies200 } from "@beep/ecfr"
+ *
+ * console.log(ListAgencies200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const ListAgencies200 = AgenciesResponse;
+/**
+ * Generated ListCorrectionsParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListCorrectionsParams = {
   readonly date?: string;
   readonly title?: string;
   readonly error_corrected_date?: string;
 };
-export const ListCorrectionsParams = Schema.Struct({
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  title: Schema.optionalKey(Schema.String),
-  error_corrected_date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
+/**
+ * Generated ListCorrectionsParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListCorrectionsParams)
+ *
+ * ```ts
+ * import { ListCorrectionsParams } from "@beep/ecfr"
+ *
+ * console.log(ListCorrectionsParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const ListCorrectionsParams = S.Struct({
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  title: S.optionalKey(S.String),
+  error_corrected_date: S.optionalKey(S.String.annotate({ format: "date" })),
 });
+/**
+ * Generated ListCorrectionsQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListCorrectionsQuery = {
   readonly date?: string;
   readonly title?: string;
   readonly error_corrected_date?: string;
 };
-export const ListCorrectionsQuery = Schema.Struct({
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  title: Schema.optionalKey(Schema.String),
-  error_corrected_date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
+/**
+ * Generated ListCorrectionsQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListCorrectionsQuery)
+ *
+ * ```ts
+ * import { ListCorrectionsQuery } from "@beep/ecfr"
+ *
+ * console.log(ListCorrectionsQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const ListCorrectionsQuery = S.Struct({
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  title: S.optionalKey(S.String),
+  error_corrected_date: S.optionalKey(S.String.annotate({ format: "date" })),
 });
+/**
+ * Generated ListCorrections200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListCorrections200 = CorrectionsResponse;
+/**
+ * Generated ListCorrections200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListCorrections200)
+ *
+ * ```ts
+ * import { ListCorrections200 } from "@beep/ecfr"
+ *
+ * console.log(ListCorrections200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const ListCorrections200 = CorrectionsResponse;
+/**
+ * Generated ListTitleCorrectionsPathParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListTitleCorrectionsPathParams = { readonly title: string };
-export const ListTitleCorrectionsPathParams = Schema.Struct({ title: Schema.String });
+/**
+ * Generated ListTitleCorrectionsPathParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListTitleCorrectionsPathParams)
+ *
+ * ```ts
+ * import { ListTitleCorrectionsPathParams } from "@beep/ecfr"
+ *
+ * console.log(ListTitleCorrectionsPathParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const ListTitleCorrectionsPathParams = S.Struct({ title: S.String });
+/**
+ * Generated ListTitleCorrections200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListTitleCorrections200 = CorrectionsResponse;
+/**
+ * Generated ListTitleCorrections200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListTitleCorrections200)
+ *
+ * ```ts
+ * import { ListTitleCorrections200 } from "@beep/ecfr"
+ *
+ * console.log(ListTitleCorrections200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const ListTitleCorrections200 = CorrectionsResponse;
+/**
+ * Generated SearchResultsParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchResultsParams = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -536,26 +1263,59 @@ export type SearchResultsParams = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchResultsParams = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchResultsParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchResultsParams)
+ *
+ * ```ts
+ * import { SearchResultsParams } from "@beep/ecfr"
+ *
+ * console.log(SearchResultsParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchResultsParams = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchResultsQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchResultsQuery = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -564,28 +1324,81 @@ export type SearchResultsQuery = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchResultsQuery = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchResultsQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchResultsQuery)
+ *
+ * ```ts
+ * import { SearchResultsQuery } from "@beep/ecfr"
+ *
+ * console.log(SearchResultsQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchResultsQuery = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchResults200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchResults200 = SearchResultsResponse;
+/**
+ * Generated SearchResults200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchResults200)
+ *
+ * ```ts
+ * import { SearchResults200 } from "@beep/ecfr"
+ *
+ * console.log(SearchResults200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const SearchResults200 = SearchResultsResponse;
+/**
+ * Generated SearchCountParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchCountParams = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -594,26 +1407,59 @@ export type SearchCountParams = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchCountParams = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchCountParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchCountParams)
+ *
+ * ```ts
+ * import { SearchCountParams } from "@beep/ecfr"
+ *
+ * console.log(SearchCountParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchCountParams = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchCountQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchCountQuery = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -622,28 +1468,81 @@ export type SearchCountQuery = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchCountQuery = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchCountQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchCountQuery)
+ *
+ * ```ts
+ * import { SearchCountQuery } from "@beep/ecfr"
+ *
+ * console.log(SearchCountQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchCountQuery = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchCount200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchCount200 = SearchCountResponse;
+/**
+ * Generated SearchCount200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchCount200)
+ *
+ * ```ts
+ * import { SearchCount200 } from "@beep/ecfr"
+ *
+ * console.log(SearchCount200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const SearchCount200 = SearchCountResponse;
+/**
+ * Generated SearchSummaryParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchSummaryParams = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -652,26 +1551,59 @@ export type SearchSummaryParams = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchSummaryParams = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchSummaryParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchSummaryParams)
+ *
+ * ```ts
+ * import { SearchSummaryParams } from "@beep/ecfr"
+ *
+ * console.log(SearchSummaryParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchSummaryParams = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchSummaryQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchSummaryQuery = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -680,28 +1612,81 @@ export type SearchSummaryQuery = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchSummaryQuery = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchSummaryQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchSummaryQuery)
+ *
+ * ```ts
+ * import { SearchSummaryQuery } from "@beep/ecfr"
+ *
+ * console.log(SearchSummaryQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchSummaryQuery = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchSummary200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchSummary200 = SearchSummaryResponse;
+/**
+ * Generated SearchSummary200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchSummary200)
+ *
+ * ```ts
+ * import { SearchSummary200 } from "@beep/ecfr"
+ *
+ * console.log(SearchSummary200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const SearchSummary200 = SearchSummaryResponse;
+/**
+ * Generated SearchDailyCountsParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchDailyCountsParams = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -710,26 +1695,59 @@ export type SearchDailyCountsParams = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchDailyCountsParams = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchDailyCountsParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchDailyCountsParams)
+ *
+ * ```ts
+ * import { SearchDailyCountsParams } from "@beep/ecfr"
+ *
+ * console.log(SearchDailyCountsParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchDailyCountsParams = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchDailyCountsQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchDailyCountsQuery = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -738,28 +1756,81 @@ export type SearchDailyCountsQuery = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchDailyCountsQuery = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchDailyCountsQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchDailyCountsQuery)
+ *
+ * ```ts
+ * import { SearchDailyCountsQuery } from "@beep/ecfr"
+ *
+ * console.log(SearchDailyCountsQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchDailyCountsQuery = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchDailyCounts200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchDailyCounts200 = SearchDailyCountsResponse;
+/**
+ * Generated SearchDailyCounts200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchDailyCounts200)
+ *
+ * ```ts
+ * import { SearchDailyCounts200 } from "@beep/ecfr"
+ *
+ * console.log(SearchDailyCounts200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const SearchDailyCounts200 = SearchDailyCountsResponse;
+/**
+ * Generated SearchTitleCountsParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchTitleCountsParams = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -768,26 +1839,59 @@ export type SearchTitleCountsParams = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchTitleCountsParams = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchTitleCountsParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchTitleCountsParams)
+ *
+ * ```ts
+ * import { SearchTitleCountsParams } from "@beep/ecfr"
+ *
+ * console.log(SearchTitleCountsParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchTitleCountsParams = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchTitleCountsQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchTitleCountsQuery = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -796,28 +1900,81 @@ export type SearchTitleCountsQuery = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchTitleCountsQuery = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchTitleCountsQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchTitleCountsQuery)
+ *
+ * ```ts
+ * import { SearchTitleCountsQuery } from "@beep/ecfr"
+ *
+ * console.log(SearchTitleCountsQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchTitleCountsQuery = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchTitleCounts200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchTitleCounts200 = SearchTitleCountsResponse;
+/**
+ * Generated SearchTitleCounts200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchTitleCounts200)
+ *
+ * ```ts
+ * import { SearchTitleCounts200 } from "@beep/ecfr"
+ *
+ * console.log(SearchTitleCounts200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const SearchTitleCounts200 = SearchTitleCountsResponse;
+/**
+ * Generated SearchHierarchyCountsParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchHierarchyCountsParams = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -826,26 +1983,59 @@ export type SearchHierarchyCountsParams = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchHierarchyCountsParams = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchHierarchyCountsParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchHierarchyCountsParams)
+ *
+ * ```ts
+ * import { SearchHierarchyCountsParams } from "@beep/ecfr"
+ *
+ * console.log(SearchHierarchyCountsParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchHierarchyCountsParams = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchHierarchyCountsQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchHierarchyCountsQuery = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -854,28 +2044,81 @@ export type SearchHierarchyCountsQuery = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchHierarchyCountsQuery = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchHierarchyCountsQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchHierarchyCountsQuery)
+ *
+ * ```ts
+ * import { SearchHierarchyCountsQuery } from "@beep/ecfr"
+ *
+ * console.log(SearchHierarchyCountsQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchHierarchyCountsQuery = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchHierarchyCounts200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchHierarchyCounts200 = SearchHierarchyCountsResponse;
+/**
+ * Generated SearchHierarchyCounts200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchHierarchyCounts200)
+ *
+ * ```ts
+ * import { SearchHierarchyCounts200 } from "@beep/ecfr"
+ *
+ * console.log(SearchHierarchyCounts200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const SearchHierarchyCounts200 = SearchHierarchyCountsResponse;
+/**
+ * Generated SearchSuggestionsParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchSuggestionsParams = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -884,26 +2127,59 @@ export type SearchSuggestionsParams = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchSuggestionsParams = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchSuggestionsParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchSuggestionsParams)
+ *
+ * ```ts
+ * import { SearchSuggestionsParams } from "@beep/ecfr"
+ *
+ * console.log(SearchSuggestionsParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchSuggestionsParams = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchSuggestionsQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchSuggestionsQuery = {
   readonly query?: string;
   readonly "agency_slugs[]"?: ReadonlyArray<string>;
   readonly date?: string;
-  readonly order?: "citations" | "hierarchy" | "newest_first" | "oldest_first" | "relevance" | "suggestions";
+  readonly order?:
+    | "citations"
+    | "hierarchy"
+    | "newest_first"
+    | "oldest_first"
+    | "relevance"
+    | "suggestions";
   readonly paginate_by?: "date" | "results";
   readonly page?: number;
   readonly per_page?: number;
@@ -912,23 +2188,70 @@ export type SearchSuggestionsQuery = {
   readonly last_modified_on_or_after?: string;
   readonly last_modified_on_or_before?: string;
 };
-export const SearchSuggestionsQuery = Schema.Struct({
-  query: Schema.optionalKey(Schema.String),
-  "agency_slugs[]": Schema.Array(Schema.String).pipe(Schema.optionalKey),
-  date: Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  order: Schema.optionalKey(
-    Schema.Literals(["citations", "hierarchy", "newest_first", "oldest_first", "relevance", "suggestions"])
+/**
+ * Generated SearchSuggestionsQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchSuggestionsQuery)
+ *
+ * ```ts
+ * import { SearchSuggestionsQuery } from "@beep/ecfr"
+ *
+ * console.log(SearchSuggestionsQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchSuggestionsQuery = S.Struct({
+  query: S.optionalKey(S.String),
+  "agency_slugs[]": S.Array(S.String).pipe(S.optionalKey),
+  date: S.optionalKey(S.String.annotate({ format: "date" })),
+  order: S.optionalKey(
+    S.Literals([
+      "citations",
+      "hierarchy",
+      "newest_first",
+      "oldest_first",
+      "relevance",
+      "suggestions",
+    ]),
   ),
-  paginate_by: Schema.optionalKey(Schema.Literals(["date", "results"])),
-  page: Schema.optionalKey(Schema.Int.annotate({ default: 1 })),
-  per_page: Schema.optionalKey(Schema.Int.annotate({ default: 20 })),
-  last_modified_after: Schema.optionalKey(Schema.String),
-  last_modified_before: Schema.optionalKey(Schema.String),
-  last_modified_on_or_after: Schema.optionalKey(Schema.String),
-  last_modified_on_or_before: Schema.optionalKey(Schema.String),
+  paginate_by: S.optionalKey(S.Literals(["date", "results"])),
+  page: S.optionalKey(S.Int.annotate({ default: 1 })),
+  per_page: S.optionalKey(S.Int.annotate({ default: 20 })),
+  last_modified_after: S.optionalKey(S.String),
+  last_modified_before: S.optionalKey(S.String),
+  last_modified_on_or_after: S.optionalKey(S.String),
+  last_modified_on_or_before: S.optionalKey(S.String),
 });
+/**
+ * Generated SearchSuggestions200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SearchSuggestions200 = SearchSuggestionsResponse;
+/**
+ * Generated SearchSuggestions200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect SearchSuggestions200)
+ *
+ * ```ts
+ * import { SearchSuggestions200 } from "@beep/ecfr"
+ *
+ * console.log(SearchSuggestions200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const SearchSuggestions200 = SearchSuggestionsResponse;
+/**
+ * Generated GetAncestryParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetAncestryParams = {
   readonly subtitle?: string;
   readonly chapter?: string;
@@ -938,20 +2261,63 @@ export type GetAncestryParams = {
   readonly section?: string;
   readonly appendix?: string;
 };
-export const GetAncestryParams = Schema.Struct({
-  subtitle: Schema.optionalKey(Schema.String),
-  chapter: Schema.optionalKey(Schema.String),
-  subchapter: Schema.optionalKey(Schema.String),
-  part: Schema.optionalKey(Schema.String),
-  subpart: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  appendix: Schema.optionalKey(Schema.String),
+/**
+ * Generated GetAncestryParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetAncestryParams)
+ *
+ * ```ts
+ * import { GetAncestryParams } from "@beep/ecfr"
+ *
+ * console.log(GetAncestryParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetAncestryParams = S.Struct({
+  subtitle: S.optionalKey(S.String),
+  chapter: S.optionalKey(S.String),
+  subchapter: S.optionalKey(S.String),
+  part: S.optionalKey(S.String),
+  subpart: S.optionalKey(S.String),
+  section: S.optionalKey(S.String),
+  appendix: S.optionalKey(S.String),
 });
-export type GetAncestryPathParams = { readonly date: string; readonly title: string };
-export const GetAncestryPathParams = Schema.Struct({
-  date: Schema.String.annotate({ format: "date" }),
-  title: Schema.String,
+/**
+ * Generated GetAncestryPathParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GetAncestryPathParams = {
+  readonly date: string;
+  readonly title: string;
+};
+/**
+ * Generated GetAncestryPathParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetAncestryPathParams)
+ *
+ * ```ts
+ * import { GetAncestryPathParams } from "@beep/ecfr"
+ *
+ * console.log(GetAncestryPathParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetAncestryPathParams = S.Struct({
+  date: S.String.annotate({ format: "date" }),
+  title: S.String,
 });
+/**
+ * Generated GetAncestryQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetAncestryQuery = {
   readonly subtitle?: string;
   readonly chapter?: string;
@@ -961,17 +2327,57 @@ export type GetAncestryQuery = {
   readonly section?: string;
   readonly appendix?: string;
 };
-export const GetAncestryQuery = Schema.Struct({
-  subtitle: Schema.optionalKey(Schema.String),
-  chapter: Schema.optionalKey(Schema.String),
-  subchapter: Schema.optionalKey(Schema.String),
-  part: Schema.optionalKey(Schema.String),
-  subpart: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  appendix: Schema.optionalKey(Schema.String),
+/**
+ * Generated GetAncestryQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetAncestryQuery)
+ *
+ * ```ts
+ * import { GetAncestryQuery } from "@beep/ecfr"
+ *
+ * console.log(GetAncestryQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetAncestryQuery = S.Struct({
+  subtitle: S.optionalKey(S.String),
+  chapter: S.optionalKey(S.String),
+  subchapter: S.optionalKey(S.String),
+  part: S.optionalKey(S.String),
+  subpart: S.optionalKey(S.String),
+  section: S.optionalKey(S.String),
+  appendix: S.optionalKey(S.String),
 });
+/**
+ * Generated GetAncestry200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetAncestry200 = AncestryResponse;
+/**
+ * Generated GetAncestry200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetAncestry200)
+ *
+ * ```ts
+ * import { GetAncestry200 } from "@beep/ecfr"
+ *
+ * console.log(GetAncestry200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const GetAncestry200 = AncestryResponse;
+/**
+ * Generated GetFullTitleXmlParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetFullTitleXmlParams = {
   readonly subtitle?: string;
   readonly chapter?: string;
@@ -981,20 +2387,63 @@ export type GetFullTitleXmlParams = {
   readonly section?: string;
   readonly appendix?: string;
 };
-export const GetFullTitleXmlParams = Schema.Struct({
-  subtitle: Schema.optionalKey(Schema.String),
-  chapter: Schema.optionalKey(Schema.String),
-  subchapter: Schema.optionalKey(Schema.String),
-  part: Schema.optionalKey(Schema.String),
-  subpart: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  appendix: Schema.optionalKey(Schema.String),
+/**
+ * Generated GetFullTitleXmlParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetFullTitleXmlParams)
+ *
+ * ```ts
+ * import { GetFullTitleXmlParams } from "@beep/ecfr"
+ *
+ * console.log(GetFullTitleXmlParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetFullTitleXmlParams = S.Struct({
+  subtitle: S.optionalKey(S.String),
+  chapter: S.optionalKey(S.String),
+  subchapter: S.optionalKey(S.String),
+  part: S.optionalKey(S.String),
+  subpart: S.optionalKey(S.String),
+  section: S.optionalKey(S.String),
+  appendix: S.optionalKey(S.String),
 });
-export type GetFullTitleXmlPathParams = { readonly date: string; readonly title: string };
-export const GetFullTitleXmlPathParams = Schema.Struct({
-  date: Schema.String.annotate({ format: "date" }),
-  title: Schema.String,
+/**
+ * Generated GetFullTitleXmlPathParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GetFullTitleXmlPathParams = {
+  readonly date: string;
+  readonly title: string;
+};
+/**
+ * Generated GetFullTitleXmlPathParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetFullTitleXmlPathParams)
+ *
+ * ```ts
+ * import { GetFullTitleXmlPathParams } from "@beep/ecfr"
+ *
+ * console.log(GetFullTitleXmlPathParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetFullTitleXmlPathParams = S.Struct({
+  date: S.String.annotate({ format: "date" }),
+  title: S.String,
 });
+/**
+ * Generated GetFullTitleXmlQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetFullTitleXmlQuery = {
   readonly subtitle?: string;
   readonly chapter?: string;
@@ -1004,17 +2453,59 @@ export type GetFullTitleXmlQuery = {
   readonly section?: string;
   readonly appendix?: string;
 };
-export const GetFullTitleXmlQuery = Schema.Struct({
-  subtitle: Schema.optionalKey(Schema.String),
-  chapter: Schema.optionalKey(Schema.String),
-  subchapter: Schema.optionalKey(Schema.String),
-  part: Schema.optionalKey(Schema.String),
-  subpart: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  appendix: Schema.optionalKey(Schema.String),
+/**
+ * Generated GetFullTitleXmlQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetFullTitleXmlQuery)
+ *
+ * ```ts
+ * import { GetFullTitleXmlQuery } from "@beep/ecfr"
+ *
+ * console.log(GetFullTitleXmlQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetFullTitleXmlQuery = S.Struct({
+  subtitle: S.optionalKey(S.String),
+  chapter: S.optionalKey(S.String),
+  subchapter: S.optionalKey(S.String),
+  part: S.optionalKey(S.String),
+  subpart: S.optionalKey(S.String),
+  section: S.optionalKey(S.String),
+  appendix: S.optionalKey(S.String),
 });
+/**
+ * Generated GetFullTitleXml200TextXml declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetFullTitleXml200TextXml = string;
-export const GetFullTitleXml200TextXml = Schema.String.annotate({ description: "Raw XML payload." });
+/**
+ * Generated GetFullTitleXml200TextXml declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetFullTitleXml200TextXml)
+ *
+ * ```ts
+ * import { GetFullTitleXml200TextXml } from "@beep/ecfr"
+ *
+ * console.log(GetFullTitleXml200TextXml)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetFullTitleXml200TextXml = S.String.annotate({
+  description: "Raw XML payload.",
+});
+/**
+ * Generated GetStructureParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetStructureParams = {
   readonly subtitle?: string;
   readonly chapter?: string;
@@ -1024,20 +2515,63 @@ export type GetStructureParams = {
   readonly section?: string;
   readonly appendix?: string;
 };
-export const GetStructureParams = Schema.Struct({
-  subtitle: Schema.optionalKey(Schema.String),
-  chapter: Schema.optionalKey(Schema.String),
-  subchapter: Schema.optionalKey(Schema.String),
-  part: Schema.optionalKey(Schema.String),
-  subpart: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  appendix: Schema.optionalKey(Schema.String),
+/**
+ * Generated GetStructureParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetStructureParams)
+ *
+ * ```ts
+ * import { GetStructureParams } from "@beep/ecfr"
+ *
+ * console.log(GetStructureParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetStructureParams = S.Struct({
+  subtitle: S.optionalKey(S.String),
+  chapter: S.optionalKey(S.String),
+  subchapter: S.optionalKey(S.String),
+  part: S.optionalKey(S.String),
+  subpart: S.optionalKey(S.String),
+  section: S.optionalKey(S.String),
+  appendix: S.optionalKey(S.String),
 });
-export type GetStructurePathParams = { readonly date: string; readonly title: string };
-export const GetStructurePathParams = Schema.Struct({
-  date: Schema.String.annotate({ format: "date" }),
-  title: Schema.String,
+/**
+ * Generated GetStructurePathParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GetStructurePathParams = {
+  readonly date: string;
+  readonly title: string;
+};
+/**
+ * Generated GetStructurePathParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetStructurePathParams)
+ *
+ * ```ts
+ * import { GetStructurePathParams } from "@beep/ecfr"
+ *
+ * console.log(GetStructurePathParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetStructurePathParams = S.Struct({
+  date: S.String.annotate({ format: "date" }),
+  title: S.String,
 });
+/**
+ * Generated GetStructureQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetStructureQuery = {
   readonly subtitle?: string;
   readonly chapter?: string;
@@ -1047,19 +2581,79 @@ export type GetStructureQuery = {
   readonly section?: string;
   readonly appendix?: string;
 };
-export const GetStructureQuery = Schema.Struct({
-  subtitle: Schema.optionalKey(Schema.String),
-  chapter: Schema.optionalKey(Schema.String),
-  subchapter: Schema.optionalKey(Schema.String),
-  part: Schema.optionalKey(Schema.String),
-  subpart: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  appendix: Schema.optionalKey(Schema.String),
+/**
+ * Generated GetStructureQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetStructureQuery)
+ *
+ * ```ts
+ * import { GetStructureQuery } from "@beep/ecfr"
+ *
+ * console.log(GetStructureQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const GetStructureQuery = S.Struct({
+  subtitle: S.optionalKey(S.String),
+  chapter: S.optionalKey(S.String),
+  subchapter: S.optionalKey(S.String),
+  part: S.optionalKey(S.String),
+  subpart: S.optionalKey(S.String),
+  section: S.optionalKey(S.String),
+  appendix: S.optionalKey(S.String),
 });
+/**
+ * Generated GetStructure200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type GetStructure200 = StructureNode;
+/**
+ * Generated GetStructure200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect GetStructure200)
+ *
+ * ```ts
+ * import { GetStructure200 } from "@beep/ecfr"
+ *
+ * console.log(GetStructure200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const GetStructure200 = StructureNode;
+/**
+ * Generated ListTitles200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListTitles200 = TitlesResponse;
+/**
+ * Generated ListTitles200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListTitles200)
+ *
+ * ```ts
+ * import { ListTitles200 } from "@beep/ecfr"
+ *
+ * console.log(ListTitles200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const ListTitles200 = TitlesResponse;
+/**
+ * Generated ListVersionsParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListVersionsParams = {
   readonly subtitle?: string;
   readonly chapter?: string;
@@ -1073,21 +2667,61 @@ export type ListVersionsParams = {
   readonly "issue_date[gte]"?: string;
   readonly page?: number;
 };
-export const ListVersionsParams = Schema.Struct({
-  subtitle: Schema.optionalKey(Schema.String),
-  chapter: Schema.optionalKey(Schema.String),
-  subchapter: Schema.optionalKey(Schema.String),
-  part: Schema.optionalKey(Schema.String),
-  subpart: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  appendix: Schema.optionalKey(Schema.String),
-  "issue_date[on]": Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  "issue_date[lte]": Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  "issue_date[gte]": Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  page: Schema.optionalKey(Schema.Int),
+/**
+ * Generated ListVersionsParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListVersionsParams)
+ *
+ * ```ts
+ * import { ListVersionsParams } from "@beep/ecfr"
+ *
+ * console.log(ListVersionsParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const ListVersionsParams = S.Struct({
+  subtitle: S.optionalKey(S.String),
+  chapter: S.optionalKey(S.String),
+  subchapter: S.optionalKey(S.String),
+  part: S.optionalKey(S.String),
+  subpart: S.optionalKey(S.String),
+  section: S.optionalKey(S.String),
+  appendix: S.optionalKey(S.String),
+  "issue_date[on]": S.optionalKey(S.String.annotate({ format: "date" })),
+  "issue_date[lte]": S.optionalKey(S.String.annotate({ format: "date" })),
+  "issue_date[gte]": S.optionalKey(S.String.annotate({ format: "date" })),
+  page: S.optionalKey(S.Int),
 });
+/**
+ * Generated ListVersionsPathParams declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListVersionsPathParams = { readonly title: string };
-export const ListVersionsPathParams = Schema.Struct({ title: Schema.String });
+/**
+ * Generated ListVersionsPathParams declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListVersionsPathParams)
+ *
+ * ```ts
+ * import { ListVersionsPathParams } from "@beep/ecfr"
+ *
+ * console.log(ListVersionsPathParams)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const ListVersionsPathParams = S.Struct({ title: S.String });
+/**
+ * Generated ListVersionsQuery declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListVersionsQuery = {
   readonly subtitle?: string;
   readonly chapter?: string;
@@ -1101,36 +2735,82 @@ export type ListVersionsQuery = {
   readonly "issue_date[gte]"?: string;
   readonly page?: number;
 };
-export const ListVersionsQuery = Schema.Struct({
-  subtitle: Schema.optionalKey(Schema.String),
-  chapter: Schema.optionalKey(Schema.String),
-  subchapter: Schema.optionalKey(Schema.String),
-  part: Schema.optionalKey(Schema.String),
-  subpart: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  appendix: Schema.optionalKey(Schema.String),
-  "issue_date[on]": Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  "issue_date[lte]": Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  "issue_date[gte]": Schema.optionalKey(Schema.String.annotate({ format: "date" })),
-  page: Schema.optionalKey(Schema.Int),
+/**
+ * Generated ListVersionsQuery declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListVersionsQuery)
+ *
+ * ```ts
+ * import { ListVersionsQuery } from "@beep/ecfr"
+ *
+ * console.log(ListVersionsQuery)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const ListVersionsQuery = S.Struct({
+  subtitle: S.optionalKey(S.String),
+  chapter: S.optionalKey(S.String),
+  subchapter: S.optionalKey(S.String),
+  part: S.optionalKey(S.String),
+  subpart: S.optionalKey(S.String),
+  section: S.optionalKey(S.String),
+  appendix: S.optionalKey(S.String),
+  "issue_date[on]": S.optionalKey(S.String.annotate({ format: "date" })),
+  "issue_date[lte]": S.optionalKey(S.String.annotate({ format: "date" })),
+  "issue_date[gte]": S.optionalKey(S.String.annotate({ format: "date" })),
+  page: S.optionalKey(S.Int),
 });
+/**
+ * Generated ListVersions200 declaration for @beep/ecfr.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ListVersions200 = VersionsResponse;
+/**
+ * Generated ListVersions200 declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect ListVersions200)
+ *
+ * ```ts
+ * import { ListVersions200 } from "@beep/ecfr"
+ *
+ * console.log(ListVersions200)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const ListVersions200 = VersionsResponse;
 
 class DefaultGroup extends HttpApiGroup.make("default", { topLevel: true }).add(
-  HttpApiEndpoint.get("listAgencies", "/api/admin/v1/agencies.json", { success: ListAgencies200 })
+  HttpApiEndpoint.get("listAgencies", "/api/admin/v1/agencies.json", {
+    success: ListAgencies200,
+  })
     .annotate(OpenApi.Identifier, "listAgencies")
-    .annotate(OpenApi.Summary, "List all top-level eCFR agencies and their children in name order."),
+    .annotate(
+      OpenApi.Summary,
+      "List all top-level eCFR agencies and their children in name order.",
+    ),
   HttpApiEndpoint.get("listCorrections", "/api/admin/v1/corrections.json", {
     query: ListCorrectionsQuery,
     success: ListCorrections200,
   })
     .annotate(OpenApi.Identifier, "listCorrections")
-    .annotate(OpenApi.Summary, "List eCFR corrections, optionally filtered by title or date."),
-  HttpApiEndpoint.get("listTitleCorrections", "/api/admin/v1/corrections/title/:title.json", {
-    params: ListTitleCorrectionsPathParams,
-    success: ListTitleCorrections200,
-  })
+    .annotate(
+      OpenApi.Summary,
+      "List eCFR corrections, optionally filtered by title or date.",
+    ),
+  HttpApiEndpoint.get(
+    "listTitleCorrections",
+    "/api/admin/v1/corrections/title/:title.json",
+    {
+      params: ListTitleCorrectionsPathParams,
+      success: ListTitleCorrections200,
+    },
+  )
     .annotate(OpenApi.Identifier, "listTitleCorrections")
     .annotate(OpenApi.Summary, "List all eCFR corrections for a CFR title."),
   HttpApiEndpoint.get("searchResults", "/api/search/v1/results", {
@@ -1139,7 +2819,10 @@ class DefaultGroup extends HttpApiGroup.make("default", { topLevel: true }).add(
   })
     .annotate(OpenApi.Identifier, "searchResults")
     .annotate(OpenApi.Summary, "Search eCFR headings and full text."),
-  HttpApiEndpoint.get("searchCount", "/api/search/v1/count", { query: SearchCountQuery, success: SearchCount200 })
+  HttpApiEndpoint.get("searchCount", "/api/search/v1/count", {
+    query: SearchCountQuery,
+    success: SearchCount200,
+  })
     .annotate(OpenApi.Identifier, "searchCount")
     .annotate(OpenApi.Summary, "Count eCFR search matches."),
   HttpApiEndpoint.get("searchSummary", "/api/search/v1/summary", {
@@ -1159,58 +2842,108 @@ class DefaultGroup extends HttpApiGroup.make("default", { topLevel: true }).add(
     success: SearchTitleCounts200,
   })
     .annotate(OpenApi.Identifier, "searchTitleCounts")
-    .annotate(OpenApi.Summary, "Return eCFR search-result counts by CFR title."),
-  HttpApiEndpoint.get("searchHierarchyCounts", "/api/search/v1/counts/hierarchy", {
-    query: SearchHierarchyCountsQuery,
-    success: SearchHierarchyCounts200,
-  })
+    .annotate(
+      OpenApi.Summary,
+      "Return eCFR search-result counts by CFR title.",
+    ),
+  HttpApiEndpoint.get(
+    "searchHierarchyCounts",
+    "/api/search/v1/counts/hierarchy",
+    { query: SearchHierarchyCountsQuery, success: SearchHierarchyCounts200 },
+  )
     .annotate(OpenApi.Identifier, "searchHierarchyCounts")
-    .annotate(OpenApi.Summary, "Return eCFR search-result counts by hierarchy node."),
+    .annotate(
+      OpenApi.Summary,
+      "Return eCFR search-result counts by hierarchy node.",
+    ),
   HttpApiEndpoint.get("searchSuggestions", "/api/search/v1/suggestions", {
     query: SearchSuggestionsQuery,
     success: SearchSuggestions200,
   })
     .annotate(OpenApi.Identifier, "searchSuggestions")
     .annotate(OpenApi.Summary, "Return eCFR search suggestions."),
-  HttpApiEndpoint.get("getAncestry", "/api/versioner/v1/ancestry/:date/title-:title.json", {
-    params: GetAncestryPathParams,
-    query: GetAncestryQuery,
-    success: GetAncestry200,
-  })
+  HttpApiEndpoint.get(
+    "getAncestry",
+    "/api/versioner/v1/ancestry/:date/title-:title.json",
+    {
+      params: GetAncestryPathParams,
+      query: GetAncestryQuery,
+      success: GetAncestry200,
+    },
+  )
     .annotate(OpenApi.Identifier, "getAncestry")
-    .annotate(OpenApi.Summary, "Return the ancestry of a CFR hierarchy node on a date."),
-  HttpApiEndpoint.get("getFullTitleXml", "/api/versioner/v1/full/:date/title-:title.xml", {
-    params: GetFullTitleXmlPathParams,
-    query: GetFullTitleXmlQuery,
-    success: GetFullTitleXml200TextXml.pipe(HttpApiSchema.asText({ contentType: "text/xml" })),
-  })
+    .annotate(
+      OpenApi.Summary,
+      "Return the ancestry of a CFR hierarchy node on a date.",
+    ),
+  HttpApiEndpoint.get(
+    "getFullTitleXml",
+    "/api/versioner/v1/full/:date/title-:title.xml",
+    {
+      params: GetFullTitleXmlPathParams,
+      query: GetFullTitleXmlQuery,
+      success: GetFullTitleXml200TextXml.pipe(
+        HttpApiSchema.asText({ contentType: "text/xml" }),
+      ),
+    },
+  )
     .annotate(OpenApi.Identifier, "getFullTitleXml")
-    .annotate(OpenApi.Summary, "Return source XML for a complete CFR title or hierarchy subset."),
-  HttpApiEndpoint.get("getStructure", "/api/versioner/v1/structure/:date/title-:title.json", {
-    params: GetStructurePathParams,
-    query: GetStructureQuery,
-    success: GetStructure200,
-  })
+    .annotate(
+      OpenApi.Summary,
+      "Return source XML for a complete CFR title or hierarchy subset.",
+    ),
+  HttpApiEndpoint.get(
+    "getStructure",
+    "/api/versioner/v1/structure/:date/title-:title.json",
+    {
+      params: GetStructurePathParams,
+      query: GetStructureQuery,
+      success: GetStructure200,
+    },
+  )
     .annotate(OpenApi.Identifier, "getStructure")
-    .annotate(OpenApi.Summary, "Return the complete structure tree for a CFR title on a date."),
-  HttpApiEndpoint.get("listTitles", "/api/versioner/v1/titles.json", { success: ListTitles200 })
+    .annotate(
+      OpenApi.Summary,
+      "Return the complete structure tree for a CFR title on a date.",
+    ),
+  HttpApiEndpoint.get("listTitles", "/api/versioner/v1/titles.json", {
+    success: ListTitles200,
+  })
     .annotate(OpenApi.Identifier, "listTitles")
     .annotate(OpenApi.Summary, "List CFR titles and currency metadata."),
-  HttpApiEndpoint.get("listVersions", "/api/versioner/v1/versions/title-:title.json", {
-    params: ListVersionsPathParams,
-    query: ListVersionsQuery,
-    success: ListVersions200,
-  })
+  HttpApiEndpoint.get(
+    "listVersions",
+    "/api/versioner/v1/versions/title-:title.json",
+    {
+      params: ListVersionsPathParams,
+      query: ListVersionsQuery,
+      success: ListVersions200,
+    },
+  )
     .annotate(OpenApi.Identifier, "listVersions")
-    .annotate(OpenApi.Summary, "List content versions within a CFR title.")
+    .annotate(OpenApi.Summary, "List content versions within a CFR title."),
 ) {}
 
-export class Ecfr extends HttpApi.make("Ecfr")
+/**
+ * Generated EcfrApi declaration for @beep/ecfr.
+ *
+ * **Example** (Inspect EcfrApi)
+ *
+ * ```ts
+ * import { EcfrApi } from "@beep/ecfr"
+ *
+ * console.log(EcfrApi)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export class EcfrApi extends HttpApi.make("EcfrApi")
   .annotate(OpenApi.Title, "eCFR API")
   .annotate(OpenApi.Version, "v1")
   .annotate(
     OpenApi.Description,
-    "Hand-maintained Swagger 2.0 description of the 15-operation public, keyless eCFR API surface. Paths span the admin, search, and versioner service families, so basePath is empty and every operation records its full /api/<family>/v1 path. The official eCFR Swagger document is the authority; response definitions preserve stable documented envelope fields conservatively where the official response schema is unspecified."
+    "Hand-maintained Swagger 2.0 description of the 15-operation public, keyless eCFR API surface. Paths span the admin, search, and versioner service families, so basePath is empty and every operation records its full /api/<family>/v1 path. The official eCFR Swagger document is the authority; response definitions preserve stable documented envelope fields conservatively where the official response schema is unspecified.",
   )
   .annotate(OpenApi.Servers, [{ url: "https://www.ecfr.gov" }])
   .add(DefaultGroup) {}

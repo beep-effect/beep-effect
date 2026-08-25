@@ -11,7 +11,6 @@
  * @category models
  */
 export * from "./_generated/Ecfr.gen.ts";
-export { Ecfr as EcfrApi } from "./_generated/Ecfr.gen.ts";
 /**
  * Runtime configuration models and constants.
  *

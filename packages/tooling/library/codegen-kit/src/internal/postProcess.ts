@@ -252,14 +252,93 @@ const extractTopAnnotation = (expression: string): SchemaExpression => {
   );
 };
 
-const normalizeNumberSchemas = (expression: string, config: GenerateConfig): string => {
-  const ints = Str.replaceAll(/\bS\.Number\.check\(S\.isInt\(\)(?:\.annotate\(\{[^)]*\}\))?\)/g, "S.Int")(expression);
-  return config.numberPolicy === "finite" ? Str.replaceAll(/\bS\.Number\b/g, "S.Finite")(ints) : ints;
+const isSchemaProperty = (node: ts.Node, name: string): node is ts.PropertyAccessExpression =>
+  ts.isPropertyAccessExpression(node) && node.name.text === name && isSchemaNamespace(node.expression);
+
+const isIntegerCheck = (node: ts.Expression): boolean =>
+  (ts.isCallExpression(node) && isSchemaCall(node, "isInt")) ||
+  (isAnnotateCall(node) &&
+    ts.isCallExpression(node.expression.expression) &&
+    isSchemaCall(node.expression.expression, "isInt"));
+
+const integerSchemaReceiver = (node: ts.CallExpression): O.Option<ts.Expression> => {
+  if (!ts.isPropertyAccessExpression(node.expression) || node.expression.name.text !== "check") return O.none();
+  if (!pipe(A.get(A.fromIterable(node.arguments), 0), O.exists(isIntegerCheck))) return O.none();
+  const receiver = node.expression.expression;
+  if (isSchemaProperty(receiver, "Number")) return O.some(receiver);
+  return pipe(
+    O.some(receiver),
+    O.filter(isAnnotateCall),
+    O.filter((call) => isSchemaProperty(call.expression.expression, "Number"))
+  );
+};
+
+const normalizeIntegerSchemas = (source: string): string => {
+  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const replacements: Array<Replacement> = [];
+  visitNodes(sourceFile, (node) => {
+    if (!ts.isCallExpression(node)) return;
+    pipe(
+      integerSchemaReceiver(node),
+      O.map((receiver) =>
+        replacements.push(
+          new Replacement(
+            node.getStart(sourceFile),
+            node.getEnd(),
+            Str.replace(/\bS\.Number\b/, "S.Int")(receiver.getText(sourceFile))
+          )
+        )
+      )
+    );
+  });
+  return applyReplacements(source, replacements);
+};
+
+const normalizeFiniteSchemas = (source: string): string => {
+  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const replacements: Array<Replacement> = [];
+  visitNodes(sourceFile, (node) => {
+    if (isSchemaProperty(node, "Number")) {
+      replacements.push(new Replacement(node.getStart(sourceFile), node.getEnd(), "S.Finite"));
+    }
+  });
+  return applyReplacements(source, replacements);
+};
+
+const normalizeNumberSchemas = (source: string, config: GenerateConfig): string => {
+  const integers = normalizeIntegerSchemas(source);
+  return config.numberPolicy === "finite" ? normalizeFiniteSchemas(integers) : integers;
+};
+
+const isPipeableSchema = (node: ts.Node): node is ts.CallExpression =>
+  ts.isCallExpression(node) && (isSchemaCall(node, "Array") || isSchemaCall(node, "Record"));
+
+const normalizePipeableSchemas = (source: string): string => {
+  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const replacements: Array<Replacement> = [];
+  visitNodes(sourceFile, (node) => {
+    if (!ts.isCallExpression(node) || !isSchemaCall(node, "optionalKey")) return;
+    pipe(
+      A.get(A.fromIterable(node.arguments), 0),
+      O.filter(isPipeableSchema),
+      O.map((schema) =>
+        replacements.push(
+          new Replacement(node.getStart(sourceFile), node.getEnd(), `${schema.getText(sourceFile)}.pipe(S.optionalKey)`)
+        )
+      )
+    );
+  });
+  if (A.isReadonlyArrayEmpty(replacements)) return source;
+  const innermost = A.filter(
+    replacements,
+    (candidate) => !A.some(replacements, (other) => other.start > candidate.start && other.end < candidate.end)
+  );
+  return normalizePipeableSchemas(applyReplacements(source, innermost));
 };
 
 const prepareSchemaExpression = (expression: string, config: GenerateConfig): SchemaExpression =>
   extractTopAnnotation(
-    rewriteKeyAnnotations(normalizeNumberSchemas(Str.replaceAll("Schema.", "S.")(expression), config))
+    rewriteKeyAnnotations(normalizeNumberSchemas(Str.replaceAll(/\bSchema\./gu, "S.")(expression), config))
   );
 
 const renderKey = (key: string): string =>
@@ -279,7 +358,8 @@ const packageLabel = (packageName: string): string =>
 const renderAnnotation = (
   name: string,
   annotations: ReadonlyArray<AnnotationEntry>,
-  config: GenerateConfig
+  config: GenerateConfig,
+  annotation: "annote" | "annoteSchema" = "annoteSchema"
 ): string => {
   const entries = dedupeAnnotations([
     new AnnotationEntry("description", `"Generated ${packageLabel(config.packageName)} schema for ${name}."`),
@@ -287,7 +367,7 @@ const renderAnnotation = (
   ]);
   return pipe(
     [
-      `  $I.annoteSchema("${name}", {`,
+      `  $I.${annotation}("${name}", {`,
       ...A.map(entries, (entry) => `    ${renderKey(entry.key)}: ${entry.value},`),
       "  })",
     ],
@@ -295,7 +375,8 @@ const renderAnnotation = (
   );
 };
 
-const schemaImportPath = (config: GenerateConfig): string => `${config.packageName}/schema`;
+const schemaImportPath = (config: GenerateConfig): string =>
+  config.schemaStyle === "class" ? config.packageName : `${config.packageName}/schema`;
 
 const renderSchemaEntry = (name: string, constLine: string, config: GenerateConfig): string => {
   const expression = prepareSchemaExpression(
@@ -343,6 +424,62 @@ const renderSchemaEntry = (name: string, constLine: string, config: GenerateConf
   );
 };
 
+const structFields = (expression: string): O.Option<string> => {
+  const { initializer, sourceFile } = parseExpression(expression);
+  return pipe(
+    O.some(initializer),
+    O.filter(ts.isCallExpression),
+    O.filter((call) => isSchemaCall(call, "Struct")),
+    O.flatMap((call) => A.get(A.fromIterable(call.arguments), 0)),
+    O.map((fields) => fields.getText(sourceFile))
+  );
+};
+
+const renderClassEntry = (
+  name: string,
+  fields: string,
+  annotations: ReadonlyArray<AnnotationEntry>,
+  config: GenerateConfig
+): string =>
+  pipe(
+    [
+      "/**",
+      ` * Generated ${packageLabel(config.packageName)} class schema for \`${name}\`.`,
+      " *",
+      ` * **Example** (Inspect ${name})`,
+      " *",
+      " * ```ts",
+      ` * import { ${name} } from "${schemaImportPath(config)}"`,
+      " *",
+      ` * console.log(${name}.ast)`,
+      " * ```",
+      " *",
+      " * @category schemas",
+      " * @since 0.0.0",
+      " */",
+      `export class ${name} extends S.Class<${name}>($I\`${name}\`)(`,
+      `  ${fields},`,
+      `${renderAnnotation(name, annotations, config, "annote")}`,
+      ") {",
+      `  static readonly is = S.is(${name});`,
+      "}",
+    ],
+    A.join("\n")
+  );
+
+const renderSchemaPair = (name: string, constLine: string, config: GenerateConfig): string => {
+  if (config.schemaStyle === "struct") return renderSchemaEntry(name, constLine, config);
+  const expression = prepareSchemaExpression(
+    pipe(constLine, Str.replace(new RegExp(`^export const ${name} = `), ""), Str.replace(/;$/, "")),
+    config
+  );
+  return pipe(
+    structFields(expression.expression),
+    O.map((fields) => renderClassEntry(name, fields, expression.annotations, config)),
+    O.getOrElse(() => renderSchemaEntry(name, constLine, config))
+  );
+};
+
 const schemaName = (typeLine: string): O.Option<string> =>
   pipe(Str.match(/^export type ([A-Za-z0-9_]+)/)(typeLine), O.flatMap(A.get(1)), O.filter(P.isString));
 
@@ -374,14 +511,14 @@ const recursiveInternals = (source: string, config: GenerateConfig): ReadonlyArr
   pipe(
     rawLines(source),
     A.filter(Str.startsWith("const __recursive_")),
-    A.map((line) => normalizeNumberSchemas(Str.replaceAll("Schema.", "S.")(line), config))
+    A.map((line) => normalizeNumberSchemas(Str.replaceAll(/\bSchema\./gu, "S.")(line), config))
   );
 
 const defaultHeader = (config: GenerateConfig): string =>
   pipe(
     [
       "/**",
-      ` * Generated schemas for ${config.packageName}.`,
+      ` * Generated ${config.format} source for ${config.packageName}.`,
       " *",
       " * @packageDocumentation",
       " * @since 0.0.0",
@@ -407,7 +544,7 @@ const renderSchemas = (source: string, config: GenerateConfig): string =>
       recursiveInternals(source, config).length === 0 ? "" : "",
       pipe(
         schemaPairs(source),
-        A.map(([name, line]) => renderSchemaEntry(name, line, config)),
+        A.map(([name, line]) => renderSchemaPair(name, line, config)),
         A.join("\n\n")
       ),
       "",
@@ -594,14 +731,19 @@ const stripUnusedImports = (source: string): string => {
   return applyReplacements(source, replacements);
 };
 
+const prependHeader = (source: string, config: GenerateConfig): string =>
+  `${config.output.header ?? defaultHeader(config)}\n\n${source}`;
+
 const normalizeModule = (source: string, config: GenerateConfig): string =>
   pipe(
     source,
     Str.replaceAll('import * as Schema from "effect/Schema"', 'import * as S from "effect/Schema"'),
-    Str.replaceAll("Schema.", "S."),
+    Str.replaceAll(/\bSchema\./gu, "S."),
     (text) => normalizeNumberSchemas(text, config),
+    normalizePipeableSchemas,
     stripUnusedImports,
-    (text) => addExportDocs(text, config)
+    (text) => addExportDocs(text, config),
+    (text) => prependHeader(text, config)
   );
 
 export const postProcess: {

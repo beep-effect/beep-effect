@@ -387,7 +387,7 @@ const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
     rateLimit: { limit: ECFR_RATE_LIMIT, window: ECFR_RATE_LIMIT_WINDOW },
   });
 
-  const client = yield* HttpApiClient.make(G.Ecfr, {
+  const client = yield* HttpApiClient.make(G.EcfrApi, {
     baseUrl: config.apiUrl,
     transformClient: transport.transformClient,
   });

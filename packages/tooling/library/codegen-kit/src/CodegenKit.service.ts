@@ -10,7 +10,7 @@ import { A, Str } from "@beep/utils";
 import { make as makeJsonSchemaGenerator } from "@effect/openapi-generator/JsonSchemaGenerator";
 import * as OpenApiGenerator from "@effect/openapi-generator/OpenApiGenerator";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
-import { Context, Effect, Layer, Match, pipe } from "effect";
+import { Console, Context, Effect, Layer, Match, MutableList, pipe } from "effect";
 import * as FileSystem from "effect/FileSystem";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -84,6 +84,27 @@ const generateError = (message: string, cause: unknown): CodegenGenerateError =>
   CodegenGenerateError.make({ message, cause });
 const postProcessError = (message: string, cause: unknown): CodegenPostProcessError =>
   CodegenPostProcessError.make({ message, cause });
+
+const formatWarning = (warning: OpenApiGenerator.OpenApiGeneratorWarning): string => {
+  const context = A.filter([warning.method, warning.path, warning.operationId], P.isString);
+  const suffix = A.isReadonlyArrayNonEmpty(context) ? ` ${A.join(context, " ")}` : "";
+  return `WARNING [${warning.code}]${suffix}: ${warning.message}`;
+};
+
+const handleWarnings = Effect.fn("CodegenKit.handleWarnings")(function* (
+  warnings: ReadonlyArray<OpenApiGenerator.OpenApiGeneratorWarning>,
+  config: GenerateConfig
+) {
+  if (A.isReadonlyArrayEmpty(warnings)) return;
+  const rendered = A.join(A.map(warnings, formatWarning), "\n");
+  if (config.onWarning === "fail") {
+    return yield* generateError(
+      `OpenAPI generation warnings for ${config.packageName}:\n${rendered}`,
+      new globalThis.Error("OpenAPI generation warning")
+    );
+  }
+  yield* Console.error(rendered);
+});
 
 /**
  * Callback that renders a package-specific extra module.
@@ -266,11 +287,18 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     const spec = yield* decodeOpenApiDocument(document).pipe(
       Effect.mapError((cause) => generateError(`Could not decode OpenAPI document for ${config.packageName}`, cause))
     );
-    return yield* openApiGenerator.generate(spec, {
-      name: packageLabel(config.packageName),
+    const warnings = MutableList.make<OpenApiGenerator.OpenApiGeneratorWarning>();
+    const generated = yield* openApiGenerator.generate(spec, {
+      name: pipe(
+        O.fromUndefinedOr(config.name),
+        O.getOrElse(() => packageLabel(config.packageName))
+      ),
       format: generatorFormat(config.format),
       onEnter: composeTransforms(config.transforms, yield* definitionsFor(document, config)),
+      onWarning: (warning) => MutableList.append(warnings, warning),
     });
+    yield* handleWarnings(MutableList.toArray(warnings), config);
+    return generated;
   });
 
   const postProcess = Effect.fn("CodegenKit.postProcess")(function* (source: string, config: GenerateConfig) {
@@ -330,6 +358,20 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     );
   });
 
+  const printDrift = Effect.fn("CodegenKit.printDrift")(function* (
+    modules: ReadonlyArray<GeneratedModule>,
+    reports: ReadonlyArray<DriftReport>
+  ) {
+    yield* Effect.forEach(
+      A.zip(modules, reports),
+      ([module, report]) =>
+        hasDrift(report)
+          ? formatter.unifiedDiff(module.path, module.content).pipe(Effect.flatMap(Console.error))
+          : Effect.void,
+      { concurrency: 1, discard: true }
+    );
+  });
+
   const run = Effect.fn("CodegenKit.run")(function* (config: GenerateConfig, mode: "write" | "check", refresh = false) {
     const document = yield* fetch(config.source, refresh);
     const patched = yield* patch(document, config.patches);
@@ -343,6 +385,7 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     }
     const reports = yield* Effect.forEach(modules, drift, { concurrency: 1 });
     if (A.some(reports, hasDrift)) {
+      yield* printDrift(modules, reports);
       return yield* CodegenDriftError.make({ message: "Generated output drift detected", reports });
     }
     return reports;

@@ -702,16 +702,14 @@ export const ToolCallLocation = S.Struct({
   ),
   line: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Optional line number within the file.",
         format: "uint32",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
@@ -1356,9 +1354,7 @@ export type ExtNotification = typeof ExtNotification.Type;
  */
 export const RequestId = S.Union([
   S.Null.annotateKey({ title: "Null" }),
-  S.Finite.annotateKey({ title: "Number", format: "int64" }).check(
-    S.isInt().annotate({ expected: "an integer" }),
-  ),
+  S.Int.annotateKey({ title: "Number", format: "int64" }),
   S.String.annotateKey({ title: "Str" }),
 ]).pipe(
   $I.annoteSchema("RequestId", {
@@ -1993,14 +1989,11 @@ export type AuthMethodAgent = typeof AuthMethodAgent.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ProtocolVersion = S.Finite.check(
-  S.isInt().annotate({ expected: "an integer" }),
+export const ProtocolVersion = S.Int.check(
+  S.isGreaterThanOrEqualTo(0).annotate({
+    expected: "a value greater than or equal to 0",
+  }),
 )
-  .check(
-    S.isGreaterThanOrEqualTo(0).annotate({
-      expected: "a value greater than or equal to 0",
-    }),
-  )
   .check(
     S.isLessThanOrEqualTo(65535).annotate({
       expected: "a value less than or equal to 65535",
@@ -2363,79 +2356,67 @@ export type StopReason = typeof StopReason.Type;
 export const Usage = S.Struct({
   cachedReadTokens: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Total cache read tokens.",
         format: "uint64",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
   cachedWriteTokens: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Total cache write tokens.",
         format: "uint64",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
-  inputTokens: S.Finite.annotateKey({
+  inputTokens: S.Int.annotateKey({
     description: "Total input tokens across all turns.",
     format: "uint64",
-  })
-    .check(S.isInt().annotate({ expected: "an integer" }))
-    .check(
-      S.isGreaterThanOrEqualTo(0).annotate({
-        expected: "a value greater than or equal to 0",
-      }),
-    ),
-  outputTokens: S.Finite.annotateKey({
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
+  outputTokens: S.Int.annotateKey({
     description: "Total output tokens across all turns.",
     format: "uint64",
-  })
-    .check(S.isInt().annotate({ expected: "an integer" }))
-    .check(
-      S.isGreaterThanOrEqualTo(0).annotate({
-        expected: "a value greater than or equal to 0",
-      }),
-    ),
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
   thoughtTokens: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Total thought/reasoning tokens",
         format: "uint64",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
-  totalTokens: S.Finite.annotateKey({
+  totalTokens: S.Int.annotateKey({
     description: "Sum of all token types across session.",
     format: "uint64",
-  })
-    .check(S.isInt().annotate({ expected: "an integer" }))
-    .check(
-      S.isGreaterThanOrEqualTo(0).annotate({
-        expected: "a value greater than or equal to 0",
-      }),
-    ),
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
 }).pipe(
   $I.annoteSchema("Usage", {
     description: "Generated ACP schema for Usage.",
@@ -2624,11 +2605,11 @@ export const ErrorCode = S.Union([
       "**URL elicitation required**: **UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe agent requires user input via a URL-based elicitation before it can proceed.",
     format: "int32",
   }),
-  S.Finite.annotateKey({
+  S.Int.annotateKey({
     title: "Other",
     description: "Other undefined error code.",
     format: "int32",
-  }).check(S.isInt().annotate({ expected: "an integer" })),
+  }),
 ]).pipe(
   $I.annoteSchema("ErrorCode", {
     description: "Generated ACP schema for ErrorCode.",
@@ -3314,17 +3295,15 @@ export const TerminalExitStatus = S.Struct({
   ),
   exitCode: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description:
           "The process exit code (may be null if terminated by signal).",
         format: "uint32",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
@@ -3443,17 +3422,15 @@ export const WaitForTerminalExitResponse = S.Struct({
   ),
   exitCode: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description:
           "The process exit code (may be null if terminated by signal).",
         format: "uint32",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
@@ -3560,9 +3537,7 @@ export type KillTerminalResponse = typeof KillTerminalResponse.Type;
  */
 export const ElicitationContentValue = S.Union([
   S.String.annotateKey({ title: "String" }),
-  S.Finite.annotateKey({ title: "Integer", format: "int64" }).check(
-    S.isInt().annotate({ expected: "an integer" }),
-  ),
+  S.Int.annotateKey({ title: "Integer", format: "int64" }),
   S.Finite.annotateKey({ title: "Number", format: "double" }).check(
     S.isFinite().annotate({ expected: "a finite number" }),
   ),
@@ -3818,31 +3793,27 @@ export const ReadTextFileRequest = S.Struct({
   ),
   limit: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Maximum number of lines to read.",
         format: "uint32",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
   line: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Line number to start reading from (1-based).",
         format: "uint32",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
@@ -5033,17 +5004,15 @@ export const CreateTerminalRequest = S.Struct({
   ),
   outputByteLimit: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description:
           "Maximum number of output bytes to retain.\n\nWhen the limit is exceeded, the Client truncates from the beginning of the output\nto stay within the limit.\n\nThe Client MUST ensure truncation happens at a character boundary to maintain valid\nstring output, even if this means the retained output is slightly less than the\nspecified limit.",
         format: "uint64",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
@@ -6054,12 +6023,7 @@ export const ContentBlock = S.Union(
       mimeType: S.optionalKey(S.Union([S.String, S.Null])),
       name: S.String,
       size: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({ format: "int64" }).check(
-            S.isInt().annotate({ expected: "an integer" }),
-          ),
-          S.Null,
-        ]),
+        S.Union([S.Int.annotateKey({ format: "int64" }), S.Null]),
       ),
       title: S.optionalKey(S.Union([S.String, S.Null])),
       uri: S.String,
@@ -7315,31 +7279,27 @@ export const ElicitationPropertySchema = S.Union(
       ),
       maxLength: S.optionalKey(
         S.Union([
-          S.Finite.annotateKey({
+          S.Int.annotateKey({
             description: "Maximum string length.",
             format: "uint32",
-          })
-            .check(S.isInt().annotate({ expected: "an integer" }))
-            .check(
-              S.isGreaterThanOrEqualTo(0).annotate({
-                expected: "a value greater than or equal to 0",
-              }),
-            ),
+          }).check(
+            S.isGreaterThanOrEqualTo(0).annotate({
+              expected: "a value greater than or equal to 0",
+            }),
+          ),
           S.Null,
         ]),
       ),
       minLength: S.optionalKey(
         S.Union([
-          S.Finite.annotateKey({
+          S.Int.annotateKey({
             description: "Minimum string length.",
             format: "uint32",
-          })
-            .check(S.isInt().annotate({ expected: "an integer" }))
-            .check(
-              S.isGreaterThanOrEqualTo(0).annotate({
-                expected: "a value greater than or equal to 0",
-              }),
-            ),
+          }).check(
+            S.isGreaterThanOrEqualTo(0).annotate({
+              expected: "a value greater than or equal to 0",
+            }),
+          ),
           S.Null,
         ]),
       ),
@@ -7419,10 +7379,7 @@ export const ElicitationPropertySchema = S.Union(
     S.Struct({
       default: S.optionalKey(
         S.Union([
-          S.Finite.annotateKey({
-            description: "Default value.",
-            format: "int64",
-          }).check(S.isInt().annotate({ expected: "an integer" })),
+          S.Int.annotateKey({ description: "Default value.", format: "int64" }),
           S.Null,
         ]),
       ),
@@ -7434,19 +7391,19 @@ export const ElicitationPropertySchema = S.Union(
       ),
       maximum: S.optionalKey(
         S.Union([
-          S.Finite.annotateKey({
+          S.Int.annotateKey({
             description: "Maximum value (inclusive).",
             format: "int64",
-          }).check(S.isInt().annotate({ expected: "an integer" })),
+          }),
           S.Null,
         ]),
       ),
       minimum: S.optionalKey(
         S.Union([
-          S.Finite.annotateKey({
+          S.Int.annotateKey({
             description: "Minimum value (inclusive).",
             format: "int64",
-          }).check(S.isInt().annotate({ expected: "an integer" })),
+          }),
           S.Null,
         ]),
       ),
@@ -7505,31 +7462,27 @@ export const ElicitationPropertySchema = S.Union(
       }),
       maxItems: S.optionalKey(
         S.Union([
-          S.Finite.annotateKey({
+          S.Int.annotateKey({
             description: "Maximum number of items to select.",
             format: "uint64",
-          })
-            .check(S.isInt().annotate({ expected: "an integer" }))
-            .check(
-              S.isGreaterThanOrEqualTo(0).annotate({
-                expected: "a value greater than or equal to 0",
-              }),
-            ),
+          }).check(
+            S.isGreaterThanOrEqualTo(0).annotate({
+              expected: "a value greater than or equal to 0",
+            }),
+          ),
           S.Null,
         ]),
       ),
       minItems: S.optionalKey(
         S.Union([
-          S.Finite.annotateKey({
+          S.Int.annotateKey({
             description: "Minimum number of items to select.",
             format: "uint64",
-          })
-            .check(S.isInt().annotate({ expected: "an integer" }))
-            .check(
-              S.isGreaterThanOrEqualTo(0).annotate({
-                expected: "a value greater than or equal to 0",
-              }),
-            ),
+          }).check(
+            S.isGreaterThanOrEqualTo(0).annotate({
+              expected: "a value greater than or equal to 0",
+            }),
+          ),
           S.Null,
         ]),
       ),
@@ -8382,26 +8335,22 @@ export const SessionUpdate = S.Union(
           description: "Cumulative session cost (optional).",
         }),
       ),
-      size: S.Finite.annotateKey({
+      size: S.Int.annotateKey({
         description: "Total context window size in tokens.",
         format: "uint64",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
-      used: S.Finite.annotateKey({
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      used: S.Int.annotateKey({
         description: "Tokens currently in context.",
         format: "uint64",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       sessionUpdate: S.Literal("usage_update"),
     }).annotateKey({
       description:
@@ -10454,10 +10403,7 @@ export type ImageContent = typeof ImageContent.Type;
 export const IntegerPropertySchema = S.Struct({
   default: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
-        description: "Default value.",
-        format: "int64",
-      }).check(S.isInt().annotate({ expected: "an integer" })),
+      S.Int.annotateKey({ description: "Default value.", format: "int64" }),
       S.Null,
     ]),
   ),
@@ -10469,19 +10415,19 @@ export const IntegerPropertySchema = S.Struct({
   ),
   maximum: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Maximum value (inclusive).",
         format: "int64",
-      }).check(S.isInt().annotate({ expected: "an integer" })),
+      }),
       S.Null,
     ]),
   ),
   minimum: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Minimum value (inclusive).",
         format: "int64",
-      }).check(S.isInt().annotate({ expected: "an integer" })),
+      }),
       S.Null,
     ]),
   ),
@@ -10667,31 +10613,27 @@ export const MultiSelectPropertySchema = S.Struct({
   }),
   maxItems: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Maximum number of items to select.",
         format: "uint64",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
   minItems: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Minimum number of items to select.",
         format: "uint64",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
@@ -10893,12 +10835,7 @@ export const ResourceLink = S.Struct({
   mimeType: S.optionalKey(S.Union([S.String, S.Null])),
   name: S.String,
   size: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({ format: "int64" }).check(
-        S.isInt().annotate({ expected: "an integer" }),
-      ),
-      S.Null,
-    ]),
+    S.Union([S.Int.annotateKey({ format: "int64" }), S.Null]),
   ),
   title: S.optionalKey(S.Union([S.String, S.Null])),
   uri: S.String,
@@ -11179,31 +11116,27 @@ export const StringPropertySchema = S.Struct({
   ),
   maxLength: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Maximum string length.",
         format: "uint32",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
   minLength: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Minimum string length.",
         format: "uint32",
-      })
-        .check(S.isInt().annotate({ expected: "an integer" }))
-        .check(
-          S.isGreaterThanOrEqualTo(0).annotate({
-            expected: "a value greater than or equal to 0",
-          }),
-        ),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
@@ -11482,26 +11415,22 @@ export const UsageUpdate = S.Struct({
       description: "Cumulative session cost (optional).",
     }),
   ),
-  size: S.Finite.annotateKey({
+  size: S.Int.annotateKey({
     description: "Total context window size in tokens.",
     format: "uint64",
-  })
-    .check(S.isInt().annotate({ expected: "an integer" }))
-    .check(
-      S.isGreaterThanOrEqualTo(0).annotate({
-        expected: "a value greater than or equal to 0",
-      }),
-    ),
-  used: S.Finite.annotateKey({
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
+  used: S.Int.annotateKey({
     description: "Tokens currently in context.",
     format: "uint64",
-  })
-    .check(S.isInt().annotate({ expected: "an integer" }))
-    .check(
-      S.isGreaterThanOrEqualTo(0).annotate({
-        expected: "a value greater than or equal to 0",
-      }),
-    ),
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
 }).pipe(
   $I.annoteSchema("UsageUpdate", {
     description: "Generated ACP schema for UsageUpdate.",

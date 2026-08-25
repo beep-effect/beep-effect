@@ -21,6 +21,7 @@ import { GenerateConfig, runGenerateCli } from "@beep/codegen-kit"
 
 const config = GenerateConfig.make({
   packageName: "@beep/example",
+  name: "ExampleApi",
   identity: { composer: "$ExampleId", moduleId: "_generated/schema.gen" },
   source: {
     _tag: "url",
@@ -38,6 +39,10 @@ runGenerateCli(config)
 ```
 
 Run the consumer package's generate script normally to use the cache. Pass `--refresh` to replace and format URL caches. Pass `--check` to fail when generated output is missing or changed. `--check` and `--refresh` cannot be combined.
+
+`name` is optional and defaults to the package-derived generator name. OpenAPI warnings fail generation by default; set `onWarning: "log"` to print them and continue. `--check` prints a unified diff for each missing or changed output.
+
+Schema output uses `schemaStyle: "struct"` by default. Set `schemaStyle: "class"` to render object schemas as `S.Class` models with `.make(...)` and a static schema-derived `is` guard. Non-object schemas keep the struct-style schema declaration.
 
 Package-specific files use `extraModules` entries with renderer names and output paths. Supply their implementations through `runGenerateCli(config, { extraRenderers })`.
 
