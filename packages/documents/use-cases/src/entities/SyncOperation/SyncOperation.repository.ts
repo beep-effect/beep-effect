@@ -127,7 +127,7 @@ export class SyncOperationRepositoryConflict extends S.TaggedError<SyncOperation
       description: "Non-empty repository conflict diagnostic.",
     }),
   },
-  $I.annote("SyncOperationRepositoryConflict", {
+  $I.annoteError<SyncOperationRepositoryConflict>("SyncOperationRepositoryConflict", {
     title: "SyncOperation repository conflict",
     description: "The SyncOperation repository rejected a duplicate idempotency key.",
   })
@@ -163,7 +163,7 @@ export class SyncOperationRepositoryNotFound extends S.TaggedError<SyncOperation
       description: "SyncOperation identity that could not be found.",
     }),
   },
-  $I.annote("SyncOperationRepositoryNotFound", {
+  $I.annoteError<SyncOperationRepositoryNotFound>("SyncOperationRepositoryNotFound", {
     title: "SyncOperation repository not found",
     description: "The SyncOperation repository could not find the requested entity.",
   })
@@ -195,7 +195,7 @@ export class SyncOperationRepositoryUnavailable extends S.TaggedError<SyncOperat
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("SyncOperationRepositoryUnavailable", {
+  $I.annoteError<SyncOperationRepositoryUnavailable>("SyncOperationRepositoryUnavailable", {
     title: "SyncOperation repository unavailable",
     description: "The SyncOperation repository could not serve the request.",
   })

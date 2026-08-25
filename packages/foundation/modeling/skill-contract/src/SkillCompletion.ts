@@ -211,16 +211,6 @@ export const CompletionInvariantReason = LiteralKit([
  */
 export type CompletionInvariantReason = typeof CompletionInvariantReason.Type;
 
-const CompletionInvariantErrorFields = {
-  message: S.NonEmptyString,
-  reason: CompletionInvariantReason,
-} satisfies S.Struct.Fields;
-const sameCompletionInvariantErrorFields = S.toEquivalence(
-  S.TaggedStruct("CompletionInvariantError", CompletionInvariantErrorFields)
-);
-const sameCompletionInvariantError = (self: CompletionInvariantError, that: CompletionInvariantError): boolean =>
-  sameCompletionInvariantErrorFields(self, that);
-
 /**
  * Boundary failure for malformed internal completion bindings.
  *
@@ -241,14 +231,13 @@ const sameCompletionInvariantError = (self: CompletionInvariantError, that: Comp
  */
 export class CompletionInvariantError extends S.TaggedError<CompletionInvariantError>($I`CompletionInvariantError`)(
   "CompletionInvariantError",
-  CompletionInvariantErrorFields,
-  $I.annoteClass<
-    S.declare<CompletionInvariantError>,
-    readonly [S.TaggedStruct<"CompletionInvariantError", typeof CompletionInvariantErrorFields>]
-  >("CompletionInvariantError", {
+  {
+    message: S.NonEmptyString,
+    reason: CompletionInvariantReason,
+  },
+  $I.annoteError<CompletionInvariantError>("CompletionInvariantError", {
     description:
       "Malformed internal contract, ladder, output, or gate-summary binding rejected by completion evaluation.",
-    toEquivalence: () => sameCompletionInvariantError,
   })
 ) {}
 

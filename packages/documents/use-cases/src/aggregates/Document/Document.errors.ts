@@ -32,7 +32,7 @@ export class FilingDecisionUnavailable extends S.TaggedError<FilingDecisionUnava
   {
     reason: S.NonEmptyString,
   },
-  $I.annote("FilingDecisionUnavailable", {
+  $I.annoteError<FilingDecisionUnavailable>("FilingDecisionUnavailable", {
     description: "The FilingDecision port could not decide a taxonomy concept.",
   })
 ) {}
@@ -59,7 +59,7 @@ export class DocumentMaterializationFailed extends S.TaggedError<DocumentMateria
   {
     reason: S.NonEmptyString,
   },
-  $I.annote("DocumentMaterializationFailed", {
+  $I.annoteError<DocumentMaterializationFailed>("DocumentMaterializationFailed", {
     description: "The workspace vault materialization write failed.",
   })
 ) {}
@@ -128,7 +128,7 @@ export class DocumentIntakeActionError extends S.TaggedError<DocumentIntakeActio
   {
     message: S.String,
   },
-  $I.annote("DocumentIntakeActionError", {
+  $I.annoteError<DocumentIntakeActionError>("DocumentIntakeActionError", {
     description: "Client-safe failure raised when dropped-file intake cannot complete.",
   })
 ) {

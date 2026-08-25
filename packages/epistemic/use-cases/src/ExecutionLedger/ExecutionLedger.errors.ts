@@ -12,7 +12,7 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -62,7 +62,7 @@ export const ExecutionLedgerOperation = LiteralKit([
 export type ExecutionLedgerOperation = typeof ExecutionLedgerOperation.Type;
 
 const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+  S.OptionFromOptionalKey(Defect({ includeStack: true }))
     .pipe(SchemaUtils.withNoneDefault)
     .annotateKey({
       description,
@@ -101,7 +101,7 @@ export class ExecutionLedgerConstraintViolation extends S.TaggedError<ExecutionL
       description: "Ledger operation the constraint rejected.",
     }),
   },
-  $I.annote("ExecutionLedgerConstraintViolation", {
+  $I.annoteError<ExecutionLedgerConstraintViolation>("ExecutionLedgerConstraintViolation", {
     title: "Execution ledger constraint violation",
     description: "A ledger write was rejected by a named append-only constraint.",
   })
@@ -158,7 +158,7 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<ExecutionLedgerUna
       description: "Non-empty ledger availability diagnostic.",
     }),
   },
-  $I.annote("ExecutionLedgerUnavailable", {
+  $I.annoteError<ExecutionLedgerUnavailable>("ExecutionLedgerUnavailable", {
     title: "Execution ledger unavailable",
     description: "The execution ledger could not serve the request.",
   })

@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -35,9 +36,9 @@ export class QualityArtifactGeneratorError extends S.TaggedError<QualityArtifact
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     filePath: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("QualityArtifactGeneratorError", {
+  $I.annoteError<QualityArtifactGeneratorError>("QualityArtifactGeneratorError", {
     description: "Typed failure raised by repo quality artifact generators.",
   })
 ) {

@@ -20,6 +20,7 @@ import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlMode
 import { findOne } from "effect/unstable/sql/SqlSchema";
 import { isUnknownRecord } from "../internal/guards.ts";
 import { flattenEncoded } from "./classification.ts";
+import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 import * as Field from "./Field.ts";
 import { ModelInvariantError } from "./model.ts";
 import type { Effect, Success } from "effect/Effect";
@@ -63,11 +64,12 @@ export class VersionConflictError extends TaggedError<VersionConflictError>(
   "VersionConflictError",
   {
     table: NonEmptyString,
-    id: Unknown,
+    id: Unknown.annotate({ toEquivalence: () => () => true }),
     expectedVersion: Int,
   },
   {
     description: "An optimistic repository update found no row with the expected version.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<VersionConflictError>(typeParameters),
   }
 ) {}
 

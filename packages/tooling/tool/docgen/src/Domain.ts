@@ -15,7 +15,6 @@ import type * as Ordering from "effect/Ordering";
 import type * as Parser from "./Parser.ts";
 
 const $I = $RepoDocgenId.create("Domain");
-
 const StringArray = S.Array(S.String);
 const OptionalString = S.UndefinedOr(S.String);
 const OptionalStringArray = S.UndefinedOr(StringArray);
@@ -1136,7 +1135,7 @@ export class DocgenError extends S.TaggedError<DocgenError>($I`DocgenError`)(
       description: "Human-readable docgen failure message.",
     }),
   },
-  $I.annote("DocgenError", {
+  $I.annoteError<DocgenError>("DocgenError", {
     description: "Typed error used throughout docgen parsing and generation operations.",
   })
 ) {}

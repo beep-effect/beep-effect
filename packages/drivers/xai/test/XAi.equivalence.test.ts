@@ -13,4 +13,12 @@ describe("xAI declared-field equivalence", () => {
     expect(sameXAiError(a, b)).toBe(true);
     expect(sameXAiError(a, c)).toBe(false);
   });
+
+  it("treats defect-only differences as equivalent", () => {
+    const a = XAiError.config(new Error("first failure"));
+    const b = XAiError.config(new Error("second failure"));
+
+    // the defect cause is payload, never identity
+    expect(sameXAiError(a, b)).toBe(true);
+  });
 });

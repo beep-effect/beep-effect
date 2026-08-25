@@ -251,7 +251,7 @@ export class HtmlSerializeError extends S.TaggedError<HtmlSerializeError>($I`Htm
     rule: HtmlSerializeRule,
     message: S.String,
   },
-  $I.annote("HtmlSerializeError", {
+  $I.annoteError<HtmlSerializeError>("HtmlSerializeError", {
     description: "Canonical HTML serialization could not preserve the modeled AST.",
   })
 ) {}

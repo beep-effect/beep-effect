@@ -7,6 +7,7 @@
 
 import { DuckDb, DuckDbConnectionOptions, DuckDbParquetExport } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, Layer, Path, pipe } from "effect";
@@ -15,7 +16,6 @@ import * as S from "effect/Schema";
 import { AiMetricsDeployTarget } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("mirror");
-
 const defaultRemoteMirrorRoot = "/srv/data/ai-metrics/p7-derived-mirror";
 const mirrorSchemaVersion = "beep.ai_metrics.mirror_bundle.v1";
 const mirrorStatusSchemaVersion = "beep.ai_metrics.mirror_status.v1";
@@ -383,10 +383,10 @@ const mirrorFailure = (message: string, cause: unknown): AiMetricsMirrorError =>
 export class AiMetricsMirrorError extends S.TaggedError<AiMetricsMirrorError>($I`AiMetricsMirrorError`)(
   "AiMetricsMirrorError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsMirrorError", {
+  $I.annoteError<AiMetricsMirrorError>("AiMetricsMirrorError", {
     description: "Typed failure raised while building or locating sanitized AI metrics mirror bundles.",
   })
 ) {}

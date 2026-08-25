@@ -42,7 +42,7 @@ export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotF
   {
     workerId: ArchitectureLabIdentity.WorkerId,
   },
-  $I.annote("WorkerRepositoryNotFound", {
+  $I.annoteError<WorkerRepositoryNotFound>("WorkerRepositoryNotFound", {
     title: "Worker repository not found",
     description: "The Worker repository could not find the requested entity.",
   })
@@ -80,7 +80,7 @@ export class WorkerRepositoryConflict extends S.TaggedError<WorkerRepositoryConf
       description: "Non-empty repository conflict diagnostic.",
     }),
   },
-  $I.annote("WorkerRepositoryConflict", {
+  $I.annoteError<WorkerRepositoryConflict>("WorkerRepositoryConflict", {
     title: "Worker repository conflict",
     description: "The Worker repository rejected a conflicting write.",
   })
@@ -113,7 +113,7 @@ export class WorkerRepositoryUnavailable extends S.TaggedError<WorkerRepositoryU
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("WorkerRepositoryUnavailable", {
+  $I.annoteError<WorkerRepositoryUnavailable>("WorkerRepositoryUnavailable", {
     title: "Worker repository unavailable",
     description: "The Worker repository could not serve the request.",
   })

@@ -6,7 +6,7 @@
  */
 
 import { $FaceDetectionId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
@@ -14,7 +14,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $FaceDetectionId.create("FaceDetection.errors");
-const FaceDetectionDefect = S.Defect({ includeStack: true });
+const FaceDetectionDefect = Defect({ includeStack: true });
 
 type FaceDetectionErrorContextInput = {
   readonly cause?: unknown;
@@ -134,20 +134,6 @@ export class FaceDetectionErrorFromUnknownOptions extends S.Class<FaceDetectionE
   })
 ) {}
 
-const FaceDetectionErrorFields = {
-  ...FaceDetectionErrorLeadingContextFields,
-  message: S.String.annotateKey({
-    description: "Human-readable face-detection failure summary.",
-  }),
-  ...FaceDetectionErrorTrailingContextFields,
-  operation: FaceDetectionOperation.annotateKey({
-    description: "Face-detection driver operation that failed.",
-  }),
-} satisfies S.Struct.Fields;
-const sameFaceDetectionErrorFields = S.toEquivalence(S.TaggedStruct("FaceDetectionError", FaceDetectionErrorFields));
-const sameFaceDetectionError = (self: FaceDetectionError, that: FaceDetectionError): boolean =>
-  sameFaceDetectionErrorFields(self, that);
-
 /**
  * Technical failure raised by the `@beep/face-detection` driver boundary.
  *
@@ -172,13 +158,18 @@ const sameFaceDetectionError = (self: FaceDetectionError, that: FaceDetectionErr
  */
 export class FaceDetectionError extends S.TaggedError<FaceDetectionError>($I`FaceDetectionError`)(
   "FaceDetectionError",
-  FaceDetectionErrorFields,
-  $I.annoteClass<
-    S.declare<FaceDetectionError>,
-    readonly [S.TaggedStruct<"FaceDetectionError", typeof FaceDetectionErrorFields>]
-  >("FaceDetectionError", {
+  {
+    ...FaceDetectionErrorLeadingContextFields,
+    message: S.String.annotateKey({
+      description: "Human-readable face-detection failure summary.",
+    }),
+    ...FaceDetectionErrorTrailingContextFields,
+    operation: FaceDetectionOperation.annotateKey({
+      description: "Face-detection driver operation that failed.",
+    }),
+  },
+  $I.annoteError<FaceDetectionError>("FaceDetectionError", {
     description: "Technical ONNX face detection driver failure scoped to a driver operation.",
-    toEquivalence: () => sameFaceDetectionError,
   })
 ) {
   static readonly is = S.is(FaceDetectionError);

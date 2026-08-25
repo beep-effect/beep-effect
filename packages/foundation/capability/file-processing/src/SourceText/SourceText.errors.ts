@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -77,11 +77,11 @@ export type SourceTextResolverErrorReason = typeof SourceTextResolverErrorReason
 export class SourceTextResolverError extends S.TaggedError<SourceTextResolverError>($I`SourceTextResolverError`)(
   "SourceTextResolverError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
     message: S.NonEmptyString,
     reason: SourceTextResolverErrorReason,
   },
-  $I.annote("SourceTextResolverError", {
+  $I.annoteError<SourceTextResolverError>("SourceTextResolverError", {
     description: "Typed, fail-closed failure emitted by canonical source-text resolution or paging.",
   })
 ) {

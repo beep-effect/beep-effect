@@ -16,7 +16,7 @@ import {
   LegalPositionRelator,
   PowerExercise,
 } from "@beep/law-practice-domain";
-import { EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -104,7 +104,7 @@ export class LegalPositionRecordRepositoryUnavailable extends S.TaggedError<Lega
 )(
   "LegalPositionRecordRepositoryUnavailable",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Optional underlying driver defect captured when the repository could not serve a request.",
@@ -116,7 +116,7 @@ export class LegalPositionRecordRepositoryUnavailable extends S.TaggedError<Lega
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("LegalPositionRecordRepositoryUnavailable", {
+  $I.annoteError<LegalPositionRecordRepositoryUnavailable>("LegalPositionRecordRepositoryUnavailable", {
     title: "Legal position record repository unavailable",
     description: "The legal position record repository could not serve the request.",
   })

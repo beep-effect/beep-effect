@@ -87,10 +87,35 @@ class AwsBlockDeviceMapping extends S.Class<AwsBlockDeviceMapping>($I`AwsBlockDe
   $I.annote("AwsBlockDeviceMapping", { description: "EC2 root block-device override for a runner bake." })
 ) {}
 
-class AwsResourcePending extends S.TaggedError<AwsResourcePending>($I`AwsResourcePending`)(
+/**
+ * Error raised when an AWS resource observed during a runner bake has not yet reached the state the
+ * bake expects.
+ *
+ * **Details**
+ *
+ * Carries the resource identity plus the expected and actual states so callers can retry or report
+ * with the same diagnostic identity; declared equivalence compares those three fields only.
+ *
+ * **Example** (Describe a runner instance that is still starting)
+ *
+ * ```ts
+ * import { AwsResourcePending } from "@beep/repo-cli/commands/Runners/Runners.service"
+ *
+ * const pending = AwsResourcePending.make({ resource: "instance i-0123", expected: "running", actual: "pending" })
+ * console.log(pending._tag) // "AwsResourcePending"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class AwsResourcePending extends S.TaggedError<AwsResourcePending>($I`AwsResourcePending`)(
   "AwsResourcePending",
-  { actual: S.NonEmptyString, expected: S.NonEmptyString, resource: S.NonEmptyString },
-  $I.annote("AwsResourcePending", {
+  {
+    actual: S.NonEmptyString,
+    expected: S.NonEmptyString,
+    resource: S.NonEmptyString,
+  },
+  $I.annoteError<AwsResourcePending>("AwsResourcePending", {
     description: "Internal signal that an AWS resource has not reached its target state.",
   })
 ) {}

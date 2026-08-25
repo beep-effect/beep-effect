@@ -4,14 +4,14 @@
  * Effect v4 `@beep/nlp` implementation notes:
  * each `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped
  * by a `$NlpProcessingId` composer, `unknown` cause fields become
- * `S.Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
+ * `Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
  *
  * @since 0.0.0
  * @packageDocumentation
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { NodeId } from "../EffectGraph.ts";
 
@@ -45,7 +45,7 @@ export class ValidationError extends S.TaggedError<ValidationError>($I`Validatio
     nodeId: NodeId,
     operationName: S.String,
   },
-  $I.annote("ValidationError", {
+  $I.annoteError<ValidationError>("ValidationError", {
     description: "Raised when a graph operation cannot validly be applied to a node.",
   })
 ) {}
@@ -78,7 +78,7 @@ export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
     operationName: S.String,
     timeoutMs: S.Finite,
   },
-  $I.annote("TimeoutError", {
+  $I.annoteError<TimeoutError>("TimeoutError", {
     description: "Raised when a graph operation exceeds its configured time limit.",
   })
 ) {}
@@ -113,11 +113,11 @@ export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
 export class OperationError extends S.TaggedError<OperationError>($I`OperationError`)(
   "OperationError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     nodeId: NodeId,
     operationName: S.String,
   },
-  $I.annote("OperationError", {
+  $I.annoteError<OperationError>("OperationError", {
     description: "Raised when a graph operation fails while being applied to a node.",
   })
 ) {}
@@ -149,7 +149,7 @@ export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
     message: S.String,
     nodeId: S.OptionFromOptionalKey(NodeId),
   },
-  $I.annote("GraphError", {
+  $I.annoteError<GraphError>("GraphError", {
     description: "Raised when a graph has an invalid structure for the requested operation.",
   })
 ) {}
@@ -181,10 +181,10 @@ export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
 export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
   "StorageError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     operation: S.Literals(["store", "retrieve", "delete", "query"]),
   },
-  $I.annote("StorageError", {
+  $I.annoteError<StorageError>("StorageError", {
     description: "Raised when the result store fails to store, retrieve, delete, or query a result.",
   })
 ) {}
@@ -212,10 +212,10 @@ export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
 export class ExecutionError extends S.TaggedError<ExecutionError>($I`ExecutionError`)(
   "ExecutionError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
     message: S.String,
   },
-  $I.annote("ExecutionError", {
+  $I.annoteError<ExecutionError>("ExecutionError", {
     description: "Raised on a general graph-operation execution failure (e.g. an unknown strategy).",
   })
 ) {}

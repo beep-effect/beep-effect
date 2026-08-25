@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -30,9 +31,9 @@ export class CiCommandError extends S.TaggedError<CiCommandError>($I`CiCommandEr
   "CiCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("CiCommandError", {
+  $I.annoteError<CiCommandError>("CiCommandError", {
     description: "Failure raised by CI helper commands.",
   })
 ) {

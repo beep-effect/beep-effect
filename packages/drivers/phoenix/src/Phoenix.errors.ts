@@ -6,7 +6,7 @@
  */
 
 import { $PhoenixId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Result } from "effect";
@@ -121,7 +121,7 @@ export type PhoenixErrorReason = typeof PhoenixErrorReason.Type;
  */
 export class PhoenixErrorOptions extends S.Class<PhoenixErrorOptions>($I`PhoenixErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
       description: "Optional failure cause converted to a redacted diagnostic label.",
     }),
   },
@@ -143,20 +143,6 @@ class PhoenixErrorOperationOptionsInput extends S.Class<PhoenixErrorOperationOpt
   })
 ) {}
 
-const PhoenixErrorFields = {
-  cause: S.optionalKey(S.String).annotateKey({
-    description: "Redacted diagnostic label derived from the original failure cause.",
-  }),
-  operation: PhoenixOperation.annotateKey({
-    description: "Phoenix driver operation that failed.",
-  }),
-  reason: PhoenixErrorReason.annotateKey({
-    description: "Technical failure reason for the Phoenix operation.",
-  }),
-} satisfies S.Struct.Fields;
-const samePhoenixErrorFields = S.toEquivalence(S.TaggedStruct("PhoenixError", PhoenixErrorFields));
-const samePhoenixError = (self: PhoenixError, that: PhoenixError): boolean => samePhoenixErrorFields(self, that);
-
 /**
  * Technical failure raised by the Phoenix driver boundary.
  *
@@ -174,14 +160,20 @@ const samePhoenixError = (self: PhoenixError, that: PhoenixError): boolean => sa
  */
 export class PhoenixError extends S.TaggedError<PhoenixError>($I`PhoenixError`)(
   "PhoenixError",
-  PhoenixErrorFields,
-  $I.annoteClass<S.declare<PhoenixError>, readonly [S.TaggedStruct<"PhoenixError", typeof PhoenixErrorFields>]>(
-    "PhoenixError",
-    {
-      description: "Redacted technical failure raised by the Phoenix driver boundary.",
-      toEquivalence: () => samePhoenixError,
-    }
-  )
+  {
+    cause: S.optionalKey(S.String).annotateKey({
+      description: "Redacted diagnostic label derived from the original failure cause.",
+    }),
+    operation: PhoenixOperation.annotateKey({
+      description: "Phoenix driver operation that failed.",
+    }),
+    reason: PhoenixErrorReason.annotateKey({
+      description: "Technical failure reason for the Phoenix operation.",
+    }),
+  },
+  $I.annoteError<PhoenixError>("PhoenixError", {
+    description: "Redacted technical failure raised by the Phoenix driver boundary.",
+  })
 ) {
   /**
    * Create a Phoenix driver error scoped to one operation.

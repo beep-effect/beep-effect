@@ -122,7 +122,9 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorM
 export class TaxonomyManifestReadError extends S.TaggedError<TaxonomyManifestReadError>($I`TaxonomyManifestReadError`)(
   "TaxonomyManifestReadError",
   { path: S.NonEmptyString },
-  $I.annote("TaxonomyManifestReadError", { description: "The vendor manifest is missing or unreadable." })
+  $I.annoteError<TaxonomyManifestReadError>("TaxonomyManifestReadError", {
+    description: "The vendor manifest is missing or unreadable.",
+  })
 ) {}
 
 /**
@@ -143,7 +145,9 @@ export class TaxonomyManifestParseError extends S.TaggedError<TaxonomyManifestPa
 )(
   "TaxonomyManifestParseError",
   { line: S.Int, path: S.NonEmptyString },
-  $I.annote("TaxonomyManifestParseError", { description: "A vendor manifest JSONL row failed schema decoding." })
+  $I.annoteError<TaxonomyManifestParseError>("TaxonomyManifestParseError", {
+    description: "A vendor manifest JSONL row failed schema decoding.",
+  })
 ) {}
 
 /**
@@ -162,7 +166,9 @@ export class TaxonomyManifestParseError extends S.TaggedError<TaxonomyManifestPa
 export class VendorSliceUnvetted extends S.TaggedError<VendorSliceUnvetted>($I`VendorSliceUnvetted`)(
   "VendorSliceUnvetted",
   { id: S.NonEmptyString },
-  $I.annote("VendorSliceUnvetted", { description: "A vendor slice is not explicitly VETTED for loading." })
+  $I.annoteError<VendorSliceUnvetted>("VendorSliceUnvetted", {
+    description: "A vendor slice is not explicitly VETTED for loading.",
+  })
 ) {}
 
 /**
@@ -181,7 +187,9 @@ export class VendorSliceUnvetted extends S.TaggedError<VendorSliceUnvetted>($I`V
 export class VendorSliceReadError extends S.TaggedError<VendorSliceReadError>($I`VendorSliceReadError`)(
   "VendorSliceReadError",
   { id: S.NonEmptyString, path: S.NonEmptyString },
-  $I.annote("VendorSliceReadError", { description: "An explicitly vetted vendor slice is unreadable." })
+  $I.annoteError<VendorSliceReadError>("VendorSliceReadError", {
+    description: "An explicitly vetted vendor slice is unreadable.",
+  })
 ) {}
 
 /**
@@ -200,7 +208,9 @@ export class VendorSliceReadError extends S.TaggedError<VendorSliceReadError>($I
 export class VendorSliceParseError extends S.TaggedError<VendorSliceParseError>($I`VendorSliceParseError`)(
   "VendorSliceParseError",
   { id: S.NonEmptyString, path: S.NonEmptyString },
-  $I.annote("VendorSliceParseError", { description: "An explicitly vetted vendor taxonomy slice is unparsable." })
+  $I.annoteError<VendorSliceParseError>("VendorSliceParseError", {
+    description: "An explicitly vetted vendor taxonomy slice is unparsable.",
+  })
 ) {}
 
 /**
@@ -224,8 +234,12 @@ export class VendorSliceParseError extends S.TaggedError<VendorSliceParseError>(
  */
 export class VendorSlicePathEscape extends S.TaggedError<VendorSlicePathEscape>($I`VendorSlicePathEscape`)(
   "VendorSlicePathEscape",
-  { id: S.NonEmptyString, path: S.NonEmptyString, vendorRoot: S.NonEmptyString },
-  $I.annote("VendorSlicePathEscape", {
+  {
+    id: S.NonEmptyString,
+    path: S.NonEmptyString,
+    vendorRoot: S.NonEmptyString,
+  },
+  $I.annoteError<VendorSlicePathEscape>("VendorSlicePathEscape", {
     description: "A vetted vendor taxonomy slice resolved outside its canonical vendor root.",
   })
 ) {}

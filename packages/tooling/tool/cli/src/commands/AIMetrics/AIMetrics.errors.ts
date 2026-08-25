@@ -18,6 +18,7 @@ import {
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import * as S from "effect/Schema";
@@ -46,9 +47,9 @@ export class AiMetricsCommandError extends S.TaggedError<AiMetricsCommandError>(
   "AiMetricsCommandError",
   {
     message: S.String,
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
-  $I.annote("AiMetricsCommandError", {
+  $I.annoteError<AiMetricsCommandError>("AiMetricsCommandError", {
     description: "User-facing failure raised by the AI metrics CLI command suite.",
   })
 ) {}
@@ -73,7 +74,7 @@ export class AiMetricsStatusExit extends S.TaggedError<AiMetricsStatusExit>($I`A
   {
     message: S.String,
   },
-  $I.annote("AiMetricsStatusExit", {
+  $I.annoteError<AiMetricsStatusExit>("AiMetricsStatusExit", {
     description: "Silent non-zero process exit requested after a command has already rendered its result.",
   })
 ) {

@@ -6,6 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Clock, Effect, Encoding, FileSystem, Path, Redacted, Result } from "effect";
 import * as S from "effect/Schema";
@@ -36,10 +37,10 @@ const AES_GCM_NONCE_BYTES = 12;
 export class AiMetricsArchiveError extends S.TaggedError<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
   "AiMetricsArchiveError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsArchiveError", {
+  $I.annoteError<AiMetricsArchiveError>("AiMetricsArchiveError", {
     description: "Typed failure raised while encrypting or reading AI metrics raw archive objects.",
   })
 ) {}

@@ -21,6 +21,7 @@ import {
 import { none, some } from "effect/Option";
 import { hasProperty, isBoolean, isNumber, isString, Struct as StructPredicate } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";
+import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import { assignStatics } from "../internal/statics.ts";
 import type { SQL } from "drizzle-orm";
 import type { ColumnBuilderBase } from "drizzle-orm/column-builder";
@@ -48,8 +49,13 @@ class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
   "@beep/effect-drizzle/sqlite/ColumnInvariantError"
 )(
   "ColumnInvariantError",
-  { message: StringSchema },
-  { description: "A SQLite column descriptor violates its shape invariant." }
+  {
+    message: StringSchema,
+  },
+  {
+    description: "A SQLite column descriptor violates its shape invariant.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<ColumnInvariantError>(typeParameters),
+  }
 ) {}
 
 /**

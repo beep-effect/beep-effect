@@ -59,7 +59,7 @@ export class LegalPositionRelatorAdmissionError extends S.TaggedError<LegalPosit
   {
     message: S.String,
   },
-  $I.annote("LegalPositionRelatorAdmissionError", {
+  $I.annoteError<LegalPositionRelatorAdmissionError>("LegalPositionRelatorAdmissionError", {
     description: "Failure raised when a candidate record is not admissible as a stored legal position relation.",
   })
 ) {

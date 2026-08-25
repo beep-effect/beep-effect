@@ -6,7 +6,7 @@
  */
 
 import { $MdId } from "@beep/identity";
-import { HtmlFragment, Markdown } from "@beep/schema";
+import { Defect, HtmlFragment, Markdown } from "@beep/schema";
 import { A, Html, R, Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, flow, identity, Match, Number as N, Order, Result, SchemaGetter, SchemaIssue, Tuple } from "effect";
 import { cast, dual, pipe } from "effect/Function";
@@ -127,9 +127,9 @@ export class RenderError extends S.TaggedError<RenderError>($I`RenderError`)(
   {
     adapter: S.String,
     message: S.String,
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
-  $I.annote("RenderError", {
+  $I.annoteError<RenderError>("RenderError", {
     description: "Typed error raised when a Markdown render adapter fails.",
   })
 ) {}
