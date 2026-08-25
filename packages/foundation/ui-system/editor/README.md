@@ -1,5 +1,18 @@
 # @beep/editor
 
+## Capability profiles
+
+`@beep/editor` owns capability descriptors and deterministic profile resolution; applications own their product
+profiles. A host passes an `EditorProfile` through `resolveEditorProfile(editorCapabilityCatalog, profile)` and mounts
+the result through `CapabilityComposer`. Every catalog node remains registered, so omitted authoring capabilities keep
+supported content readable while their controls and guarded shortcuts stay unavailable.
+
+Profiles and initial editor state are mount-immutable. To switch profiles, first project the latest state through
+`editorStateToDocument`, rebuild it with `documentToEditorState`, and remount with a new React key. The shipped
+`compatibilityProfile` preserves `EditorComposer`'s historical History/List/CheckList/Link/Markdown plugin set and
+leaves Lexical-native shortcuts in control. Goal B grows the surface by adding descriptors under the matching atlas ids
+and keeping the strict catalog reconciliation test green.
+
 
 React editor kit on Lexical + `@lexical/react` for schema-first rich text: a
 read-only viewer and composer primitives over the

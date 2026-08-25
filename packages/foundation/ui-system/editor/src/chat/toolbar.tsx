@@ -210,7 +210,7 @@ const computeSelectionState = (): SelectionState => {
  * @category atoms
  * @since 0.0.0
  */
-const toolbarSelectionAtom = Atom.family((editor: LexicalEditor) =>
+export const toolbarSelectionAtom = Atom.family((editor: LexicalEditor) =>
   Atom.make((get) => {
     get.addFinalizer(
       editor.registerUpdateListener(({ editorState }) => get.setSelf(editorState.read(computeSelectionState)))

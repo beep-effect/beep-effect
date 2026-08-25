@@ -14,17 +14,16 @@ import { ContentEditable } from "@beep/ui/components/editor/editor-ui/content-ed
 import { O } from "@beep/utils";
 import { useAtomSet } from "@effect/atom-react";
 import { TRANSFORMERS } from "@lexical/markdown";
-import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
-import { ListPlugin } from "@lexical/react/LexicalListPlugin";
-import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { Result } from "effect";
 import * as S from "effect/Schema";
+import { editorCapabilityCatalog } from "./capability/catalog.ts";
+import { compatibilityProfile } from "./capability/profiles.ts";
+import { resolveEditorProfile } from "./capability/resolver.ts";
+import { ResolvedExtensions } from "./capability/runtime.tsx";
 import { logEditorErrorFn } from "./chat/atoms.ts";
 import { editorNodes } from "./nodes.ts";
 import { decodeEditorStateForRuntimeResult } from "./runtime.ts";
@@ -32,6 +31,10 @@ import { editorTheme } from "./theme.ts";
 import { EditorCompatibilityViewer, EditorWireViewer } from "./viewer.tsx";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { JSX } from "react";
+
+const resolvedCompatibilityProfile = Result.getOrThrow(
+  resolveEditorProfile(editorCapabilityCatalog, compatibilityProfile)
+);
 
 /**
  * The markdown shortcut transformers registered by {@link EditorComposer} —
@@ -174,11 +177,7 @@ export function EditorComposer({
           ErrorBoundary={LexicalErrorBoundary}
         />
       </div>
-      <HistoryPlugin />
-      <ListPlugin />
-      <CheckListPlugin />
-      <LinkPlugin />
-      <MarkdownShortcutPlugin transformers={[...markdownTransformers]} />
+      <ResolvedExtensions resolved={resolvedCompatibilityProfile} />
       {onSerializedChange === undefined ? null : (
         <OnChangePlugin
           ignoreSelectionChange={true}

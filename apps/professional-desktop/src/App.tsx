@@ -1,7 +1,7 @@
 /**
  * Professional Desktop React workbench shell bootstrap.
  *
- * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): thirteen
+ * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): fourteen
  * keep-alive dock panels — Home, Chat ({@link ChatApp}), Vault sync,
  * contradiction triage, and the nine ontology workbench regions — in one
  * workspace whose layout the user can rearrange and which persists to
@@ -50,6 +50,7 @@ import { Component, lazy, Suspense } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
+import { EditorProofPanel } from "./editor-proof/EditorProofPanel.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
 import { BrowserFailureSource, reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
 import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runtime/ProfessionalAtomRuntime.ts";
@@ -572,6 +573,7 @@ const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPa
   return {
     home: () => wrap("Home", <HomeSurface />),
     chat: () => wrap("Chat", <ChatApp />),
+    "editor-proof": () => wrap("Editor proof", <EditorProofPanel />),
     sync: () => wrapDesktop("Vault sync", <VaultSyncPanel floating={false} />),
     "contradiction-triage": () => wrapDesktop("Contradiction Triage", <ContradictionTriagePanel />),
     "ontology-explorer": () => wrapDesktop("Explorer", <OntologyExplorerRegion />),
