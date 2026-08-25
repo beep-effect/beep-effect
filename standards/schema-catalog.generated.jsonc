@@ -12,6 +12,29 @@
       "description": "Result produced by the architecture lab app contract harness."
     },
     {
+      "file": "apps/labs/semantica/src/canary/Command.ts",
+      "symbol": "CanaryOptions",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "CanaryOptions",
+      "description": "Manifest, paper selection, and replay mode parsed for one canary stage."
+    },
+    {
+      "file": "apps/labs/semantica/src/canary/Command.ts",
+      "symbol": "CanaryStage",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "CanaryStage",
+      "description": "Headless Semantica canary stages available through the lab command."
+    },
+    {
+      "file": "apps/labs/semantica/src/canary/Command.ts",
+      "symbol": "StageNotImplemented",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "StageNotImplemented"
+    },
+    {
       "file": "apps/oip-web/src/app/api/contact/ContactRouteResponse.ts",
       "symbol": "ContactRoutePayloadError",
       "kind": "tagged-error",
