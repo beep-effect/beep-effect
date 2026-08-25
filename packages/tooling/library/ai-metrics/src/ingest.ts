@@ -6,6 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -22,20 +23,6 @@ import {
 import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("ingest");
-
-const AiMetricsIngestErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAiMetricsIngestErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsIngestError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: AiMetricsIngestErrorFields.message,
-  })
-);
-const sameAiMetricsIngestError = (self: AiMetricsIngestError, that: AiMetricsIngestError): boolean =>
-  sameAiMetricsIngestErrorFields(self, that);
-
 const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString(TranscriptIngestSummary));
 
 /**
@@ -58,13 +45,12 @@ const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString
  */
 export class AiMetricsIngestError extends S.TaggedError<AiMetricsIngestError>($I`AiMetricsIngestError`)(
   "AiMetricsIngestError",
-  AiMetricsIngestErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsIngestError>,
-    readonly [S.TaggedStruct<"AiMetricsIngestError", typeof AiMetricsIngestErrorFields>]
-  >("AiMetricsIngestError", {
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annoteError<AiMetricsIngestError>("AiMetricsIngestError", {
     description: "Typed failure raised by AI metrics transcript ingest helpers.",
-    toEquivalence: () => sameAiMetricsIngestError,
   })
 ) {}
 

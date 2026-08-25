@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
@@ -18,21 +19,6 @@ type CodexCommandErrorOptions =
   | {
       readonly exitCode?: undefined | number;
     };
-
-const CodexCommandErrorFields = {
-  message: S.String,
-  exitCode: S.optionalKey(S.Finite),
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameCodexCommandErrorFields = S.toEquivalence(
-  S.TaggedStruct("CodexCommandError", {
-    message: CodexCommandErrorFields.message,
-    exitCode: CodexCommandErrorFields.exitCode,
-  })
-);
-const sameCodexCommandError = (self: CodexCommandError, that: CodexCommandError): boolean =>
-  sameCodexCommandErrorFields(self, that);
 
 /**
  * Typed failure for Codex helper commands.
@@ -49,13 +35,13 @@ const sameCodexCommandError = (self: CodexCommandError, that: CodexCommandError)
  */
 export class CodexCommandError extends S.TaggedError<CodexCommandError>($I`CodexCommandError`)(
   "CodexCommandError",
-  CodexCommandErrorFields,
-  $I.annoteClass<
-    S.declare<CodexCommandError>,
-    readonly [S.TaggedStruct<"CodexCommandError", typeof CodexCommandErrorFields>]
-  >("CodexCommandError", {
+  {
+    message: S.String,
+    exitCode: S.optionalKey(S.Finite),
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<CodexCommandError>("CodexCommandError", {
     description: "Failure raised by Codex helper commands.",
-    toEquivalence: () => sameCodexCommandError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */

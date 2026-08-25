@@ -58,22 +58,6 @@ export const FileProcessingOperationErrorReason = LiteralKit([
  * @since 0.0.0
  */
 export type FileProcessingOperationErrorReason = typeof FileProcessingOperationErrorReason.Type;
-const FileProcessingOperationErrorFields = {
-  artifactId: S.optionalKey(ArtifactId),
-  details: S.optionalKey(S.Record(S.String, S.String)),
-  engine: S.optionalKey(S.String),
-  format: S.optionalKey(FileFormatFamily),
-  message: S.String,
-  operationId: S.optionalKey(OperationId),
-  reason: FileProcessingOperationErrorReason,
-} satisfies S.Struct.Fields;
-const sameFileProcessingOperationErrorFields = S.toEquivalence(
-  S.TaggedStruct("FileProcessingOperationError", FileProcessingOperationErrorFields)
-);
-const sameFileProcessingOperationError = (
-  self: FileProcessingOperationError,
-  that: FileProcessingOperationError
-): boolean => sameFileProcessingOperationErrorFields(self, that);
 
 /**
  * Sanitized file-processing operation error.
@@ -96,13 +80,17 @@ export class FileProcessingOperationError extends S.TaggedError<FileProcessingOp
   $I`FileProcessingOperationError`
 )(
   "FileProcessingOperationError",
-  FileProcessingOperationErrorFields,
-  $I.annoteClass<
-    S.declare<FileProcessingOperationError>,
-    readonly [S.TaggedStruct<"FileProcessingOperationError", typeof FileProcessingOperationErrorFields>]
-  >("FileProcessingOperationError", {
+  {
+    artifactId: S.optionalKey(ArtifactId),
+    details: S.optionalKey(S.Record(S.String, S.String)),
+    engine: S.optionalKey(S.String),
+    format: S.optionalKey(FileFormatFamily),
+    message: S.String,
+    operationId: S.optionalKey(OperationId),
+    reason: FileProcessingOperationErrorReason,
+  },
+  $I.annoteError<FileProcessingOperationError>("FileProcessingOperationError", {
     description: "Sanitized operation-level error exposed by the file-processing capability boundary.",
-    toEquivalence: () => sameFileProcessingOperationError,
   })
 ) {
   /**

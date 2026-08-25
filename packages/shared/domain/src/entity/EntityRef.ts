@@ -6,6 +6,7 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
+import { OpaqueUnknown } from "@beep/schema";
 import { Result } from "effect";
 import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
@@ -16,29 +17,16 @@ const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;
 
 const EntityRefInvariantErrorFields = {
   actualEntityType: S.String,
-  actualId: S.Unknown,
+  actualId: OpaqueUnknown,
   entityType: S.String,
 } satisfies S.Struct.Fields;
-const EntityRefInvariantErrorEquivalenceFields = {
-  actualEntityType: EntityRefInvariantErrorFields.actualEntityType,
-  entityType: EntityRefInvariantErrorFields.entityType,
-} satisfies S.Struct.Fields;
 // actualId is opaque unknown: equivalence is declared diagnostic identity, actualId stays payload.
-const sameEntityRefInvariantErrorFields = S.toEquivalence(
-  S.TaggedStruct("EntityRefInvariantError", EntityRefInvariantErrorEquivalenceFields)
-);
-const sameEntityRefInvariantError = (self: EntityRefInvariantError, that: EntityRefInvariantError): boolean =>
-  sameEntityRefInvariantErrorFields(self, that);
 
 class EntityRefInvariantError extends S.TaggedError<EntityRefInvariantError>($I`EntityRefInvariantError`)(
   "EntityRefInvariantError",
   EntityRefInvariantErrorFields,
-  $I.annoteClass<
-    S.declare<EntityRefInvariantError>,
-    readonly [S.TaggedStruct<"EntityRefInvariantError", typeof EntityRefInvariantErrorFields>]
-  >("EntityRefInvariantError", {
+  $I.annoteError<EntityRefInvariantError>("EntityRefInvariantError", {
     description: "EntityRef runtime invariant failure.",
-    toEquivalence: () => sameEntityRefInvariantError,
   })
 ) {}
 

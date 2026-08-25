@@ -14,17 +14,6 @@ import { commandErrorFields } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/Runners/Runners.errors");
 
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameRunnersCommandErrorFields = S.toEquivalence(
-  S.TaggedStruct("RunnersCommandError", {
-    message: commandErrorFields.message,
-    command: commandErrorFields.command,
-    exitCode: commandErrorFields.exitCode,
-  })
-);
-const sameRunnersCommandError = (self: RunnersCommandError, that: RunnersCommandError): boolean =>
-  sameRunnersCommandErrorFields(self, that);
-
 /**
  * Operational failure raised while planning, checking, or baking a runner AMI.
  *
@@ -43,12 +32,8 @@ const sameRunnersCommandError = (self: RunnersCommandError, that: RunnersCommand
 export class RunnersCommandError extends S.TaggedError<RunnersCommandError>($I`RunnersCommandError`)(
   "RunnersCommandError",
   commandErrorFields,
-  $I.annoteClass<
-    S.declare<RunnersCommandError>,
-    readonly [S.TaggedStruct<"RunnersCommandError", typeof commandErrorFields>]
-  >("RunnersCommandError", {
+  $I.annoteError<RunnersCommandError>("RunnersCommandError", {
     description: "Failure raised by the runner AMI bake command family.",
-    toEquivalence: () => sameRunnersCommandError,
   })
 ) {
   /**

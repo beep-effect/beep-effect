@@ -31,13 +31,14 @@ import {
 } from "effect/Option";
 import { hasProperty, isUndefined } from "effect/Predicate";
 import { empty, get as getRecord, set } from "effect/Record";
-import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
+import { String as StringSchema, TaggedError } from "effect/Schema";
 import {
   makeRelationsConfig,
   relationName,
   validatePhysicalTableNames,
   validateSchemaNames,
 } from "../core/assembly.ts";
+import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import * as Field from "../core/Field.ts";
 import { snakeCase } from "../internal/case.ts";
 import * as SqliteColumn from "./Column.ts";
@@ -45,28 +46,10 @@ import * as Derive from "./derive.ts";
 import { toSqliteTable } from "./table.ts";
 import type { RelationsBuilder, RelationsBuilderConfig } from "drizzle-orm";
 import type { Option } from "effect/Option";
-import type { Annotations, Struct } from "effect/Schema";
 import type { Edge, Junction, SchemaName } from "../core/assembly.ts";
 import type * as Meta from "../core/Meta.ts";
 import type { AnyModel, FieldsInput } from "./model.ts";
 import type { TableOf } from "./table.ts";
-
-const SchemaAssemblyErrorFields = {
-  message: StringSchema,
-  sourceTable: StringSchema,
-  fieldName: StringSchema,
-  targetTable: StringSchema,
-} satisfies Struct.Fields;
-const sameSchemaAssemblyErrorFields = toEquivalence(TaggedStruct("SchemaAssemblyError", SchemaAssemblyErrorFields));
-const sameSchemaAssemblyError = (self: SchemaAssemblyError, that: SchemaAssemblyError): boolean =>
-  sameSchemaAssemblyErrorFields(self, that);
-const SchemaAssemblyErrorAnnotations = {
-  description: "A @beep/effect-drizzle cross-table reference could not be resolved or validated.",
-  toEquivalence: () => sameSchemaAssemblyError,
-} satisfies Annotations.Declaration<
-  SchemaAssemblyError,
-  readonly [TaggedStruct<"SchemaAssemblyError", typeof SchemaAssemblyErrorFields>]
->;
 
 /**
  * Reports a cross-model reference failure during SQLite schema assembly.
@@ -97,8 +80,16 @@ const SchemaAssemblyErrorAnnotations = {
  */
 export class SchemaAssemblyError extends TaggedError<SchemaAssemblyError>("@beep/effect-drizzle/SchemaAssemblyError")(
   "SchemaAssemblyError",
-  SchemaAssemblyErrorFields,
-  SchemaAssemblyErrorAnnotations
+  {
+    message: StringSchema,
+    sourceTable: StringSchema,
+    fieldName: StringSchema,
+    targetTable: StringSchema,
+  },
+  {
+    description: "A @beep/effect-drizzle cross-table reference could not be resolved or validated.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<SchemaAssemblyError>(typeParameters),
+  }
 ) {}
 
 /**

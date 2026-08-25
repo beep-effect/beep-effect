@@ -10,7 +10,7 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
-import { EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -64,32 +64,6 @@ export const CandorRecordOperation = CandorRecordOperationBase.pipe(
  */
 export type CandorRecordOperation = typeof CandorRecordOperation.Type;
 
-const CandorRecordRepositoryUnavailableFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description: "Optional underlying driver defect captured when the repository could not serve a request.",
-    }),
-  operation: CandorRecordOperation.annotateKey({
-    description: "Repository operation that could not be served.",
-  }),
-  reason: S.NonEmptyString.annotateKey({
-    description: "Non-empty repository availability diagnostic.",
-  }),
-} satisfies S.Struct.Fields;
-const CandorRecordRepositoryUnavailableEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  operation: CandorRecordRepositoryUnavailableFields.operation,
-  reason: CandorRecordRepositoryUnavailableFields.reason,
-} satisfies S.Struct.Fields;
-const sameCandorRecordRepositoryUnavailableFields = S.toEquivalence(
-  S.TaggedStruct("CandorRecordRepositoryUnavailable", CandorRecordRepositoryUnavailableEquivalenceFields)
-);
-const sameCandorRecordRepositoryUnavailable = (
-  self: CandorRecordRepositoryUnavailable,
-  that: CandorRecordRepositoryUnavailable
-): boolean => sameCandorRecordRepositoryUnavailableFields(self, that);
-
 /**
  * Raised when the candor record repository could not serve a request.
  *
@@ -121,15 +95,22 @@ export class CandorRecordRepositoryUnavailable extends S.TaggedError<CandorRecor
   $I`CandorRecordRepositoryUnavailable`
 )(
   "CandorRecordRepositoryUnavailable",
-  CandorRecordRepositoryUnavailableFields,
-  $I.annoteClass<
-    S.declare<CandorRecordRepositoryUnavailable>,
-    readonly [S.TaggedStruct<"CandorRecordRepositoryUnavailable", typeof CandorRecordRepositoryUnavailableFields>]
-  >("CandorRecordRepositoryUnavailable", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Optional underlying driver defect captured when the repository could not serve a request.",
+      }),
+    operation: CandorRecordOperation.annotateKey({
+      description: "Repository operation that could not be served.",
+    }),
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository availability diagnostic.",
+    }),
+  },
+  $I.annoteError<CandorRecordRepositoryUnavailable>("CandorRecordRepositoryUnavailable", {
     title: "Candor record repository unavailable",
     description: "The candor record repository could not serve the request.",
-
-    toEquivalence: () => sameCandorRecordRepositoryUnavailable,
   })
 ) {
   /**

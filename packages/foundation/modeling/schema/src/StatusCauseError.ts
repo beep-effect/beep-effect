@@ -10,6 +10,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { Defect } from "./Opaque.ts";
 
 const $I = $SchemaId.create("StatusCauseError");
 
@@ -40,7 +41,7 @@ const $I = $SchemaId.create("StatusCauseError");
 export const StatusCauseFields = {
   message: S.String,
   status: S.Finite,
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+  cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
 } as const;
 
 /**
@@ -66,7 +67,7 @@ export const StatusCauseFields = {
 export class StatusCauseInputOptions extends S.Class<StatusCauseInputOptions>($I`StatusCauseInputOptions`)(
   {
     status: S.Finite,
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
   $I.annote("StatusCauseInputOptions", {
     description: "Normalized status/cause input options.",

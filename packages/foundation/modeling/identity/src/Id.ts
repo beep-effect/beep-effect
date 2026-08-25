@@ -36,6 +36,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TString } from "@beep/types";
+import type { Equivalence } from "effect/Equivalence";
 import type { PayloadEncoding } from "effect/unstable/httpapi/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
 import type { CoreVocab, Predicate, VocabShape } from "./Vocab.ts";
@@ -90,6 +91,11 @@ const preserveSchemaStatics = <Schema extends S.Top>(
   return annotated as AnnotatedSchema<Schema>;
 };
 
+// Effect calls the hook with the declared struct's equivalence. Narrowing it from `never` to `Self`
+// is the contravariant direction (`Self` extends the struct type), so the assertion is sound.
+const adoptDeclaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>
+  typeParameters[0] as Equivalence<Self>;
+
 /**
  * Bootstrap identity annotation helper for schemas defined before `make` exists.
  *
@@ -109,14 +115,14 @@ const $I = {
     identifier,
     ...extras,
   }),
+  annoteError: <Self>(identifier: string, extras: S.Annotations.Documentation<Self>): ErrorAnnotationRecord<Self> => ({
+    ...extras,
+    schemaId: Symbol.for(identifier),
+    identifier,
+    title: extras.title ?? identifier,
+    toEquivalence: adoptDeclaredFieldsEquivalence<Self>,
+  }),
 };
-
-const IdentityInterpolationErrorFields = {} satisfies S.Struct.Fields;
-const sameIdentityInterpolationErrorFields = S.toEquivalence(
-  S.TaggedStruct("IdentityInterpolationError", IdentityInterpolationErrorFields)
-);
-const sameIdentityInterpolationError = (self: IdentityInterpolationError, that: IdentityInterpolationError): boolean =>
-  sameIdentityInterpolationErrorFields(self, that);
 
 /**
  * Error thrown when an identity template tag receives interpolation values.
@@ -149,26 +155,16 @@ export class IdentityInterpolationError extends S.TaggedError<IdentityInterpolat
   "@beep/identity/errors/IdentityInterpolationError"
 )(
   "IdentityInterpolationError",
-  IdentityInterpolationErrorFields,
-  // `$I.annote` (not `annoteClass`): indexing `S.declare<IdentityInterpolationError>["Type"]` from the
-  // base-class expression is a type cycle under docgen's tsc, while a plain comparator thunk is not.
-  $I.annote("@beep/identity/errors/IdentityInterpolationError", {
+  {},
+  $I.annoteError<IdentityInterpolationError>("@beep/identity/errors/IdentityInterpolationError", {
     title: "Identity Interpolation Error",
     description: "Identity template tags do not allow interpolations.",
-    toEquivalence: () => sameIdentityInterpolationError,
   })
 ) {
   override get message() {
     return "Identity template tags do not allow interpolations.";
   }
 }
-
-const IdentitySegmentCountErrorFields = {} satisfies S.Struct.Fields;
-const sameIdentitySegmentCountErrorFields = S.toEquivalence(
-  S.TaggedStruct("IdentitySegmentCountError", IdentitySegmentCountErrorFields)
-);
-const sameIdentitySegmentCountError = (self: IdentitySegmentCountError, that: IdentitySegmentCountError): boolean =>
-  sameIdentitySegmentCountErrorFields(self, that);
 
 /**
  * Error thrown when an identity template tag receives more or fewer than one literal segment.
@@ -193,13 +189,10 @@ export class IdentitySegmentCountError extends S.TaggedError<IdentitySegmentCoun
   "@beep/identity/errors/IdentitySegmentCountError"
 )(
   "IdentitySegmentCountError",
-  IdentitySegmentCountErrorFields,
-  // `$I.annote` (not `annoteClass`): indexing `S.declare<IdentitySegmentCountError>["Type"]` from the
-  // base-class expression is a type cycle under docgen's tsc, while a plain comparator thunk is not.
-  $I.annote("@beep/identity/errors/IdentitySegmentCountError", {
+  {},
+  $I.annoteError<IdentitySegmentCountError>("@beep/identity/errors/IdentitySegmentCountError", {
     title: "Identity Segment Count Error",
     description: "Identity template tags must use a single literal segment.",
-    toEquivalence: () => sameIdentitySegmentCountError,
   })
 ) {
   /**
@@ -649,6 +642,39 @@ export type DeclarationAnnotationExtras<
 > = S.Annotations.Declaration<T, TypeParameters>;
 
 /**
+ * Annotation record produced by `annoteError`: identity metadata, caller extras, and a
+ * `toEquivalence` hook that adopts the declared field struct's equivalence.
+ *
+ * **Details**
+ *
+ * Effect calls a declaration's `toEquivalence` hook with the derived equivalences of its type
+ * parameters; for `S.TaggedError` that single parameter is the declared `TaggedStruct`, so the
+ * hook returns it and `S.toEquivalence(ErrorClass)` compares declared fields only. The hook is
+ * typed over `never` type parameters and `Self` on purpose: that shape is assignable to every
+ * `S.Annotations.Declaration<Self, readonly [S.TaggedStruct<Tag, Fields>]>` without naming the
+ * fields, and it does not require the compiler to infer anything from `Self` inside the class's
+ * own base expression.
+ *
+ * **Example** (Name the record of a tagged error annotation)
+ *
+ * ```ts
+ * import type { ErrorAnnotationRecord } from "@beep/identity"
+ *
+ * declare class WidgetError { readonly _tag: "WidgetError" }
+ * type Record = ErrorAnnotationRecord<WidgetError>
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface ErrorAnnotationRecord<Self> extends S.Annotations.Documentation<Self> {
+  readonly identifier: string;
+  readonly schemaId: symbol;
+  readonly title: string;
+  readonly toEquivalence: (typeParameters: readonly [Equivalence<never>]) => Equivalence<Self>;
+}
+
+/**
  * Annotation fields accepted by `annoteKey`, mirroring `S.Annotations.Key`.
  *
  * **Example** (Name the extras a key annotation accepts)
@@ -1074,6 +1100,46 @@ export interface IdentityComposer<
     identifier: SegmentValue<Next>,
     extras?: DeclarationAnnotationExtras<Schema["Type"], TP>
   ): S.Annotations.Declaration<Schema["Type"], TP>;
+
+  /**
+   * Produce the identity annotation record for an `S.TaggedError` whose equivalence is its
+   * declared fields.
+   *
+   * **Details**
+   *
+   * Without a `toEquivalence` annotation a tagged-error declaration falls back to `Equal.equals`,
+   * which compares `Error` runtime metadata and makes field-equal instances compare unequal
+   * depending on construction site. This record adopts the declared field struct's equivalence, so
+   * `S.toEquivalence(ErrorClass)` compares the declared fields only. Fields that must not take part
+   * in identity say so on their own schema (`Defect` from `@beep/schema` declares an always-equal
+   * equivalence); nothing is hand-excluded at the class.
+   *
+   * **Example** (Declare a tagged error with fields-only identity)
+   *
+   * ```ts
+   * import { make } from "@beep/identity"
+   * import * as S from "effect/Schema"
+   *
+   * const { $MyPkgId } = make("my-pkg")
+   * const $I = $MyPkgId.create("Widget")
+   *
+   * class WidgetError extends S.TaggedError<WidgetError>($I`WidgetError`)(
+   *   "WidgetError",
+   *   { reason: S.String },
+   *   $I.annoteError<WidgetError>("WidgetError", { description: "Widget failed." })
+   * ) {}
+   *
+   * const same = S.toEquivalence(WidgetError)
+   * console.log(same(WidgetError.make({ reason: "x" }), WidgetError.make({ reason: "x" }))) // true
+   * ```
+   *
+   * @category combinators
+   * @since 0.0.0
+   */
+  annoteError<Self>(
+    identifier: SegmentValue<TString.NonEmpty>,
+    extras?: undefined | S.Annotations.Documentation<Self>
+  ): ErrorAnnotationRecord<Self>;
 
   /**
    * Produce a schema annotation function with HTTP API metadata.
@@ -1824,6 +1890,20 @@ const createComposer = <
   ): S.Annotations.Declaration<Schema["Type"], TP> =>
     mergeIdentityAnnotation(identifier, extras) as S.Annotations.Declaration<Schema["Type"], TP>;
 
+  const annoteError = <Self>(
+    identifier: SegmentValue<TString.NonEmpty>,
+    extras?: undefined | S.Annotations.Documentation<Self>
+  ): ErrorAnnotationRecord<Self> => {
+    const merged = mergeIdentityAnnotation(identifier, extras);
+    return {
+      ...extras,
+      schemaId: merged.schemaId,
+      identifier: merged.identifier,
+      title: merged.title,
+      toEquivalence: adoptDeclaredFieldsEquivalence<Self>,
+    };
+  };
+
   const annoteSchema = <Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
     identifier: SegmentValue<Next>,
     extras?: undefined | S.Annotations.Bottom<Schema["Type"], Schema["~type.parameters"]>
@@ -1995,6 +2075,12 @@ const createComposer = <
     },
     annoteClass: {
       value: annoteClass,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
+    annoteError: {
+      value: annoteError,
       enumerable: true,
       writable: true,
       configurable: true,

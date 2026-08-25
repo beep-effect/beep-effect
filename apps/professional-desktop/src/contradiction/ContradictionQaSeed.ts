@@ -200,16 +200,6 @@ const ContradictionQaSeedErrorReason = LiteralKit([
 
 type ContradictionQaSeedErrorReason = typeof ContradictionQaSeedErrorReason.Type;
 
-const ContradictionQaSeedErrorFields = {
-  message: S.NonEmptyString,
-  reason: ContradictionQaSeedErrorReason,
-} satisfies S.Struct.Fields;
-const sameContradictionQaSeedErrorFields = S.toEquivalence(
-  S.TaggedStruct("ContradictionQaSeedError", ContradictionQaSeedErrorFields)
-);
-const sameContradictionQaSeedError = (self: ContradictionQaSeedError, that: ContradictionQaSeedError): boolean =>
-  sameContradictionQaSeedErrorFields(self, that);
-
 /**
  * Sanitized contradiction browser-QA seed failure.
  *
@@ -227,13 +217,12 @@ const sameContradictionQaSeedError = (self: ContradictionQaSeedError, that: Cont
  */
 export class ContradictionQaSeedError extends S.TaggedError<ContradictionQaSeedError>($I`ContradictionQaSeedError`)(
   "ContradictionQaSeedError",
-  ContradictionQaSeedErrorFields,
-  $I.annoteClass<
-    S.declare<ContradictionQaSeedError>,
-    readonly [S.TaggedStruct<"ContradictionQaSeedError", typeof ContradictionQaSeedErrorFields>]
-  >("ContradictionQaSeedError", {
+  {
+    message: S.NonEmptyString,
+    reason: ContradictionQaSeedErrorReason,
+  },
+  $I.annoteError<ContradictionQaSeedError>("ContradictionQaSeedError", {
     description: "Fail-closed collision or availability failure from the contradiction browser-QA seed.",
-    toEquivalence: () => sameContradictionQaSeedError,
   })
 ) {
   /**

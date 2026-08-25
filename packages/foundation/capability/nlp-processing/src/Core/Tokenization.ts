@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { Defect } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import type { Document, DocumentId } from "@beep/nlp/Core/Document";
@@ -20,20 +21,6 @@ type TokenizationShape = {
   readonly document: (text: string, id?: DocumentId | string) => Effect.Effect<Document, TokenizationError>;
   readonly tokenCount: (text: string) => Effect.Effect<number, TokenizationError>;
 };
-
-const TokenizationErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  operation: S.String,
-} satisfies S.Struct.Fields;
-const TokenizationErrorEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  operation: TokenizationErrorFields.operation,
-} satisfies S.Struct.Fields;
-const sameTokenizationErrorFields = S.toEquivalence(
-  S.TaggedStruct("TokenizationError", TokenizationErrorEquivalenceFields)
-);
-const sameTokenizationError = (self: TokenizationError, that: TokenizationError): boolean =>
-  sameTokenizationErrorFields(self, that);
 
 /**
  * Tokenization error.
@@ -55,14 +42,12 @@ const sameTokenizationError = (self: TokenizationError, that: TokenizationError)
  */
 export class TokenizationError extends S.TaggedError<TokenizationError>($I`TokenizationError`)(
   "TokenizationError",
-  TokenizationErrorFields,
-  $I.annoteClass<
-    S.declare<TokenizationError>,
-    readonly [S.TaggedStruct<"TokenizationError", typeof TokenizationErrorFields>]
-  >("TokenizationError", {
+  {
+    cause: Defect({ includeStack: true }),
+    operation: S.String,
+  },
+  $I.annoteError<TokenizationError>("TokenizationError", {
     description: "Failure raised by an NLP tokenization service.",
-
-    toEquivalence: () => sameTokenizationError,
   })
 ) {}
 

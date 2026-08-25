@@ -13,16 +13,6 @@ import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("errors/CyclicDependencyError");
 
-const CyclicDependencyErrorFields = {
-  message: S.String,
-  cycles: S.String.pipe(S.Array, S.Array),
-} satisfies S.Struct.Fields;
-const sameCyclicDependencyErrorFields = S.toEquivalence(
-  S.TaggedStruct("CyclicDependencyError", CyclicDependencyErrorFields)
-);
-const sameCyclicDependencyError = (self: CyclicDependencyError, that: CyclicDependencyError): boolean =>
-  sameCyclicDependencyErrorFields(self, that);
-
 /**
  * Raised when topological sorting or cycle detection finds circular
  * dependencies in the workspace dependency graph.
@@ -43,14 +33,13 @@ const sameCyclicDependencyError = (self: CyclicDependencyError, that: CyclicDepe
  */
 export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>($I`CyclicDependencyError`)(
   "CyclicDependencyError",
-  CyclicDependencyErrorFields,
-  $I.annoteClass<
-    S.declare<CyclicDependencyError>,
-    readonly [S.TaggedStruct<"CyclicDependencyError", typeof CyclicDependencyErrorFields>]
-  >("CyclicDependencyError", {
+  {
+    message: S.String,
+    cycles: S.String.pipe(S.Array, S.Array),
+  },
+  $I.annoteError<CyclicDependencyError>("CyclicDependencyError", {
     title: "Cyclic Dependency Error",
     description:
       "Raised when topological sorting or cycle detection finds circular\ndependencies in the workspace dependency graph.",
-    toEquivalence: () => sameCyclicDependencyError,
   })
 ) {}

@@ -5,6 +5,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { P } from "@beep/utils";
 import { Context, Effect, Result } from "effect";
@@ -98,18 +99,6 @@ export const CommandJsonOutput: Context.Reference<(text: string) => Effect.Effec
   }
 );
 
-const CliJsonErrorFields = {
-  message: S.String,
-  cause: S.Defect({ includeStack: true }),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameCliJsonErrorFields = S.toEquivalence(
-  S.TaggedStruct("CliJsonError", {
-    message: CliJsonErrorFields.message,
-  })
-);
-const sameCliJsonError = (self: CliJsonError, that: CliJsonError): boolean => sameCliJsonErrorFields(self, that);
-
 /**
  * Failure raised when a command cannot encode a machine-readable JSON payload.
  *
@@ -128,14 +117,13 @@ const sameCliJsonError = (self: CliJsonError, that: CliJsonError): boolean => sa
  */
 export class CliJsonError extends S.TaggedError<CliJsonError>($I`CliJsonError`)(
   "CliJsonError",
-  CliJsonErrorFields,
-  $I.annoteClass<S.declare<CliJsonError>, readonly [S.TaggedStruct<"CliJsonError", typeof CliJsonErrorFields>]>(
-    "CliJsonError",
-    {
-      description: "Failure raised when a repo-cli command cannot encode a JSON payload.",
-      toEquivalence: () => sameCliJsonError,
-    }
-  )
+  {
+    message: S.String,
+    cause: Defect({ includeStack: true }),
+  },
+  $I.annoteError<CliJsonError>("CliJsonError", {
+    description: "Failure raised when a repo-cli command cannot encode a JSON payload.",
+  })
 ) {}
 
 /**

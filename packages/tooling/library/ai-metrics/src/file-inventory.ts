@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -17,20 +17,6 @@ const AiMetricsFileInventoryOperation = LiteralKit(["inspect", "read"]).pipe(
     description: "Filesystem operation that failed during AI metrics file inventory traversal.",
   })
 );
-const AiMetricsFileInventoryErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  operation: AiMetricsFileInventoryOperation,
-} satisfies S.Struct.Fields;
-const sameAiMetricsFileInventoryErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsFileInventoryError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    operation: AiMetricsFileInventoryErrorFields.operation,
-  })
-);
-const sameAiMetricsFileInventoryError = (
-  self: AiMetricsFileInventoryError,
-  that: AiMetricsFileInventoryError
-): boolean => sameAiMetricsFileInventoryErrorFields(self, that);
 
 /**
  * Failure to inspect a file or read a directory while building an AI metrics file inventory.
@@ -55,13 +41,12 @@ export class AiMetricsFileInventoryError extends S.TaggedError<AiMetricsFileInve
   $I`AiMetricsFileInventoryError`
 )(
   "AiMetricsFileInventoryError",
-  AiMetricsFileInventoryErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsFileInventoryError>,
-    readonly [S.TaggedStruct<"AiMetricsFileInventoryError", typeof AiMetricsFileInventoryErrorFields>]
-  >("AiMetricsFileInventoryError", {
+  {
+    cause: Defect({ includeStack: true }),
+    operation: AiMetricsFileInventoryOperation,
+  },
+  $I.annoteError<AiMetricsFileInventoryError>("AiMetricsFileInventoryError", {
     description: "Failure to inspect a file or read a directory in an AI metrics storage tree.",
-    toEquivalence: () => sameAiMetricsFileInventoryError,
   })
 ) {}
 

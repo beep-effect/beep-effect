@@ -6,25 +6,12 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeServerId.create("PracticeKg.errors");
-
-const PracticeKgProjectionErrorFields = {
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-const PracticeKgProjectionErrorEquivalenceFields = {
-  message: PracticeKgProjectionErrorFields.message,
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-} satisfies S.Struct.Fields;
-const samePracticeKgProjectionErrorFields = S.toEquivalence(
-  S.TaggedStruct("PracticeKgProjectionError", PracticeKgProjectionErrorEquivalenceFields)
-);
-const samePracticeKgProjectionError = (self: PracticeKgProjectionError, that: PracticeKgProjectionError): boolean =>
-  samePracticeKgProjectionErrorFields(self, that);
 
 /**
  * Failure raised while projecting a practice knowledge-graph bundle.
@@ -62,14 +49,12 @@ const samePracticeKgProjectionError = (self: PracticeKgProjectionError, that: Pr
  */
 export class PracticeKgProjectionError extends S.TaggedError<PracticeKgProjectionError>($I`PracticeKgProjectionError`)(
   "PracticeKgProjectionError",
-  PracticeKgProjectionErrorFields,
-  $I.annoteClass<
-    S.declare<PracticeKgProjectionError>,
-    readonly [S.TaggedStruct<"PracticeKgProjectionError", typeof PracticeKgProjectionErrorFields>]
-  >("PracticeKgProjectionError", {
+  {
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<PracticeKgProjectionError>("PracticeKgProjectionError", {
     description: "A failure raised while projecting a deterministic practice knowledge-graph bundle.",
-
-    toEquivalence: () => samePracticeKgProjectionError,
   })
 ) {
   /**

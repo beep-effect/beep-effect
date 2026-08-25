@@ -13,15 +13,6 @@ import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 
 const $I = $ProfessionalDesktopId.create("intake/VaultDirectoryPicker.rpc");
 
-const VaultDirectoryPickErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameVaultDirectoryPickErrorFields = S.toEquivalence(
-  S.TaggedStruct("VaultDirectoryPickError", VaultDirectoryPickErrorFields)
-);
-const sameVaultDirectoryPickError = (self: VaultDirectoryPickError, that: VaultDirectoryPickError): boolean =>
-  sameVaultDirectoryPickErrorFields(self, that);
-
 /**
  * Client-safe native vault directory picker failure.
  *
@@ -39,13 +30,11 @@ const sameVaultDirectoryPickError = (self: VaultDirectoryPickError, that: VaultD
  */
 export class VaultDirectoryPickError extends S.TaggedError<VaultDirectoryPickError>($I`VaultDirectoryPickError`)(
   "VaultDirectoryPickError",
-  VaultDirectoryPickErrorFields,
-  $I.annoteClass<
-    S.declare<VaultDirectoryPickError>,
-    readonly [S.TaggedStruct<"VaultDirectoryPickError", typeof VaultDirectoryPickErrorFields>]
-  >("VaultDirectoryPickError", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<VaultDirectoryPickError>("VaultDirectoryPickError", {
     description: "Client-safe native vault directory picker failure.",
-    toEquivalence: () => sameVaultDirectoryPickError,
   })
 ) {
   static readonly new = (message: string) => VaultDirectoryPickError.make({ message });

@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
+
 import { is as isDrizzleEntity, SQL, sql } from "drizzle-orm";
 import {
   check as drizzleCheck,
@@ -20,28 +21,14 @@ import { taggedEnum } from "effect/Data";
 import { dual } from "effect/Function";
 import { fromUndefinedOr, match } from "effect/Option";
 import { hasProperty, isObject, isString } from "effect/Predicate";
-import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
+import { String as StringSchema, TaggedError } from "effect/Schema";
+import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import * as Meta from "../core/Meta.ts";
 import { assertSqlName } from "../core/names.ts";
 import type { SQLiteColumn, SQLiteTableExtraConfigValue } from "drizzle-orm/sqlite-core";
 import type { TaggedEnum } from "effect/Data";
-import type { Annotations, Struct } from "effect/Schema";
 import type * as Field from "../core/Field.ts";
 import type { ValidateSqlName } from "../core/names.ts";
-
-const TableExtraErrorFields = {
-  message: StringSchema,
-} satisfies Struct.Fields;
-const sameTableExtraErrorFields = toEquivalence(TaggedStruct("TableExtraError", TableExtraErrorFields));
-const sameTableExtraError = (self: TableExtraError, that: TableExtraError): boolean =>
-  sameTableExtraErrorFields(self, that);
-const TableExtraErrorAnnotations = {
-  description: "A SQLite table-extra declaration violates a database invariant.",
-  toEquivalence: () => sameTableExtraError,
-} satisfies Annotations.Declaration<
-  TableExtraError,
-  readonly [TaggedStruct<"TableExtraError", typeof TableExtraErrorFields>]
->;
 
 const validateName = (name: string): string => {
   assertSqlName(name, "sqlite", "SQLite table-extra name");
@@ -57,8 +44,13 @@ const validateName = (name: string): string => {
  */
 export class TableExtraError extends TaggedError<TableExtraError>("@beep/effect-drizzle/sqlite/TableExtraError")(
   "TableExtraError",
-  TableExtraErrorFields,
-  TableExtraErrorAnnotations
+  {
+    message: StringSchema,
+  },
+  {
+    description: "A SQLite table-extra declaration violates a database invariant.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<TableExtraError>(typeParameters),
+  }
 ) {}
 
 const sqliteDialect = new SQLiteDialect();

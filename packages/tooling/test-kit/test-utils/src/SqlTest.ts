@@ -7,7 +7,7 @@
 
 import { randomUUID } from "node:crypto";
 import { $TestUtilsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -57,41 +57,6 @@ const TestDatabaseDriver = LiteralKit([
     description: "Driver identifier for reusable SQL integration-test harnesses.",
   })
 );
-
-const SqlTestHarnessErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("SqlTestHarnessError.cause", {
-      description: "Optional underlying defect captured while provisioning or preparing the SQL test harness.",
-    })
-  ),
-  driver: TestDatabaseDriver.pipe(
-    $I.annoteKey("SqlTestHarnessError.driver", {
-      description: "SQL test driver active when the harness failure occurred.",
-    })
-  ),
-  message: S.String.pipe(
-    $I.annoteKey("SqlTestHarnessError.message", {
-      description: "Human-readable SQL test harness failure message.",
-    })
-  ),
-  phase: SqlTestHarnessPhase.pipe(
-    $I.annoteKey("SqlTestHarnessError.phase", {
-      description: "Lifecycle phase active when the harness failure occurred.",
-    })
-  ),
-} satisfies S.Struct.Fields;
-const sameSqlTestHarnessErrorFields = S.toEquivalence(
-  S.TaggedStruct("SqlTestHarnessError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    driver: SqlTestHarnessErrorFields.driver,
-    message: SqlTestHarnessErrorFields.message,
-    phase: SqlTestHarnessErrorFields.phase,
-  })
-);
-const sameSqlTestHarnessError = (self: SqlTestHarnessError, that: SqlTestHarnessError): boolean =>
-  sameSqlTestHarnessErrorFields(self, that);
-
 const PgExternalIsolationMode = LiteralKit(["schema", "none"]).pipe(
   $I.annoteSchema("PgExternalIsolationMode", {
     description: "Isolation mode for shared external PostgreSQL SQL test drivers.",
@@ -570,13 +535,31 @@ export class TestDatabaseInfo extends Context.Service<TestDatabaseInfo, TestData
  */
 export class SqlTestHarnessError extends S.TaggedError<SqlTestHarnessError>($I`SqlTestHarnessError`)(
   "SqlTestHarnessError",
-  SqlTestHarnessErrorFields,
-  $I.annoteClass<
-    S.declare<SqlTestHarnessError>,
-    readonly [S.TaggedStruct<"SqlTestHarnessError", typeof SqlTestHarnessErrorFields>]
-  >("SqlTestHarnessError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("SqlTestHarnessError.cause", {
+        description: "Optional underlying defect captured while provisioning or preparing the SQL test harness.",
+      })
+    ),
+    driver: TestDatabaseDriver.pipe(
+      $I.annoteKey("SqlTestHarnessError.driver", {
+        description: "SQL test driver active when the harness failure occurred.",
+      })
+    ),
+    message: S.String.pipe(
+      $I.annoteKey("SqlTestHarnessError.message", {
+        description: "Human-readable SQL test harness failure message.",
+      })
+    ),
+    phase: SqlTestHarnessPhase.pipe(
+      $I.annoteKey("SqlTestHarnessError.phase", {
+        description: "Lifecycle phase active when the harness failure occurred.",
+      })
+    ),
+  },
+  $I.annoteError<SqlTestHarnessError>("SqlTestHarnessError", {
     description: "Typed integration-test harness error for SQL database provisioning and setup hooks.",
-    toEquivalence: () => sameSqlTestHarnessError,
   })
 ) {
   static readonly is = S.is(SqlTestHarnessError);

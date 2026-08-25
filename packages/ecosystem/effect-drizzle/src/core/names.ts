@@ -3,20 +3,9 @@
  *
  * @since 0.0.0
  */
-import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
-import type { Annotations, Struct } from "effect/Schema";
 
-const SqlNameErrorFields = {
-  message: StringSchema,
-  name: StringSchema,
-  surface: StringSchema,
-} satisfies Struct.Fields;
-const sameSqlNameErrorFields = toEquivalence(TaggedStruct("SqlNameError", SqlNameErrorFields));
-const sameSqlNameError = (self: SqlNameError, that: SqlNameError): boolean => sameSqlNameErrorFields(self, that);
-const SqlNameErrorAnnotations = {
-  description: "A SQL identifier or enum label violates a dialect naming invariant.",
-  toEquivalence: () => sameSqlNameError,
-} satisfies Annotations.Declaration<SqlNameError, readonly [TaggedStruct<"SqlNameError", typeof SqlNameErrorFields>]>;
+import { String as StringSchema, TaggedError } from "effect/Schema";
+import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 
 /**
  * Compile-time diagnostic carrier exposed by SQL naming validation.
@@ -109,8 +98,15 @@ export type ValidateDerivedSqlName<Identifier extends string, Message extends st
  */
 class SqlNameError extends TaggedError<SqlNameError>("@beep/effect-drizzle/SqlNameError")(
   "SqlNameError",
-  SqlNameErrorFields,
-  SqlNameErrorAnnotations
+  {
+    message: StringSchema,
+    name: StringSchema,
+    surface: StringSchema,
+  },
+  {
+    description: "A SQL identifier or enum label violates a dialect naming invariant.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<SqlNameError>(typeParameters),
+  }
 ) {}
 
 /**

@@ -52,22 +52,6 @@ export const CandorPromotionSubjectResolutionReason = CandorPromotionSubjectReso
  */
 export type CandorPromotionSubjectResolutionReason = typeof CandorPromotionSubjectResolutionReason.Type;
 
-const CandorPromotionSubjectResolutionErrorFields = {
-  reason: CandorPromotionSubjectResolutionReason.annotateKey({
-    description: "Bounded reason the subject could not be resolved to a candor filing scope.",
-  }),
-  request: PromotionGateRequest.annotateKey({
-    description: "Tenant-bound opaque subject that could not be resolved.",
-  }),
-} satisfies S.Struct.Fields;
-const sameCandorPromotionSubjectResolutionErrorFields = S.toEquivalence(
-  S.TaggedStruct("CandorPromotionSubjectResolutionError", CandorPromotionSubjectResolutionErrorFields)
-);
-const sameCandorPromotionSubjectResolutionError = (
-  self: CandorPromotionSubjectResolutionError,
-  that: CandorPromotionSubjectResolutionError
-): boolean => sameCandorPromotionSubjectResolutionErrorFields(self, that);
-
 /**
  * Failure to resolve an opaque shared subject to this slice's filing scope.
  *
@@ -98,16 +82,16 @@ export class CandorPromotionSubjectResolutionError extends S.TaggedError<CandorP
   $I`CandorPromotionSubjectResolutionError`
 )(
   "CandorPromotionSubjectResolutionError",
-  CandorPromotionSubjectResolutionErrorFields,
-  $I.annoteClass<
-    S.declare<CandorPromotionSubjectResolutionError>,
-    readonly [
-      S.TaggedStruct<"CandorPromotionSubjectResolutionError", typeof CandorPromotionSubjectResolutionErrorFields>,
-    ]
-  >("CandorPromotionSubjectResolutionError", {
+  {
+    reason: CandorPromotionSubjectResolutionReason.annotateKey({
+      description: "Bounded reason the subject could not be resolved to a candor filing scope.",
+    }),
+    request: PromotionGateRequest.annotateKey({
+      description: "Tenant-bound opaque subject that could not be resolved.",
+    }),
+  },
+  $I.annoteError<CandorPromotionSubjectResolutionError>("CandorPromotionSubjectResolutionError", {
     description: "The law-practice adapter could not resolve an opaque promotion subject to a filing scope.",
-
-    toEquivalence: () => sameCandorPromotionSubjectResolutionError,
   })
 ) {}
 

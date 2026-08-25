@@ -18,24 +18,12 @@ import {
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
-
-const AiMetricsCommandErrorFields = {
-  message: S.String,
-  cause: S.Defect({ includeStack: true }),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameAiMetricsCommandErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsCommandError", {
-    message: AiMetricsCommandErrorFields.message,
-  })
-);
-const sameAiMetricsCommandError = (self: AiMetricsCommandError, that: AiMetricsCommandError): boolean =>
-  sameAiMetricsCommandErrorFields(self, that);
 
 /**
  * Error raised by the AI metrics CLI.
@@ -57,22 +45,14 @@ const sameAiMetricsCommandError = (self: AiMetricsCommandError, that: AiMetricsC
  */
 export class AiMetricsCommandError extends S.TaggedError<AiMetricsCommandError>($I`AiMetricsCommandError`)(
   "AiMetricsCommandError",
-  AiMetricsCommandErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsCommandError>,
-    readonly [S.TaggedStruct<"AiMetricsCommandError", typeof AiMetricsCommandErrorFields>]
-  >("AiMetricsCommandError", {
+  {
+    message: S.String,
+    cause: Defect({ includeStack: true }),
+  },
+  $I.annoteError<AiMetricsCommandError>("AiMetricsCommandError", {
     description: "User-facing failure raised by the AI metrics CLI command suite.",
-    toEquivalence: () => sameAiMetricsCommandError,
   })
 ) {}
-
-const AiMetricsStatusExitFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAiMetricsStatusExitFields = S.toEquivalence(S.TaggedStruct("AiMetricsStatusExit", AiMetricsStatusExitFields));
-const sameAiMetricsStatusExit = (self: AiMetricsStatusExit, that: AiMetricsStatusExit): boolean =>
-  sameAiMetricsStatusExitFields(self, that);
 
 /**
  * Silent non-zero status used after the status command has already rendered output.
@@ -91,13 +71,11 @@ const sameAiMetricsStatusExit = (self: AiMetricsStatusExit, that: AiMetricsStatu
  */
 export class AiMetricsStatusExit extends S.TaggedError<AiMetricsStatusExit>($I`AiMetricsStatusExit`)(
   "AiMetricsStatusExit",
-  AiMetricsStatusExitFields,
-  $I.annoteClass<
-    S.declare<AiMetricsStatusExit>,
-    readonly [S.TaggedStruct<"AiMetricsStatusExit", typeof AiMetricsStatusExitFields>]
-  >("AiMetricsStatusExit", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<AiMetricsStatusExit>("AiMetricsStatusExit", {
     description: "Silent non-zero process exit requested after a command has already rendered its result.",
-    toEquivalence: () => sameAiMetricsStatusExit,
   })
 ) {
   /** Process exit code reported when this status sentinel reaches the runtime boundary. */

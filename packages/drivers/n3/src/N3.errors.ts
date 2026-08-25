@@ -52,14 +52,6 @@ export const N3TurtleCodecErrorReason = LiteralKit(["parseFailed", "serializeFai
  */
 export type N3TurtleCodecErrorReason = typeof N3TurtleCodecErrorReason.Type;
 
-const N3TurtleCodecErrorFields = {
-  reason: N3TurtleCodecErrorReason,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameN3TurtleCodecErrorFields = S.toEquivalence(S.TaggedStruct("N3TurtleCodecError", N3TurtleCodecErrorFields));
-const sameN3TurtleCodecError = (self: N3TurtleCodecError, that: N3TurtleCodecError): boolean =>
-  sameN3TurtleCodecErrorFields(self, that);
-
 /**
  * Typed N3 Turtle codec error.
  *
@@ -81,12 +73,11 @@ const sameN3TurtleCodecError = (self: N3TurtleCodecError, that: N3TurtleCodecErr
  */
 export class N3TurtleCodecError extends S.TaggedError<N3TurtleCodecError>($I`N3TurtleCodecError`)(
   "N3TurtleCodecError",
-  N3TurtleCodecErrorFields,
-  $I.annoteClass<
-    S.declare<N3TurtleCodecError>,
-    readonly [S.TaggedStruct<"N3TurtleCodecError", typeof N3TurtleCodecErrorFields>]
-  >("N3TurtleCodecError", {
+  {
+    reason: N3TurtleCodecErrorReason,
+    message: S.String,
+  },
+  $I.annoteError<N3TurtleCodecError>("N3TurtleCodecError", {
     description: "Typed N3 Turtle codec error.",
-    toEquivalence: () => sameN3TurtleCodecError,
   })
 ) {}

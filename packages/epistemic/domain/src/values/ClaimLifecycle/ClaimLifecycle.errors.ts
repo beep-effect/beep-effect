@@ -11,16 +11,6 @@ import { ClaimLifecycle } from "./ClaimLifecycle.model.ts";
 
 const $I = $EpistemicDomainId.create("values/ClaimLifecycle/ClaimLifecycle.errors");
 
-const ClaimInvalidTransitionFields = {
-  from: ClaimLifecycle,
-  to: ClaimLifecycle,
-} satisfies S.Struct.Fields;
-const sameClaimInvalidTransitionFields = S.toEquivalence(
-  S.TaggedStruct("ClaimInvalidTransition", ClaimInvalidTransitionFields)
-);
-const sameClaimInvalidTransition = (self: ClaimInvalidTransition, that: ClaimInvalidTransition): boolean =>
-  sameClaimInvalidTransitionFields(self, that);
-
 /**
  * Raised when a requested lifecycle transition is not a legal forward step for
  * the claim's current state (e.g. skipping a state, moving backwards, or
@@ -40,14 +30,13 @@ const sameClaimInvalidTransition = (self: ClaimInvalidTransition, that: ClaimInv
  */
 export class ClaimInvalidTransition extends S.TaggedError<ClaimInvalidTransition>($I`ClaimInvalidTransition`)(
   "ClaimInvalidTransition",
-  ClaimInvalidTransitionFields,
-  $I.annoteClass<
-    S.declare<ClaimInvalidTransition>,
-    readonly [S.TaggedStruct<"ClaimInvalidTransition", typeof ClaimInvalidTransitionFields>]
-  >("ClaimInvalidTransition", {
+  {
+    from: ClaimLifecycle,
+    to: ClaimLifecycle,
+  },
+  $I.annoteError<ClaimInvalidTransition>("ClaimInvalidTransition", {
     title: "Claim invalid transition",
     description: "The requested lifecycle transition is not a legal forward step for the current claim state.",
-    toEquivalence: () => sameClaimInvalidTransition,
   })
 ) {
   /**

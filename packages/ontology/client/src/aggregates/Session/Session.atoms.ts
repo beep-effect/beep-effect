@@ -1612,17 +1612,6 @@ const GRAPH_WORKER_MESSAGE_ERROR = "Ontology graph worker message failed to dese
 
 const GRAPH_WORKER_TIMEOUT_MESSAGE = "The graph worker did not respond. The diagram could not be drawn.";
 
-const OntologyGraphWorkerTimeoutErrorFields = {
-  message: S.NonEmptyString,
-} satisfies S.Struct.Fields;
-const sameOntologyGraphWorkerTimeoutErrorFields = S.toEquivalence(
-  S.TaggedStruct("OntologyGraphWorkerTimeoutError", OntologyGraphWorkerTimeoutErrorFields)
-);
-const sameOntologyGraphWorkerTimeoutError = (
-  self: OntologyGraphWorkerTimeoutError,
-  that: OntologyGraphWorkerTimeoutError
-): boolean => sameOntologyGraphWorkerTimeoutErrorFields(self, that);
-
 /**
  * Failure raised when ontology graph projection exceeds the worker response deadline.
  *
@@ -1642,14 +1631,11 @@ export class OntologyGraphWorkerTimeoutError extends S.TaggedError<OntologyGraph
   $I`OntologyGraphWorkerTimeoutError`
 )(
   "OntologyGraphWorkerTimeoutError",
-  OntologyGraphWorkerTimeoutErrorFields,
-  $I.annoteClass<
-    S.declare<OntologyGraphWorkerTimeoutError>,
-    readonly [S.TaggedStruct<"OntologyGraphWorkerTimeoutError", typeof OntologyGraphWorkerTimeoutErrorFields>]
-  >("OntologyGraphWorkerTimeoutError", {
+  {
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<OntologyGraphWorkerTimeoutError>("OntologyGraphWorkerTimeoutError", {
     description: "The ontology graph projection worker exceeded its response deadline.",
-
-    toEquivalence: () => sameOntologyGraphWorkerTimeoutError,
   })
 ) {}
 

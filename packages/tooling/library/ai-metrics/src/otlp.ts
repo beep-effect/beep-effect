@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
@@ -33,20 +33,6 @@ import type { Resource } from "@opentelemetry/resources";
 import type { ReadableSpan } from "@opentelemetry/sdk-trace-base";
 
 const $I = $RepoAiMetricsId.create("otlp");
-
-const AiMetricsOtlpExportErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAiMetricsOtlpExportErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsOtlpExportError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: AiMetricsOtlpExportErrorFields.message,
-  })
-);
-const sameAiMetricsOtlpExportError = (self: AiMetricsOtlpExportError, that: AiMetricsOtlpExportError): boolean =>
-  sameAiMetricsOtlpExportErrorFields(self, that);
-
 /**
  * OTLP attributes approved for redacted AI metrics span export.
  *
@@ -145,13 +131,12 @@ export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Typ
  */
 export class AiMetricsOtlpExportError extends S.TaggedError<AiMetricsOtlpExportError>($I`AiMetricsOtlpExportError`)(
   "AiMetricsOtlpExportError",
-  AiMetricsOtlpExportErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsOtlpExportError>,
-    readonly [S.TaggedStruct<"AiMetricsOtlpExportError", typeof AiMetricsOtlpExportErrorFields>]
-  >("AiMetricsOtlpExportError", {
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annoteError<AiMetricsOtlpExportError>("AiMetricsOtlpExportError", {
     description: "Typed failure raised while projecting or exporting redacted AI metrics OTLP spans.",
-    toEquivalence: () => sameAiMetricsOtlpExportError,
   })
 ) {}
 

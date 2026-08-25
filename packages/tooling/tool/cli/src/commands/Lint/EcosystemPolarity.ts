@@ -104,13 +104,6 @@ export class EcosystemPolaritySummary extends S.Class<EcosystemPolaritySummary>(
   })
 ) {}
 
-const EcosystemPolarityErrorFields = { message: S.String } satisfies S.Struct.Fields;
-const sameEcosystemPolarityErrorFields = S.toEquivalence(
-  S.TaggedStruct("EcosystemPolarityError", EcosystemPolarityErrorFields)
-);
-const sameEcosystemPolarityError = (self: EcosystemPolarityError, that: EcosystemPolarityError): boolean =>
-  sameEcosystemPolarityErrorFields(self, that);
-
 /**
  * Tagged filesystem or manifest failure raised while checking ecosystem polarity.
  *
@@ -128,13 +121,9 @@ const sameEcosystemPolarityError = (self: EcosystemPolarityError, that: Ecosyste
  */
 export class EcosystemPolarityError extends S.TaggedError<EcosystemPolarityError>($I`EcosystemPolarityError`)(
   "EcosystemPolarityError",
-  EcosystemPolarityErrorFields,
-  $I.annoteClass<
-    S.declare<EcosystemPolarityError>,
-    readonly [S.TaggedStruct<"EcosystemPolarityError", typeof EcosystemPolarityErrorFields>]
-  >("EcosystemPolarityError", {
+  { message: S.String },
+  $I.annoteError<EcosystemPolarityError>("EcosystemPolarityError", {
     description: "An ecosystem package could not be discovered, read, or decoded for polarity linting.",
-    toEquivalence: () => sameEcosystemPolarityError,
   })
 ) {
   static readonly new = (message: string): EcosystemPolarityError => EcosystemPolarityError.make({ message });

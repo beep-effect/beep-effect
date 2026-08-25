@@ -41,16 +41,6 @@ type OipContentLoadErrorOptions = {
   readonly status?: number;
 };
 
-const OipContentLoadErrorFields = {
-  provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  reason: OipContentLoadErrorReason,
-  status: S.OptionFromOptionalKey(OipContentProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
-} satisfies S.Struct.Fields;
-const sameOipContentLoadErrorFields = S.toEquivalence(S.TaggedStruct("OipContentLoadError", OipContentLoadErrorFields));
-const sameOipContentLoadError = (self: OipContentLoadError, that: OipContentLoadError): boolean =>
-  sameOipContentLoadErrorFields(self, that);
-
 /**
  * Typed server-side failure raised while loading OIP site content.
  *
@@ -72,13 +62,14 @@ const sameOipContentLoadError = (self: OipContentLoadError, that: OipContentLoad
  */
 export class OipContentLoadError extends S.TaggedError<OipContentLoadError>($I`OipContentLoadError`)(
   "OipContentLoadError",
-  OipContentLoadErrorFields,
-  $I.annoteClass<
-    S.declare<OipContentLoadError>,
-    readonly [S.TaggedStruct<"OipContentLoadError", typeof OipContentLoadErrorFields>]
-  >("OipContentLoadError", {
+  {
+    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    reason: OipContentLoadErrorReason,
+    status: S.OptionFromOptionalKey(OipContentProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annoteError<OipContentLoadError>("OipContentLoadError", {
     description: "Typed server-side OIP content loading failure.",
-    toEquivalence: () => sameOipContentLoadError,
   })
 ) {
   static readonly fromReason = (

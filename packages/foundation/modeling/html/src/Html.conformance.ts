@@ -180,15 +180,6 @@ export class HtmlConformanceIssue extends S.Class<HtmlConformanceIssue>($I`HtmlC
   })
 ) {}
 
-const HtmlConformanceErrorFields = {
-  issues: S.NonEmptyArray(HtmlConformanceIssue),
-} satisfies S.Struct.Fields;
-const sameHtmlConformanceErrorFields = S.toEquivalence(
-  S.TaggedStruct("HtmlConformanceError", HtmlConformanceErrorFields)
-);
-const sameHtmlConformanceError = (self: HtmlConformanceError, that: HtmlConformanceError): boolean =>
-  sameHtmlConformanceErrorFields(self, that);
-
 /**
  * Failure returned when an AST cannot be proven conformant.
  *
@@ -206,13 +197,11 @@ const sameHtmlConformanceError = (self: HtmlConformanceError, that: HtmlConforma
  */
 export class HtmlConformanceError extends S.TaggedError<HtmlConformanceError>($I`HtmlConformanceError`)(
   "HtmlConformanceError",
-  HtmlConformanceErrorFields,
-  $I.annoteClass<
-    S.declare<HtmlConformanceError>,
-    readonly [S.TaggedStruct<"HtmlConformanceError", typeof HtmlConformanceErrorFields>]
-  >("HtmlConformanceError", {
+  {
+    issues: S.NonEmptyArray(HtmlConformanceIssue),
+  },
+  $I.annoteError<HtmlConformanceError>("HtmlConformanceError", {
     description: "The HTML AST failed one or more conformance rules.",
-    toEquivalence: () => sameHtmlConformanceError,
   })
 ) {}
 

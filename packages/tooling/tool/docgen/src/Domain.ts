@@ -15,15 +15,6 @@ import type * as Ordering from "effect/Ordering";
 import type * as Parser from "./Parser.ts";
 
 const $I = $RepoDocgenId.create("Domain");
-
-const DocgenErrorFields = {
-  message: S.String.annotateKey({
-    description: "Human-readable docgen failure message.",
-  }),
-} satisfies S.Struct.Fields;
-const sameDocgenErrorFields = S.toEquivalence(S.TaggedStruct("DocgenError", DocgenErrorFields));
-const sameDocgenError = (self: DocgenError, that: DocgenError): boolean => sameDocgenErrorFields(self, that);
-
 const StringArray = S.Array(S.String);
 const OptionalString = S.UndefinedOr(S.String);
 const OptionalStringArray = S.UndefinedOr(StringArray);
@@ -1139,14 +1130,14 @@ export type DocgenErrorTypeId = typeof DocgenErrorTypeId;
  */
 export class DocgenError extends S.TaggedError<DocgenError>($I`DocgenError`)(
   "DocgenError",
-  DocgenErrorFields,
-  $I.annoteClass<S.declare<DocgenError>, readonly [S.TaggedStruct<"DocgenError", typeof DocgenErrorFields>]>(
-    "DocgenError",
-    {
-      description: "Typed error used throughout docgen parsing and generation operations.",
-      toEquivalence: () => sameDocgenError,
-    }
-  )
+  {
+    message: S.String.annotateKey({
+      description: "Human-readable docgen failure message.",
+    }),
+  },
+  $I.annoteError<DocgenError>("DocgenError", {
+    description: "Typed error used throughout docgen parsing and generation operations.",
+  })
 ) {}
 
 /**

@@ -267,13 +267,6 @@ export const SparqlQueryErrorReason = LiteralKit(["unsupportedProfile", "unimple
  * @since 0.0.0
  */
 export type SparqlQueryErrorReason = typeof SparqlQueryErrorReason.Type;
-const SparqlQueryErrorFields = {
-  reason: SparqlQueryErrorReason,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameSparqlQueryErrorFields = S.toEquivalence(S.TaggedStruct("SparqlQueryError", SparqlQueryErrorFields));
-const sameSparqlQueryError = (self: SparqlQueryError, that: SparqlQueryError): boolean =>
-  sameSparqlQueryErrorFields(self, that);
 
 /**
  * Typed SPARQL query error.
@@ -296,14 +289,13 @@ const sameSparqlQueryError = (self: SparqlQueryError, that: SparqlQueryError): b
  */
 export class SparqlQueryError extends S.TaggedError<SparqlQueryError>($I`SparqlQueryError`)(
   "SparqlQueryError",
-  SparqlQueryErrorFields,
-  $I.annoteClass<
-    S.declare<SparqlQueryError>,
-    readonly [S.TaggedStruct<"SparqlQueryError", typeof SparqlQueryErrorFields>]
-  >("SparqlQueryError", {
+  {
+    reason: SparqlQueryErrorReason,
+    message: S.String,
+  },
+  $I.annoteError<SparqlQueryError>("SparqlQueryError", {
     description: "Typed SPARQL query error.",
     semanticSchemaMetadata: serviceContractMetadata("SparqlQueryError", "Typed SPARQL query error."),
-    toEquivalence: () => sameSparqlQueryError,
   })
 ) {}
 

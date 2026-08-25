@@ -8,7 +8,7 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -21,22 +21,6 @@ import { AiMetricsPrivacyCheckResult, hashPublicTextSha256 } from "./privacy.ts"
 import type { DuckDbClient, DuckDbError } from "@beep/duckdb";
 
 const $I = $RepoAiMetricsId.create("derived-storage");
-
-const AiMetricsDerivedStorageErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAiMetricsDerivedStorageErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsDerivedStorageError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: AiMetricsDerivedStorageErrorFields.message,
-  })
-);
-const sameAiMetricsDerivedStorageError = (
-  self: AiMetricsDerivedStorageError,
-  that: AiMetricsDerivedStorageError
-): boolean => sameAiMetricsDerivedStorageErrorFields(self, that);
-
 const DERIVED_TABLES = [
   "ai_metrics_ingest_runs",
   "ai_metrics_source_files",
@@ -695,13 +679,12 @@ export class AiMetricsDerivedStorageError extends S.TaggedError<AiMetricsDerived
   $I`AiMetricsDerivedStorageError`
 )(
   "AiMetricsDerivedStorageError",
-  AiMetricsDerivedStorageErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsDerivedStorageError>,
-    readonly [S.TaggedStruct<"AiMetricsDerivedStorageError", typeof AiMetricsDerivedStorageErrorFields>]
-  >("AiMetricsDerivedStorageError", {
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annoteError<AiMetricsDerivedStorageError>("AiMetricsDerivedStorageError", {
     description: "Typed failure raised while projecting AI metrics records into DuckDB derived storage.",
-    toEquivalence: () => sameAiMetricsDerivedStorageError,
   })
 ) {}
 

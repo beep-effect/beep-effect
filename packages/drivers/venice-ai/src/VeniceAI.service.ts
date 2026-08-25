@@ -662,32 +662,6 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
   })
 ) {}
 
-const VeniceAIErrorFields = {
-  cause: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Sanitized technical cause label when one was available." })
-  ),
-  method: S.OptionFromOptionalKey(VeniceAIHttpMethod).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "HTTP method associated with the failure when known." })
-  ),
-  operation: S.OptionFromOptionalKey(VeniceAIOperationId).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Venice operation associated with the failure when known." })
-  ),
-  path: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Request path associated with the failure when known." })
-  ),
-  reason: VeniceAIErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
-  status: S.OptionFromOptionalKey(VeniceAIHttpStatus).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "HTTP response status code associated with the failure when known." })
-  ),
-} satisfies S.Struct.Fields;
-const sameVeniceAIErrorFields = S.toEquivalence(S.TaggedStruct("VeniceAIError", VeniceAIErrorFields));
-const sameVeniceAIError = (self: VeniceAIError, that: VeniceAIError): boolean => sameVeniceAIErrorFields(self, that);
-
 /**
  * Technical failure raised by the Venice AI driver boundary.
  *
@@ -714,14 +688,32 @@ const sameVeniceAIError = (self: VeniceAIError, that: VeniceAIError): boolean =>
  */
 export class VeniceAIError extends S.TaggedError<VeniceAIError>($I`VeniceAIError`)(
   "VeniceAIError",
-  VeniceAIErrorFields,
-  $I.annoteClass<S.declare<VeniceAIError>, readonly [S.TaggedStruct<"VeniceAIError", typeof VeniceAIErrorFields>]>(
-    "VeniceAIError",
-    {
-      description: "Redacted technical failure raised by the Venice AI driver boundary.",
-      toEquivalence: () => sameVeniceAIError,
-    }
-  )
+  {
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Sanitized technical cause label when one was available." })
+    ),
+    method: S.OptionFromOptionalKey(VeniceAIHttpMethod).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "HTTP method associated with the failure when known." })
+    ),
+    operation: S.OptionFromOptionalKey(VeniceAIOperationId).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Venice operation associated with the failure when known." })
+    ),
+    path: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Request path associated with the failure when known." })
+    ),
+    reason: VeniceAIErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
+    status: S.OptionFromOptionalKey(VeniceAIHttpStatus).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "HTTP response status code associated with the failure when known." })
+    ),
+  },
+  $I.annoteError<VeniceAIError>("VeniceAIError", {
+    description: "Redacted technical failure raised by the Venice AI driver boundary.",
+  })
 ) {
   /**
    * Create a driver error scoped to an OpenAPI operation.

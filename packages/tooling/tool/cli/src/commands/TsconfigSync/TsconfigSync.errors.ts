@@ -11,16 +11,6 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.errors");
 
-const TsconfigSyncDriftErrorFields = {
-  fileCount: S.Finite,
-  summary: S.String,
-} satisfies S.Struct.Fields;
-const sameTsconfigSyncDriftErrorFields = S.toEquivalence(
-  S.TaggedStruct("TsconfigSyncDriftError", TsconfigSyncDriftErrorFields)
-);
-const sameTsconfigSyncDriftError = (self: TsconfigSyncDriftError, that: TsconfigSyncDriftError): boolean =>
-  sameTsconfigSyncDriftErrorFields(self, that);
-
 /**
  * Drift error raised in check mode when changes are required.
  *
@@ -38,14 +28,13 @@ const sameTsconfigSyncDriftError = (self: TsconfigSyncDriftError, that: Tsconfig
  */
 export class TsconfigSyncDriftError extends S.TaggedError<TsconfigSyncDriftError>($I`TsconfigSyncDriftError`)(
   "TsconfigSyncDriftError",
-  TsconfigSyncDriftErrorFields,
-  $I.annoteClass<
-    S.declare<TsconfigSyncDriftError>,
-    readonly [S.TaggedStruct<"TsconfigSyncDriftError", typeof TsconfigSyncDriftErrorFields>]
-  >("TsconfigSyncDriftError", {
+  {
+    fileCount: S.Finite,
+    summary: S.String,
+  },
+  $I.annoteError<TsconfigSyncDriftError>("TsconfigSyncDriftError", {
     title: "Tsconfig Sync Drift Error",
     description: "Raised when tsconfig-sync --check detects one or more files that are out of sync.",
-    toEquivalence: () => sameTsconfigSyncDriftError,
   })
 ) {
   /**
@@ -70,16 +59,6 @@ export class TsconfigSyncDriftError extends S.TaggedError<TsconfigSyncDriftError
   );
 }
 
-const TsconfigSyncCycleErrorFields = {
-  cycles: S.String.pipe(S.Array, S.Array),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameTsconfigSyncCycleErrorFields = S.toEquivalence(
-  S.TaggedStruct("TsconfigSyncCycleError", TsconfigSyncCycleErrorFields)
-);
-const sameTsconfigSyncCycleError = (self: TsconfigSyncCycleError, that: TsconfigSyncCycleError): boolean =>
-  sameTsconfigSyncCycleErrorFields(self, that);
-
 /**
  * Cycle error raised when workspace dependency cycles are detected.
  *
@@ -97,14 +76,13 @@ const sameTsconfigSyncCycleError = (self: TsconfigSyncCycleError, that: Tsconfig
  */
 export class TsconfigSyncCycleError extends S.TaggedError<TsconfigSyncCycleError>($I`TsconfigSyncCycleError`)(
   "TsconfigSyncCycleError",
-  TsconfigSyncCycleErrorFields,
-  $I.annoteClass<
-    S.declare<TsconfigSyncCycleError>,
-    readonly [S.TaggedStruct<"TsconfigSyncCycleError", typeof TsconfigSyncCycleErrorFields>]
-  >("TsconfigSyncCycleError", {
+  {
+    cycles: S.String.pipe(S.Array, S.Array),
+    message: S.String,
+  },
+  $I.annoteError<TsconfigSyncCycleError>("TsconfigSyncCycleError", {
     title: "Tsconfig Sync Cycle Error",
     description: "Raised when workspace dependency graph contains one or more cycles.",
-    toEquivalence: () => sameTsconfigSyncCycleError,
   })
 ) {
   /**
@@ -129,16 +107,6 @@ export class TsconfigSyncCycleError extends S.TaggedError<TsconfigSyncCycleError
   );
 }
 
-const TsconfigSyncFilterErrorFields = {
-  filter: S.String,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameTsconfigSyncFilterErrorFields = S.toEquivalence(
-  S.TaggedStruct("TsconfigSyncFilterError", TsconfigSyncFilterErrorFields)
-);
-const sameTsconfigSyncFilterError = (self: TsconfigSyncFilterError, that: TsconfigSyncFilterError): boolean =>
-  sameTsconfigSyncFilterErrorFields(self, that);
-
 /**
  * Filter error raised when `--filter` does not match any workspace package.
  *
@@ -156,14 +124,13 @@ const sameTsconfigSyncFilterError = (self: TsconfigSyncFilterError, that: Tsconf
  */
 export class TsconfigSyncFilterError extends S.TaggedError<TsconfigSyncFilterError>($I`TsconfigSyncFilterError`)(
   "TsconfigSyncFilterError",
-  TsconfigSyncFilterErrorFields,
-  $I.annoteClass<
-    S.declare<TsconfigSyncFilterError>,
-    readonly [S.TaggedStruct<"TsconfigSyncFilterError", typeof TsconfigSyncFilterErrorFields>]
-  >("TsconfigSyncFilterError", {
+  {
+    filter: S.String,
+    message: S.String,
+  },
+  $I.annoteError<TsconfigSyncFilterError>("TsconfigSyncFilterError", {
     title: "Tsconfig Sync Filter Error",
     description: "Raised when tsconfig-sync filter does not match any workspace package name or path.",
-    toEquivalence: () => sameTsconfigSyncFilterError,
   })
 ) {
   /**

@@ -12,24 +12,14 @@ import { Effect, PlatformError } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $UtilsId.create("NodeUrl");
-const NodeUrlUnavailableErrorFields = {
-  module: S.Literal("node:url"),
-} satisfies S.Struct.Fields;
-const sameNodeUrlUnavailableErrorFields = S.toEquivalence(
-  S.TaggedStruct("NodeUrlUnavailableError", NodeUrlUnavailableErrorFields)
-);
-const sameNodeUrlUnavailableError = (self: NodeUrlUnavailableError, that: NodeUrlUnavailableError): boolean =>
-  sameNodeUrlUnavailableErrorFields(self, that);
 
 class NodeUrlUnavailableError extends S.TaggedError<NodeUrlUnavailableError>($I`NodeUrlUnavailableError`)(
   "NodeUrlUnavailableError",
-  NodeUrlUnavailableErrorFields,
-  $I.annoteClass<
-    S.declare<NodeUrlUnavailableError>,
-    readonly [S.TaggedStruct<"NodeUrlUnavailableError", typeof NodeUrlUnavailableErrorFields>]
-  >("NodeUrlUnavailableError", {
+  {
+    module: S.Literal("node:url"),
+  },
+  $I.annoteError<NodeUrlUnavailableError>("NodeUrlUnavailableError", {
     description: "Thrown when node:url is unavailable to URL conversion helpers.",
-    toEquivalence: () => sameNodeUrlUnavailableError,
   })
 ) {}
 

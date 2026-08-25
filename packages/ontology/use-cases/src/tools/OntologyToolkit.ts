@@ -125,16 +125,6 @@ export const OntologyBudgetKind = LiteralKit([
  */
 export type OntologyBudgetKind = typeof OntologyBudgetKind.Type;
 
-const OntologyCasConflictFields = {
-  expectedFingerprint: OntologyFingerprint,
-  currentFingerprint: OntologyFingerprint,
-  guidance: S.NonEmptyString,
-  recoverable: S.Literal(true),
-} satisfies S.Struct.Fields;
-const sameOntologyCasConflictFields = S.toEquivalence(S.TaggedStruct("OntologyCasConflict", OntologyCasConflictFields));
-const sameOntologyCasConflict = (self: OntologyCasConflict, that: OntologyCasConflict): boolean =>
-  sameOntologyCasConflictFields(self, that);
-
 /** Recoverable semantic CAS conflict.
  * **Example** (Usage)
  * ```ts
@@ -146,28 +136,16 @@ const sameOntologyCasConflict = (self: OntologyCasConflict, that: OntologyCasCon
  */
 export class OntologyCasConflict extends S.TaggedError<OntologyCasConflict>($I`OntologyCasConflict`)(
   "OntologyCasConflict",
-  OntologyCasConflictFields,
-  $I.annoteClass<
-    S.declare<OntologyCasConflict>,
-    readonly [S.TaggedStruct<"OntologyCasConflict", typeof OntologyCasConflictFields>]
-  >("OntologyCasConflict", {
+  {
+    expectedFingerprint: OntologyFingerprint,
+    currentFingerprint: OntologyFingerprint,
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyCasConflict>("OntologyCasConflict", {
     description: "Recoverable rdfc-1.0 compare-and-set conflict.",
-    toEquivalence: () => sameOntologyCasConflict,
   })
 ) {}
-
-const OntologyBudgetRefusalFields = {
-  kind: OntologyBudgetKind,
-  actual: NonNegativeInt,
-  limit: NonNegativeInt,
-  guidance: S.NonEmptyString,
-  recoverable: S.Literal(true),
-} satisfies S.Struct.Fields;
-const sameOntologyBudgetRefusalFields = S.toEquivalence(
-  S.TaggedStruct("OntologyBudgetRefusal", OntologyBudgetRefusalFields)
-);
-const sameOntologyBudgetRefusal = (self: OntologyBudgetRefusal, that: OntologyBudgetRefusal): boolean =>
-  sameOntologyBudgetRefusalFields(self, that);
 
 /** Recoverable static budget refusal.
  * **Example** (Usage)
@@ -180,30 +158,17 @@ const sameOntologyBudgetRefusal = (self: OntologyBudgetRefusal, that: OntologyBu
  */
 export class OntologyBudgetRefusal extends S.TaggedError<OntologyBudgetRefusal>($I`OntologyBudgetRefusal`)(
   "OntologyBudgetRefusal",
-  OntologyBudgetRefusalFields,
-  $I.annoteClass<
-    S.declare<OntologyBudgetRefusal>,
-    readonly [S.TaggedStruct<"OntologyBudgetRefusal", typeof OntologyBudgetRefusalFields>]
-  >("OntologyBudgetRefusal", {
+  {
+    kind: OntologyBudgetKind,
+    actual: NonNegativeInt,
+    limit: NonNegativeInt,
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyBudgetRefusal>("OntologyBudgetRefusal", {
     description: "Recoverable refusal when a server-owned ontology budget is exceeded.",
-
-    toEquivalence: () => sameOntologyBudgetRefusal,
   })
 ) {}
-
-const OntologyReasonerDriftRefusalFields = {
-  actual: NonNegativeInt,
-  cap: NonNegativeInt,
-  guidance: S.NonEmptyString,
-  recoverable: S.Literal(true),
-} satisfies S.Struct.Fields;
-const sameOntologyReasonerDriftRefusalFields = S.toEquivalence(
-  S.TaggedStruct("OntologyReasonerDriftRefusal", OntologyReasonerDriftRefusalFields)
-);
-const sameOntologyReasonerDriftRefusal = (
-  self: OntologyReasonerDriftRefusal,
-  that: OntologyReasonerDriftRefusal
-): boolean => sameOntologyReasonerDriftRefusalFields(self, that);
 
 /** Recoverable reasoner drift-cap refusal.
  * **Example** (Usage)
@@ -218,24 +183,16 @@ export class OntologyReasonerDriftRefusal extends S.TaggedError<OntologyReasoner
   $I`OntologyReasonerDriftRefusal`
 )(
   "OntologyReasonerDriftRefusal",
-  OntologyReasonerDriftRefusalFields,
-  $I.annoteClass<
-    S.declare<OntologyReasonerDriftRefusal>,
-    readonly [S.TaggedStruct<"OntologyReasonerDriftRefusal", typeof OntologyReasonerDriftRefusalFields>]
-  >("OntologyReasonerDriftRefusal", {
+  {
+    actual: NonNegativeInt,
+    cap: NonNegativeInt,
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyReasonerDriftRefusal>("OntologyReasonerDriftRefusal", {
     description: "Recoverable refusal that prevents an unbounded reasoner recompute.",
-
-    toEquivalence: () => sameOntologyReasonerDriftRefusal,
   })
 ) {}
-
-const OntologyNoOpRefusalFields = {
-  guidance: S.NonEmptyString,
-  recoverable: S.Literal(true),
-} satisfies S.Struct.Fields;
-const sameOntologyNoOpRefusalFields = S.toEquivalence(S.TaggedStruct("OntologyNoOpRefusal", OntologyNoOpRefusalFields));
-const sameOntologyNoOpRefusal = (self: OntologyNoOpRefusal, that: OntologyNoOpRefusal): boolean =>
-  sameOntologyNoOpRefusalFields(self, that);
 
 /** Explicit refusal for a change batch with no real delta.
  * **Example** (Usage)
@@ -249,28 +206,14 @@ const sameOntologyNoOpRefusal = (self: OntologyNoOpRefusal, that: OntologyNoOpRe
  */
 export class OntologyNoOpRefusal extends S.TaggedError<OntologyNoOpRefusal>($I`OntologyNoOpRefusal`)(
   "OntologyNoOpRefusal",
-  OntologyNoOpRefusalFields,
-  $I.annoteClass<
-    S.declare<OntologyNoOpRefusal>,
-    readonly [S.TaggedStruct<"OntologyNoOpRefusal", typeof OntologyNoOpRefusalFields>]
-  >("OntologyNoOpRefusal", {
+  {
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyNoOpRefusal>("OntologyNoOpRefusal", {
     description: "Visible refusal for an ontology mutation that would have no effect.",
-
-    toEquivalence: () => sameOntologyNoOpRefusal,
   })
 ) {}
-
-const OntologyActorIdentityRefusalFields = {
-  guidance: S.NonEmptyString,
-  recoverable: S.Literal(true),
-} satisfies S.Struct.Fields;
-const sameOntologyActorIdentityRefusalFields = S.toEquivalence(
-  S.TaggedStruct("OntologyActorIdentityRefusal", OntologyActorIdentityRefusalFields)
-);
-const sameOntologyActorIdentityRefusal = (
-  self: OntologyActorIdentityRefusal,
-  that: OntologyActorIdentityRefusal
-): boolean => sameOntologyActorIdentityRefusalFields(self, that);
 
 /** Recoverable refusal when authenticated caller identity is unavailable.
  * **Example** (Usage)
@@ -286,26 +229,14 @@ export class OntologyActorIdentityRefusal extends S.TaggedError<OntologyActorIde
   $I`OntologyActorIdentityRefusal`
 )(
   "OntologyActorIdentityRefusal",
-  OntologyActorIdentityRefusalFields,
-  $I.annoteClass<
-    S.declare<OntologyActorIdentityRefusal>,
-    readonly [S.TaggedStruct<"OntologyActorIdentityRefusal", typeof OntologyActorIdentityRefusalFields>]
-  >("OntologyActorIdentityRefusal", {
+  {
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyActorIdentityRefusal>("OntologyActorIdentityRefusal", {
     description: "Recoverable refusal when authenticated caller identity is unavailable for mutation attribution.",
-
-    toEquivalence: () => sameOntologyActorIdentityRefusal,
   })
 ) {}
-
-const OntologyTierGateRefusalFields = {
-  guidance: S.NonEmptyString,
-  recoverable: S.Literal(true),
-} satisfies S.Struct.Fields;
-const sameOntologyTierGateRefusalFields = S.toEquivalence(
-  S.TaggedStruct("OntologyTierGateRefusal", OntologyTierGateRefusalFields)
-);
-const sameOntologyTierGateRefusal = (self: OntologyTierGateRefusal, that: OntologyTierGateRefusal): boolean =>
-  sameOntologyTierGateRefusalFields(self, that);
 
 /** Recoverable refusal returned when TierGate does not approve a mutation.
  * **Example** (Usage)
@@ -319,27 +250,14 @@ const sameOntologyTierGateRefusal = (self: OntologyTierGateRefusal, that: Ontolo
  */
 export class OntologyTierGateRefusal extends S.TaggedError<OntologyTierGateRefusal>($I`OntologyTierGateRefusal`)(
   "OntologyTierGateRefusal",
-  OntologyTierGateRefusalFields,
-  $I.annoteClass<
-    S.declare<OntologyTierGateRefusal>,
-    readonly [S.TaggedStruct<"OntologyTierGateRefusal", typeof OntologyTierGateRefusalFields>]
-  >("OntologyTierGateRefusal", {
+  {
+    guidance: S.NonEmptyString,
+    recoverable: S.Literal(true),
+  },
+  $I.annoteError<OntologyTierGateRefusal>("OntologyTierGateRefusal", {
     description: "Recoverable fail-closed refusal returned when TierGate does not approve an ontology mutation.",
-
-    toEquivalence: () => sameOntologyTierGateRefusal,
   })
 ) {}
-
-const OntologyToolExecutionErrorFields = {
-  operation: S.NonEmptyString,
-  message: S.NonEmptyString,
-  recoverable: S.Boolean,
-} satisfies S.Struct.Fields;
-const sameOntologyToolExecutionErrorFields = S.toEquivalence(
-  S.TaggedStruct("OntologyToolExecutionError", OntologyToolExecutionErrorFields)
-);
-const sameOntologyToolExecutionError = (self: OntologyToolExecutionError, that: OntologyToolExecutionError): boolean =>
-  sameOntologyToolExecutionErrorFields(self, that);
 
 /** Typed execution failure from a real ontology layer.
  * **Example** (Usage)
@@ -355,13 +273,13 @@ export class OntologyToolExecutionError extends S.TaggedError<OntologyToolExecut
   $I`OntologyToolExecutionError`
 )(
   "OntologyToolExecutionError",
-  OntologyToolExecutionErrorFields,
-  $I.annoteClass<
-    S.declare<OntologyToolExecutionError>,
-    readonly [S.TaggedStruct<"OntologyToolExecutionError", typeof OntologyToolExecutionErrorFields>]
-  >("OntologyToolExecutionError", {
+  {
+    operation: S.NonEmptyString,
+    message: S.NonEmptyString,
+    recoverable: S.Boolean,
+  },
+  $I.annoteError<OntologyToolExecutionError>("OntologyToolExecutionError", {
     description: "Typed safe execution failure returned by an ontology tool.",
-    toEquivalence: () => sameOntologyToolExecutionError,
   })
 ) {}
 

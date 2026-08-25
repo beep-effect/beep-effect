@@ -335,15 +335,6 @@ export const ShaclValidationErrorReason = LiteralKit(["invalidShape", "engineFai
  * @since 0.0.0
  */
 export type ShaclValidationErrorReason = typeof ShaclValidationErrorReason.Type;
-const ShaclValidationErrorFields = {
-  reason: ShaclValidationErrorReason,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameShaclValidationErrorFields = S.toEquivalence(
-  S.TaggedStruct("ShaclValidationError", ShaclValidationErrorFields)
-);
-const sameShaclValidationError = (self: ShaclValidationError, that: ShaclValidationError): boolean =>
-  sameShaclValidationErrorFields(self, that);
 
 /**
  * Typed SHACL validation error.
@@ -366,14 +357,13 @@ const sameShaclValidationError = (self: ShaclValidationError, that: ShaclValidat
  */
 export class ShaclValidationError extends S.TaggedError<ShaclValidationError>($I`ShaclValidationError`)(
   "ShaclValidationError",
-  ShaclValidationErrorFields,
-  $I.annoteClass<
-    S.declare<ShaclValidationError>,
-    readonly [S.TaggedStruct<"ShaclValidationError", typeof ShaclValidationErrorFields>]
-  >("ShaclValidationError", {
+  {
+    reason: ShaclValidationErrorReason,
+    message: S.String,
+  },
+  $I.annoteError<ShaclValidationError>("ShaclValidationError", {
     description: "Typed SHACL validation error.",
     semanticSchemaMetadata: serviceContractMetadata("ShaclValidationError", "Typed SHACL validation error."),
-    toEquivalence: () => sameShaclValidationError,
   })
 ) {}
 

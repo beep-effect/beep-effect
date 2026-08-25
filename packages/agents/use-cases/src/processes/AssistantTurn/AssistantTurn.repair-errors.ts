@@ -11,13 +11,6 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.repair-errors");
 
-const BlockRepairFailedFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameBlockRepairFailedFields = S.toEquivalence(S.TaggedStruct("BlockRepairFailed", BlockRepairFailedFields));
-const sameBlockRepairFailed = (self: BlockRepairFailed, that: BlockRepairFailed): boolean =>
-  sameBlockRepairFailedFields(self, that);
-
 /**
  * Port failure raised when the block-repair adapter cannot complete its repair call.
  *
@@ -35,14 +28,11 @@ const sameBlockRepairFailed = (self: BlockRepairFailed, that: BlockRepairFailed)
  */
 export class BlockRepairFailed extends S.TaggedError<BlockRepairFailed>($I`BlockRepairFailed`)(
   "BlockRepairFailed",
-  BlockRepairFailedFields,
-  $I.annoteClass<
-    S.declare<BlockRepairFailed>,
-    readonly [S.TaggedStruct<"BlockRepairFailed", typeof BlockRepairFailedFields>]
-  >("BlockRepairFailed", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<BlockRepairFailed>("BlockRepairFailed", {
     description: "Raised when the assistant-turn block repair adapter cannot complete its repair call.",
-
-    toEquivalence: () => sameBlockRepairFailed,
   })
 ) {
   static readonly new = (message: string) => BlockRepairFailed.make({ message });

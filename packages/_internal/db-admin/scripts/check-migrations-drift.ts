@@ -5,55 +5,40 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Console, Effect, FileSystem, HashSet, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import type { Equivalence } from "effect/Equivalence";
 
-const MigrationsDriftErrorFields = {
-  message: S.String,
-  newFolders: S.Array(S.String),
-} satisfies S.Struct.Fields;
-const sameMigrationsDriftErrorFields = S.toEquivalence(
-  S.TaggedStruct("MigrationsDriftError", MigrationsDriftErrorFields)
-);
-const sameMigrationsDriftError = (self: MigrationsDriftError, that: MigrationsDriftError): boolean =>
-  sameMigrationsDriftErrorFields(self, that);
-const MigrationsDriftErrorAnnotations = {
-  toEquivalence: () => sameMigrationsDriftError,
-} satisfies S.Annotations.Declaration<
-  MigrationsDriftError,
-  readonly [S.TaggedStruct<"MigrationsDriftError", typeof MigrationsDriftErrorFields>]
->;
+// Effect calls the hook with the declared struct equivalence; a non-generic signature keeps the
+// annotation contextually typed without inferring anything from the class in its own base type.
+const declaredFieldsEquivalence = (typeParameters: readonly [Equivalence<never>]): Equivalence<never> =>
+  typeParameters[0];
 
 class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()(
   "MigrationsDriftError",
-  MigrationsDriftErrorFields,
-  MigrationsDriftErrorAnnotations
+  {
+    message: S.String,
+    newFolders: S.Array(S.String),
+  },
+  {
+    toEquivalence: ([sameFields]) => sameFields,
+  }
 ) {}
-
-const MigrationGenerationErrorFields = {
-  exitCode: S.Int,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameMigrationGenerationErrorFields = S.toEquivalence(
-  S.TaggedStruct("MigrationGenerationError", MigrationGenerationErrorFields)
-);
-const sameMigrationGenerationError = (self: MigrationGenerationError, that: MigrationGenerationError): boolean =>
-  sameMigrationGenerationErrorFields(self, that);
-const MigrationGenerationErrorAnnotations = {
-  toEquivalence: () => sameMigrationGenerationError,
-} satisfies S.Annotations.Declaration<
-  MigrationGenerationError,
-  readonly [S.TaggedStruct<"MigrationGenerationError", typeof MigrationGenerationErrorFields>]
->;
 
 class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>()(
   "MigrationGenerationError",
-  MigrationGenerationErrorFields,
-  MigrationGenerationErrorAnnotations
+  {
+    exitCode: S.Int,
+    message: S.String,
+  },
+  {
+    toEquivalence: ([sameFields]) => sameFields,
+  }
 ) {}
 
 const program = Effect.scoped(

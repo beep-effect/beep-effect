@@ -95,17 +95,6 @@ export const TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECT
  */
 export type TurboConfigProofSelectorMode = typeof TurboConfigProofSelectorMode.Type;
 
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameTurboConfigProofErrorFields = S.toEquivalence(
-  S.TaggedStruct("TurboConfigProofError", {
-    message: commandErrorFields.message,
-    command: commandErrorFields.command,
-    exitCode: commandErrorFields.exitCode,
-  })
-);
-const sameTurboConfigProofError = (self: TurboConfigProofError, that: TurboConfigProofError): boolean =>
-  sameTurboConfigProofErrorFields(self, that);
-
 /**
  * Typed error raised while collecting Turbo scoped-config proof data.
  *
@@ -115,12 +104,8 @@ const sameTurboConfigProofError = (self: TurboConfigProofError, that: TurboConfi
 export class TurboConfigProofError extends S.TaggedError<TurboConfigProofError>($I`TurboConfigProofError`)(
   "TurboConfigProofError",
   commandErrorFields,
-  $I.annoteClass<
-    S.declare<TurboConfigProofError>,
-    readonly [S.TaggedStruct<"TurboConfigProofError", typeof commandErrorFields>]
-  >("TurboConfigProofError", {
+  $I.annoteError<TurboConfigProofError>("TurboConfigProofError", {
     description: "Failure raised by the Turbo scoped-config proof harness.",
-    toEquivalence: () => sameTurboConfigProofError,
   })
 ) {
   /**

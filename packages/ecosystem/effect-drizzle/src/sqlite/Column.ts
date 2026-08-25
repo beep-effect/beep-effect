@@ -20,7 +20,8 @@ import {
 } from "effect/Match";
 import { none, some } from "effect/Option";
 import { hasProperty, isBoolean, isNumber, isString, Struct as StructPredicate } from "effect/Predicate";
-import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
+import { String as StringSchema, TaggedError } from "effect/Schema";
+import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import { assignStatics } from "../internal/statics.ts";
 import type { SQL } from "drizzle-orm";
 import type { ColumnBuilderBase } from "drizzle-orm/column-builder";
@@ -39,29 +40,23 @@ import type {
 } from "drizzle-orm/sqlite-core";
 import type { TaggedEnum } from "effect/Data";
 import type { Option } from "effect/Option";
-import type { Annotations, Struct } from "effect/Schema";
 import type { AST, Literal } from "effect/SchemaAST";
 import type * as Meta from "../core/Meta.ts";
-
-const ColumnInvariantErrorFields = {
-  message: StringSchema,
-} satisfies Struct.Fields;
-const sameColumnInvariantErrorFields = toEquivalence(TaggedStruct("ColumnInvariantError", ColumnInvariantErrorFields));
-const sameColumnInvariantError = (self: ColumnInvariantError, that: ColumnInvariantError): boolean =>
-  sameColumnInvariantErrorFields(self, that);
-const ColumnInvariantErrorAnnotations = {
-  description: "A SQLite column descriptor violates its shape invariant.",
-  toEquivalence: () => sameColumnInvariantError,
-} satisfies Annotations.Declaration<
-  ColumnInvariantError,
-  readonly [TaggedStruct<"ColumnInvariantError", typeof ColumnInvariantErrorFields>]
->;
 
 /** Failure raised when a SQLite descriptor violates its closed shape. */
 /** @internal */
 class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
   "@beep/effect-drizzle/sqlite/ColumnInvariantError"
-)("ColumnInvariantError", ColumnInvariantErrorFields, ColumnInvariantErrorAnnotations) {}
+)(
+  "ColumnInvariantError",
+  {
+    message: StringSchema,
+  },
+  {
+    description: "A SQLite column descriptor violates its shape invariant.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<ColumnInvariantError>(typeParameters),
+  }
+) {}
 
 /**
  * SQLite number-encoded EntityId storage identity.

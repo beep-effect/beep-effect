@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
+import { Defect, NonNegativeInt } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -42,19 +42,6 @@ const $I = $RepoCliId.create("commands/Knowledge/Knowledge.errors");
 export const KNOWLEDGE_HISTORY_REMEDIATION =
   "Ensure CI checks out full history with `fetch-depth: 0`; for an existing shallow clone run `git fetch --unshallow`.";
 
-const KnowledgeOperationalErrorFields = {
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameKnowledgeOperationalErrorFields = S.toEquivalence(
-  S.TaggedStruct("KnowledgeOperationalError", {
-    message: KnowledgeOperationalErrorFields.message,
-  })
-);
-const sameKnowledgeOperationalError = (self: KnowledgeOperationalError, that: KnowledgeOperationalError): boolean =>
-  sameKnowledgeOperationalErrorFields(self, that);
-
 /**
  * An operational scanner failure that must fail the run closed.
  *
@@ -86,14 +73,13 @@ const sameKnowledgeOperationalError = (self: KnowledgeOperationalError, that: Kn
  */
 export class KnowledgeOperationalError extends S.TaggedError<KnowledgeOperationalError>($I`KnowledgeOperationalError`)(
   "KnowledgeOperationalError",
-  KnowledgeOperationalErrorFields,
-  $I.annoteClass<
-    S.declare<KnowledgeOperationalError>,
-    readonly [S.TaggedStruct<"KnowledgeOperationalError", typeof KnowledgeOperationalErrorFields>]
-  >("KnowledgeOperationalError", {
+  {
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<KnowledgeOperationalError>("KnowledgeOperationalError", {
     description:
       "A Git, tree-resolution, archive, UTF-8, manifest-decode, command-probe, or index-probe failure that must fail closed.",
-    toEquivalence: () => sameKnowledgeOperationalError,
   })
 ) {
   /**
@@ -149,15 +135,6 @@ export class KnowledgeOperationalError extends S.TaggedError<KnowledgeOperationa
   static readonly mapError = Err.mapToError(this.new);
 }
 
-const KnowledgeProbeBootErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameKnowledgeProbeBootErrorFields = S.toEquivalence(
-  S.TaggedStruct("KnowledgeProbeBootError", KnowledgeProbeBootErrorFields)
-);
-const sameKnowledgeProbeBootError = (self: KnowledgeProbeBootError, that: KnowledgeProbeBootError): boolean =>
-  sameKnowledgeProbeBootErrorFields(self, that);
-
 /**
  * A current-checkout probe over archive data that exited non-zero without structured output.
  *
@@ -192,27 +169,13 @@ const sameKnowledgeProbeBootError = (self: KnowledgeProbeBootError, that: Knowle
  */
 export class KnowledgeProbeBootError extends S.TaggedError<KnowledgeProbeBootError>($I`KnowledgeProbeBootError`)(
   "KnowledgeProbeBootError",
-  KnowledgeProbeBootErrorFields,
-  $I.annoteClass<
-    S.declare<KnowledgeProbeBootError>,
-    readonly [S.TaggedStruct<"KnowledgeProbeBootError", typeof KnowledgeProbeBootErrorFields>]
-  >("KnowledgeProbeBootError", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<KnowledgeProbeBootError>("KnowledgeProbeBootError", {
     description: "A current-checkout probe over archive data that exited before emitting structured output.",
-    toEquivalence: () => sameKnowledgeProbeBootError,
   })
 ) {}
-
-const KnowledgeIntroducedFindingsErrorFields = {
-  message: S.String,
-  introducedCount: NonNegativeInt,
-} satisfies S.Struct.Fields;
-const sameKnowledgeIntroducedFindingsErrorFields = S.toEquivalence(
-  S.TaggedStruct("KnowledgeIntroducedFindingsError", KnowledgeIntroducedFindingsErrorFields)
-);
-const sameKnowledgeIntroducedFindingsError = (
-  self: KnowledgeIntroducedFindingsError,
-  that: KnowledgeIntroducedFindingsError
-): boolean => sameKnowledgeIntroducedFindingsErrorFields(self, that);
 
 /**
  * The gate failure raised once a rendered report contains introduced blocking findings.
@@ -244,25 +207,14 @@ export class KnowledgeIntroducedFindingsError extends S.TaggedError<KnowledgeInt
   $I`KnowledgeIntroducedFindingsError`
 )(
   "KnowledgeIntroducedFindingsError",
-  KnowledgeIntroducedFindingsErrorFields,
-  $I.annoteClass<
-    S.declare<KnowledgeIntroducedFindingsError>,
-    readonly [S.TaggedStruct<"KnowledgeIntroducedFindingsError", typeof KnowledgeIntroducedFindingsErrorFields>]
-  >("KnowledgeIntroducedFindingsError", {
+  {
+    message: S.String,
+    introducedCount: NonNegativeInt,
+  },
+  $I.annoteError<KnowledgeIntroducedFindingsError>("KnowledgeIntroducedFindingsError", {
     description: "The report contains one or more introduced blocking Stage-1 findings.",
-    toEquivalence: () => sameKnowledgeIntroducedFindingsError,
   })
 ) {}
-
-const KnowledgeHostPathDebtErrorFields = {
-  message: S.String,
-  liveDebtCount: NonNegativeInt,
-} satisfies S.Struct.Fields;
-const sameKnowledgeHostPathDebtErrorFields = S.toEquivalence(
-  S.TaggedStruct("KnowledgeHostPathDebtError", KnowledgeHostPathDebtErrorFields)
-);
-const sameKnowledgeHostPathDebtError = (self: KnowledgeHostPathDebtError, that: KnowledgeHostPathDebtError): boolean =>
-  sameKnowledgeHostPathDebtErrorFields(self, that);
 
 /**
  * The gate failure raised when a checked census still carries live host-path debt.
@@ -296,27 +248,14 @@ export class KnowledgeHostPathDebtError extends S.TaggedError<KnowledgeHostPathD
   $I`KnowledgeHostPathDebtError`
 )(
   "KnowledgeHostPathDebtError",
-  KnowledgeHostPathDebtErrorFields,
-  $I.annoteClass<
-    S.declare<KnowledgeHostPathDebtError>,
-    readonly [S.TaggedStruct<"KnowledgeHostPathDebtError", typeof KnowledgeHostPathDebtErrorFields>]
-  >("KnowledgeHostPathDebtError", {
+  {
+    message: S.String,
+    liveDebtCount: NonNegativeInt,
+  },
+  $I.annoteError<KnowledgeHostPathDebtError>("KnowledgeHostPathDebtError", {
     description: "The checked census carries live host-path observations in the gated classes.",
-    toEquivalence: () => sameKnowledgeHostPathDebtError,
   })
 ) {}
-
-const KnowledgeCloneAttributesErrorFields = {
-  message: S.String,
-  attributesPath: S.String,
-} satisfies S.Struct.Fields;
-const sameKnowledgeCloneAttributesErrorFields = S.toEquivalence(
-  S.TaggedStruct("KnowledgeCloneAttributesError", KnowledgeCloneAttributesErrorFields)
-);
-const sameKnowledgeCloneAttributesError = (
-  self: KnowledgeCloneAttributesError,
-  that: KnowledgeCloneAttributesError
-): boolean => sameKnowledgeCloneAttributesErrorFields(self, that);
 
 /**
  * The guard failure raised when a non-empty clone-local git attributes file is present.
@@ -347,13 +286,12 @@ export class KnowledgeCloneAttributesError extends S.TaggedError<KnowledgeCloneA
   $I`KnowledgeCloneAttributesError`
 )(
   "KnowledgeCloneAttributesError",
-  KnowledgeCloneAttributesErrorFields,
-  $I.annoteClass<
-    S.declare<KnowledgeCloneAttributesError>,
-    readonly [S.TaggedStruct<"KnowledgeCloneAttributesError", typeof KnowledgeCloneAttributesErrorFields>]
-  >("KnowledgeCloneAttributesError", {
+  {
+    message: S.String,
+    attributesPath: S.String,
+  },
+  $I.annoteError<KnowledgeCloneAttributesError>("KnowledgeCloneAttributesError", {
     description: "A non-empty clone-local git attributes file would silently rewrite hermetic archive bytes.",
-    toEquivalence: () => sameKnowledgeCloneAttributesError,
   })
 ) {
   /**

@@ -7,7 +7,7 @@
 
 import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -53,31 +53,6 @@ export const ContradictionTriageOperation = ContradictionTriageOperationBase.pip
  */
 export type ContradictionTriageOperation = typeof ContradictionTriageOperation.Type;
 
-const ContradictionRepositoryUnavailableFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional driver defect retained for boundary diagnostics." })
-  ),
-  operation: ContradictionTriageOperation.annotateKey({
-    description: "Repository operation that could not be served.",
-  }),
-  reason: S.NonEmptyString.annotateKey({
-    description: "Non-empty repository availability diagnostic.",
-  }),
-} satisfies S.Struct.Fields;
-const ContradictionRepositoryUnavailableEquivalenceFields = {
-  operation: ContradictionRepositoryUnavailableFields.operation,
-  reason: ContradictionRepositoryUnavailableFields.reason,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameContradictionRepositoryUnavailableFields = S.toEquivalence(
-  S.TaggedStruct("ContradictionRepositoryUnavailable", ContradictionRepositoryUnavailableEquivalenceFields)
-);
-const sameContradictionRepositoryUnavailable = (
-  self: ContradictionRepositoryUnavailable,
-  that: ContradictionRepositoryUnavailable
-): boolean => sameContradictionRepositoryUnavailableFields(self, that);
-
 /**
  * Raised when the contradiction repository cannot serve an operation.
  *
@@ -100,13 +75,20 @@ export class ContradictionRepositoryUnavailable extends S.TaggedError<Contradict
   $I`ContradictionRepositoryUnavailable`
 )(
   "ContradictionRepositoryUnavailable",
-  ContradictionRepositoryUnavailableFields,
-  $I.annoteClass<
-    S.declare<ContradictionRepositoryUnavailable>,
-    readonly [S.TaggedStruct<"ContradictionRepositoryUnavailable", typeof ContradictionRepositoryUnavailableFields>]
-  >("ContradictionRepositoryUnavailable", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional driver defect retained for boundary diagnostics." })
+    ),
+    operation: ContradictionTriageOperation.annotateKey({
+      description: "Repository operation that could not be served.",
+    }),
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository availability diagnostic.",
+    }),
+  },
+  $I.annoteError<ContradictionRepositoryUnavailable>("ContradictionRepositoryUnavailable", {
     description: "The contradiction repository could not serve an operation.",
-    toEquivalence: () => sameContradictionRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(ContradictionRepositoryUnavailable);
@@ -181,22 +163,6 @@ export const ContradictionReviewConflictReason = ContradictionReviewConflictReas
  */
 export type ContradictionReviewConflictReason = typeof ContradictionReviewConflictReason.Type;
 
-const ContradictionReviewConflictFields = {
-  candidateId: Epistemic.ContradictionCandidateId.annotateKey({
-    description: "Candidate whose review could not be applied.",
-  }),
-  reason: ContradictionReviewConflictReason.annotateKey({
-    description: "Why the optimistic review no longer applies.",
-  }),
-} satisfies S.Struct.Fields;
-const sameContradictionReviewConflictFields = S.toEquivalence(
-  S.TaggedStruct("ContradictionReviewConflict", ContradictionReviewConflictFields)
-);
-const sameContradictionReviewConflict = (
-  self: ContradictionReviewConflict,
-  that: ContradictionReviewConflict
-): boolean => sameContradictionReviewConflictFields(self, that);
-
 /**
  * Typed optimistic conflict raised when a review no longer applies.
  *
@@ -216,13 +182,16 @@ export class ContradictionReviewConflict extends S.TaggedError<ContradictionRevi
   $I`ContradictionReviewConflict`
 )(
   "ContradictionReviewConflict",
-  ContradictionReviewConflictFields,
-  $I.annoteClass<
-    S.declare<ContradictionReviewConflict>,
-    readonly [S.TaggedStruct<"ContradictionReviewConflict", typeof ContradictionReviewConflictFields>]
-  >("ContradictionReviewConflict", {
+  {
+    candidateId: Epistemic.ContradictionCandidateId.annotateKey({
+      description: "Candidate whose review could not be applied.",
+    }),
+    reason: ContradictionReviewConflictReason.annotateKey({
+      description: "Why the optimistic review no longer applies.",
+    }),
+  },
+  $I.annoteError<ContradictionReviewConflict>("ContradictionReviewConflict", {
     description: "An optimistic contradiction review no longer applies to current persisted state.",
-    toEquivalence: () => sameContradictionReviewConflict,
   })
 ) {
   static readonly is = S.is(ContradictionReviewConflict);
@@ -278,22 +247,6 @@ export const ContradictionSubmissionConflictReason = ContradictionSubmissionConf
  */
 export type ContradictionSubmissionConflictReason = typeof ContradictionSubmissionConflictReason.Type;
 
-const ContradictionSubmissionConflictFields = {
-  candidateKey: ContradictionCandidateKey.annotateKey({
-    description: "Canonical candidate identity whose submission conflicted.",
-  }),
-  reason: ContradictionSubmissionConflictReason.annotateKey({
-    description: "Bounded immutable-submission conflict reason.",
-  }),
-} satisfies S.Struct.Fields;
-const sameContradictionSubmissionConflictFields = S.toEquivalence(
-  S.TaggedStruct("ContradictionSubmissionConflict", ContradictionSubmissionConflictFields)
-);
-const sameContradictionSubmissionConflict = (
-  self: ContradictionSubmissionConflict,
-  that: ContradictionSubmissionConflict
-): boolean => sameContradictionSubmissionConflictFields(self, that);
-
 /**
  * Typed immutable-submission conflict.
  *
@@ -320,13 +273,16 @@ export class ContradictionSubmissionConflict extends S.TaggedError<Contradiction
   $I`ContradictionSubmissionConflict`
 )(
   "ContradictionSubmissionConflict",
-  ContradictionSubmissionConflictFields,
-  $I.annoteClass<
-    S.declare<ContradictionSubmissionConflict>,
-    readonly [S.TaggedStruct<"ContradictionSubmissionConflict", typeof ContradictionSubmissionConflictFields>]
-  >("ContradictionSubmissionConflict", {
+  {
+    candidateKey: ContradictionCandidateKey.annotateKey({
+      description: "Canonical candidate identity whose submission conflicted.",
+    }),
+    reason: ContradictionSubmissionConflictReason.annotateKey({
+      description: "Bounded immutable-submission conflict reason.",
+    }),
+  },
+  $I.annoteError<ContradictionSubmissionConflict>("ContradictionSubmissionConflict", {
     description: "A contradiction submission tried to mutate an identity or reuse a receipt inconsistently.",
-    toEquivalence: () => sameContradictionSubmissionConflict,
   })
 ) {
   static readonly is = S.is(ContradictionSubmissionConflict);

@@ -35,18 +35,26 @@ the tag. Cause-carrying errors declare
 
 ### Declared field equivalence
 
-Every `S.TaggedError` declaration carries a fields-only `toEquivalence`
-annotation. The comparator covers declared diagnostic identity and ignores the
-`Error` runtime metadata inherited by the class. The direct schema-derived
-form lives in `packages/drivers/tika/src/Tika.errors.ts`; fields that need typed
-projections use the hand-composed form in
-`packages/drivers/m365/src/M365.errors.ts`.
+Every `S.TaggedError` declaration adopts its declared field struct as its
+equivalence by passing `$I.annoteError<Self>(identifier, extras?)` as its
+annotations. Effect calls a declaration's `toEquivalence` hook with the derived
+equivalence of its type parameters, and for a tagged error that single
+parameter is the declared `TaggedStruct`; the record returned by `annoteError`
+hands that equivalence back, so `S.toEquivalence(ErrorClass)` compares declared
+diagnostic identity and ignores the `Error` runtime metadata the class
+inherits. Nothing is derived by hand at the class: no field constants, no
+comparator functions, no explicit schema type arguments. Packages that cannot
+depend on `@beep/identity` write the same hook inline as
+`toEquivalence: ([sameFields]) => sameFields` on a contextually typed
+annotation object (`packages/ecosystem/effect-drizzle/src/core/Meta.ts`).
 
-Opaque fields modeled with `S.Defect(...)`, including optional defect fields,
-remain payload but stay out of the comparator. Two errors may therefore be
-equivalent even when their opaque defects differ. The comparator and its
-annotation live beside the class declaration. Tests consume
-`S.toEquivalence(ErrorClass)` and never install test-local overrides.
+Opaque payloads declare their own identity rule at the schema layer: `Defect`
+from `@beep/schema` is Effect's `S.Defect(options)` annotated with an
+always-true equivalence, so a `cause` field stays payload and two errors that
+differ only in their defect compare equal. Excluding a field from equivalence at
+the class is not a pattern; the field's schema says whether it participates.
+Tests consume `S.toEquivalence(ErrorClass)` and never install test-local
+overrides.
 
 ## 2. Translation contract
 

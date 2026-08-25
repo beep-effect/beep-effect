@@ -21,7 +21,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
-import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
+import { Defect, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Unknown } from "@beep/schema/Unknown";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
@@ -157,20 +157,6 @@ export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I
   })
 ) {}
 
-const PracticeKgClaimsErrorFields = {
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-  message: S.NonEmptyString,
-} satisfies S.Struct.Fields;
-const PracticeKgClaimsErrorEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  message: PracticeKgClaimsErrorFields.message,
-} satisfies S.Struct.Fields;
-const samePracticeKgClaimsErrorFields = S.toEquivalence(
-  S.TaggedStruct("PracticeKgClaimsError", PracticeKgClaimsErrorEquivalenceFields)
-);
-const samePracticeKgClaimsError = (self: PracticeKgClaimsError, that: PracticeKgClaimsError): boolean =>
-  samePracticeKgClaimsErrorFields(self, that);
-
 /**
  * Typed batch failure with the provider or persistence cause retained locally.
  *
@@ -186,14 +172,12 @@ const samePracticeKgClaimsError = (self: PracticeKgClaimsError, that: PracticeKg
  */
 export class PracticeKgClaimsError extends S.TaggedError<PracticeKgClaimsError>($I`PracticeKgClaimsError`)(
   "PracticeKgClaimsError",
-  PracticeKgClaimsErrorFields,
-  $I.annoteClass<
-    S.declare<PracticeKgClaimsError>,
-    readonly [S.TaggedStruct<"PracticeKgClaimsError", typeof PracticeKgClaimsErrorFields>]
-  >("PracticeKgClaimsError", {
+  {
+    cause: S.optionalKey(Defect({ includeStack: true })),
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<PracticeKgClaimsError>("PracticeKgClaimsError", {
     description: "Failure while extracting or persisting the practice KG claims batch.",
-
-    toEquivalence: () => samePracticeKgClaimsError,
   })
 ) {}
 

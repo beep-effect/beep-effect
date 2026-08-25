@@ -22,28 +22,16 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $UtilsId.create("FileSystem");
-const NodeFileSystemUnavailableErrorFields = {
-  module: S.Literal("node:fs"),
-} satisfies S.Struct.Fields;
-const sameNodeFileSystemUnavailableErrorFields = S.toEquivalence(
-  S.TaggedStruct("NodeFileSystemUnavailableError", NodeFileSystemUnavailableErrorFields)
-);
-const sameNodeFileSystemUnavailableError = (
-  self: NodeFileSystemUnavailableError,
-  that: NodeFileSystemUnavailableError
-): boolean => sameNodeFileSystemUnavailableErrorFields(self, that);
 
 class NodeFileSystemUnavailableError extends S.TaggedError<NodeFileSystemUnavailableError>(
   $I`NodeFileSystemUnavailableError`
 )(
   "NodeFileSystemUnavailableError",
-  NodeFileSystemUnavailableErrorFields,
-  $I.annoteClass<
-    S.declare<NodeFileSystemUnavailableError>,
-    readonly [S.TaggedStruct<"NodeFileSystemUnavailableError", typeof NodeFileSystemUnavailableErrorFields>]
-  >("NodeFileSystemUnavailableError", {
+  {
+    module: S.Literal("node:fs"),
+  },
+  $I.annoteError<NodeFileSystemUnavailableError>("NodeFileSystemUnavailableError", {
     description: "Thrown when node:fs is unavailable to sync file system helpers.",
-    toEquivalence: () => sameNodeFileSystemUnavailableError,
   })
 ) {}
 

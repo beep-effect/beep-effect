@@ -64,13 +64,6 @@ export type TextGraph = Graph.DirectedGraph<TextNode, TextEdge>;
  */
 export type MutableTextGraph = Graph.MutableDirectedGraph<TextNode, TextEdge>;
 
-const GraphCycleErrorFields = {
-  parentIndex: S.Finite,
-} satisfies S.Struct.Fields;
-const sameGraphCycleErrorFields = S.toEquivalence(S.TaggedStruct("GraphCycleError", GraphCycleErrorFields));
-const sameGraphCycleError = (self: GraphCycleError, that: GraphCycleError): boolean =>
-  sameGraphCycleErrorFields(self, that);
-
 /**
  * Raised when adding children would introduce a cycle (graphs must stay acyclic).
  *
@@ -88,14 +81,11 @@ const sameGraphCycleError = (self: GraphCycleError, that: GraphCycleError): bool
  */
 export class GraphCycleError extends S.TaggedError<GraphCycleError>($I`GraphCycleError`)(
   "GraphCycleError",
-  GraphCycleErrorFields,
-  $I.annoteClass<
-    S.declare<GraphCycleError>,
-    readonly [S.TaggedStruct<"GraphCycleError", typeof GraphCycleErrorFields>]
-  >("GraphCycleError", {
+  {
+    parentIndex: S.Finite,
+  },
+  $I.annoteError<GraphCycleError>("GraphCycleError", {
     description: "Raised when a text-graph mutation would create a cycle.",
-
-    toEquivalence: () => sameGraphCycleError,
   })
 ) {}
 

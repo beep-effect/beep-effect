@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
@@ -12,23 +13,6 @@ import * as S from "effect/Schema";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/SyncDataToTs.errors");
-
-const SyncDataToTsErrorFields = {
-  message: S.String,
-  targetId: S.optionalKey(S.String),
-  file: S.optionalKey(S.String),
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameSyncDataToTsErrorFields = S.toEquivalence(
-  S.TaggedStruct("SyncDataToTsError", {
-    message: SyncDataToTsErrorFields.message,
-    targetId: SyncDataToTsErrorFields.targetId,
-    file: SyncDataToTsErrorFields.file,
-  })
-);
-const sameSyncDataToTsError = (self: SyncDataToTsError, that: SyncDataToTsError): boolean =>
-  sameSyncDataToTsErrorFields(self, that);
 
 /**
  * Operational error during source fetch, parsing, projection, or file writes.
@@ -47,14 +31,15 @@ const sameSyncDataToTsError = (self: SyncDataToTsError, that: SyncDataToTsError)
  */
 export class SyncDataToTsError extends S.TaggedError<SyncDataToTsError>($I`SyncDataToTsError`)(
   "SyncDataToTsError",
-  SyncDataToTsErrorFields,
-  $I.annoteClass<
-    S.declare<SyncDataToTsError>,
-    readonly [S.TaggedStruct<"SyncDataToTsError", typeof SyncDataToTsErrorFields>]
-  >("SyncDataToTsError", {
+  {
+    message: S.String,
+    targetId: S.optionalKey(S.String),
+    file: S.optionalKey(S.String),
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<SyncDataToTsError>("SyncDataToTsError", {
     title: "Sync Data To TypeScript Error",
     description: "Failed to fetch, decode, normalize, render, or write synced data.",
-    toEquivalence: () => sameSyncDataToTsError,
   })
 ) {
   /**
@@ -89,16 +74,6 @@ export class SyncDataToTsError extends S.TaggedError<SyncDataToTsError>($I`SyncD
   );
 }
 
-const SyncDataToTsDriftErrorFields = {
-  message: S.String,
-  driftCount: S.Finite,
-} satisfies S.Struct.Fields;
-const sameSyncDataToTsDriftErrorFields = S.toEquivalence(
-  S.TaggedStruct("SyncDataToTsDriftError", SyncDataToTsDriftErrorFields)
-);
-const sameSyncDataToTsDriftError = (self: SyncDataToTsDriftError, that: SyncDataToTsDriftError): boolean =>
-  sameSyncDataToTsDriftErrorFields(self, that);
-
 /**
  * Drift detected in check mode.
  *
@@ -116,14 +91,13 @@ const sameSyncDataToTsDriftError = (self: SyncDataToTsDriftError, that: SyncData
  */
 export class SyncDataToTsDriftError extends S.TaggedError<SyncDataToTsDriftError>($I`SyncDataToTsDriftError`)(
   "SyncDataToTsDriftError",
-  SyncDataToTsDriftErrorFields,
-  $I.annoteClass<
-    S.declare<SyncDataToTsDriftError>,
-    readonly [S.TaggedStruct<"SyncDataToTsDriftError", typeof SyncDataToTsDriftErrorFields>]
-  >("SyncDataToTsDriftError", {
+  {
+    message: S.String,
+    driftCount: S.Finite,
+  },
+  $I.annoteError<SyncDataToTsDriftError>("SyncDataToTsDriftError", {
     title: "Sync Data To TypeScript Drift Error",
     description: "Generated data drift was detected while running in check mode.",
-    toEquivalence: () => sameSyncDataToTsDriftError,
   })
 ) {
   /**

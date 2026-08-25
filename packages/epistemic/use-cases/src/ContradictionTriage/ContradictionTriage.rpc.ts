@@ -479,17 +479,6 @@ export const ContradictionActionErrorReason = ContradictionActionErrorReasonBase
  */
 export type ContradictionActionErrorReason = typeof ContradictionActionErrorReason.Type;
 
-const ContradictionActionErrorFields = {
-  reason: ContradictionActionErrorReason.annotateKey({
-    description: "Sanitized reason the requested contradiction action could not complete.",
-  }),
-} satisfies S.Struct.Fields;
-const sameContradictionActionErrorFields = S.toEquivalence(
-  S.TaggedStruct("ContradictionActionError", ContradictionActionErrorFields)
-);
-const sameContradictionActionError = (self: ContradictionActionError, that: ContradictionActionError): boolean =>
-  sameContradictionActionErrorFields(self, that);
-
 /**
  * Client-safe contradiction action failure carried by every triage RPC.
  *
@@ -507,13 +496,13 @@ const sameContradictionActionError = (self: ContradictionActionError, that: Cont
  */
 export class ContradictionActionError extends S.TaggedError<ContradictionActionError>($I`ContradictionActionError`)(
   "ContradictionActionError",
-  ContradictionActionErrorFields,
-  $I.annoteClass<
-    S.declare<ContradictionActionError>,
-    readonly [S.TaggedStruct<"ContradictionActionError", typeof ContradictionActionErrorFields>]
-  >("ContradictionActionError", {
+  {
+    reason: ContradictionActionErrorReason.annotateKey({
+      description: "Sanitized reason the requested contradiction action could not complete.",
+    }),
+  },
+  $I.annoteError<ContradictionActionError>("ContradictionActionError", {
     description: "Sanitized failure for client-visible contradiction triage actions.",
-    toEquivalence: () => sameContradictionActionError,
   })
 ) {
   static readonly is = S.is(ContradictionActionError);

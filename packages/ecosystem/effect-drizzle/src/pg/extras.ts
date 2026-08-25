@@ -6,6 +6,7 @@
  *
  * @since 0.0.0
  */
+
 import { is as isDrizzleEntity, SQL, sql } from "drizzle-orm";
 import {
   check as drizzleCheck,
@@ -22,28 +23,14 @@ import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import { fromUndefinedOr, match } from "effect/Option";
 import { hasProperty, isObject, isString, isUndefined } from "effect/Predicate";
-import { String as StringSchema, TaggedError, TaggedStruct, toEquivalence } from "effect/Schema";
+import { String as StringSchema, TaggedError } from "effect/Schema";
+import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import * as Meta from "../core/Meta.ts";
 import { assertSqlName } from "../core/names.ts";
 import type { ExtraConfigColumn, PgIndexMethod, PgTableExtraConfigValue } from "drizzle-orm/pg-core";
 import type { TaggedEnum } from "effect/Data";
-import type { Annotations, Struct } from "effect/Schema";
 import type * as Field from "../core/Field.ts";
 import type { ValidateSqlName } from "../core/names.ts";
-
-const TableExtraErrorFields = {
-  message: StringSchema,
-} satisfies Struct.Fields;
-const sameTableExtraErrorFields = toEquivalence(TaggedStruct("TableExtraError", TableExtraErrorFields));
-const sameTableExtraError = (self: TableExtraError, that: TableExtraError): boolean =>
-  sameTableExtraErrorFields(self, that);
-const TableExtraErrorAnnotations = {
-  description: "A PostgreSQL table-extra declaration violates a database invariant.",
-  toEquivalence: () => sameTableExtraError,
-} satisfies Annotations.Declaration<
-  TableExtraError,
-  readonly [TaggedStruct<"TableExtraError", typeof TableExtraErrorFields>]
->;
 
 const validateName = (name: string): string => {
   assertSqlName(name, "pg", "PostgreSQL table-extra name");
@@ -59,8 +46,13 @@ const validateName = (name: string): string => {
  */
 export class TableExtraError extends TaggedError<TableExtraError>("@beep/effect-drizzle/pg/TableExtraError")(
   "TableExtraError",
-  TableExtraErrorFields,
-  TableExtraErrorAnnotations
+  {
+    message: StringSchema,
+  },
+  {
+    description: "A PostgreSQL table-extra declaration violates a database invariant.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<TableExtraError>(typeParameters),
+  }
 ) {}
 
 const pgDialect = new PgDialect();

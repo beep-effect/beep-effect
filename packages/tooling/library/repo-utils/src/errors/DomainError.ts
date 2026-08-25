@@ -8,23 +8,12 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("errors/DomainError");
-
-const DomainErrorFields = {
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-const sameDomainErrorFields = S.toEquivalence(
-  S.TaggedStruct("DomainError", {
-    message: DomainErrorFields.message,
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  })
-);
-const sameDomainError = (self: DomainError, that: DomainError): boolean => sameDomainErrorFields(self, that);
 
 /**
  * A generic domain-level error with an optional underlying cause.
@@ -44,16 +33,15 @@ const sameDomainError = (self: DomainError, that: DomainError): boolean => sameD
  */
 export class DomainError extends S.TaggedError<DomainError>($I`DomainError`)(
   "DomainError",
-  DomainErrorFields,
-  $I.annoteClass<S.declare<DomainError>, readonly [S.TaggedStruct<"DomainError", typeof DomainErrorFields>]>(
-    "DomainError",
-    {
-      title: "Domain Error",
-      description:
-        "A generic domain-level error with an optional underlying cause for JSON parse failures, glob failures, and other operational errors.",
-      toEquivalence: () => sameDomainError,
-    }
-  )
+  {
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<DomainError>("DomainError", {
+    title: "Domain Error",
+    description:
+      "A generic domain-level error with an optional underlying cause for JSON parse failures, glob failures, and other operational errors.",
+  })
 ) {
   static readonly newCause: {
     (cause: unknown, message: string): DomainError;

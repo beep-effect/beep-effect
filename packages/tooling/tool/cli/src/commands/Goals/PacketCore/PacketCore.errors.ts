@@ -10,14 +10,6 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketCore.errors");
 
-const PacketStreamErrorFields = {
-  packet: S.String,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const samePacketStreamErrorFields = S.toEquivalence(S.TaggedStruct("PacketStreamError", PacketStreamErrorFields));
-const samePacketStreamError = (self: PacketStreamError, that: PacketStreamError): boolean =>
-  samePacketStreamErrorFields(self, that);
-
 /**
  * Failure raised when a packet event stream cannot be read, decoded, or
  * safely appended to.
@@ -43,13 +35,12 @@ const samePacketStreamError = (self: PacketStreamError, that: PacketStreamError)
  */
 export class PacketStreamError extends S.TaggedError<PacketStreamError>($I`PacketStreamError`)(
   "PacketStreamError",
-  PacketStreamErrorFields,
-  $I.annoteClass<
-    S.declare<PacketStreamError>,
-    readonly [S.TaggedStruct<"PacketStreamError", typeof PacketStreamErrorFields>]
-  >("PacketStreamError", {
+  {
+    packet: S.String,
+    message: S.String,
+  },
+  $I.annoteError<PacketStreamError>("PacketStreamError", {
     description: "A packet event stream cannot be read, decoded, or safely appended to.",
-    toEquivalence: () => samePacketStreamError,
   })
 ) {
   /**
@@ -64,18 +55,6 @@ export class PacketStreamError extends S.TaggedError<PacketStreamError>($I`Packe
   static readonly new = (packet: string, message: string): PacketStreamError =>
     PacketStreamError.make({ packet, message });
 }
-
-const PacketCasConflictErrorFields = {
-  packet: S.String,
-  expectedRevision: S.Finite,
-  actualRevision: S.Finite,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const samePacketCasConflictErrorFields = S.toEquivalence(
-  S.TaggedStruct("PacketCasConflictError", PacketCasConflictErrorFields)
-);
-const samePacketCasConflictError = (self: PacketCasConflictError, that: PacketCasConflictError): boolean =>
-  samePacketCasConflictErrorFields(self, that);
 
 /**
  * Failure raised when a compare-and-set append loses to a concurrent write.
@@ -108,12 +87,13 @@ const samePacketCasConflictError = (self: PacketCasConflictError, that: PacketCa
  */
 export class PacketCasConflictError extends S.TaggedError<PacketCasConflictError>($I`PacketCasConflictError`)(
   "PacketCasConflictError",
-  PacketCasConflictErrorFields,
-  $I.annoteClass<
-    S.declare<PacketCasConflictError>,
-    readonly [S.TaggedStruct<"PacketCasConflictError", typeof PacketCasConflictErrorFields>]
-  >("PacketCasConflictError", {
+  {
+    packet: S.String,
+    expectedRevision: S.Finite,
+    actualRevision: S.Finite,
+    message: S.String,
+  },
+  $I.annoteError<PacketCasConflictError>("PacketCasConflictError", {
     description: "A compare-and-set append lost to a concurrent write; the transition is refused whole.",
-    toEquivalence: () => samePacketCasConflictError,
   })
 ) {}

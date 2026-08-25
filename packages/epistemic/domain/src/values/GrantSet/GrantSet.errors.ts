@@ -10,16 +10,6 @@ import { PolicyRevision } from "../ExecutionGrant/index.ts";
 
 const $I = $EpistemicDomainId.create("values/GrantSet/GrantSet.errors");
 
-const GrantRevisionMismatchFields = {
-  setRevision: PolicyRevision,
-  grantRevision: PolicyRevision,
-} satisfies S.Struct.Fields;
-const sameGrantRevisionMismatchFields = S.toEquivalence(
-  S.TaggedStruct("GrantRevisionMismatch", GrantRevisionMismatchFields)
-);
-const sameGrantRevisionMismatch = (self: GrantRevisionMismatch, that: GrantRevisionMismatch): boolean =>
-  sameGrantRevisionMismatchFields(self, that);
-
 /**
  * A grant issued under one policy revision was offered to a set pinned to
  * another. Rejected rather than absorbed: every execution decision records the
@@ -45,14 +35,13 @@ const sameGrantRevisionMismatch = (self: GrantRevisionMismatch, that: GrantRevis
  */
 export class GrantRevisionMismatch extends S.TaggedError<GrantRevisionMismatch>($I`GrantRevisionMismatch`)(
   "GrantRevisionMismatch",
-  GrantRevisionMismatchFields,
-  $I.annoteClass<
-    S.declare<GrantRevisionMismatch>,
-    readonly [S.TaggedStruct<"GrantRevisionMismatch", typeof GrantRevisionMismatchFields>]
-  >("GrantRevisionMismatch", {
+  {
+    setRevision: PolicyRevision,
+    grantRevision: PolicyRevision,
+  },
+  $I.annoteError<GrantRevisionMismatch>("GrantRevisionMismatch", {
     title: "Grant revision mismatch",
     description: "A grant's policy revision does not match the revision its grant set is pinned to.",
-    toEquivalence: () => sameGrantRevisionMismatch,
   })
 ) {
   /**

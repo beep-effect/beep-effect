@@ -6,7 +6,7 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A, dual, flow, O, P, R, Struct } from "@beep/utils";
 import { Effect, Match, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
@@ -219,19 +219,6 @@ export type PandocJsonFromString = typeof PandocJsonFromString.Type;
 
 const PandocJsonObject = S.Record(S.String, S.Json);
 const PandocJsonObjectFromString = S.fromJsonString(PandocJsonObject);
-const PandocDecodeErrorFields = {
-  message: S.String,
-  cause: S.Defect({ includeStack: true }),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const PandocDecodeErrorComparableFields = {
-  message: PandocDecodeErrorFields.message,
-} satisfies S.Struct.Fields;
-const samePandocDecodeErrorFields = S.toEquivalence(
-  S.TaggedStruct("PandocDecodeError", PandocDecodeErrorComparableFields)
-);
-const samePandocDecodeError = (self: PandocDecodeError, that: PandocDecodeError): boolean =>
-  samePandocDecodeErrorFields(self, that);
 
 /**
  * Typed failure raised by strict or lossless Pandoc JSON decoding.
@@ -253,13 +240,12 @@ const samePandocDecodeError = (self: PandocDecodeError, that: PandocDecodeError)
  */
 export class PandocDecodeError extends S.TaggedError<PandocDecodeError>($I`PandocDecodeError`)(
   "PandocDecodeError",
-  PandocDecodeErrorFields,
-  $I.annoteClass<
-    S.declare<PandocDecodeError>,
-    readonly [S.TaggedStruct<"PandocDecodeError", typeof PandocDecodeErrorFields>]
-  >("PandocDecodeError", {
+  {
+    message: S.String,
+    cause: Defect({ includeStack: true }),
+  },
+  $I.annoteError<PandocDecodeError>("PandocDecodeError", {
     description: "Typed failure raised when a Pandoc semantic or lossless JSON payload cannot be decoded.",
-    toEquivalence: () => samePandocDecodeError,
   })
 ) {}
 

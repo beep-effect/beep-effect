@@ -153,14 +153,6 @@ export const TurtleCodecErrorReason = LiteralKit([
  */
 export type TurtleCodecErrorReason = typeof TurtleCodecErrorReason.Type;
 
-const TurtleCodecErrorFields = {
-  reason: TurtleCodecErrorReason,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameTurtleCodecErrorFields = S.toEquivalence(S.TaggedStruct("TurtleCodecError", TurtleCodecErrorFields));
-const sameTurtleCodecError = (self: TurtleCodecError, that: TurtleCodecError): boolean =>
-  sameTurtleCodecErrorFields(self, that);
-
 /**
  * Typed Turtle codec error exposed at the use-case boundary.
  *
@@ -182,14 +174,12 @@ const sameTurtleCodecError = (self: TurtleCodecError, that: TurtleCodecError): b
  */
 export class TurtleCodecError extends S.TaggedError<TurtleCodecError>($I`TurtleCodecError`)(
   "TurtleCodecError",
-  TurtleCodecErrorFields,
-  $I.annoteClass<
-    S.declare<TurtleCodecError>,
-    readonly [S.TaggedStruct<"TurtleCodecError", typeof TurtleCodecErrorFields>]
-  >("TurtleCodecError", {
+  {
+    reason: TurtleCodecErrorReason,
+    message: S.String,
+  },
+  $I.annoteError<TurtleCodecError>("TurtleCodecError", {
     description: "Typed Turtle codec error exposed at the use-case boundary.",
-
-    toEquivalence: () => sameTurtleCodecError,
   })
 ) {}
 
@@ -381,17 +371,6 @@ export const OntologyFileStoreErrorReason = LiteralKit(["notFound", "readFailed"
  */
 export type OntologyFileStoreErrorReason = typeof OntologyFileStoreErrorReason.Type;
 
-const OntologyFileStoreErrorFields = {
-  reason: OntologyFileStoreErrorReason,
-  path: OntologyFilePath,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameOntologyFileStoreErrorFields = S.toEquivalence(
-  S.TaggedStruct("OntologyFileStoreError", OntologyFileStoreErrorFields)
-);
-const sameOntologyFileStoreError = (self: OntologyFileStoreError, that: OntologyFileStoreError): boolean =>
-  sameOntologyFileStoreErrorFields(self, that);
-
 /**
  * Typed sidecar file-store error.
  *
@@ -415,14 +394,13 @@ const sameOntologyFileStoreError = (self: OntologyFileStoreError, that: Ontology
  */
 export class OntologyFileStoreError extends S.TaggedError<OntologyFileStoreError>($I`OntologyFileStoreError`)(
   "OntologyFileStoreError",
-  OntologyFileStoreErrorFields,
-  $I.annoteClass<
-    S.declare<OntologyFileStoreError>,
-    readonly [S.TaggedStruct<"OntologyFileStoreError", typeof OntologyFileStoreErrorFields>]
-  >("OntologyFileStoreError", {
+  {
+    reason: OntologyFileStoreErrorReason,
+    path: OntologyFilePath,
+    message: S.String,
+  },
+  $I.annoteError<OntologyFileStoreError>("OntologyFileStoreError", {
     description: "Typed sidecar file-store error.",
-
-    toEquivalence: () => sameOntologyFileStoreError,
   })
 ) {}
 

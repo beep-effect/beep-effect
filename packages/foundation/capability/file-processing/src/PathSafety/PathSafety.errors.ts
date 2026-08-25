@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -58,25 +58,6 @@ export const PathSafetyViolationReason = LiteralKit([
  * @since 0.0.0
  */
 export type PathSafetyViolationReason = typeof PathSafetyViolationReason.Type;
-const PathSafetyErrorFields = {
-  candidate: S.String,
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-  message: S.String,
-  reason: PathSafetyViolationReason,
-  resolved: S.OptionFromOptionalKey(S.String),
-  root: S.String,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const PathSafetyErrorComparableFields = {
-  candidate: PathSafetyErrorFields.candidate,
-  message: PathSafetyErrorFields.message,
-  reason: PathSafetyErrorFields.reason,
-  resolved: PathSafetyErrorFields.resolved,
-  root: PathSafetyErrorFields.root,
-} satisfies S.Struct.Fields;
-const samePathSafetyErrorFields = S.toEquivalence(S.TaggedStruct("PathSafetyError", PathSafetyErrorComparableFields));
-const samePathSafetyError = (self: PathSafetyError, that: PathSafetyError): boolean =>
-  samePathSafetyErrorFields(self, that);
 
 /**
  * Typed, fail-closed path-safety violation.
@@ -104,14 +85,17 @@ const samePathSafetyError = (self: PathSafetyError, that: PathSafetyError): bool
  */
 export class PathSafetyError extends S.TaggedError<PathSafetyError>($I`PathSafetyError`)(
   "PathSafetyError",
-  PathSafetyErrorFields,
-  $I.annoteClass<
-    S.declare<PathSafetyError>,
-    readonly [S.TaggedStruct<"PathSafetyError", typeof PathSafetyErrorFields>]
-  >("PathSafetyError", {
+  {
+    candidate: S.String,
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    message: S.String,
+    reason: PathSafetyViolationReason,
+    resolved: S.OptionFromOptionalKey(S.String),
+    root: S.String,
+  },
+  $I.annoteError<PathSafetyError>("PathSafetyError", {
     description:
       "Typed, fail-closed error raised when a candidate path escapes its allowed root or cannot be canonicalized.",
-    toEquivalence: () => samePathSafetyError,
   })
 ) {
   /**

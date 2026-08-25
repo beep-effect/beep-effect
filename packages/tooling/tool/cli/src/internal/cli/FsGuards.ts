@@ -19,7 +19,7 @@
 
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { Defect, LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { Effect, FileSystem, HashSet, MutableHashSet, Path } from "effect";
 import * as Eq from "effect/Equal";
@@ -57,26 +57,6 @@ class ContainedTarget extends S.Class<ContainedTarget>($I`ContainedTarget`)(
   })
 ) {}
 
-const FsGuardErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-  message: S.String,
-  path: S.String,
-  reason: FsGuardFailureReason,
-  root: S.String,
-  target: S.String,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameFsGuardErrorFields = S.toEquivalence(
-  S.TaggedStruct("FsGuardError", {
-    message: FsGuardErrorFields.message,
-    path: FsGuardErrorFields.path,
-    reason: FsGuardErrorFields.reason,
-    root: FsGuardErrorFields.root,
-    target: FsGuardErrorFields.target,
-  })
-);
-const sameFsGuardError = (self: FsGuardError, that: FsGuardError): boolean => sameFsGuardErrorFields(self, that);
-
 /**
  * Typed refusal from a root-contained, no-follow filesystem operation.
  *
@@ -108,14 +88,17 @@ const sameFsGuardError = (self: FsGuardError, that: FsGuardError): boolean => sa
  */
 export class FsGuardError extends S.TaggedError<FsGuardError>($I`FsGuardError`)(
   "FsGuardError",
-  FsGuardErrorFields,
-  $I.annoteClass<S.declare<FsGuardError>, readonly [S.TaggedStruct<"FsGuardError", typeof FsGuardErrorFields>]>(
-    "FsGuardError",
-    {
-      description: "Typed refusal from a root-contained filesystem operation that never accepts symlink entries.",
-      toEquivalence: () => sameFsGuardError,
-    }
-  )
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    message: S.String,
+    path: S.String,
+    reason: FsGuardFailureReason,
+    root: S.String,
+    target: S.String,
+  },
+  $I.annoteError<FsGuardError>("FsGuardError", {
+    description: "Typed refusal from a root-contained filesystem operation that never accepts symlink entries.",
+  })
 ) {}
 
 /**

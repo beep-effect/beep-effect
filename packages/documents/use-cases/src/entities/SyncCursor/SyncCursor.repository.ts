@@ -66,19 +66,6 @@ export class SyncCursorSeed extends S.Class<SyncCursorSeed>($I`SyncCursorSeed`)(
   })
 ) {}
 
-const SyncCursorRepositoryUnavailableFields = {
-  reason: S.NonEmptyString.annotateKey({
-    description: "Non-empty repository availability diagnostic.",
-  }),
-} satisfies S.Struct.Fields;
-const sameSyncCursorRepositoryUnavailableFields = S.toEquivalence(
-  S.TaggedStruct("SyncCursorRepositoryUnavailable", SyncCursorRepositoryUnavailableFields)
-);
-const sameSyncCursorRepositoryUnavailable = (
-  self: SyncCursorRepositoryUnavailable,
-  that: SyncCursorRepositoryUnavailable
-): boolean => sameSyncCursorRepositoryUnavailableFields(self, that);
-
 /**
  * Persistence failure raised when the SyncCursor repository is unavailable.
  *
@@ -98,14 +85,14 @@ export class SyncCursorRepositoryUnavailable extends S.TaggedError<SyncCursorRep
   $I`SyncCursorRepositoryUnavailable`
 )(
   "SyncCursorRepositoryUnavailable",
-  SyncCursorRepositoryUnavailableFields,
-  $I.annoteClass<
-    S.declare<SyncCursorRepositoryUnavailable>,
-    readonly [S.TaggedStruct<"SyncCursorRepositoryUnavailable", typeof SyncCursorRepositoryUnavailableFields>]
-  >("SyncCursorRepositoryUnavailable", {
+  {
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository availability diagnostic.",
+    }),
+  },
+  $I.annoteError<SyncCursorRepositoryUnavailable>("SyncCursorRepositoryUnavailable", {
     title: "SyncCursor repository unavailable",
     description: "The SyncCursor repository could not serve the request.",
-    toEquivalence: () => sameSyncCursorRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(SyncCursorRepositoryUnavailable);

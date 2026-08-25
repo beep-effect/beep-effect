@@ -6,24 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Research/Research.errors");
-
-const ResearchCommandErrorFields = {
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameResearchCommandErrorFields = S.toEquivalence(
-  S.TaggedStruct("ResearchCommandError", {
-    message: ResearchCommandErrorFields.message,
-  })
-);
-const sameResearchCommandError = (self: ResearchCommandError, that: ResearchCommandError): boolean =>
-  sameResearchCommandErrorFields(self, that);
 
 /**
  * Error raised by research knowledge-vault commands.
@@ -42,13 +30,12 @@ const sameResearchCommandError = (self: ResearchCommandError, that: ResearchComm
  */
 export class ResearchCommandError extends S.TaggedError<ResearchCommandError>($I`ResearchCommandError`)(
   "ResearchCommandError",
-  ResearchCommandErrorFields,
-  $I.annoteClass<
-    S.declare<ResearchCommandError>,
-    readonly [S.TaggedStruct<"ResearchCommandError", typeof ResearchCommandErrorFields>]
-  >("ResearchCommandError", {
+  {
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<ResearchCommandError>("ResearchCommandError", {
     description: "A failure raised while preparing or applying a research knowledge-vault operation.",
-    toEquivalence: () => sameResearchCommandError,
   })
 ) {
   /**

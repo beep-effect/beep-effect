@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
@@ -20,21 +21,6 @@ type QualityScriptCommandErrorOptions =
       readonly command?: undefined | string;
       readonly exitCode?: undefined | number;
     };
-
-const ChangesetGraphErrorFields = {
-  message: S.String,
-  file: S.optionalKey(S.String),
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameChangesetGraphErrorFields = S.toEquivalence(
-  S.TaggedStruct("ChangesetGraphError", {
-    message: ChangesetGraphErrorFields.message,
-    file: ChangesetGraphErrorFields.file,
-  })
-);
-const sameChangesetGraphError = (self: ChangesetGraphError, that: ChangesetGraphError): boolean =>
-  sameChangesetGraphErrorFields(self, that);
 
 /**
  * Failure raised while validating changeset package references.
@@ -55,13 +41,13 @@ const sameChangesetGraphError = (self: ChangesetGraphError, that: ChangesetGraph
  */
 export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError>($I`ChangesetGraphError`)(
   "ChangesetGraphError",
-  ChangesetGraphErrorFields,
-  $I.annoteClass<
-    S.declare<ChangesetGraphError>,
-    readonly [S.TaggedStruct<"ChangesetGraphError", typeof ChangesetGraphErrorFields>]
-  >("ChangesetGraphError", {
+  {
+    message: S.String,
+    file: S.optionalKey(S.String),
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<ChangesetGraphError>("ChangesetGraphError", {
     description: "Failure raised while validating changeset package references.",
-    toEquivalence: () => sameChangesetGraphError,
   })
 ) {
   /**
@@ -87,21 +73,6 @@ export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError>($I`C
   static readonly mapError = Err.mapToError(this.new);
 }
 
-const ChangesetStatusErrorFields = {
-  message: S.String,
-  file: S.optionalKey(S.String),
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameChangesetStatusErrorFields = S.toEquivalence(
-  S.TaggedStruct("ChangesetStatusError", {
-    message: ChangesetStatusErrorFields.message,
-    file: ChangesetStatusErrorFields.file,
-  })
-);
-const sameChangesetStatusError = (self: ChangesetStatusError, that: ChangesetStatusError): boolean =>
-  sameChangesetStatusErrorFields(self, that);
-
 /**
  * Failure raised while running the path-aware changeset status wrapper.
  *
@@ -121,13 +92,13 @@ const sameChangesetStatusError = (self: ChangesetStatusError, that: ChangesetSta
  */
 export class ChangesetStatusError extends S.TaggedError<ChangesetStatusError>($I`ChangesetStatusError`)(
   "ChangesetStatusError",
-  ChangesetStatusErrorFields,
-  $I.annoteClass<
-    S.declare<ChangesetStatusError>,
-    readonly [S.TaggedStruct<"ChangesetStatusError", typeof ChangesetStatusErrorFields>]
-  >("ChangesetStatusError", {
+  {
+    message: S.String,
+    file: S.optionalKey(S.String),
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<ChangesetStatusError>("ChangesetStatusError", {
     description: "Failure raised while running the path-aware changeset status wrapper.",
-    toEquivalence: () => sameChangesetStatusError,
   })
 ) {
   /**
@@ -153,17 +124,6 @@ export class ChangesetStatusError extends S.TaggedError<ChangesetStatusError>($I
   static readonly mapError = Err.mapToError(this.new);
 }
 
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameQualityScriptCommandErrorFields = S.toEquivalence(
-  S.TaggedStruct("QualityScriptCommandError", {
-    message: commandErrorFields.message,
-    command: commandErrorFields.command,
-    exitCode: commandErrorFields.exitCode,
-  })
-);
-const sameQualityScriptCommandError = (self: QualityScriptCommandError, that: QualityScriptCommandError): boolean =>
-  sameQualityScriptCommandErrorFields(self, that);
-
 /**
  * Typed failure for repo operational commands.
  *
@@ -180,12 +140,8 @@ const sameQualityScriptCommandError = (self: QualityScriptCommandError, that: Qu
 export class QualityScriptCommandError extends S.TaggedError<QualityScriptCommandError>($I`QualityScriptCommandError`)(
   "QualityScriptCommandError",
   commandErrorFields,
-  $I.annoteClass<
-    S.declare<QualityScriptCommandError>,
-    readonly [S.TaggedStruct<"QualityScriptCommandError", typeof commandErrorFields>]
-  >("QualityScriptCommandError", {
+  $I.annoteError<QualityScriptCommandError>("QualityScriptCommandError", {
     description: "Failure raised while running a migrated repo operational command.",
-    toEquivalence: () => sameQualityScriptCommandError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */
@@ -215,15 +171,6 @@ export class QualityScriptCommandError extends S.TaggedError<QualityScriptComman
   static readonly mapError = Err.mapToError(this.new);
 }
 
-const QualityTaskFailedFields = {
-  label: S.String,
-  command: S.String,
-  exitCode: S.Finite,
-} satisfies S.Struct.Fields;
-const sameQualityTaskFailedFields = S.toEquivalence(S.TaggedStruct("QualityTaskFailed", QualityTaskFailedFields));
-const sameQualityTaskFailed = (self: QualityTaskFailed, that: QualityTaskFailed): boolean =>
-  sameQualityTaskFailedFields(self, that);
-
 /**
  * Error raised when a quality task subprocess exits unsuccessfully.
  *
@@ -243,13 +190,13 @@ const sameQualityTaskFailed = (self: QualityTaskFailed, that: QualityTaskFailed)
  */
 export class QualityTaskFailed extends S.TaggedError<QualityTaskFailed>($I`QualityTaskFailed`)(
   "QualityTaskFailed",
-  QualityTaskFailedFields,
-  $I.annoteClass<
-    S.declare<QualityTaskFailed>,
-    readonly [S.TaggedStruct<"QualityTaskFailed", typeof QualityTaskFailedFields>]
-  >("QualityTaskFailed", {
+  {
+    label: S.String,
+    command: S.String,
+    exitCode: S.Finite,
+  },
+  $I.annoteError<QualityTaskFailed>("QualityTaskFailed", {
     description: "A quality subprocess exited with a non-zero status code.",
-    toEquivalence: () => sameQualityTaskFailed,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */
@@ -273,17 +220,6 @@ export class QualityTaskFailed extends S.TaggedError<QualityTaskFailed>($I`Quali
     (exitCode, label, command) => QualityTaskFailed.new(exitCode, label, command)
   );
 }
-
-const QualityTaskGroupFailedFields = {
-  label: S.String,
-  exitCode: S.Finite,
-  failures: S.Array(QualityTaskFailed),
-} satisfies S.Struct.Fields;
-const sameQualityTaskGroupFailedFields = S.toEquivalence(
-  S.TaggedStruct("QualityTaskGroupFailed", QualityTaskGroupFailedFields)
-);
-const sameQualityTaskGroupFailed = (self: QualityTaskGroupFailed, that: QualityTaskGroupFailed): boolean =>
-  sameQualityTaskGroupFailedFields(self, that);
 
 /**
  * Error raised when a bounded quality task group completes with failed steps.
@@ -310,13 +246,13 @@ const sameQualityTaskGroupFailed = (self: QualityTaskGroupFailed, that: QualityT
  */
 export class QualityTaskGroupFailed extends S.TaggedError<QualityTaskGroupFailed>($I`QualityTaskGroupFailed`)(
   "QualityTaskGroupFailed",
-  QualityTaskGroupFailedFields,
-  $I.annoteClass<
-    S.declare<QualityTaskGroupFailed>,
-    readonly [S.TaggedStruct<"QualityTaskGroupFailed", typeof QualityTaskGroupFailedFields>]
-  >("QualityTaskGroupFailed", {
+  {
+    label: S.String,
+    exitCode: S.Finite,
+    failures: S.Array(QualityTaskFailed),
+  },
+  $I.annoteError<QualityTaskGroupFailed>("QualityTaskGroupFailed", {
     description: "A bounded quality task group completed with one or more failed subprocesses.",
-    toEquivalence: () => sameQualityTaskGroupFailed,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */
@@ -342,17 +278,6 @@ export class QualityTaskGroupFailed extends S.TaggedError<QualityTaskGroupFailed
   >((failures, label, exitCode) => QualityTaskGroupFailed.new(failures, label, exitCode));
 }
 
-const QualityTaskConfigurationErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameQualityTaskConfigurationErrorFields = S.toEquivalence(
-  S.TaggedStruct("QualityTaskConfigurationError", QualityTaskConfigurationErrorFields)
-);
-const sameQualityTaskConfigurationError = (
-  self: QualityTaskConfigurationError,
-  that: QualityTaskConfigurationError
-): boolean => sameQualityTaskConfigurationErrorFields(self, that);
-
 /**
  * Error raised when a quality task cannot resolve its required configuration.
  *
@@ -372,13 +297,11 @@ export class QualityTaskConfigurationError extends S.TaggedError<QualityTaskConf
   $I`QualityTaskConfigurationError`
 )(
   "QualityTaskConfigurationError",
-  QualityTaskConfigurationErrorFields,
-  $I.annoteClass<
-    S.declare<QualityTaskConfigurationError>,
-    readonly [S.TaggedStruct<"QualityTaskConfigurationError", typeof QualityTaskConfigurationErrorFields>]
-  >("QualityTaskConfigurationError", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<QualityTaskConfigurationError>("QualityTaskConfigurationError", {
     description: "Quality task configuration could not be resolved.",
-    toEquivalence: () => sameQualityTaskConfigurationError,
   })
 ) {
   static readonly new = (message: string): QualityTaskConfigurationError =>
@@ -388,17 +311,6 @@ export class QualityTaskConfigurationError extends S.TaggedError<QualityTaskConf
     QualityTaskConfigurationError.new(messageWithCause(message, cause))
   );
 }
-
-const UnexpectedQualityTaskFailureFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameUnexpectedQualityTaskFailureFields = S.toEquivalence(
-  S.TaggedStruct("UnexpectedQualityTaskFailure", UnexpectedQualityTaskFailureFields)
-);
-const sameUnexpectedQualityTaskFailure = (
-  self: UnexpectedQualityTaskFailure,
-  that: UnexpectedQualityTaskFailure
-): boolean => sameUnexpectedQualityTaskFailureFields(self, that);
 
 /**
  * Error raised when an unexpected quality task cause reaches the command boundary.
@@ -419,13 +331,11 @@ export class UnexpectedQualityTaskFailure extends S.TaggedError<UnexpectedQualit
   $I`UnexpectedQualityTaskFailure`
 )(
   "UnexpectedQualityTaskFailure",
-  UnexpectedQualityTaskFailureFields,
-  $I.annoteClass<
-    S.declare<UnexpectedQualityTaskFailure>,
-    readonly [S.TaggedStruct<"UnexpectedQualityTaskFailure", typeof UnexpectedQualityTaskFailureFields>]
-  >("UnexpectedQualityTaskFailure", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<UnexpectedQualityTaskFailure>("UnexpectedQualityTaskFailure", {
     description: "Unexpected quality task failure preserved for the process runtime boundary.",
-    toEquivalence: () => sameUnexpectedQualityTaskFailure,
   })
 ) {
   static readonly new = (message: string): UnexpectedQualityTaskFailure =>

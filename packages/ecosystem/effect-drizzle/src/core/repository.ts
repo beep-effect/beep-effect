@@ -12,7 +12,7 @@ import { catchTag, fail as failEffect, gen, withSpan } from "effect/Effect";
 import { getOrElse, isSome, map } from "effect/Option";
 import { isTagged } from "effect/Predicate";
 import { filter, get, isEmptyReadonlyRecord } from "effect/Record";
-import { Int, is, isSchema, NonEmptyString, TaggedError, TaggedStruct, toEquivalence, Unknown } from "effect/Schema";
+import { Int, is, isSchema, NonEmptyString, TaggedError, Unknown } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import { VariantSchema } from "effect/unstable/schema";
 import { SqlClient } from "effect/unstable/sql/SqlClient";
@@ -20,36 +20,15 @@ import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlMode
 import { findOne } from "effect/unstable/sql/SqlSchema";
 import { isUnknownRecord } from "../internal/guards.ts";
 import { flattenEncoded } from "./classification.ts";
+import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 import * as Field from "./Field.ts";
 import { ModelInvariantError } from "./model.ts";
 import type { Effect, Success } from "effect/Effect";
-import type { Annotations, SchemaError, Struct } from "effect/Schema";
+import type { SchemaError } from "effect/Schema";
 import type { Model as EffectModel } from "effect/unstable/schema";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 import type { UnknownRecord } from "../internal/guards.ts";
 import type { AnyModel } from "./model.ts";
-
-const VersionConflictErrorFields = {
-  table: NonEmptyString,
-  id: Unknown,
-  expectedVersion: Int,
-} satisfies Struct.Fields;
-const sameVersionConflictErrorFields = toEquivalence(
-  TaggedStruct("VersionConflictError", {
-    table: VersionConflictErrorFields.table,
-    // id is opaque unknown data: equivalence is declared diagnostic identity, id stays payload.
-    expectedVersion: VersionConflictErrorFields.expectedVersion,
-  })
-);
-const sameVersionConflictError = (self: VersionConflictError, that: VersionConflictError): boolean =>
-  sameVersionConflictErrorFields(self, that);
-const VersionConflictErrorAnnotations = {
-  description: "An optimistic repository update found no row with the expected version.",
-  toEquivalence: () => sameVersionConflictError,
-} satisfies Annotations.Declaration<
-  VersionConflictError,
-  readonly [TaggedStruct<"VersionConflictError", typeof VersionConflictErrorFields>]
->;
 
 /**
  * Reports an optimistic update whose id/version pair matched no current row.
@@ -81,7 +60,18 @@ const VersionConflictErrorAnnotations = {
  */
 export class VersionConflictError extends TaggedError<VersionConflictError>(
   "@beep/effect-drizzle/VersionConflictError"
-)("VersionConflictError", VersionConflictErrorFields, VersionConflictErrorAnnotations) {}
+)(
+  "VersionConflictError",
+  {
+    table: NonEmptyString,
+    id: Unknown.annotate({ toEquivalence: () => () => true }),
+    expectedVersion: Int,
+  },
+  {
+    description: "An optimistic repository update found no row with the expected version.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<VersionConflictError>(typeParameters),
+  }
+) {}
 
 type RepositoryModel = EffectModel.Any & AnyModel;
 

@@ -421,13 +421,6 @@ export class HtmlPolicyIssue extends S.Class<HtmlPolicyIssue>($I`HtmlPolicyIssue
   })
 ) {}
 
-const HtmlPolicyErrorFields = {
-  issues: S.NonEmptyArray(HtmlPolicyIssue),
-} satisfies S.Struct.Fields;
-const sameHtmlPolicyErrorFields = S.toEquivalence(S.TaggedStruct("HtmlPolicyError", HtmlPolicyErrorFields));
-const sameHtmlPolicyError = (self: HtmlPolicyError, that: HtmlPolicyError): boolean =>
-  sameHtmlPolicyErrorFields(self, that);
-
 /**
  * Failure returned when conformant HTML does not satisfy the safe policy.
  *
@@ -453,13 +446,11 @@ const sameHtmlPolicyError = (self: HtmlPolicyError, that: HtmlPolicyError): bool
  */
 export class HtmlPolicyError extends S.TaggedError<HtmlPolicyError>($I`HtmlPolicyError`)(
   "HtmlPolicyError",
-  HtmlPolicyErrorFields,
-  $I.annoteClass<
-    S.declare<HtmlPolicyError>,
-    readonly [S.TaggedStruct<"HtmlPolicyError", typeof HtmlPolicyErrorFields>]
-  >("HtmlPolicyError", {
+  {
+    issues: S.NonEmptyArray(HtmlPolicyIssue),
+  },
+  $I.annoteError<HtmlPolicyError>("HtmlPolicyError", {
     description: "Conformant HTML failed one or more safe-output policy rules.",
-    toEquivalence: () => sameHtmlPolicyError,
   })
 ) {}
 

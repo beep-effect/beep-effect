@@ -214,13 +214,6 @@ export class UrlSafetyViolation extends S.TaggedClass<UrlSafetyViolation>($I`Url
   })
 ) {}
 
-const ScalarSafetyViolationFields = {
-  path: S.Array(DocumentSafetyPathSegment),
-} satisfies S.Struct.Fields;
-const sameScalarSafetyViolationFields = S.toEquivalence(S.TaggedStruct("InvalidScalar", ScalarSafetyViolationFields));
-const sameScalarSafetyViolation = (self: ScalarSafetyViolation, that: ScalarSafetyViolation): boolean =>
-  sameScalarSafetyViolationFields(self, that);
-
 /**
  * A string containing a code point that cannot be represented by the canonical
  * HTML serializer.
@@ -239,27 +232,13 @@ const sameScalarSafetyViolation = (self: ScalarSafetyViolation, that: ScalarSafe
  */
 export class ScalarSafetyViolation extends S.TaggedError<ScalarSafetyViolation>($I`ScalarSafetyViolation`)(
   "InvalidScalar",
-  ScalarSafetyViolationFields,
-  $I.annoteClass<
-    S.declare<ScalarSafetyViolation>,
-    readonly [S.TaggedStruct<"InvalidScalar", typeof ScalarSafetyViolationFields>]
-  >("ScalarSafetyViolation", {
+  {
+    path: S.Array(DocumentSafetyPathSegment),
+  },
+  $I.annoteError<ScalarSafetyViolation>("ScalarSafetyViolation", {
     description: "Path-located NUL code point or lone UTF-16 surrogate rejected before safe HTML projection.",
-    toEquivalence: () => sameScalarSafetyViolation,
   })
 ) {}
-
-const DuplicateFootnoteDefinitionSafetyViolationFields = {
-  identifier: FootnoteIdentifier,
-  path: S.Array(DocumentSafetyPathSegment),
-} satisfies S.Struct.Fields;
-const sameDuplicateFootnoteDefinitionSafetyViolationFields = S.toEquivalence(
-  S.TaggedStruct("DuplicateFootnoteDefinition", DuplicateFootnoteDefinitionSafetyViolationFields)
-);
-const sameDuplicateFootnoteDefinitionSafetyViolation = (
-  self: DuplicateFootnoteDefinitionSafetyViolation,
-  that: DuplicateFootnoteDefinitionSafetyViolation
-): boolean => sameDuplicateFootnoteDefinitionSafetyViolationFields(self, that);
 
 /**
  * A repeated footnote-definition identifier that would produce duplicate HTML
@@ -284,13 +263,12 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
   $I`DuplicateFootnoteDefinitionSafetyViolation`
 )(
   "DuplicateFootnoteDefinition",
-  DuplicateFootnoteDefinitionSafetyViolationFields,
-  $I.annoteClass<
-    S.declare<DuplicateFootnoteDefinitionSafetyViolation>,
-    readonly [S.TaggedStruct<"DuplicateFootnoteDefinition", typeof DuplicateFootnoteDefinitionSafetyViolationFields>]
-  >("DuplicateFootnoteDefinitionSafetyViolation", {
+  {
+    identifier: FootnoteIdentifier,
+    path: S.Array(DocumentSafetyPathSegment),
+  },
+  $I.annoteError<DuplicateFootnoteDefinitionSafetyViolation>("DuplicateFootnoteDefinitionSafetyViolation", {
     description: "Path-located repeated footnote definition rejected before safe HTML projection.",
-    toEquivalence: () => sameDuplicateFootnoteDefinitionSafetyViolation,
   })
 ) {}
 

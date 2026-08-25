@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Match, Order, Path, pipe } from "effect";
@@ -33,20 +33,6 @@ import { AiMetricsDeployTarget, AiMetricsTranscriptSource, ConfigSnapshot } from
 import { hashPrivateIdentifier, hashPublicTextSha256, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("retention");
-
-const AiMetricsRetentionErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAiMetricsRetentionErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsRetentionError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: AiMetricsRetentionErrorFields.message,
-  })
-);
-const sameAiMetricsRetentionError = (self: AiMetricsRetentionError, that: AiMetricsRetentionError): boolean =>
-  sameAiMetricsRetentionErrorFields(self, that);
-
 const retentionSchemaVersion = "beep.ai_metrics.retention_inventory.v1";
 const retentionMutationSchemaVersion = "beep.ai_metrics.retention_mutation.v1";
 const retentionEnforcementSchemaVersion = "beep.ai_metrics.retention_enforcement.v1";
@@ -224,13 +210,12 @@ const validateRawArchivePath = (
  */
 export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionError>($I`AiMetricsRetentionError`)(
   "AiMetricsRetentionError",
-  AiMetricsRetentionErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsRetentionError>,
-    readonly [S.TaggedStruct<"AiMetricsRetentionError", typeof AiMetricsRetentionErrorFields>]
-  >("AiMetricsRetentionError", {
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annoteError<AiMetricsRetentionError>("AiMetricsRetentionError", {
     description: "Typed failure raised by AI metrics retention, restore, delete, and compaction workflows.",
-    toEquivalence: () => sameAiMetricsRetentionError,
   })
 ) {}
 

@@ -1435,6 +1435,18 @@ same stable diagnostic identity.
 This supersedes test-local equivalence overrides and the prior implicit
 acceptance of `S.TaggedError`'s declaration fallback.
 
+Amended 2026-08-24 (same day, after the non-driver burn-down): the declaration
+adopts its struct equivalence through `$I.annoteError<Self>(...)` rather than a
+hand-derived comparator. Effect already passes the declared `TaggedStruct`
+equivalence to the `toEquivalence` hook, so the per-class `*Fields` constant,
+`S.toEquivalence(S.TaggedStruct(...))` comparator, and explicit
+`annoteClass<S.declare<Self>, ...>` type arguments were re-deriving what the hook
+receives; across ~390 declarations they also registered as Fallow clones, grew a
+consumer bundle, and produced a base-type cycle under docgen's `tsc`. Opaque
+causes use `Defect` from `@beep/schema`, whose schema declares an always-true
+equivalence, instead of per-class exclusion. The detector accepts the
+`annoteError` call as the compliant form.
+
 ## 2026-08-24: Local Coverage Baseline Regeneration Holds Unchanged Packages
 
 - **Status:** Active

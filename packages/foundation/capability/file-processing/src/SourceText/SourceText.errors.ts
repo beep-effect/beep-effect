@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -58,21 +58,6 @@ export const SourceTextResolverErrorReason = LiteralKit([
  * @since 0.0.0
  */
 export type SourceTextResolverErrorReason = typeof SourceTextResolverErrorReason.Type;
-const SourceTextResolverErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-  message: S.NonEmptyString,
-  reason: SourceTextResolverErrorReason,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const SourceTextResolverErrorComparableFields = {
-  message: SourceTextResolverErrorFields.message,
-  reason: SourceTextResolverErrorFields.reason,
-} satisfies S.Struct.Fields;
-const sameSourceTextResolverErrorFields = S.toEquivalence(
-  S.TaggedStruct("SourceTextResolverError", SourceTextResolverErrorComparableFields)
-);
-const sameSourceTextResolverError = (self: SourceTextResolverError, that: SourceTextResolverError): boolean =>
-  sameSourceTextResolverErrorFields(self, that);
 
 /**
  * Typed, fail-closed source-text resolution failure.
@@ -91,13 +76,13 @@ const sameSourceTextResolverError = (self: SourceTextResolverError, that: Source
  */
 export class SourceTextResolverError extends S.TaggedError<SourceTextResolverError>($I`SourceTextResolverError`)(
   "SourceTextResolverError",
-  SourceTextResolverErrorFields,
-  $I.annoteClass<
-    S.declare<SourceTextResolverError>,
-    readonly [S.TaggedStruct<"SourceTextResolverError", typeof SourceTextResolverErrorFields>]
-  >("SourceTextResolverError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    message: S.NonEmptyString,
+    reason: SourceTextResolverErrorReason,
+  },
+  $I.annoteError<SourceTextResolverError>("SourceTextResolverError", {
     description: "Typed, fail-closed failure emitted by canonical source-text resolution or paging.",
-    toEquivalence: () => sameSourceTextResolverError,
   })
 ) {
   /**

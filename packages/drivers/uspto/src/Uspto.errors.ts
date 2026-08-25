@@ -86,15 +86,6 @@ class UsptoErrorOptions extends S.Class<UsptoErrorOptions>($I`UsptoErrorOptions`
   })
 ) {}
 
-const UsptoErrorFields = {
-  ...UsptoErrorContextFields,
-  reason: UsptoErrorReason.annotateKey({
-    description: "Redacted technical error reason.",
-  }),
-} satisfies S.Struct.Fields;
-const sameUsptoErrorFields = S.toEquivalence(S.TaggedStruct("UsptoError", UsptoErrorFields));
-const sameUsptoError = (self: UsptoError, that: UsptoError): boolean => sameUsptoErrorFields(self, that);
-
 /**
  * Technical failure raised inside the USPTO driver boundary.
  *
@@ -112,14 +103,15 @@ const sameUsptoError = (self: UsptoError, that: UsptoError): boolean => sameUspt
  */
 export class UsptoError extends S.TaggedError<UsptoError>($I`UsptoError`)(
   "UsptoError",
-  UsptoErrorFields,
-  $I.annoteClass<S.declare<UsptoError>, readonly [S.TaggedStruct<"UsptoError", typeof UsptoErrorFields>]>(
-    "UsptoError",
-    {
-      description: "Redacted technical failure raised inside the USPTO driver boundary.",
-      toEquivalence: () => sameUsptoError,
-    }
-  )
+  {
+    ...UsptoErrorContextFields,
+    reason: UsptoErrorReason.annotateKey({
+      description: "Redacted technical error reason.",
+    }),
+  },
+  $I.annoteError<UsptoError>("UsptoError", {
+    description: "Redacted technical failure raised inside the USPTO driver boundary.",
+  })
 ) {
   /**
    * Create a USPTO technical error with sanitized context.

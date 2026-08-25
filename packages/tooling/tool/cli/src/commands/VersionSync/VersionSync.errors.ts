@@ -5,27 +5,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/VersionSync.errors");
-
-const VersionSyncErrorFields = {
-  message: S.String,
-  file: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameVersionSyncErrorFields = S.toEquivalence(
-  S.TaggedStruct("VersionSyncError", {
-    message: VersionSyncErrorFields.message,
-    file: VersionSyncErrorFields.file,
-  })
-);
-const sameVersionSyncError = (self: VersionSyncError, that: VersionSyncError): boolean =>
-  sameVersionSyncErrorFields(self, that);
 
 /**
  * Operational error during version sync (file read/write, parse failures).
@@ -44,14 +30,14 @@ const sameVersionSyncError = (self: VersionSyncError, that: VersionSyncError): b
  */
 export class VersionSyncError extends S.TaggedError<VersionSyncError>($I`VersionSyncError`)(
   "VersionSyncError",
-  VersionSyncErrorFields,
-  $I.annoteClass<
-    S.declare<VersionSyncError>,
-    readonly [S.TaggedStruct<"VersionSyncError", typeof VersionSyncErrorFields>]
-  >("VersionSyncError", {
+  {
+    message: S.String,
+    file: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<VersionSyncError>("VersionSyncError", {
     title: "Version Sync Error",
     description: "Failed to read, resolve, or update a version pin",
-    toEquivalence: () => sameVersionSyncError,
   })
 ) {
   /**
@@ -80,13 +66,6 @@ export class VersionSyncError extends S.TaggedError<VersionSyncError>($I`Version
   );
 }
 
-const NetworkUnavailableErrorFields = { message: S.String } satisfies S.Struct.Fields;
-const sameNetworkUnavailableErrorFields = S.toEquivalence(
-  S.TaggedStruct("NetworkUnavailableError", NetworkUnavailableErrorFields)
-);
-const sameNetworkUnavailableError = (self: NetworkUnavailableError, that: NetworkUnavailableError): boolean =>
-  sameNetworkUnavailableErrorFields(self, that);
-
 /**
  * Network unavailable during upstream version resolution.
  *
@@ -104,14 +83,10 @@ const sameNetworkUnavailableError = (self: NetworkUnavailableError, that: Networ
  */
 export class NetworkUnavailableError extends S.TaggedError<NetworkUnavailableError>($I`NetworkUnavailableError`)(
   "NetworkUnavailableError",
-  NetworkUnavailableErrorFields,
-  $I.annoteClass<
-    S.declare<NetworkUnavailableError>,
-    readonly [S.TaggedStruct<"NetworkUnavailableError", typeof NetworkUnavailableErrorFields>]
-  >("NetworkUnavailableError", {
+  { message: S.String },
+  $I.annoteError<NetworkUnavailableError>("NetworkUnavailableError", {
     title: "Network Unavailable",
     description: "Upstream version resolution failed due to network",
-    toEquivalence: () => sameNetworkUnavailableError,
   })
 ) {
   static readonly new = (message: string) => NetworkUnavailableError.make({ message });
@@ -120,16 +95,6 @@ export class NetworkUnavailableError extends S.TaggedError<NetworkUnavailableErr
     NetworkUnavailableError.new(messageWithCause(message, cause))
   );
 }
-
-const VersionSyncDriftErrorFields = {
-  message: S.String,
-  driftCount: S.Finite,
-} satisfies S.Struct.Fields;
-const sameVersionSyncDriftErrorFields = S.toEquivalence(
-  S.TaggedStruct("VersionSyncDriftError", VersionSyncDriftErrorFields)
-);
-const sameVersionSyncDriftError = (self: VersionSyncDriftError, that: VersionSyncDriftError): boolean =>
-  sameVersionSyncDriftErrorFields(self, that);
 
 /**
  * Drift detected in check mode (non-zero exit).
@@ -148,14 +113,13 @@ const sameVersionSyncDriftError = (self: VersionSyncDriftError, that: VersionSyn
  */
 export class VersionSyncDriftError extends S.TaggedError<VersionSyncDriftError>($I`VersionSyncDriftError`)(
   "VersionSyncDriftError",
-  VersionSyncDriftErrorFields,
-  $I.annoteClass<
-    S.declare<VersionSyncDriftError>,
-    readonly [S.TaggedStruct<"VersionSyncDriftError", typeof VersionSyncDriftErrorFields>]
-  >("VersionSyncDriftError", {
+  {
+    message: S.String,
+    driftCount: S.Finite,
+  },
+  $I.annoteError<VersionSyncDriftError>("VersionSyncDriftError", {
     title: "Version Sync Drift Error",
     description: "Version drift detected in check mode",
-    toEquivalence: () => sameVersionSyncDriftError,
   })
 ) {
   /**

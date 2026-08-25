@@ -23,28 +23,16 @@ const $I = $SchemaId.create("Float16Array");
 const float16ArrayConstructor = globalThis.Float16Array;
 const unsupportedFloat16ArrayRuntimeMessage =
   "Float16Array is not available in this runtime. Use Node >=24.0.0 or Bun >=1.1.23.";
-const UnsupportedFloat16ArrayRuntimeErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameUnsupportedFloat16ArrayRuntimeErrorFields = S.toEquivalence(
-  S.TaggedStruct("UnsupportedFloat16ArrayRuntimeError", UnsupportedFloat16ArrayRuntimeErrorFields)
-);
-const sameUnsupportedFloat16ArrayRuntimeError = (
-  self: UnsupportedFloat16ArrayRuntimeError,
-  that: UnsupportedFloat16ArrayRuntimeError
-): boolean => sameUnsupportedFloat16ArrayRuntimeErrorFields(self, that);
 
 class UnsupportedFloat16ArrayRuntimeError extends S.TaggedError<UnsupportedFloat16ArrayRuntimeError>(
   $I`UnsupportedFloat16ArrayRuntimeError`
 )(
   "UnsupportedFloat16ArrayRuntimeError",
-  UnsupportedFloat16ArrayRuntimeErrorFields,
-  $I.annoteClass<
-    S.declare<UnsupportedFloat16ArrayRuntimeError>,
-    readonly [S.TaggedStruct<"UnsupportedFloat16ArrayRuntimeError", typeof UnsupportedFloat16ArrayRuntimeErrorFields>]
-  >("UnsupportedFloat16ArrayRuntimeError", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<UnsupportedFloat16ArrayRuntimeError>("UnsupportedFloat16ArrayRuntimeError", {
     description: "Float16Array helpers were used in a runtime that does not expose globalThis.Float16Array.",
-    toEquivalence: () => sameUnsupportedFloat16ArrayRuntimeError,
   })
 ) {}
 

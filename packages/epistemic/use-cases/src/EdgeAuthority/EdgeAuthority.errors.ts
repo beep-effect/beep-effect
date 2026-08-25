@@ -15,7 +15,7 @@
 
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -112,35 +112,11 @@ export const EdgeWriteOperation = EdgeWriteOperationBase.pipe(
 export type EdgeWriteOperation = typeof EdgeWriteOperation.Type;
 
 const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+  S.OptionFromOptionalKey(Defect({ includeStack: true }))
     .pipe(SchemaUtils.withNoneDefault)
     .annotateKey({
       description,
     });
-
-const SupersessionConflictFields = {
-  cause: optionalDefect("Optional underlying defect captured when a database backstop rejected the supersession."),
-  expectedVersion: PosInt.annotateKey({
-    description: "Version the caller believed was the open head when it issued the supersession.",
-  }),
-  logicalKey: LogicalEdgeKey.annotateKey({
-    description: "Logical edge whose supersession was rejected.",
-  }),
-  observedVersion: PosInt.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
-    description: "Version actually found at the open head; absent when no open head could be read.",
-  }),
-} satisfies S.Struct.Fields;
-const SupersessionConflictEquivalenceFields = {
-  expectedVersion: SupersessionConflictFields.expectedVersion,
-  logicalKey: SupersessionConflictFields.logicalKey,
-  observedVersion: SupersessionConflictFields.observedVersion,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameSupersessionConflictFields = S.toEquivalence(
-  S.TaggedStruct("SupersessionConflict", SupersessionConflictEquivalenceFields)
-);
-const sameSupersessionConflict = (self: SupersessionConflict, that: SupersessionConflict): boolean =>
-  sameSupersessionConflictFields(self, that);
 
 /**
  * Raised when a supersession cannot be applied to the version the caller named.
@@ -173,14 +149,21 @@ const sameSupersessionConflict = (self: SupersessionConflict, that: Supersession
  */
 export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I`SupersessionConflict`)(
   "SupersessionConflict",
-  SupersessionConflictFields,
-  $I.annoteClass<
-    S.declare<SupersessionConflict>,
-    readonly [S.TaggedStruct<"SupersessionConflict", typeof SupersessionConflictFields>]
-  >("SupersessionConflict", {
+  {
+    cause: optionalDefect("Optional underlying defect captured when a database backstop rejected the supersession."),
+    expectedVersion: PosInt.annotateKey({
+      description: "Version the caller believed was the open head when it issued the supersession.",
+    }),
+    logicalKey: LogicalEdgeKey.annotateKey({
+      description: "Logical edge whose supersession was rejected.",
+    }),
+    observedVersion: PosInt.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Version actually found at the open head; absent when no open head could be read.",
+    }),
+  },
+  $I.annoteError<SupersessionConflict>("SupersessionConflict", {
     title: "Supersession conflict",
     description: "A supersession could not be applied to the version the caller named.",
-    toEquivalence: () => sameSupersessionConflict,
   })
 ) {
   static readonly is = S.is(SupersessionConflict);
@@ -266,20 +249,6 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
   }
 }
 
-const EdgeConstraintViolationFields = {
-  constraintName: S.NonEmptyString.annotateKey({
-    description: "Name of the database constraint that rejected the write.",
-  }),
-  operation: EdgeWriteOperation.annotateKey({
-    description: "Write operation that was rejected.",
-  }),
-} satisfies S.Struct.Fields;
-const sameEdgeConstraintViolationFields = S.toEquivalence(
-  S.TaggedStruct("EdgeConstraintViolation", EdgeConstraintViolationFields)
-);
-const sameEdgeConstraintViolation = (self: EdgeConstraintViolation, that: EdgeConstraintViolation): boolean =>
-  sameEdgeConstraintViolationFields(self, that);
-
 /**
  * Raised when a named database constraint rejected an edge write for a reason
  * that is not a supersession race — an unordered interval, an endpoint whose
@@ -305,14 +274,17 @@ const sameEdgeConstraintViolation = (self: EdgeConstraintViolation, that: EdgeCo
  */
 export class EdgeConstraintViolation extends S.TaggedError<EdgeConstraintViolation>($I`EdgeConstraintViolation`)(
   "EdgeConstraintViolation",
-  EdgeConstraintViolationFields,
-  $I.annoteClass<
-    S.declare<EdgeConstraintViolation>,
-    readonly [S.TaggedStruct<"EdgeConstraintViolation", typeof EdgeConstraintViolationFields>]
-  >("EdgeConstraintViolation", {
+  {
+    constraintName: S.NonEmptyString.annotateKey({
+      description: "Name of the database constraint that rejected the write.",
+    }),
+    operation: EdgeWriteOperation.annotateKey({
+      description: "Write operation that was rejected.",
+    }),
+  },
+  $I.annoteError<EdgeConstraintViolation>("EdgeConstraintViolation", {
     title: "Edge constraint violation",
     description: "A named database constraint rejected a bitemporal edge write.",
-    toEquivalence: () => sameEdgeConstraintViolation,
   })
 ) {
   static readonly is = S.is(EdgeConstraintViolation);
@@ -337,26 +309,6 @@ export class EdgeConstraintViolation extends S.TaggedError<EdgeConstraintViolati
   }
 }
 
-const EdgeRepositoryUnavailableFields = {
-  cause: optionalDefect("Optional underlying driver defect captured when the repository could not serve a request."),
-  operation: EdgeAuthorityOperation.annotateKey({
-    description: "Repository operation that could not be served.",
-  }),
-  reason: S.NonEmptyString.annotateKey({
-    description: "Non-empty repository availability diagnostic.",
-  }),
-} satisfies S.Struct.Fields;
-const EdgeRepositoryUnavailableEquivalenceFields = {
-  operation: EdgeRepositoryUnavailableFields.operation,
-  reason: EdgeRepositoryUnavailableFields.reason,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameEdgeRepositoryUnavailableFields = S.toEquivalence(
-  S.TaggedStruct("EdgeRepositoryUnavailable", EdgeRepositoryUnavailableEquivalenceFields)
-);
-const sameEdgeRepositoryUnavailable = (self: EdgeRepositoryUnavailable, that: EdgeRepositoryUnavailable): boolean =>
-  sameEdgeRepositoryUnavailableFields(self, that);
-
 /**
  * Raised when the edge authority repository could not serve a request at all:
  * the connection is gone, the transaction was aborted by the driver, the query
@@ -376,14 +328,18 @@ const sameEdgeRepositoryUnavailable = (self: EdgeRepositoryUnavailable, that: Ed
  */
 export class EdgeRepositoryUnavailable extends S.TaggedError<EdgeRepositoryUnavailable>($I`EdgeRepositoryUnavailable`)(
   "EdgeRepositoryUnavailable",
-  EdgeRepositoryUnavailableFields,
-  $I.annoteClass<
-    S.declare<EdgeRepositoryUnavailable>,
-    readonly [S.TaggedStruct<"EdgeRepositoryUnavailable", typeof EdgeRepositoryUnavailableFields>]
-  >("EdgeRepositoryUnavailable", {
+  {
+    cause: optionalDefect("Optional underlying driver defect captured when the repository could not serve a request."),
+    operation: EdgeAuthorityOperation.annotateKey({
+      description: "Repository operation that could not be served.",
+    }),
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository availability diagnostic.",
+    }),
+  },
+  $I.annoteError<EdgeRepositoryUnavailable>("EdgeRepositoryUnavailable", {
     title: "Edge repository unavailable",
     description: "The bitemporal edge repository could not serve the request.",
-    toEquivalence: () => sameEdgeRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(EdgeRepositoryUnavailable);

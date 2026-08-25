@@ -12,7 +12,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Runtime } from "effect";
 import * as S from "effect/Schema";
@@ -105,21 +105,6 @@ export const CodexPacketWriteFailureReason = LiteralKit([
  */
 export type CodexPacketWriteFailureReason = typeof CodexPacketWriteFailureReason.Type;
 
-const CodexFindingsIngestErrorFields = {
-  reason: CodexIngestFailureReason,
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameCodexFindingsIngestErrorFields = S.toEquivalence(
-  S.TaggedStruct("CodexFindingsIngestError", {
-    reason: CodexFindingsIngestErrorFields.reason,
-    message: CodexFindingsIngestErrorFields.message,
-  })
-);
-const sameCodexFindingsIngestError = (self: CodexFindingsIngestError, that: CodexFindingsIngestError): boolean =>
-  sameCodexFindingsIngestErrorFields(self, that);
-
 /**
  * Failure raised while reading or decoding a capture payload.
  *
@@ -141,13 +126,13 @@ const sameCodexFindingsIngestError = (self: CodexFindingsIngestError, that: Code
  */
 export class CodexFindingsIngestError extends S.TaggedError<CodexFindingsIngestError>($I`CodexFindingsIngestError`)(
   "CodexFindingsIngestError",
-  CodexFindingsIngestErrorFields,
-  $I.annoteClass<
-    S.declare<CodexFindingsIngestError>,
-    readonly [S.TaggedStruct<"CodexFindingsIngestError", typeof CodexFindingsIngestErrorFields>]
-  >("CodexFindingsIngestError", {
+  {
+    reason: CodexIngestFailureReason,
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<CodexFindingsIngestError>("CodexFindingsIngestError", {
     description: "Failure raised while reading or decoding a Codex findings capture payload.",
-    toEquivalence: () => sameCodexFindingsIngestError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */
@@ -212,18 +197,6 @@ export class CodexFindingsIngestError extends S.TaggedError<CodexFindingsIngestE
   );
 }
 
-const CodexFindingsRedactionErrorFields = {
-  message: S.String,
-  surfaces: S.Array(S.String),
-} satisfies S.Struct.Fields;
-const sameCodexFindingsRedactionErrorFields = S.toEquivalence(
-  S.TaggedStruct("CodexFindingsRedactionError", CodexFindingsRedactionErrorFields)
-);
-const sameCodexFindingsRedactionError = (
-  self: CodexFindingsRedactionError,
-  that: CodexFindingsRedactionError
-): boolean => sameCodexFindingsRedactionErrorFields(self, that);
-
 /**
  * Failure raised when captured content carries secret-shaped or private material.
  *
@@ -253,33 +226,17 @@ export class CodexFindingsRedactionError extends S.TaggedError<CodexFindingsReda
   $I`CodexFindingsRedactionError`
 )(
   "CodexFindingsRedactionError",
-  CodexFindingsRedactionErrorFields,
-  $I.annoteClass<
-    S.declare<CodexFindingsRedactionError>,
-    readonly [S.TaggedStruct<"CodexFindingsRedactionError", typeof CodexFindingsRedactionErrorFields>]
-  >("CodexFindingsRedactionError", {
+  {
+    message: S.String,
+    surfaces: S.Array(S.String),
+  },
+  $I.annoteError<CodexFindingsRedactionError>("CodexFindingsRedactionError", {
     description: "Failure raised when captured content carries secret-shaped or private material.",
-    toEquivalence: () => sameCodexFindingsRedactionError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */
   override readonly [Runtime.errorExitCode] = 1;
 }
-
-const CodexPacketWriteErrorFields = {
-  reason: CodexPacketWriteFailureReason,
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameCodexPacketWriteErrorFields = S.toEquivalence(
-  S.TaggedStruct("CodexPacketWriteError", {
-    reason: CodexPacketWriteErrorFields.reason,
-    message: CodexPacketWriteErrorFields.message,
-  })
-);
-const sameCodexPacketWriteError = (self: CodexPacketWriteError, that: CodexPacketWriteError): boolean =>
-  sameCodexPacketWriteErrorFields(self, that);
 
 /**
  * Failure raised while staging or committing a generated packet.
@@ -302,13 +259,13 @@ const sameCodexPacketWriteError = (self: CodexPacketWriteError, that: CodexPacke
  */
 export class CodexPacketWriteError extends S.TaggedError<CodexPacketWriteError>($I`CodexPacketWriteError`)(
   "CodexPacketWriteError",
-  CodexPacketWriteErrorFields,
-  $I.annoteClass<
-    S.declare<CodexPacketWriteError>,
-    readonly [S.TaggedStruct<"CodexPacketWriteError", typeof CodexPacketWriteErrorFields>]
-  >("CodexPacketWriteError", {
+  {
+    reason: CodexPacketWriteFailureReason,
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<CodexPacketWriteError>("CodexPacketWriteError", {
     description: "Failure raised while staging or committing a generated Codex findings packet.",
-    toEquivalence: () => sameCodexPacketWriteError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */

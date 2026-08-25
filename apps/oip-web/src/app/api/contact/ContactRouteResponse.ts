@@ -27,15 +27,6 @@ const ContactRoutePayloadErrorReason = LiteralKit(["form-data", "schema"]).pipe(
 
 type ContactRoutePayloadErrorReason = typeof ContactRoutePayloadErrorReason.Type;
 
-const ContactRoutePayloadErrorFields = {
-  reason: ContactRoutePayloadErrorReason,
-} satisfies S.Struct.Fields;
-const sameContactRoutePayloadErrorFields = S.toEquivalence(
-  S.TaggedStruct("ContactRoutePayloadError", ContactRoutePayloadErrorFields)
-);
-const sameContactRoutePayloadError = (self: ContactRoutePayloadError, that: ContactRoutePayloadError): boolean =>
-  sameContactRoutePayloadErrorFields(self, that);
-
 /**
  * Typed failure raised when the OIP contact route cannot decode a form payload.
  *
@@ -53,13 +44,11 @@ const sameContactRoutePayloadError = (self: ContactRoutePayloadError, that: Cont
  */
 export class ContactRoutePayloadError extends S.TaggedError<ContactRoutePayloadError>($I`ContactRoutePayloadError`)(
   "ContactRoutePayloadError",
-  ContactRoutePayloadErrorFields,
-  $I.annoteClass<
-    S.declare<ContactRoutePayloadError>,
-    readonly [S.TaggedStruct<"ContactRoutePayloadError", typeof ContactRoutePayloadErrorFields>]
-  >("ContactRoutePayloadError", {
+  {
+    reason: ContactRoutePayloadErrorReason,
+  },
+  $I.annoteError<ContactRoutePayloadError>("ContactRoutePayloadError", {
     description: "Typed OIP contact route form payload failure.",
-    toEquivalence: () => sameContactRoutePayloadError,
   })
 ) {
   static readonly fromReason = (reason: ContactRoutePayloadErrorReason): ContactRoutePayloadError =>

@@ -13,14 +13,6 @@ import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("errors/NoSuchFileError");
 
-const NoSuchFileErrorFields = {
-  path: S.String,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameNoSuchFileErrorFields = S.toEquivalence(S.TaggedStruct("NoSuchFileError", NoSuchFileErrorFields));
-const sameNoSuchFileError = (self: NoSuchFileError, that: NoSuchFileError): boolean =>
-  sameNoSuchFileErrorFields(self, that);
-
 /**
  * Raised when a required file or directory cannot be located.
  *
@@ -40,13 +32,12 @@ const sameNoSuchFileError = (self: NoSuchFileError, that: NoSuchFileError): bool
  */
 export class NoSuchFileError extends S.TaggedError<NoSuchFileError>($I`NoSuchFileError`)(
   "NoSuchFileError",
-  NoSuchFileErrorFields,
-  $I.annoteClass<
-    S.declare<NoSuchFileError>,
-    readonly [S.TaggedStruct<"NoSuchFileError", typeof NoSuchFileErrorFields>]
-  >("NoSuchFileError", {
+  {
+    path: S.String,
+    message: S.String,
+  },
+  $I.annoteError<NoSuchFileError>("NoSuchFileError", {
     title: "No Such File Error",
     description: "Raised when a required file or directory cannot be located on the filesystem.",
-    toEquivalence: () => sameNoSuchFileError,
   })
 ) {}

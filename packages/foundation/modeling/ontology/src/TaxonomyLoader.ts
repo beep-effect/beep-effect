@@ -106,13 +106,6 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorM
   static readonly decodeUnknownJsonStringEffect = S.decodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
 }
 
-const TaxonomyManifestReadErrorFields = { path: S.NonEmptyString } satisfies S.Struct.Fields;
-const sameTaxonomyManifestReadErrorFields = S.toEquivalence(
-  S.TaggedStruct("TaxonomyManifestReadError", TaxonomyManifestReadErrorFields)
-);
-const sameTaxonomyManifestReadError = (self: TaxonomyManifestReadError, that: TaxonomyManifestReadError): boolean =>
-  sameTaxonomyManifestReadErrorFields(self, that);
-
 /**
  *  Raised when the manifest cannot be read.
  *
@@ -128,22 +121,11 @@ const sameTaxonomyManifestReadError = (self: TaxonomyManifestReadError, that: Ta
  */
 export class TaxonomyManifestReadError extends S.TaggedError<TaxonomyManifestReadError>($I`TaxonomyManifestReadError`)(
   "TaxonomyManifestReadError",
-  TaxonomyManifestReadErrorFields,
-  $I.annoteClass<
-    S.declare<TaxonomyManifestReadError>,
-    readonly [S.TaggedStruct<"TaxonomyManifestReadError", typeof TaxonomyManifestReadErrorFields>]
-  >("TaxonomyManifestReadError", {
+  { path: S.NonEmptyString },
+  $I.annoteError<TaxonomyManifestReadError>("TaxonomyManifestReadError", {
     description: "The vendor manifest is missing or unreadable.",
-    toEquivalence: () => sameTaxonomyManifestReadError,
   })
 ) {}
-
-const TaxonomyManifestParseErrorFields = { line: S.Int, path: S.NonEmptyString } satisfies S.Struct.Fields;
-const sameTaxonomyManifestParseErrorFields = S.toEquivalence(
-  S.TaggedStruct("TaxonomyManifestParseError", TaxonomyManifestParseErrorFields)
-);
-const sameTaxonomyManifestParseError = (self: TaxonomyManifestParseError, that: TaxonomyManifestParseError): boolean =>
-  sameTaxonomyManifestParseErrorFields(self, that);
 
 /**
  *  Raised when a manifest row cannot be parsed.
@@ -162,20 +144,11 @@ export class TaxonomyManifestParseError extends S.TaggedError<TaxonomyManifestPa
   $I`TaxonomyManifestParseError`
 )(
   "TaxonomyManifestParseError",
-  TaxonomyManifestParseErrorFields,
-  $I.annoteClass<
-    S.declare<TaxonomyManifestParseError>,
-    readonly [S.TaggedStruct<"TaxonomyManifestParseError", typeof TaxonomyManifestParseErrorFields>]
-  >("TaxonomyManifestParseError", {
+  { line: S.Int, path: S.NonEmptyString },
+  $I.annoteError<TaxonomyManifestParseError>("TaxonomyManifestParseError", {
     description: "A vendor manifest JSONL row failed schema decoding.",
-    toEquivalence: () => sameTaxonomyManifestParseError,
   })
 ) {}
-
-const VendorSliceUnvettedFields = { id: S.NonEmptyString } satisfies S.Struct.Fields;
-const sameVendorSliceUnvettedFields = S.toEquivalence(S.TaggedStruct("VendorSliceUnvetted", VendorSliceUnvettedFields));
-const sameVendorSliceUnvetted = (self: VendorSliceUnvetted, that: VendorSliceUnvetted): boolean =>
-  sameVendorSliceUnvettedFields(self, that);
 
 /**
  *  Raised when a manifest slice lacks explicit loading approval.
@@ -192,22 +165,11 @@ const sameVendorSliceUnvetted = (self: VendorSliceUnvetted, that: VendorSliceUnv
  */
 export class VendorSliceUnvetted extends S.TaggedError<VendorSliceUnvetted>($I`VendorSliceUnvetted`)(
   "VendorSliceUnvetted",
-  VendorSliceUnvettedFields,
-  $I.annoteClass<
-    S.declare<VendorSliceUnvetted>,
-    readonly [S.TaggedStruct<"VendorSliceUnvetted", typeof VendorSliceUnvettedFields>]
-  >("VendorSliceUnvetted", {
+  { id: S.NonEmptyString },
+  $I.annoteError<VendorSliceUnvetted>("VendorSliceUnvetted", {
     description: "A vendor slice is not explicitly VETTED for loading.",
-    toEquivalence: () => sameVendorSliceUnvetted,
   })
 ) {}
-
-const VendorSliceReadErrorFields = { id: S.NonEmptyString, path: S.NonEmptyString } satisfies S.Struct.Fields;
-const sameVendorSliceReadErrorFields = S.toEquivalence(
-  S.TaggedStruct("VendorSliceReadError", VendorSliceReadErrorFields)
-);
-const sameVendorSliceReadError = (self: VendorSliceReadError, that: VendorSliceReadError): boolean =>
-  sameVendorSliceReadErrorFields(self, that);
 
 /**
  *  Raised when an approved slice cannot be read.
@@ -224,22 +186,11 @@ const sameVendorSliceReadError = (self: VendorSliceReadError, that: VendorSliceR
  */
 export class VendorSliceReadError extends S.TaggedError<VendorSliceReadError>($I`VendorSliceReadError`)(
   "VendorSliceReadError",
-  VendorSliceReadErrorFields,
-  $I.annoteClass<
-    S.declare<VendorSliceReadError>,
-    readonly [S.TaggedStruct<"VendorSliceReadError", typeof VendorSliceReadErrorFields>]
-  >("VendorSliceReadError", {
+  { id: S.NonEmptyString, path: S.NonEmptyString },
+  $I.annoteError<VendorSliceReadError>("VendorSliceReadError", {
     description: "An explicitly vetted vendor slice is unreadable.",
-    toEquivalence: () => sameVendorSliceReadError,
   })
 ) {}
-
-const VendorSliceParseErrorFields = { id: S.NonEmptyString, path: S.NonEmptyString } satisfies S.Struct.Fields;
-const sameVendorSliceParseErrorFields = S.toEquivalence(
-  S.TaggedStruct("VendorSliceParseError", VendorSliceParseErrorFields)
-);
-const sameVendorSliceParseError = (self: VendorSliceParseError, that: VendorSliceParseError): boolean =>
-  sameVendorSliceParseErrorFields(self, that);
 
 /**
  *  Raised when an approved slice cannot be schema-decoded.
@@ -256,26 +207,11 @@ const sameVendorSliceParseError = (self: VendorSliceParseError, that: VendorSlic
  */
 export class VendorSliceParseError extends S.TaggedError<VendorSliceParseError>($I`VendorSliceParseError`)(
   "VendorSliceParseError",
-  VendorSliceParseErrorFields,
-  $I.annoteClass<
-    S.declare<VendorSliceParseError>,
-    readonly [S.TaggedStruct<"VendorSliceParseError", typeof VendorSliceParseErrorFields>]
-  >("VendorSliceParseError", {
+  { id: S.NonEmptyString, path: S.NonEmptyString },
+  $I.annoteError<VendorSliceParseError>("VendorSliceParseError", {
     description: "An explicitly vetted vendor taxonomy slice is unparsable.",
-    toEquivalence: () => sameVendorSliceParseError,
   })
 ) {}
-
-const VendorSlicePathEscapeFields = {
-  id: S.NonEmptyString,
-  path: S.NonEmptyString,
-  vendorRoot: S.NonEmptyString,
-} satisfies S.Struct.Fields;
-const sameVendorSlicePathEscapeFields = S.toEquivalence(
-  S.TaggedStruct("VendorSlicePathEscape", VendorSlicePathEscapeFields)
-);
-const sameVendorSlicePathEscape = (self: VendorSlicePathEscape, that: VendorSlicePathEscape): boolean =>
-  sameVendorSlicePathEscapeFields(self, that);
 
 /**
  * Raised when a vetted vendor slice resolves outside its canonical vendor root.
@@ -298,14 +234,13 @@ const sameVendorSlicePathEscape = (self: VendorSlicePathEscape, that: VendorSlic
  */
 export class VendorSlicePathEscape extends S.TaggedError<VendorSlicePathEscape>($I`VendorSlicePathEscape`)(
   "VendorSlicePathEscape",
-  VendorSlicePathEscapeFields,
-  $I.annoteClass<
-    S.declare<VendorSlicePathEscape>,
-    readonly [S.TaggedStruct<"VendorSlicePathEscape", typeof VendorSlicePathEscapeFields>]
-  >("VendorSlicePathEscape", {
+  {
+    id: S.NonEmptyString,
+    path: S.NonEmptyString,
+    vendorRoot: S.NonEmptyString,
+  },
+  $I.annoteError<VendorSlicePathEscape>("VendorSlicePathEscape", {
     description: "A vetted vendor taxonomy slice resolved outside its canonical vendor root.",
-
-    toEquivalence: () => sameVendorSlicePathEscape,
   })
 ) {}
 

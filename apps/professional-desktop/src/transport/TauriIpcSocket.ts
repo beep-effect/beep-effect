@@ -144,14 +144,6 @@ const sidecarClosedMessage = (payload: SidecarClosedPayload): string =>
     onSome: (message) => `sidecar ${payload.kind}: ${message}`,
   });
 
-const SidecarClosedErrorFields = {
-  message: S.String,
-  payload: SidecarClosedPayload,
-} satisfies S.Struct.Fields;
-const sameSidecarClosedErrorFields = S.toEquivalence(S.TaggedStruct("SidecarClosedError", SidecarClosedErrorFields));
-const sameSidecarClosedError = (self: SidecarClosedError, that: SidecarClosedError): boolean =>
-  sameSidecarClosedErrorFields(self, that);
-
 /**
  * Raised when the sidecar reports a terminal lifecycle event on
  * `sidecar://closed`, carrying the decoded payload so callers keep the typed
@@ -174,23 +166,14 @@ const sameSidecarClosedError = (self: SidecarClosedError, that: SidecarClosedErr
  */
 export class SidecarClosedError extends S.TaggedError<SidecarClosedError>($I`SidecarClosedError`)(
   "SidecarClosedError",
-  SidecarClosedErrorFields,
-  $I.annoteClass<
-    S.declare<SidecarClosedError>,
-    readonly [S.TaggedStruct<"SidecarClosedError", typeof SidecarClosedErrorFields>]
-  >("SidecarClosedError", {
+  {
+    message: S.String,
+    payload: SidecarClosedPayload,
+  },
+  $I.annoteError<SidecarClosedError>("SidecarClosedError", {
     description: "The sidecar emitted a terminal `sidecar://closed` lifecycle event.",
-    toEquivalence: () => sameSidecarClosedError,
   })
 ) {}
-
-const SidecarSendErrorFields = {
-  causeMessage: S.String,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameSidecarSendErrorFields = S.toEquivalence(S.TaggedStruct("SidecarSendError", SidecarSendErrorFields));
-const sameSidecarSendError = (self: SidecarSendError, that: SidecarSendError): boolean =>
-  sameSidecarSendErrorFields(self, that);
 
 /**
  * Raised when writing an outbound frame to the sidecar's stdin via the
@@ -213,13 +196,12 @@ const sameSidecarSendError = (self: SidecarSendError, that: SidecarSendError): b
  */
 export class SidecarSendError extends S.TaggedError<SidecarSendError>($I`SidecarSendError`)(
   "SidecarSendError",
-  SidecarSendErrorFields,
-  $I.annoteClass<
-    S.declare<SidecarSendError>,
-    readonly [S.TaggedStruct<"SidecarSendError", typeof SidecarSendErrorFields>]
-  >("SidecarSendError", {
+  {
+    causeMessage: S.String,
+    message: S.String,
+  },
+  $I.annoteError<SidecarSendError>("SidecarSendError", {
     description: "Writing an outbound ndjson frame to the sidecar's stdin failed.",
-    toEquivalence: () => sameSidecarSendError,
   })
 ) {}
 

@@ -224,18 +224,6 @@ export class RunOntologySparqlResult extends S.Class<RunOntologySparqlResult>($I
   })
 ) {}
 
-const OntologySparqlErrorFields = {
-  reason: LiteralKit(["profileMismatch", "engineFailed"]).pipe(
-    $I.annoteSchema("OntologySparqlErrorReason", {
-      description: "SPARQL safeguard validation failure reason.",
-    })
-  ),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameOntologySparqlErrorFields = S.toEquivalence(S.TaggedStruct("OntologySparqlError", OntologySparqlErrorFields));
-const sameOntologySparqlError = (self: OntologySparqlError, that: OntologySparqlError): boolean =>
-  sameOntologySparqlErrorFields(self, that);
-
 /**
  * SPARQL safeguard validation failure.
  *
@@ -257,14 +245,16 @@ const sameOntologySparqlError = (self: OntologySparqlError, that: OntologySparql
  */
 export class OntologySparqlError extends S.TaggedError<OntologySparqlError>($I`OntologySparqlError`)(
   "OntologySparqlError",
-  OntologySparqlErrorFields,
-  $I.annoteClass<
-    S.declare<OntologySparqlError>,
-    readonly [S.TaggedStruct<"OntologySparqlError", typeof OntologySparqlErrorFields>]
-  >("OntologySparqlError", {
+  {
+    reason: LiteralKit(["profileMismatch", "engineFailed"]).pipe(
+      $I.annoteSchema("OntologySparqlErrorReason", {
+        description: "SPARQL safeguard validation failure reason.",
+      })
+    ),
+    message: S.String,
+  },
+  $I.annoteError<OntologySparqlError>("OntologySparqlError", {
     description: "SPARQL safeguard validation failure.",
-
-    toEquivalence: () => sameOntologySparqlError,
   })
 ) {}
 

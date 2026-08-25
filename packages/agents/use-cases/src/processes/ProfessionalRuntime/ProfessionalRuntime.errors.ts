@@ -12,17 +12,6 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.errors");
 
-const ProfessionalRuntimeValidationErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameProfessionalRuntimeValidationErrorFields = S.toEquivalence(
-  S.TaggedStruct("ProfessionalRuntimeValidationError", ProfessionalRuntimeValidationErrorFields)
-);
-const sameProfessionalRuntimeValidationError = (
-  self: ProfessionalRuntimeValidationError,
-  that: ProfessionalRuntimeValidationError
-): boolean => sameProfessionalRuntimeValidationErrorFields(self, that);
-
 /**
  * Validation failure for runtime SDK requests and candidate proposals.
  *
@@ -41,14 +30,11 @@ export class ProfessionalRuntimeValidationError extends S.TaggedError<Profession
   $I`ProfessionalRuntimeValidationError`
 )(
   "ProfessionalRuntimeValidationError",
-  ProfessionalRuntimeValidationErrorFields,
-  $I.annoteClass<
-    S.declare<ProfessionalRuntimeValidationError>,
-    readonly [S.TaggedStruct<"ProfessionalRuntimeValidationError", typeof ProfessionalRuntimeValidationErrorFields>]
-  >("ProfessionalRuntimeValidationError", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<ProfessionalRuntimeValidationError>("ProfessionalRuntimeValidationError", {
     description: "Raised when runtime request or proposal data violates SDK validation rules.",
-
-    toEquivalence: () => sameProfessionalRuntimeValidationError,
   })
 ) {
   static readonly new = (message: string) => ProfessionalRuntimeValidationError.make({ message });
@@ -61,22 +47,6 @@ export class ProfessionalRuntimeValidationError extends S.TaggedError<Profession
 
   static readonly failEffectThunk = flow(this.failEffect, (effect) => () => effect);
 }
-
-const ProfessionalRuntimePromotionBlockedFields = {
-  reason: PromotionBlockReason.annotateKey({
-    description: "Opaque sanitized reason returned by the consulted vertical policy.",
-  }),
-  subject: PromotionSubjectRef.annotateKey({
-    description: "Opaque subject whose candidate promotion was refused.",
-  }),
-} satisfies S.Struct.Fields;
-const sameProfessionalRuntimePromotionBlockedFields = S.toEquivalence(
-  S.TaggedStruct("ProfessionalRuntimePromotionBlocked", ProfessionalRuntimePromotionBlockedFields)
-);
-const sameProfessionalRuntimePromotionBlocked = (
-  self: ProfessionalRuntimePromotionBlocked,
-  that: ProfessionalRuntimePromotionBlocked
-): boolean => sameProfessionalRuntimePromotionBlockedFields(self, that);
 
 /**
  * Fail-closed refusal returned when a vertical policy blocks candidate output
@@ -102,14 +72,16 @@ export class ProfessionalRuntimePromotionBlocked extends S.TaggedError<Professio
   $I`ProfessionalRuntimePromotionBlocked`
 )(
   "ProfessionalRuntimePromotionBlocked",
-  ProfessionalRuntimePromotionBlockedFields,
-  $I.annoteClass<
-    S.declare<ProfessionalRuntimePromotionBlocked>,
-    readonly [S.TaggedStruct<"ProfessionalRuntimePromotionBlocked", typeof ProfessionalRuntimePromotionBlockedFields>]
-  >("ProfessionalRuntimePromotionBlocked", {
+  {
+    reason: PromotionBlockReason.annotateKey({
+      description: "Opaque sanitized reason returned by the consulted vertical policy.",
+    }),
+    subject: PromotionSubjectRef.annotateKey({
+      description: "Opaque subject whose candidate promotion was refused.",
+    }),
+  },
+  $I.annoteError<ProfessionalRuntimePromotionBlocked>("ProfessionalRuntimePromotionBlocked", {
     description: "A consulted vertical policy refused candidate output promotion for the subject.",
-
-    toEquivalence: () => sameProfessionalRuntimePromotionBlocked,
   })
 ) {
   static readonly failEffect = (subject: PromotionSubjectRef, reason: PromotionBlockReason) =>

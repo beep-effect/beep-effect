@@ -5,24 +5,12 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.errors");
-
-const CiCommandErrorFields = {
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameCiCommandErrorFields = S.toEquivalence(
-  S.TaggedStruct("CiCommandError", {
-    message: CiCommandErrorFields.message,
-  })
-);
-const sameCiCommandError = (self: CiCommandError, that: CiCommandError): boolean =>
-  sameCiCommandErrorFields(self, that);
 
 /**
  * Typed failure for CI helper commands.
@@ -41,14 +29,13 @@ const sameCiCommandError = (self: CiCommandError, that: CiCommandError): boolean
  */
 export class CiCommandError extends S.TaggedError<CiCommandError>($I`CiCommandError`)(
   "CiCommandError",
-  CiCommandErrorFields,
-  $I.annoteClass<S.declare<CiCommandError>, readonly [S.TaggedStruct<"CiCommandError", typeof CiCommandErrorFields>]>(
-    "CiCommandError",
-    {
-      description: "Failure raised by CI helper commands.",
-      toEquivalence: () => sameCiCommandError,
-    }
-  )
+  {
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<CiCommandError>("CiCommandError", {
+    description: "Failure raised by CI helper commands.",
+  })
 ) {
   /**
    * Construct a CI command error from an original cause and message.

@@ -11,12 +11,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("CsvError");
-const CsvErrorFields = {
-  message: S.String,
-  offset: S.optionalKey(S.Finite),
-} satisfies S.Struct.Fields;
-const sameCsvErrorFields = S.toEquivalence(S.TaggedStruct("CsvError", CsvErrorFields));
-const sameCsvError = (self: CsvError, that: CsvError): boolean => sameCsvErrorFields(self, that);
 
 /**
  * Raised when CSV parsing, header validation, or formatting fails.
@@ -35,10 +29,12 @@ const sameCsvError = (self: CsvError, that: CsvError): boolean => sameCsvErrorFi
  */
 export class CsvError extends S.TaggedError<CsvError>($I`CsvError`)(
   "CsvError",
-  CsvErrorFields,
-  $I.annoteClass<S.declare<CsvError>, readonly [S.TaggedStruct<"CsvError", typeof CsvErrorFields>]>("CsvError", {
+  {
+    message: S.String,
+    offset: S.optionalKey(S.Finite),
+  },
+  $I.annoteError<CsvError>("CsvError", {
     description: "Raised when CSV parsing, header validation, or formatting fails.",
-    toEquivalence: () => sameCsvError,
   })
 ) {}
 

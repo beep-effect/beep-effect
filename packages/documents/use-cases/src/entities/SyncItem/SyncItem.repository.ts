@@ -96,20 +96,6 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
   })
 ) {}
 
-const SyncItemRepositoryConflictFields = {
-  localRelPath: VaultRelPath.annotateKey({
-    description: "Vault-relative path whose tracking row conflicted.",
-  }),
-  reason: S.NonEmptyString.annotateKey({
-    description: "Non-empty repository conflict diagnostic.",
-  }),
-} satisfies S.Struct.Fields;
-const sameSyncItemRepositoryConflictFields = S.toEquivalence(
-  S.TaggedStruct("SyncItemRepositoryConflict", SyncItemRepositoryConflictFields)
-);
-const sameSyncItemRepositoryConflict = (self: SyncItemRepositoryConflict, that: SyncItemRepositoryConflict): boolean =>
-  sameSyncItemRepositoryConflictFields(self, that);
-
 /**
  * Persistence failure raised when a SyncItem write conflicts with an existing row.
  *
@@ -134,29 +120,21 @@ export class SyncItemRepositoryConflict extends S.TaggedError<SyncItemRepository
   $I`SyncItemRepositoryConflict`
 )(
   "SyncItemRepositoryConflict",
-  SyncItemRepositoryConflictFields,
-  $I.annoteClass<
-    S.declare<SyncItemRepositoryConflict>,
-    readonly [S.TaggedStruct<"SyncItemRepositoryConflict", typeof SyncItemRepositoryConflictFields>]
-  >("SyncItemRepositoryConflict", {
+  {
+    localRelPath: VaultRelPath.annotateKey({
+      description: "Vault-relative path whose tracking row conflicted.",
+    }),
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository conflict diagnostic.",
+    }),
+  },
+  $I.annoteError<SyncItemRepositoryConflict>("SyncItemRepositoryConflict", {
     title: "SyncItem repository conflict",
     description: "The SyncItem repository rejected a conflicting write.",
-    toEquivalence: () => sameSyncItemRepositoryConflict,
   })
 ) {
   static readonly is = S.is(SyncItemRepositoryConflict);
 }
-
-const SyncItemRepositoryNotFoundFields = {
-  syncItemId: DocumentsIdentity.SyncItemId.annotateKey({
-    description: "SyncItem identity that could not be found.",
-  }),
-} satisfies S.Struct.Fields;
-const sameSyncItemRepositoryNotFoundFields = S.toEquivalence(
-  S.TaggedStruct("SyncItemRepositoryNotFound", SyncItemRepositoryNotFoundFields)
-);
-const sameSyncItemRepositoryNotFound = (self: SyncItemRepositoryNotFound, that: SyncItemRepositoryNotFound): boolean =>
-  sameSyncItemRepositoryNotFoundFields(self, that);
 
 /**
  * Persistence failure raised when a SyncItem row is absent.
@@ -181,31 +159,18 @@ export class SyncItemRepositoryNotFound extends S.TaggedError<SyncItemRepository
   $I`SyncItemRepositoryNotFound`
 )(
   "SyncItemRepositoryNotFound",
-  SyncItemRepositoryNotFoundFields,
-  $I.annoteClass<
-    S.declare<SyncItemRepositoryNotFound>,
-    readonly [S.TaggedStruct<"SyncItemRepositoryNotFound", typeof SyncItemRepositoryNotFoundFields>]
-  >("SyncItemRepositoryNotFound", {
+  {
+    syncItemId: DocumentsIdentity.SyncItemId.annotateKey({
+      description: "SyncItem identity that could not be found.",
+    }),
+  },
+  $I.annoteError<SyncItemRepositoryNotFound>("SyncItemRepositoryNotFound", {
     title: "SyncItem repository not found",
     description: "The SyncItem repository could not find the requested entity.",
-    toEquivalence: () => sameSyncItemRepositoryNotFound,
   })
 ) {
   static readonly is = S.is(SyncItemRepositoryNotFound);
 }
-
-const SyncItemRepositoryUnavailableFields = {
-  reason: S.NonEmptyString.annotateKey({
-    description: "Non-empty repository availability diagnostic.",
-  }),
-} satisfies S.Struct.Fields;
-const sameSyncItemRepositoryUnavailableFields = S.toEquivalence(
-  S.TaggedStruct("SyncItemRepositoryUnavailable", SyncItemRepositoryUnavailableFields)
-);
-const sameSyncItemRepositoryUnavailable = (
-  self: SyncItemRepositoryUnavailable,
-  that: SyncItemRepositoryUnavailable
-): boolean => sameSyncItemRepositoryUnavailableFields(self, that);
 
 /**
  * Persistence failure raised when the SyncItem repository is unavailable.
@@ -226,14 +191,14 @@ export class SyncItemRepositoryUnavailable extends S.TaggedError<SyncItemReposit
   $I`SyncItemRepositoryUnavailable`
 )(
   "SyncItemRepositoryUnavailable",
-  SyncItemRepositoryUnavailableFields,
-  $I.annoteClass<
-    S.declare<SyncItemRepositoryUnavailable>,
-    readonly [S.TaggedStruct<"SyncItemRepositoryUnavailable", typeof SyncItemRepositoryUnavailableFields>]
-  >("SyncItemRepositoryUnavailable", {
+  {
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository availability diagnostic.",
+    }),
+  },
+  $I.annoteError<SyncItemRepositoryUnavailable>("SyncItemRepositoryUnavailable", {
     title: "SyncItem repository unavailable",
     description: "The SyncItem repository could not serve the request.",
-    toEquivalence: () => sameSyncItemRepositoryUnavailable,
   })
 ) {
   static readonly is = S.is(SyncItemRepositoryUnavailable);

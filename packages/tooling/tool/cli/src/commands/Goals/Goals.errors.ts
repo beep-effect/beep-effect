@@ -6,19 +6,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Goals/Goals.errors");
-
-const GoalPacketNotFoundErrorFields = {
-  slug: S.String,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameGoalPacketNotFoundErrorFields = S.toEquivalence(
-  S.TaggedStruct("GoalPacketNotFoundError", GoalPacketNotFoundErrorFields)
-);
-const sameGoalPacketNotFoundError = (self: GoalPacketNotFoundError, that: GoalPacketNotFoundError): boolean =>
-  sameGoalPacketNotFoundErrorFields(self, that);
 
 /**
  * Failure raised when a goal packet directory or manifest cannot be found.
@@ -37,13 +28,12 @@ const sameGoalPacketNotFoundError = (self: GoalPacketNotFoundError, that: GoalPa
  */
 export class GoalPacketNotFoundError extends S.TaggedError<GoalPacketNotFoundError>($I`GoalPacketNotFoundError`)(
   "GoalPacketNotFoundError",
-  GoalPacketNotFoundErrorFields,
-  $I.annoteClass<
-    S.declare<GoalPacketNotFoundError>,
-    readonly [S.TaggedStruct<"GoalPacketNotFoundError", typeof GoalPacketNotFoundErrorFields>]
-  >("GoalPacketNotFoundError", {
+  {
+    slug: S.String,
+    message: S.String,
+  },
+  $I.annoteError<GoalPacketNotFoundError>("GoalPacketNotFoundError", {
     description: "A goal packet directory or its manifest could not be found.",
-    toEquivalence: () => sameGoalPacketNotFoundError,
   })
 ) {
   /**
@@ -58,16 +48,6 @@ export class GoalPacketNotFoundError extends S.TaggedError<GoalPacketNotFoundErr
   static readonly new = (slug: string, message: string): GoalPacketNotFoundError =>
     GoalPacketNotFoundError.make({ slug, message });
 }
-
-const GoalManifestInvalidErrorFields = {
-  slug: S.String,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameGoalManifestInvalidErrorFields = S.toEquivalence(
-  S.TaggedStruct("GoalManifestInvalidError", GoalManifestInvalidErrorFields)
-);
-const sameGoalManifestInvalidError = (self: GoalManifestInvalidError, that: GoalManifestInvalidError): boolean =>
-  sameGoalManifestInvalidErrorFields(self, that);
 
 /**
  * Failure raised when a goal manifest cannot be parsed or does not decode as
@@ -87,13 +67,12 @@ const sameGoalManifestInvalidError = (self: GoalManifestInvalidError, that: Goal
  */
 export class GoalManifestInvalidError extends S.TaggedError<GoalManifestInvalidError>($I`GoalManifestInvalidError`)(
   "GoalManifestInvalidError",
-  GoalManifestInvalidErrorFields,
-  $I.annoteClass<
-    S.declare<GoalManifestInvalidError>,
-    readonly [S.TaggedStruct<"GoalManifestInvalidError", typeof GoalManifestInvalidErrorFields>]
-  >("GoalManifestInvalidError", {
+  {
+    slug: S.String,
+    message: S.String,
+  },
+  $I.annoteError<GoalManifestInvalidError>("GoalManifestInvalidError", {
     description: "A goal manifest failed JSON parsing or GoalManifest decoding.",
-    toEquivalence: () => sameGoalManifestInvalidError,
   })
 ) {
   /**
@@ -108,16 +87,6 @@ export class GoalManifestInvalidError extends S.TaggedError<GoalManifestInvalidE
   static readonly new = (slug: string, message: string): GoalManifestInvalidError =>
     GoalManifestInvalidError.make({ slug, message });
 }
-
-const GoalReadmeStatusLineErrorFields = {
-  slug: S.String,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameGoalReadmeStatusLineErrorFields = S.toEquivalence(
-  S.TaggedStruct("GoalReadmeStatusLineError", GoalReadmeStatusLineErrorFields)
-);
-const sameGoalReadmeStatusLineError = (self: GoalReadmeStatusLineError, that: GoalReadmeStatusLineError): boolean =>
-  sameGoalReadmeStatusLineErrorFields(self, that);
 
 /**
  * Failure raised when a packet README has no recognizable `Lifecycle:` status
@@ -137,13 +106,12 @@ const sameGoalReadmeStatusLineError = (self: GoalReadmeStatusLineError, that: Go
  */
 export class GoalReadmeStatusLineError extends S.TaggedError<GoalReadmeStatusLineError>($I`GoalReadmeStatusLineError`)(
   "GoalReadmeStatusLineError",
-  GoalReadmeStatusLineErrorFields,
-  $I.annoteClass<
-    S.declare<GoalReadmeStatusLineError>,
-    readonly [S.TaggedStruct<"GoalReadmeStatusLineError", typeof GoalReadmeStatusLineErrorFields>]
-  >("GoalReadmeStatusLineError", {
+  {
+    slug: S.String,
+    message: S.String,
+  },
+  $I.annoteError<GoalReadmeStatusLineError>("GoalReadmeStatusLineError", {
     description: "A packet README lacks a recognizable Lifecycle: status line to rewrite.",
-    toEquivalence: () => sameGoalReadmeStatusLineError,
   })
 ) {
   /**
@@ -158,12 +126,6 @@ export class GoalReadmeStatusLineError extends S.TaggedError<GoalReadmeStatusLin
   static readonly new = (slug: string, message: string): GoalReadmeStatusLineError =>
     GoalReadmeStatusLineError.make({ slug, message });
 }
-
-const GoalsGitErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameGoalsGitErrorFields = S.toEquivalence(S.TaggedStruct("GoalsGitError", GoalsGitErrorFields));
-const sameGoalsGitError = (self: GoalsGitError, that: GoalsGitError): boolean => sameGoalsGitErrorFields(self, that);
 
 /**
  * Failure raised when a git command backing a goals-doctor advisory fails.
@@ -186,26 +148,15 @@ const sameGoalsGitError = (self: GoalsGitError, that: GoalsGitError): boolean =>
  */
 export class GoalsGitError extends S.TaggedError<GoalsGitError>($I`GoalsGitError`)(
   "GoalsGitError",
-  GoalsGitErrorFields,
-  $I.annoteClass<S.declare<GoalsGitError>, readonly [S.TaggedStruct<"GoalsGitError", typeof GoalsGitErrorFields>]>(
-    "GoalsGitError",
-    {
-      description: "A git command backing a goals-doctor advisory failed (recovered, never blocking).",
-      toEquivalence: () => sameGoalsGitError,
-    }
-  )
+  {
+    message: S.String,
+  },
+  $I.annoteError<GoalsGitError>("GoalsGitError", {
+    description: "A git command backing a goals-doctor advisory failed (recovered, never blocking).",
+  })
 ) {
   static readonly new = (message: string): GoalsGitError => GoalsGitError.make({ message });
 }
-
-const GoalStatusInputErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameGoalStatusInputErrorFields = S.toEquivalence(
-  S.TaggedStruct("GoalStatusInputError", GoalStatusInputErrorFields)
-);
-const sameGoalStatusInputError = (self: GoalStatusInputError, that: GoalStatusInputError): boolean =>
-  sameGoalStatusInputErrorFields(self, that);
 
 /**
  * Failure raised when a `beep goals` writer command receives unusable
@@ -226,24 +177,15 @@ const sameGoalStatusInputError = (self: GoalStatusInputError, that: GoalStatusIn
  */
 export class GoalStatusInputError extends S.TaggedError<GoalStatusInputError>($I`GoalStatusInputError`)(
   "GoalStatusInputError",
-  GoalStatusInputErrorFields,
-  $I.annoteClass<
-    S.declare<GoalStatusInputError>,
-    readonly [S.TaggedStruct<"GoalStatusInputError", typeof GoalStatusInputErrorFields>]
-  >("GoalStatusInputError", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<GoalStatusInputError>("GoalStatusInputError", {
     description: "Invalid argument input for a beep goals writer command (set-status, set-risk-tier).",
-    toEquivalence: () => sameGoalStatusInputError,
   })
 ) {
   static readonly new = (message: string): GoalStatusInputError => GoalStatusInputError.make({ message });
 }
-
-const GoalPlanInputErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameGoalPlanInputErrorFields = S.toEquivalence(S.TaggedStruct("GoalPlanInputError", GoalPlanInputErrorFields));
-const sameGoalPlanInputError = (self: GoalPlanInputError, that: GoalPlanInputError): boolean =>
-  sameGoalPlanInputErrorFields(self, that);
 
 /**
  * Failure raised when `beep goals bootstrap` or `beep goals adopt` receives
@@ -271,30 +213,15 @@ const sameGoalPlanInputError = (self: GoalPlanInputError, that: GoalPlanInputErr
  */
 export class GoalPlanInputError extends S.TaggedError<GoalPlanInputError>($I`GoalPlanInputError`)(
   "GoalPlanInputError",
-  GoalPlanInputErrorFields,
-  $I.annoteClass<
-    S.declare<GoalPlanInputError>,
-    readonly [S.TaggedStruct<"GoalPlanInputError", typeof GoalPlanInputErrorFields>]
-  >("GoalPlanInputError", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<GoalPlanInputError>("GoalPlanInputError", {
     description: "Invalid input for beep goals bootstrap/adopt plan compilation.",
-    toEquivalence: () => sameGoalPlanInputError,
   })
 ) {
   static readonly new = (message: string): GoalPlanInputError => GoalPlanInputError.make({ message });
 }
-
-const GoalPlanOperationalErrorFields = {
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameGoalPlanOperationalErrorFields = S.toEquivalence(
-  S.TaggedStruct("GoalPlanOperationalError", {
-    message: GoalPlanOperationalErrorFields.message,
-  })
-);
-const sameGoalPlanOperationalError = (self: GoalPlanOperationalError, that: GoalPlanOperationalError): boolean =>
-  sameGoalPlanOperationalErrorFields(self, that);
 
 /**
  * Failure raised when a packet snapshot read cannot be completed.
@@ -320,13 +247,12 @@ const sameGoalPlanOperationalError = (self: GoalPlanOperationalError, that: Goal
  */
 export class GoalPlanOperationalError extends S.TaggedError<GoalPlanOperationalError>($I`GoalPlanOperationalError`)(
   "GoalPlanOperationalError",
-  GoalPlanOperationalErrorFields,
-  $I.annoteClass<
-    S.declare<GoalPlanOperationalError>,
-    readonly [S.TaggedStruct<"GoalPlanOperationalError", typeof GoalPlanOperationalErrorFields>]
-  >("GoalPlanOperationalError", {
+  {
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<GoalPlanOperationalError>("GoalPlanOperationalError", {
     description: "A packet-snapshot read failure that must fail plan compilation closed.",
-    toEquivalence: () => sameGoalPlanOperationalError,
   })
 ) {
   static readonly new =

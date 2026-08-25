@@ -7,6 +7,7 @@
 
 import { DuckDb, DuckDbConnectionOptions, DuckDbParquetExport } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, Layer, Path, pipe } from "effect";
@@ -15,20 +16,6 @@ import * as S from "effect/Schema";
 import { AiMetricsDeployTarget } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("mirror");
-
-const AiMetricsMirrorErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAiMetricsMirrorErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsMirrorError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: AiMetricsMirrorErrorFields.message,
-  })
-);
-const sameAiMetricsMirrorError = (self: AiMetricsMirrorError, that: AiMetricsMirrorError): boolean =>
-  sameAiMetricsMirrorErrorFields(self, that);
-
 const defaultRemoteMirrorRoot = "/srv/data/ai-metrics/p7-derived-mirror";
 const mirrorSchemaVersion = "beep.ai_metrics.mirror_bundle.v1";
 const mirrorStatusSchemaVersion = "beep.ai_metrics.mirror_status.v1";
@@ -395,13 +382,12 @@ const mirrorFailure = (message: string, cause: unknown): AiMetricsMirrorError =>
  */
 export class AiMetricsMirrorError extends S.TaggedError<AiMetricsMirrorError>($I`AiMetricsMirrorError`)(
   "AiMetricsMirrorError",
-  AiMetricsMirrorErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsMirrorError>,
-    readonly [S.TaggedStruct<"AiMetricsMirrorError", typeof AiMetricsMirrorErrorFields>]
-  >("AiMetricsMirrorError", {
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annoteError<AiMetricsMirrorError>("AiMetricsMirrorError", {
     description: "Typed failure raised while building or locating sanitized AI metrics mirror bundles.",
-    toEquivalence: () => sameAiMetricsMirrorError,
   })
 ) {}
 

@@ -87,15 +87,6 @@ class AwsBlockDeviceMapping extends S.Class<AwsBlockDeviceMapping>($I`AwsBlockDe
   $I.annote("AwsBlockDeviceMapping", { description: "EC2 root block-device override for a runner bake." })
 ) {}
 
-const AwsResourcePendingFields = {
-  actual: S.NonEmptyString,
-  expected: S.NonEmptyString,
-  resource: S.NonEmptyString,
-} satisfies S.Struct.Fields;
-const sameAwsResourcePendingFields = S.toEquivalence(S.TaggedStruct("AwsResourcePending", AwsResourcePendingFields));
-const sameAwsResourcePending = (self: AwsResourcePending, that: AwsResourcePending): boolean =>
-  sameAwsResourcePendingFields(self, that);
-
 /**
  * Error raised when an AWS resource observed during a runner bake has not yet reached the state the
  * bake expects.
@@ -119,13 +110,13 @@ const sameAwsResourcePending = (self: AwsResourcePending, that: AwsResourcePendi
  */
 export class AwsResourcePending extends S.TaggedError<AwsResourcePending>($I`AwsResourcePending`)(
   "AwsResourcePending",
-  AwsResourcePendingFields,
-  $I.annoteClass<
-    S.declare<AwsResourcePending>,
-    readonly [S.TaggedStruct<"AwsResourcePending", typeof AwsResourcePendingFields>]
-  >("AwsResourcePending", {
+  {
+    actual: S.NonEmptyString,
+    expected: S.NonEmptyString,
+    resource: S.NonEmptyString,
+  },
+  $I.annoteError<AwsResourcePending>("AwsResourcePending", {
     description: "Internal signal that an AWS resource has not reached its target state.",
-    toEquivalence: () => sameAwsResourcePending,
   })
 ) {}
 

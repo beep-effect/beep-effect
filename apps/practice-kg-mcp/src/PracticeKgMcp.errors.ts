@@ -6,21 +6,10 @@
  */
 
 import { $PracticeKgMcpId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PracticeKgMcpId.create("PracticeKgMcp.errors");
-
-const PackageFailureFields = {
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-  message: S.NonEmptyString,
-} satisfies S.Struct.Fields;
-const PackageFailureEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  message: PackageFailureFields.message,
-} satisfies S.Struct.Fields;
-const samePackageFailureFields = S.toEquivalence(S.TaggedStruct("PackageFailure", PackageFailureEquivalenceFields));
-const samePackageFailure = (self: PackageFailure, that: PackageFailure): boolean =>
-  samePackageFailureFields(self, that);
 
 /**
  * Sanitized packaging failure for the MCPB build entrypoint.
@@ -39,30 +28,14 @@ const samePackageFailure = (self: PackageFailure, that: PackageFailure): boolean
  */
 export class PackageFailure extends S.TaggedError<PackageFailure>($I`PackageFailure`)(
   "PackageFailure",
-  PackageFailureFields,
-  $I.annoteClass<S.declare<PackageFailure>, readonly [S.TaggedStruct<"PackageFailure", typeof PackageFailureFields>]>(
-    "PackageFailure",
-    {
-      description: "Sanitized failure from compiling or assembling an MCPB artifact.",
-
-      toEquivalence: () => samePackageFailure,
-    }
-  )
+  {
+    cause: S.optionalKey(Defect({ includeStack: true })),
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<PackageFailure>("PackageFailure", {
+    description: "Sanitized failure from compiling or assembling an MCPB artifact.",
+  })
 ) {}
-
-const PracticeKgHostErrorFields = {
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-  message: S.NonEmptyString,
-} satisfies S.Struct.Fields;
-const PracticeKgHostErrorEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  message: PracticeKgHostErrorFields.message,
-} satisfies S.Struct.Fields;
-const samePracticeKgHostErrorFields = S.toEquivalence(
-  S.TaggedStruct("PracticeKgHostError", PracticeKgHostErrorEquivalenceFields)
-);
-const samePracticeKgHostError = (self: PracticeKgHostError, that: PracticeKgHostError): boolean =>
-  samePracticeKgHostErrorFields(self, that);
 
 /**
  * Sanitized startup failure while resolving a portable practice KG bundle.
@@ -81,27 +54,14 @@ const samePracticeKgHostError = (self: PracticeKgHostError, that: PracticeKgHost
  */
 export class PracticeKgHostError extends S.TaggedError<PracticeKgHostError>($I`PracticeKgHostError`)(
   "PracticeKgHostError",
-  PracticeKgHostErrorFields,
-  $I.annoteClass<
-    S.declare<PracticeKgHostError>,
-    readonly [S.TaggedStruct<"PracticeKgHostError", typeof PracticeKgHostErrorFields>]
-  >("PracticeKgHostError", {
+  {
+    cause: S.optionalKey(Defect({ includeStack: true })),
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<PracticeKgHostError>("PracticeKgHostError", {
     description: "Sanitized startup failure while resolving a portable practice KG bundle.",
-
-    toEquivalence: () => samePracticeKgHostError,
   })
 ) {}
-
-const SmokeFailureFields = {
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-  message: S.NonEmptyString,
-} satisfies S.Struct.Fields;
-const SmokeFailureEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  message: SmokeFailureFields.message,
-} satisfies S.Struct.Fields;
-const sameSmokeFailureFields = S.toEquivalence(S.TaggedStruct("SmokeFailure", SmokeFailureEquivalenceFields));
-const sameSmokeFailure = (self: SmokeFailure, that: SmokeFailure): boolean => sameSmokeFailureFields(self, that);
 
 /**
  * Sanitized failure from the compiled MCP host smoke test.
@@ -120,9 +80,9 @@ const sameSmokeFailure = (self: SmokeFailure, that: SmokeFailure): boolean => sa
  */
 export class SmokeFailure extends S.TaggedError<SmokeFailure>($I`SmokeFailure`)(
   "SmokeFailure",
-  SmokeFailureFields,
-  $I.annoteClass<S.declare<SmokeFailure>, readonly [S.TaggedStruct<"SmokeFailure", typeof SmokeFailureFields>]>(
-    "SmokeFailure",
-    { description: "Sanitized compiled-host smoke failure.", toEquivalence: () => sameSmokeFailure }
-  )
+  {
+    cause: S.optionalKey(Defect({ includeStack: true })),
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<SmokeFailure>("SmokeFailure", { description: "Sanitized compiled-host smoke failure." })
 ) {}

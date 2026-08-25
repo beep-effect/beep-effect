@@ -54,14 +54,6 @@ export const VerifiedSpanErrorReason = LiteralKit([
  * @since 0.0.0
  */
 export type VerifiedSpanErrorReason = typeof VerifiedSpanErrorReason.Type;
-const VerifiedSpanErrorFields = {
-  candidateIndex: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  message: S.String,
-  reason: VerifiedSpanErrorReason,
-} satisfies S.Struct.Fields;
-const sameVerifiedSpanErrorFields = S.toEquivalence(S.TaggedStruct("VerifiedSpanError", VerifiedSpanErrorFields));
-const sameVerifiedSpanError = (self: VerifiedSpanError, that: VerifiedSpanError): boolean =>
-  sameVerifiedSpanErrorFields(self, that);
 
 /**
  * Sanitized strict-span mapping failure.
@@ -79,13 +71,13 @@ const sameVerifiedSpanError = (self: VerifiedSpanError, that: VerifiedSpanError)
  */
 export class VerifiedSpanError extends S.TaggedError<VerifiedSpanError>($I`VerifiedSpanError`)(
   "VerifiedSpanError",
-  VerifiedSpanErrorFields,
-  $I.annoteClass<
-    S.declare<VerifiedSpanError>,
-    readonly [S.TaggedStruct<"VerifiedSpanError", typeof VerifiedSpanErrorFields>]
-  >("VerifiedSpanError", {
+  {
+    candidateIndex: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    message: S.String,
+    reason: VerifiedSpanErrorReason,
+  },
+  $I.annoteError<VerifiedSpanError>("VerifiedSpanError", {
     description: "Sanitized failure from bounded strict source-text reconstruction or locator mapping.",
-    toEquivalence: () => sameVerifiedSpanError,
   })
 ) {
   /**

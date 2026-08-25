@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { HttpStatus2XX, HttpStatus4XX, HttpStatus5XX } from "@beep/schema/HttpStatus";
 import * as S from "effect/Schema";
 import { HttpApiSchema } from "effect/unstable/httpapi";
@@ -92,32 +92,6 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
   })
 ) {}
 
-const FailureBadRequestFields = {
-  cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
-  status: S.tag(HttpStatus4XX.From.Enum.BadRequest),
-} satisfies S.Struct.Fields;
-const sameFailureBadRequestFields = S.toEquivalence(S.TaggedStruct("FailureBadRequest", FailureBadRequestFields));
-const sameFailureBadRequest = (self: FailureBadRequest, that: FailureBadRequest): boolean =>
-  sameFailureBadRequestFields(self, that);
-
-const FailureNotFoundFields = {
-  cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
-  status: S.tag(HttpStatus4XX.From.Enum.NotFound),
-} satisfies S.Struct.Fields;
-const sameFailureNotFoundFields = S.toEquivalence(S.TaggedStruct("FailureNotFound", FailureNotFoundFields));
-const sameFailureNotFound = (self: FailureNotFound, that: FailureNotFound): boolean =>
-  sameFailureNotFoundFields(self, that);
-
-const FailureInternalServerErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
-  status: S.tag(HttpStatus5XX.From.Enum.InternalServerError),
-} satisfies S.Struct.Fields;
-const sameFailureInternalServerErrorFields = S.toEquivalence(
-  S.TaggedStruct("FailureInternalServerError", FailureInternalServerErrorFields)
-);
-const sameFailureInternalServerError = (self: FailureInternalServerError, that: FailureInternalServerError): boolean =>
-  sameFailureInternalServerErrorFields(self, that);
-
 /**
  * Bad-request failure returned by the GovInfo search endpoint.
  *
@@ -139,13 +113,12 @@ const sameFailureInternalServerError = (self: FailureInternalServerError, that: 
  */
 export class FailureBadRequest extends S.TaggedError<FailureBadRequest>($I`FailureBadRequest`)(
   "FailureBadRequest",
-  FailureBadRequestFields,
-  $I.annoteClass<
-    S.declare<FailureBadRequest>,
-    readonly [S.TaggedStruct<"FailureBadRequest", typeof FailureBadRequestFields>]
-  >("FailureBadRequest", {
+  {
+    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
+    status: S.tag(HttpStatus4XX.From.Enum.BadRequest),
+  },
+  $I.annoteError<FailureBadRequest>("FailureBadRequest", {
     description: "Bad-request failure returned when GovInfo rejects the submitted search payload.",
-    toEquivalence: () => sameFailureBadRequest,
   })
 ) {}
 
@@ -170,13 +143,12 @@ export class FailureBadRequest extends S.TaggedError<FailureBadRequest>($I`Failu
  */
 export class FailureNotFound extends S.TaggedError<FailureNotFound>($I`FailureNotFound`)(
   "FailureNotFound",
-  FailureNotFoundFields,
-  $I.annoteClass<
-    S.declare<FailureNotFound>,
-    readonly [S.TaggedStruct<"FailureNotFound", typeof FailureNotFoundFields>]
-  >("FailureNotFound", {
+  {
+    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
+    status: S.tag(HttpStatus4XX.From.Enum.NotFound),
+  },
+  $I.annoteError<FailureNotFound>("FailureNotFound", {
     description: "Not-found failure returned when the GovInfo search route or resource is unavailable.",
-    toEquivalence: () => sameFailureNotFound,
   })
 ) {}
 
@@ -203,13 +175,12 @@ export class FailureInternalServerError extends S.TaggedError<FailureInternalSer
   $I`FailureInternalServerError`
 )(
   "FailureInternalServerError",
-  FailureInternalServerErrorFields,
-  $I.annoteClass<
-    S.declare<FailureInternalServerError>,
-    readonly [S.TaggedStruct<"FailureInternalServerError", typeof FailureInternalServerErrorFields>]
-  >("FailureInternalServerError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
+    status: S.tag(HttpStatus5XX.From.Enum.InternalServerError),
+  },
+  $I.annoteError<FailureInternalServerError>("FailureInternalServerError", {
     description: "Internal-server-error failure returned when GovInfo reports an unexpected server-side error.",
-    toEquivalence: () => sameFailureInternalServerError,
   })
 ) {}
 

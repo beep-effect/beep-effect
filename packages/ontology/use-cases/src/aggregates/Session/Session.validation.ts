@@ -292,16 +292,6 @@ export class ExportOntologyProvenanceResult extends S.Class<ExportOntologyProven
   })
 ) {}
 
-const OntologyValidationErrorFields = {
-  reason: LiteralKit(["shaclFailed", "repairVerificationFailed", "actorIdentityMissing"]),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameOntologyValidationErrorFields = S.toEquivalence(
-  S.TaggedStruct("OntologyValidationError", OntologyValidationErrorFields)
-);
-const sameOntologyValidationError = (self: OntologyValidationError, that: OntologyValidationError): boolean =>
-  sameOntologyValidationErrorFields(self, that);
-
 /**
  * Ontology validation failure.
  *
@@ -323,14 +313,12 @@ const sameOntologyValidationError = (self: OntologyValidationError, that: Ontolo
  */
 export class OntologyValidationError extends S.TaggedError<OntologyValidationError>($I`OntologyValidationError`)(
   "OntologyValidationError",
-  OntologyValidationErrorFields,
-  $I.annoteClass<
-    S.declare<OntologyValidationError>,
-    readonly [S.TaggedStruct<"OntologyValidationError", typeof OntologyValidationErrorFields>]
-  >("OntologyValidationError", {
+  {
+    reason: LiteralKit(["shaclFailed", "repairVerificationFailed", "actorIdentityMissing"]),
+    message: S.String,
+  },
+  $I.annoteError<OntologyValidationError>("OntologyValidationError", {
     description: "Ontology validation failure.",
-
-    toEquivalence: () => sameOntologyValidationError,
   })
 ) {}
 

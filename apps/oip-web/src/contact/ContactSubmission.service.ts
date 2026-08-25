@@ -46,18 +46,6 @@ type ContactSubmissionErrorOptions = {
   readonly status?: number;
 };
 
-const ContactSubmissionErrorFields = {
-  provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  reason: ContactSubmissionErrorReason,
-  status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
-} satisfies S.Struct.Fields;
-const sameContactSubmissionErrorFields = S.toEquivalence(
-  S.TaggedStruct("ContactSubmissionError", ContactSubmissionErrorFields)
-);
-const sameContactSubmissionError = (self: ContactSubmissionError, that: ContactSubmissionError): boolean =>
-  sameContactSubmissionErrorFields(self, that);
-
 /**
  * Typed server-side failure raised by the OIP contact submission boundary.
  *
@@ -79,13 +67,14 @@ const sameContactSubmissionError = (self: ContactSubmissionError, that: ContactS
  */
 export class ContactSubmissionError extends S.TaggedError<ContactSubmissionError>($I`ContactSubmissionError`)(
   "ContactSubmissionError",
-  ContactSubmissionErrorFields,
-  $I.annoteClass<
-    S.declare<ContactSubmissionError>,
-    readonly [S.TaggedStruct<"ContactSubmissionError", typeof ContactSubmissionErrorFields>]
-  >("ContactSubmissionError", {
+  {
+    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    reason: ContactSubmissionErrorReason,
+    status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annoteError<ContactSubmissionError>("ContactSubmissionError", {
     description: "Typed server-side contact submission boundary failure.",
-    toEquivalence: () => sameContactSubmissionError,
   })
 ) {
   static readonly fromReason = (

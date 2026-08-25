@@ -12,7 +12,7 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -62,27 +62,11 @@ export const ExecutionLedgerOperation = LiteralKit([
 export type ExecutionLedgerOperation = typeof ExecutionLedgerOperation.Type;
 
 const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+  S.OptionFromOptionalKey(Defect({ includeStack: true }))
     .pipe(SchemaUtils.withNoneDefault)
     .annotateKey({
       description,
     });
-
-const ExecutionLedgerConstraintViolationFields = {
-  constraintName: S.NonEmptyString.annotateKey({
-    description: "Name of the database constraint that rejected the write.",
-  }),
-  operation: ExecutionLedgerOperation.annotateKey({
-    description: "Ledger operation the constraint rejected.",
-  }),
-} satisfies S.Struct.Fields;
-const sameExecutionLedgerConstraintViolationFields = S.toEquivalence(
-  S.TaggedStruct("ExecutionLedgerConstraintViolation", ExecutionLedgerConstraintViolationFields)
-);
-const sameExecutionLedgerConstraintViolation = (
-  self: ExecutionLedgerConstraintViolation,
-  that: ExecutionLedgerConstraintViolation
-): boolean => sameExecutionLedgerConstraintViolationFields(self, that);
 
 /**
  * A ledger write the database rejected by constraint name.
@@ -109,14 +93,17 @@ export class ExecutionLedgerConstraintViolation extends S.TaggedError<ExecutionL
   $I`ExecutionLedgerConstraintViolation`
 )(
   "ExecutionLedgerConstraintViolation",
-  ExecutionLedgerConstraintViolationFields,
-  $I.annoteClass<
-    S.declare<ExecutionLedgerConstraintViolation>,
-    readonly [S.TaggedStruct<"ExecutionLedgerConstraintViolation", typeof ExecutionLedgerConstraintViolationFields>]
-  >("ExecutionLedgerConstraintViolation", {
+  {
+    constraintName: S.NonEmptyString.annotateKey({
+      description: "Name of the database constraint that rejected the write.",
+    }),
+    operation: ExecutionLedgerOperation.annotateKey({
+      description: "Ledger operation the constraint rejected.",
+    }),
+  },
+  $I.annoteError<ExecutionLedgerConstraintViolation>("ExecutionLedgerConstraintViolation", {
     title: "Execution ledger constraint violation",
     description: "A ledger write was rejected by a named append-only constraint.",
-    toEquivalence: () => sameExecutionLedgerConstraintViolation,
   })
 ) {
   static readonly is = S.is(ExecutionLedgerConstraintViolation);
@@ -143,26 +130,6 @@ export class ExecutionLedgerConstraintViolation extends S.TaggedError<ExecutionL
   }
 }
 
-const ExecutionLedgerUnavailableFields = {
-  cause: optionalDefect("Optional underlying driver defect captured when the ledger could not serve a request."),
-  operation: ExecutionLedgerOperation.annotateKey({
-    description: "Ledger operation that could not be served.",
-  }),
-  reason: S.NonEmptyString.annotateKey({
-    description: "Non-empty ledger availability diagnostic.",
-  }),
-} satisfies S.Struct.Fields;
-const ExecutionLedgerUnavailableEquivalenceFields = {
-  operation: ExecutionLedgerUnavailableFields.operation,
-  reason: ExecutionLedgerUnavailableFields.reason,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameExecutionLedgerUnavailableFields = S.toEquivalence(
-  S.TaggedStruct("ExecutionLedgerUnavailable", ExecutionLedgerUnavailableEquivalenceFields)
-);
-const sameExecutionLedgerUnavailable = (self: ExecutionLedgerUnavailable, that: ExecutionLedgerUnavailable): boolean =>
-  sameExecutionLedgerUnavailableFields(self, that);
-
 /**
  * The execution ledger could not serve a request.
  *
@@ -182,14 +149,18 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<ExecutionLedgerUna
   $I`ExecutionLedgerUnavailable`
 )(
   "ExecutionLedgerUnavailable",
-  ExecutionLedgerUnavailableFields,
-  $I.annoteClass<
-    S.declare<ExecutionLedgerUnavailable>,
-    readonly [S.TaggedStruct<"ExecutionLedgerUnavailable", typeof ExecutionLedgerUnavailableFields>]
-  >("ExecutionLedgerUnavailable", {
+  {
+    cause: optionalDefect("Optional underlying driver defect captured when the ledger could not serve a request."),
+    operation: ExecutionLedgerOperation.annotateKey({
+      description: "Ledger operation that could not be served.",
+    }),
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty ledger availability diagnostic.",
+    }),
+  },
+  $I.annoteError<ExecutionLedgerUnavailable>("ExecutionLedgerUnavailable", {
     title: "Execution ledger unavailable",
     description: "The execution ledger could not serve the request.",
-    toEquivalence: () => sameExecutionLedgerUnavailable,
   })
 ) {
   static readonly is = S.is(ExecutionLedgerUnavailable);

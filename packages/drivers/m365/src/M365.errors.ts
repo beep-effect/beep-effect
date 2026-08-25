@@ -112,20 +112,6 @@ const makeHttpStatus: (status: number) => M365HttpStatus = flow(
   S.decodeUnknownOption(M365HttpStatus),
   O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
 );
-const sameM365ErrorReason = S.toEquivalence(M365ErrorReason);
-const sameOptionalErrorText = S.toEquivalence(S.Option(S.String));
-const sameOptionalRetryAfterSeconds = S.toEquivalence(S.Option(NonNegativeInt));
-const sameOptionalHttpStatus = S.toEquivalence(S.Option(M365HttpStatus));
-
-const sameM365ErrorFields = (self: M365Error, that: M365Error): boolean =>
-  sameM365ErrorReason(self.reason, that.reason) &&
-  sameOptionalErrorText(self.cause, that.cause) &&
-  sameOptionalErrorText(self.itemId, that.itemId) &&
-  sameOptionalErrorText(self.resource, that.resource) &&
-  sameOptionalRetryAfterSeconds(self.retryAfterSeconds, that.retryAfterSeconds) &&
-  sameOptionalHttpStatus(self.status, that.status) &&
-  sameOptionalErrorText(self.url, that.url);
-
 const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365ErrorOptionsInput =>
   M365ErrorOptionsInput.make({
     cause: O.fromUndefinedOr(options.cause),
@@ -135,19 +121,6 @@ const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365Error
     status: pipe(O.fromUndefinedOr(options.status), O.map(makeHttpStatus)),
     url: O.fromUndefinedOr(options.url),
   });
-
-const M365ErrorFields = {
-  reason: M365ErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
-  cause: optionalField(S.String, "Sanitized cause label (tag/name), if any."),
-  itemId: optionalField(S.String, "Graph item id involved, if any."),
-  resource: optionalField(S.String, "Graph resource family (drives/sites/messages/events), if any."),
-  retryAfterSeconds: optionalField(
-    NonNegativeInt,
-    "Honored Retry-After delay in seconds, if the response was throttled."
-  ),
-  status: optionalField(M365HttpStatus, "HTTP status code, if any."),
-  url: optionalField(S.String, "Request URL involved, if any."),
-} satisfies S.Struct.Fields;
 
 /**
  * Technical failure raised by the Microsoft 365 driver boundary.
@@ -177,10 +150,20 @@ const M365ErrorFields = {
  */
 export class M365Error extends S.TaggedError<M365Error>($I`M365Error`)(
   "M365Error",
-  M365ErrorFields,
-  $I.annoteClass<S.declare<M365Error>, readonly [S.TaggedStruct<"M365Error", typeof M365ErrorFields>]>("M365Error", {
+  {
+    reason: M365ErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
+    cause: optionalField(S.String, "Sanitized cause label (tag/name), if any."),
+    itemId: optionalField(S.String, "Graph item id involved, if any."),
+    resource: optionalField(S.String, "Graph resource family (drives/sites/messages/events), if any."),
+    retryAfterSeconds: optionalField(
+      NonNegativeInt,
+      "Honored Retry-After delay in seconds, if the response was throttled."
+    ),
+    status: optionalField(M365HttpStatus, "HTTP status code, if any."),
+    url: optionalField(S.String, "Request URL involved, if any."),
+  },
+  $I.annoteError<M365Error>("M365Error", {
     description: "Redacted technical failure raised by the Microsoft 365 Graph driver boundary.",
-    toEquivalence: () => sameM365ErrorFields,
   })
 ) {
   /**

@@ -10,17 +10,6 @@ import * as S from "effect/Schema";
 
 const $I = $LawPracticeUseCasesId.create("LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.errors");
 
-const LegalPositionRelatorAdmissionErrorFields = {
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameLegalPositionRelatorAdmissionErrorFields = S.toEquivalence(
-  S.TaggedStruct("LegalPositionRelatorAdmissionError", LegalPositionRelatorAdmissionErrorFields)
-);
-const sameLegalPositionRelatorAdmissionError = (
-  self: LegalPositionRelatorAdmissionError,
-  that: LegalPositionRelatorAdmissionError
-): boolean => sameLegalPositionRelatorAdmissionErrorFields(self, that);
-
 /**
  * A candidate record was not admitted as a stored legal position relation.
  *
@@ -67,14 +56,11 @@ export class LegalPositionRelatorAdmissionError extends S.TaggedError<LegalPosit
   $I`LegalPositionRelatorAdmissionError`
 )(
   "LegalPositionRelatorAdmissionError",
-  LegalPositionRelatorAdmissionErrorFields,
-  $I.annoteClass<
-    S.declare<LegalPositionRelatorAdmissionError>,
-    readonly [S.TaggedStruct<"LegalPositionRelatorAdmissionError", typeof LegalPositionRelatorAdmissionErrorFields>]
-  >("LegalPositionRelatorAdmissionError", {
+  {
+    message: S.String,
+  },
+  $I.annoteError<LegalPositionRelatorAdmissionError>("LegalPositionRelatorAdmissionError", {
     description: "Failure raised when a candidate record is not admissible as a stored legal position relation.",
-
-    toEquivalence: () => sameLegalPositionRelatorAdmissionError,
   })
 ) {
   /**

@@ -189,14 +189,6 @@ class BoxErrorOptionsInput extends S.Class<BoxErrorOptionsInput>($I`BoxErrorOpti
   })
 ) {}
 
-const BoxErrorFields = {
-  ...BoxErrorContextFields,
-  reason: BoxErrorReason,
-  sdkVersion: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(BOX_SDK_VERSION)),
-} satisfies S.Struct.Fields;
-const sameBoxErrorFields = S.toEquivalence(S.TaggedStruct("BoxError", BoxErrorFields));
-const sameBoxError = (self: BoxError, that: BoxError): boolean => sameBoxErrorFields(self, that);
-
 /**
  * Technical failure raised by the Box driver boundary.
  *
@@ -214,10 +206,13 @@ const sameBoxError = (self: BoxError, that: BoxError): boolean => sameBoxErrorFi
  */
 export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
   "BoxError",
-  BoxErrorFields,
-  $I.annoteClass<S.declare<BoxError>, readonly [S.TaggedStruct<"BoxError", typeof BoxErrorFields>]>("BoxError", {
+  {
+    ...BoxErrorContextFields,
+    reason: BoxErrorReason,
+    sdkVersion: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(BOX_SDK_VERSION)),
+  },
+  $I.annoteError<BoxError>("BoxError", {
     description: "Sanitized technical failure raised by the Box driver boundary.",
-    toEquivalence: () => sameBoxError,
   })
 ) {
   /**

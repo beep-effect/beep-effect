@@ -12,17 +12,6 @@ import { WorkItemId, WorkItemStatus } from "./WorkItem.values.ts";
 
 const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.errors");
 
-const WorkItemAlreadyArchivedFields = {
-  workItemId: WorkItemId.annotateKey({
-    description: "WorkItem aggregate id that is already archived.",
-  }),
-} satisfies S.Struct.Fields;
-const sameWorkItemAlreadyArchivedFields = S.toEquivalence(
-  S.TaggedStruct("WorkItemAlreadyArchived", WorkItemAlreadyArchivedFields)
-);
-const sameWorkItemAlreadyArchived = (self: WorkItemAlreadyArchived, that: WorkItemAlreadyArchived): boolean =>
-  sameWorkItemAlreadyArchivedFields(self, that);
-
 /**
  * Failure raised when a command attempts to mutate an archived WorkItem.
  *
@@ -46,33 +35,16 @@ const sameWorkItemAlreadyArchived = (self: WorkItemAlreadyArchived, that: WorkIt
  */
 export class WorkItemAlreadyArchived extends S.TaggedError<WorkItemAlreadyArchived>($I`WorkItemAlreadyArchived`)(
   "WorkItemAlreadyArchived",
-  WorkItemAlreadyArchivedFields,
-  $I.annoteClass<
-    S.declare<WorkItemAlreadyArchived>,
-    readonly [S.TaggedStruct<"WorkItemAlreadyArchived", typeof WorkItemAlreadyArchivedFields>]
-  >("WorkItemAlreadyArchived", {
+  {
+    workItemId: WorkItemId.annotateKey({
+      description: "WorkItem aggregate id that is already archived.",
+    }),
+  },
+  $I.annoteError<WorkItemAlreadyArchived>("WorkItemAlreadyArchived", {
     title: "WorkItem already archived",
     description: "The WorkItem is archived and no further lifecycle transition is allowed.",
-    toEquivalence: () => sameWorkItemAlreadyArchived,
   })
 ) {}
-
-const WorkItemInvalidTransitionFields = {
-  workItemId: WorkItemId.annotateKey({
-    description: "WorkItem aggregate id whose transition was rejected.",
-  }),
-  from: WorkItemStatus.annotateKey({
-    description: "Current WorkItem lifecycle status.",
-  }),
-  to: WorkItemStatus.annotateKey({
-    description: "Requested WorkItem lifecycle status.",
-  }),
-} satisfies S.Struct.Fields;
-const sameWorkItemInvalidTransitionFields = S.toEquivalence(
-  S.TaggedStruct("WorkItemInvalidTransition", WorkItemInvalidTransitionFields)
-);
-const sameWorkItemInvalidTransition = (self: WorkItemInvalidTransition, that: WorkItemInvalidTransition): boolean =>
-  sameWorkItemInvalidTransitionFields(self, that);
 
 /**
  * Failure raised when a command attempts an unsupported lifecycle transition.
@@ -99,14 +71,20 @@ const sameWorkItemInvalidTransition = (self: WorkItemInvalidTransition, that: Wo
  */
 export class WorkItemInvalidTransition extends S.TaggedError<WorkItemInvalidTransition>($I`WorkItemInvalidTransition`)(
   "WorkItemInvalidTransition",
-  WorkItemInvalidTransitionFields,
-  $I.annoteClass<
-    S.declare<WorkItemInvalidTransition>,
-    readonly [S.TaggedStruct<"WorkItemInvalidTransition", typeof WorkItemInvalidTransitionFields>]
-  >("WorkItemInvalidTransition", {
+  {
+    workItemId: WorkItemId.annotateKey({
+      description: "WorkItem aggregate id whose transition was rejected.",
+    }),
+    from: WorkItemStatus.annotateKey({
+      description: "Current WorkItem lifecycle status.",
+    }),
+    to: WorkItemStatus.annotateKey({
+      description: "Requested WorkItem lifecycle status.",
+    }),
+  },
+  $I.annoteError<WorkItemInvalidTransition>("WorkItemInvalidTransition", {
     title: "WorkItem invalid transition",
     description: "The requested lifecycle transition is not valid for the current WorkItem state.",
-    toEquivalence: () => sameWorkItemInvalidTransition,
   })
 ) {
   /**
@@ -141,17 +119,6 @@ export class WorkItemInvalidTransition extends S.TaggedError<WorkItemInvalidTran
   }
 }
 
-const WorkItemAssigneeRequiredFields = {
-  workItemId: WorkItemId.annotateKey({
-    description: "WorkItem aggregate id that requires an assignee.",
-  }),
-} satisfies S.Struct.Fields;
-const sameWorkItemAssigneeRequiredFields = S.toEquivalence(
-  S.TaggedStruct("WorkItemAssigneeRequired", WorkItemAssigneeRequiredFields)
-);
-const sameWorkItemAssigneeRequired = (self: WorkItemAssigneeRequired, that: WorkItemAssigneeRequired): boolean =>
-  sameWorkItemAssigneeRequiredFields(self, that);
-
 /**
  * Failure raised when an assignment command omits a valid assignee.
  *
@@ -175,14 +142,14 @@ const sameWorkItemAssigneeRequired = (self: WorkItemAssigneeRequired, that: Work
  */
 export class WorkItemAssigneeRequired extends S.TaggedError<WorkItemAssigneeRequired>($I`WorkItemAssigneeRequired`)(
   "WorkItemAssigneeRequired",
-  WorkItemAssigneeRequiredFields,
-  $I.annoteClass<
-    S.declare<WorkItemAssigneeRequired>,
-    readonly [S.TaggedStruct<"WorkItemAssigneeRequired", typeof WorkItemAssigneeRequiredFields>]
-  >("WorkItemAssigneeRequired", {
+  {
+    workItemId: WorkItemId.annotateKey({
+      description: "WorkItem aggregate id that requires an assignee.",
+    }),
+  },
+  $I.annoteError<WorkItemAssigneeRequired>("WorkItemAssigneeRequired", {
     title: "WorkItem assignee required",
     description: "Assigning a WorkItem requires a valid Worker identity.",
-    toEquivalence: () => sameWorkItemAssigneeRequired,
   })
 ) {}
 

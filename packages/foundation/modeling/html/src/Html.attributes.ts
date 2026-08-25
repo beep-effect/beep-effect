@@ -30,22 +30,12 @@ import { toAsciiLowerCase } from "./internal/Html.ascii.ts";
 import { readonlyStruct } from "./internal/Html.readonly.ts";
 
 const $I = $HtmlId.create("Html.attributes");
-const HtmlAttributeDomainErrorFields = { message: S.String } satisfies S.Struct.Fields;
-const sameHtmlAttributeDomainErrorFields = S.toEquivalence(
-  S.TaggedStruct("HtmlAttributeDomainError", HtmlAttributeDomainErrorFields)
-);
-const sameHtmlAttributeDomainError = (self: HtmlAttributeDomainError, that: HtmlAttributeDomainError): boolean =>
-  sameHtmlAttributeDomainErrorFields(self, that);
 
 class HtmlAttributeDomainError extends S.TaggedError<HtmlAttributeDomainError>($I`HtmlAttributeDomainError`)(
   "HtmlAttributeDomainError",
-  HtmlAttributeDomainErrorFields,
-  $I.annoteClass<
-    S.declare<HtmlAttributeDomainError>,
-    readonly [S.TaggedStruct<"HtmlAttributeDomainError", typeof HtmlAttributeDomainErrorFields>]
-  >("HtmlAttributeDomainError", {
+  { message: S.String },
+  $I.annoteError<HtmlAttributeDomainError>("HtmlAttributeDomainError", {
     description: "Invalid fixed registry supplied to an HTML attribute schema factory.",
-    toEquivalence: () => sameHtmlAttributeDomainError,
   })
 ) {}
 

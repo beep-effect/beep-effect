@@ -19,7 +19,7 @@ import {
   PhoenixPromptChatMessage,
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
-import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
@@ -37,20 +37,6 @@ import type {
 } from "@beep/phoenix";
 
 const $I = $RepoAiMetricsId.create("agent-effectiveness");
-
-const AgentEffectivenessErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAgentEffectivenessErrorFields = S.toEquivalence(
-  S.TaggedStruct("AgentEffectivenessError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: AgentEffectivenessErrorFields.message,
-  })
-);
-const sameAgentEffectivenessError = (self: AgentEffectivenessError, that: AgentEffectivenessError): boolean =>
-  sameAgentEffectivenessErrorFields(self, that);
-
 const defaultPhoenixBaseUrl = "https://dankserver.tailc7c348.ts.net:8447";
 /**
  * Stable default pointer used to locate the latest checked-in JSDoc worker-eval evidence.
@@ -267,13 +253,12 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
  */
 export class AgentEffectivenessError extends S.TaggedError<AgentEffectivenessError>($I`AgentEffectivenessError`)(
   "AgentEffectivenessError",
-  AgentEffectivenessErrorFields,
-  $I.annoteClass<
-    S.declare<AgentEffectivenessError>,
-    readonly [S.TaggedStruct<"AgentEffectivenessError", typeof AgentEffectivenessErrorFields>]
-  >("AgentEffectivenessError", {
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annoteError<AgentEffectivenessError>("AgentEffectivenessError", {
     description: "Typed failure raised while encoding or decoding agent-effectiveness reports.",
-    toEquivalence: () => sameAgentEffectivenessError,
   })
 ) {}
 

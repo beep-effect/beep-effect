@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import { dual } from "effect/Function";
@@ -15,30 +16,12 @@ const $I = $RepoCliId.create("commands/Files/Files.errors");
 
 class PlatformErrorOptions extends S.Class<PlatformErrorOptions>($I`PlatformErrorOptions`)(
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
   $I.annote("PlatformErrorOptions", {
     description: "Options for platform errors, including a cause.",
   })
 ) {}
-
-const FilesCommandErrorFields = {
-  message: S.String,
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
-  exitCode: S.optionalKey(S.Literals([1, 2])).annotateKey({
-    description:
-      "Process exit-code hint per the file-processing SPEC: 2 for configuration/engine-discovery failures, 1 (default) otherwise.",
-  }),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameFilesCommandErrorFields = S.toEquivalence(
-  S.TaggedStruct("FilesCommandError", {
-    message: FilesCommandErrorFields.message,
-    exitCode: FilesCommandErrorFields.exitCode,
-  })
-);
-const sameFilesCommandError = (self: FilesCommandError, that: FilesCommandError): boolean =>
-  sameFilesCommandErrorFields(self, that);
 
 /**
  * Error raised by file curation commands.
@@ -57,13 +40,16 @@ const sameFilesCommandError = (self: FilesCommandError, that: FilesCommandError)
  */
 export class FilesCommandError extends S.TaggedError<FilesCommandError>($I`FilesCommandError`)(
   "FilesCommandError",
-  FilesCommandErrorFields,
-  $I.annoteClass<
-    S.declare<FilesCommandError>,
-    readonly [S.TaggedStruct<"FilesCommandError", typeof FilesCommandErrorFields>]
-  >("FilesCommandError", {
+  {
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+    exitCode: S.optionalKey(S.Literals([1, 2])).annotateKey({
+      description:
+        "Process exit-code hint per the file-processing SPEC: 2 for configuration/engine-discovery failures, 1 (default) otherwise.",
+    }),
+  },
+  $I.annoteError<FilesCommandError>("FilesCommandError", {
     description: "A failure raised while preparing or applying a file curation operation.",
-    toEquivalence: () => sameFilesCommandError,
   })
 ) {
   /** Process exit code reported when this error reaches the runtime boundary. */

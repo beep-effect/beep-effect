@@ -4,27 +4,18 @@
  * Effect v4 `@beep/nlp` implementation notes:
  * each `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped
  * by a `$NlpProcessingId` composer, `unknown` cause fields become
- * `S.Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
+ * `Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
  *
  * @since 0.0.0
  * @packageDocumentation
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { NodeId } from "../EffectGraph.ts";
 
 const $I = $NlpProcessingId.create("Graph/GraphOperations/Errors");
-
-const ValidationErrorFields = {
-  errors: S.Array(S.String),
-  nodeId: NodeId,
-  operationName: S.String,
-} satisfies S.Struct.Fields;
-const sameValidationErrorFields = S.toEquivalence(S.TaggedStruct("ValidationError", ValidationErrorFields));
-const sameValidationError = (self: ValidationError, that: ValidationError): boolean =>
-  sameValidationErrorFields(self, that);
 
 /**
  * Failure raised when validation rejects an operation for a source node.
@@ -49,24 +40,15 @@ const sameValidationError = (self: ValidationError, that: ValidationError): bool
  */
 export class ValidationError extends S.TaggedError<ValidationError>($I`ValidationError`)(
   "ValidationError",
-  ValidationErrorFields,
-  $I.annoteClass<
-    S.declare<ValidationError>,
-    readonly [S.TaggedStruct<"ValidationError", typeof ValidationErrorFields>]
-  >("ValidationError", {
+  {
+    errors: S.Array(S.String),
+    nodeId: NodeId,
+    operationName: S.String,
+  },
+  $I.annoteError<ValidationError>("ValidationError", {
     description: "Raised when a graph operation cannot validly be applied to a node.",
-
-    toEquivalence: () => sameValidationError,
   })
 ) {}
-
-const TimeoutErrorFields = {
-  nodeId: NodeId,
-  operationName: S.String,
-  timeoutMs: S.Finite,
-} satisfies S.Struct.Fields;
-const sameTimeoutErrorFields = S.toEquivalence(S.TaggedStruct("TimeoutError", TimeoutErrorFields));
-const sameTimeoutError = (self: TimeoutError, that: TimeoutError): boolean => sameTimeoutErrorFields(self, that);
 
 /**
  * Failure raised when an operation exceeds its configured timeout.
@@ -91,30 +73,15 @@ const sameTimeoutError = (self: TimeoutError, that: TimeoutError): boolean => sa
  */
 export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
   "TimeoutError",
-  TimeoutErrorFields,
-  $I.annoteClass<S.declare<TimeoutError>, readonly [S.TaggedStruct<"TimeoutError", typeof TimeoutErrorFields>]>(
-    "TimeoutError",
-    {
-      description: "Raised when a graph operation exceeds its configured time limit.",
-
-      toEquivalence: () => sameTimeoutError,
-    }
-  )
+  {
+    nodeId: NodeId,
+    operationName: S.String,
+    timeoutMs: S.Finite,
+  },
+  $I.annoteError<TimeoutError>("TimeoutError", {
+    description: "Raised when a graph operation exceeds its configured time limit.",
+  })
 ) {}
-
-const OperationErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  nodeId: NodeId,
-  operationName: S.String,
-} satisfies S.Struct.Fields;
-const OperationErrorEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  nodeId: OperationErrorFields.nodeId,
-  operationName: OperationErrorFields.operationName,
-} satisfies S.Struct.Fields;
-const sameOperationErrorFields = S.toEquivalence(S.TaggedStruct("OperationError", OperationErrorEquivalenceFields));
-const sameOperationError = (self: OperationError, that: OperationError): boolean =>
-  sameOperationErrorFields(self, that);
 
 /**
  * Failure raised when a node-level operation application defects.
@@ -145,23 +112,15 @@ const sameOperationError = (self: OperationError, that: OperationError): boolean
  */
 export class OperationError extends S.TaggedError<OperationError>($I`OperationError`)(
   "OperationError",
-  OperationErrorFields,
-  $I.annoteClass<S.declare<OperationError>, readonly [S.TaggedStruct<"OperationError", typeof OperationErrorFields>]>(
-    "OperationError",
-    {
-      description: "Raised when a graph operation fails while being applied to a node.",
-
-      toEquivalence: () => sameOperationError,
-    }
-  )
+  {
+    cause: Defect({ includeStack: true }),
+    nodeId: NodeId,
+    operationName: S.String,
+  },
+  $I.annoteError<OperationError>("OperationError", {
+    description: "Raised when a graph operation fails while being applied to a node.",
+  })
 ) {}
-
-const GraphErrorFields = {
-  message: S.String,
-  nodeId: S.OptionFromOptionalKey(NodeId),
-} satisfies S.Struct.Fields;
-const sameGraphErrorFields = S.toEquivalence(S.TaggedStruct("GraphError", GraphErrorFields));
-const sameGraphError = (self: GraphError, that: GraphError): boolean => sameGraphErrorFields(self, that);
 
 /**
  * Failure raised when graph structure is invalid for an operation.
@@ -186,27 +145,14 @@ const sameGraphError = (self: GraphError, that: GraphError): boolean => sameGrap
  */
 export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
   "GraphError",
-  GraphErrorFields,
-  $I.annoteClass<S.declare<GraphError>, readonly [S.TaggedStruct<"GraphError", typeof GraphErrorFields>]>(
-    "GraphError",
-    {
-      description: "Raised when a graph has an invalid structure for the requested operation.",
-
-      toEquivalence: () => sameGraphError,
-    }
-  )
+  {
+    message: S.String,
+    nodeId: S.OptionFromOptionalKey(NodeId),
+  },
+  $I.annoteError<GraphError>("GraphError", {
+    description: "Raised when a graph has an invalid structure for the requested operation.",
+  })
 ) {}
-
-const StorageErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  operation: S.Literals(["store", "retrieve", "delete", "query"]),
-} satisfies S.Struct.Fields;
-const StorageErrorEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  operation: StorageErrorFields.operation,
-} satisfies S.Struct.Fields;
-const sameStorageErrorFields = S.toEquivalence(S.TaggedStruct("StorageError", StorageErrorEquivalenceFields));
-const sameStorageError = (self: StorageError, that: StorageError): boolean => sameStorageErrorFields(self, that);
 
 /**
  * Failure raised by a result-store backend.
@@ -234,28 +180,14 @@ const sameStorageError = (self: StorageError, that: StorageError): boolean => sa
  */
 export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
   "StorageError",
-  StorageErrorFields,
-  $I.annoteClass<S.declare<StorageError>, readonly [S.TaggedStruct<"StorageError", typeof StorageErrorFields>]>(
-    "StorageError",
-    {
-      description: "Raised when the result store fails to store, retrieve, delete, or query a result.",
-
-      toEquivalence: () => sameStorageError,
-    }
-  )
+  {
+    cause: Defect({ includeStack: true }),
+    operation: S.Literals(["store", "retrieve", "delete", "query"]),
+  },
+  $I.annoteError<StorageError>("StorageError", {
+    description: "Raised when the result store fails to store, retrieve, delete, or query a result.",
+  })
 ) {}
-
-const ExecutionErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const ExecutionErrorEquivalenceFields = {
-  // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-  message: ExecutionErrorFields.message,
-} satisfies S.Struct.Fields;
-const sameExecutionErrorFields = S.toEquivalence(S.TaggedStruct("ExecutionError", ExecutionErrorEquivalenceFields));
-const sameExecutionError = (self: ExecutionError, that: ExecutionError): boolean =>
-  sameExecutionErrorFields(self, that);
 
 /**
  * Failure raised by the executor for orchestration problems.
@@ -279,15 +211,13 @@ const sameExecutionError = (self: ExecutionError, that: ExecutionError): boolean
  */
 export class ExecutionError extends S.TaggedError<ExecutionError>($I`ExecutionError`)(
   "ExecutionError",
-  ExecutionErrorFields,
-  $I.annoteClass<S.declare<ExecutionError>, readonly [S.TaggedStruct<"ExecutionError", typeof ExecutionErrorFields>]>(
-    "ExecutionError",
-    {
-      description: "Raised on a general graph-operation execution failure (e.g. an unknown strategy).",
-
-      toEquivalence: () => sameExecutionError,
-    }
-  )
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    message: S.String,
+  },
+  $I.annoteError<ExecutionError>("ExecutionError", {
+    description: "Raised on a general graph-operation execution failure (e.g. an unknown strategy).",
+  })
 ) {}
 
 /**

@@ -45,6 +45,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { Defect } from "./Opaque.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("SafeRemoteHost");
@@ -61,38 +62,6 @@ const $I = $SchemaId.create("SafeRemoteHost");
 // resolver must surface a `BlockedHostError` (fail-closed) when resolution
 // fails, so the guard never proceeds on a name it could not evaluate.
 type RemoteHostResolver = (hostname: string) => Effect.Effect<ReadonlyArray<string>, BlockedHostError>;
-
-const BlockedHostErrorFields = {
-  host: S.String.annotateKey({
-    description: "Normalized hostname that was rejected (lowercased, brackets stripped).",
-  }),
-  url: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Originating URL when the guard was invoked on a full URL.",
-    })
-  ),
-  message: S.String.annotateKey({
-    description: "Safe diagnostic message explaining why the host was blocked.",
-  }),
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Underlying parse failure when the URL could not be decoded.",
-    })
-  ),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const BlockedHostErrorComparableFields = {
-  host: BlockedHostErrorFields.host,
-  url: BlockedHostErrorFields.url,
-  message: BlockedHostErrorFields.message,
-} satisfies S.Struct.Fields;
-const sameBlockedHostErrorFields = S.toEquivalence(
-  S.TaggedStruct("BlockedHostError", BlockedHostErrorComparableFields)
-);
-const sameBlockedHostError = (self: BlockedHostError, that: BlockedHostError): boolean =>
-  sameBlockedHostErrorFields(self, that);
 
 /**
  * Typed failure raised when a hostname or URL targets internal network space
@@ -122,13 +91,28 @@ const sameBlockedHostError = (self: BlockedHostError, that: BlockedHostError): b
  */
 export class BlockedHostError extends S.TaggedError<BlockedHostError>($I`BlockedHostError`)(
   "BlockedHostError",
-  BlockedHostErrorFields,
-  $I.annoteClass<
-    S.declare<BlockedHostError>,
-    readonly [S.TaggedStruct<"BlockedHostError", typeof BlockedHostErrorFields>]
-  >("BlockedHostError", {
+  {
+    host: S.String.annotateKey({
+      description: "Normalized hostname that was rejected (lowercased, brackets stripped).",
+    }),
+    url: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Originating URL when the guard was invoked on a full URL.",
+      })
+    ),
+    message: S.String.annotateKey({
+      description: "Safe diagnostic message explaining why the host was blocked.",
+    }),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Underlying parse failure when the URL could not be decoded.",
+      })
+    ),
+  },
+  $I.annoteError<BlockedHostError>("BlockedHostError", {
     description: "Raised when an outbound request targets internal network space or an unparseable URL.",
-    toEquivalence: () => sameBlockedHostError,
   })
 ) {}
 

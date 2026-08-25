@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -34,19 +34,6 @@ import { hashPrivateIdentifier, makeAiMetricsPrivacyCheckResult } from "./privac
 import { shellQuote } from "./shell.ts";
 
 const $I = $RepoAiMetricsId.create("forwarder");
-
-const AiMetricsForwarderErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAiMetricsForwarderErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsForwarderError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: AiMetricsForwarderErrorFields.message,
-  })
-);
-const sameAiMetricsForwarderError = (self: AiMetricsForwarderError, that: AiMetricsForwarderError): boolean =>
-  sameAiMetricsForwarderErrorFields(self, that);
 const DEFAULT_MAX_FILES = 200;
 const absoluteExecutablePathPattern = /^(?:[A-Za-z]:[\\/]|\\\\|\/)/u;
 const isAbsoluteExecutablePath = (value: string): boolean => absoluteExecutablePathPattern.test(value);
@@ -102,13 +89,12 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
  */
 export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderError>($I`AiMetricsForwarderError`)(
   "AiMetricsForwarderError",
-  AiMetricsForwarderErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsForwarderError>,
-    readonly [S.TaggedStruct<"AiMetricsForwarderError", typeof AiMetricsForwarderErrorFields>]
-  >("AiMetricsForwarderError", {
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annoteError<AiMetricsForwarderError>("AiMetricsForwarderError", {
     description: "Typed failure raised by the durable AI metrics forwarder.",
-    toEquivalence: () => sameAiMetricsForwarderError,
   })
 ) {}
 

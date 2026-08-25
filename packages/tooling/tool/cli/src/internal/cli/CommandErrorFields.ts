@@ -17,6 +17,7 @@
  * @since 0.0.0
  */
 
+import { Defect } from "@beep/schema";
 import { Console, Effect, Inspectable } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -68,7 +69,7 @@ export const commandErrorFields = {
   message: S.String,
   command: S.optionalKey(S.String),
   exitCode: S.optionalKey(S.Finite),
-  cause: S.optionalKey(S.Defect({ includeStack: true })),
+  cause: S.optionalKey(Defect({ includeStack: true })),
 } satisfies S.Struct.Fields;
 
 /**

@@ -63,26 +63,6 @@ export const IrToLawExtractionErrorReason = LiteralKit([
  */
 export type IrToLawExtractionErrorReason = typeof IrToLawExtractionErrorReason.Type;
 
-const IrToLawExtractionErrorFields = {
-  alignmentStatus: S.OptionFromOptionalKey(AlignmentStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Optional LangExtract alignment status copied from the rejected extraction.",
-  }),
-  label: S.NonEmptyString.annotateKey({
-    description: "Required extraction label that failed validation.",
-  }),
-  message: S.NonEmptyString.annotateKey({
-    description: "Sanitized diagnostic for the failed IR-to-law extraction boundary.",
-  }),
-  reason: IrToLawExtractionErrorReason.annotateKey({
-    description: "Machine-readable reason for rejecting the extraction output.",
-  }),
-} satisfies S.Struct.Fields;
-const sameIrToLawExtractionErrorFields = S.toEquivalence(
-  S.TaggedStruct("IrToLawExtractionError", IrToLawExtractionErrorFields)
-);
-const sameIrToLawExtractionError = (self: IrToLawExtractionError, that: IrToLawExtractionError): boolean =>
-  sameIrToLawExtractionErrorFields(self, that);
-
 /**
  * Failure raised when required office-action extraction output is missing or
  * lacks a source-grounded span needed for legal evidence.
@@ -110,14 +90,22 @@ const sameIrToLawExtractionError = (self: IrToLawExtractionError, that: IrToLawE
  */
 export class IrToLawExtractionError extends S.TaggedError<IrToLawExtractionError>($I`IrToLawExtractionError`)(
   "IrToLawExtractionError",
-  IrToLawExtractionErrorFields,
-  $I.annoteClass<
-    S.declare<IrToLawExtractionError>,
-    readonly [S.TaggedStruct<"IrToLawExtractionError", typeof IrToLawExtractionErrorFields>]
-  >("IrToLawExtractionError", {
+  {
+    alignmentStatus: S.OptionFromOptionalKey(AlignmentStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional LangExtract alignment status copied from the rejected extraction.",
+    }),
+    label: S.NonEmptyString.annotateKey({
+      description: "Required extraction label that failed validation.",
+    }),
+    message: S.NonEmptyString.annotateKey({
+      description: "Sanitized diagnostic for the failed IR-to-law extraction boundary.",
+    }),
+    reason: IrToLawExtractionErrorReason.annotateKey({
+      description: "Machine-readable reason for rejecting the extraction output.",
+    }),
+  },
+  $I.annoteError<IrToLawExtractionError>("IrToLawExtractionError", {
     description: "Sanitized failure emitted when office-action extraction output cannot be grounded.",
-
-    toEquivalence: () => sameIrToLawExtractionError,
   })
 ) {
   /**

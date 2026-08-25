@@ -692,21 +692,6 @@ export const OntologyAssemblyErrorReason = LiteralKit([
  */
 export type OntologyAssemblyErrorReason = typeof OntologyAssemblyErrorReason.Type;
 
-const OntologyAssemblyErrorFields = {
-  reason: OntologyAssemblyErrorReason,
-  message: S.NonEmptyString,
-  term: S.OptionFromOptionalKey(S.NonEmptyString),
-  field: S.OptionFromOptionalKey(S.NonEmptyString),
-  identifier: S.OptionFromOptionalKey(S.NonEmptyString),
-  subjectIri: S.OptionFromOptionalKey(IRI),
-  objectIri: S.OptionFromOptionalKey(IRI),
-} satisfies S.Struct.Fields;
-const sameOntologyAssemblyErrorFields = S.toEquivalence(
-  S.TaggedStruct("OntologyAssemblyError", OntologyAssemblyErrorFields)
-);
-const sameOntologyAssemblyError = (self: OntologyAssemblyError, that: OntologyAssemblyError): boolean =>
-  sameOntologyAssemblyErrorFields(self, that);
-
 /**
  * Typed assembly failure raised by the ontology fold's gate.
  *
@@ -732,14 +717,17 @@ const sameOntologyAssemblyError = (self: OntologyAssemblyError, that: OntologyAs
  */
 export class OntologyAssemblyError extends S.TaggedError<OntologyAssemblyError>($I`OntologyAssemblyError`)(
   "OntologyAssemblyError",
-  OntologyAssemblyErrorFields,
-  $I.annoteClass<
-    S.declare<OntologyAssemblyError>,
-    readonly [S.TaggedStruct<"OntologyAssemblyError", typeof OntologyAssemblyErrorFields>]
-  >("OntologyAssemblyError", {
+  {
+    reason: OntologyAssemblyErrorReason,
+    message: S.NonEmptyString,
+    term: S.OptionFromOptionalKey(S.NonEmptyString),
+    field: S.OptionFromOptionalKey(S.NonEmptyString),
+    identifier: S.OptionFromOptionalKey(S.NonEmptyString),
+    subjectIri: S.OptionFromOptionalKey(IRI),
+    objectIri: S.OptionFromOptionalKey(IRI),
+  },
+  $I.annoteError<OntologyAssemblyError>("OntologyAssemblyError", {
     description: "Typed diagnostics-ledger failure for the ontology fold.",
-
-    toEquivalence: () => sameOntologyAssemblyError,
   })
 ) {}
 

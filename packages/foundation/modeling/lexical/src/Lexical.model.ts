@@ -18,7 +18,7 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, Result, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
@@ -3042,20 +3042,6 @@ export const EditorStateWireFromJson = S.fromJsonString(SerializedEditorStateWir
   })
 );
 
-const LexicalDecodeErrorFields = {
-  message: S.String,
-  cause: S.Defect({ includeStack: true }),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const LexicalDecodeErrorComparableFields = {
-  message: LexicalDecodeErrorFields.message,
-} satisfies S.Struct.Fields;
-const sameLexicalDecodeErrorFields = S.toEquivalence(
-  S.TaggedStruct("LexicalDecodeError", LexicalDecodeErrorComparableFields)
-);
-const sameLexicalDecodeError = (self: LexicalDecodeError, that: LexicalDecodeError): boolean =>
-  sameLexicalDecodeErrorFields(self, that);
-
 /**
  * Typed failure raised by strict or lossless editor-state decoding.
  *
@@ -3076,13 +3062,12 @@ const sameLexicalDecodeError = (self: LexicalDecodeError, that: LexicalDecodeErr
  */
 export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`LexicalDecodeError`)(
   "LexicalDecodeError",
-  LexicalDecodeErrorFields,
-  $I.annoteClass<
-    S.declare<LexicalDecodeError>,
-    readonly [S.TaggedStruct<"LexicalDecodeError", typeof LexicalDecodeErrorFields>]
-  >("LexicalDecodeError", {
+  {
+    message: S.String,
+    cause: Defect({ includeStack: true }),
+  },
+  $I.annoteError<LexicalDecodeError>("LexicalDecodeError", {
     description: "Typed failure raised when a Lexical semantic or wire payload cannot be decoded.",
-    toEquivalence: () => sameLexicalDecodeError,
   })
 ) {}
 

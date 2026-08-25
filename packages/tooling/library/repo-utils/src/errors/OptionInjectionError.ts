@@ -16,16 +16,6 @@ import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("errors/OptionInjectionError");
 
-const OptionInjectionErrorFields = {
-  message: S.String,
-  value: S.String,
-} satisfies S.Struct.Fields;
-const sameOptionInjectionErrorFields = S.toEquivalence(
-  S.TaggedStruct("OptionInjectionError", OptionInjectionErrorFields)
-);
-const sameOptionInjectionError = (self: OptionInjectionError, that: OptionInjectionError): boolean =>
-  sameOptionInjectionErrorFields(self, that);
-
 /**
  * Raised when a guarded child-process argument value is option-like (for
  * example begins with `-`) and would be reinterpreted as a flag by the spawned
@@ -47,14 +37,13 @@ const sameOptionInjectionError = (self: OptionInjectionError, that: OptionInject
  */
 export class OptionInjectionError extends S.TaggedError<OptionInjectionError>($I`OptionInjectionError`)(
   "OptionInjectionError",
-  OptionInjectionErrorFields,
-  $I.annoteClass<
-    S.declare<OptionInjectionError>,
-    readonly [S.TaggedStruct<"OptionInjectionError", typeof OptionInjectionErrorFields>]
-  >("OptionInjectionError", {
+  {
+    message: S.String,
+    value: S.String,
+  },
+  $I.annoteError<OptionInjectionError>("OptionInjectionError", {
     title: "Option Injection Error",
     description:
       "Raised when a data-derived child-process argument is shaped like a\ncommand-line option and would be reinterpreted as a flag by the spawned\nprocess instead of being treated as a literal positional argument.",
-    toEquivalence: () => sameOptionInjectionError,
   })
 ) {}

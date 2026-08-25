@@ -11,13 +11,6 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.errors");
 
-const ProviderInstanceNotFoundFields = { providerInstanceId: Agents.ProviderInstanceId } satisfies S.Struct.Fields;
-const sameProviderInstanceNotFoundFields = S.toEquivalence(
-  S.TaggedStruct("ProviderInstanceNotFound", ProviderInstanceNotFoundFields)
-);
-const sameProviderInstanceNotFound = (self: ProviderInstanceNotFound, that: ProviderInstanceNotFound): boolean =>
-  sameProviderInstanceNotFoundFields(self, that);
-
 /**
  *  Requested provider instance does not exist.
  *
@@ -34,25 +27,11 @@ const sameProviderInstanceNotFound = (self: ProviderInstanceNotFound, that: Prov
  */
 export class ProviderInstanceNotFound extends S.TaggedError<ProviderInstanceNotFound>($I`ProviderInstanceNotFound`)(
   "ProviderInstanceNotFound",
-  ProviderInstanceNotFoundFields,
-  $I.annoteClass<
-    S.declare<ProviderInstanceNotFound>,
-    readonly [S.TaggedStruct<"ProviderInstanceNotFound", typeof ProviderInstanceNotFoundFields>]
-  >("ProviderInstanceNotFound", {
+  { providerInstanceId: Agents.ProviderInstanceId },
+  $I.annoteError<ProviderInstanceNotFound>("ProviderInstanceNotFound", {
     description: "The requested provider instance does not exist.",
-    toEquivalence: () => sameProviderInstanceNotFound,
   })
 ) {}
-
-const ProviderUnauthenticatedFields = {
-  providerInstanceId: Agents.ProviderInstanceId,
-  guidance: S.NonEmptyString,
-} satisfies S.Struct.Fields;
-const sameProviderUnauthenticatedFields = S.toEquivalence(
-  S.TaggedStruct("ProviderUnauthenticated", ProviderUnauthenticatedFields)
-);
-const sameProviderUnauthenticated = (self: ProviderUnauthenticated, that: ProviderUnauthenticated): boolean =>
-  sameProviderUnauthenticatedFields(self, that);
 
 /**
  *  Provider CLI is logged out and requires the supplied domain guidance.
@@ -71,22 +50,14 @@ const sameProviderUnauthenticated = (self: ProviderUnauthenticated, that: Provid
  */
 export class ProviderUnauthenticated extends S.TaggedError<ProviderUnauthenticated>($I`ProviderUnauthenticated`)(
   "ProviderUnauthenticated",
-  ProviderUnauthenticatedFields,
-  $I.annoteClass<
-    S.declare<ProviderUnauthenticated>,
-    readonly [S.TaggedStruct<"ProviderUnauthenticated", typeof ProviderUnauthenticatedFields>]
-  >("ProviderUnauthenticated", {
+  {
+    providerInstanceId: Agents.ProviderInstanceId,
+    guidance: S.NonEmptyString,
+  },
+  $I.annoteError<ProviderUnauthenticated>("ProviderUnauthenticated", {
     description: "The provider CLI is unauthenticated and requires login.",
-    toEquivalence: () => sameProviderUnauthenticated,
   })
 ) {}
-
-const ProviderProbeUnavailableFields = { guidance: S.NonEmptyString } satisfies S.Struct.Fields;
-const sameProviderProbeUnavailableFields = S.toEquivalence(
-  S.TaggedStruct("ProviderProbeUnavailable", ProviderProbeUnavailableFields)
-);
-const sameProviderProbeUnavailable = (self: ProviderProbeUnavailable, that: ProviderProbeUnavailable): boolean =>
-  sameProviderProbeUnavailableFields(self, that);
 
 /**
  *  Provider probing or persistence is temporarily unavailable.
@@ -104,14 +75,9 @@ const sameProviderProbeUnavailable = (self: ProviderProbeUnavailable, that: Prov
  */
 export class ProviderProbeUnavailable extends S.TaggedError<ProviderProbeUnavailable>($I`ProviderProbeUnavailable`)(
   "ProviderProbeUnavailable",
-  ProviderProbeUnavailableFields,
-  $I.annoteClass<
-    S.declare<ProviderProbeUnavailable>,
-    readonly [S.TaggedStruct<"ProviderProbeUnavailable", typeof ProviderProbeUnavailableFields>]
-  >("ProviderProbeUnavailable", {
+  { guidance: S.NonEmptyString },
+  $I.annoteError<ProviderProbeUnavailable>("ProviderProbeUnavailable", {
     description: "The provider probe or its persistence boundary is unavailable.",
-
-    toEquivalence: () => sameProviderProbeUnavailable,
   })
 ) {}
 

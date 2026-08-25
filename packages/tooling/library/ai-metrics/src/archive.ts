@@ -6,6 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Clock, Effect, Encoding, FileSystem, Path, Redacted, Result } from "effect";
 import * as S from "effect/Schema";
@@ -13,19 +14,6 @@ import { AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("archive");
-
-const AiMetricsArchiveErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-} satisfies S.Struct.Fields;
-const sameAiMetricsArchiveErrorFields = S.toEquivalence(
-  S.TaggedStruct("AiMetricsArchiveError", {
-    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-    message: AiMetricsArchiveErrorFields.message,
-  })
-);
-const sameAiMetricsArchiveError = (self: AiMetricsArchiveError, that: AiMetricsArchiveError): boolean =>
-  sameAiMetricsArchiveErrorFields(self, that);
 const AES_GCM_KEY_BYTES = 32;
 const AES_GCM_NONCE_BYTES = 12;
 
@@ -48,13 +36,12 @@ const AES_GCM_NONCE_BYTES = 12;
  */
 export class AiMetricsArchiveError extends S.TaggedError<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
   "AiMetricsArchiveError",
-  AiMetricsArchiveErrorFields,
-  $I.annoteClass<
-    S.declare<AiMetricsArchiveError>,
-    readonly [S.TaggedStruct<"AiMetricsArchiveError", typeof AiMetricsArchiveErrorFields>]
-  >("AiMetricsArchiveError", {
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+  },
+  $I.annoteError<AiMetricsArchiveError>("AiMetricsArchiveError", {
     description: "Typed failure raised while encrypting or reading AI metrics raw archive objects.",
-    toEquivalence: () => sameAiMetricsArchiveError,
   })
 ) {}
 

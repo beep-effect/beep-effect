@@ -276,13 +276,6 @@ export class RedactedCause extends S.Class<RedactedCause>($I`RedactedCause`)(
   })
 ) {}
 
-const RedactedCauseErrorFields = {
-  redacted: RedactedCause,
-} satisfies S.Struct.Fields;
-const sameRedactedCauseErrorFields = S.toEquivalence(S.TaggedStruct("RedactedCauseError", RedactedCauseErrorFields));
-const sameRedactedCauseError = (self: RedactedCauseError, that: RedactedCauseError): boolean =>
-  sameRedactedCauseErrorFields(self, that);
-
 /**
  * Options controlling how a cause is redacted.
  *
@@ -484,13 +477,11 @@ export const redactCauseForClient = (input: unknown): RedactedCause =>
  */
 export class RedactedCauseError extends S.TaggedError<RedactedCauseError>($I`RedactedCauseError`)(
   "RedactedCauseError",
-  RedactedCauseErrorFields,
-  $I.annoteClass<
-    S.declare<RedactedCauseError>,
-    readonly [S.TaggedStruct<"RedactedCauseError", typeof RedactedCauseErrorFields>]
-  >("RedactedCauseError", {
+  {
+    redacted: RedactedCause,
+  },
+  $I.annoteError<RedactedCauseError>("RedactedCauseError", {
     description: "Boundary failure carrying only a sanitized, bounded representation of the originating cause.",
-    toEquivalence: () => sameRedactedCauseError,
   })
 ) {}
 

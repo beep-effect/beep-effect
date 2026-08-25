@@ -18,6 +18,11 @@ describe("FaceDetectionError declared-field equivalence", () => {
       operation: "detect",
     });
     const c = FaceDetectionError.make({
+      cause: O.some(new Error("model failed")),
+      message: "other failure",
+      operation: "detect",
+    });
+    const d = FaceDetectionError.make({
       cause: O.some(new Error("other failure")),
       message: "detection failed",
       operation: "detect",
@@ -25,5 +30,7 @@ describe("FaceDetectionError declared-field equivalence", () => {
 
     expect(sameFaceDetectionError(a, b)).toBe(true);
     expect(sameFaceDetectionError(a, c)).toBe(false);
+    // the defect cause is payload, never identity
+    expect(sameFaceDetectionError(a, d)).toBe(true);
   });
 });
