@@ -4738,10 +4738,7 @@ export const SetSessionConfigOptionRequest = S.Union([
     sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
       description: "The ID of the session to set the configuration option for.",
     }),
-  }).annotateKey({
-    description:
-      "Request parameters for setting a session configuration option.",
-  }),
+  }).annotateKey({ description: 'A boolean value (`type: "boolean"`).' }),
   S.Struct({
     value: S.suspend(
       (): S.Codec<SessionConfigValueId> => SessionConfigValueId,
@@ -4769,11 +4766,13 @@ export const SetSessionConfigOptionRequest = S.Union([
   }).annotateKey({
     title: "value_id",
     description:
-      "Request parameters for setting a session configuration option.",
+      "A [`SessionConfigValueId`] string value.\n\nThis is the default when `type` is absent on the wire. Unknown `type`\nvalues with string payloads also gracefully deserialize into this\nvariant.",
   }),
 ]).pipe(
   $I.annoteSchema("SetSessionConfigOptionRequest", {
     description: "Generated ACP schema for SetSessionConfigOptionRequest.",
+    documentation:
+      "Request parameters for setting a session configuration option.",
     identifier: "SetSessionConfigOptionRequest",
   }),
   SchemaUtils.withCodecStatics,
@@ -4940,7 +4939,6 @@ export const RequestPermissionOutcome = S.Union(
         "The prompt turn was cancelled before the user responded.\n\nWhen a client sends a `session/cancel` notification to cancel an ongoing\nprompt turn, it MUST respond to all pending `session/request_permission`\nrequests with this `Cancelled` outcome.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
     }),
     S.Struct({
-      outcome: S.Literal("selected"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -4956,6 +4954,7 @@ export const RequestPermissionOutcome = S.Union(
       optionId: S.suspend(
         (): S.Codec<PermissionOptionId> => PermissionOptionId,
       ).annotateKey({ description: "The ID of the option the user selected." }),
+      outcome: S.Literal("selected"),
     }).annotateKey({
       description: "The user selected one of the provided options.",
     }),
@@ -5246,7 +5245,6 @@ export type UntitledMultiSelectItems = typeof UntitledMultiSelectItems.Type;
  */
 export const AuthMethod = S.Union([
   S.Struct({
-    type: S.Literal("env_var"),
     _meta: S.optionalKey(
       S.Union([
         S.Record(
@@ -5286,12 +5284,12 @@ export const AuthMethod = S.Union([
     vars: S.Array(AuthEnvVar).annotateKey({
       description: "The environment variables the client should set.",
     }),
+    type: S.Literal("env_var"),
   }).annotateKey({
     description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nEnvironment variable authentication method.\n\nThe user provides credentials that the client passes to the agent as environment variables.",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUser provides a key that the client passes to the agent as an environment variable.",
   }),
   S.Struct({
-    type: S.Literal("terminal"),
     _meta: S.optionalKey(
       S.Union([
         S.Record(
@@ -5331,9 +5329,10 @@ export const AuthMethod = S.Union([
     name: S.String.annotateKey({
       description: "Human-readable name of the authentication method.",
     }),
+    type: S.Literal("terminal"),
   }).annotateKey({
     description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nTerminal-based authentication method.\n\nThe client runs an interactive terminal for the user to authenticate via a TUI.",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nClient runs an interactive terminal for the user to authenticate via a TUI.",
   }),
   S.suspend((): S.Codec<AuthMethodAgent> => AuthMethodAgent).annotateKey({
     title: "agent",
@@ -5762,7 +5761,6 @@ export type TerminalOutputResponse = typeof TerminalOutputResponse.Type;
 export const ElicitationAction = S.Union(
   [
     S.Struct({
-      action: S.Literal("accept"),
       content: S.optionalKey(
         S.Union([
           S.Record(S.String, ElicitationContentValue).annotateKey({
@@ -5772,10 +5770,8 @@ export const ElicitationAction = S.Union(
           S.Null,
         ]),
       ),
-    }).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user accepted the elicitation and provided content.",
-    }),
+      action: S.Literal("accept"),
+    }).annotateKey({ description: "The user accepted and provided content." }),
     S.Struct({ action: S.Literal("decline") }).annotateKey({
       description: "The user declined the elicitation.",
     }),
@@ -5978,7 +5974,6 @@ export type ListSessionsResponse = typeof ListSessionsResponse.Type;
 export const ContentBlock = S.Union(
   [
     S.Struct({
-      type: S.Literal("text"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -5993,9 +5988,12 @@ export const ContentBlock = S.Union(
       ),
       annotations: S.optionalKey(S.Union([Annotations, S.Null])),
       text: S.String,
-    }).annotateKey({ description: "Text provided to or from an LLM." }),
+      type: S.Literal("text"),
+    }).annotateKey({
+      description:
+        "Text content. May be plain text or formatted with Markdown.\n\nAll agents MUST support text content blocks in prompts.\nClients SHOULD render this text as Markdown.",
+    }),
     S.Struct({
-      type: S.Literal("image"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -6012,9 +6010,12 @@ export const ContentBlock = S.Union(
       data: S.String,
       mimeType: S.String,
       uri: S.optionalKey(S.Union([S.String, S.Null])),
-    }).annotateKey({ description: "An image provided to or from an LLM." }),
+      type: S.Literal("image"),
+    }).annotateKey({
+      description:
+        "Images for visual context or analysis.\n\nRequires the `image` prompt capability when included in prompts.",
+    }),
     S.Struct({
-      type: S.Literal("audio"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -6030,9 +6031,12 @@ export const ContentBlock = S.Union(
       annotations: S.optionalKey(S.Union([Annotations, S.Null])),
       data: S.String,
       mimeType: S.String,
-    }).annotateKey({ description: "Audio provided to or from an LLM." }),
+      type: S.Literal("audio"),
+    }).annotateKey({
+      description:
+        "Audio data for transcription or analysis.\n\nRequires the `audio` prompt capability when included in prompts.",
+    }),
     S.Struct({
-      type: S.Literal("resource_link"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -6059,12 +6063,12 @@ export const ContentBlock = S.Union(
       ),
       title: S.optionalKey(S.Union([S.String, S.Null])),
       uri: S.String,
+      type: S.Literal("resource_link"),
     }).annotateKey({
       description:
-        "A resource that the server is capable of reading, included in a prompt or tool call result.",
+        "References to resources that the agent can access.\n\nAll agents MUST support resource links in prompts.",
     }),
     S.Struct({
-      type: S.Literal("resource"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -6079,9 +6083,10 @@ export const ContentBlock = S.Union(
       ),
       annotations: S.optionalKey(S.Union([Annotations, S.Null])),
       resource: EmbeddedResourceResource,
+      type: S.Literal("resource"),
     }).annotateKey({
       description:
-        "The contents of a resource, embedded into a prompt or tool call result.",
+        "Complete resource contents embedded directly in the message.\n\nPreferred for including context as it avoids extra round-trips.\n\nRequires the `embeddedContext` prompt capability when included in prompts.",
     }),
   ],
   { mode: "oneOf" },
@@ -6367,30 +6372,32 @@ export type RequestPermissionResponse = typeof RequestPermissionResponse.Type;
  */
 export const McpServer = S.Union([
   S.Struct({
+    _meta: S.optionalKey(
+      S.Union([
+        S.Record(
+          S.String,
+          S.Json.annotate({ expected: "JSON value" }),
+        ).annotateKey({
+          description:
+            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+        S.Null,
+      ]),
+    ),
+    headers: S.Array(HttpHeader).annotateKey({
+      description:
+        "HTTP headers to set when making requests to the MCP server.",
+    }),
+    name: S.String.annotateKey({
+      description: "Human-readable name identifying this MCP server.",
+    }),
+    url: S.String.annotateKey({ description: "URL to the MCP server." }),
     type: S.Literal("http"),
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(
-          S.String,
-          S.Json.annotate({ expected: "JSON value" }),
-        ).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    headers: S.Array(HttpHeader).annotateKey({
-      description:
-        "HTTP headers to set when making requests to the MCP server.",
-    }),
-    name: S.String.annotateKey({
-      description: "Human-readable name identifying this MCP server.",
-    }),
-    url: S.String.annotateKey({ description: "URL to the MCP server." }),
-  }).annotateKey({ description: "HTTP transport configuration for MCP." }),
+  }).annotateKey({
+    description:
+      "HTTP transport configuration\n\nOnly available when the Agent capabilities indicate `mcp_capabilities.http` is `true`.",
+  }),
   S.Struct({
-    type: S.Literal("sse"),
     _meta: S.optionalKey(
       S.Union([
         S.Record(
@@ -6411,7 +6418,11 @@ export const McpServer = S.Union([
       description: "Human-readable name identifying this MCP server.",
     }),
     url: S.String.annotateKey({ description: "URL to the MCP server." }),
-  }).annotateKey({ description: "SSE transport configuration for MCP." }),
+    type: S.Literal("sse"),
+  }).annotateKey({
+    description:
+      "SSE transport configuration\n\nOnly available when the Agent capabilities indicate `mcp_capabilities.sse` is `true`.",
+  }),
   S.suspend((): S.Codec<McpServerStdio> => McpServerStdio).annotateKey({
     title: "stdio",
     description:
@@ -6797,7 +6808,6 @@ export type InitializeResponse = typeof InitializeResponse.Type;
 export const ToolCallContent = S.Union(
   [
     S.Struct({
-      type: S.Literal("content"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -6813,11 +6823,11 @@ export const ToolCallContent = S.Union(
       content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey(
         { description: "The actual content block." },
       ),
+      type: S.Literal("content"),
     }).annotateKey({
       description: "Standard content block (text, images, resources).",
     }),
     S.Struct({
-      type: S.Literal("diff"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -6844,12 +6854,9 @@ export const ToolCallContent = S.Union(
       path: S.String.annotateKey({
         description: "The file path being modified.",
       }),
-    }).annotateKey({
-      description:
-        "A diff representing file modifications.\n\nShows changes to files in a format suitable for display in the client UI.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
-    }),
+      type: S.Literal("diff"),
+    }).annotateKey({ description: "File modification shown as a diff." }),
     S.Struct({
-      type: S.Literal("terminal"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -6863,6 +6870,7 @@ export const ToolCallContent = S.Union(
         ]),
       ),
       terminalId: S.String,
+      type: S.Literal("terminal"),
     }).annotateKey({
       description:
         "Embed a terminal created with `terminal/create` by its id.\n\nThe terminal must be added before calling `terminal/release`.\n\nSee protocol docs: [Terminal](https://agentclientprotocol.com/protocol/terminals)",
@@ -7280,7 +7288,6 @@ export type ResumeSessionRequest = typeof ResumeSessionRequest.Type;
 export const ElicitationPropertySchema = S.Union(
   [
     S.Struct({
-      type: S.Literal("string"),
       default: S.optionalKey(
         S.Union([
           S.String.annotateKey({ description: "Default value." }),
@@ -7360,18 +7367,62 @@ export const ElicitationPropertySchema = S.Union(
           S.Null,
         ]),
       ),
+      type: S.Literal("string"),
     }).annotateKey({
       description:
-        'Schema for string properties in an elicitation form.\n\nWhen `enum` or `oneOf` is set, this represents a single-select enum\nwith `"type": "string"`.',
+        "String property (or single-select enum when `enum`/`oneOf` is set).",
     }),
     S.Struct({
+      default: S.optionalKey(
+        S.Union([
+          S.Finite.annotateKey({
+            description: "Default value.",
+            format: "double",
+          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+          S.Null,
+        ]),
+      ),
+      description: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({ description: "Human-readable description." }),
+          S.Null,
+        ]),
+      ),
+      maximum: S.optionalKey(
+        S.Union([
+          S.Finite.annotateKey({
+            description: "Maximum value (inclusive).",
+            format: "double",
+          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+          S.Null,
+        ]),
+      ),
+      minimum: S.optionalKey(
+        S.Union([
+          S.Finite.annotateKey({
+            description: "Minimum value (inclusive).",
+            format: "double",
+          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+          S.Null,
+        ]),
+      ),
+      title: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "Optional title for the property.",
+          }),
+          S.Null,
+        ]),
+      ),
       type: S.Literal("number"),
+    }).annotateKey({ description: "Number (floating-point) property." }),
+    S.Struct({
       default: S.optionalKey(
         S.Union([
           S.Finite.annotateKey({
             description: "Default value.",
-            format: "double",
-          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+            format: "int64",
+          }).check(S.isInt().annotate({ expected: "an integer" })),
           S.Null,
         ]),
       ),
@@ -7385,8 +7436,8 @@ export const ElicitationPropertySchema = S.Union(
         S.Union([
           S.Finite.annotateKey({
             description: "Maximum value (inclusive).",
-            format: "double",
-          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+            format: "int64",
+          }).check(S.isInt().annotate({ expected: "an integer" })),
           S.Null,
         ]),
       ),
@@ -7394,8 +7445,8 @@ export const ElicitationPropertySchema = S.Union(
         S.Union([
           S.Finite.annotateKey({
             description: "Minimum value (inclusive).",
-            format: "double",
-          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+            format: "int64",
+          }).check(S.isInt().annotate({ expected: "an integer" })),
           S.Null,
         ]),
       ),
@@ -7407,58 +7458,9 @@ export const ElicitationPropertySchema = S.Union(
           S.Null,
         ]),
       ),
-    }).annotateKey({
-      description:
-        "Schema for number (floating-point) properties in an elicitation form.",
-    }),
-    S.Struct({
       type: S.Literal("integer"),
-      default: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Default value.",
-            format: "int64",
-          }).check(S.isInt().annotate({ expected: "an integer" })),
-          S.Null,
-        ]),
-      ),
-      description: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({ description: "Human-readable description." }),
-          S.Null,
-        ]),
-      ),
-      maximum: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Maximum value (inclusive).",
-            format: "int64",
-          }).check(S.isInt().annotate({ expected: "an integer" })),
-          S.Null,
-        ]),
-      ),
-      minimum: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Minimum value (inclusive).",
-            format: "int64",
-          }).check(S.isInt().annotate({ expected: "an integer" })),
-          S.Null,
-        ]),
-      ),
-      title: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "Optional title for the property.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({
-      description: "Schema for integer properties in an elicitation form.",
-    }),
+    }).annotateKey({ description: "Integer property." }),
     S.Struct({
-      type: S.Literal("boolean"),
       default: S.optionalKey(
         S.Union([
           S.Boolean.annotateKey({ description: "Default value." }),
@@ -7479,11 +7481,9 @@ export const ElicitationPropertySchema = S.Union(
           S.Null,
         ]),
       ),
-    }).annotateKey({
-      description: "Schema for boolean properties in an elicitation form.",
-    }),
+      type: S.Literal("boolean"),
+    }).annotateKey({ description: "Boolean property." }),
     S.Struct({
-      type: S.Literal("array"),
       default: S.optionalKey(
         S.Union([
           S.Array(S.String).annotateKey({
@@ -7541,10 +7541,8 @@ export const ElicitationPropertySchema = S.Union(
           S.Null,
         ]),
       ),
-    }).annotateKey({
-      description:
-        "Schema for multi-select (array) properties in an elicitation form.",
-    }),
+      type: S.Literal("array"),
+    }).annotateKey({ description: "Multi-select array property." }),
   ],
   { mode: "oneOf" },
 ).pipe(
@@ -7766,13 +7764,13 @@ export type ToolCallUpdate = typeof ToolCallUpdate.Type;
 export const SessionConfigOption = S.Union(
   [
     S.Struct({
-      type: S.Literal("select"),
       currentValue: S.suspend(
         (): S.Codec<SessionConfigValueId> => SessionConfigValueId,
       ).annotateKey({ description: "The currently selected value." }),
       options: S.suspend(
         (): S.Codec<SessionConfigSelectOptions> => SessionConfigSelectOptions,
       ).annotateKey({ description: "The set of selectable options." }),
+      type: S.Literal("select"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -7807,15 +7805,12 @@ export const SessionConfigOption = S.Union(
       name: S.String.annotateKey({
         description: "Human-readable label for the option.",
       }),
-    }).annotateKey({
-      description:
-        "A session configuration option selector and its current state.",
-    }),
+    }).annotateKey({ description: "Single-value selector (dropdown)." }),
     S.Struct({
-      type: S.Literal("boolean"),
       currentValue: S.Boolean.annotateKey({
         description: "The current value of the boolean option.",
       }),
+      type: S.Literal("boolean"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -7852,13 +7847,15 @@ export const SessionConfigOption = S.Union(
       }),
     }).annotateKey({
       description:
-        "A session configuration option selector and its current state.",
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nBoolean on/off toggle.",
     }),
   ],
   { mode: "oneOf" },
 ).pipe(
   $I.annoteSchema("SessionConfigOption", {
     description: "Generated ACP schema for SessionConfigOption.",
+    documentation:
+      "A session configuration option selector and its current state.",
     identifier: "SessionConfigOption",
   }),
   SchemaUtils.withCodecStatics,
@@ -8038,7 +8035,35 @@ export type RequestPermissionRequest = typeof RequestPermissionRequest.Type;
 export const SessionUpdate = S.Union(
   [
     S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey(
+        { description: "A single item of content" },
+      ),
+      messageId: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description:
+              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
+          }),
+          S.Null,
+        ]),
+      ),
       sessionUpdate: S.Literal("user_message_chunk"),
+    }).annotateKey({
+      description: "A chunk of the user's message being streamed.",
+    }),
+    S.Struct({
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8063,9 +8088,11 @@ export const SessionUpdate = S.Union(
           S.Null,
         ]),
       ),
-    }).annotateKey({ description: "A streamed item of content" }),
-    S.Struct({
       sessionUpdate: S.Literal("agent_message_chunk"),
+    }).annotateKey({
+      description: "A chunk of the agent's response being streamed.",
+    }),
+    S.Struct({
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8090,36 +8117,11 @@ export const SessionUpdate = S.Union(
           S.Null,
         ]),
       ),
-    }).annotateKey({ description: "A streamed item of content" }),
-    S.Struct({
       sessionUpdate: S.Literal("agent_thought_chunk"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(
-            S.String,
-            S.Json.annotate({ expected: "JSON value" }),
-          ).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey(
-        { description: "A single item of content" },
-      ),
-      messageId: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({ description: "A streamed item of content" }),
+    }).annotateKey({
+      description: "A chunk of the agent's internal reasoning being streamed.",
+    }),
     S.Struct({
-      sessionUpdate: S.Literal("tool_call"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8172,12 +8174,11 @@ export const SessionUpdate = S.Union(
       toolCallId: S.suspend((): S.Codec<ToolCallId> => ToolCallId).annotateKey({
         description: "Unique identifier for this tool call within the session.",
       }),
+      sessionUpdate: S.Literal("tool_call"),
     }).annotateKey({
-      description:
-        "Represents a tool call that the language model has requested.\n\nTool calls are actions that the agent executes on behalf of the language model,\nsuch as reading files, executing code, or fetching data from external sources.\n\nSee protocol docs: [Tool Calls](https://agentclientprotocol.com/protocol/tool-calls)",
+      description: "Notification that a new tool call has been initiated.",
     }),
     S.Struct({
-      sessionUpdate: S.Literal("tool_call_update"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8239,12 +8240,11 @@ export const SessionUpdate = S.Union(
       toolCallId: S.suspend((): S.Codec<ToolCallId> => ToolCallId).annotateKey({
         description: "The ID of the tool call being updated.",
       }),
+      sessionUpdate: S.Literal("tool_call_update"),
     }).annotateKey({
-      description:
-        "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
+      description: "Update on the status or results of a tool call.",
     }),
     S.Struct({
-      sessionUpdate: S.Literal("plan"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8261,12 +8261,12 @@ export const SessionUpdate = S.Union(
         description:
           "The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update.",
       }),
+      sessionUpdate: S.Literal("plan"),
     }).annotateKey({
       description:
-        "An execution plan for accomplishing complex tasks.\n\nPlans consist of multiple entries representing individual tasks or goals.\nAgents report plans to clients to provide visibility into their execution strategy.\nPlans can evolve during execution as the agent discovers new requirements or completes tasks.\n\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
+        "The agent's execution plan for complex tasks.\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
     }),
     S.Struct({
-      sessionUpdate: S.Literal("available_commands_update"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8282,11 +8282,11 @@ export const SessionUpdate = S.Union(
       availableCommands: S.Array(AvailableCommand).annotateKey({
         description: "Commands the agent can execute",
       }),
+      sessionUpdate: S.Literal("available_commands_update"),
     }).annotateKey({
       description: "Available commands are ready or have changed",
     }),
     S.Struct({
-      sessionUpdate: S.Literal("current_mode_update"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8302,12 +8302,12 @@ export const SessionUpdate = S.Union(
       currentModeId: S.suspend(
         (): S.Codec<SessionModeId> => SessionModeId,
       ).annotateKey({ description: "The ID of the current mode" }),
+      sessionUpdate: S.Literal("current_mode_update"),
     }).annotateKey({
       description:
         "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
     }),
     S.Struct({
-      sessionUpdate: S.Literal("config_option_update"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8324,11 +8324,11 @@ export const SessionUpdate = S.Union(
         description:
           "The full set of configuration options and their current values.",
       }),
+      sessionUpdate: S.Literal("config_option_update"),
     }).annotateKey({
       description: "Session configuration options have been updated.",
     }),
     S.Struct({
-      sessionUpdate: S.Literal("session_info_update"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8359,12 +8359,12 @@ export const SessionUpdate = S.Union(
           S.Null,
         ]),
       ),
+      sessionUpdate: S.Literal("session_info_update"),
     }).annotateKey({
       description:
-        "Update to session metadata. All fields are optional to support partial updates.\n\nAgents send this notification to update session information like title or custom metadata.\nThis allows clients to display dynamic session names and track session state changes.",
+        "Session metadata has been updated (title, timestamps, custom metadata)",
     }),
     S.Struct({
-      sessionUpdate: S.Literal("usage_update"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8402,9 +8402,10 @@ export const SessionUpdate = S.Union(
             expected: "a value greater than or equal to 0",
           }),
         ),
+      sessionUpdate: S.Literal("usage_update"),
     }).annotateKey({
       description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nContext window and cost update for a session.",
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nContext window and cost update for the session.",
     }),
   ],
   { mode: "oneOf" },
@@ -8810,13 +8811,13 @@ export type SetSessionConfigOptionResponse =
 export const ElicitationRequest = S.Union(
   [
     S.Struct({
-      mode: S.Literal("form"),
       requestedSchema: S.suspend(
         (): S.Codec<ElicitationSchema> => ElicitationSchema,
       ).annotateKey({
         description:
           "A JSON Schema describing the form fields to present to the user.",
       }),
+      mode: S.Literal("form"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8838,10 +8839,9 @@ export const ElicitationRequest = S.Union(
       }),
     }).annotateKey({
       description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
+        "Form-based elicitation where the client renders a form from the provided schema.",
     }),
     S.Struct({
-      mode: S.Literal("url"),
       elicitationId: S.suspend(
         (): S.Codec<ElicitationId> => ElicitationId,
       ).annotateKey({
@@ -8851,6 +8851,7 @@ export const ElicitationRequest = S.Union(
         description: "The URL to direct the user to.",
         format: "uri",
       }),
+      mode: S.Literal("url"),
       _meta: S.optionalKey(
         S.Union([
           S.Record(
@@ -8872,13 +8873,15 @@ export const ElicitationRequest = S.Union(
       }),
     }).annotateKey({
       description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
+        "URL-based elicitation where the client directs the user to a URL.",
     }),
   ],
   { mode: "oneOf" },
 ).pipe(
   $I.annoteSchema("ElicitationRequest", {
     description: "Generated ACP schema for ElicitationRequest.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
     identifier: "ElicitationRequest",
   }),
   SchemaUtils.withCodecStatics,

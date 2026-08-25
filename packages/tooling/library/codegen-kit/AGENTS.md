@@ -1,11 +1,17 @@
 # @beep/codegen-kit
 
-Shared OpenAPI/JSON Schema codegen kit: fetch, patch, generate via @effect/openapi-generator, post-process, format, drift-check
+This package owns the shared code-generation pipeline:
 
-## Surface
-
-- See `src/index.ts` barrel — do not hand-maintain inventory tables here.
+```text
+fetch -> patch -> generate(onEnter) -> postProcess -> format -> write | drift
+```
 
 ## Laws
 
-- Root `AGENTS.md` and `standards/ARCHITECTURE.md` govern this package; record only genuinely package-specific deltas here.
+- URL sources require a committed cache and a release pin. Normal runs and `--check` stay offline; only `--refresh` may download.
+- Normalize refreshed JSON to two-space indentation and run the pinned Biome binary before writing it.
+- Drift checks compare generated outputs only. They never compare upstream cache byte layout.
+- Keep transforms pure and registered by `NamedTransform`.
+- Preserve schema identity annotations, codec statics, and docgen-valid Example blocks in generated schema modules.
+- Use `ChildProcessSpawner` with `node_modules/.bin/biome`; do not add runtime formatter downloads.
+- Root `AGENTS.md` and `standards/ARCHITECTURE.md` govern all other package behavior.

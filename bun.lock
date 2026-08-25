@@ -623,13 +623,11 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/codegen-kit": "workspace:^",
         "@beep/test-utils": "workspace:^",
-        "@effect/openapi-generator": "catalog:",
-        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
-        "ts-morph": "catalog:",
       },
     },
     "packages/drivers/ai-provider-cli": {
@@ -779,6 +777,7 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/openapi-generator": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -879,10 +878,12 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/openapi-generator": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1219,6 +1220,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@effect/openapi-generator": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -2413,11 +2415,19 @@
       "name": "@beep/codegen-kit",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@effect/openapi-generator": "catalog:",
+        "@effect/platform-node": "catalog:",
         "effect": "catalog:",
+        "ts-morph": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/tooling/library/qa-capture": {

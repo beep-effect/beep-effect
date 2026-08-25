@@ -60,10 +60,18 @@
     }
   },
   "dependencies": {
-    "effect": "catalog:"
+    "@beep/identity": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
+    "@effect/openapi-generator": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "effect": "catalog:",
+    "ts-morph": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   }
 }
