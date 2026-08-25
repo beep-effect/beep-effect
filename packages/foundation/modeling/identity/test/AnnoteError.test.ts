@@ -3,11 +3,18 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const $I = make("probe").$ProbeId.create("Widget");
+const $Bound = make("probe", { authority: "https://ns.beep.sh/", prefix: "beep" }).$ProbeId.create("Widget");
 
 class WidgetError extends S.TaggedError<WidgetError>($I`WidgetError`)(
   "WidgetError",
   { reason: S.String, attempts: S.Finite },
   $I.annoteError<WidgetError>("WidgetError", { description: "Widget failed." })
+) {}
+
+class BoundWidgetError extends S.TaggedError<BoundWidgetError>($Bound`BoundWidgetError`)(
+  "BoundWidgetError",
+  { reason: S.String },
+  $Bound.annoteError<BoundWidgetError>("BoundWidgetError", { description: "Bound widget failed." })
 ) {}
 
 describe("IdentityComposer.annoteError", () => {
@@ -28,5 +35,38 @@ describe("IdentityComposer.annoteError", () => {
     expect(record.title).toBe("WidgetError");
     expect(record.description).toBe("Widget failed.");
     expect(typeof record.schemaId).toBe("symbol");
+  });
+
+  it("omits iri and curie on an unbound composer", () => {
+    const record = $I.annoteError<WidgetError>("WidgetError", { description: "Widget failed." });
+
+    expect("iri" in record).toBe(false);
+    expect("curie" in record).toBe(false);
+  });
+
+  it("forwards the bound composer's iri and curie, matching annote", () => {
+    const identity = $Bound.annote("BoundWidgetError");
+    const record = $Bound.annoteError<BoundWidgetError>("BoundWidgetError", {
+      description: "Bound widget failed.",
+    });
+
+    expect(typeof identity.iri).toBe("string");
+    expect(typeof identity.curie).toBe("string");
+    expect(record.iri).toBe(identity.iri);
+    expect(record.curie).toBe(identity.curie);
+  });
+
+  it("resolves iri and curie on the annotated error class", () => {
+    const identity = $Bound.annote("BoundWidgetError");
+    const resolved = S.resolveAnnotations(BoundWidgetError);
+
+    expect(resolved?.iri).toBe(identity.iri);
+    expect(resolved?.curie).toBe(identity.curie);
+  });
+
+  it("lets a caller-supplied title win over the derived default", () => {
+    const record = $I.annoteError<WidgetError>("WidgetError", { title: "Custom Widget Failure" });
+
+    expect(record.title).toBe("Custom Widget Failure");
   });
 });

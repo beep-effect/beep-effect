@@ -8,6 +8,7 @@
 "use client";
 
 import { $EditorId } from "@beep/identity";
+import { Defect } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import DOMPurify from "dompurify";
@@ -25,22 +26,6 @@ const fallbackDiagramName = "Mermaid diagram";
 const fallbackDiagramDescription = (source: string): string => `Mermaid diagram source:\n${source}`;
 const invalidDiagramMessage = "Diagram could not be parsed.";
 const unsafeDiagramMessage = "Diagram output did not satisfy the desktop safety policy.";
-
-const MermaidRenderErrorFields = {
-  message: S.String.annotateKey({ description: "User-safe diagram failure message." }),
-  cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
-    description: "Optional underlying Mermaid defect retained for diagnostics.",
-  }),
-} satisfies S.Struct.Fields;
-const MermaidRenderErrorEquivalenceFields = {
-  message: MermaidRenderErrorFields.message,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameMermaidRenderErrorFields = S.toEquivalence(
-  S.TaggedStruct("MermaidRenderError", MermaidRenderErrorEquivalenceFields)
-);
-const sameMermaidRenderError = (self: MermaidRenderError, that: MermaidRenderError): boolean =>
-  sameMermaidRenderErrorFields(self, that);
 
 /**
  * Typed Mermaid load, parse, or render failure. The optional defect is retained
@@ -60,13 +45,14 @@ const sameMermaidRenderError = (self: MermaidRenderError, that: MermaidRenderErr
  */
 export class MermaidRenderError extends S.TaggedError<MermaidRenderError>($I`MermaidRenderError`)(
   "MermaidRenderError",
-  MermaidRenderErrorFields,
-  $I.annoteClass<
-    S.declare<MermaidRenderError>,
-    readonly [S.TaggedStruct<"MermaidRenderError", typeof MermaidRenderErrorFields>]
-  >("MermaidRenderError", {
+  {
+    message: S.String.annotateKey({ description: "User-safe diagram failure message." }),
+    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+      description: "Optional underlying Mermaid defect retained for diagnostics.",
+    }),
+  },
+  $I.annoteError<MermaidRenderError>("MermaidRenderError", {
     description: "A typed Mermaid load, parse, or render failure.",
-    toEquivalence: () => sameMermaidRenderError,
   })
 ) {}
 

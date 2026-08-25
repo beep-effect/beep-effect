@@ -12,13 +12,20 @@ const expectDeclaredEquivalence = <A>(same: (self: A, that: A) => boolean, first
 describe("law-practice server tagged-error declared equivalence", () => {
   it("compares CandorPromotionSubjectResolutionError by declared fields", () => {
     const same = S.toEquivalence(CandorPromotionSubjectResolutionError);
-    const request = PromotionGateRequest.make({
-      subject: PromotionSubjectRef.make({ id: "application-1", kind: "patent-application" }),
-      tenantRef: PromotionTenantRef.make("org-1"),
+    const makeRequest = () =>
+      PromotionGateRequest.make({
+        subject: PromotionSubjectRef.make({ id: "application-1", kind: "patent-application" }),
+        tenantRef: PromotionTenantRef.make("org-1"),
+      });
+    const first = CandorPromotionSubjectResolutionError.make({ reason: "mapping-unavailable", request: makeRequest() });
+    const second = CandorPromotionSubjectResolutionError.make({
+      reason: "mapping-unavailable",
+      request: makeRequest(),
     });
-    const first = CandorPromotionSubjectResolutionError.make({ reason: "mapping-unavailable", request });
-    const second = CandorPromotionSubjectResolutionError.make({ reason: "mapping-unavailable", request });
-    const different = CandorPromotionSubjectResolutionError.make({ reason: "subject-not-found", request });
+    const different = CandorPromotionSubjectResolutionError.make({
+      reason: "subject-not-found",
+      request: makeRequest(),
+    });
 
     expectDeclaredEquivalence(same, first, second, different);
   });

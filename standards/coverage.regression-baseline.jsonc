@@ -19577,18 +19577,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/rdf/src/Vocab/SchemaOrg.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/rdf/src/Vocab/Skos.ts": {
           "lines": 100,
           "statements": 100,
@@ -19650,18 +19638,6 @@
           }
         },
         "packages/foundation/modeling/rdf/src/Vocab/generated/Rdfs.terms.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/rdf/src/Vocab/generated/SchemaOrg.terms.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -22742,18 +22718,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/commands/Qa/CitedArtifactExistsGate.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Qa/Control.ts": {
           "lines": 44,
           "statements": 42.3,
@@ -22908,18 +22872,6 @@
             "statements": 7,
             "branches": 2,
             "functions": 6
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Qa/QaJudgeGateId.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Qa/Record.ts": {
@@ -30092,18 +30044,6 @@
             "functions": 1
           }
         },
-        "packages/foundation/modeling/schema/src/Unknown.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/Xml.ts": {
           "lines": 88,
           "statements": 88,
@@ -31814,18 +31754,6 @@
         "functions": 0
       },
       "files": {
-        "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts": {
           "lines": 100,
           "statements": 100,
@@ -31850,43 +31778,7 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/skill-contract/src/Recovery.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/skill-contract/src/SchemaReference.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/skill-contract/src/SkillCompletion.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/skill-contract/src/SkillContract.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

@@ -20,11 +20,18 @@ const $I = $SchemaId.create("StatusCauseError");
  * **Example** (Build tagged AppError)
  *
  * ```ts
+ * import { $SchemaId } from "@beep/identity"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { StatusCauseFields } from "@beep/schema/StatusCauseError"
  *
- * class AppError extends S.TaggedError<AppError>()("AppError", StatusCauseFields) {}
+ * const $I = $SchemaId.create("Example")
+ *
+ * class AppError extends S.TaggedError<AppError>($I`AppError`)(
+ *   "AppError",
+ *   StatusCauseFields,
+ *   $I.annoteError<AppError>("AppError", { description: "Application failure." })
+ * ) {}
  *
  * const error = AppError.make({
  *   message: "not found",
@@ -192,10 +199,17 @@ const buildStatusCauseErrorBuilder = <Input extends StatusCauseInput, Error>(
  * **Example** (Build dual error constructor)
  *
  * ```ts
+ * import { $SchemaId } from "@beep/identity"
  * import * as S from "effect/Schema"
  * import { StatusCauseFields, makeStatusCauseError } from "@beep/schema/StatusCauseError"
  *
- * class AppError extends S.TaggedError<AppError>()("AppError", StatusCauseFields) {}
+ * const $I = $SchemaId.create("Example")
+ *
+ * class AppError extends S.TaggedError<AppError>($I`AppError`)(
+ *   "AppError",
+ *   StatusCauseFields,
+ *   $I.annoteError<AppError>("AppError", { description: "Application failure." })
+ * ) {}
  *
  * const build = makeStatusCauseError(AppError)
  * const err = build({

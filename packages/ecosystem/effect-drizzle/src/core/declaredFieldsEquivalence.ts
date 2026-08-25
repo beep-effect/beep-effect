@@ -12,7 +12,7 @@ import type { Equivalence } from "effect/Equivalence";
  * extends the struct type), so the assertion is sound.
  *
  * @internal
- * @category equivalence
+ * @category utilities
  * @since 0.0.0
  */
 export const declaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>

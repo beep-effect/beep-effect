@@ -31,7 +31,8 @@ Use the package's `$I` composer when a distinct namespaced schema identifier is
 wanted. When no distinct identifier is needed, omit it with
 `S.TaggedError<Self>()("Tag", fields)`; never pass a bare identifier equal to
 the tag. Cause-carrying errors declare
-`cause: S.Defect({ includeStack: true })` explicitly.
+`cause: Defect({ includeStack: true })` explicitly with the `Defect` wrapper
+from `@beep/schema` (see "Declared field equivalence" below).
 
 ### Declared field equivalence
 
@@ -44,9 +45,12 @@ hands that equivalence back, so `S.toEquivalence(ErrorClass)` compares declared
 diagnostic identity and ignores the `Error` runtime metadata the class
 inherits. Nothing is derived by hand at the class: no field constants, no
 comparator functions, no explicit schema type arguments. Packages that cannot
-depend on `@beep/identity` write the same hook inline as
-`toEquivalence: ([sameFields]) => sameFields` on a contextually typed
-annotation object (`packages/ecosystem/effect-drizzle/src/core/Meta.ts`).
+depend on `@beep/identity` write the same hook through a module-level
+`declaredFieldsEquivalence<Self>` helper, passed as
+`toEquivalence: (typeParameters) => declaredFieldsEquivalence<X>(typeParameters)`
+on the annotation object
+(`packages/ecosystem/effect-drizzle/src/core/repository.ts`,
+`packages/_internal/db-admin/scripts/check-migrations-drift.ts`).
 
 Opaque payloads declare their own identity rule at the schema layer: `Defect`
 from `@beep/schema` is Effect's `S.Defect(options)` annotated with an
@@ -91,6 +95,7 @@ The full chain. Each block is one boundary.
 ````ts
 // packages/drivers/postgres/src/Postgres.errors.ts (excerpt)
 import { $PostgresId } from "@beep/identity";
+import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PostgresId.create("Postgres.errors");
@@ -109,9 +114,9 @@ export class PostgresError extends S.TaggedError<PostgresError>(
     operation: S.String,
     sqlState: S.OptionFromOptionalKey(S.String),
     query: S.OptionFromOptionalKey(S.String),
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
-  $I.annote("PostgresError", {
+  $I.annoteError<PostgresError>("PostgresError", {
     description: "Technical Postgres driver failure scoped to a driver operation.",
   })
 ) {}
@@ -140,7 +145,7 @@ export class MembershipRepositoryNotFound extends S.TaggedError<MembershipReposi
 )(
   "MembershipRepositoryNotFound",
   { membershipId: MembershipId },
-  $I.annote("MembershipRepositoryNotFound", {
+  $I.annoteError<MembershipRepositoryNotFound>("MembershipRepositoryNotFound", {
     description: "The requested membership does not exist.",
   })
 ) {}
@@ -156,7 +161,7 @@ export class MembershipRepositoryUnavailable extends S.TaggedError<MembershipRep
 )(
   "MembershipRepositoryUnavailable",
   { reason: S.String },
-  $I.annote("MembershipRepositoryUnavailable", {
+  $I.annoteError<MembershipRepositoryUnavailable>("MembershipRepositoryUnavailable", {
     description: "The membership repository is temporarily unreachable.",
   })
 ) {}

@@ -8,6 +8,7 @@
 
 import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-embed";
 import { $ProfessionalDesktopId } from "@beep/identity";
+import { Defect } from "@beep/schema";
 import { O, thunkNull, thunkUndefined } from "@beep/utils";
 import { useAtom, useAtomMount } from "@effect/atom-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -20,24 +21,6 @@ import type { JSX } from "react";
 const $I = $ProfessionalDesktopId.create("chat/ui/YouTubeWatchOpener");
 
 const hasTauriRuntime = (): boolean => "__TAURI_INTERNALS__" in globalThis;
-
-const YouTubeWatchOpenFailedFields = {
-  request: YouTubeWatchRequest.annotateKey({
-    description: "Validated canonical YouTube watch request that can be retried.",
-  }),
-  cause: S.Defect({ includeStack: true }).annotateKey({
-    description: "Native opener defect retained for structured diagnostics only.",
-  }),
-} satisfies S.Struct.Fields;
-const YouTubeWatchOpenFailedEquivalenceFields = {
-  request: YouTubeWatchOpenFailedFields.request,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameYouTubeWatchOpenFailedFields = S.toEquivalence(
-  S.TaggedStruct("YouTubeWatchOpenFailed", YouTubeWatchOpenFailedEquivalenceFields)
-);
-const sameYouTubeWatchOpenFailed = (self: YouTubeWatchOpenFailed, that: YouTubeWatchOpenFailed): boolean =>
-  sameYouTubeWatchOpenFailedFields(self, that);
 
 /**
  * Failure raised when the Tauri native opener rejects a validated YouTube watch request.
@@ -60,13 +43,16 @@ const sameYouTubeWatchOpenFailed = (self: YouTubeWatchOpenFailed, that: YouTubeW
  */
 export class YouTubeWatchOpenFailed extends S.TaggedError<YouTubeWatchOpenFailed>($I`YouTubeWatchOpenFailed`)(
   "YouTubeWatchOpenFailed",
-  YouTubeWatchOpenFailedFields,
-  $I.annoteClass<
-    S.declare<YouTubeWatchOpenFailed>,
-    readonly [S.TaggedStruct<"YouTubeWatchOpenFailed", typeof YouTubeWatchOpenFailedFields>]
-  >("YouTubeWatchOpenFailed", {
+  {
+    request: YouTubeWatchRequest.annotateKey({
+      description: "Validated canonical YouTube watch request that can be retried.",
+    }),
+    cause: Defect({ includeStack: true }).annotateKey({
+      description: "Native opener defect retained for structured diagnostics only.",
+    }),
+  },
+  $I.annoteError<YouTubeWatchOpenFailed>("YouTubeWatchOpenFailed", {
     description: "The Tauri native opener rejected a validated YouTube watch request.",
-    toEquivalence: () => sameYouTubeWatchOpenFailed,
   })
 ) {}
 

@@ -48,7 +48,6 @@ const causeMessage = (cause: unknown): string => {
  * ```ts
  * import { $RepoCliId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
- * import * as S from "effect/Schema"
  * import { commandErrorFields } from "@beep/repo-cli/internal/cli/CommandErrorFields"
  *
  * const $I = $RepoCliId.create("commands/Example/Example.errors")
@@ -56,7 +55,7 @@ const causeMessage = (cause: unknown): string => {
  * class ExampleCommandError extends S.TaggedError<ExampleCommandError>($I`ExampleCommandError`)(
  *   "ExampleCommandError",
  *   { ...commandErrorFields, path: S.optionalKey(S.String) },
- *   $I.annote("ExampleCommandError", { description: "Example failure." })
+ *   $I.annoteError<ExampleCommandError>("ExampleCommandError", { description: "Example failure." })
  * ) {}
  *
  * console.log(ExampleCommandError.make({ message: "boom" }).message)

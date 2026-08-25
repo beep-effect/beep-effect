@@ -119,7 +119,7 @@ const $I = {
     ...extras,
     schemaId: Symbol.for(identifier),
     identifier,
-    title: identifier,
+    title: extras.title ?? identifier,
     toEquivalence: adoptDeclaredFieldsEquivalence<Self>,
   }),
 };
@@ -653,6 +653,9 @@ export type DeclarationAnnotationExtras<
  * fields, and it does not require the compiler to infer anything from `Self` inside the class's
  * own base expression.
  *
+ * The `iri` and `curie` members are present only when the record came from a composer bound to
+ * an authority and prefix; the bootstrap `annoteError` shim never sets them.
+ *
  * **Example** (Name the record of a tagged error annotation)
  *
  * ```ts
@@ -666,7 +669,9 @@ export type DeclarationAnnotationExtras<
  * @since 0.0.0
  */
 export interface ErrorAnnotationRecord<Self> extends S.Annotations.Documentation<Self> {
+  readonly curie?: string | undefined;
   readonly identifier: string;
+  readonly iri?: string | undefined;
   readonly schemaId: symbol;
   readonly title: string;
   readonly toEquivalence: (typeParameters: readonly [Equivalence<never>]) => Equivalence<Self>;
@@ -1897,7 +1902,13 @@ const createComposer = <
       ...extras,
       schemaId: merged.schemaId,
       identifier: merged.identifier,
-      title: merged.title,
+      ...(merged.iri === undefined || merged.curie === undefined
+        ? {}
+        : {
+            iri: merged.iri,
+            curie: merged.curie,
+          }),
+      title: extras?.title ?? merged.title,
       toEquivalence: adoptDeclaredFieldsEquivalence<Self>,
     };
   };

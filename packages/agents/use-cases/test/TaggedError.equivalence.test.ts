@@ -93,18 +93,18 @@ describe("agents use-case tagged-error declared equivalence", () => {
 
   it("compares ProfessionalRuntimePromotionBlocked by declared fields", () => {
     const same = S.toEquivalence(ProfessionalRuntimePromotionBlocked);
-    const subject = PromotionSubjectRef.make({ id: "subject-1", kind: "matter" });
+    const makeSubject = () => PromotionSubjectRef.make({ id: "subject-1", kind: "matter" });
     const first = ProfessionalRuntimePromotionBlocked.make({
       reason: PromotionBlockReason.make("vertical-policy-blocked"),
-      subject,
+      subject: makeSubject(),
     });
     const second = ProfessionalRuntimePromotionBlocked.make({
       reason: PromotionBlockReason.make("vertical-policy-blocked"),
-      subject,
+      subject: makeSubject(),
     });
     const different = ProfessionalRuntimePromotionBlocked.make({
       reason: PromotionBlockReason.make("vertical-policy-revision-required"),
-      subject,
+      subject: makeSubject(),
     });
 
     expectDeclaredEquivalence(same, first, second, different);
