@@ -1,9 +1,4 @@
 {
-  "name": "@beep/duckdb",
-  "entryPoints": ["src/index.ts"],
-  "out": "docs",
-  "excludeInternal": true,
-  "includeVersion": true,
   "$schema": "../../../packages/tooling/tool/docgen/schema.json",
   "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/duckdb/src/",
   "examplesCompilerOptions": {

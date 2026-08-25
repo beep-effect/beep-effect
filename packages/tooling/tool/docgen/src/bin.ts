@@ -11,7 +11,7 @@ import { Effect, Exit, Layer, Runtime } from "effect";
 import { Command } from "effect/unstable/cli";
 import { docgenCommand } from "./CLI.ts";
 import * as Domain from "./Domain.ts";
-import * as InternalVersion from "./internal/version.ts";
+import * as Version from "./Version.ts";
 
 const BaseLayers = Layer.mergeAll(BunServices.layer, Domain.Process.layer);
 
@@ -21,9 +21,8 @@ const program = Effect.scoped(
   Layer.build(DerivedLayers).pipe(
     Effect.flatMap(
       Effect.fnUntraced(function* (context) {
-        return yield* Command.run(docgenCommand, { version: `v${InternalVersion.moduleVersion}` }).pipe(
-          Effect.provide(context)
-        );
+        const version = yield* Version.readModuleVersion().pipe(Effect.provide(context));
+        return yield* Command.run(docgenCommand, { version: `v${version}` }).pipe(Effect.provide(context));
       })
     )
   )
