@@ -2,9 +2,12 @@
 
 Date: 2026-08-24
 
-Status: in progress. This change stages the reusable workflow and organization
-registration. The default-branch call and runner-group workflow restriction
-must land in the follow-up cutover change described below.
+Status: cut over on 2026-08-25. #805 staged the reusable workflow and the
+controller's organization registration; #808 switched the caller to the
+default-branch reference and the runner group's workflow restriction is on.
+The controller change deployed, failed on a missing installation permission,
+and rolled back; the redeploy is the remaining P3 step. Evidence:
+[`P3-EVIDENCE.md`](./P3-EVIDENCE.md).
 
 ## Admission rule
 
@@ -24,6 +27,10 @@ workflow reference to one of these protected default-branch files:
 - `beep-effect/beep-effect/.github/workflows/heavy.yml@refs/heads/main`
 - `beep-effect/beep-effect/.github/workflows/fleet-shadow-check.yml@refs/heads/main`
 - `beep-effect/beep-effect/.github/workflows/fleet-lane-probe.yml@refs/heads/main`
+- `beep-effect/beep-effect/.github/workflows/check.yml@refs/heads/main`, for the
+  push-only `Build` job that runs directly on the fleet; a push to `main`
+  executes default-branch code by construction, and the pull-request merge
+  reference of `check.yml` stays outside the list.
 
 The group is defense in depth. P2's disabled metadata endpoint remains the
 primary boundary for code that reaches a worker.
@@ -72,7 +79,7 @@ diff --git a/.github/workflows/check.yml b/.github/workflows/check.yml
 ```
 
 At the follow-up cutover, the operator sets runner group
-`beep-ec2-heavy` to `restricted_to_workflows: true` and selects the three
+`beep-ec2-heavy` to `restricted_to_workflows: true` and selects the four
 `@refs/heads/main` workflow references listed above. Until then, the group
 remains open to workflows and this PR's local call does not protect the heavy
 steps from PR edits.
@@ -164,7 +171,7 @@ not satisfy the security acceptance criteria by itself.
 
 1. Read organization group id 4 through the GitHub API. Require
    `visibility: selected`, only `beep-effect/beep-effect`, public repository
-   allowance, workflow restriction enabled, and exactly the three protected
+   allowance, workflow restriction enabled, and exactly the four protected
    workflow references.
 2. Launch one candidate and prove its registration reports runner group
    `beep-ec2-heavy`; absence or rejection of that group must leave the runner

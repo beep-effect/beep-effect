@@ -152,14 +152,21 @@ changes. P3 is in progress.
 - [x] Record the two-PR cutover, exact ruleset context renames, residual
       exposure, rollback, replay rule, and proof plan in
       [`research/P3-DESIGN.md`](./research/P3-DESIGN.md).
-- [ ] Rename the five required ruleset contexts to their `Heavy / ...` forms
-      before merging the first PR; the local reusable call already emits the
-      new names.
-- [ ] Merge the first PR, then change only the caller to
-      `beep-effect/beep-effect/.github/workflows/heavy.yml@main`.
-- [ ] At that follow-up cutover, enable `restricted_to_workflows` and select
-      only `heavy.yml`, `fleet-shadow-check.yml`, and `fleet-lane-probe.yml` at
-      `refs/heads/main`.
+- [x] Rename the five required ruleset contexts to their `Heavy / ...` forms
+      before merging the first PR; renamed through the rulesets API on
+      2026-08-25 at `04:32:29Z`, after #803 merged and before #805.
+- [x] Merge the first PR (#805, `05:03:27Z`), then change only the caller to
+      `beep-effect/beep-effect/.github/workflows/heavy.yml@main` (#808).
+- [x] At that follow-up cutover, enable `restricted_to_workflows` and select
+      only `heavy.yml`, `fleet-shadow-check.yml`, `fleet-lane-probe.yml`, and
+      `check.yml` (for the push-only `Build` job) at `refs/heads/main`; applied
+      to organization group id 4 before #808 opened. The controller's
+      organization registration deployed at `05:11:47Z`, failed on a missing
+      installation permission, and rolled back at `05:36:51Z`. See
+      [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md).
+- [ ] Accept the organization self-hosted-runners permission on the
+      fleet-controller installation, redeploy the committed controller source,
+      and drain pre-deploy runners.
 - [ ] Prove a PR heavy job runs from the protected reusable workflow and a
       non-allowlisted workflow remains queued without runner assignment.
 - [ ] Prove a missing or rejecting named group fails registration without
