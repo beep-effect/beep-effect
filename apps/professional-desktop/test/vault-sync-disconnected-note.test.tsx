@@ -7,8 +7,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { afterEach, describe, expect, it } from "vitest";
-import { vaultSyncStatusAtom } from "@/sync/Sync.atoms";
+import { vaultSyncConflictsAtom, vaultSyncStatusAtom } from "@/sync/Sync.atoms";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
+import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import type { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
 
 const statusWith = (connected: boolean, disconnectReason: O.Option<DmsMirrorDisconnectReason>): VaultSyncStatus =>
@@ -26,16 +27,24 @@ const statusWith = (connected: boolean, disconnectReason: O.Option<DmsMirrorDisc
     queuedOperations: 0,
   });
 
-const renderWithStatus = (status: VaultSyncStatus) =>
+const noConflicts: ReadonlyArray<SyncConflict> = [];
+
+const renderWithStatus = (
+  status: VaultSyncStatus,
+  conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown> = AsyncResult.success(noConflicts)
+) =>
   render(
     <RegistryProvider
-      initialValues={[[vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), AsyncResult.success(status)]]}
+      initialValues={[
+        [vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), AsyncResult.success(status)],
+        [vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), conflicts],
+      ]}
     >
       <VaultSyncPanel floating={false} />
     </RegistryProvider>
   );
 
-describe("vault sync disconnected copy is keyed on the sidecar's reason", () => {
+describe("vault sync panel", () => {
   afterEach(cleanup);
 
   it("tells the operator to set the token only when credentials are missing", () => {
@@ -77,5 +86,18 @@ describe("vault sync disconnected copy is keyed on the sidecar's reason", () => 
     expect(screen.getByTestId("vault-sync-connection")).toHaveTextContent("connected");
     expect(screen.queryByTestId("vault-sync-setup-note")).not.toBeInTheDocument();
     expect(screen.getByTestId("vault-sync-trigger")).toBeEnabled();
+  });
+
+  it("keeps a failed conflict query visible and retryable", () => {
+    const conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown> = AsyncResult.fail(
+      "conflicts unavailable"
+    );
+    const { container } = renderWithStatus(statusWith(true, O.none()), conflicts);
+    const screen = within(container);
+
+    expect(screen.getByTestId("vault-sync-conflicts-failed")).toHaveTextContent("Open conflicts could not be loaded.");
+    expect(screen.getByTestId("vault-sync-conflicts-retry")).toHaveTextContent("Retry");
+    expect(screen.getByTestId("vault-sync-conflicts-retry")).toBeEnabled();
+    expect(screen.queryByTestId("vault-sync-conflicts")).not.toBeInTheDocument();
   });
 });
