@@ -2,6 +2,7 @@
 "@beep/identity": minor
 "@beep/repo-utils": patch
 "@beep/semantic-web": minor
+"@beep/epistemic-server": patch
 ---
 
 Add the discrete `Fibered` kit, exact identity registry and RDF dataset codec,
