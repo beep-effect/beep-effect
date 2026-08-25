@@ -83,5 +83,97 @@
     "value": {
       "type": "string"
     }
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/allowedCudaVersions/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/cpuFlavorIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/cpuFlavorPriority/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/dataCenterIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/dataCenterPriority/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/gpuTypeIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/gpuTypePriority/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/Endpoint/properties/allowedCudaVersions/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/Endpoint/properties/dataCenterIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/Endpoint/properties/gpuTypeIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/Endpoint/properties/minCudaVersion/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/allowedCudaVersions/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/cpuFlavorIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/dataCenterIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/gpuTypeIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/minCudaVersion/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/allowedCudaVersions/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/cpuFlavorIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/dataCenterIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/gpuTypeIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/minCudaVersion/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/CudaVersions/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/GPUTypeId/enum"
   }
 ]

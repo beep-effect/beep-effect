@@ -16,7 +16,7 @@ import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as G from "./_generated/Runpod.generated.ts";
+import * as G from "./_generated/Runpod.operations.gen.ts";
 import { RUNPOD_API_URL, RunpodConfigInput, RunpodConfigUrl } from "./Runpod.config.ts";
 import { RunpodError, RunpodHttpStatusCode } from "./Runpod.errors.ts";
 import type { Redacted } from "effect";

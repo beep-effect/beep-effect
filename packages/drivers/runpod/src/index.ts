@@ -11,7 +11,8 @@
  * @category models
  * @since 0.1.0
  */
-export * from "./_generated/Runpod.generated.ts";
+export * from "./_generated/Runpod.models.gen.ts";
+export * from "./_generated/Runpod.operations.gen.ts";
 /**
  * Runtime configuration models and constants.
  *
