@@ -22,6 +22,16 @@ import {
   CitedArtifactExistsVerdict,
   evaluateCitedArtifactExists,
 } from "./CitedArtifactExistsGate.ts";
+import {
+  CitedEventIdExistsInput,
+  DeclaredRoundCoherentInput,
+  DeclaredRoundCoherentVerdict,
+  EvidenceCrossCheckCleanInput,
+  EvidenceCrossCheckCleanVerdict,
+  evaluateCitedEventIdExists,
+  evaluateDeclaredRoundCoherent,
+  evaluateEvidenceCrossCheckClean,
+} from "./JudgeContract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
 import type { FileSystem, Path } from "effect";
@@ -249,6 +259,36 @@ export const citedArtifactVerdictToCrossCheck: {
   (verdict: CitedArtifactExistsVerdict, missingEventIds: ReadonlyArray<number>): EvidenceCrossCheck;
 } = dual(2, citedArtifactVerdictToCrossCheckImpl);
 
+const evidenceCrossCheckVerdictToCrossCheckImpl = (verdict: EvidenceCrossCheckCleanVerdict): EvidenceCrossCheck =>
+  EvidenceCrossCheckCleanVerdict.match(verdict, {
+    allowed: () => EvidenceCrossCheck.make({ missingEventIds: A.empty<number>(), missingPaths: A.empty<string>() }),
+    denied: ({ audit }) => EvidenceCrossCheck.make(audit.detail),
+  });
+
+/**
+ * Projects the derived aggregate gate verdict into the legacy cross-check model.
+ *
+ * **Details**
+ *
+ * Leaf verdict audits remain available to typed callers. This projection keeps
+ * only the ordered missing artifact paths and event ids exposed by the existing
+ * renderer and command adapters.
+ *
+ * **Example** (Inspect the projection)
+ *
+ * ```ts
+ * import { evidenceCrossCheckVerdictToCrossCheck } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ *
+ * console.log(typeof evidenceCrossCheckVerdictToCrossCheck) // "function"
+ * ```
+ *
+ * @param verdict - Derived artifact-and-event aggregate verdict.
+ * @returns Legacy evidence cross-check projection.
+ * @category projections
+ * @since 0.0.0
+ */
+export const evidenceCrossCheckVerdictToCrossCheck = evidenceCrossCheckVerdictToCrossCheckImpl;
+
 /**
  * Render a cross-check failure into an operator-readable error.
  *
@@ -322,12 +362,19 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
   inventory: QaInventory,
   eventLog: QaEventLog
 ): Effect.fn.Return<EvidenceCrossCheck, never, FileSystem.FileSystem | Path.Path> {
-  const verdict = yield* evaluateCitedArtifactExists(
+  const artifactVerdict = yield* evaluateCitedArtifactExists(
     CitedArtifactExistsInput.make({ citedPaths: citedPaths(inventory), roundRoot: layout.root })
   );
-  const knownEventIds = HashSet.fromIterable(A.map(eventLog.events, (event) => event.seq));
-  const missingEventIds = A.filter(citedEventIds(inventory), (seq) => !HashSet.has(knownEventIds, seq));
-  return citedArtifactVerdictToCrossCheck(verdict, missingEventIds);
+  const eventIdVerdict = yield* evaluateCitedEventIdExists(
+    CitedEventIdExistsInput.make({
+      citedEventIds: citedEventIds(inventory),
+      knownEventIds: A.map(eventLog.events, (event) => event.seq),
+    })
+  );
+  const aggregateVerdict = yield* evaluateEvidenceCrossCheckClean(
+    EvidenceCrossCheckCleanInput.make({ artifactVerdict, eventIdVerdict })
+  );
+  return evidenceCrossCheckVerdictToCrossCheck(aggregateVerdict);
 });
 
 /**
@@ -356,8 +403,28 @@ export const raiseCrossCheckFailure: {
       : Effect.fail(QaCommandError.make({ message: renderCrossCheckFailure(round, check) }))
 );
 
+const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound")(function* (
+  round: number,
+  inventory: QaInventory
+): Effect.fn.Return<void, QaCommandError> {
+  const verdict = yield* evaluateDeclaredRoundCoherent(
+    DeclaredRoundCoherentInput.make({ declaredRound: inventory.round, requestedRound: round })
+  );
+  return yield* DeclaredRoundCoherentVerdict.match(verdict, {
+    allowed: () => Effect.void,
+    denied: ({ audit }) =>
+      Effect.fail(
+        QaCommandError.make({
+          message: `qa judge inventory declares round ${audit.detail.declaredRound} but round ${audit.detail.requestedRound} was requested.`,
+        })
+      ),
+  });
+});
+
 /**
  * Fail when an inventory declares a different round than the one requested.
+ *
+ * **Details**
  *
  * Witness sequence numbers restart per round and frame names repeat across
  * rounds, so a copied inventory can genuinely pass another round's evidence
@@ -386,17 +453,7 @@ export const raiseCrossCheckFailure: {
 export const requireInventoryRound: {
   (inventory: QaInventory): (round: number) => Effect.Effect<void, QaCommandError>;
   (round: number, inventory: QaInventory): Effect.Effect<void, QaCommandError>;
-} = dual(
-  2,
-  (round: number, inventory: QaInventory): Effect.Effect<void, QaCommandError> =>
-    inventory.round === round
-      ? Effect.void
-      : Effect.fail(
-          QaCommandError.make({
-            message: `qa judge inventory declares round ${inventory.round} but round ${round} was requested.`,
-          })
-        )
-);
+} = dual(2, requireInventoryRoundImpl);
 
 const FENCED_JSON = /```json\s*\r?\n([\s\S]*?)```/g;
 const FENCED_ANY = /```\s*\r?\n(\{[\s\S]*?\})\s*```/g;
