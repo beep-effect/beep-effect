@@ -54,7 +54,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [secure-document-delivery](./secure-document-delivery/README.md) | Secure Document Delivery | 0/4 | 2026-07-14 | Deliver an incubated secure-document-delivery capability and authenticated desktop route, proven by one authorized fixt… |
 | [semantic-foundation](./semantic-foundation/README.md) | Semantic Foundation | 1/6 | 2026-07-14 | — |
 | [semantica-canary](./semantica-canary/README.md) | Semantica Canary | 0/5 | 2026-08-24 | Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 unde… |
-| [ship-velocity](./ship-velocity/README.md) | Ship Velocity | 2/6 | 2026-08-24 | Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guaran… |
+| [ship-velocity](./ship-velocity/README.md) | Ship Velocity | 2/6 | 2026-08-25 | Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guaran… |
 | [skill-contract-kernel](./skill-contract-kernel/README.md) | Skill Contract Kernel | 1/5 | 2026-08-24 | Ship @beep/skill-contract (schemas-only contract kernel: SkillContract, fail-closed gates, evidence ladder, in-toto-ali… |
 | [spar-document-annotation-wire](./spar-document-annotation-wire/README.md) | SPAR Document Annotation Wire | 0/5 | 2026-08-13 | Generate pinned SPAR terms and ship typed OA/PROV document annotations plus the Md-to-DOCO section fold. |
 | [thread-virtualization](./thread-virtualization/README.md) | Thread Virtualization | 0/5 | 2026-08-13 | Deliver exact-height virtualization for the editor-stack thread renderer by consuming the @beep/pretext root surface pl… |

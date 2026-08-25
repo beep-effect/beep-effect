@@ -1504,8 +1504,12 @@ dependents recorded separately, and it is the exact set the ratchet compares
 and the completeness check requires. Selections heavier than the proven
 single-invocation budget execute like the full lane (one prebuild filtered to
 the selection, then weighted `--only` shards, empty shards dropped). Baseline
-adoption on a scoped `--write-baseline` remains the direct owners of the
-changed files: dependents are measured and compared, never adopted.
+adoption is unchanged by this decision: an unscoped `--write-baseline` still
+adopts only the direct owners of the changed files, while a scoped write
+(`--filter` or `--affected` with `--write-baseline`) merges every row it
+measured — dependents included — because the operator asked for exactly that
+scope. (Corrected 2026-08-25: the original text claimed dependents were never
+adopted, which was true only of the unscoped writer.)
 
 Rationale:
 
@@ -1526,6 +1530,44 @@ deferred to the comparator-policy decision.
 
 This supersedes the direct-owners-only selection introduced with the
 weighted-shard pull-request scoping.
+
+## 2026-08-25: Row-Only Baseline Edits Are Validated By Measuring Their Packages
+
+- **Status:** Active
+
+Decision:
+
+The committed coverage baseline stays a global coverage input, with one
+carve-out: when the pull-request planner can read both the base revision and
+the working copy of `standards/coverage.regression-baseline.jsonc` and finds
+that only `packages` rows differ, it selects the packages those rows name and
+measures them instead of the full workspace. A row for a package that cannot be
+measured (no coverage task, or a lab) forces the full run; a row for a package
+that left the workspace needs no run. Any change to `epsilon`, `minimum`,
+`exemptions`, or `follow_ups` — or a side that cannot be read or decoded, or a
+legacy schema-v1 document — keeps the full-run behaviour. Provenance fields
+(`generated_at`, `git_sha`, `command`) never affect the verdict and are ignored.
+The ratchet's failure output ends with a remediation block that names the
+scoped regeneration command for exactly the regressed packages, and the
+baseline header advertises that scoped form ahead of the whole-document one.
+`standards/**/*.md` is coverage-inert; the `*.jsonc` policy inputs under
+`standards/` remain global.
+
+Rationale:
+
+Regenerating one row used to cost the full lane twice: the agent ran the
+repo-wide writer locally (the only command anything pointed at), and the
+resulting baseline commit was itself a global input that forced the 9–15
+minute full fallback on the PR. That loop produced 39 baseline commits in 90
+days and, before B9, minted floors the hosted runner could not reach. A row
+edit is a claim about one package; measuring that package is the smallest
+proof that validates it, and a change to how every row is judged is the only
+edit that genuinely needs every row measured. Documentation under `standards/`
+was already inert in every other lane; it forced two full coverage runs during
+B10 purely by path.
+
+This supersedes the unconditional global-input treatment of the baseline file
+in the pull-request planner.
 
 ## Known Unknowns
 

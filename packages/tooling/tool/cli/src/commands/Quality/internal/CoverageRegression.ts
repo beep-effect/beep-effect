@@ -1063,7 +1063,7 @@ const replaceMeasuredPackage = (
 ): ((packageName: string) => boolean) => {
   const changedNames = HashSet.fromIterable(packageNames);
   return Bool.match(replaceAll, {
-    onTrue: () => () => true,
+    onTrue: () => thunkTrue,
     onFalse:
       () =>
       (packageName: string): boolean =>
