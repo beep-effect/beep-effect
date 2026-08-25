@@ -52,7 +52,7 @@ const editorProofDocument = Md.Document.make({
   ],
 });
 
-// Example** (Reference the codec) ```ts import { EditorProofDocumentJson } from "@/editor-proof/EditorProof.atom
+// Canonical JSON codec for the proof document (encode for the drawer, decode on import).
 const EditorProofDocumentJson = S.fromJsonString(Md.Document).pipe(
   $I.annoteSchema("EditorProofDocumentJson", {
     description: "Canonical JSON text for the local editor proof document.",
@@ -75,7 +75,7 @@ const nextRevision = (revision: number): number => revision + 1;
  * @since 0.0.0
  */
 export const editorProofProfileIdAtom = Atom.make(referenceProfiles.minimal.id);
-// Example** (Reference the atom) ```ts import { editorProofCanonicalAtom } from "@/editor-proof/EditorProof.atom
+// The canonical document the composer is remounted over.
 const editorProofCanonicalAtom = Atom.make(editorProofDocument);
 /** Serialized editor state derived from the canonical atom for each remount.
  *

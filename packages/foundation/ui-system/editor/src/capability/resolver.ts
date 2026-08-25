@@ -405,15 +405,30 @@ const resolvedCommands = (
     )
   );
 
+const sameBinding = (left: Keybinding, right: Keybinding): boolean =>
+  Equal.equals(left.platform, right.platform) && Equal.equals(left.chord, right.chord);
+
+// A default chord is guarded when nothing in the resolved registry owns it:
+// every chord of a disabled capability, plus the defaults an override replaced
+// or unbound on an enabled command (otherwise the native Lexical shortcut
+// would still fire underneath the replacement).
 const guardedChordsOf = (
   catalog: CapabilityCatalog,
-  enabled: MutableHashSet.MutableHashSet<CapabilityId>
-): ReadonlyArray<Keybinding> =>
-  pipe(
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>,
+  commands: ReadonlyArray<ResolvedCommand>
+): ReadonlyArray<Keybinding> => {
+  const active = A.flatMap(commands, (command) => command.keybindings);
+  return pipe(
     catalog,
-    A.filter((descriptor) => !MutableHashSet.has(enabled, descriptor.id)),
-    A.flatMap((descriptor) => A.flatMap(descriptor.commands, (command) => command.keybindings))
+    A.flatMap((descriptor) =>
+      A.flatMap(descriptor.commands, (command) =>
+        MutableHashSet.has(enabled, descriptor.id)
+          ? A.filter(command.keybindings, (binding) => !A.some(active, (owned) => sameBinding(owned, binding)))
+          : command.keybindings
+      )
+    )
   );
+};
 
 const assembleResolved = (
   catalog: CapabilityCatalog,
@@ -438,7 +453,7 @@ const assembleResolved = (
       transformers: A.flatMap(descriptors, (descriptor) => descriptor.registrations.transformers),
     }),
     commands,
-    guardedChords: guardedChordsOf(catalog, enabled),
+    guardedChords: guardedChordsOf(catalog, enabled, commands),
   });
 
 const firstResolutionError = (

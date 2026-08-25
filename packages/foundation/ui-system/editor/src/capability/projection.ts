@@ -208,3 +208,37 @@ export const projectSlashItems: {
       })
     )
 );
+
+const ariaModifier = Modifier.$match({
+  control: () => "Control",
+  meta: () => "Meta",
+  alt: () => "Alt",
+  shift: () => "Shift",
+});
+
+/**
+ * Serializes a chord in the `aria-keyshortcuts` vocabulary (`Control`,
+ * `Meta`, `Alt`, `Shift` plus the key), independent of the platform-facing
+ * labels {@link formatChord} renders for people.
+ *
+ * **Example** (Serialize a chord for assistive technology)
+ *
+ * ```ts
+ * import { ariaKeyShortcuts } from "@beep/editor/capability/projection"
+ * import { KeyChord } from "@beep/editor/capability/schemas"
+ *
+ * const chord = KeyChord.make({ modifiers: ["control", "alt"], key: "1" })
+ * console.log(ariaKeyShortcuts(chord)) // "Control+Alt+1"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const ariaKeyShortcuts = (chord: KeyChord): string =>
+  A.join(
+    A.append(
+      A.map(chord.modifiers, ariaModifier),
+      Str.length(chord.key) === 1 ? Str.toUpperCase(chord.key) : chord.key
+    ),
+    "+"
+  );

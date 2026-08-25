@@ -178,7 +178,9 @@ const clearFormatting = (editor: LexicalEditor): void =>
   editor.update(() => {
     const selection = $getSelection();
     if (!$isRangeSelection(selection)) return;
-    A.forEach(selection.getNodes(), (node) => {
+    // `extract` splits the boundary text nodes so only the selected range
+    // loses its formatting.
+    A.forEach(selection.extract(), (node) => {
       if ($isTextNode(node)) node.setFormat(0).setStyle("");
     });
   });
@@ -259,6 +261,9 @@ export const chordFromKeyboardEvent: {
   (platform: Platform): (event: KeyboardEvent) => O.Option<KeyChord>;
   (event: KeyboardEvent, platform: Platform): O.Option<KeyChord>;
 } = dual(2, (event: KeyboardEvent, platform: Platform): O.Option<KeyChord> => {
+  // AltGr reports ctrlKey + altKey on Windows/Linux layouts; it is typing a
+  // layout character, never a Ctrl+Alt chord.
+  if (event.getModifierState("AltGraph")) return O.none();
   const digit = Str.startsWith("Digit")(event.code) ? Str.slice(5)(event.code) : "";
   const key = digit === "" ? Str.toLowerCase(event.key) : digit;
   if (key === "" || key === "control" || key === "meta" || key === "alt" || key === "shift") return O.none();
@@ -319,6 +324,17 @@ export function ResolvedExtensions({ resolved }: { readonly resolved: ResolvedEd
 }
 
 /** Owns resolved and guarded chords at high Lexical command priority.
+ *
+ * **Details**
+ *
+ * The plugin mounts only when the resolved profile enables
+ * `extension.shortcut-help` (the atlas identity of the Playground's
+ * `ShortcutsPlugin`, which owns keyboard chords there too). Without it the
+ * profile keeps Lexical's native chords — the compatibility profile relies on
+ * that to stay byte-identical for existing `EditorComposer` consumers. A
+ * profile that overrides or unbinds commands must therefore enable
+ * `extension.shortcut-help`; the resolver's `guardedChords` then swallow both
+ * disabled capabilities' chords and any replaced defaults.
  *
  * **Example** (Reference keybinding plugin)
  * ```tsx

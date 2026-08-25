@@ -9,7 +9,7 @@ import { useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { Match } from "effect";
 import { toolbarSelectionAtom } from "../chat/toolbar.tsx";
-import { formatChord, projectCommands } from "./projection.ts";
+import { ariaKeyShortcuts, formatChord, projectCommands } from "./projection.ts";
 import { runCommand } from "./runtime.tsx";
 import type { JSX } from "react";
 import type { Platform, ResolvedEditorProfile } from "./schemas.ts";
@@ -45,17 +45,20 @@ export function CapabilityToolbar({
   return (
     <div role="toolbar" aria-label="Editing commands" className="flex shrink-0 flex-wrap gap-1 border-b p-2">
       {A.map(projectCommands(resolved, "toolbar"), (command) => {
-        const chord = A.findFirst(command.keybindings, (binding) => binding.platform === platform).pipe(
-          O.map((binding) => formatChord(platform, binding.chord))
-        );
+        const binding = A.findFirst(command.keybindings, (candidate) => candidate.platform === platform);
+        const chord = O.map(binding, (found) => formatChord(platform, found.chord));
+        const ariaChord = O.map(binding, (found) => ariaKeyShortcuts(found.chord));
         return (
           <Button
             key={command.id}
             type="button"
             size="sm"
             variant="ghost"
-            title={command.helpText}
-            aria-keyshortcuts={O.getOrUndefined(chord)}
+            title={O.match(chord, {
+              onNone: () => command.helpText,
+              onSome: (label) => `${command.helpText} (${label})`,
+            })}
+            aria-keyshortcuts={O.getOrUndefined(ariaChord)}
             aria-pressed={O.getOrUndefined(pressed(command.id))}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => runCommand(editor, command.id)}
