@@ -35,7 +35,7 @@ import {
   CodegenPatchError,
   CodegenPostProcessError,
 } from "./CodegenKit.errors.ts";
-import { DriftReport, GeneratedModule, SpecSource } from "./CodegenKit.models.ts";
+import { DriftReport, GeneratedModule, SpecPinPolicy, SpecSource } from "./CodegenKit.models.ts";
 import { makeFormatter } from "./internal/format.ts";
 import { postProcess as postProcessSource } from "./internal/postProcess.ts";
 import { composeTransforms } from "./internal/transforms.ts";
@@ -76,6 +76,20 @@ class DefinitionDocument extends S.Class<DefinitionDocument>($I`DefinitionDocume
   })
 ) {}
 
+class OpenApiInfo extends S.Class<OpenApiInfo>($I`OpenApiInfo`)(
+  { version: S.NonEmptyString },
+  $I.annote("OpenApiInfo", {
+    description: "OpenAPI info fields required to validate a source version pin.",
+  })
+) {}
+
+class OpenApiVersionDocument extends S.Class<OpenApiVersionDocument>($I`OpenApiVersionDocument`)(
+  { info: OpenApiInfo },
+  $I.annote("OpenApiVersionDocument", {
+    description: "OpenAPI document subset containing the upstream version used for pin validation.",
+  })
+) {}
+
 const OpenApiDocument = S.declare<OpenAPISpec>((input): input is OpenAPISpec => P.isObject(input), {
   identifier: $I`OpenApiDocument`,
   title: "OpenAPI generator document",
@@ -86,6 +100,7 @@ const decodeJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Json));
 const encodePrettyJson = S.encodeUnknownEffect(S.fromJsonString(S.Json, { space: 2 }));
 const decodeDefinitionDocument = S.decodeUnknownEffect(DefinitionDocument);
 const decodeOpenApiDocument = S.decodeUnknownEffect(OpenApiDocument);
+const decodeOpenApiVersionDocument = S.decodeUnknownEffect(OpenApiVersionDocument);
 
 const fetchError = (message: string, cause: unknown): CodegenFetchError => CodegenFetchError.make({ message, cause });
 const generateError = (message: string, cause: unknown): CodegenGenerateError =>
@@ -156,6 +171,53 @@ const sourcePath = SpecSource.match({
 const sourceUrl = SpecSource.match({
   file: () => O.none<string>(),
   url: ({ url }) => O.some(url),
+});
+
+type UrlSpecSource = Extract<SpecSource, { readonly _tag: "url" }>;
+
+const defaultPinPolicy = (source: UrlSpecSource): SpecPinPolicy =>
+  Str.includes(source.pin)(source.url) ? SpecPinPolicy.Enum["url-embedded"] : SpecPinPolicy.Enum["info-version"];
+
+const pinPolicyFor = (source: UrlSpecSource): SpecPinPolicy =>
+  pipe(
+    O.fromUndefinedOr(source.pinPolicy),
+    O.getOrElse(() => defaultPinPolicy(source))
+  );
+
+const validateUrlEmbeddedPin = Effect.fn("CodegenKit.validateUrlEmbeddedPin")(function* (source: UrlSpecSource) {
+  if (Str.includes(source.pin)(source.url)) return;
+  return yield* fetchError(
+    `Configured pin ${source.pin} is not embedded in source URL ${source.url}`,
+    "url-embedded pin mismatch"
+  );
+});
+
+const validateInfoVersionPin = Effect.fn("CodegenKit.validateInfoVersionPin")(function* (
+  source: UrlSpecSource,
+  document: S.Json
+) {
+  const versionDocument = yield* decodeOpenApiVersionDocument(document).pipe(
+    Effect.mapError((cause) =>
+      fetchError(`Refreshed source ${source.url} does not contain the info.version required by its pin policy`, cause)
+    )
+  );
+  if (Str.Equivalence(versionDocument.info.version, source.pin)) return;
+  return yield* fetchError(
+    `Refreshed source ${source.url} reports info.version ${versionDocument.info.version}, but configured pin is ${source.pin}; bump pin deliberately before accepting the upstream version`,
+    "info.version pin mismatch"
+  );
+});
+
+const validateSourcePin = Effect.fn("CodegenKit.validateSourcePin")(function* (source: SpecSource, document: S.Json) {
+  return yield* SpecSource.match({
+    file: () => Effect.fail(fetchError("Only URL sources have remote pins", "file source")),
+    url: (urlSource) =>
+      Match.value(pinPolicyFor(urlSource)).pipe(
+        Match.when("url-embedded", () => validateUrlEmbeddedPin(urlSource)),
+        Match.when("info-version", () => validateInfoVersionPin(urlSource, document)),
+        Match.exhaustive
+      ),
+  })(source);
 });
 
 const definitionContainer = Match.type<GenerateConfig["dialect"]>().pipe(
@@ -253,6 +315,7 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     const document = yield* decodeJsonText(content).pipe(
       Effect.mapError((cause) => fetchError(`Refreshed source ${url} is not valid JSON`, cause))
     );
+    yield* validateSourcePin(source, document);
     const pretty = yield* encodePrettyJson(document).pipe(
       Effect.mapError((cause) => fetchError(`Could not normalize refreshed source ${url}`, cause))
     );

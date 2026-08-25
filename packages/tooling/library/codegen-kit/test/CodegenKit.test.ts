@@ -6,7 +6,8 @@ import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { FetchHttpClient } from "effect/unstable/http";
+import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/unstable/http";
+import type { SpecSource } from "@beep/codegen-kit";
 
 const platform = Layer.merge(NodeServices.layer, FetchHttpClient.layer);
 const CodegenKitTestLayer = Layer.mergeAll(
@@ -131,6 +132,32 @@ const tinyOpenApi: S.Json = {
   },
 };
 
+const inlineOpenApiResponse = `{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Inline OpenAPI",
+    "version": "1.0.0"
+  },
+  "paths": {}
+}`;
+
+const inlineHttpClientLayer = Layer.succeed(
+  HttpClient.HttpClient,
+  HttpClient.make((request) =>
+    Effect.succeed(
+      HttpClientResponse.fromWeb(
+        request,
+        new Response(inlineOpenApiResponse, { status: 200, headers: { "content-type": "application/json" } })
+      )
+    )
+  )
+);
+const refreshPlatform = Layer.merge(NodeServices.layer, inlineHttpClientLayer);
+const CodegenKitRefreshTestLayer = Layer.mergeAll(
+  refreshPlatform,
+  CodegenKit.layer().pipe(Layer.provide(refreshPlatform))
+);
+
 const warningOpenApi: S.Json = {
   openapi: "3.0.3",
   info: { title: "Warning API", version: "1.0.0" },
@@ -155,10 +182,114 @@ const writeJson = Effect.fnUntraced(function* (filePath: string, document: S.Jso
 
 const withTempDirectory = <A, E, R>(use: (directory: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
-    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),
+    Effect.flatMap(FileSystem.FileSystem, (fs) =>
+      fs.makeTempDirectory({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+    ),
     use,
     (directory) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(directory, { recursive: true, force: true }))
   );
+
+layer(CodegenKitRefreshTestLayer)("@beep/codegen-kit source pins", (it) => {
+  it.effect("derives url-embedded policy and writes a matching refresh", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (directory) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const kit = yield* CodegenKit;
+        const cachePath = path.join(directory, "url-embedded.json");
+        const source: SpecSource = {
+          _tag: "url",
+          url: "https://example.test/releases/v1/openapi.json",
+          pin: "v1",
+          cachePath,
+        };
+
+        yield* kit.fetch(source, true);
+        const cache = yield* fs.readFileString(cachePath);
+
+        expect(cache).toContain('"version": "1.0.0"');
+      })
+    )
+  );
+
+  it.effect("rejects a url-embedded mismatch without replacing the cache", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (directory) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const kit = yield* CodegenKit;
+        const cachePath = path.join(directory, "url-embedded-mismatch.json");
+        const previous = '{"sentinel":"untouched"}\n';
+        const source: SpecSource = {
+          _tag: "url",
+          url: "https://example.test/releases/v2/openapi.json",
+          pin: "v1",
+          pinPolicy: "url-embedded",
+          cachePath,
+        };
+        yield* fs.writeFileString(cachePath, previous);
+
+        const failure = yield* kit.fetch(source, true).pipe(Effect.flip);
+        const cache = yield* fs.readFileString(cachePath);
+
+        expect(failure._tag).toBe("CodegenFetchError");
+        expect(failure.message).toContain("Configured pin v1");
+        expect(cache).toBe(previous);
+      })
+    )
+  );
+
+  it.effect("derives info-version policy and writes a matching refresh", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (directory) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const kit = yield* CodegenKit;
+        const cachePath = path.join(directory, "info-version.json");
+        const source: SpecSource = {
+          _tag: "url",
+          url: "https://example.test/openapi.json",
+          pin: "1.0.0",
+          cachePath,
+        };
+
+        yield* kit.fetch(source, true);
+        const cache = yield* fs.readFileString(cachePath);
+
+        expect(cache).toContain('"version": "1.0.0"');
+      })
+    )
+  );
+
+  it.effect("rejects an info-version mismatch without replacing the cache", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (directory) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const kit = yield* CodegenKit;
+        const cachePath = path.join(directory, "info-version-mismatch.json");
+        const previous = '{"sentinel":"untouched"}\n';
+        const source: SpecSource = {
+          _tag: "url",
+          url: "https://example.test/openapi.json",
+          pin: "2.0.0",
+          pinPolicy: "info-version",
+          cachePath,
+        };
+        yield* fs.writeFileString(cachePath, previous);
+
+        const failure = yield* kit.fetch(source, true).pipe(Effect.flip);
+        const cache = yield* fs.readFileString(cachePath);
+
+        expect(failure._tag).toBe("CodegenFetchError");
+        expect(failure.message).toContain("info.version 1.0.0");
+        expect(failure.message).toContain("configured pin is 2.0.0");
+        expect(failure.message).toContain("bump pin deliberately");
+        expect(cache).toBe(previous);
+      })
+    )
+  );
+});
 
 layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
   it.effect("repairs ACP ContentBlock and SessionUpdate variant schemas", () =>

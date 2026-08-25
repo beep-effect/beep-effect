@@ -15,6 +15,35 @@ import * as S from "effect/Schema";
 const $I = $CodegenKitId.create("CodegenKit.models");
 
 /**
+ * Policies for validating a remote source pin before replacing its cache.
+ *
+ * **Example** (Require an OpenAPI version pin)
+ *
+ * ```ts
+ * import { SpecPinPolicy } from "@beep/codegen-kit"
+ *
+ * console.log(SpecPinPolicy.Enum["info-version"])
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const SpecPinPolicy = LiteralKit(["url-embedded", "info-version"]).annotate(
+  $I.annote("SpecPinPolicy", {
+    description: "Policy used to verify a remote source pin before its committed cache is replaced.",
+  })
+);
+
+/**
+ * Runtime source pin policy represented by {@link SpecPinPolicy}.
+ *
+ * @see {@link SpecPinPolicy} for the supported values.
+ * @category configuration
+ * @since 0.0.0
+ */
+export type SpecPinPolicy = typeof SpecPinPolicy.Type;
+
+/**
  * Pinned local or remote source for one generator document.
  *
  * **Example** (Describe a cached release asset)
@@ -26,6 +55,7 @@ const $I = $CodegenKitId.create("CodegenKit.models");
  *   _tag: "url",
  *   url: "https://example.com/schema.json",
  *   pin: "v1.0.0",
+ *   pinPolicy: "info-version",
  *   cachePath: "spec/schema.json"
  * }
  * console.log(source._tag)
@@ -38,6 +68,7 @@ export const SpecSource = S.TaggedUnion({
   url: {
     url: S.NonEmptyString,
     pin: S.NonEmptyString,
+    pinPolicy: SpecPinPolicy.pipe(S.optionalKey),
     cachePath: S.NonEmptyString,
   },
   file: {
@@ -45,7 +76,8 @@ export const SpecSource = S.TaggedUnion({
   },
 }).pipe(
   $I.annoteSchema("SpecSource", {
-    description: "Pinned source document, with remote sources backed by a committed local cache.",
+    description:
+      "Pinned source document, with remote sources backed by a committed local cache and an optional explicit pin policy.",
   })
 );
 

@@ -8,7 +8,7 @@
 fetch -> patch -> generate(onEnter) -> postProcess -> format -> write | drift
 ```
 
-`fetch` reads the committed cache by default. A URL source still requires `cachePath` and `pin`; the network is used only with `--refresh`. Check mode is offline and compares generated outputs, never the cached source bytes.
+`fetch` reads the committed cache by default. A URL source still requires `cachePath` and `pin`; the network is used only with `--refresh`. Before a refreshed cache is written, `pinPolicy: "url-embedded"` requires the URL to contain the pin and `pinPolicy: "info-version"` requires the downloaded OpenAPI `info.version` to equal it. When `pinPolicy` is omitted, the kit derives `url-embedded` if the URL contains the pin and `info-version` otherwise. Check mode is offline and compares generated outputs, never the cached source bytes.
 
 Refreshes parse the upstream JSON, serialize it with two-space indentation, and run the pinned repository Biome binary. This matches the pre-commit JSON format, so refreshing an unchanged release does not dirty the cache.
 
@@ -27,6 +27,7 @@ const config = GenerateConfig.make({
     _tag: "url",
     url: "https://example.com/v1/schema.json",
     pin: "v1",
+    pinPolicy: "url-embedded",
     cachePath: `${import.meta.dirname}/../spec/schema.json`
   },
   dialect: "json-schema-2020-12",

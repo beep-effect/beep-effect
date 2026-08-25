@@ -165,7 +165,9 @@ jobs:
               git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
             fi
             changed_files="$(git diff --name-only "${base_ref}...HEAD")"
-            if ! grep -Eq '(^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\.json|spec/|scripts/|src/_generated/)|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^packages/_internal/db-admin/drizzle/|^apps/professional-desktop/(package\.json|scripts/sync-migration-bundle\.ts|src/runtime/Migrations\.gen\.ts)$)' <<< "$changed_files"; then
+            # The shared kit directory covers output-affecting implementation and package config. Root package.json
+            # and bun.lock stay excluded because matching them would run codegen for unrelated dependency churn.
+            if ! grep -Eq '(^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\.json|spec/|scripts/|src/_generated/)|^packages/tooling/library/codegen-kit/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^packages/_internal/db-admin/drizzle/|^apps/professional-desktop/(package\.json|scripts/sync-migration-bundle\.ts|src/runtime/Migrations\.gen\.ts)$)' <<< "$changed_files"; then
               should_run=false
             fi
           fi
