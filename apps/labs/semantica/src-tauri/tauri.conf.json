@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "semantica",
+  "version": "0.0.0",
+  "identifier": "dev.beep.semantica",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://semantica.labs.beep.localhost:1355",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "@beep/semantica",
+        "width": 900,
+        "height": 700
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost",
+      "devCsp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost ws://semantica.labs.beep.localhost:1355 http://semantica.labs.beep.localhost:1355"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.png"]
+  }
+}

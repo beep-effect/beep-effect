@@ -15,7 +15,8 @@ import { DateTime, Effect, FileSystem, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
-import * as InternalVersion from "./internal/version.ts";
+import * as JsonFile from "./internal/JsonFile.ts";
+import * as Version from "./Version.ts";
 
 const $I = $RepoDocgenId.create("ProofManifest");
 
@@ -383,13 +384,13 @@ const collectFileDigests = Effect.fn("DocgenProofManifest.collectFileDigests")(f
   return sortedFileDigests(digests);
 });
 
-const fingerprintForFiles = (options: {
+const fingerprintForFiles = Effect.fn("DocgenProofManifest.fingerprintForFiles")(function* (options: {
   readonly inputs: ReadonlyArray<DocgenProofManifestFile>;
   readonly outputs: ReadonlyArray<DocgenProofManifestFile>;
-}): DocgenProofManifestFingerprint => {
+}) {
   const inputSha256 = sha256Json(options.inputs);
   const outputSha256 = sha256Json(options.outputs);
-  const toolVersion = InternalVersion.moduleVersion;
+  const toolVersion = yield* Version.readModuleVersion();
 
   return DocgenProofManifestFingerprint.make({
     sha256: sha256Json({ inputSha256, outputSha256, toolVersion }),
@@ -399,18 +400,19 @@ const fingerprintForFiles = (options: {
     outputFileCount: NonNegativeInt.make(options.outputs.length),
     toolVersion,
   });
-};
+});
 
 const computeDocgenProofPayload = Effect.fn("DocgenProofManifest.computeDocgenProofPayload")(function* (
   packagePath: string
 ) {
   const inputs = yield* collectFileDigests(packagePath, DOCGEN_PROOF_INPUT_GLOBS);
   const outputs = yield* collectFileDigests(packagePath, DOCGEN_PROOF_OUTPUT_GLOBS);
+  const fingerprint = yield* fingerprintForFiles({ inputs, outputs });
 
   return {
     inputs,
     outputs,
-    fingerprint: fingerprintForFiles({ inputs, outputs }),
+    fingerprint,
   } as const;
 });
 
@@ -546,19 +548,10 @@ export const verifyDocgenProofManifest = Effect.fn("DocgenProofManifest.verifyDo
     return makeVerification({ ...base, status: "missing", reason: "proof manifest is missing" });
   }
 
-  const content = yield* fs.readFileString(manifestPath).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[ProofManifest.verifyDocgenProofManifest] Failed to read '${manifestPath}'\n${String(cause)}`,
-      })
-    )
-  );
-  const manifest = yield* DocgenProofManifest.decodeJsonEffect(content).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[ProofManifest.verifyDocgenProofManifest] Failed to decode '${manifestPath}'\n${String(cause)}`,
-      })
-    )
+  const manifest = yield* JsonFile.readDecodedJsonFile(
+    "ProofManifest.verifyDocgenProofManifest",
+    manifestPath,
+    DocgenProofManifest.decodeJsonEffect
   );
 
   if (manifest.packageName !== packageName) {

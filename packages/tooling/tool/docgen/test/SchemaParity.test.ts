@@ -72,7 +72,6 @@ describe("schema parity", () => {
       exclude: [],
       include: [],
       outDir: "docs",
-      runExamples: false,
       srcDir: "src",
       theme: Configuration.DEFAULT_THEME,
       tscExecutable: "tsc",
