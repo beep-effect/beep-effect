@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: false
+      jit_replay:
+        description: Attempt an operator-controlled replay of the one-use JIT configuration
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -312,6 +317,103 @@ jobs:
             echo "JIT residue: absent"
           fi
 
+      - name: Probe M - JIT configuration replay
+        if: ${{ inputs.redteam && inputs.jit_replay }}
+        id: gate_m_jit_replay
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          scratch_runner="${RUNNER_TEMP}/jit-replay-runner"
+          listener_log="${RUNNER_TEMP}/jit-replay-listener.log"
+          trap 'unset jit_value; rm -rf -- "${scratch_runner}"' EXIT
+          mkdir -p "${scratch_runner}"
+          cp -a /opt/actions-runner/bin "${scratch_runner}/bin"
+          cp -a /opt/actions-runner/externals "${scratch_runner}/externals"
+          (cd "${scratch_runner}" && "${scratch_runner}/bin/Runner.Listener" --help >/dev/null 2>&1 || true)
+
+          jit_value="$(
+            for f in /proc/[0-9]*/cmdline; do
+              tr '\0' ' ' < "$f" 2>/dev/null
+            done | grep -o -- '--jitconfig [A-Za-z0-9+/=_-]*' \
+              | grep -E '^--jitconfig [A-Za-z0-9+/=_-]+$' | head -1 || true
+          )"
+          jit_value="${jit_value#--jitconfig }"
+          if [[ -z "${jit_value}" ]]; then
+            echo "JIT replay: inconclusive (running listener configuration was not readable)"
+            exit 1
+          fi
+
+          replay_runner_name="$(
+            printf '%s' "${jit_value}" | python3 -c '
+          import base64, json, re, sys
+          encoded = sys.stdin.read().strip()
+          encoded += "=" * (-len(encoded) % 4)
+          try:
+              payload = json.loads(base64.urlsafe_b64decode(encoded))
+          except Exception:
+              payload = {}
+          runner = payload.get("runner")
+          name = runner.get("name") if isinstance(runner, dict) else None
+          name = name if isinstance(name, str) else payload.get("agentName")
+          if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9._-]{1,128}", name):
+              print(name)
+          ' || true
+          )"
+
+          set +e
+          (cd "${scratch_runner}" && timeout 90 "${scratch_runner}/bin/Runner.Listener" run \
+            --jitconfig "${jit_value}" > "${listener_log}" 2>&1)
+          listener_status=$?
+          set -e
+
+          # Only a recognized server-side rejection marker may classify the replay as rejected.
+          # A marker-free non-zero exit is a local setup or runtime failure and must stay
+          # inconclusive, or the gate reports PASS without evidence GitHub rejected the replay.
+          # Markers are case-sensitive and phrase-anchored so a local diagnostic that merely
+          # contains a keyword (for example a missing shared library reported as "not found")
+          # cannot pass as a server-side rejection; an unanticipated rejection phrase fails
+          # inconclusive, which is the safe direction for this gate.
+          error_line="$(grep -Em1 \
+            -e 'already (been )?(registered|used|configured|exists)' \
+            -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
+            -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
+            -e '\bUnauthorized\b' \
+            -e '[Rr]unner (was )?not found' \
+            -e '(access|permission) denied' \
+            "${listener_log}" | tr -d '\r' || true)"
+          diag_line=""
+          if [[ -z "${error_line}" && "${listener_status}" -ne 0 && "${listener_status}" -ne 124 ]]; then
+            diag_line="$(sed -n '/[^[:space:]]/{s/\r$//;p;q;}' "${listener_log}")"
+            diag_line="${diag_line:-no listener output}"
+            diag_line="${diag_line//${jit_value}/[redacted]}"
+            diag_line="$(printf '%s' "${diag_line}" | sed -E \
+              's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-240)"
+          fi
+          if [[ -n "${error_line}" ]]; then
+            error_line="${error_line//${jit_value}/[redacted]}"
+            error_line="$(printf '%s' "${error_line}" | sed -E \
+              's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-240)"
+            unset jit_value
+            echo "JIT replay: rejected (${error_line})"
+            exit 0
+          fi
+
+          unset jit_value
+          if grep -Eq 'Listening for Jobs|Connected to GitHub' "${listener_log}" || [[ "${listener_status}" -eq 124 ]]; then
+            echo "JIT replay: accepted"
+            [[ -z "${replay_runner_name}" ]] || echo "JIT replay runner: ${replay_runner_name}"
+            exit 1
+          fi
+
+          if [[ -n "${diag_line}" ]]; then
+            echo "JIT replay: inconclusive (listener exited with status ${listener_status}: ${diag_line})"
+            exit 1
+          fi
+
+          echo "JIT replay: inconclusive (listener exited without a rejection or connection marker)"
+          exit 1
+
       - name: Gate A - deny GitHub App secrets
         if: ${{ always() && inputs.redteam }}
         id: gate_a
@@ -517,6 +619,14 @@ jobs:
             echo "GATE L_IAM_EDGES: PASS"
           else
             echo "GATE L_IAM_EDGES: FAIL"
+            failed=1
+          fi
+          if [[ "${{ inputs.jit_replay }}" != true ]]; then
+            echo "GATE M_JIT_REPLAY: SKIPPED"
+          elif [[ "${{ steps.gate_m_jit_replay.outcome }}" == success ]]; then
+            echo "GATE M_JIT_REPLAY: PASS"
+          else
+            echo "GATE M_JIT_REPLAY: FAIL"
             failed=1
           fi
           exit "${failed}"
