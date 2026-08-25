@@ -278,6 +278,31 @@ export function readState(): {
       })
     );
 
+    it.effect("strips ignored and untyped properties regardless of modifiers", () =>
+      Effect.gen(function* () {
+        const functions = yield* runInLayer(
+          makeParserTestLayer(`/**
+ * Reads the public state.
+ *
+ * @since 1.0.0
+ */
+export function readState(): {
+  /** @ignore */
+  first: number
+  visible: string
+  /** @internal */
+  untyped
+  last: boolean
+} {
+  return { first: 1, visible: "ready", untyped: undefined, last: true }
+}`),
+          Parser.parseFunctions
+        );
+
+        expect(functions[0]?.signature).toBe("declare const readState: () => { visible: string; last: boolean; }");
+      })
+    );
+
     it.effect(
       `should remove all metadata from typedcript code blocks when the theme is ${Configuration.DEFAULT_THEME}`,
       () =>
