@@ -491,6 +491,35 @@ describe("commands/Qa judge ingest and lint", () => {
     )
   );
 
+  it.effect("fails judge-lint with the decode-gate messages for malformed and schema-rejected inventories", () =>
+    withTempCwd(
+      Effect.fnUntraced(function* (cwd) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { layout } = yield* prepareRound(cwd, 1);
+        const inventoryPath = path.join(layout.root, "inventory.json");
+        const lint = () =>
+          runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(Effect.flip);
+
+        yield* fs.writeFileString(inventoryPath, "{");
+        const malformed = yield* lint();
+        yield* fs.writeFileString(inventoryPath, '{"schemaVersion":"qa-inventory/v0"}');
+        const rejected = yield* lint();
+
+        expect(malformed).toMatchObject({
+          _tag: "QaCommandError",
+          message: `qa judge-lint could not parse ${inventoryPath} as JSON.`,
+        });
+        expect(rejected).toMatchObject({
+          _tag: "QaCommandError",
+          message: `qa judge-lint rejected ${inventoryPath} against the qa-inventory/v1 schema.`,
+        });
+        expect(P.isString(malformed.cause) && malformed.cause.length > 0).toBe(true);
+        expect(P.isString(rejected.cause) && rejected.cause.length > 0).toBe(true);
+      })
+    )
+  );
+
   it.effect("fails judge-lint when the round has no inventory yet", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
