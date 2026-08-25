@@ -31,18 +31,19 @@ Execution:
    `9459410104b881919cd820b97c673b67` and
    `d1f026deb21881919d853e63780734fe` remain open until the P5 merge gate;
    P6 owns dashboard closure.
-3. P2 Workload identity boundary: add the self-only metadata-disable allow and
-   boundary Deny for every value other than `disabled`; dry-run both edges.
-   Keep JIT in root-only tmpfs, scrub residue, and start only after the helper
-   exits and both host IMDS probes fail. Use the no-profile broker if one-way
-   self-only disable cannot be proved.
+3. P2 Workload identity boundary: complete 2026-08-24. Treat
+   `research/P2-EVIDENCE.md` as the canary, current-state IAM, deployed
+   A-through-J-plus-L, lane, and closure-ready record. The self-only Allow
+   applies while current state is `enabled`; the boundary denies changes once
+   state is `disabled`. Informational JIT argv residue remains P4 work.
 4. P3 Admission defense in depth: first prove selected-workflow ref matching
    live. Move the five heavy lanes to `heavy.yml@main`; create selected group
    `beep-ec2-heavy` for the public repository, `heavy.yml`, and the two probe
    workflows at `refs/heads/main`. Register at organization scope and fail
    closed without fallback. Obtain `admin:org` or App-equivalent authority.
-5. P4 Boundary verification: rerun the complete deployed proof and mark all six
-   exact Codex IDs closure-ready.
+5. P4 Boundary verification: run the operator-controlled JIT replay probe,
+   rerun the complete deployed proof, and mark all six exact Codex IDs
+   closure-ready.
 6. P5 Yeet publish, review, and merge gate: reach `merge-ready: yes`, resolve
    every thread, and merge only with explicit authority.
 7. P6 Dashboard closure and P7 Close: after merge, close the six exact IDs,

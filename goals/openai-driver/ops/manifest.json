@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "openai-driver",
+    "title": "OpenAI Driver (@beep/openai)",
+    "status": "active",
+    "created": "2026-08-24",
+    "updated": "2026-08-24",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/openai-driver",
+  "lifecycle": "active",
+  "statusNote": "Scaffolded 2026-08-24 by the docs-only graduation ceremony (M3, MAP v1.0 packet #2); P0 Research starts on its own PR beside the lab's C0 work.",
+  "mission": "Ship @beep/openai, a thin driver mirroring @beep/anthropic that composes @effect/ai-openai's shipped OpenAiClient, OpenAiLanguageModel, and OpenAiEmbeddingModel behind typed config and errors and exposes Layer factories for both model kinds; no engine code.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/semantica-lab",
+    "graduated": "2026-08-24",
+    "note": "MAP v1.0 packet #2 (DECISIONS S3-rev, M3): its own packet at template weight, no dependency edge; the semantica-canary lab consumes its EmbeddingModel Layer at C1 through OpenAiEmbeddingModel.model() so Dimensions is available for dimension-keyed vector tables."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/architecture/03-driver-boundaries.md",
+    "standards/architecture/07-non-slice-families.md",
+    "explorations/semantica-lab/BRIEF.md",
+    "explorations/semantica-lab/MAP.md",
+    "explorations/semantica-lab/DECISIONS.md",
+    "goals/openai-driver/README.md",
+    "goals/openai-driver/SPEC.md",
+    "goals/openai-driver/PLAN.md",
+    "goals/openai-driver/GOAL.md",
+    "goals/openai-driver/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/openai-driver/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/openai-driver/GOAL.md)\" -le 4000",
+    "jq . goals/openai-driver/ops/manifest.json",
+    "rg -n \"openai-driver|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/openai-driver",
+    "git diff --check -- goals/openai-driver",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts",
+    "bun run docgen:local",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "The Effect reference checkout disagrees with the composition facts in SPEC.md (OpenAiEmbeddingModel.model() vs .layer(), OpenAiClient.layerConfig shape).",
+    "The scaffold CLI cannot produce a drivers package without manual mkdir or hand-edited identity files.",
+    "Verification would need a live OpenAI key or paid calls; unit proof runs against the stubbed HttpClient only.",
+    "The implementation would exceed named scope: protocol or base-URL knobs, lab schemas, engine code, or changes to sibling drivers.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

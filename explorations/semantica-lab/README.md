@@ -2,11 +2,13 @@
 
 ## Status
 
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
-Source: [`ops/manifest.json`](./ops/manifest.json). `BRIEF.md` v1.0 ratified 2026-08-24; the next
-session drafts `MAP.md`.
+Source: [`ops/manifest.json`](./ops/manifest.json). `BRIEF.md` v1.1 and `MAP.md` v1.0 ratified
+2026-08-24; graduated the same day into
+[`goals/semantica-canary`](../../goals/semantica-canary/README.md) and
+[`goals/openai-driver`](../../goals/openai-driver/README.md).
 
 ## Spark
 
@@ -17,37 +19,62 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-Tracker questions answered (DECISIONS T1–T3): after #794 merges, land the sweep as a docs PR
-from `main` (with the benchmarks vocabulary skim and the HermiT/Pellet issue draft). Then draft
-`MAP.md`: canary C0-C2 as Goal 1 with C0 on F1 + one W1 paper as the first vertical slice;
-the `@beep/openai` driver as a pre-C1 slice; the storage-inversion and NET-NEW reasoning spikes as
-post-C2 goals; two O4 OSS gates and the atlas-sync candidate queued; every row passes the
-capability check. Then graduate and scaffold the lab. Background: decompose
-(`MAP.md` — canary = Goal 1, two O4 gates, queued atlas-sync candidate), graduate, scaffold the
-lab. Also awaiting him:
-`research/glossary-rosetta-draft.md` (36 Rosetta cells), `research/drafts/repo-issues.md`, and
-`research/drafts/upstream-contributions.md` — nothing posts without him.
+None. Both promised-now goals are scaffolded (`semantica-canary`, `openai-driver`); the
+`@beep/nlp` Handoff span fix ships as its own PR (M2) and the lab mint is `semantica-canary`'s
+first step on its own PR (M5). The five queued MAP candidates (`semantica-storage-inversion`,
+`semantica-reasoning-spike`, `semantica-atlas-sync`, OSS `reasoning-package`, OSS
+`evals-harness`) stay gated re-entry points; when a gate fires, reopen this exploration at
+`decompose` rather than scaffolding from an old row. Held with Benjamin, no date: upstream
+posting of `research/drafts/*` (O1/O2/T3) and the Rosetta ratification
+(`research/glossary-rosetta-draft.md`, rides with the async atlas batches per O3/M4).
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`BRIEF.md`](./BRIEF.md) - v1.0 ratified pitch (stage 3): problem, stop rule, staged canary,
+2. [`BRIEF.md`](./BRIEF.md) - v1.1 ratified pitch (stage 3): problem, stop rule, staged canary,
    service roster, rabbit holes, no-gos.
-3. [`DECISIONS.md`](./DECISIONS.md) - open with the Current law table; the dated log below it
+3. [`MAP.md`](./MAP.md) - v1.0 ratified (stage 4): candidate packets, capability check, first
+   slice, inherited constraints, dispositions M1–M6.
+4. [`DECISIONS.md`](./DECISIONS.md) - open with the Current law table; the dated log below it
    is history. Terminology table lives there too.
-4. [`research/criteria-rubric.md`](./research/criteria-rubric.md) - v2.0, ratified.
-5. [`research/workload-contract.md`](./research/workload-contract.md) - v1.3 budgets, corpus, stop rule.
-6. [`research/shared-schema.md`](./research/shared-schema.md) - v1.2 schema contract.
-7. [`RESEARCH.md`](./RESEARCH.md) - grounding sweep and what landed (stage 1).
-8. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - opportunity/friction ledger
+5. [`research/criteria-rubric.md`](./research/criteria-rubric.md) - v2.0, ratified.
+6. [`research/workload-contract.md`](./research/workload-contract.md) - v1.4 budgets, corpus, stop rule.
+7. [`research/shared-schema.md`](./research/shared-schema.md) - v1.4 schema contract.
+8. [`RESEARCH.md`](./RESEARCH.md) - grounding sweep and what landed (stage 1).
+9. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - opportunity/friction ledger
    with dispositions.
-9. [`CAPTURE.md`](./CAPTURE.md) - the raw stage-0 dump; read last, never tidy it.
+10. [`CAPTURE.md`](./CAPTURE.md) - the raw stage-0 dump; read last, never tidy it.
 
 The Notion atlas (`@beep/semantica`, workspace Todox) owns component/module *facts*; this packet
 owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-08-24 (PR #802 review closeout): openclaw caught two stale MAP spellings (fixed in
+  93f6f0b48e); Codex's three P1s became review amendments R1–R3 — report/telemetry split, full-W1
+  gate per stage, `G-projection` before rebuild identity — applied to BRIEF, MAP, shared-schema
+  v1.4, contract v1.4 and the `semantica-canary` packet.
+- 2026-08-24 (MAP grill + graduation): `/grill-with-docs` over MAP v0.1's five challenges plus one
+  doctrine collision, grounded by a ten-agent fact-find (six finders, four skeptics; every verdict
+  held). Live source moved two calls: `@beep/doc-text` returns one normalized string, and the
+  repo's `SourceTextIdentity` + `TextAnchor` + `verifyTextAnchor` already own span meaning under
+  raw-is-canonical doctrine — so `CanonicalText` composes instead of being built and the loss map
+  is dropped (M1); the `@beep/nlp` Handoff mention/span drop was verified (unresolvable
+  `MentionId`s, span never read) and is fixed now as PR A (M2, O1 exception); `@beep/openai` is
+  its own packet for the regime-split reason, not the false "every driver has a goal" premise
+  (M3; also `.model()` not `.layer` for `Dimensions`); atlas gate restored to O3 verbatim (M4);
+  three PRs (M5); ROADMAP funnel policy gains a lab-canary clause and a drift note (M6). BRIEF
+  → v1.1, shared-schema → v1.3, MAP → v1.0. Scaffolded `goals/semantica-canary` +
+  `goals/openai-driver`; status flipped to `graduated`.
+- 2026-08-24 (decompose, MAP draft): confirmed #797 landed the tracker sweep (12 files, T1–T3).
+  Re-verified every brick in the brief's roster against the live checkout, then drafted `MAP.md`
+  v0.1: two promised-now packets (`semantica-canary`, `openai-driver`), five queued re-entry
+  points with named gates, a 13-row capability check with per-contract tripwires from the
+  tracker sweep, C0 on F1 + one G-relation paper as the first slice, 17 inherited constraints.
+  Capability check surfaced two corrections to the brief: `@beep/doc-text` already wraps `unpdf`
+  (PDF.js), so the "PDF.js or MuPDF tie" collapses to doc-text-first; `@beep/nlp` Handoff drops
+  char-spans and must stay off the span path. Stage stays `decompose` until Benjamin ratifies the
+  five ⚠ challenges; graduation is the next session.
 - 2026-08-24 (tracker sweep, stage loop): mined the full semantica tracker (725 items) with
   seven Grok lanes + Grok synthesis + Codex skeptic (RATIFY-WITH-EDITS, applied). Both O4 gates
   STRENGTHENED; held danklocal fixes confirmed unreported; Benjamin answered the six questions

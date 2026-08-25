@@ -1,0 +1,58 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ServiceCeiling",
+      "Effect": "Allow",
+      "Action": [
+        "logs:*",
+        "ec2:*",
+        "ssm:*",
+        "sqs:*",
+        "s3:*",
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "events:*",
+        "lambda:InvokeFunction",
+        "sts:GetCallerIdentity",
+        "dynamodb:*",
+        "cloudwatch:PutMetricData"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PassOwnRoles",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::<acct>:role/beep-ci/beep-ci-*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "ec2.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "NoIamMutation",
+      "Effect": "Deny",
+      "Action": [
+        "iam:Create*",
+        "iam:Put*",
+        "iam:Attach*",
+        "iam:Delete*",
+        "iam:Update*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyMetadataOptionsOnceDisabled",
+      "Effect": "Deny",
+      "Action": "ec2:ModifyInstanceMetadataOptions",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:MetadataHttpEndpoint": "disabled"
+        }
+      }
+    }
+  ]
+}
