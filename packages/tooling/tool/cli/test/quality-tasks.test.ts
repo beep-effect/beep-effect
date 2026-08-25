@@ -2437,10 +2437,18 @@ describe("quality task adapter", () => {
             });
             yield* writePackage("packages/b", { name: "@beep/b", scripts: { coverage: "vitest" } });
             yield* writePackage("packages/c", { name: "@beep/c", scripts: { test: "vitest" } });
+            // A manifest with no `scripts` key at all is still an owner, just not a coverage owner.
+            yield* writePackage("packages/d", { name: "@beep/d", dependencies: { "@beep/a": "workspace:*" } });
 
             const owners = yield* workspaceCoverageScopeOwners(repoRoot);
-            expect(A.map(owners, (owner) => owner.packageName)).toEqual(["@beep/a", "@beep/b", "@beep/c"]);
-            expect(A.map(owners, (owner) => owner.workspaceDependencies)).toEqual([["@beep/b", "@beep/c"], [], []]);
+            expect(A.map(owners, (owner) => owner.packageName)).toEqual(["@beep/a", "@beep/b", "@beep/c", "@beep/d"]);
+            expect(A.map(owners, (owner) => owner.hasCoverage)).toEqual([true, true, false, false]);
+            expect(A.map(owners, (owner) => owner.workspaceDependencies)).toEqual([
+              ["@beep/b", "@beep/c"],
+              [],
+              [],
+              ["@beep/a"],
+            ]);
 
             expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["packages/b/src/B.ts"])).toEqual({
               _tag: "selected",
@@ -2455,6 +2463,25 @@ describe("quality task adapter", () => {
           })
         )
       ));
+
+    it("falls back to a full run when a repository fixture's configured owner cannot measure coverage", () => {
+      const owners = [
+        CoverageScopeOwner.make({
+          packageName: "@beep/repo-cli",
+          packagePath: "packages/tooling/tool/cli",
+          hasCoverage: false,
+        }),
+      ];
+
+      expect(
+        planCoverageAffectedScope(owners, ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc"])
+      ).toEqual({
+        _tag: "full",
+        reasons: [
+          "goals/fallow-quality-enforcement/research/feature-matrix.jsonc: configured repository fixture coverage owner is unavailable",
+        ],
+      });
+    });
 
     it("terminates on dependency cycles and excludes the seeds themselves", () => {
       const owners = [
