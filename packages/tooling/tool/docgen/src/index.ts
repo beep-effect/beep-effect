@@ -45,3 +45,9 @@ export * as Printer from "./Printer.ts";
  * @since 0.0.0
  */
 export * as ProofManifest from "./ProofManifest.ts";
+/**
+ * Package version reader used by the CLI banner and proof manifests.
+ *
+ * @since 0.0.0
+ */
+export * as Version from "./Version.ts";
