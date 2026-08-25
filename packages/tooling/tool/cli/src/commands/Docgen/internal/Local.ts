@@ -39,6 +39,7 @@ const $I = $RepoCliId.create("commands/Docgen/internal/Local");
 
 const DEFAULT_LOCAL_PARALLEL = 1 as const;
 const DOCGEN_FULL_COMMAND = "bun run docgen" as const;
+const DOCGEN_FULL_AGGREGATE_ARGS = ["run", "docs:aggregate"] as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".md", ".mdx"] as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_PREFIXES = ["src/", "docs/"] as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_FILES = [
@@ -413,6 +414,12 @@ const turboArgsForSelectedPackages = (
   "--no-daemon",
 ];
 
+const fullTurboArgs = (parallel: number): ReadonlyArray<string> => [
+  "run",
+  "docgen",
+  `--concurrency=${localParallel(parallel)}`,
+];
+
 const discoverConfiguredPackages = Effect.fn("DocgenLocal.discoverConfiguredPackages")(function* () {
   yield* assertNoOrphanDocgenConfigPaths();
   return yield* discoverDocgenWorkspacePackages().pipe(
@@ -460,6 +467,19 @@ const buildPlanFromChangedFiles = Effect.fn("DocgenLocal.buildPlanFromChangedFil
     turboArgs: mode === "scoped" ? [...turboArgsForSelectedPackages(sortedSelectedPackages, options.parallel)] : [],
   });
 });
+
+const buildFullPlan = (options: DocgenLocalOptions): DocgenLocalPlan =>
+  DocgenLocalPlan.make({
+    base: options.base,
+    changedFiles: A.empty(),
+    fallbackCommand: DOCGEN_FULL_COMMAND,
+    fullReasons: A.empty(),
+    head: options.head,
+    mode: "full",
+    parallel: localParallel(options.parallel),
+    selectedPackages: A.empty(),
+    turboArgs: A.empty(),
+  });
 
 const buildPlanFromPackage = Effect.fn("DocgenLocal.buildPlanFromPackage")(function* (options: DocgenLocalOptions) {
   const packageSelector = O.getOrUndefined(options.packageSelector);
@@ -780,6 +800,10 @@ const renderPlan = Effect.fn("DocgenLocal.renderPlan")(function* (plan: DocgenLo
     yield* Console.log(`- turbo command: bunx ${A.join(plan.turboArgs, " ")}`);
   }
   yield* Console.log(`- full proof: ${plan.fallbackCommand}`);
+  if (plan.mode === "full") {
+    yield* Console.log(`- full turbo command: node_modules/.bin/turbo ${A.join(fullTurboArgs(plan.parallel), " ")}`);
+    yield* Console.log(`- full aggregate command: bun ${A.join(DOCGEN_FULL_AGGREGATE_ARGS, " ")}`);
+  }
   if (A.isReadonlyArrayNonEmpty(plan.fullReasons)) {
     yield* Console.log(`- full proof required:\n${renderFullReasons(plan.fullReasons)}`);
   }
@@ -856,14 +880,14 @@ const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot
   yield* runStepWithStallWatchdog(
     "full turbo docgen",
     turboBinaryPath(repoRoot),
-    ["run", "docgen", `--concurrency=${localParallel(parallel)}`],
+    fullTurboArgs(parallel),
     repoRoot,
     fullDocgenStepBudget
   );
   yield* runStepWithStallWatchdog(
     "full docs aggregate",
     "bun",
-    ["run", "docs:aggregate"],
+    DOCGEN_FULL_AGGREGATE_ARGS,
     repoRoot,
     fullDocgenStepBudget
   );
@@ -1125,6 +1149,9 @@ const buildDocgenLocalPlanWithRepoRoot = Effect.fn("DocgenLocal.buildDocgenLocal
   options: DocgenLocalOptions,
   repoRoot: string
 ) {
+  if (options.full) {
+    return buildFullPlan(options);
+  }
   return yield* O.isSome(options.packageSelector)
     ? buildPlanFromPackage(options)
     : buildPlanFromChangedFiles(options, repoRoot);
