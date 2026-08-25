@@ -163,6 +163,7 @@ export const baseLifecycle = (
   activation: ReadonlyArray<Step>,
   output: LocatorSpec,
   options: Readonly<{
+    activatedScreenshotLabel?: string;
     afterActivation?: ReadonlyArray<Step>;
     beforeActivation?: ReadonlyArray<Step>;
     query?: Query;
@@ -175,7 +176,7 @@ export const baseLifecycle = (
   ...(options.beforeActivation ?? [keyboard("Control+A", EDITOR)]),
   ...activation,
   expectSelector(output),
-  screenshot("activated"),
+  screenshot(options.activatedScreenshotLabel ?? "activated"),
   ...(options.afterActivation ?? []),
   keyboard("Control+Z", EDITOR),
   screenshot("undone"),
@@ -235,14 +236,14 @@ export const nodeLifecycle = (
 export const multiPathLifecycle = (
   activations: ReadonlyArray<ReadonlyArray<Step>>,
   output: LocatorSpec,
-  options: Readonly<{ query?: Query }> = {}
+  options: Readonly<{ query?: Query; screenshotLabels?: ReadonlyArray<string> }> = {}
 ): ReadonlyArray<Step> => [
   goto("/", query(options.query)),
   expectSelector(EDITOR),
   ...activations.flatMap((activation, index) => [
     ...activation,
     expectSelector(output),
-    ...(index < 3 ? [screenshot(`activation-path-${index + 1}`)] : []),
+    ...(index < 3 ? [screenshot(options.screenshotLabels?.[index] ?? `activation-path-${index + 1}`)] : []),
     ...(index === activations.length - 1
       ? []
       : [keyboard("Control+Z", EDITOR), keyboard("Control+A", EDITOR), keyboard("Backspace", EDITOR)]),
@@ -281,19 +282,25 @@ export const markdownLifecycle = (
 
 export const surfaceLifecycle = (
   steps: ReadonlyArray<Step>,
-  options: Readonly<{ afterActivation?: ReadonlyArray<Step>; query?: Query; seed?: string }> = {}
+  options: Readonly<{
+    afterActivation?: ReadonlyArray<Step>;
+    afterScreenshotLabel?: string;
+    narrowScreenshotLabel?: string;
+    query?: Query;
+    seed?: string;
+  }> = {}
 ): ReadonlyArray<Step> => [
   goto("/", query(options.query)),
   expectSelector(EDITOR),
   ...(options.seed === undefined ? [] : [type(EDITOR, options.seed)]),
   screenshot("before"),
   ...steps,
-  screenshot("after"),
+  screenshot(options.afterScreenshotLabel ?? "after"),
   ...(options.afterActivation ?? []),
   setViewport(480, 900),
   keyboard("Tab"),
   expectSelector(EDITOR),
-  screenshot("narrow-keyboard"),
+  screenshot(options.narrowScreenshotLabel ?? "narrow-keyboard"),
   keyboard("Control+Z", EDITOR),
   keyboard("Control+Y", EDITOR),
   clipboardCopy(EDITOR),

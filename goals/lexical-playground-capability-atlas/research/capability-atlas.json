@@ -3271,14 +3271,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/01-activation-path-1.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/02-activation-path-2.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/03-activation-path-3.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/03-markdown-shortcut-paste-drop-importer.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/04-narrow-keyboard-copy-paste-serialized.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed: file paste produced paste-drop-evidence.png, and HTML import retained that image while adding importer evidence plus Importer caption (observations rows 25-36)."
           },
           {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
@@ -3327,12 +3327,12 @@
         {
           "surface": "paste-drop",
           "action": "Paste or drop an image/file payload.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         },
         {
           "surface": "importer",
           "action": "Import figure/image HTML.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [],
@@ -11040,6 +11040,15 @@
         ],
         "live": [
           {
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.tree-view/observations.ndjson",
+            "screenshots": [
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.tree-view/01-settings-panel-tree-view.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.tree-view/02-enabled-narrow-keyboard.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.tree-view/03-reset.png"
+            ],
+            "detail": "P0.5 passed: Debug View reported aria-checked=true and the tree-view output was visible (observations rows 7-13)."
+          },
+          {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
             "screenshots": [
               "explorations/full-document-editor/assets/01-overview-full.png"
@@ -11070,7 +11079,7 @@
         {
           "surface": "settings-panel",
           "action": "Toggle Tree and state debug view when the host exposes the setting.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [],
@@ -12029,13 +12038,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/01-activation-path-1.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/02-activation-path-2.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/03-narrow-keyboard-copy-paste-serialized.png"
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/03-markdown-shortcut.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/04-narrow-keyboard-copy-paste-serialized.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed: the four bold and bold-italic delimiter forms produced the fourth bold theme node (observations rows 29-31)."
           },
           {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
@@ -12088,7 +12098,7 @@
         {
           "surface": "markdown-shortcut",
           "action": "Type or import the BOLD_STAR, BOLD_UNDERSCORE, BOLD_ITALIC_STAR, BOLD_ITALIC_UNDERSCORE transformer syntax.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [
@@ -12206,13 +12216,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/01-activation-path-1.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/02-activation-path-2.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/03-narrow-keyboard-copy-paste-serialized.png"
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/03-markdown-shortcut.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/04-narrow-keyboard-copy-paste-serialized.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed: the four italic and bold-italic delimiter forms produced the fourth italic theme node (observations rows 29-31)."
           },
           {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
@@ -12265,7 +12276,7 @@
         {
           "surface": "markdown-shortcut",
           "action": "Type or import the ITALIC_STAR, ITALIC_UNDERSCORE, BOLD_ITALIC_STAR, BOLD_ITALIC_UNDERSCORE transformer syntax.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [
@@ -12550,13 +12561,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/01-activation-path-1.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/02-activation-path-2.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/03-narrow-keyboard-copy-paste-serialized.png"
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/03-markdown-shortcut.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/04-narrow-keyboard-copy-paste-serialized.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed: the double-tilde delimiter produced the strikethrough theme class (observations rows 25-27)."
           },
           {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
@@ -12604,7 +12616,7 @@
         {
           "surface": "markdown-shortcut",
           "action": "Type or import the STRIKETHROUGH transformer syntax.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [
@@ -12722,13 +12734,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/01-activation-path-1.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/02-activation-path-2.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/03-narrow-keyboard-copy-paste-serialized.png"
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/03-markdown-shortcut.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/04-narrow-keyboard-copy-paste-serialized.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed: the backtick delimiter produced the inline-code theme class (observations rows 23-25)."
           },
           {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
@@ -12776,7 +12789,7 @@
         {
           "surface": "markdown-shortcut",
           "action": "Type or import the INLINE_CODE transformer syntax.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [
@@ -13729,13 +13742,13 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.semantic-highlight/observations.ndjson",
             "screenshots": [
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.semantic-highlight/01-activated.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.semantic-highlight/01-markdown-shortcut.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.semantic-highlight/02-undone.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.semantic-highlight/03-narrow-keyboard-copy-paste-redone.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed: the double-equals delimiter produced the semantic-highlight theme class (observations rows 15-16)."
           },
           {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
@@ -13775,7 +13788,7 @@
         {
           "surface": "markdown-shortcut",
           "action": "Type or import the HIGHLIGHT transformer syntax.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [],
@@ -15893,14 +15906,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.history/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.history/01-before.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.history/02-after.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.history/02-toolbar.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.history/03-narrow-keyboard.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.history/04-surface-roundtrip.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed: toolbar Undo detached the bold output and toolbar Redo restored it (observations rows 14-18)."
           }
         ]
       },
@@ -15931,7 +15944,7 @@
         {
           "surface": "toolbar",
           "action": "Use Undo or Redo.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [],
@@ -17264,13 +17277,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.autocomplete/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.autocomplete/01-created.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.autocomplete/02-undone.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.autocomplete/03-narrow-redone-and-serialized.png"
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.autocomplete/03-narrow-redone-and-serialized.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.autocomplete/04-selection-swipe-right.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed: touch-swipe completed, the autocomplete ghost detached, and the editor contained exact text collaboration (observations rows 37-39)."
           }
         ]
       },
@@ -17306,7 +17320,7 @@
         {
           "surface": "selection",
           "action": "Accept with swipe-right on a supported touch surface.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         }
       ],
       "commands": [],
@@ -18978,14 +18992,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.column-reorder/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.column-reorder/01-before.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.column-reorder/02-after.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.column-reorder/03-narrow-keyboard.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.column-reorder/04-surface-roundtrip.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 passed the existing hover-drag route only. The context menu has no reorder item, so the accessible context-menu path remains unverified and waived (observations rows 12-16)."
           },
           {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
@@ -23257,14 +23271,14 @@
         ],
         "live": [
           {
-            "auditPath": "goals/lexical-playground-capability-atlas/research/LIVE-EXERCISE-2026-08-24.md",
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/observations.ndjson",
             "screenshots": [
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/01-before.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/02-after.png",
-              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/03-narrow-keyboard.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/02-read-only-runtime-lock.png",
+              "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/03-read-only-reload-reset.png",
               "goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/04-surface-roundtrip.png"
             ],
-            "detail": "Passed."
+            "detail": "P0.5 negative evidence: the runtime lock set contenteditable=false, but same-URL reload restored the document with contenteditable=true (observations rows 16-24). The mount-time read-only path remains unverified and waived."
           },
           {
             "auditPath": "explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",

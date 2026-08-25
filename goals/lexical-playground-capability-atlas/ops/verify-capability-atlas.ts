@@ -673,32 +673,25 @@ if (counts.settings !== 29 || counts.screenshots !== 17 || counts.observedKeybin
 }
 
 const evidenceGaps = await Bun.file(evidenceGapsPath).text();
-const remainingUnverifiedHeading = "## Remaining unverified entries";
-const remainingUnverifiedStart = evidenceGaps.indexOf(remainingUnverifiedHeading);
-let remainingUnverifiedSection = "";
-if (remainingUnverifiedStart === -1) {
-  fail("P0 evidence-gap ledger is missing the Remaining unverified entries section");
+const approvedWaiverScopesHeading = "## Approved waiver scopes";
+const approvedWaiverScopesStart = evidenceGaps.indexOf(approvedWaiverScopesHeading);
+let approvedWaiverScopesSection = "";
+if (approvedWaiverScopesStart === -1) {
+  fail("P0 evidence-gap ledger is missing the Approved waiver scopes section");
 } else {
-  const afterRemainingUnverifiedHeading = evidenceGaps
-    .slice(remainingUnverifiedStart + remainingUnverifiedHeading.length)
+  const afterApprovedWaiverScopesHeading = evidenceGaps
+    .slice(approvedWaiverScopesStart + approvedWaiverScopesHeading.length)
     .trimStart();
-  const nextSectionStart = afterRemainingUnverifiedHeading.search(/^## /m);
-  remainingUnverifiedSection =
+  const nextSectionStart = afterApprovedWaiverScopesHeading.search(/^## /m);
+  approvedWaiverScopesSection =
     nextSectionStart === -1
-      ? afterRemainingUnverifiedHeading
-      : afterRemainingUnverifiedHeading.slice(0, nextSectionStart);
+      ? afterApprovedWaiverScopesHeading
+      : afterApprovedWaiverScopesHeading.slice(0, nextSectionStart);
 }
-const recordedGapIds = [...remainingUnverifiedSection.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
+const recordedWaiverScopeIds = [...approvedWaiverScopesSection.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
 const unverifiedIds = atlas.capabilities.filter((item) => item.evidenceStatus === "unverified").map((item) => item.id);
-compareExactInventory("P0 evidence-gap ledger", recordedGapIds, unverifiedIds);
 if (/\b(?:TODO|TBD|FIXME|PLACEHOLDER)\b/i.test(evidenceGaps)) {
   fail("P0 evidence-gap ledger contains placeholder text");
-}
-if (!evidenceGaps.includes("P0's entry gate is closed")) {
-  fail("P0 evidence-gap ledger must state that the entry gate is closed");
-}
-if (!/The\s+activation-path gate is open/.test(evidenceGaps)) {
-  fail("P0 evidence-gap ledger must state that the activation-path gate is open");
 }
 
 const spec = await Bun.file(specPath).text();
@@ -747,8 +740,13 @@ for (const row of exceptionLedgerRows) {
   const capability = capabilityById.get(scope);
   if (capability === undefined) {
     fail(`Exception Ledger names unknown atlas ID ${scope}`);
-  } else if (capability.evidenceStatus !== "unverified") {
-    fail(`Exception Ledger waives ${scope}, but its evidenceStatus is ${capability.evidenceStatus}`);
+  } else if (
+    capability.evidenceStatus !== "unverified" &&
+    !capability.activationPaths.some((path) => path.evidenceStatus === "unverified" && path.surface !== "programmatic")
+  ) {
+    fail(
+      `Exception Ledger waives ${scope}, but the capability has neither unverified entry evidence nor an unverified user-visible activation path`
+    );
   }
   if (goalOwners.has(owner)) {
     resolvedWaiverOwners.push([scope, owner, "goal"]);
@@ -776,6 +774,19 @@ const missingActivationPathWaivers = atlas.capabilities.flatMap((capability) =>
     )
     .map((path) => `${capability.id}/${path.surface}`)
 );
+compareExactInventory("P0 evidence-gap waiver scope ledger", recordedWaiverScopeIds, [...approvedWaiverIds]);
+if (missingWaiverIds.length === 0 && !evidenceGaps.includes("P0's entry gate is closed")) {
+  fail("P0 evidence-gap ledger must state that the entry gate is closed");
+}
+if (
+  missingActivationPathWaivers.length === 0 &&
+  !/The\s+activation-path gate is closed with zero open\s+paths\./.test(evidenceGaps)
+) {
+  fail("P0 evidence-gap ledger must state that the activation-path gate is closed with zero open paths");
+}
+if (missingActivationPathWaivers.length > 0 && !/The activation-path gate is open/.test(evidenceGaps)) {
+  fail("P0 evidence-gap ledger must state that the activation-path gate is open");
+}
 
 // The entry gate is unconditional: every unverified capability must carry a
 // user-approved Exception Ledger waiver regardless of the manifest phase, so a
@@ -830,21 +841,19 @@ for (const [scope, owner, kind] of resolvedWaiverOwners) {
 const verifiedLiveByExerciseCount = atlas.capabilities.filter(
   (item) =>
     item.evidenceStatus === "verified-live" &&
-    item.upstreamEvidence.live.some((evidence) => evidence.auditPath === exerciseAuditPath)
+    item.upstreamEvidence.live.some(
+      (evidence) =>
+        evidence.auditPath === exerciseAuditPath ||
+        (evidence.auditPath.startsWith(exerciseScreenshotPrefix) && evidence.auditPath.endsWith("/observations.ndjson"))
+    )
 ).length;
-if (missingWaiverIds.length === 0 && missingActivationPathWaivers.length === 0) {
-  writeLine(
-    `P0 evidence gate: complete (${verifiedLiveByExerciseCount} verified-live by exercise; ${unverifiedIds.length} unverified entries carry user-approved Exception Ledger waivers; ${unverifiedProgrammaticPathCount} programmatic paths are not user-visible and are proven by verified-source evidence or P1 resolver tests)`
-  );
-} else {
-  writeLine(
-    missingWaiverIds.length === 0
-      ? `P0 entry gate: complete (${verifiedLiveByExerciseCount} verified-live by exercise; ${unverifiedIds.length} unverified entries carry user-approved Exception Ledger waivers)`
-      : `P0 entry gate: OPEN (${missingWaiverIds.length} unverified entries lack user-approved Exception Ledger waivers: ${missingWaiverIds.join(", ")})`
-  );
-  writeLine(
-    missingActivationPathWaivers.length === 0
-      ? `P0 activation-path gate: complete (all user-visible unverified paths belong to waived entries; ${unverifiedProgrammaticPathCount} programmatic paths are not user-visible and are proven by verified-source evidence or P1 resolver tests)`
-      : `P0 activation-path gate: OPEN (${missingActivationPathWaivers.length} user-visible unverified paths lack an entry waiver: ${missingActivationPathWaivers.join(", ")}; ${unverifiedProgrammaticPathCount} programmatic paths are not user-visible and are proven by verified-source evidence or P1 resolver tests)`
-  );
-}
+writeLine(
+  missingWaiverIds.length === 0
+    ? `P0 entry gate: complete (${verifiedLiveByExerciseCount} verified-live by exercise; ${unverifiedIds.length} unverified entries carry user-approved Exception Ledger waivers)`
+    : `P0 entry gate: OPEN (${missingWaiverIds.length} unverified entries lack user-approved Exception Ledger waivers: ${missingWaiverIds.join(", ")})`
+);
+writeLine(
+  missingActivationPathWaivers.length === 0
+    ? `P0 activation-path gate: complete (all user-visible unverified paths belong to waived scopes; ${unverifiedProgrammaticPathCount} programmatic paths are not user-visible and are proven by verified-source evidence or P1 resolver tests)`
+    : `P0 activation-path gate: OPEN (${missingActivationPathWaivers.length} user-visible unverified paths lack an entry waiver: ${missingActivationPathWaivers.join(", ")}; ${unverifiedProgrammaticPathCount} programmatic paths are not user-visible and are proven by verified-source evidence or P1 resolver tests)`
+);
