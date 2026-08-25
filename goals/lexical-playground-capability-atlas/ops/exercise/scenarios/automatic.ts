@@ -1,5 +1,14 @@
-import { click, expectSelector, keyboard, setViewport, type } from "./dsl.ts";
-import { baseLifecycle, GROUP, INSERT_ITEM, nodeLifecycle, PAGE_ITEM, scenario, surfaceLifecycle } from "./helpers.ts";
+import { click, expectSelector, expectText, goto, keyboard, screenshot, setViewport, touchSwipe, type } from "./dsl.ts";
+import {
+  baseLifecycle,
+  GROUP,
+  INSERT_ITEM,
+  nodeLifecycle,
+  PAGE_ITEM,
+  query,
+  scenario,
+  surfaceLifecycle,
+} from "./helpers.ts";
 import {
   AUTOCOMPLETE_PREFIX,
   CUSTOM_OUTPUT,
@@ -12,7 +21,7 @@ import {
 
 export const scenarios = [
   scenario({
-    activationExercise: "Type an eligible prefix; accept with Tab and repeat with Right Arrow.",
+    activationExercise: "Type an eligible prefix; accept with Tab, Right Arrow, and a rightward touch swipe.",
     group: GROUP.automatic,
     id: "authoring.autocomplete",
     steps: [
@@ -25,6 +34,16 @@ export const scenarios = [
       type(EDITOR, ` ${AUTOCOMPLETE_PREFIX}`),
       expectSelector(OUTPUT.autocomplete),
       keyboard("ArrowRight", EDITOR),
+      goto("/", query({ [SETTING_QUERY.autocomplete]: true })),
+      expectSelector(EDITOR),
+      type(EDITOR, AUTOCOMPLETE_PREFIX),
+      expectSelector(OUTPUT.autocomplete),
+      touchSwipe(EDITOR, { x: 96, y: 0 }),
+      expectSelector(OUTPUT.autocomplete, "detached"),
+      expectText(EDITOR, "collaboration", true),
+      screenshot("selection-swipe-right"),
+      keyboard("Control+A", EDITOR),
+      keyboard("Backspace", EDITOR),
     ],
     title: "Autocomplete provider",
   }),

@@ -27,4 +27,17 @@
 {"action":"type","detail":"insert \" collab\" in css=.ContentEditable__root","entryId":"authoring.autocomplete","outcome":"pass","step":27}
 {"action":"expect-selector","detail":"css=[data-autocomplete-ghost=\"true\"] is visible","entryId":"authoring.autocomplete","outcome":"pass","step":28}
 {"action":"keyboard","detail":"ArrowRight on css=.ContentEditable__root","entryId":"authoring.autocomplete","outcome":"pass","step":29}
-{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"authoring.autocomplete","outcome":"pass","step":30}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"authoring.autocomplete","outcome":"pass","step":30}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isAutocomplete\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"authoring.autocomplete","outcome":"pass","step":31}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"authoring.autocomplete","outcome":"pass","step":32}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"authoring.autocomplete","outcome":"pass","step":33}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"authoring.autocomplete","outcome":"pass","step":34}
+{"action":"type","detail":"insert \"collab\" in css=.ContentEditable__root","entryId":"authoring.autocomplete","outcome":"pass","step":35}
+{"action":"expect-selector","detail":"css=[data-autocomplete-ghost=\"true\"] is visible","entryId":"authoring.autocomplete","outcome":"pass","step":36}
+{"action":"touch-swipe","detail":"css=.ContentEditable__root delta={\"x\":96,\"y\":0}","entryId":"authoring.autocomplete","outcome":"pass","step":37}
+{"action":"expect-selector","detail":"css=[data-autocomplete-ghost=\"true\"] is detached","entryId":"authoring.autocomplete","outcome":"pass","step":38}
+{"action":"expect-text","detail":"css=.ContentEditable__root contains \"collaboration\"","entryId":"authoring.autocomplete","outcome":"pass","step":39}
+{"action":"screenshot","detail":"selection-swipe-right","entryId":"authoring.autocomplete","outcome":"pass","step":40}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"authoring.autocomplete","outcome":"pass","step":41}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"authoring.autocomplete","outcome":"pass","step":42}
+{"action":"network-summary","detail":"none: 0 capability request(s); 6 baseline egress request(s)","entryId":"authoring.autocomplete","outcome":"pass","step":43}
