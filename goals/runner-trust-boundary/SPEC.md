@@ -52,20 +52,22 @@ That duplicate is outside the sixteen-record ownership count but keeps the
 occurrence history exact against all three source ledgers. This packet does not
 invent closure reasons for the three IDs absent from the six-open inventory.
 
-| Source packet and CSF ordinal | Codex ID | Finding identity | Lane | Current dashboard state, 2026-08-24 |
+| Source packet and CSF ordinal | Codex ID | Finding identity | Lane | Dashboard state, 2026-08-25 |
 | --- | --- | --- | --- | --- |
-| `2026-08-10` CSF-001; `2026-08-13` CSF-001; `2026-08-24` CSF-001 | `08ee74d0eb18819187fd02f570b4d57c` | PR code now runs on self-hosted EC2 CI lanes | admission | Open; transferred |
+| `2026-08-10` CSF-001; `2026-08-13` CSF-001; `2026-08-24` CSF-001 | `08ee74d0eb18819187fd02f570b4d57c` | PR code now runs on self-hosted EC2 CI lanes | admission | Closed 2026-08-25, Already fixed (P4 proof) |
 | `2026-08-10` CSF-002; `2026-08-13` CSF-002 | `382c538bc3c8819195f83b4a36b002fb` | Non-ephemeral CI runners expose PR jobs to trusted push secrets | historical fleet lifecycle | Closed; absent from the exact six-open inventory |
-| `2026-08-10` CSF-003; `2026-08-13` CSF-003; `2026-08-24` CSF-004 | `a3a281b2a3d881919fdcbf68ee2364f0` | PR code now runs on owned EC2 CI runners | admission | Open; transferred |
-| `2026-08-10` CSF-004; `2026-08-13` CSF-004; `2026-08-24` CSF-005 | `c799c2269d748191997ff176ce4bfd48` | Shadow runner exposes AWS role creds to job code | workload identity | Open; transferred — closure-ready |
+| `2026-08-10` CSF-003; `2026-08-13` CSF-003; `2026-08-24` CSF-004 | `a3a281b2a3d881919fdcbf68ee2364f0` | PR code now runs on owned EC2 CI runners | admission | Closed 2026-08-25, Already fixed (P4 proof) |
+| `2026-08-10` CSF-004; `2026-08-13` CSF-004; `2026-08-24` CSF-005 | `c799c2269d748191997ff176ce4bfd48` | Shadow runner exposes AWS role creds to job code | workload identity | Closed 2026-08-24, Already fixed (P2 proof) |
 | `2026-08-13` CSF-005 | `ca9a4a0353e481919011a7d8380f5068` | CI runner IMDS firewall rollback exposes AWS role creds | historical workload identity | Closed; absent from the exact six-open inventory |
 | `2026-08-13` CSF-006 | `e841bb5393c08191a74ff574c0108bd8` | PR code can steal EC2 runner IAM credentials | historical admission and identity | Closed; absent from the exact six-open inventory |
-| `2026-08-13` CSF-008; `2026-08-24` CSF-006 | `33cd94a12d788191afbec1edc25c433f` | Red-team gate misses sudo IMDS credential path | workload identity | Open; transferred — closure-ready |
-| `2026-08-24` CSF-003 | `9459410104b881919cd820b97c673b67` | Baked runner trusts mutable Bun binary | `P1` deployment proof | Open; held — closure-ready |
-| `2026-08-24` CSF-009 | `d1f026deb21881919d853e63780734fe` | IMDS hook can silently remain unarmed | `P1` deployment proof | Open; held — closure-ready |
+| `2026-08-13` CSF-008; `2026-08-24` CSF-006 | `33cd94a12d788191afbec1edc25c433f` | Red-team gate misses sudo IMDS credential path | workload identity | Closed 2026-08-24, Already fixed (P2 proof) |
+| `2026-08-24` CSF-003 | `9459410104b881919cd820b97c673b67` | Baked runner trusts mutable Bun binary | `P1` deployment proof | Closed 2026-08-24, Already fixed (`P1` proof) |
+| `2026-08-24` CSF-009 | `d1f026deb21881919d853e63780734fe` | IMDS hook can silently remain unarmed | `P1` deployment proof | Closed 2026-08-24, Already fixed (`P1` proof) |
 
-The exact open allowlist for this packet is the six IDs marked Open above.
-`P1` owns the two held identities. `P2` through `P4` own the remaining four.
+The exact allowlist for this packet is the six IDs closed on 2026-08-24 and
+2026-08-25 above. `P1` owned the two held identities; `P2` through `P4` owned
+the remaining four. The per-ID ledger is `ops/closures.json`; the three
+historically closed IDs were not reopened or reclassified.
 
 ## Source hierarchy
 
@@ -153,8 +155,8 @@ all requirements against the fresh serving image:
    [`P1-EVIDENCE.md` § Lane probe #3](./research/P1-EVIDENCE.md#lane-probe-3-positive-path).
 5. [x] The two held Codex IDs have individual closure-ready mappings in
    [`P1-EVIDENCE.md`](./research/P1-EVIDENCE.md#closure-ready-mapping). Both
-   remain open until the `P5` remediation PR merge gate; `P6` owns dashboard
-   closure.
+   were closed on 2026-08-24 after remediation PRs #783 and #796 merged; see
+   `ops/closures.json`.
 
 ### P2 Workload identity boundary
 
@@ -188,7 +190,8 @@ proof is in
 7. [x] The two workload-identity Codex IDs have individual closure-ready
    mappings in
    [`P2-EVIDENCE.md`](./research/P2-EVIDENCE.md#closure-ready-mapping). Both
-   remain open through P5; P6 owns dashboard closure.
+   were closed on 2026-08-24 after remediation PR #800 merged; see
+   `ops/closures.json`.
 
 Informational probe K reports `JIT residue: visible`: the one-use JIT
 configuration is readable in `/proc/*/cmdline` by the job user. P2 does not
@@ -207,8 +210,12 @@ call it from `check.yml` with
 `uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main`. Create
 organization group `beep-ec2-heavy` with public-repository access enabled,
 visibility `selected` for only `beep-effect/beep-effect`, and workflow
-restriction enabled for `heavy.yml`, `fleet-shadow-check.yml`, and
-`fleet-lane-probe.yml`, each at `refs/heads/main`.
+restriction enabled for `heavy.yml`, `fleet-shadow-check.yml`,
+`fleet-lane-probe.yml`, and `check.yml`, each at `refs/heads/main`. The
+`check.yml` entry (ratified 2026-08-25 during the P3 cutover) exists only for
+the push-only `Build` job, which runs on the fleet directly from `check.yml`;
+a push to `main` executes default-branch code by construction, and the
+pull-request merge reference of `check.yml` stays outside the list.
 
 The controller must use organization-scoped registration with
 `enable_organization_runners` and `runner_group_name`. A missing or rejecting
@@ -259,20 +266,30 @@ manifest, and index state together.
       sample prove one-way, self-only metadata disable before runner startup.
 - [ ] P4 proves that replay of the one-use JIT configuration is rejected and
       scrubs the operator-retained probe value. P2 records the visible argv
-      residue without claiming replay rejection.
-- [ ] Runner-group controls use the default-branch reusable workflow, match the
-      selected-repository and three-workflow design, and cannot fall back.
-- [ ] The complete final-head red-team matrix, runner deregistration, and EC2
+      residue without claiming replay rejection. Partially proven 2026-08-25
+      in `research/P4-EVIDENCE.md` (run `32893112867`, `M_JIT_REPLAY: PASS`):
+      concurrent replay is rejected and the value was scrubbed; replay after
+      the original session ends is untested and recorded as exception E1.
+- [x] Runner-group controls use the default-branch reusable workflow, match the
+      selected-repository and four-workflow design, and cannot fall back.
+      Proven 2026-08-25 in `research/P3-EVIDENCE.md` (proofs 1 through 4,
+      including the absent-group probe).
+- [x] The complete final-head red-team matrix, runner deregistration, and EC2
       teardown pass after P3. P2's deployed A-through-J-plus-L proof is retained
-      in `research/P2-EVIDENCE.md`.
-- [ ] The remediation PR is published, reviewed, `merge-ready: yes`, and merged
-      before any of the six dashboard IDs are closed.
-- [ ] After merge, all six open Codex IDs are closed with exact deployed
+      in `research/P2-EVIDENCE.md`; the final-head proof on `4764cdb4ba` is in
+      `research/P4-EVIDENCE.md`.
+- [x] The remediation PR is published, reviewed, `merge-ready: yes`, and merged
+      before any of the six dashboard IDs are closed. Remediation PRs #796,
+      #800, #805, #808, and #814 merged before their closures; see
+      `research/P4-EVIDENCE.md` § Merge-gate reading.
+- [x] After merge, all six open Codex IDs are closed with exact deployed
       evidence; the three older closed identities are not reopened or
-      reclassified without proof.
+      reclassified without proof. Ledger: `ops/closures.json`. Four closed on
+      2026-08-24 before the P4 re-proof under exception E2.
 - [x] Fleet packet ownership remains unchanged.
-- [ ] Yeet reports `merge-ready: yes`, review threads are zero, the PR is merged,
-      and the closeout reflection validates.
+- [x] Yeet reports `merge-ready: yes`, review threads are zero, the PR is merged,
+      and the closeout reflection validates
+      (`history/reflections/2026-08-25-claude.md`).
 
 ## Verification matrix
 
@@ -283,11 +300,12 @@ manifest, and index state together.
 | Packet health | `bun run beep goals doctor` | No new blocking findings |
 | Goal index | `bun run beep goals index --check` | Pass |
 | Reflection schema | `bun run beep lint reflection-artifacts` | Exit 0 |
+| Closure ledger | `jq . goals/runner-trust-boundary/ops/closures.json` | Pass |
 | P0 gate | Retained fact record and operator grill | Ratified 2026-08-24 |
 | `P1` bake | Fresh bake report, pin, deployment, setup log | All integrity checks pass |
 | `P1` red team | `redteam-verify.sh <deployed-ref>` | One PASS per required gate, teardown proved |
 | Workload identity | Ordinary plus privileged probes | No usable application role credentials |
-| Dashboard | Post-merge signed-in exact-ID reconciliation | All six packet IDs closed after `P5` merge |
+| Dashboard | Post-merge signed-in exact-ID reconciliation | All six packet IDs closed after `P5` merge; ledger `ops/closures.json` |
 | Whitespace | `git diff --check -- goals/runner-trust-boundary` | Pass |
 
 ## Stop conditions
@@ -311,4 +329,5 @@ manifest, and index state together.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| E1 Post-release JIT replay untested | The replay half of `c799c2269d748191997ff176ce4bfd48` and `33cd94a12d788191afbec1edc25c433f`; SPEC acceptance item "P4 proves that replay of the one-use JIT configuration is rejected" | `ci-fleet-endgame` (probe change lands in `fleet-shadow-check.yml` on `main`) | P4 proved that GitHub rejects a second listener while the original session is alive (`A session for this runner already exists.`). It did not test replay after the original listener is stopped, nor replay from another host after the VM is gone. Job code runs as `ec2-user` with passwordless sudo and can read, exfiltrate, or kill the listener; the shim powers the VM off on listener exit, but a root attacker can also stop the shim, and stale registrations are not reaped before GitHub's one-day ephemeral cleanup. Recorded 2026-08-25 at closeout; the packet does not claim post-release rejection. | A disposable-runner probe that stops the original listener, replays the configuration from the host and from another host, and records a server-side rejection; or a controller change that deregisters the runner on abnormal listener exit, proven live. |
+| E2 Four IDs closed before the P4 re-proof | `c799c2269d748191997ff176ce4bfd48`, `33cd94a12d788191afbec1edc25c433f`, `9459410104b881919cd820b97c673b67`, `d1f026deb21881919d853e63780734fe` | Operator | The operator authorized closing these four on 2026-08-24 after #796 and #800 merged, on their individual `P1` and P2 evidence, before P3 and P4 existed. `P2-DESIGN.md` mapped the P4 JIT replay probe to both workload-identity IDs; that probe ran on 2026-08-25 and passed for concurrent replay only (E1). The final-head run `32893112867` re-passed every other mapped gate. The closures were not reversed. | Operator reopens the two workload-identity IDs on the dashboard, or E1 is removed. |

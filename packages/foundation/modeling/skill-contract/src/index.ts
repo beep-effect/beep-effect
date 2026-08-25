@@ -56,3 +56,10 @@ export * from "./SkillCompletion.ts";
  * @since 0.0.0
  */
 export * from "./SkillContract.ts";
+/**
+ * Deterministic SKILL.md projection and artifact re-extraction verdicts.
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export * from "./SkillProjection.ts";

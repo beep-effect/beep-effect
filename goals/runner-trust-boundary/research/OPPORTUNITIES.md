@@ -1,6 +1,7 @@
 # Runner trust-boundary friction receipts
 
-These receipts were captured during P1 and P2 on 2026-08-24. They record
+These receipts were captured during P1 and P2 on 2026-08-24 and P3, P4, and
+the closeout on 2026-08-25. They record
 operational friction without expanding this packet's ownership.
 
 ## Bake identity was not discoverable
@@ -176,3 +177,114 @@ instance-initiated shutdown behavior set to `terminate`.
 Access Analyzer and add a live dry-run for intended self-scoped actions. The
 module should replace the unsupported key or remove the dead statement if
 external teardown remains authoritative.
+
+## Installation permission acceptance was invisible until deploy
+
+**What.** Adding `organization_self_hosted_runners` to the fleet-controller
+GitHub App did not grant it to the organization installation; an
+administrator must accept the pending permission request in the organization
+UI. The first organization-registration deploy therefore failed on every
+scale-up and rolled back.
+
+**Evidence.** `GET /orgs/beep-effect/actions/runner-groups` returned
+`403 Resource not accessible by integration` with
+`x-accepted-github-permissions: organization_self_hosted_runners=read`, while
+`gh api /orgs/beep-effect/installations` showed the permission absent on the
+installation. The redeploy after acceptance changed nothing but the same
+three resources and passed the probes.
+
+**What would have prevented it.** A pre-deploy guard that reads the
+installation's permissions through `/orgs/{org}/installations` and refuses
+to enable organization registration until the required permission is present
+on the installation, not only on the App. The redeploy script for this step
+now carries that guard; it belongs in the fleet deploy command.
+
+## Non-allowlisted dispatches still cost candidate launches
+
+**What.** The controller launches one candidate per queued `workflow_job`
+event before GitHub applies the group's workflow restriction, and its
+`job_retry` setting (`max_attempts: 2`, `delay_in_seconds: 120`,
+`delay_backoff: 2`) launches again while the job is still queued. A job the
+group will never admit therefore costs up to three instances, each idling for
+`minimum_running_time_in_minutes` before it terminates or takes an allowlisted
+job.
+
+**Evidence.** Negative probe run `32880025557` produced three launches: the
+initial candidate at `17:48:47Z` and retries at `17:50:53Z` and `17:52:59Z`,
+matching the retry schedule. The job stayed queued for five minutes
+throughout. Two of the three candidates were absorbed by #810's allowlisted
+jobs; the third idled to termination. Admission held; the launches were spent
+regardless.
+
+**What would have prevented it.** The scale-up lambda could resolve the
+job's workflow reference from the event and skip launches whose reference is
+outside the group's selected workflows. Until then, treat a repeated
+out-of-allowlist dispatch as a cost signal in the fleet dashboard.
+
+## Unresolvable-group failures churn a launch every fifteen seconds
+
+**What.** When the controller cannot resolve its runner group, every queue
+retry for a queued job launches a candidate, fails at the group lookup, and
+terminates it. The failure is a configuration error, but the module treats it
+like a transient one.
+
+**Evidence.** The absent-group probe launched and terminated eleven candidates
+for one queued job in two and a half minutes (`18:10:47Z` to `18:13:20Z`,
+run `32882220360`), each with `Runner group beep-ec2-heavy-absent does not
+exist`. The `05:19Z` permission incident had the same shape.
+
+**What would have prevented it.** Resolve the group before `RunInstances`
+rather than after, and treat a group-lookup error as non-retryable at the
+configuration level: one alarm, no relaunch, until an operator changes the
+deployment. Until the module offers that, treat sustained launch-and-terminate
+churn with zero registrations as the signature of a group or permission
+misconfiguration.
+
+## The replay probe waits out its timeout after the rejection
+
+**What.** Probe M classifies the replay from the listener log after the
+listener exits, and the listener keeps retrying its session after GitHub
+refuses it, so every replay run spends the full 90-second window even when
+the decisive rejection arrived in the first seconds.
+
+**Evidence.** P4 run `32893112867`: the scratch listener started at
+`20:03:34Z` and the probe printed `JIT replay: rejected (A session for this
+runner already exists.)` at `20:05:04Z`, exactly at the `timeout 90` limit.
+
+**What would have prevented it.** Tail the listener log while it runs and
+stop the listener at the first phrase-anchored rejection or acceptance match,
+keeping the timeout only as the inconclusive fallback. The classification
+would be identical and the probe would return in seconds.
+
+## Dashboard closure has no API and no export of closure state
+
+**What.** The Codex findings dashboard exposes closure only through the
+signed-in SPA. Reading which of the packet's IDs were already closed, and
+closing the rest, required a browser lane with the operator's session, and
+the earlier closure draft lived only in a session scratchpad that did not
+survive.
+
+**Evidence.** P6 on 2026-08-25 needed a read-only browser capture before any
+closure could be recorded, because four of the six IDs had been closed on
+2026-08-24 without a tracked ledger entry; the packet's own prose still called
+them open.
+
+**What would have prevented it.** Land `ops/closures.json` in the same PR as
+any dashboard action, and treat a closure without a ledger row as
+unrecorded. The CSV export covers open findings; a closure record has to be
+written by the agent that clicks.
+
+## A lockfile refresh re-stales the sealed image the same day it is proved
+
+**What.** Every `bun.lock` change on `main` re-stales the serving image, so
+the fleet falls back to full setup until a matching bake is deployed. #812
+merged twenty-one seconds before the P4 head and moved every heavy lane back
+to the slow path while the packet was proving the image.
+
+**Evidence.** Checkout digest `2a4bb737…` against image key `f81ab29f…`
+after `19:57:05Z` on 2026-08-25; the last positive fast path was probe run
+`32880023142` at `17:49Z`.
+
+**What would have prevented it.** A bake triggered by lockfile changes on
+`main`, deployed through the existing pin command, so the integrity check
+rejects for at most one bake cycle. Owned by `ci-fleet-endgame`.

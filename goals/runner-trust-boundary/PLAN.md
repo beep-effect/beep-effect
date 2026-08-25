@@ -2,12 +2,18 @@
 
 ## Status
 
-Status: `active`. P0 was ratified on 2026-08-24 in
-[`research/P0-GRILL.md`](./research/P0-GRILL.md). `P1` completed on 2026-08-24
-with closure-ready evidence retained. P2 completed on 2026-08-24 with
-closure-ready evidence retained in
-[`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md). P3 Admission defense in
-depth is in progress.
+Status: `completed-retained`. P0 was ratified on 2026-08-24 in
+[`research/P0-GRILL.md`](./research/P0-GRILL.md). `P1` and P2 completed on
+2026-08-24 with closure-ready evidence retained in
+[`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md) and
+[`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md). P3 Admission defense
+in depth completed on 2026-08-25 with admission evidence retained in
+[`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md). P4 Boundary
+verification completed on 2026-08-25 with the final-head proof of record in
+[`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md). P5 through P7 closed
+on 2026-08-25: every remediation PR is merged, the six exact Codex IDs are
+closed with the ledger in [`ops/closures.json`](./ops/closures.json), and the
+closeout reflection is retained under `history/reflections/`.
 
 ## Phases
 
@@ -16,11 +22,11 @@ depth is in progress.
 | P0 Posture validation and grill gate | ratified 2026-08-24 | Validate the posture against live GitHub, AWS, AMI, identity, lifecycle, and lane-placement facts; ratify mechanism, sequencing, rollback, and proof. | The sanitized facts, threat model, mechanism, and operator grill record exist. |
 | P1 08-24 CSF-003/CSF-009 deployment proof | complete 2026-08-24 (closure-ready evidence retained) | Bake and deploy a fresh sealed image before the bootstrap rewrite, prove the setup fast path, run all five red-team gates, and prove teardown. | Every `SPEC.md` deployment-proof requirement passes; closure-ready evidence exists for the two held exact IDs. |
 | P2 Workload identity boundary | complete 2026-08-24 (closure-ready evidence retained) | Keep the boundary-capped role for root-owned bootstrap, then disable IMDS fail-closed before runner startup. | No ordinary or privileged probe can obtain usable application role credentials; bootstrap, registration, and teardown still work. |
-| P3 Admission defense in depth | in progress | Move the five heavy lanes to a default-branch reusable workflow and admit them through the selected organization runner group. | Group policy, workflow refs, membership, and fail-closed registration match the ratified design. |
-| P4 Boundary verification | pending | Run the complete deployed threat matrix and prepare exact-ID reconciliation. | Admission, identity, AMI, lifecycle, red-team, and teardown evidence satisfy `SPEC.md`; all six packet-owned open IDs are closure-ready. |
-| P5 Yeet publish, review, and merge gate | pending | Publish through Yeet, close required checks and review threads, and merge with explicit operator authority. | Yeet reports `merge-ready: yes`, unresolved review threads are zero, and the remediation PR is merged. |
-| P6 Dashboard closure | pending | Close the six exact Codex IDs only after the P5 merge gate. | All six IDs are closed as Already fixed with sanitized per-ID evidence, and the live dashboard reconciles to the allowlist. |
-| P7 Close | pending | Record final evidence, reflection, lifecycle, and packet relationships. | Closeout reflection validates and README, plan, manifest, and index update together. |
+| P3 Admission defense in depth | complete 2026-08-25 (admission evidence retained) | Move the five heavy lanes to a default-branch reusable workflow and admit them through the selected organization runner group. | Group policy, workflow refs, membership, and fail-closed registration match the ratified design. |
+| P4 Boundary verification | complete 2026-08-25 (final-head proof retained) | Run the complete deployed threat matrix and prepare exact-ID reconciliation. | Admission, identity, AMI, lifecycle, red-team, and teardown evidence satisfy `SPEC.md`; all six packet-owned open IDs are closure-ready. |
+| P5 Yeet publish, review, and merge gate | complete 2026-08-25 (all remediation PRs merged) | Publish through Yeet, close required checks and review threads, and merge with explicit operator authority. | Yeet reports `merge-ready: yes`, unresolved review threads are zero, and the remediation PR is merged. |
+| P6 Dashboard closure | complete 2026-08-25 (ledger retained) | Close the six exact Codex IDs only after the P5 merge gate. | All six IDs are closed as Already fixed with sanitized per-ID evidence, and the live dashboard reconciles to the allowlist. |
+| P7 Close | complete 2026-08-25 | Record final evidence, reflection, lifecycle, and packet relationships. | Closeout reflection validates and README, plan, manifest, and index update together. |
 
 ## P0 checklist
 
@@ -134,8 +140,10 @@ change that lacks per-job version pinning:
    clean. Keep the candidate only after the operator records the clean result.
 
 The recipe bounded launch-template v11 and v12 failures and allowed v13 to
-remain only after the clean canary. Apply the same discipline to P3 admission
-changes. P3 is in progress.
+remain only after the clean canary. The same discipline applied to the P3
+admission changes; the redeploy's deviation from step 3 is recorded and
+ratified in
+[`research/P3-EVIDENCE.md` § Canary-window deviation](./research/P3-EVIDENCE.md#canary-window-deviation).
 
 ## P3 Admission defense in depth checklist
 
@@ -164,13 +172,24 @@ changes. P3 is in progress.
       organization registration deployed at `05:11:47Z`, failed on a missing
       installation permission, and rolled back at `05:36:51Z`. See
       [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md).
-- [ ] Accept the organization self-hosted-runners permission on the
+- [x] Accept the organization self-hosted-runners permission on the
       fleet-controller installation, redeploy the committed controller source,
-      and drain pre-deploy runners.
-- [ ] Prove a PR heavy job runs from the protected reusable workflow and a
-      non-allowlisted workflow remains queued without runner assignment.
-- [ ] Prove a missing or rejecting named group fails registration without
-      `Default` or repository fallback.
+      and drain pre-deploy runners; accepted before `17:36:57Z`, redeployed
+      `17:37:02Z` to `17:38:58Z`, drained by `17:48:09Z` on 2026-08-25.
+- [x] Prove a PR heavy job runs from the protected reusable workflow and a
+      non-allowlisted workflow remains queued without runner assignment; #810
+      run `32880339636` (all five `Heavy / ...` jobs on group-4 runners through
+      `heavy.yml@refs/heads/main`) and probe run `32880025557` (queued five
+      minutes with no runner beside an idle group runner). See
+      [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md).
+- [x] Prove a missing or rejecting named group fails registration without
+      `Default` or repository fallback; the absent-group probe (`18:08:45Z`
+      to `18:16:22Z`, run `32882220360`) deployed a group name that does not
+      exist, launched and terminated eleven candidates on `Runner group
+      beep-ec2-heavy-absent does not exist` with zero organization or
+      repository registrations, restored automatically, and then ran the same
+      queued job on a group-4 runner. The `05:19Z` permission incident is
+      retained as a second fail-closed record.
 
 ## Rollback posture
 
@@ -185,38 +204,66 @@ changes. P3 is in progress.
   command and a packet record naming it as a known-risk state. It is not a
   successful security rollback and is never an agent default.
 
-## P4 Boundary verification
+## P4 Boundary verification checklist
 
-1. Repeat the approved deployment and red-team matrix on the final exact head.
-2. Prove one-job-one-VM registration, pickup, deregistration, and EC2 teardown.
-3. Prove the AMI and setup fast path reject every tested digest, owner, or mode
-   mismatch.
+1. [x] Repeat the approved deployment and red-team matrix on the final exact
+   head. Run `32893112867` on `4764cdb4ba` (2026-08-25, `20:03Z`) reported
+   exactly one PASS for Gates A through J, L, and M, `AMI_PIN`, and live
+   `METADATA_DISABLED`, then `REDTEAM: PASS`. See
+   [`research/P4-EVIDENCE.md` § Proof of record](./research/P4-EVIDENCE.md#proof-of-record).
+2. [x] Prove one-job-one-VM registration, pickup, deregistration, and EC2
+   teardown. The proof worker registered only in group 4, served one job,
+   deregistered after one second, and was terminating one second later. See
+   [§ Lifecycle on the final head](./research/P4-EVIDENCE.md#lifecycle-on-the-final-head).
+3. [x] Prove the AMI and setup fast path reject every tested digest, owner,
+   or mode mismatch. `AMI_PIN` bound the worker to the serving pin; the
+   lockfile change in #812 made the integrity check refuse the stale fast
+   path on the final head, matching `P1` lane probe #1. See
+   [§ Sealed image and setup fast path](./research/P4-EVIDENCE.md#sealed-image-and-setup-fast-path-on-the-final-head).
 4. [x] Add the operator-controlled one-use JIT replay probe and conditional
    `M_JIT_REPLAY` verifier routing without logging the JIT value.
-5. [ ] Run the replay probe. Require the second registration to be rejected,
-   scrub the retained value, and record only the rejection class and
-   timestamps.
-6. Re-read the live runner-group state and deployed AWS state after rollout.
-7. Map the final evidence to each of the six open Codex IDs in `SPEC.md`.
-8. Mark each exact ID closure-ready after its individual evidence passes. Do
-   not close any ID before the `P5` merge gate.
+5. [x] Run the replay probe. GitHub rejected the second listener with
+   `A session for this runner already exists.`; the probe scrubbed the value
+   and recorded only the rejection class and timestamps. This proves
+   concurrent replay only; post-release replay is SPEC exception E1. See
+   [§ JIT replay probe](./research/P4-EVIDENCE.md#jit-replay-probe).
+6. [x] Re-read the live runner-group state and deployed AWS state after
+   rollout. See
+   [§ Live state after rollout](./research/P4-EVIDENCE.md#live-state-after-rollout).
+7. [x] Map the final evidence to each of the six open Codex IDs in `SPEC.md`.
+   See
+   [§ Closure-ready mapping](./research/P4-EVIDENCE.md#closure-ready-mapping).
+8. [x] Mark each exact ID closure-ready after its individual evidence passes,
+   and close none before the merge gate. The gate reading is recorded in
+   [§ Merge-gate reading](./research/P4-EVIDENCE.md#merge-gate-reading).
 
-## P5 Yeet publish, review, and merge through P7 Close
+## P5 Yeet publish, review, and merge through P7 Close checklist
 
-1. Run Yeet repair and verify, publish with an intentional message, and monitor
-   exact-head checks and review threads until `merge-ready: yes`.
-2. With explicit operator authority, merge the remediation PR. Treat merge as a
-   hard gate before every dashboard action.
-3. Close the six exact Codex IDs as Already fixed, then reconcile the live
-   dashboard against the allowlist and retain sanitized per-ID metadata.
-4. Write `history/reflections/<YYYY-MM-DD>-<agent>.md` via the `/reflect` skill
-   and validate it with `bun run beep lint reflection-artifacts`.
-5. Store the grill receipt, deployment report, sanitized setup summary,
-   red-team gate accounting, teardown proof, runner-group proof, workload
-   identity proof, and exact-ID closure record under `history/`.
-6. Update `README.md`, this plan, `ops/manifest.json`, and `goals/INDEX.md` in
-   the same closeout PR.
-7. Leave `ci-fleet-endgame` and `ci-fleet-residue` lifecycle state unchanged.
+1. [x] Publish through Yeet and monitor exact-head checks and review threads
+   until `merge-ready: yes`. Remediation PRs #796, #800, #805, #808, and #814
+   each closed this way and merged with operator authority; the closeout PR
+   follows the same path.
+2. [x] Treat merge as a hard gate before every dashboard action. Every
+   remediation PR was merged before its findings were closed; four IDs were
+   closed on 2026-08-24 before the P4 re-proof under SPEC exception E2; the
+   closeout PR carries no remediation code. See
+   [`research/P4-EVIDENCE.md` § Merge-gate reading](./research/P4-EVIDENCE.md#merge-gate-reading).
+3. [x] Close the six exact Codex IDs as Already fixed and reconcile the live
+   dashboard against the allowlist. Ledger:
+   [`ops/closures.json`](./ops/closures.json).
+4. [x] Write `history/reflections/2026-08-25-claude.md` and validate it with
+   `bun run beep lint reflection-artifacts`.
+5. [x] Retain the grill record, deployment reports, sanitized setup
+   summaries, red-team gate accounting, teardown proof, runner-group proof,
+   workload-identity proof, and exact-ID closure record. They live in
+   `research/P0-GRILL.md`, `research/P1-EVIDENCE.md` through
+   `research/P4-EVIDENCE.md`, and `ops/closures.json`; `history/` holds the
+   reflection.
+6. [x] Update `README.md`, this plan, `ops/manifest.json`, and
+   `goals/INDEX.md` in the same closeout PR.
+7. [x] Leave `ci-fleet-endgame` and `ci-fleet-residue` lifecycle state
+   unchanged. The stale-image re-bake is handed to `ci-fleet-endgame` as a
+   performance item, not a lifecycle change.
 
 ## Verification commands
 
@@ -226,5 +273,6 @@ jq . goals/runner-trust-boundary/ops/manifest.json > /dev/null
 bun run beep goals index --check
 bun run beep goals doctor
 bun run beep lint reflection-artifacts
+jq . goals/runner-trust-boundary/ops/closures.json > /dev/null
 git diff --check -- goals/runner-trust-boundary goals/INDEX.md
 ```

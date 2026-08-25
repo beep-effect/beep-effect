@@ -839,6 +839,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     ),
     supportsAck: true,
     supportsTransferables: false,
+    codecFor: parserFactory.codecFor,
   });
 
   const serverProtocol = RpcServer.Protocol.of({
@@ -857,6 +858,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     supportsNotifications: true,
     supportsSpanPropagation: true,
     supportsTransferables: false,
+    codecFor: parserFactory.codecFor,
   });
 
   const sendNotificationEffect = Effect.fn($I`sendNotification`)(function* (method: string, payload: unknown) {

@@ -256,9 +256,10 @@ const parallelFlag = Flag.integer("parallel").pipe(
   Flag.withDefault(4),
   Flag.withDescription("Maximum number of packages to process concurrently")
 );
+const docgenConcurrencyConfig = Config.int("BEEP_DOCGEN_CONCURRENCY").pipe(Config.withDefault(3));
 const localParallelFlag = Flag.integer("parallel").pipe(
   Flag.withAlias("j"),
-  Flag.withDefault(1),
+  Flag.optional,
   Flag.withDescription("Maximum number of local docgen packages to process concurrently")
 );
 
@@ -519,6 +520,7 @@ const docgenLocalCommand = Command.make(
   },
   Effect.fn(
     function* ({ package: packageSelector, allowFull, base, head, parallel, plan, full, json }) {
+      const configuredParallel = yield* docgenConcurrencyConfig;
       yield* runDocgenLocal({
         allowFull,
         base,
@@ -526,7 +528,7 @@ const docgenLocalCommand = Command.make(
         head,
         json,
         packageSelector,
-        parallel,
+        parallel: O.getOrElse(parallel, () => configuredParallel),
         plan,
       });
     },

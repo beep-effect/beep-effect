@@ -3,13 +3,13 @@
   "initiative": {
     "id": "skill-contract-kernel",
     "title": "Skill Contract Kernel",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-24",
+    "updated": "2026-08-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/skill-contract-kernel",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Ship @beep/skill-contract (schemas-only contract kernel: SkillContract, fail-closed gates, evidence ladder, in-toto-aligned receipts), proven by the qa judge-gate retrofit and a re-extraction-gated SKILL.md projection.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -61,22 +61,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
