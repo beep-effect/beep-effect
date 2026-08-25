@@ -4,27 +4,20 @@
  */
 import { referenceProfiles } from "@beep/editor/capability/profiles";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { documentToEditorState } from "@beep/lexical-schema";
+import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema";
 import * as Md from "@beep/md/Md.model";
-import { Effect, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { Atom } from "effect/unstable/reactivity";
+import type { SerializedEditorState } from "@beep/lexical-schema";
 
 const text = (value: string) => Md.Text.make({ value });
 const $I = $ProfessionalDesktopId.create("editor-proof/EditorProof.atoms");
 
-/** App-local canonical proof fixture, independent from Storybook source files.
- *
- * **Example** (Inspect the heading)
- * ```ts
- * import { editorProofDocument } from "@/editor-proof/EditorProof.atoms"
- * console.log(editorProofDocument.children[0]?._tag) // "Heading"
- * ```
- * @category fixtures
- * @since 0.0.0
- */
-export const editorProofDocument = Md.Document.make({
+// App-local canonical proof fixture, independent from Storybook source files.
+const editorProofDocument = Md.Document.make({
   children: [
     Md.Heading.make({ level: 1, children: [text("Capability proof")] }),
     Md.P.make({
@@ -60,23 +53,17 @@ export const editorProofDocument = Md.Document.make({
   ],
 });
 
-/** Canonical JSON text codec for the proof document.
- *
- * **Example** (Reference the codec)
- * ```ts
- * import { EditorProofDocumentJson } from "@/editor-proof/EditorProof.atoms"
- * console.log(typeof EditorProofDocumentJson) // "function"
- * ```
- * @category codecs
- * @since 0.0.0
- */
-export const EditorProofDocumentJson = S.fromJsonString(Md.Document).pipe(
+// Example** (Reference the codec) ```ts import { EditorProofDocumentJson } from "@/editor-proof/EditorProof.atom
+const EditorProofDocumentJson = S.fromJsonString(Md.Document).pipe(
   $I.annoteSchema("EditorProofDocumentJson", {
     description: "Canonical JSON text for the local editor proof document.",
   })
 );
 
 const encodeEditorProofJson = S.encodeUnknownResult(EditorProofDocumentJson);
+const decodeEditorProofJson = S.decodeUnknownResult(EditorProofDocumentJson);
+const formatIssue = SchemaIssue.makeFormatterDefault();
+const nextRevision = (revision: number): number => revision + 1;
 
 /** Selected app reference-profile identifier.
  *
@@ -89,17 +76,8 @@ const encodeEditorProofJson = S.encodeUnknownResult(EditorProofDocumentJson);
  * @since 0.0.0
  */
 export const editorProofProfileIdAtom = Atom.make(referenceProfiles.minimal.id);
-/** Latest canonical document transaction state.
- *
- * **Example** (Reference the atom)
- * ```ts
- * import { editorProofCanonicalAtom } from "@/editor-proof/EditorProof.atoms"
- * console.log(editorProofCanonicalAtom)
- * ```
- * @category atoms
- * @since 0.0.0
- */
-export const editorProofCanonicalAtom = Atom.make(editorProofDocument);
+// Example** (Reference the atom) ```ts import { editorProofCanonicalAtom } from "@/editor-proof/EditorProof.atom
+const editorProofCanonicalAtom = Atom.make(editorProofDocument);
 /** Serialized editor state derived from the canonical atom for each remount.
  *
  * **Example** (Reference the atom)
@@ -146,3 +124,61 @@ export const editorProofImportFailureAtom = Atom.make<O.Option<string>>(O.none()
  * @since 0.0.0
  */
 export const editorProofRevisionAtom = Atom.make(0);
+
+const selectMinimalProfileAtom = Atom.fnSync<unknown>()((_event, ctx) => {
+  ctx.set(editorProofProfileIdAtom, referenceProfiles.minimal.id);
+  ctx.set(editorProofRevisionAtom, nextRevision(ctx(editorProofRevisionAtom)));
+});
+
+const selectDocumentProofProfileAtom = Atom.fnSync<unknown>()((_event, ctx) => {
+  ctx.set(editorProofProfileIdAtom, referenceProfiles.documentProof.id);
+  ctx.set(editorProofRevisionAtom, nextRevision(ctx(editorProofRevisionAtom)));
+});
+
+const importCanonicalJsonAtom = Atom.fnSync<unknown>()((_event, ctx) =>
+  Result.match(decodeEditorProofJson(ctx(editorProofJsonAtom)), {
+    onFailure: (error) => ctx.set(editorProofImportFailureAtom, O.some(pipe(error.issue, formatIssue))),
+    onSuccess: (next) => {
+      ctx.set(editorProofCanonicalAtom, next);
+      ctx.set(editorProofImportFailureAtom, O.none());
+      ctx.set(editorProofRevisionAtom, nextRevision(ctx(editorProofRevisionAtom)));
+    },
+  })
+);
+
+const reloadCanonicalAtom = Atom.fnSync<unknown>()((_event, ctx) =>
+  ctx.set(editorProofRevisionAtom, nextRevision(ctx(editorProofRevisionAtom)))
+);
+
+const editCanonicalJsonAtom = Atom.fnSync<string>()((json, ctx) => {
+  ctx.set(editorProofJsonAtom, json);
+  ctx.set(editorProofImportFailureAtom, O.none());
+});
+
+const captureEditorStateAtom = Atom.fnSync<SerializedEditorState>()((state, ctx) => {
+  const next = editorStateToDocument(state);
+  ctx.set(editorProofCanonicalAtom, next);
+  Result.match(encodeEditorProofJson(next), {
+    onFailure: (error) => ctx.set(editorProofImportFailureAtom, O.some(pipe(error.issue, formatIssue))),
+    onSuccess: (json) => ctx.set(editorProofJsonAtom, json),
+  });
+});
+
+/** Atom-owned actions for profile selection, canonical import, capture, editing, and reload.
+ *
+ * **Example** (Reference the actions)
+ * ```ts
+ * import { editorProofActions } from "@/editor-proof/EditorProof.atoms"
+ * console.log(editorProofActions.importCanonicalJson)
+ * ```
+ * @category atoms
+ * @since 0.0.0
+ */
+export const editorProofActions = {
+  selectMinimalProfile: selectMinimalProfileAtom,
+  selectDocumentProofProfile: selectDocumentProofProfileAtom,
+  importCanonicalJson: importCanonicalJsonAtom,
+  reloadCanonical: reloadCanonicalAtom,
+  editCanonicalJson: editCanonicalJsonAtom,
+  captureEditorState: captureEditorStateAtom,
+} as const;

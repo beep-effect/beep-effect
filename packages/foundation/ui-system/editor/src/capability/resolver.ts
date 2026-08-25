@@ -6,7 +6,7 @@
  */
 
 import { A, dual, O } from "@beep/utils";
-import { Effect, Equal, Result } from "effect";
+import { Effect, Equal, pipe, Result } from "effect";
 import * as Graph from "effect/Graph";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -47,6 +47,44 @@ const enabledDescriptors = (
   enabled: MutableHashSet.MutableHashSet<CapabilityId>
 ): ReadonlyArray<CapabilityDescriptor> => A.filter(catalog, (descriptor) => MutableHashSet.has(enabled, descriptor.id));
 
+const addDependencyNodes = (
+  mutable: Graph.MutableDirectedGraph<CapabilityId, CapabilityId>,
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  nodeIndexes: MutableHashMap.MutableHashMap<CapabilityId, Graph.NodeIndex>
+): void => {
+  for (const descriptor of descriptors) {
+    MutableHashMap.set(nodeIndexes, descriptor.id, Graph.addNode(mutable, descriptor.id));
+  }
+};
+
+const addDescriptorEdges = (
+  mutable: Graph.MutableDirectedGraph<CapabilityId, CapabilityId>,
+  descriptor: CapabilityDescriptor,
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>,
+  nodeIndexes: MutableHashMap.MutableHashMap<CapabilityId, Graph.NodeIndex>
+): void => {
+  for (const dependency of descriptor.dependencies) {
+    if (MutableHashSet.has(enabled, dependency)) {
+      const source = MutableHashMap.get(nodeIndexes, descriptor.id);
+      const target = MutableHashMap.get(nodeIndexes, dependency);
+      if (O.isSome(source) && O.isSome(target)) {
+        Graph.addEdge(mutable, source.value, target.value, dependency);
+      }
+    }
+  }
+};
+
+const addDependencyEdges = (
+  mutable: Graph.MutableDirectedGraph<CapabilityId, CapabilityId>,
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>,
+  nodeIndexes: MutableHashMap.MutableHashMap<CapabilityId, Graph.NodeIndex>
+): void => {
+  for (const descriptor of descriptors) {
+    addDescriptorEdges(mutable, descriptor, enabled, nodeIndexes);
+  }
+};
+
 const makeDependencyGraph = (descriptors: ReadonlyArray<CapabilityDescriptor>) => {
   const nodeIndexes = MutableHashMap.empty<CapabilityId, Graph.NodeIndex>();
   const enabled = MutableHashSet.empty<CapabilityId>();
@@ -54,21 +92,62 @@ const makeDependencyGraph = (descriptors: ReadonlyArray<CapabilityDescriptor>) =
     MutableHashSet.add(enabled, descriptor.id);
   }
   return Graph.mutate(Graph.directed<CapabilityId, CapabilityId>(), (mutable) => {
-    for (const descriptor of descriptors) {
-      MutableHashMap.set(nodeIndexes, descriptor.id, Graph.addNode(mutable, descriptor.id));
-    }
-    for (const descriptor of descriptors) {
-      for (const dependency of descriptor.dependencies) {
-        if (MutableHashSet.has(enabled, dependency)) {
-          const source = MutableHashMap.get(nodeIndexes, descriptor.id);
-          const target = MutableHashMap.get(nodeIndexes, dependency);
-          if (O.isSome(source) && O.isSome(target)) {
-            Graph.addEdge(mutable, source.value, target.value, dependency);
-          }
-        }
-      }
-    }
+    addDependencyNodes(mutable, descriptors, nodeIndexes);
+    addDependencyEdges(mutable, descriptors, enabled, nodeIndexes);
   });
+};
+
+const cycleFromStack = (
+  stack: ReadonlyArray<CapabilityId>,
+  capabilityId: CapabilityId
+): A.NonEmptyReadonlyArray<CapabilityId> =>
+  A.append(
+    A.dropWhile(stack, (candidate) => !Equal.equals(candidate, capabilityId)),
+    capabilityId
+  );
+
+const visitDependencies = (
+  dependencies: ReadonlyArray<CapabilityId>,
+  stack: ReadonlyArray<CapabilityId>,
+  index: MutableHashMap.MutableHashMap<CapabilityId, CapabilityDescriptor>,
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>,
+  visiting: MutableHashSet.MutableHashSet<CapabilityId>,
+  visited: MutableHashSet.MutableHashSet<CapabilityId>
+): O.Option<A.NonEmptyReadonlyArray<CapabilityId>> =>
+  A.reduce(dependencies, O.none<A.NonEmptyReadonlyArray<CapabilityId>>(), (found, dependency) =>
+    O.orElse(found, () =>
+      MutableHashSet.has(enabled, dependency)
+        ? visitCapability(dependency, stack, index, enabled, visiting, visited)
+        : O.none()
+    )
+  );
+
+const visitCapability = (
+  capabilityId: CapabilityId,
+  stack: ReadonlyArray<CapabilityId>,
+  index: MutableHashMap.MutableHashMap<CapabilityId, CapabilityDescriptor>,
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>,
+  visiting: MutableHashSet.MutableHashSet<CapabilityId>,
+  visited: MutableHashSet.MutableHashSet<CapabilityId>
+): O.Option<A.NonEmptyReadonlyArray<CapabilityId>> => {
+  if (MutableHashSet.has(visiting, capabilityId)) {
+    return O.some(cycleFromStack(stack, capabilityId));
+  }
+  if (MutableHashSet.has(visited, capabilityId)) {
+    return O.none();
+  }
+
+  MutableHashSet.add(visiting, capabilityId);
+  const nextStack = A.append(stack, capabilityId);
+  const found = pipe(
+    MutableHashMap.get(index, capabilityId),
+    O.flatMap((descriptor) => visitDependencies(descriptor.dependencies, nextStack, index, enabled, visiting, visited))
+  );
+  if (O.isNone(found)) {
+    MutableHashSet.remove(visiting, capabilityId);
+    MutableHashSet.add(visited, capabilityId);
+  }
+  return found;
 };
 
 const dependencyCycle = (
@@ -81,47 +160,9 @@ const dependencyCycle = (
   for (const descriptor of descriptors) {
     MutableHashSet.add(enabled, descriptor.id);
   }
-
-  const visit = (
-    capabilityId: CapabilityId,
-    stack: ReadonlyArray<CapabilityId>
-  ): O.Option<A.NonEmptyReadonlyArray<CapabilityId>> => {
-    if (MutableHashSet.has(visiting, capabilityId)) {
-      return O.some(
-        A.append(
-          A.dropWhile(stack, (candidate) => !Equal.equals(candidate, capabilityId)),
-          capabilityId
-        )
-      );
-    }
-    if (MutableHashSet.has(visited, capabilityId)) {
-      return O.none();
-    }
-
-    MutableHashSet.add(visiting, capabilityId);
-    const descriptor = MutableHashMap.get(index, capabilityId);
-    if (O.isSome(descriptor)) {
-      for (const dependency of descriptor.value.dependencies) {
-        if (MutableHashSet.has(enabled, dependency)) {
-          const found = visit(dependency, A.append(stack, capabilityId));
-          if (O.isSome(found)) {
-            return found;
-          }
-        }
-      }
-    }
-    MutableHashSet.remove(visiting, capabilityId);
-    MutableHashSet.add(visited, capabilityId);
-    return O.none();
-  };
-
-  for (const descriptor of descriptors) {
-    const found = visit(descriptor.id, []);
-    if (O.isSome(found)) {
-      return found;
-    }
-  }
-  return O.none();
+  return A.reduce(descriptors, O.none<A.NonEmptyReadonlyArray<CapabilityId>>(), (found, descriptor) =>
+    O.orElse(found, () => visitCapability(descriptor.id, [], index, enabled, visiting, visited))
+  );
 };
 
 const defaultCommands = (descriptors: ReadonlyArray<CapabilityDescriptor>): ReadonlyArray<ResolvedCommand> =>
@@ -215,6 +256,199 @@ const findRegistrationOwner = (
       A.contains(descriptor.registrations.transformers, registration)
   );
 
+const firstSome = <A, B>(values: ReadonlyArray<A>, find: (value: A) => O.Option<B>): O.Option<B> =>
+  A.reduce(values, O.none<B>(), (found, value) => O.orElse(found, () => find(value)));
+
+const CapabilityDispositionDevelopmentOnly = (descriptor: CapabilityDescriptor): boolean =>
+  Equal.equals(descriptor.classification.disposition, "development-only");
+
+const unknownCapability = (
+  index: MutableHashMap.MutableHashMap<CapabilityId, CapabilityDescriptor>,
+  profile: EditorProfile
+): O.Option<ProfileResolutionError> =>
+  pipe(
+    A.findFirst(profile.capabilities, (capabilityId) => !MutableHashMap.has(index, capabilityId)),
+    O.map((capabilityId) => UnknownCapabilityError.make({ profileId: profile.id, capabilityId }))
+  );
+
+const developmentOnlyInProduction = (
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  profile: EditorProfile
+): O.Option<ProfileResolutionError> =>
+  pipe(
+    A.findFirst(
+      descriptors,
+      (descriptor) =>
+        CapabilityDispositionDevelopmentOnly(descriptor) && !Equal.equals(profile.kind, "development-reference")
+    ),
+    O.map((descriptor) => DevelopmentOnlyCapabilityError.make({ profileId: profile.id, capabilityId: descriptor.id }))
+  );
+
+const missingDependency = (
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>,
+  profile: EditorProfile
+): O.Option<ProfileResolutionError> =>
+  firstSome(descriptors, (descriptor) =>
+    pipe(
+      A.findFirst(descriptor.dependencies, (dependency) => !MutableHashSet.has(enabled, dependency)),
+      O.map((dependencyId) =>
+        MissingDependencyError.make({
+          profileId: profile.id,
+          capabilityId: descriptor.id,
+          dependencyId,
+        })
+      )
+    )
+  );
+
+const dependencyCycleError = (
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  index: MutableHashMap.MutableHashMap<CapabilityId, CapabilityDescriptor>,
+  profile: EditorProfile
+): O.Option<ProfileResolutionError> =>
+  Graph.isAcyclic(makeDependencyGraph(descriptors))
+    ? O.none()
+    : pipe(
+        dependencyCycle(descriptors, index),
+        O.map((cycle) => DependencyCycleError.make({ profileId: profile.id, cycle }))
+      );
+
+const capabilityConflict = (
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>,
+  profile: EditorProfile
+): O.Option<ProfileResolutionError> =>
+  firstSome(descriptors, (descriptor) =>
+    pipe(
+      A.findFirst(descriptor.conflicts, (conflict) => MutableHashSet.has(enabled, conflict)),
+      O.map((conflictsWith) =>
+        CapabilityConflictError.make({
+          profileId: profile.id,
+          capabilityId: descriptor.id,
+          conflictsWith,
+        })
+      )
+    )
+  );
+
+const transformerRegistrationError = (
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  profile: EditorProfile
+): O.Option<ProfileResolutionError> =>
+  pipe(
+    A.findFirst(descriptors, (descriptor) => A.length(descriptor.registrations.transformers) > 0),
+    O.map((owner) =>
+      A.match(owner.registrations.transformers, {
+        onEmpty: () =>
+          IncompatibleRegistrationError.make({
+            profileId: profile.id,
+            capabilityId: owner.id,
+            registration: "unknown-transformer",
+            reason: "transformer requires interchange.markdown",
+          }),
+        onNonEmpty: ([registration]) =>
+          IncompatibleRegistrationError.make({
+            profileId: profile.id,
+            capabilityId: owner.id,
+            registration,
+            reason: "transformer requires interchange.markdown",
+          }),
+      })
+    )
+  );
+
+const checklistRegistrationError = (
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  profile: EditorProfile
+): O.Option<ProfileResolutionError> =>
+  pipe(
+    findRegistrationOwner(descriptors, "CheckListPlugin"),
+    O.map((owner) =>
+      IncompatibleRegistrationError.make({
+        profileId: profile.id,
+        capabilityId: owner.id,
+        registration: "CheckListPlugin",
+        reason: "CheckListPlugin requires ListPlugin",
+      })
+    )
+  );
+
+const incompatibleRegistration = (
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  extensions: ReadonlyArray<string>,
+  transformers: ReadonlyArray<string>,
+  profile: EditorProfile
+): O.Option<ProfileResolutionError> =>
+  pipe(
+    A.length(transformers) > 0 && !A.contains(extensions, "MarkdownShortcutPlugin")
+      ? transformerRegistrationError(descriptors, profile)
+      : O.none(),
+    O.orElse(() =>
+      A.contains(extensions, "CheckListPlugin") && !A.contains(extensions, "ListPlugin")
+        ? checklistRegistrationError(descriptors, profile)
+        : O.none()
+    )
+  );
+
+const resolvedCommands = (
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  profile: EditorProfile
+): Result.Result<ReadonlyArray<ResolvedCommand>, ProfileResolutionError> =>
+  pipe(
+    applyOverrides(defaultCommands(descriptors), profile),
+    Result.flatMap((commands) =>
+      pipe(
+        keybindingConflict(commands, profile),
+        O.match({
+          onNone: () => Result.succeed(commands),
+          onSome: Result.fail,
+        })
+      )
+    )
+  );
+
+const guardedChordsOf = (
+  catalog: CapabilityCatalog,
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>
+): ReadonlyArray<Keybinding> =>
+  pipe(
+    catalog,
+    A.filter((descriptor) => !MutableHashSet.has(enabled, descriptor.id)),
+    A.flatMap((descriptor) => A.flatMap(descriptor.commands, (command) => command.keybindings))
+  );
+
+const assembleResolved = (
+  catalog: CapabilityCatalog,
+  profile: EditorProfile,
+  enabled: MutableHashSet.MutableHashSet<CapabilityId>,
+  descriptors: ReadonlyArray<CapabilityDescriptor>,
+  commands: ReadonlyArray<ResolvedCommand>
+): ResolvedEditorProfile =>
+  ResolvedEditorProfile.make({
+    profileId: profile.id,
+    kind: profile.kind,
+    capabilities: A.map(catalog, (descriptor) =>
+      ResolvedCapability.make({
+        id: descriptor.id,
+        mode: MutableHashSet.has(enabled, descriptor.id) ? ("authoring" as const) : ("read-only" as const),
+        readOnlyFallback: descriptor.readOnlyFallback,
+      })
+    ),
+    registrations: CapabilityRegistrations.make({
+      nodes: A.flatMap(catalog, (descriptor) => descriptor.registrations.nodes),
+      extensions: A.flatMap(descriptors, (descriptor) => descriptor.registrations.extensions),
+      transformers: A.flatMap(descriptors, (descriptor) => descriptor.registrations.transformers),
+    }),
+    commands,
+    guardedChords: guardedChordsOf(catalog, enabled),
+  });
+
+const firstResolutionError = (
+  checks: ReadonlyArray<() => O.Option<ProfileResolutionError>>
+): O.Option<ProfileResolutionError> =>
+  A.reduce(checks, O.none<ProfileResolutionError>(), (error, check) => O.orElse(error, check));
+
 /**
  * Resolves a profile into a deterministic runtime plan without effects or hidden defaults.
  *
@@ -252,139 +486,32 @@ export const resolveEditorProfile: {
     profile: EditorProfile
   ): Result.Result<ResolvedEditorProfile, ProfileResolutionError> => {
     const index = descriptorIndex(catalog);
-    for (const capabilityId of profile.capabilities) {
-      if (!MutableHashMap.has(index, capabilityId)) {
-        return Result.fail(UnknownCapabilityError.make({ profileId: profile.id, capabilityId }));
-      }
-    }
-
     const enabled = enabledIdSet(profile);
     const descriptors = enabledDescriptors(catalog, enabled);
-
-    for (const descriptor of descriptors) {
-      if (CapabilityDispositionDevelopmentOnly(descriptor) && !Equal.equals(profile.kind, "development-reference")) {
-        return Result.fail(DevelopmentOnlyCapabilityError.make({ profileId: profile.id, capabilityId: descriptor.id }));
-      }
-    }
-
-    for (const descriptor of descriptors) {
-      for (const dependency of descriptor.dependencies) {
-        if (!MutableHashSet.has(enabled, dependency)) {
-          return Result.fail(
-            MissingDependencyError.make({
-              profileId: profile.id,
-              capabilityId: descriptor.id,
-              dependencyId: dependency,
-            })
-          );
-        }
-      }
-    }
-
-    const graph = makeDependencyGraph(descriptors);
-    if (!Graph.isAcyclic(graph)) {
-      const cycle = dependencyCycle(descriptors, index);
-      if (O.isSome(cycle)) {
-        return Result.fail(DependencyCycleError.make({ profileId: profile.id, cycle: cycle.value }));
-      }
-    }
-
-    for (const descriptor of descriptors) {
-      for (const conflict of descriptor.conflicts) {
-        if (MutableHashSet.has(enabled, conflict)) {
-          return Result.fail(
-            CapabilityConflictError.make({
-              profileId: profile.id,
-              capabilityId: descriptor.id,
-              conflictsWith: conflict,
-            })
-          );
-        }
-      }
-    }
-
-    const nodes = A.flatMap(catalog, (descriptor) => descriptor.registrations.nodes);
     const extensions = A.flatMap(descriptors, (descriptor) => descriptor.registrations.extensions);
     const transformers = A.flatMap(descriptors, (descriptor) => descriptor.registrations.transformers);
+    const error = firstResolutionError([
+      () => unknownCapability(index, profile),
+      () => developmentOnlyInProduction(descriptors, profile),
+      () => missingDependency(descriptors, enabled, profile),
+      () => dependencyCycleError(descriptors, index, profile),
+      () => capabilityConflict(descriptors, enabled, profile),
+      () => incompatibleRegistration(descriptors, extensions, transformers, profile),
+    ]);
 
-    if (A.length(transformers) > 0 && !A.contains(extensions, "MarkdownShortcutPlugin")) {
-      const owner = A.findFirst(descriptors, (descriptor) => A.length(descriptor.registrations.transformers) > 0);
-      if (O.isSome(owner)) {
-        return A.match(owner.value.registrations.transformers, {
-          onEmpty: () =>
-            Result.fail(
-              IncompatibleRegistrationError.make({
-                profileId: profile.id,
-                capabilityId: owner.value.id,
-                registration: "unknown-transformer",
-                reason: "transformer requires interchange.markdown",
-              })
-            ),
-          onNonEmpty: ([registration]) =>
-            Result.fail(
-              IncompatibleRegistrationError.make({
-                profileId: profile.id,
-                capabilityId: owner.value.id,
-                registration,
-                reason: "transformer requires interchange.markdown",
-              })
-            ),
-        });
-      }
-    }
-
-    if (A.contains(extensions, "CheckListPlugin") && !A.contains(extensions, "ListPlugin")) {
-      const owner = findRegistrationOwner(descriptors, "CheckListPlugin");
-      if (O.isSome(owner)) {
-        return Result.fail(
-          IncompatibleRegistrationError.make({
-            profileId: profile.id,
-            capabilityId: owner.value.id,
-            registration: "CheckListPlugin",
-            reason: "CheckListPlugin requires ListPlugin",
-          })
-        );
-      }
-    }
-
-    const commandResult = applyOverrides(defaultCommands(descriptors), profile);
-    if (Result.isFailure(commandResult)) {
-      return Result.fail(commandResult.failure);
-    }
-    const commandConflict = keybindingConflict(commandResult.success, profile);
-    if (O.isSome(commandConflict)) {
-      return Result.fail(commandConflict.value);
-    }
-
-    const disabledDescriptors: ReadonlyArray<CapabilityDescriptor> = A.filter(
-      catalog,
-      (descriptor) => !MutableHashSet.has(enabled, descriptor.id)
-    );
-    const guardedChords: ReadonlyArray<Keybinding> = A.flatMap(disabledDescriptors, (descriptor) =>
-      A.flatMap(descriptor.commands, (command) => command.keybindings)
-    );
-
-    return Result.succeed(
-      ResolvedEditorProfile.make({
-        profileId: profile.id,
-        kind: profile.kind,
-        capabilities: A.map(catalog, (descriptor) =>
-          ResolvedCapability.make({
-            id: descriptor.id,
-            mode: MutableHashSet.has(enabled, descriptor.id) ? ("authoring" as const) : ("read-only" as const),
-            readOnlyFallback: descriptor.readOnlyFallback,
-          })
-        ),
-        registrations: CapabilityRegistrations.make({ nodes, extensions, transformers }),
-        commands: commandResult.success,
-        guardedChords,
+    return pipe(
+      error,
+      O.match({
+        onSome: Result.fail,
+        onNone: () =>
+          pipe(
+            resolvedCommands(descriptors, profile),
+            Result.map((commands) => assembleResolved(catalog, profile, enabled, descriptors, commands))
+          ),
       })
     );
   }
 );
-
-const CapabilityDispositionDevelopmentOnly = (descriptor: CapabilityDescriptor): boolean =>
-  Equal.equals(descriptor.classification.disposition, "development-only");
 
 /**
  * Effect wrapper for {@link resolveEditorProfile} with the same typed failure channel.

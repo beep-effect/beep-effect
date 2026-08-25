@@ -26,7 +26,7 @@ import { resolveEditorProfile } from "./capability/resolver.ts";
 import { ResolvedExtensions } from "./capability/runtime.tsx";
 import { logEditorErrorFn } from "./chat/atoms.ts";
 import { editorNodes } from "./nodes.ts";
-import { decodeEditorStateForRuntimeResult } from "./runtime.ts";
+import { decodeEditorStateForRuntimeResult, runtimeInitialStateOption } from "./runtime.ts";
 import { editorTheme } from "./theme.ts";
 import { EditorCompatibilityViewer, EditorWireViewer } from "./viewer.tsx";
 import type { SerializedEditorState } from "@beep/lexical-schema";
@@ -144,9 +144,7 @@ export function EditorComposer({
   onSerializedChange,
 }: EditorComposerProps): JSX.Element {
   const logEditorError = useAtomSet(logEditorErrorFn);
-  const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
-    Result.getSuccess(decodeEditorStateForRuntimeResult(state))
-  );
+  const runtimeInitialState = runtimeInitialStateOption(initialState);
   if (initialState !== undefined && O.isNone(runtimeInitialState)) {
     return <EditorWireViewer input={initialState} className={className} />;
   }

@@ -11,9 +11,11 @@ import { LinkNode } from "@lexical/link";
 import { ListItemNode, ListNode } from "@lexical/list";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
-import { Effect, Equal } from "effect";
+import { Effect, Equal, pipe, Result } from "effect";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import { LineBreakNode, ParagraphNode, TabNode, TextNode } from "lexical";
+import type { CapabilityDescriptor, CommandDefinition, Keybinding } from "@beep/editor/capability/schemas";
 
 const $I = $EditorId.create("capability/catalog-test");
 
@@ -88,65 +90,148 @@ const atlasUrl = new URL(
   import.meta.url
 );
 
+const decodeKeyChord = S.decodeUnknownResult(KeyChordFromString);
+
+const mismatch = (matches: boolean, message: string): ReadonlyArray<string> => (matches ? [] : [message]);
+
+const orderedStringsEqual = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
+  A.length(left) === A.length(right) &&
+  A.every(A.zip(left, right), ([leftValue, rightValue]) => leftValue === rightValue);
+
+const classificationMismatches = (
+  descriptor: CapabilityDescriptor,
+  atlasEntry: AtlasCapability
+): ReadonlyArray<string> => [
+  ...mismatch(
+    descriptor.classification.category === atlasEntry.category,
+    `${descriptor.id}: category descriptor=${descriptor.classification.category}, atlas=${atlasEntry.category}`
+  ),
+  ...mismatch(
+    descriptor.classification.disposition === atlasEntry.disposition.kind,
+    `${descriptor.id}: disposition descriptor=${descriptor.classification.disposition}, atlas=${atlasEntry.disposition.kind}`
+  ),
+];
+
+const dependencyMismatches = (descriptor: CapabilityDescriptor, atlasEntry: AtlasCapability): ReadonlyArray<string> =>
+  mismatch(
+    A.every(atlasEntry.dependencies, (dependency) => A.contains(descriptor.dependencies, dependency)),
+    `${descriptor.id}: atlas dependencies are not a subset of descriptor dependencies`
+  );
+
+const bindingMismatches = (
+  descriptor: CapabilityDescriptor,
+  catalogCommand: CommandDefinition,
+  atlasCommand: AtlasCommand
+): ReadonlyArray<string> =>
+  A.flatMap(atlasCommand.keybindings, (atlasBinding) =>
+    pipeBinding(
+      descriptor,
+      atlasCommand,
+      atlasBinding,
+      A.findFirst(catalogCommand.keybindings, (binding) => Equal.equals(binding.platform, atlasBinding.platform))
+    )
+  );
+
+const pipeBinding = (
+  descriptor: CapabilityDescriptor,
+  atlasCommand: AtlasCommand,
+  atlasBinding: AtlasBinding,
+  catalogBinding: O.Option<Keybinding>
+): ReadonlyArray<string> =>
+  O.match(catalogBinding, {
+    onNone: () => [`Missing ${atlasBinding.platform} binding for ${atlasCommand.id}`],
+    onSome: (binding) =>
+      Result.match(decodeKeyChord(atlasBinding.chord), {
+        onFailure: () => [`${descriptor.id}: invalid atlas chord ${atlasBinding.chord} for ${atlasCommand.id}`],
+        onSuccess: (parsedAtlasChord) =>
+          mismatch(
+            Equal.equals(binding.chord, parsedAtlasChord),
+            `${descriptor.id}: chord mismatch for ${atlasCommand.id} on ${atlasBinding.platform}`
+          ),
+      }),
+  });
+
+const commandEntryMismatches = (descriptor: CapabilityDescriptor, atlasCommand: AtlasCommand): ReadonlyArray<string> =>
+  O.match(
+    A.findFirst(descriptor.commands, (command) => Equal.equals(command.id, atlasCommand.id)),
+    {
+      onNone: () => [`Missing command ${atlasCommand.id}`],
+      onSome: (catalogCommand) => [
+        ...mismatch(
+          catalogCommand.label === atlasCommand.label,
+          `${descriptor.id}: label mismatch for ${atlasCommand.id}`
+        ),
+        ...mismatch(
+          catalogCommand.helpText === atlasCommand.helpText,
+          `${descriptor.id}: help text mismatch for ${atlasCommand.id}`
+        ),
+        ...bindingMismatches(descriptor, catalogCommand, atlasCommand),
+      ],
+    }
+  );
+
+const commandMismatches = (descriptor: CapabilityDescriptor, atlasEntry: AtlasCapability): ReadonlyArray<string> => [
+  ...mismatch(
+    orderedStringsEqual(
+      A.map(descriptor.commands, (command) => command.id),
+      A.map(atlasEntry.commands, (command) => command.id)
+    ),
+    `${descriptor.id}: command identifiers differ`
+  ),
+  ...A.flatMap(atlasEntry.commands, (atlasCommand) => commandEntryMismatches(descriptor, atlasCommand)),
+];
+
+const compatibilityMismatches = (
+  descriptor: CapabilityDescriptor,
+  atlasEntry: AtlasCapability
+): ReadonlyArray<string> =>
+  O.match(
+    A.findFirst(atlasEntry.compatibility, (row) => Equal.equals(row.format, "beep-md")),
+    {
+      onNone: () => [`Missing beep-md compatibility for ${descriptor.id}`],
+      onSome: (canonical) =>
+        mismatch(
+          Equal.equals(descriptor.canonicalCompatibility, canonical.status),
+          `${descriptor.id}: descriptor=${descriptor.canonicalCompatibility}, atlas=${canonical.status}`
+        ),
+    }
+  );
+
+const reconcileEntry = (descriptor: CapabilityDescriptor, atlasEntry: AtlasCapability): ReadonlyArray<string> => [
+  ...classificationMismatches(descriptor, atlasEntry),
+  ...dependencyMismatches(descriptor, atlasEntry),
+  ...commandMismatches(descriptor, atlasEntry),
+  ...compatibilityMismatches(descriptor, atlasEntry),
+];
+
+const atlasIndex = (
+  capabilities: ReadonlyArray<AtlasCapability>
+): MutableHashMap.MutableHashMap<string, AtlasCapability> => {
+  const index = MutableHashMap.empty<string, AtlasCapability>();
+  for (const capability of capabilities) {
+    MutableHashMap.set(index, capability.id, capability);
+  }
+  return index;
+};
+
 describe("capability catalog", () => {
   it.effect(
     "reconciles every atlas-backed descriptor and command",
     Effect.fnUntraced(function* () {
       const atlasText = yield* Effect.tryPromise(() => Bun.file(atlasUrl).text());
       const atlas = yield* S.decodeEffect(S.fromJsonString(AtlasArtifact))(atlasText);
-      let compatibilityMismatches: ReadonlyArray<string> = [];
-
-      for (const descriptor of editorCapabilityCatalog) {
-        if (Equal.equals(descriptor.id, "beep.artifact-ref")) {
-          continue;
-        }
-        const atlasEntry = A.findFirst(atlas.capabilities, (entry) => Equal.equals(entry.id, descriptor.id));
-        if (O.isNone(atlasEntry)) {
-          return yield* Effect.die(`Missing atlas row ${descriptor.id}`);
-        }
-
-        expect(descriptor.classification.category).toBe(atlasEntry.value.category);
-        expect(descriptor.classification.disposition).toBe(atlasEntry.value.disposition.kind);
-        expect(
-          A.every(atlasEntry.value.dependencies, (dependency) => A.contains(descriptor.dependencies, dependency))
-        ).toBe(true);
-
-        expect(A.map(descriptor.commands, (command) => command.id)).toEqual(
-          A.map(atlasEntry.value.commands, (command) => command.id)
-        );
-        for (const atlasCommand of atlasEntry.value.commands) {
-          const catalogCommand = A.findFirst(descriptor.commands, (command) =>
-            Equal.equals(command.id, atlasCommand.id)
-          );
-          if (O.isNone(catalogCommand)) {
-            return yield* Effect.die(`Missing command ${atlasCommand.id}`);
-          }
-          expect(catalogCommand.value.label).toBe(atlasCommand.label);
-          expect(catalogCommand.value.helpText).toBe(atlasCommand.helpText);
-          for (const atlasBinding of atlasCommand.keybindings) {
-            const catalogBinding = A.findFirst(catalogCommand.value.keybindings, (binding) =>
-              Equal.equals(binding.platform, atlasBinding.platform)
-            );
-            if (O.isNone(catalogBinding)) {
-              return yield* Effect.die(`Missing ${atlasBinding.platform} binding for ${atlasCommand.id}`);
-            }
-            const parsedAtlasChord = yield* S.decodeEffect(KeyChordFromString)(atlasBinding.chord);
-            expect(Equal.equals(catalogBinding.value.chord, parsedAtlasChord)).toBe(true);
-          }
-        }
-
-        const canonical = A.findFirst(atlasEntry.value.compatibility, (row) => Equal.equals(row.format, "beep-md"));
-        if (O.isNone(canonical)) {
-          return yield* Effect.die(`Missing beep-md compatibility for ${descriptor.id}`);
-        }
-        if (!Equal.equals(descriptor.canonicalCompatibility, canonical.value.status)) {
-          compatibilityMismatches = A.append(
-            compatibilityMismatches,
-            `${descriptor.id}: descriptor=${descriptor.canonicalCompatibility}, atlas=${canonical.value.status}`
-          );
-        }
-      }
-      expect(compatibilityMismatches).toEqual([]);
+      const index = atlasIndex(atlas.capabilities);
+      const mismatches = pipe(
+        editorCapabilityCatalog,
+        A.filter((descriptor) => !Equal.equals(descriptor.id, "beep.artifact-ref")),
+        A.flatMap((descriptor) =>
+          O.match(MutableHashMap.get(index, descriptor.id), {
+            onNone: () => [`Missing atlas row ${descriptor.id}`],
+            onSome: (atlasEntry) => reconcileEntry(descriptor, atlasEntry),
+          })
+        )
+      );
+      expect(mismatches).toEqual([]);
     })
   );
 

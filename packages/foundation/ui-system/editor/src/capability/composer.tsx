@@ -15,7 +15,7 @@ import { Result } from "effect";
 import * as S from "effect/Schema";
 import { logEditorErrorFn } from "../chat/atoms.ts";
 import { SlashPlugin } from "../chat/typeahead.tsx";
-import { decodeEditorStateForRuntimeResult } from "../runtime.ts";
+import { decodeEditorStateForRuntimeResult, runtimeInitialStateOption } from "../runtime.ts";
 import { editorTheme } from "../theme.ts";
 import { EditorWireViewer } from "../viewer.tsx";
 import { editorCapabilityCatalog } from "./catalog.ts";
@@ -89,11 +89,9 @@ export function CapabilityComposer({
   return Result.match(resolveEditorProfile(catalog, profile), {
     onFailure: (error) => <ProfileResolutionNotice error={error} />,
     onSuccess: (resolved) => {
-      const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
-        Result.getSuccess(decodeEditorStateForRuntimeResult(state))
-      );
       // D3: content that the live runtime cannot admit stays readable as
       // escaped wire instead of silently mounting an empty editor.
+      const runtimeInitialState = runtimeInitialStateOption(initialState);
       if (initialState !== undefined && O.isNone(runtimeInitialState)) {
         return (
           <EditorWireViewer input={initialState} {...O.getSomesStruct({ className: O.fromUndefinedOr(className) })} />
