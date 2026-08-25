@@ -118,6 +118,328 @@ BEEP_IMDS_DROP
 )
 `;
 
+// The pinned module fetches and deletes the one-use JIT configuration before
+// invoking /opt/actions-runner/run.sh as ec2-user. Replacing that entrypoint in
+// post-install puts the one-way metadata shutdown after the last bootstrap
+// credential use but before the runner can accept a job. The two sudo targets
+// are root-owned and job-non-writable. They deliberately remain callable by a
+// job: metadata disable is idempotent, and powering off one ephemeral worker is
+// only self-denial of service. Keep the whole installer subshell-scoped because
+// the module inlines it into the surrounding user-data shell.
+const imdsWorkloadBoundaryPostInstall = `(
+  set -eu
+  beep_log() { logger -t "$1" -- "$2"; printf '%s %s: %s\\n' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }
+  install -d -o root -g root -m 0755 /opt/beep
+
+  cat > /opt/beep/imds-disable.sh <<'BEEP_IMDS_DISABLE'
+#!/usr/bin/env bash
+set -eu
+
+beep_log() { logger -t "$1" -- "$2"; printf '%s %s: %s\\n' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }
+beep_exit_reason="helper exited before completion"
+edge_error_file=
+aws_version_file=
+beep_on_exit() {
+  exit_code=$?
+  beep_log beep-imds-disable "final exit: status=$exit_code reason=$beep_exit_reason"
+  if [ -n "$edge_error_file" ]; then
+    rm -f -- "$edge_error_file"
+  fi
+  if [ -n "$aws_version_file" ]; then
+    rm -f -- "$aws_version_file"
+  fi
+}
+trap beep_on_exit EXIT
+
+if aws_path="$(command -v aws)"; then
+  beep_log beep-imds-disable "command -v aws: $aws_path"
+else
+  beep_exit_reason="aws command missing"
+  beep_log beep-imds-disable "command -v aws: MISSING"
+  exit 1
+fi
+edge_error_file="$(mktemp /tmp/beep-imds-edges.XXXXXX)"
+aws_version_file="$(mktemp /tmp/beep-aws-version.XXXXXX)"
+: > "$edge_error_file"
+if aws --version >"$aws_version_file" 2>"$edge_error_file"; then
+  aws_version_line="$(head -n 1 "$aws_version_file" || true)"
+  if [ -z "$aws_version_line" ]; then
+    aws_version_line="$(head -n 1 "$edge_error_file" || true)"
+  fi
+  beep_log beep-imds-disable "aws --version: $aws_version_line"
+else
+  aws_version_exit_code=$?
+  aws_error_line="$(head -n 1 "$edge_error_file" || true)"
+  beep_log beep-imds-disable "AWS CLI stderr first line: $aws_error_line"
+  beep_exit_reason="aws --version failed (exit=$aws_version_exit_code)"
+  beep_log beep-imds-disable "$beep_exit_reason"
+  exit 1
+fi
+if jq_path="$(command -v jq)"; then
+  beep_log beep-imds-disable "command -v jq: $jq_path"
+else
+  beep_exit_reason="jq command missing"
+  beep_log beep-imds-disable "command -v jq: MISSING"
+  exit 1
+fi
+beep_log beep-imds-disable "id -u: $(id -u)"
+
+beep_exit_reason="IMDSv2 bootstrap token request failed"
+beep_log beep-imds-disable "requesting IMDSv2 bootstrap token"
+imds_token="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --request PUT \\
+  --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\
+  http://169.254.169.254/latest/api/token)"
+beep_log beep-imds-disable "IMDSv2 bootstrap token obtained"
+beep_exit_reason="instance id resolution failed"
+instance_id="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --header "X-aws-ec2-metadata-token: $imds_token" \\
+  http://169.254.169.254/latest/meta-data/instance-id)"
+beep_exit_reason="region resolution failed"
+region="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --header "X-aws-ec2-metadata-token: $imds_token" \\
+  http://169.254.169.254/latest/dynamic/instance-identity/document | jq -er '.region')"
+beep_log beep-imds-disable "instance id + region resolved: instance_id=$instance_id region=$region"
+beep_exit_reason="IMDS edge validation aborted"
+
+imds_edge_dry_run() {
+  local aws_error_line error_code
+  : > "$edge_error_file"
+  if aws ec2 modify-instance-metadata-options \\
+    --dry-run \\
+    --instance-id "$1" \\
+    --http-endpoint "$2" \\
+    --region "$region" \\
+    >/dev/null 2>"$edge_error_file"; then
+    printf '%s\\n' NoError
+    return
+  fi
+  # The CLI prints a blank line before the error; log the whole stderr on one
+  # line so the encoded authorization message (decodable off-box with
+  # sts decode-authorization-message) reaches the console.
+  aws_error_line="$(tr '\\n' ' ' < "$edge_error_file" | sed 's/  */ /g' || true)"
+  beep_log beep-imds-edges "AWS CLI stderr: $aws_error_line"
+  error_code="$(grep -oE '\\([A-Za-z0-9._-]+\\)' "$edge_error_file" | head -n 1 | tr -d '()' || true)"
+  printf '%s\\n' "\${error_code:-UnknownError}"
+}
+
+imds_edge_dry_run_with_cached_credentials() {
+  local aws_error_line error_code
+  : > "$edge_error_file"
+  if env \\
+    AWS_ACCESS_KEY_ID="$cached_access_key_id" \\
+    AWS_SECRET_ACCESS_KEY="$cached_secret_access_key" \\
+    AWS_SESSION_TOKEN="$cached_session_token" \\
+    AWS_EC2_METADATA_DISABLED=true \\
+    aws ec2 modify-instance-metadata-options \\
+      --dry-run \\
+      --instance-id "$1" \\
+      --http-endpoint "$2" \\
+      --region "$region" \\
+      >/dev/null 2>"$edge_error_file"; then
+    printf '%s\\n' NoError
+    return
+  fi
+  aws_error_line="$(tr '\\n' ' ' < "$edge_error_file" | sed 's/  */ /g' || true)"
+  beep_log beep-imds-edges "AWS CLI stderr: $aws_error_line"
+  error_code="$(grep -oE '\\([A-Za-z0-9._-]+\\)' "$edge_error_file" | head -n 1 | tr -d '()' || true)"
+  printf '%s\\n' "\${error_code:-UnknownError}"
+}
+
+discard_cached_credentials() {
+  unset cached_access_key_id cached_secret_access_key cached_session_token
+  beep_log beep-imds-disable "cached credentials discarded"
+}
+
+self_disable_code="$(imds_edge_dry_run "$instance_id" disabled)"
+case "$self_disable_code" in
+  DryRunOperation) beep_log beep-imds-edges "IMDS_EDGE self_disable: PASS" ;;
+  *) beep_exit_reason="IMDS_EDGE self_disable failed ($self_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_disable: FAIL ($self_disable_code)"; exit 1 ;;
+esac
+
+other_disable_code="$(imds_edge_dry_run i-0f0f0f0f0f0f0f0f0 disabled)"
+case "$other_disable_code" in
+  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE other_disable: PASS" ;;
+  InvalidInstanceID.NotFound|InvalidInstanceID.Malformed)
+    beep_log beep-imds-edges "IMDS_EDGE other_disable: INCONCLUSIVE ($other_disable_code)" ;;
+  *) beep_exit_reason="IMDS_EDGE other_disable failed ($other_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE other_disable: FAIL ($other_disable_code)"; exit 1 ;;
+esac
+
+beep_exit_reason="instance-profile role name resolution failed"
+role_name="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --header "X-aws-ec2-metadata-token: $imds_token" \\
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/)"
+beep_exit_reason="instance-profile credential resolution failed"
+role_credentials_json="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --header "X-aws-ec2-metadata-token: $imds_token" \\
+  "http://169.254.169.254/latest/meta-data/iam/security-credentials/$role_name")"
+cached_access_key_id="$(printf '%s' "$role_credentials_json" | jq -er '.AccessKeyId | strings | select(length > 0)')"
+cached_secret_access_key="$(printf '%s' "$role_credentials_json" | jq -er '.SecretAccessKey | strings | select(length > 0)')"
+cached_session_token="$(printf '%s' "$role_credentials_json" | jq -er '.Token | strings | select(length > 0)')"
+unset role_credentials_json imds_token
+beep_log beep-imds-disable "instance-profile credentials cached in memory for post-disable lock probes"
+
+beep_exit_reason="modify call aborted"
+beep_log beep-imds-disable "disabling IMDS on $instance_id in $region"
+: > "$edge_error_file"
+if aws ec2 modify-instance-metadata-options \\
+  --instance-id "$instance_id" \\
+  --http-endpoint disabled \\
+  --region "$region" \\
+  >/dev/null 2>"$edge_error_file"; then
+  beep_log beep-imds-disable "disable request accepted; waiting for sustained host endpoint denial"
+  beep_exit_reason="IMDS reachability wait aborted"
+else
+  modify_exit_code=$?
+  aws_error_line="$(tr '\\n' ' ' < "$edge_error_file" | sed 's/  */ /g' || true)"
+  beep_log beep-imds-disable "AWS CLI stderr: $aws_error_line"
+  modify_error_code="$(grep -oE '\\([A-Za-z0-9._-]+\\)' "$edge_error_file" | head -n 1 | tr -d '()' || true)"
+  if [ -z "$modify_error_code" ]; then
+    modify_error_code=UnknownError
+  fi
+  beep_exit_reason="modify call failed ($modify_error_code, exit=$modify_exit_code)"
+  beep_log beep-imds-disable \\
+    "disable request failed ($modify_error_code, exit=$modify_exit_code); failing closed"
+  exit 1
+fi
+
+deadline=$(( $(date +%s) + 90 ))
+required_denial_streak=5
+denial_streak=0
+while :; do
+  ipv4_reachable=false
+  ipv6_reachable=false
+  if curl --noproxy '*' --silent --show-error --fail \\
+    --connect-timeout 2 --max-time 3 \\
+    --request PUT \\
+    --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\
+    --output /dev/null \\
+    http://169.254.169.254/latest/api/token 2>/dev/null; then
+    ipv4_reachable=true
+  fi
+  if curl --noproxy '*' --silent --show-error --fail --globoff --ipv6 \\
+    --connect-timeout 2 --max-time 3 \\
+    --request PUT \\
+    --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\
+    --output /dev/null \\
+    'http://[fd00:ec2::254]/latest/api/token' 2>/dev/null; then
+    ipv6_reachable=true
+  fi
+
+  if [ "$ipv4_reachable" = false ] && [ "$ipv6_reachable" = false ]; then
+    denial_streak=$(( denial_streak + 1 ))
+  else
+    denial_streak=0
+  fi
+  beep_log beep-imds-disable \\
+    "IMDS reachability: ipv4=$ipv4_reachable ipv6=$ipv6_reachable streak=$denial_streak"
+  if [ "$(date +%s)" -ge "$deadline" ]; then
+    beep_exit_reason="IMDS denial was not sustained before deadline"
+    beep_log beep-imds-disable \\
+      "IMDS denial was not sustained at deadline (ipv4=$ipv4_reachable ipv6=$ipv6_reachable streak=$denial_streak); failing closed"
+    exit 1
+  fi
+  if [ "$denial_streak" -ge "$required_denial_streak" ]; then
+    beep_exit_reason="IMDS was unreachable for $denial_streak consecutive checks"
+    beep_log beep-imds-disable \\
+      "IPv4 and IPv6 IMDS probes both failed for $denial_streak consecutive checks; testing metadata-options lock"
+    break
+  fi
+  sleep 1
+done
+
+beep_exit_reason="post-disable IAM edge validation aborted"
+self_reenable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" enabled)"
+case "$self_reenable_code" in
+  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_reenable: PASS" ;;
+  *) beep_exit_reason="IMDS_EDGE self_reenable failed ($self_reenable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_reenable: FAIL ($self_reenable_code)"; discard_cached_credentials; exit 1 ;;
+esac
+
+self_redisable_code="$(imds_edge_dry_run_with_cached_credentials "$instance_id" disabled)"
+case "$self_redisable_code" in
+  UnauthorizedOperation) beep_log beep-imds-edges "IMDS_EDGE self_redisable: PASS" ;;
+  *) beep_exit_reason="IMDS_EDGE self_redisable failed ($self_redisable_code)"; beep_log beep-imds-edges "IMDS_EDGE self_redisable: FAIL ($self_redisable_code)"; discard_cached_credentials; exit 1 ;;
+esac
+
+discard_cached_credentials
+beep_exit_reason="IMDS disabled and metadata-options lock proven"
+beep_log beep-imds-disable "metadata-options lock proven; runner may start"
+exit 0
+BEEP_IMDS_DISABLE
+
+  cat > /opt/beep/self-poweroff.sh <<'BEEP_SELF_POWEROFF'
+#!/usr/bin/env bash
+set -eu
+beep_log() { logger -t "$1" -- "$2"; printf '%s %s: %s\\n' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }
+beep_log beep-self-poweroff "powering off ephemeral runner"
+exec shutdown -P now
+BEEP_SELF_POWEROFF
+
+  chown root:root /opt/beep/imds-disable.sh /opt/beep/self-poweroff.sh
+  chmod 0755 /opt/beep/imds-disable.sh /opt/beep/self-poweroff.sh
+  printf '%s\\n' \\
+    '${runnerRunAs} ALL=(root) NOPASSWD: /opt/beep/imds-disable.sh' \\
+    '${runnerRunAs} ALL=(root) NOPASSWD: /opt/beep/self-poweroff.sh' \\
+    > /etc/sudoers.d/beep-imds-boundary
+  chown root:root /etc/sudoers.d/beep-imds-boundary
+  chmod 0440 /etc/sudoers.d/beep-imds-boundary
+  if visudo -cf /etc/sudoers.d/beep-imds-boundary; then
+    beep_log beep-runner-shim "validated fail-closed IMDS boundary sudoers"
+  else
+    visudo_status=$?
+    beep_log beep-runner-shim "visudo failed for IMDS boundary sudoers (exit=$visudo_status); aborting post-install"
+    exit "$visudo_status"
+  fi
+
+  if [ ! -f /opt/actions-runner/run.sh ]; then
+    beep_log beep-runner-shim "module run.sh missing; refusing to register runner"
+    exit 1
+  fi
+  if [ -e /opt/actions-runner/run.module.sh ]; then
+    beep_log beep-runner-shim "run.module.sh already exists; refusing ambiguous runner entrypoint"
+    exit 1
+  fi
+  mv /opt/actions-runner/run.sh /opt/actions-runner/run.module.sh
+  cat > /opt/actions-runner/run.sh <<'BEEP_RUNNER_SHIM'
+#!/usr/bin/env bash
+set -eu
+
+beep_log() { logger -t "$1" -- "$2"; printf '%s %s: %s\\n' "$(date -u +%FT%TZ)" "$1" "$2" > /dev/console 2>/dev/null || true; }
+
+if ! sudo /opt/beep/imds-disable.sh; then
+  beep_log beep-runner-shim "IMDS disable failed; runner will not start"
+  beep_log beep-runner-shim "HOLDING 240s for console capture"
+  sleep 240
+  if ! sudo /opt/beep/self-poweroff.sh; then
+    beep_log beep-runner-shim "poweroff failed after IMDS disable failure"
+  fi
+  exit 1
+fi
+
+beep_log beep-runner-shim "IMDS disabled and unreachable; starting module runner"
+if ./run.module.sh "$@"; then
+  runner_status=0
+else
+  runner_status=$?
+fi
+beep_log beep-runner-shim "module runner exited with status $runner_status; powering off"
+if ! sudo /opt/beep/self-poweroff.sh; then
+  beep_log beep-runner-shim "poweroff failed after runner exit"
+  exit 1
+fi
+exit "$runner_status"
+BEEP_RUNNER_SHIM
+  chown root:root /opt/actions-runner/run.sh
+  chmod 0755 /opt/actions-runner/run.sh /opt/actions-runner/run.module.sh
+  beep_log beep-runner-shim "installed fail-closed IMDS boundary runner shim"
+)
+`;
+
 // The terraform-module bridge writes module inputs into `pulumi.tf.json`, and
 // Terraform's JSON syntax parses every string value as an HCL template: a
 // literal bash `${...}` (or `%{...}`) plans as an HCL reference and fails the
@@ -130,7 +452,38 @@ const escapeHclTemplateSequences = flow(
   Str.replaceAll("%{", "%%{")
 );
 
-const runnerPostInstall = escapeHclTemplateSequences(runnerToolbeltPostInstall + imdsJobHookPostInstall);
+const runnerPostInstall = escapeHclTemplateSequences(
+  runnerToolbeltPostInstall + imdsJobHookPostInstall + imdsWorkloadBoundaryPostInstall
+);
+
+// Self-only and enabled-state-only: the caller's own instance ARN
+// (`ec2:SourceInstanceARN`, present for instance-profile credentials) must name
+// the target instance (`ec2:InstanceID`). The role may act only while that
+// instance's endpoint is enabled, so after the disable it has no authority over
+// its metadata options. For this action the metadata condition keys describe
+// current resource state, not requested values, so the requested value cannot
+// be constrained through them. That is acceptable because the caller is the
+// root-only bootstrap helper and every option other than the endpoint is
+// harmless.
+const runnerImdsDisablePolicyDocument = JSON.stringify({
+  Version: "2012-10-17",
+  Statement: [
+    {
+      Sid: "DisableOwnMetadataEndpointWhileEnabled",
+      Effect: "Allow",
+      Action: "ec2:ModifyInstanceMetadataOptions",
+      Resource: "arn:aws:ec2:*:*:instance/*",
+      Condition: {
+        ArnEquals: {
+          "ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/${ec2:InstanceID}",
+        },
+        StringEquals: {
+          "ec2:MetadataHttpEndpoint": "enabled",
+        },
+      },
+    },
+  ],
+});
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
@@ -349,33 +702,30 @@ type CiFleetControllerArgs = {
  *
  * **Gotchas**
  *
- * The host IMDS credential-theft mitigation (CSF-003) is wired as a per-job
- * `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook (`imdsJobHookPostInstall`) that
- * installs the uid-scoped `iptables` OWNER-match DROP after the agent has
- * registered but before any job step runs. History that shaped it: the
- * original post-install DROP was deployed and rolled back the same day after
- * the worker failed to register (`runner-start-failed`) — but the toolbelt
- * post-install later reproduced the identical failure with no firewall at
- * all, because the module inlines `userdata_post_install` into its user-data
- * script and a leaked `set -u` kills the runner-start section on its own
- * unset variables. The DROP's culpability was never proven; the retest must
- * keep every snippet subshell-scoped, and no failure story about the hook is
- * believed until reproduced in that form. The hook design accounts for the
- * two structural constraints the rollback exposed: agent and steps share one
- * uid (so the DROP lands per-job, when the agent no longer needs IMDS), and
- * root's config-time IMDS for JIT registration stays open (uid-scoped rule).
- * Privilege transition is explicit — the hook wrapper execs the root-owned
- * installer through a sudoers entry scoped to exactly that script. Boot first
- * installs `iptables-nft` and verifies the nft backend plus OWNER match before
- * writing or wiring the hook. The installer and wrapper propagate failures so
- * GitHub's job-start hook fails closed before any job step can run. A missing
- * runner directory now aborts post-install before runner registration. Gate E
- * then proves live job pickup and denial of the runner user's IMDSv2 token PUT;
- * no live deployment proof is claimed here. Deploys are gated on Gate E plus
- * the full guest-isolation red-team re-run on a live ephemeral worker; the
- * always-on layers remain IMDSv2 hop limit 1, the permissions-boundary-capped
- * instance role, the ephemeral one-job-one-VM lifecycle, and JIT config that
- * keeps no registration token on the instance.
+ * The primary workload-identity boundary is the post-install `run.sh` shim.
+ * The pinned module first uses IMDS to read its instance facts, fetches static
+ * and one-use JIT configuration from SSM, deletes the JIT parameter, and then
+ * invokes the shim as `ec2-user`. The shim calls a root-owned helper that may
+ * only disable IMDS on the source instance. It waits until both host metadata
+ * endpoints are unreachable before it starts the module runner. Failure powers
+ * off the guest without starting the runner. The launch template converts that
+ * guest shutdown into EC2 termination, so teardown does not need role
+ * credentials after IMDS closes.
+ *
+ * The `ACTIONS_RUNNER_HOOK_JOB_STARTED` owner DROP remains defense in depth.
+ * Its root-owned installer is exposed through one exact sudoers entry, and
+ * every prerequisite fails closed before a job step. Gate E proves the runner
+ * user's token PUT remains denied; Gate J separately proves the owner rule is
+ * still armed after the stronger endpoint shutdown lands. A job may call the
+ * disable helper again or power off its own one-job VM. Neither call grants
+ * privilege.
+ *
+ * The module inlines `userdata_post_install` into one user-data script. Each
+ * snippet must keep shell options in a subshell because a leaked `set -u`
+ * kills the module's later start section on unset variables. Terraform also
+ * parses every module-input string as an HCL template, so literal shell
+ * `${...}` and `%{...}` sequences must pass through
+ * `escapeHclTemplateSequences`.
  *
  * Reliability semantics for the one-job-one-VM fleet: `job_retry` rescues a
  * job whose runner died between launch and pickup (spot reclaim, boot
@@ -467,6 +817,22 @@ export class CiFleetController extends pulumi.ComponentResource {
         },
         type: "String",
         value: resolvedAmiId,
+      },
+      { parent: this }
+    );
+
+    const runnerImdsDisablePolicy = new aws.iam.Policy(
+      `${name}-runner-imds-disable`,
+      {
+        description: "Allow a CI runner to disable IMDS on only its own instance.",
+        name: "beep-ci-runner-imds-disable",
+        path: "/beep-ci/",
+        policy: runnerImdsDisablePolicyDocument,
+        tags: {
+          App: "ci-runners",
+          ManagedBy: "pulumi",
+          Project: "beep-ci",
+        },
       },
       { parent: this }
     );
@@ -586,6 +952,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         runner_disable_default_labels: true,
         runner_ec2_tags: { "beep-ci": "runner" },
         runner_extra_labels: [args.config.runnerLabel],
+        runner_iam_role_managed_policy_arns: [runnerImdsDisablePolicy.arn],
         runner_metadata_options: {
           http_endpoint: "enabled",
           http_put_response_hop_limit: 1,

@@ -9,19 +9,23 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Stage `decompose`: draft `MAP.md` (canary C0-C2 = Goal 1; `@beep/openai` driver as a pre-C1 slice; two O4 gates + atlas-sync queued) → graduate → scaffold the lab. BRIEF v1.0 ratified; shared-schema v1.2 and contract v1.3 are the contracts in force | "fold S6; Benjamin confirms" |
+| Next work | Stage `graduate` (MAP v1.0 ratified, M1–M6): PR A = `@beep/nlp` Handoff mentions fix (own branch); PR B = docs-only ceremony (goals `semantica-canary` + `openai-driver` scaffolded, exploration flipped `graduated`, ROADMAP funnel clause); PR C = lab mint (`semantica-canary` P1 step 1, after B). BRIEF v1.1, shared-schema v1.3, contract v1.3 are the contracts in force | MAP v0.1 "draft MAP → graduate → scaffold" |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is EvalReport telemetry, never a gate | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
 | Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
-| Embeddings | park-pending-canary; contract = `effect/unstable/ai` `EmbeddingModel`; M1 Layer = the shipped `@effect/ai-openai` `OpenAiEmbeddingModel.layer` composed through a new `@beep/openai` driver that mirrors `@beep/anthropic` (S3-rev); Anthropic has no embeddings API; local Snowflake/ONNX lane parked | S3 (openai-compat `/embeddings` op); G6 "via the agents slice" |
-| Input | park-pending-canary; per-stage slate is probe order; PDF.js/MuPDF is a tie | the sheet's per-stage winners |
+| Embeddings | park-pending-canary; contract = `effect/unstable/ai` `EmbeddingModel`; M1 Layer = the shipped `@effect/ai-openai` `OpenAiEmbeddingModel` composed through a new `@beep/openai` driver that mirrors `@beep/anthropic` (S3-rev) — use `OpenAiEmbeddingModel.model()` where `Dimensions` is needed (`.layer` provides `EmbeddingModel` only); the driver is its own goal packet `openai-driver` at template weight, key-only config (M3); Anthropic has no embeddings API; local Snowflake/ONNX lane parked | S3 (openai-compat `/embeddings` op); G6 "via the agents slice"; S3-rev's "`.layer` provides Dimensions" |
+| Input | park-pending-canary; per-stage slate is probe order; PDF first probe = `@beep/doc-text` (the exact string the product pipeline digests); breaker retry = direct `unpdf` text items with `disableNormalization: true` inside the lab (same MIT dep) if G-structure needs page/font structure; MuPDF parked (AGPL subprocess, new binary) (M1) | the sheet's per-stage winners; "PDF.js/MuPDF is a tie" |
+| Spans | compose, not build: the lab's `CanonicalText` = `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text, spans = `@beep/provenance` `TextAnchor`, C0 tripwire = `verifyTextAnchor`; raw extracted text IS canonical, normalization is locator-only, no raw→canonical loss map; lab-local NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness` (M1) | shared-schema v1.1 `CanonicalText` loss map; BRIEF rabbit hole 1 |
 | Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
 | Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict, written at C0, where G-relation now scores (S7) | the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are EvalReport telemetry (Tier-D) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the EvalReport with network off | A8's fully-offline M1 |
 | Atlas writes | only final `park`/`drop` today; `adopt`/`pick-one` values wait for a passed canary stage | D3 columns as live verdicts |
+| Atlas backlog | O3 verbatim (M4): template exemplars, IR row-fill and the 27 module analyses are async codex batches off the critical path, not a goal and not gated; `semantica-atlas-sync` = the D5 render/diff sync pipeline only, re-entry = semantica 0.6.7+ or atlas-edit need | MAP v0.1 "gate = C0 pass" |
+| Repo defects | O1 exception (M2): the `@beep/nlp` Handoff mention/span drop is fixed now in its own PR (`nlp-ir/1.1`, required `mentions`); the relation drop stays repo-issues Draft 2, cleanup-on-touch | O1 "fixes ride cleanup-on-touch" for this one defect |
+| Graduation | M5/M6: three PRs — fix → docs-only ceremony → lab mint; both packets graduate in one ceremony; `openai-driver` scaffolds `active` with no dependency edge; `docs/ROADMAP.md` funnel policy gains a lab-canary slot-free clause and a Labs line | G2 "graduate this week" |
 
 **Verdict map** (which vocabulary is legal where):
 
@@ -418,3 +422,76 @@ round.
   not chosen yet. Nothing posts without him.
 - **PR vehicle.** #794 merges first (his merge); the sweep lands as a follow-up docs PR from
   `main`.
+
+## 2026-08-24 (MAP grill) — M1–M6, ratified by Benjamin in /grill-with-docs rounds
+
+Source: `MAP.md` v0.1's five ⚠ challenges plus one doctrine collision found while grilling; a
+ten-agent fact-find (six finders, four skeptics, all verdicts held) grounded every question in
+live source before it was asked. Two rounds; every answer took the recommendation.
+
+- **M1 (PDF probe + span owner; supersedes "PDF.js/MuPDF tie", shared-schema v1.1 `CanonicalText`,
+  BRIEF rabbit hole 1).** `@beep/doc-text` returns one already-normalized string (PDF.js NFKC
+  of ligatures/NBSP/µ, then `unpdf` whitespace collapse) with no items, offsets or per-page text,
+  so no raw→canonical loss map can be derived from it — and repo doctrine says none should be:
+  `goals/citation-verified-span-substrate` constraint 4 makes the extracted raw text canonical
+  and normalization locator-only; `SourceTextIdentity` (textDigest + extractor{name,version}),
+  `TextAnchor` (UTF-16 half-open, width-checked) and `verifyTextAnchor` already own span
+  meaning, and the product pipeline digests doc-text's exact string. **Answer:** compose, do not
+  build. `CanonicalText` = `ResolvedSourceText`; spans = `TextAnchor`; C0's "every span slices
+  back" tripwire = `verifyTextAnchor`. First PDF probe = `@beep/doc-text`; breaker retry =
+  direct `unpdf` text items (`disableNormalization: true`) inside the lab; MuPDF parks (AGPL).
+  Lab-local NET-NEW is now `EvidenceBatch`, `ModelIdentity`, `ConflictWitness`
+  (`ContradictionCandidate` in `@beep/epistemic-domain` is the witness precedent; epistemic
+  `Activity`/`UsageRecord` are the ledger's write-model precedents). **Rejected:** a second
+  normalized text as its own derived `SourceTextIdentity` (unprovable spans, second identity per
+  document); keeping the brief's NET-NEW `CanonicalText` (rebuilds three live bricks).
+- **M2 (Handoff span drop; O1 exception).** Verified: `AnnotatedDocument` is
+  `{chunks, entities, provenance, relations, version "nlp-ir/1.0"}`; `Entity.mentions` is bare
+  `MentionId[]`; the langextract adapter mints unresolvable ids and never reads
+  `extraction.span`/`matchedText`; `@beep/law-practice-use-cases` already bypasses the envelope.
+  Blast radius is one producer and one test reader. **Answer:** fix the mention/span drop now in
+  its own small PR (required `mentions: S.Array(Mention)`, version `nlp-ir/1.1`, `Mention.text` =
+  `matchedText`, tests prove `slice(span) === text`). Relations stay repo-issues Draft 2. The lab
+  does not consume the envelope either way (claims build from `GroundedExtraction` + `TextAnchor`).
+  **Rejected:** fixing relations in the same PR (target kind through alignment = model change);
+  leaving it for cleanup-on-touch (Benjamin: "I prefer getting ahead of things").
+- **M3 (`@beep/openai` packet; corrects MAP challenge 1 and S3-rev).** The driver is justified:
+  `@beep/openai-compat` is a hand-rolled `/chat/completions` protocol driver with no `@effect/ai`
+  dependency and no embeddings surface, while `OpenAiEmbeddingModel`/`OpenAiLanguageModel`
+  require `@effect/ai-openai`'s own `OpenAiClient` (`/responses`, `/embeddings`). The MAP's
+  "every existing driver has its own goal" premise was false (`@beep/anthropic` shipped as a P1
+  slice of `workspace-thread-domain`; tika/libpff/doc-text were folded). **Answer:** own packet
+  anyway, for the honest reasons — the lab is ceremony-exempt while a drivers package pays
+  docgen/JSDoc/coverage/changeset (folding gives Goal 1 two quality regimes), the driver PR runs
+  beside C0 with no lab dependency, and the completion gate is per-packet. Template weight
+  (pretext-driver precedent). SPEC: mirror anthropic's role files minus `repair.ts`; expose
+  `OpenAiEmbeddingModel.model()` for `Dimensions` (`.layer` yields `EmbeddingModel` only — S3-rev
+  was wrong); key-only config `AI_OPENAI_API_KEY` / `AI_OPENAI_MODEL` / `AI_OPENAI_EMBEDDING_MODEL`;
+  no `apiUrl` knob (base-URL is openai-compat's role). **Rejected:** fold as a `targetPackages.drivers[]`
+  slice with an `ops/handoffs/` file.
+- **M4 (atlas gate; restores O3).** MAP v0.1 gated the whole atlas backlog on C0. O3 already says
+  templates ratify async, row-fill and analyses run as codex batches, and only the D5 sync
+  pipeline is the queued candidate. **Answer:** O3 verbatim — `semantica-atlas-sync` = the D5
+  render/diff sync pipeline, re-entry "semantica 0.6.7+ or atlas-edit need"; template/row-fill
+  work is async and not a goal; B1 still holds for verdict values. **Rejected:** C0 gate; C2 gate.
+- **M5 (three PRs).** PR A = the Handoff fix (code, own branch, independent). PR B = docs-only
+  ceremony: MAP v1.0, BRIEF v1.1 + shared-schema v1.3 amendments, both goal packets from
+  `goals/_template` (`openai-driver` `active`, no dependency edge), exploration `graduated` with
+  the held items logged DEFERRED, ATLAS → Graduated, goals index regenerated, ROADMAP clause,
+  pdfjs attribution note. PR C = `create-package semantica --lab` mint + hand-written
+  `server/main.ts` + `src/runtime/Layer.ts` = `semantica-canary` P1 step 1 (labs doctrine: a new
+  lab passes its lab lane on its own PR; #742 precedent). **Rejected:** folding the fix into the
+  ceremony (docs lane becomes a code PR); one PR for everything.
+- **M6 (ROADMAP funnel policy drift).** `docs/ROADMAP.md` requires a free lane slot to scaffold
+  a goals packet; all three NOW lanes are occupied; #773/#779/#781/#782 graduated without
+  touching ROADMAP and none of their packets appear in it. **Answer:** amend the funnel policy
+  in PR B — a lab-hosted canary packet (ceremony-exempt, ships no product scope) does not consume
+  a lane slot and is listed under a Labs line in NOW; `openai-driver` rides as its enabling
+  driver; the four unlisted graduations are recorded as drift for the next re-eval.
+  **Rejected:** follow precedent silently; claim a real lane (forces a portfolio decision the
+  canary does not need).
+
+DEFERRED (Graduation Contract point 2; carried into the goal packets as re-entry items, not open
+questions): upstream posting of `research/drafts/*` (O1/O2/T3 — Benjamin's call, no date);
+Rosetta ratification (`research/glossary-rosetta-draft.md`, rides with the async atlas batches);
+Explorer/UI milestone shape (decided inside `semantica-canary` SPEC per D16).
