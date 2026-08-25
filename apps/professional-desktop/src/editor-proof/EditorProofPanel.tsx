@@ -74,7 +74,9 @@ export function EditorProofPanel(): JSX.Element {
     // controls + drawer + floor (narrow/touch layouts), the panel scrolls as a
     // whole instead of collapsing the document.
     <section className="flex h-full min-h-0 flex-col overflow-y-auto" data-testid="editor-proof-panel">
-      <div className="flex flex-wrap items-center gap-3 border-b p-3">
+      {/* Sticky and opaque: focus-driven scrolling must never leave the mode and
+          import controls half-hidden under the dock's tab strip. */}
+      <div className="sticky top-0 z-10 flex shrink-0 flex-wrap items-center gap-3 border-b bg-background p-3">
         <fieldset className="flex gap-3">
           <legend className="sr-only">Capability profile</legend>
           <label>

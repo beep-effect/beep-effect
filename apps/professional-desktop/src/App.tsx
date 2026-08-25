@@ -153,10 +153,12 @@ const sidecarTransportAtom = professionalBrowserRuntime.atom(readSidecarTranspor
 // what this session is and how to unlock it.
 const DesktopSessionNotice = ({ label }: { readonly label: string }): JSX.Element => (
   <div
-    className="grid h-full place-items-center p-6 text-center text-sm text-muted-foreground"
+    className="grid h-full min-w-0 place-items-center overflow-hidden p-6 text-center text-sm text-muted-foreground"
     data-testid="desktop-session-required"
   >
-    <div className="max-w-md">
+    {/* Env-var tokens have no break opportunities; let them wrap inside a
+        narrow pane instead of clipping at its edge. */}
+    <div className="min-w-0 max-w-md break-words [overflow-wrap:anywhere]">
       <p>{label} needs the desktop shell or an authenticated desktop HTTP session.</p>
       <p className="mt-2 text-xs">
         This browser session is chat-only. Launch the sidecar with BEEP_DESKTOP_RPC_SESSION_TOKEN and start Vite with

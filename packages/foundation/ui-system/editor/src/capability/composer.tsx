@@ -116,7 +116,9 @@ export function CapabilityComposer({
             {A.contains(resolved.registrations.extensions, "ToolbarProjection") ? (
               <CapabilityToolbar resolved={resolved} platform={platform} />
             ) : undefined}
-            <div className="relative min-h-0 flex-1 overflow-auto">
+            {/* Inset focus-within ring: the editing surface stays identifiable
+                for keyboard users, and inset survives the scroll container. */}
+            <div className="relative min-h-0 flex-1 overflow-auto rounded-sm focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring">
               <RichTextPlugin
                 contentEditable={
                   <ContentEditable

@@ -1,0 +1,518 @@
+{
+  "round": "3",
+  "url": "https://professional-desktop.beep.localhost:1355/",
+  "scenarios": [
+    {
+      "name": "open-panel-through-dock",
+      "screenshots": [
+        "open-panel-through-dock--before-open.png",
+        "open-panel-through-dock--opened.png"
+      ],
+      "assertions": [
+        {
+          "name": "panel starts closed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "tab appears in the dock",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "tab is active",
+          "ok": true,
+          "detail": "true"
+        },
+        {
+          "name": "panel fills its dock box",
+          "ok": true,
+          "detail": "{\"panelH\":317.5,\"panelW\":1586,\"groupH\":355,\"groupW\":1588,\"groupId\":\"desktop-shell\"}"
+        },
+        {
+          "name": "minimal profile is the default",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "nothing from another surface is painted over the panel",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 14"]
+    },
+    {
+      "name": "minimal-toolbar-help-and-readable-content",
+      "screenshots": ["minimal-toolbar-help-and-readable-content--minimal.png"],
+      "assertions": [
+        {
+          "name": "minimal toolbar is exactly Bold/Italic/Undo/Redo",
+          "ok": true,
+          "detail": "Bold,Italic,Undo,Redo"
+        },
+        {
+          "name": "help lists exactly the resolved commands",
+          "ok": true,
+          "detail": "Bold,Italic,Undo,Redo"
+        },
+        {
+          "name": "every fixture semantic stays readable under minimal",
+          "ok": true,
+          "detail": "missing="
+        },
+        {
+          "name": "heading/list/link/quote/code/table nodes render",
+          "ok": true,
+          "detail": "{\"h1\":1,\"ul\":2,\"link\":1,\"quote\":1,\"code\":2,\"table\":1}"
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 2"]
+    },
+    {
+      "name": "minimal-disabled-authoring-paths",
+      "screenshots": [
+        "minimal-disabled-authoring-paths--after-disabled-paths.png"
+      ],
+      "assertions": [
+        {
+          "name": "Ctrl+U does not underline under minimal (guarded chord)",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Ctrl+Alt+1 does not create a heading under minimal",
+          "ok": true,
+          "detail": "p"
+        },
+        {
+          "name": "'## ' stays a paragraph under minimal (no markdown shortcut)",
+          "ok": true,
+          "detail": "p"
+        },
+        {
+          "name": "Ctrl+B still bolds under minimal",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 14"]
+    },
+    {
+      "name": "switch-to-document-proof-keeps-content",
+      "screenshots": [
+        "switch-to-document-proof-keeps-content--document-proof.png"
+      ],
+      "assertions": [
+        {
+          "name": "document proof selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "typed text survives the remount transaction",
+          "ok": true,
+          "detail": "Capability proofBold italic struck inline() proof link## boldedFirst itemSecond "
+        },
+        {
+          "name": "content identical across the remount",
+          "ok": true,
+          "detail": "134 vs 134"
+        },
+        {
+          "name": "document-proof toolbar grows beyond minimal",
+          "ok": true,
+          "detail": "Normal,Heading 1,Heading 2,Heading 3,Quote,Numbered list,Bullet list,Check list,Insert link,Code block,Bold,Italic,Strikethrough,Inline code,Clear formatting,Undo,Redo"
+        },
+        {
+          "name": "help exactly matches the resolved command set",
+          "ok": true,
+          "detail": "help=17 toolbar=17"
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 6"]
+    },
+    {
+      "name": "every-command-mouse-and-keyboard",
+      "screenshots": [
+        "every-command-mouse-and-keyboard--after-sweep.png",
+        "every-command-mouse-and-keyboard--after-toggles.png"
+      ],
+      "assertions": [
+        {
+          "name": "every toolbar button has a visible label",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "every toolbar button exposes aria-keyshortcuts",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Normal: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Normal: editor survives keyboard chord Ctrl+Alt+0",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Heading 1: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Heading 1: editor survives keyboard chord Ctrl+Alt+1",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Heading 2: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Heading 2: editor survives keyboard chord Ctrl+Alt+2",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Heading 3: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Heading 3: editor survives keyboard chord Ctrl+Alt+3",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Quote: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Quote: editor survives keyboard chord Ctrl+Shift+Q",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Numbered list: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Numbered list: editor survives keyboard chord Ctrl+Shift+7",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Bullet list: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Bullet list: editor survives keyboard chord Ctrl+Shift+8",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Check list: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Check list: editor survives keyboard chord Ctrl+Shift+9",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Insert link: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Insert link: editor survives keyboard chord Ctrl+K",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Code block: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Code block: editor survives keyboard chord Ctrl+Alt+C",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Bold: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Bold: editor survives keyboard chord Ctrl+B",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Italic: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Italic: editor survives keyboard chord Ctrl+I",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Strikethrough: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Strikethrough: editor survives keyboard chord Ctrl+Shift+X",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Inline code: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Inline code: editor survives keyboard chord Ctrl+Shift+C",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Clear formatting: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Clear formatting: editor survives keyboard chord Ctrl+\\",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Undo: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Undo: editor survives keyboard chord Ctrl+Z",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Redo: focus stays in the editor after a mouse click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Redo: editor survives keyboard chord Ctrl+Y",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "Ctrl+B bolds the selection",
+          "ok": true,
+          "detail": "\"Capability proof\""
+        },
+        {
+          "name": "Ctrl+Alt+1 makes a heading",
+          "ok": true,
+          "detail": "h1"
+        },
+        {
+          "name": "Ctrl+Alt+0 returns to a paragraph",
+          "ok": true,
+          "detail": "p"
+        },
+        {
+          "name": "Ctrl+Shift+8 makes a bullet list item",
+          "ok": true,
+          "detail": "li"
+        },
+        {
+          "name": "Ctrl+Z undoes the list",
+          "ok": true,
+          "detail": "p"
+        },
+        {
+          "name": "Ctrl+Y redoes the list",
+          "ok": true,
+          "detail": "li"
+        },
+        {
+          "name": "Ctrl+U stays guarded under document-proof (canonical loss avoided)",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 134"]
+    },
+    {
+      "name": "slash-menu-and-markdown-shortcut",
+      "screenshots": [
+        "slash-menu-and-markdown-shortcut--slash-open.png",
+        "slash-menu-and-markdown-shortcut--after-slash-and-markdown.png"
+      ],
+      "assertions": [
+        {
+          "name": "slash menu opens with block commands",
+          "ok": true,
+          "detail": "Normal|Heading 1|Heading 2|Heading 3|Quote|Numbered list|Bullet list|Check list|Code block"
+        },
+        {
+          "name": "slash 'Heading 1' converts the block",
+          "ok": true,
+          "detail": "h1"
+        },
+        {
+          "name": "'## ' markdown shortcut makes an h2 under document-proof",
+          "ok": true,
+          "detail": "h2"
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 14"]
+    },
+    {
+      "name": "keyboard-focus-order-and-accessible-names",
+      "screenshots": [
+        "keyboard-focus-order-and-accessible-names--focus-sweep.png"
+      ],
+      "assertions": [
+        {
+          "name": "Tab reaches the toolbar then the editor without a trap",
+          "ok": true,
+          "detail": "button:Import canonical JSON > button:Reload from canonical > button:Normal > button:Heading 1 > button:Heading 2 > button:Heading 3 > button:Quote > button:Numbered list > button:Bullet list > button:Check list > button:Insert link > button:Code block > button:Bold > button:Italic > button:Strikethrough > button:Inline code > button:Clear formatting > button:Undo > button:Redo > div:Slash headingMarkdown headingBold italic"
+        },
+        {
+          "name": "every focusable control has an accessible name",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "no unlabeled icon or color controls in the panel",
+          "ok": true,
+          "detail": "[]"
+        },
+        {
+          "name": "toolbar and help carry landmark roles",
+          "ok": true,
+          "detail": "{\"toolbar\":true,\"region\":true,\"alert\":0}"
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 10"]
+    },
+    {
+      "name": "canonical-json-import-lifecycle",
+      "screenshots": [
+        "canonical-json-import-lifecycle--after-valid-import.png",
+        "canonical-json-import-lifecycle--after-invalid-import.png"
+      ],
+      "assertions": [
+        {
+          "name": "canonical JSON reflects the live document",
+          "ok": true,
+          "detail": "1587 chars"
+        },
+        {
+          "name": "valid canonical JSON import remounts the editor with the new heading",
+          "ok": true,
+          "detail": "Slash headingImported proofBold italic struck inline() proof"
+        },
+        {
+          "name": "no alert after a valid import",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "invalid JSON surfaces a typed alert",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "editor stays mounted after a failed import",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "reload keeps the imported canonical document",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 16"]
+    },
+    {
+      "name": "narrow-viewport-and-touch",
+      "screenshots": [
+        "narrow-viewport-and-touch--narrow-drawer-open.png",
+        "narrow-viewport-and-touch--narrow.png",
+        "narrow-viewport-and-touch--after-touch.png"
+      ],
+      "assertions": [
+        {
+          "name": "no horizontal overflow at 480px",
+          "ok": true,
+          "detail": "{\"overflowX\":0,\"docOverflowX\":0,\"toolbarRows\":4,\"toolbarVisible\":true}"
+        },
+        {
+          "name": "toolbar wraps and stays visible at 480px",
+          "ok": true,
+          "detail": "{\"overflowX\":0,\"docOverflowX\":0,\"toolbarRows\":4,\"toolbarVisible\":true}"
+        },
+        {
+          "name": "composer region keeps a usable floor with the drawer open",
+          "ok": true,
+          "detail": "h=256"
+        },
+        {
+          "name": "Bold control is reachable at 480px",
+          "ok": true,
+          "detail": "{\"x\":15,\"y\":602.5,\"width\":47.625,\"height\":28}"
+        },
+        {
+          "name": "touch tap on Bold runs the command",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "canonical JSON control remains reachable at 480px",
+          "ok": true,
+          "detail": "{\"x\":15,\"y\":808.5,\"width\":450,\"height\":24,\"top\":808.5,\"right\":465,\"bottom\":832.5,\"left\":15}"
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["recorder collector CORS console errors (not app traffic): 18"]
+    },
+    {
+      "name": "no-network-egress",
+      "screenshots": [],
+      "assertions": [
+        {
+          "name": "no request left the app origin while the panel was exercised",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["foreign requests observed: 0"]
+    }
+  ]
+}
