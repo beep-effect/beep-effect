@@ -55,7 +55,11 @@
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "lexical": "catalog:",
+    "mdast-util-find-and-replace": "catalog:",
     "n3": "catalog:",
+    "rehype-stringify": "catalog:",
+    "remark-gfm": "catalog:",
+    "typedoc": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {

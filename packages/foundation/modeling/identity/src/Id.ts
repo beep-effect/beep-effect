@@ -942,7 +942,7 @@ type KeyIdentifierValue<Struct extends object, Identifier extends string> = Get<
 
 type SchemaStatics<Schema extends S.Top> = Omit<Schema, keyof Schema["Rebuild"] | keyof S.Top>;
 
-type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
+export type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
 
 /**
  * Record mapping `$`-prefixed accessor keys to child {@link IdentityComposer} instances,
