@@ -130,12 +130,13 @@ the current listener's `--jitconfig` value from `/proc`, never prints it, and
 runs a second `Runner.Listener` from a scratch copy of `bin` and `externals`.
 It captures output in the ephemeral runner temp directory.
 
-The probe classifies replay as rejected when the second listener exits
-non-zero before the 90-second timeout or reports `already`, `invalid`,
-`expired`, `Unauthorized`, `not found`, or `denied`. It classifies replay as
-accepted when the listener reports `Listening for Jobs` or
-`Connected to GitHub`, or survives to the timeout without a rejection. A local
-setup failure or marker-free early exit is inconclusive and fails the gate.
+The probe classifies replay as rejected only when the listener log reports a
+recognized rejection marker: `already`, `invalid`, `expired`, `Unauthorized`,
+`not found`, or `denied`. It classifies replay as accepted when the listener
+reports `Listening for Jobs` or `Connected to GitHub`, or survives to the
+timeout without a rejection. Every other exit is inconclusive and fails the
+gate — including a marker-free non-zero exit, which reports its exit status
+and redacted first log line without passing.
 When an accepted payload is decodable, the probe prints only its runner name so
 the operator can remove the registration.
 

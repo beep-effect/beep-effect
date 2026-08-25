@@ -367,11 +367,18 @@ jobs:
           listener_status=$?
           set -e
 
+          # Only a recognized server-side rejection marker may classify the replay as rejected.
+          # A marker-free non-zero exit is a local setup or runtime failure and must stay
+          # inconclusive, or the gate reports PASS without evidence GitHub rejected the replay.
           error_line="$(grep -Eim1 'already|invalid|expired|Unauthorized|not found|denied' \
             "${listener_log}" | tr -d '\r' || true)"
+          diag_line=""
           if [[ -z "${error_line}" && "${listener_status}" -ne 0 && "${listener_status}" -ne 124 ]]; then
-            error_line="$(sed -n '/[^[:space:]]/{s/\r$//;p;q;}' "${listener_log}")"
-            error_line="${error_line:-listener exited with status ${listener_status}}"
+            diag_line="$(sed -n '/[^[:space:]]/{s/\r$//;p;q;}' "${listener_log}")"
+            diag_line="${diag_line:-no listener output}"
+            diag_line="${diag_line//${jit_value}/[redacted]}"
+            diag_line="$(printf '%s' "${diag_line}" | sed -E \
+              's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-240)"
           fi
           if [[ -n "${error_line}" ]]; then
             error_line="${error_line//${jit_value}/[redacted]}"
@@ -386,6 +393,11 @@ jobs:
           if grep -Eq 'Listening for Jobs|Connected to GitHub' "${listener_log}" || [[ "${listener_status}" -eq 124 ]]; then
             echo "JIT replay: accepted"
             [[ -z "${replay_runner_name}" ]] || echo "JIT replay runner: ${replay_runner_name}"
+            exit 1
+          fi
+
+          if [[ -n "${diag_line}" ]]; then
+            echo "JIT replay: inconclusive (listener exited with status ${listener_status}: ${diag_line})"
             exit 1
           fi
 
