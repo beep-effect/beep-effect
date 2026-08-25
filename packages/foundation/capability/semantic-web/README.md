@@ -1,7 +1,7 @@
 # @beep/semantic-web
 
-RDF capability service contracts: SPARQL query, SHACL validation, and RDF
-dataset canonicalization. This package is the ports layer between the RDF
+RDF capability service contracts plus the exact identity-registry RDF binding
+and SHACL policy projection. This package is the ports layer between the RDF
 value models in `@beep/rdf` and the driver packages that implement the
 contracts.
 
@@ -13,7 +13,8 @@ behind the epistemic claim gate lives in `@beep/epistemic-server`.
 
 ## Surface
 
-- `@beep/semantic-web` (root: the three service contract modules)
+- `@beep/semantic-web` (root: service contracts plus identity RDF binding,
+  dataset registry layer, and SHACL projection)
 - `@beep/semantic-web/services/canonicalization`
 - `@beep/semantic-web/services/shacl-validation`
 - `@beep/semantic-web/services/sparql-query`
@@ -24,6 +25,7 @@ behind the epistemic claim gate lives in `@beep/epistemic-server`.
 import { SparqlQueryService } from "@beep/semantic-web/services/sparql-query"
 import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation"
 import { CanonicalizationService } from "@beep/semantic-web/services/canonicalization"
+import { entriesToDataset, projectShapes } from "@beep/semantic-web"
 import { ProvBundle, EvidenceAnchor, makeQuad, IRI } from "@beep/rdf"
 ```
 

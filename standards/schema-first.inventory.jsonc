@@ -788,6 +788,16 @@
       "line": 37,
       "owner": "@beep/repo-cli",
       "reason": "Intentionally golden/regression-only coverage: the sealed Workstream E phase-0 design mandates byte-golden plan fixtures, and determinism is pinned by repeated and permuted compilation rather than schema-derived arbitraries."
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 22,
+      "owner": "@beep/repo-utils",
+      "reason": "Intentionally golden/regression-only coverage: the harness pins byte-identity of JSDocTagDefinition.make before and after the Fibered migration against a committed 113-tag fingerprint snapshot; schema-derived arbitrary coverage for TagValue cases lives in JSDoc.model.test.ts and for the kit in the identity Fibered tests."
     }
   ]
 }

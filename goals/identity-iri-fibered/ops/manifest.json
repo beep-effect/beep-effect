@@ -3,15 +3,15 @@
   "initiative": {
     "id": "identity-iri-fibered",
     "title": "Identity IRI Fibered",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-08-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/identity-iri-fibered",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Ship the discrete Fibered kit, exact IdentityRegistry, byte-identical JSDoc migration, post-move SHACL projection, and test/dev store Layers.",
-  "statusNote": "Scaffolded after identity-iri-fold merged. Implementation is blocked by semantic-web PR2 cleanup and semantic-web PR3 cleanup; neither cleanup has a goal packet, so landed-content evidence must clear both text blockers.",
+  "statusNote": "Completed-retained 2026-08-25: P0 cleared semantic-web PR2 (#695) / PR3 (#687, #711, #715) from live source; P1 shipped the full MAP row (Fibered + IdentityRegistry in @beep/identity, byte-identical JSDocTagDefinition.make migration in @beep/repo-utils, identity RDF binding + layerDataset + SHACL projection in @beep/semantic-web, e2e proof in epistemic-server); P2 evidence in history/p1-p2-evidence.md; P3 published via Yeet; P4 reflection in history/reflections/2026-08-25-claude.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -19,10 +19,7 @@
     "graduated": "2026-08-13"
   },
   "dependencies": ["goals/identity-iri-core", "goals/identity-iri-fold"],
-  "blockedBy": [
-    "semantic-web PR2 cleanup (no goal packet; require landed-content evidence)",
-    "semantic-web PR3 cleanup (no goal packet; require landed-content evidence)"
-  ],
+  "blockedBy": [],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -40,13 +37,23 @@
     "goals/identity-iri-fibered/research/SOURCES.md",
     "explorations/identity-as-iri/BRIEF.md",
     "explorations/identity-as-iri/MAP.md",
-    "explorations/identity-as-iri/DECISIONS.md"
+    "explorations/identity-as-iri/DECISIONS.md",
+    "goals/identity-iri-fibered/history/p0-blocker-audit.md",
+    "goals/identity-iri-fibered/research/2026-08-25-p1-design.md",
+    "goals/identity-iri-fibered/history/p1-p2-evidence.md",
+    "goals/identity-iri-fibered/history/reflections/2026-08-25-claude.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
     "../../explorations/identity-as-iri/research/SOURCES.md",
     "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
-    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md"
+    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md",
+    "research/2026-08-25-p1-design.md",
+    "history/p0-blocker-audit.md",
+    "history/p1-p2-evidence.md",
+    "history/p1-lane-a-report.md",
+    "history/p1-lane-b-report.md",
+    "research/OPPORTUNITIES.md"
   ],
   "agentLaunchers": [
     {
@@ -58,11 +65,31 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Blocker and contract audit", "status": "pending" },
-    { "id": "P1", "name": "Implement full MAP row", "status": "pending" },
-    { "id": "P2", "name": "Verify", "status": "pending" },
-    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
-    { "id": "P4", "name": "Close", "status": "pending" }
+    {
+      "id": "P0",
+      "name": "Blocker and contract audit",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement full MAP row",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/identity-iri-fibered/GOAL.md)\" -le 4000",

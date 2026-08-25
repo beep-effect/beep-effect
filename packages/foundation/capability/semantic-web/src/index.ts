@@ -9,6 +9,13 @@
  */
 
 /**
+ * Identity registry RDF binding and SHACL policy projection exports.
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export * from "./identity/index.ts";
+/**
  * RDF dataset canonicalization service contract exports.
  *
  * @category services
