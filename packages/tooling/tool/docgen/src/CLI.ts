@@ -16,7 +16,6 @@ import { Command, Flag } from "effect/unstable/cli";
 import * as Configuration from "./Configuration.ts";
 import * as Core from "./Core.ts";
 import * as Domain from "./Domain.ts";
-import * as InternalVersion from "./internal/version.ts";
 
 const decodeCompilerOptions = S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)));
 
@@ -68,11 +67,6 @@ const enforceExamples = Flag.boolean("enforce-examples").pipe(
 
 const enforceVersion = Flag.boolean("enforce-version").pipe(
   Flag.withDescription("Whether @since tags for each module export should be required"),
-  Flag.optional
-);
-
-const runExamples = Flag.boolean("run-examples").pipe(
-  Flag.withDescription("Whether to execute examples discovered in the source files"),
   Flag.optional
 );
 
@@ -129,7 +123,6 @@ const options = {
   enforceDescriptions,
   enforceExamples,
   enforceVersion,
-  runExamples,
   include,
   exclude,
   tscExecutable,
@@ -184,7 +177,6 @@ export const docgenCommand = Command.make(
       enforceExamples: input.enforceExamples,
       enforceVersion: input.enforceVersion,
       tscExecutable: input.tscExecutable,
-      runExamples: input.runExamples,
       include: input.include.pipe(O.map(splitGlobList)),
       exclude: input.exclude.pipe(O.map(A.of)),
       parseCompilerOptions,
@@ -220,13 +212,13 @@ export const docgenCommand = Command.make(
  * import { Effect } from "effect"
  * import { cli } from "@beep/repo-docgen/CLI"
  *
- * const helpProgram = cli(["--help"]).pipe(Effect.result)
+ * const helpProgram = cli("0.0.2")(["--help"]).pipe(Effect.result)
  * console.log(helpProgram)
  * ```
  *
+ * @param version - The package version displayed by the command.
+ * @returns A command runner accepting an explicit argument array.
  * @category cli-commands
  * @since 0.0.0
  */
-export const cli = Command.runWith(docgenCommand, {
-  version: `v${InternalVersion.moduleVersion}`,
-});
+export const cli = (version: string) => Command.runWith(docgenCommand, { version: `v${version}` });

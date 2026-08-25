@@ -11,6 +11,7 @@ import * as doctrine from "doctrine";
 import { Context, Effect, flow, Layer, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as ast from "ts-morph";
@@ -235,7 +236,7 @@ export const parseInterfaces = Effect.gen(function* () {
   return yield* parseInterfaceDeclarations(source.sourceFile.getInterfaces());
 });
 
-const parseType = (node: ast.Node) =>
+const getTypeText = (node: ast.Node) =>
   node
     .getType()
     .getText(
@@ -247,6 +248,26 @@ const parseType = (node: ast.Node) =>
         ast.ts.TypeFormatFlags.AllowUniqueESSymbolType |
         ast.ts.TypeFormatFlags.WriteArrowStyleSignature
     );
+
+const parseType = (node: ast.Node) => {
+  let text = getTypeText(node);
+  for (const property of node.getDescendantsOfKind(ast.ts.SyntaxKind.PropertySignature)) {
+    if (!shouldIgnore(parseDoc(getJSDocText(property.getJsDocs())))) continue;
+    const readonly = P.isNotUndefined(property.getFirstModifierByKind(ast.ts.SyntaxKind.ReadonlyKeyword))
+      ? "readonly "
+      : "";
+    const optional = property.hasQuestionToken() ? "?" : "";
+    const type = property.getTypeNode()?.getText() ?? getTypeText(property);
+    const signature = `${readonly}${property.getName()}${optional}: ${type}`;
+    text = pipe(
+      text,
+      Str.replaceAll(`; ${signature}`, ""),
+      Str.replaceAll(`${signature}; `, ""),
+      Str.replaceAll(signature, "")
+    );
+  }
+  return text;
+};
 
 const getFunctionDeclarationJSDocs = (fd: ast.FunctionDeclaration): Array<ast.JSDoc> =>
   A.matchLeft(fd.getOverloads(), {

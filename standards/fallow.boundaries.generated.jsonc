@@ -666,6 +666,12 @@
         ]
       },
       {
+        "name": "@beep/semantica",
+        "patterns": [
+          "apps/labs/semantica/src/**"
+        ]
+      },
+      {
         "name": "@beep/shacl",
         "patterns": [
           "packages/drivers/shacl/src/**"
@@ -3113,6 +3119,19 @@
           "@beep/semantic-web",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/semantica",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/semantica"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/semantica"
         ]
       },
       {

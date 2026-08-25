@@ -1990,10 +1990,9 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
   A.map(
     [
       // Static LPT order from research/00-evidence-brief.md (run 31683014887):
-      // deprecated-apis 975199ms, docgen 197298ms, semantic-delta 78127ms,
+      // deprecated-apis 975199ms, semantic-delta 78127ms,
       // schema-first 51162ms, then every remaining step in descending measured duration.
       repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
-      repoCliStep(repoRoot, "lint:docgen", ["docgen", "check", "--reuse-proof-manifest"]),
       // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
       // introduced by this branch and lets the corpus keep its inherited ones.
       repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),

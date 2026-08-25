@@ -299,7 +299,6 @@ export function checkExports(_models: ReadonlyArray<Domain.Export>) {
  *   parseCompilerOptions: defaultCompilerOptions,
  *   projectHomepage: "",
  *   projectName: "@beep/example",
- *   runExamples: false,
  *   srcDir: "src",
  *   srcLink: "",
  *   theme: DEFAULT_THEME,
