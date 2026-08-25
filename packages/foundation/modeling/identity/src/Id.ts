@@ -119,7 +119,7 @@ const $I = {
     ...extras,
     schemaId: Symbol.for(identifier),
     identifier,
-    title: extras.title ?? identifier,
+    title: identifier,
     toEquivalence: adoptDeclaredFieldsEquivalence<Self>,
   }),
 };
@@ -157,7 +157,6 @@ export class IdentityInterpolationError extends S.TaggedError<IdentityInterpolat
   "IdentityInterpolationError",
   {},
   $I.annoteError<IdentityInterpolationError>("@beep/identity/errors/IdentityInterpolationError", {
-    title: "Identity Interpolation Error",
     description: "Identity template tags do not allow interpolations.",
   })
 ) {
@@ -191,7 +190,6 @@ export class IdentitySegmentCountError extends S.TaggedError<IdentitySegmentCoun
   "IdentitySegmentCountError",
   {},
   $I.annoteError<IdentitySegmentCountError>("@beep/identity/errors/IdentitySegmentCountError", {
-    title: "Identity Segment Count Error",
     description: "Identity template tags must use a single literal segment.",
   })
 ) {
