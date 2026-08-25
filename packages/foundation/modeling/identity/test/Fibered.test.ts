@@ -140,4 +140,37 @@ describe("Fibered", () => {
 
     expectTypeOf(rejectPartialSection).toBeFunction();
   });
+
+  it("rejects member hooks that return a non-member schema", () => {
+    const rejectInvalidMemberHook = () =>
+      Fibered.make({
+        base: S.Literals(["text"]),
+        fibers: { text: S.String },
+        // @ts-expect-error Member hooks must preserve the tagged member shape.
+        member: () => S.String,
+        section: {
+          schema: S.Struct({ label: S.String }),
+          values: { text: { label: "Text" } },
+        },
+      });
+
+    expectTypeOf(rejectInvalidMemberHook).toBeFunction();
+  });
+
+  it("returns the schema produced by a conforming member hook", () => {
+    const customFamily = Fibered.make({
+      base: S.Literals(["custom"]),
+      fibers: { custom: S.String },
+      member: (point, fiber) =>
+        S.Struct({ _tag: S.tag(point), value: fiber }).annotate({ description: "Custom member schema" }),
+      section: {
+        schema: S.Struct({ label: S.String }),
+        values: { custom: { label: "Custom" } },
+      },
+    });
+    const member = customFamily.member("custom");
+
+    expect(S.resolveAnnotations(member)?.description).toBe("Custom member schema");
+    expect(S.is(member)({ _tag: "custom", value: "payload" })).toBe(true);
+  });
 });

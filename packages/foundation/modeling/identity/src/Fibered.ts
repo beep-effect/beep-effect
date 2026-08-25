@@ -67,7 +67,9 @@ export interface FiberedInput<
   readonly annotationKey?: string | undefined;
   readonly base: S.Literals<Points>;
   readonly fibers: Fibers;
-  readonly member?: (<Point extends Points[number]>(point: Point, fiber: Fibers[Point]) => S.Top) | undefined;
+  readonly member?:
+    | (<Point extends Points[number]>(point: Point, fiber: Fibers[Point]) => FiberMember<Point, Fibers[Point]>)
+    | undefined;
   readonly section: {
     readonly schema: Section;
     readonly values: SectionValues<Points, Section>;
@@ -163,7 +165,10 @@ const make = <
   input: FiberedInput<Points, Fibers, Section>
 ): Fibered<Points, Fibers, Section> => {
   const annotationKey = input.annotationKey ?? "fiberedSection";
-  const makeMember = <Point extends Points[number]>(point: Point, fiber: Fibers[Point]): S.Top =>
+  const makeMember = <Point extends Points[number]>(
+    point: Point,
+    fiber: Fibers[Point]
+  ): FiberMember<Point, Fibers[Point]> =>
     input.member === undefined ? defaultMember(point, fiber) : input.member(point, fiber);
   const maps = A.reduce(
     input.base.literals,
@@ -173,10 +178,7 @@ const make = <
     },
     (current, point: Points[number]) => {
       const section = Result.getOrThrow(S.decodeResult(input.section.schema)(input.section.values[point]));
-      const member = makeMember(point, input.fibers[point]).annotate({ [annotationKey]: section }) as FiberMember<
-        Points[number],
-        Fibers[Points[number]]
-      >;
+      const member = makeMember(point, input.fibers[point]).annotate({ [annotationKey]: section });
 
       return {
         members: HashMap.set(current.members, point, member),

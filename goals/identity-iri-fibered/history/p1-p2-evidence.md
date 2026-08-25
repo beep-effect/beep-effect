@@ -82,3 +82,21 @@ tree, then `yeet publish --reuse-verified` and `yeet monitor` to merge-ready
 - Store examples are test/dev Layers only → `layerDataset` over an in-memory
   `Dataset`; `SparqlQueryService` untouched.
 - No P1 before blockers cleared → `p0-blocker-audit.md` (2026-08-25).
+
+## P3 — review and hosted-gate follow-ups (PR #821)
+
+- Greptile P1 (predicate collisions defeat the exact codec) → `IdentityRdfBinding`
+  now carries the pairwise-distinct-predicates invariant as a schema check on its
+  fields struct (`S.check(S.makeFilter(...))`, validated against rc.112
+  `Schema.ts` Class-accepts-Struct overload); Greptile P2 → `FiberedInput.member`
+  hook returns `FiberMember<Point, Fibers[Point]>`, cast removed. Report:
+  `history/p3-review-fixes-report.md`.
+- Hosted `Repo Sanity` → `@beep/epistemic-server` added to the changeset (test-only
+  change still counts as a changed product workspace).
+- Hosted `Heavy / Coverage Regression` → semantic-web's 100/100/100/100 floors
+  restored with behavior-level tests (`test/IdentityRdfBindingCoverage.test.ts`,
+  report `history/p3-coverage-report.md`) plus one crispening: `literalAt` now
+  uses `A.match` (empty / exactly-one / duplicate arms), removing an unreachable
+  `O.none` arm that no test could cover. Scoped ratchet:
+  `bun run coverage -- --filter=@beep/identity --filter=@beep/semantic-web` → ok.
+

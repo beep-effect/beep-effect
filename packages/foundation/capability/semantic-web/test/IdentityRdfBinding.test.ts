@@ -16,9 +16,15 @@ import {
   ShaclValidationResult,
   ShaclValidationService,
 } from "@beep/semantic-web/services/shacl-validation";
-import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Ref } from "effect";
+import { assert, describe, expect, it } from "@effect/vitest";
+import { Effect, Layer, pipe, Ref, Result } from "effect";
+import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import { FastCheck as fc } from "effect/testing";
 import type { ShaclNodeShape } from "@beep/semantic-web/services/shacl-validation";
 
 const entryComposer = $SemanticWebId.create("identity/registry-test-entry");
@@ -40,6 +46,33 @@ const EntrySeed = S.Struct({
   label: S.String,
   route: S.String,
 });
+const collidingBindingInput = {
+  identifierPath: DefaultIdentityRdfBinding.identifierPath,
+  curiePath: DefaultIdentityRdfBinding.identifierPath,
+  fiberPaths: { label: labelPath },
+};
+
+const bindingPredicateValues = (value: IdentityRdfBinding): ReadonlyArray<string> =>
+  pipe(
+    R.values(value.fiberPaths),
+    A.map((path) => path.value),
+    A.prepend(value.curiePath.value),
+    A.prepend(value.identifierPath.value)
+  );
+
+const expectBindingMakeToFail = (run: () => unknown, messagePart: string): void => {
+  const formatIssue = SchemaIssue.makeFormatterDefault();
+  try {
+    run();
+  } catch (error) {
+    if (P.hasProperty(error, "cause") && SchemaIssue.isIssue(error.cause)) {
+      expect(formatIssue(error.cause)).toContain(messagePart);
+      return;
+    }
+    throw error;
+  }
+  expect.unreachable("expected binding construction to throw");
+};
 
 const provideScopedLayer =
   <ROut, E2, RIn>(provided: Layer.Layer<ROut, E2, RIn>) =>
@@ -47,6 +80,33 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(provided).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 describe("identity RDF binding", () => {
+  it("rejects predicate collisions during construction and decoding", () => {
+    expectBindingMakeToFail(
+      () => IdentityRdfBinding.make(collidingBindingInput),
+      "identifierPath and curiePath collide at RDF predicate"
+    );
+
+    const decoded = S.decodeUnknownResult(IdentityRdfBinding)(collidingBindingInput);
+    assert.isTrue(Result.isFailure(decoded));
+    if (Result.isFailure(decoded)) {
+      assert.include(
+        SchemaIssue.makeFormatterDefault()(decoded.failure.issue),
+        "identifierPath and curiePath collide at RDF predicate"
+      );
+    }
+  });
+
+  it("derives only pairwise-distinct predicate bindings", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(IdentityRdfBinding)(fc), (generated) => {
+        const predicates = bindingPredicateValues(generated);
+
+        assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
+      }),
+      { numRuns: 40 }
+    );
+  });
+
   it.effect(
     "round-trips exact identity entries through an RDF dataset",
     Effect.fnUntraced(function* () {

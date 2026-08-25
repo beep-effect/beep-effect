@@ -11,6 +11,7 @@ import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode, ObjectTer
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Effect, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -22,6 +23,53 @@ const identifierPathIri = $SemanticWebId.create("identity/identifier").iri;
 const curiePathIri = $SemanticWebId.create("identity/curie").iri;
 const sameNamedNode = S.toEquivalence(NamedNode);
 const sameSubject = S.toEquivalence(Subject);
+
+const IdentityRdfBindingFields = S.Struct({
+  identifierPath: NamedNode,
+  curiePath: NamedNode,
+  fiberPaths: S.Record(S.String, NamedNode),
+});
+
+const predicateEntries = (binding: typeof IdentityRdfBindingFields.Type): ReadonlyArray<readonly [string, NamedNode]> =>
+  pipe(
+    R.toEntries(binding.fiberPaths),
+    A.map(([fiber, path]) => Tuple.make(`fiberPaths.${fiber}`, path)),
+    A.prepend(Tuple.make("curiePath", binding.curiePath)),
+    A.prepend(Tuple.make("identifierPath", binding.identifierPath))
+  );
+
+const predicateCollision = (binding: typeof IdentityRdfBindingFields.Type): O.Option<string> => {
+  let seen = HashMap.empty<string, string>();
+
+  for (const [label, path] of predicateEntries(binding)) {
+    const previous = HashMap.get(seen, path.value);
+    if (O.isSome(previous)) {
+      return O.some(`${previous.value} and ${label} collide at RDF predicate '${path.value}'`);
+    }
+    seen = HashMap.set(seen, path.value, label);
+  }
+
+  return O.none();
+};
+
+const IdentityRdfPredicatePathsDistinct = S.makeFilter<typeof IdentityRdfBindingFields.Type>(
+  (binding) =>
+    pipe(
+      predicateCollision(binding),
+      O.match({
+        onNone: () => true,
+        onSome: (collision) => collision,
+      })
+    ),
+  {
+    identifier: $I`IdentityRdfPredicatePathsDistinct`,
+    title: "Distinct Identity RDF Predicate Paths",
+    description: "Requires identifier, CURIE, and fiber RDF predicate paths to be pairwise distinct.",
+    message: "Identity RDF predicate paths must be pairwise distinct.",
+  }
+);
+
+const CheckedIdentityRdfBindingFields = IdentityRdfBindingFields.pipe(S.check(IdentityRdfPredicatePathsDistinct));
 
 /**
  * Explicit predicate binding for identity registry fields and named fibers.
@@ -44,11 +92,7 @@ const sameSubject = S.toEquivalence(Subject);
  * @since 0.0.0
  */
 export class IdentityRdfBinding extends S.Class<IdentityRdfBinding>($I`IdentityRdfBinding`)(
-  {
-    identifierPath: NamedNode,
-    curiePath: NamedNode,
-    fiberPaths: S.Record(S.String, NamedNode),
-  },
+  CheckedIdentityRdfBindingFields,
   $I.annote("IdentityRdfBinding", {
     description: "Explicit RDF predicates for identity registry fields and named string fibers.",
   })
@@ -141,15 +185,12 @@ const literalAt = Effect.fn("IdentityRdfBinding.literalAt")(function* (
     A.filter((quad) => sameNamedNode(quad.predicate, path))
   );
 
-  if (A.length(matching) !== 1) {
-    return yield* IdentityDatasetDecodeError.make({ subject, message: cardinalityMessage });
-  }
-
+  const cardinalityError = () => Effect.fail(IdentityDatasetDecodeError.make({ subject, message: cardinalityMessage }));
   const quad = yield* pipe(
-    A.head(matching),
-    O.match({
-      onNone: () => Effect.fail(IdentityDatasetDecodeError.make({ subject, message: cardinalityMessage })),
-      onSome: Effect.succeed,
+    matching,
+    A.match({
+      onEmpty: cardinalityError,
+      onNonEmpty: (found) => (A.length(found) === 1 ? Effect.succeed(A.headNonEmpty(found)) : cardinalityError()),
     })
   );
 
