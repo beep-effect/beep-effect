@@ -14,10 +14,10 @@ import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { Equivalence } from "effect/Equivalence";
 
-// Effect calls the hook with the declared struct equivalence; a non-generic signature keeps the
-// annotation contextually typed without inferring anything from the class in its own base type.
-const declaredFieldsEquivalence = (typeParameters: readonly [Equivalence<never>]): Equivalence<never> =>
-  typeParameters[0];
+// Effect calls the hook with the declared struct equivalence; narrowing it from `never` to `Self`
+// is the contravariant direction (`Self` extends the struct type), so the assertion is sound.
+const declaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>
+  typeParameters[0] as Equivalence<Self>;
 
 class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()(
   "MigrationsDriftError",
@@ -26,7 +26,7 @@ class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()(
     newFolders: S.Array(S.String),
   },
   {
-    toEquivalence: ([sameFields]) => sameFields,
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<MigrationsDriftError>(typeParameters),
   }
 ) {}
 
@@ -37,7 +37,7 @@ class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>()
     message: S.String,
   },
   {
-    toEquivalence: ([sameFields]) => sameFields,
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<MigrationGenerationError>(typeParameters),
   }
 ) {}
 
