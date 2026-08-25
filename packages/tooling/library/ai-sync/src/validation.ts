@@ -121,7 +121,6 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(bun run beep yeet publish:*)",
   "Bash(bun run beep yeet monitor:*)",
   "Bash(bun run beep yeet closeout:*)",
-  "Bash(bun run beep yeet sweep)",
   "Bash(bun run beep worktree new:*)",
   "Bash(bun run beep worktree doctor:*)",
   "Bash(bun run beep worktree remove:*)",
@@ -134,7 +133,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 48-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and guarded branch and worktree cleanup.",
+      "Exact 47-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and stale-worktree cleanup.",
   })
 );
 
