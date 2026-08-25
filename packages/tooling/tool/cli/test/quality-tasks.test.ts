@@ -2689,6 +2689,58 @@ describe("quality task adapter", () => {
         )
       ));
 
+    it("resolves an affected run from a dirty row-only baseline edit against the workspace", () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+            const writeBaseline = (document: CoverageRegressionBaseline) =>
+              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+                Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+              );
+
+            yield* fs.makeDirectory(path.join(repoRoot, "packages/existing/src"), { recursive: true });
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            yield* fs.writeFileString(
+              path.join(repoRoot, "package.json"),
+              encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
+            );
+            yield* fs.writeFileString(
+              path.join(repoRoot, "packages/existing/package.json"),
+              encodeJson({ name: "@beep/existing", private: true, scripts: { coverage: "vitest" } })
+            );
+            yield* fs.writeFileString(path.join(repoRoot, "packages/existing/src/Index.ts"), "export const v = 1;\n");
+            yield* writeBaseline(
+              withRows({
+                "@beep/existing": coveragePackageBaseline("packages/existing"),
+                "@beep/gone": coveragePackageBaseline("packages/gone"),
+              })
+            );
+            yield* runGit(repoRoot, ["init"]);
+            yield* runGit(repoRoot, ["config", "user.email", "coverage-affected@example.test"]);
+            yield* runGit(repoRoot, ["config", "user.name", "Coverage Affected Test"]);
+            yield* runGit(repoRoot, ["add", "--all"]);
+            yield* runGit(repoRoot, ["commit", "-m", "seed"]);
+
+            // One present row changes and the vanished package's row is dropped:
+            // the affected resolver must plan from those rows without a full run.
+            yield* writeBaseline(withRows({ "@beep/existing": coveragePackageBaseline("packages/existing", 61) }));
+            const exit = yield* Effect.exit(
+              validateCoverageTaskArgsForTesting(repoRoot, ["--affected"]).pipe(
+                Effect.provideService(
+                  ConfigProvider.ConfigProvider,
+                  ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "HEAD" })
+                )
+              )
+            );
+            expect(Exit.isSuccess(exit)).toBe(true);
+          })
+        )
+      ));
+
     it("selects the packages named by a row-only baseline edit instead of the full workspace", () => {
       const owners = [
         CoverageScopeOwner.make({ packageName: "@beep/a", packagePath: "packages/a", hasCoverage: true }),
