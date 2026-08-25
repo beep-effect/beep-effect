@@ -62,6 +62,8 @@ import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import {
   cleanCoverageRegressionOutputs,
   compareCoverageRegressionBaseline,
+  coverageBaselineRowDeltaFromBase,
+  coverageRegressionBaselinePath,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
 import {
@@ -98,6 +100,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
+import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
 import type {
   GithubCheckFailurePolicy,
@@ -673,7 +676,28 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
     QualityTaskConfigurationError.mapError(`Failed to collect affected coverage files from ${base}...HEAD.`)
   );
-  const scope = yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles);
+  // A row-only baseline edit is validated by measuring the packages whose rows
+  // changed; anything else in the document keeps the baseline a global input.
+  // This line reports the diff only — the planner's own scope line below is
+  // the authority on what runs, since a row can still force `full` or `noop`.
+  const baselineRowPackages = A.contains(changedFiles, coverageRegressionBaselinePath)
+    ? yield* coverageBaselineRowDeltaFromBase(repoRoot, base)
+    : O.none<CoverageBaselineRowDelta>();
+  yield* O.match(baselineRowPackages, {
+    onNone: () => Effect.void,
+    onSome: (delta) => {
+      const rows = A.appendAll(
+        A.map(delta.present, (packageName) => `${packageName} (present)`),
+        A.map(delta.removed, (packageName) => `${packageName} (removed)`)
+      );
+      return Console.log(
+        A.isReadonlyArrayNonEmpty(rows)
+          ? `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} differs from ${base} only in the row(s) for ${A.join(rows, ", ")}; planning from those rows`
+          : `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} differs from ${base} only in provenance fields`
+      );
+    },
+  });
+  const scope = yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles, baselineRowPackages);
   const passthroughArgs = withoutCoverageAffectedArg(args);
 
   return yield* Match.value(scope).pipe(

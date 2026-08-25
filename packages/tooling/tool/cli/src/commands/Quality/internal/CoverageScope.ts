@@ -21,11 +21,15 @@ import type { PackageJson } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScope");
 
+// Mirrors `coverageRegressionBaselinePath` in CoverageRegression.ts, which
+// imports this module; the literal stays here to keep the dependency one-way.
+const COVERAGE_BASELINE_PATH = "standards/coverage.regression-baseline.jsonc";
+
 const COVERAGE_FULL_INPUT_FILES = [
   ".bun-version",
   "bun.lock",
   "package.json",
-  "standards/coverage.regression-baseline.jsonc",
+  COVERAGE_BASELINE_PATH,
   "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
   "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
   "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
@@ -535,8 +539,16 @@ const ownerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: strin
 const isGlobalCoverageInput = (filePath: string): boolean =>
   isExactFile(COVERAGE_FULL_INPUT_FILES, filePath) || hasPrefix(COVERAGE_FULL_INPUT_PREFIXES, filePath);
 
+// `standards/` mixes executable policy inputs (`*.jsonc` baselines and
+// inventories that tests read) with authored documentation; only the Markdown
+// is coverage-inert. A decision-log edit forced two full runs on 2026-08-24.
+const isStandardsDocument = (filePath: string): boolean =>
+  Str.startsWith("standards/")(filePath) && Str.endsWith(".md")(filePath);
+
 const isCoverageNoopInput = (filePath: string): boolean =>
-  isExactFile(COVERAGE_NOOP_FILES, filePath) || hasPrefix(COVERAGE_NOOP_PREFIXES, filePath);
+  isExactFile(COVERAGE_NOOP_FILES, filePath) ||
+  hasPrefix(COVERAGE_NOOP_PREFIXES, filePath) ||
+  isStandardsDocument(filePath);
 
 const repositoryFixtureOwnerNameForFile = (filePath: string): O.Option<string> =>
   pipe(
@@ -849,26 +861,181 @@ const dependentSeedOwners = (
 export const planCoverageAffectedScope: {
   (changedFiles: ReadonlyArray<string>): (owners: ReadonlyArray<CoverageScopeOwner>) => CoverageAffectedScope;
   (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): CoverageAffectedScope;
-} = dual(2, (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): CoverageAffectedScope => {
-  const reasons = pipe(
-    A.getSomes(A.map(changedFiles, (filePath) => fullReasonForFile(owners, filePath))),
-    A.dedupe,
-    A.sort(Order.String)
-  );
-  if (A.isReadonlyArrayNonEmpty(reasons)) {
-    return CoverageFullScope.make({ reasons });
-  }
+} = dual(
+  2,
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): CoverageAffectedScope =>
+    planCoverageAffectedScopeWithBaseline(owners, changedFiles, O.none())
+);
 
-  const directPackageNames = changedCoverageOwners(owners, changedFiles);
-  const dependentPackageNames = pipe(
-    coverageDependentOwners(owners, dependentSeedOwners(owners, changedFiles)),
-    A.difference(directPackageNames)
+const isCoverageBaselinePath = (filePath: string): boolean => filePath === COVERAGE_BASELINE_PATH;
+
+/**
+ * Which coverage-baseline rows a pull request changed, split by direction.
+ *
+ * **Details**
+ *
+ * `present` names rows that exist in the working copy and were added or
+ * changed; `removed` names rows that exist only at the comparison base. The
+ * split matters to the planner: a present row must name a measurable package
+ * (an unknown name is a typo the full run has to surface, since `main`'s
+ * unscoped run would otherwise fail it as a missing summary), while a removed
+ * row for a package that left the workspace is pruned by the writer and needs
+ * no run.
+ *
+ * **Example** (One changed row)
+ *
+ * ```ts
+ * import { CoverageBaselineRowDelta } from "@beep/repo-cli/test/Quality"
+ *
+ * const delta = CoverageBaselineRowDelta.make({ present: ["@beep/schema"], removed: [] })
+ * console.log(delta.present)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageBaselineRowDelta extends S.Class<CoverageBaselineRowDelta>($I`CoverageBaselineRowDelta`)(
+  {
+    present: S.Array(S.String),
+    removed: S.Array(S.String),
+  },
+  $I.annote("CoverageBaselineRowDelta", {
+    description: "Coverage baseline package rows added or changed (present) and deleted (removed) by a change set.",
+  })
+) {}
+
+// A present row names a package the run must measure. No owner at all is a
+// typo or a package that was never in the workspace; an owner without a
+// coverage task (or a lab) cannot be measured. Both are configuration problems
+// the full run has to surface.
+const presentBaselineRowReason = (owners: ReadonlyArray<CoverageScopeOwner>, packageName: string): O.Option<string> =>
+  pipe(
+    A.findFirst(owners, (owner) => owner.packageName === packageName),
+    O.match({
+      onNone: () => O.some(`${COVERAGE_BASELINE_PATH}: row for ${packageName} names no workspace package`),
+      onSome: (owner) =>
+        isMeasurableOwner(owner)
+          ? O.none()
+          : O.some(`${COVERAGE_BASELINE_PATH}: row for ${packageName} names a package that cannot be measured`),
+    })
   );
-  const packageNames = pipe(A.union(directPackageNames, dependentPackageNames), A.sort(Order.String));
-  return A.isReadonlyArrayNonEmpty(packageNames)
-    ? CoverageSelectedScope.make({ packageNames, dependentPackageNames })
-    : CoverageNoopScope.make();
-});
+
+// Removed rows need a run only when their package is still measurable: the row
+// was dropped but the package remains, so its next summary must be reviewed.
+const measurableBaselineRowOwners = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  packageNames: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  pipe(
+    owners,
+    A.filter((owner) => isMeasurableOwner(owner) && A.contains(packageNames, owner.packageName)),
+    A.map((owner) => owner.packageName)
+  );
+
+/**
+ * Plan affected coverage scope with knowledge of which baseline rows changed.
+ *
+ * **Details**
+ *
+ * The committed baseline is a global coverage input: an edit to it normally
+ * forces the full workspace run. When the caller has diffed the document
+ * against the comparison base and found that only `packages` rows changed
+ * (`coverageBaselineRowDelta` in CoverageRegression), the packages named by
+ * those rows are selected — and measured — instead. Every baseline regeneration
+ * commit used to cost the 9–15 minute full run; a row-only splice now costs
+ * exactly the packages it touches. `None` keeps the global-input behaviour.
+ *
+ * **Example** (A row-only baseline edit selects its package)
+ *
+ * ```ts
+ * import {
+ *   CoverageBaselineRowDelta,
+ *   CoverageScopeOwner,
+ *   planCoverageAffectedScopeWithBaseline
+ * } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const owner = CoverageScopeOwner.make({
+ *   packageName: "@beep/schema",
+ *   packagePath: "packages/foundation/modeling/schema",
+ *   hasCoverage: true
+ * })
+ * const scope = planCoverageAffectedScopeWithBaseline(
+ *   [owner],
+ *   ["standards/coverage.regression-baseline.jsonc"],
+ *   O.some(CoverageBaselineRowDelta.make({ present: ["@beep/schema"], removed: [] }))
+ * )
+ * console.log(scope._tag) // "selected"
+ * ```
+ *
+ * @param owners - Current workspace packages, their coverage capability, and workspace dependencies.
+ * @param changedFiles - Sorted or unsorted repository-relative changed paths.
+ * @param baselineRowPackages - Packages whose baseline rows changed, when the baseline edit was row-only.
+ * @returns A deterministic full, selected, or no-op scope.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const planCoverageAffectedScopeWithBaseline: {
+  (
+    changedFiles: ReadonlyArray<string>,
+    baselineRowPackages: O.Option<CoverageBaselineRowDelta>
+  ): (owners: ReadonlyArray<CoverageScopeOwner>) => CoverageAffectedScope;
+  (
+    owners: ReadonlyArray<CoverageScopeOwner>,
+    changedFiles: ReadonlyArray<string>,
+    baselineRowPackages: O.Option<CoverageBaselineRowDelta>
+  ): CoverageAffectedScope;
+} = dual(
+  3,
+  (
+    owners: ReadonlyArray<CoverageScopeOwner>,
+    changedFiles: ReadonlyArray<string>,
+    baselineRowPackages: O.Option<CoverageBaselineRowDelta>
+  ): CoverageAffectedScope => {
+    const presentRows = pipe(
+      baselineRowPackages,
+      O.map((delta) => delta.present),
+      O.getOrElse(A.empty<string>)
+    );
+    const removedRows = pipe(
+      baselineRowPackages,
+      O.map((delta) => delta.removed),
+      O.getOrElse(A.empty<string>)
+    );
+    const scopedBaselineEdit = O.isSome(baselineRowPackages);
+    const reasons = pipe(
+      A.appendAll(
+        A.getSomes(
+          A.map(changedFiles, (filePath) =>
+            scopedBaselineEdit && isCoverageBaselinePath(filePath) ? O.none() : fullReasonForFile(owners, filePath)
+          )
+        ),
+        A.getSomes(A.map(presentRows, (packageName) => presentBaselineRowReason(owners, packageName)))
+      ),
+      A.dedupe,
+      A.sort(Order.String)
+    );
+    if (A.isReadonlyArrayNonEmpty(reasons)) {
+      return CoverageFullScope.make({ reasons });
+    }
+
+    const directPackageNames = pipe(
+      A.union(
+        changedCoverageOwners(owners, changedFiles),
+        measurableBaselineRowOwners(owners, A.appendAll(presentRows, removedRows))
+      ),
+      A.sort(Order.String)
+    );
+    const dependentPackageNames = pipe(
+      coverageDependentOwners(owners, dependentSeedOwners(owners, changedFiles)),
+      A.difference(directPackageNames)
+    );
+    const packageNames = pipe(A.union(directPackageNames, dependentPackageNames), A.sort(Order.String));
+    return A.isReadonlyArrayNonEmpty(packageNames)
+      ? CoverageSelectedScope.make({ packageNames, dependentPackageNames })
+      : CoverageNoopScope.make();
+  }
+);
 
 /**
  * Derive affected coverage scope from changed files using live workspace ownership.
@@ -891,8 +1058,13 @@ export const planCoverageAffectedScope: {
 export const planWorkspaceCoverageAffectedScope = Effect.fn("CoverageScope.planWorkspaceCoverageAffectedScope")(
   function* (
     repoRoot: string,
-    changedFiles: ReadonlyArray<string>
+    changedFiles: ReadonlyArray<string>,
+    baselineRowPackages: O.Option<CoverageBaselineRowDelta> = O.none()
   ): Effect.fn.Return<CoverageAffectedScope, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
-    return planCoverageAffectedScope(yield* workspaceCoverageScopeOwners(repoRoot), changedFiles);
+    return planCoverageAffectedScopeWithBaseline(
+      yield* workspaceCoverageScopeOwners(repoRoot),
+      changedFiles,
+      baselineRowPackages
+    );
   }
 );

@@ -587,3 +587,37 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   comparator-policy step); the seven foundation packages still cost a near-full run on any
   source change, which is correct but makes step 7's no-op widening and step 4's comparator
   rules the next wins.
+
+## 2026-08-25 — B11: the ratchet pointed every drop at the repo-wide writer
+
+- What was happening: step 3 of the coverage-lane plan. After B9 (deterministic runtime) and
+  B10 (dependents in scope), the remaining self-inflicted cost was the regeneration loop
+  itself: the ratchet's failure output named no fix at all, and the only command an agent could
+  find was the baseline header's `bun run coverage:baseline:write` — a 128-package run to change
+  one row — whose resulting baseline commit was then a global input that forced the 9–15 minute
+  full fallback on the PR. 39 baseline commits in 90 days, each paying twice.
+- Evidence: the scoped write path already existed and was never advertised — a `--filter`/
+  `--affected` run with `--write-baseline` merges exactly the rows it measured
+  (`CoverageRegression.ts` scoped branch of `writeCoverageRegressionBaseline`). B10's own PR
+  demonstrated the loop: adding covered branches to `CoverageScope.ts` dropped its branch
+  percentage 92.85→92.1 with the same three uncovered arms, and the fix was two tests, not a
+  regen; nothing in the output said which of the two to do or how.
+- Proof (local, `CI=true`, `TURBO_SCM_BASE=HEAD`, committed tree, one dirty file): editing
+  only `@beep/pandoc-ast`'s baseline row (lines floor 85.21→100, uncovered 127→0) planned
+  `coverage:affected: standards/coverage.regression-baseline.jsonc changed only the row(s) for
+  @beep/pandoc-ast; measuring those instead of the full workspace`, ran one package in 24.5 s
+  of turbo time, and failed the ratchet with the new block:
+  `remediation: … bun run coverage -- --filter=@beep/pandoc-ast --write-baseline`. A
+  `standards/architecture/DECISIONS.md`-only edit planned `no coverage-bearing inputs changed`.
+- Friction, two receipts: (1) `compareCoverageRegressionSnapshotsForTesting` is `dual(3)` — a
+  two-argument call silently returns the data-last function, and a fixture with unchanged
+  `uncovered` counts is a "deletion", not a regression, so the first remediation test asserted
+  on a function and then on an empty result before the fixture carried an uncovered rise;
+  (2) `standards/` mixes 25 executable policy inputs (`*.jsonc` baselines and inventories that
+  tests read) with 28 Markdown files, so the no-op rule had to be a suffix rule, not a prefix.
+- Would have prevented it: a remediation line on day one of the ratchet — every other gate in
+  the lane prints its repair command; and a planner probe subcommand (still the top ask from
+  B10) to see the scope a hypothetical change set gets without running it.
+- Still open: step 4 (comparator policy — the percentage treadmill that bit B10, and whether
+  new files are held to the package tier), step 5 (B4 publish-time coverage), 6 (laws text),
+  7 (remaining no-op prefixes: `.claude/`, `scripts/`, root config files).

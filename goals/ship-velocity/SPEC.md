@@ -152,6 +152,25 @@ be closed, not tolerated.
   `@beep/schema` test change; (2) a wide selection dispatches `coverage:prebuild` with one
   `--filter` per selected owner and no empty shard; (3) a real `coverage --affected` run under
   `CI=true` executes the sharded selected path and the ratchet compares every selected row.
+- **B11 Scoped remediation and row-only baseline scoping.** The ratchet's failure output never
+  named a fix, and the only command an agent could find was the baseline header's repo-wide
+  `bun run coverage:baseline:write` — a 9–15 minute run that re-measures 128 packages to
+  change one row, and the origin of the regen treadmill (39 baseline commits in 90 days, every
+  one a full-fallback run on the PR). Three changes: (1) the ratchet prints a remediation block
+  naming the exact scoped command for the regressed packages
+  (`bun run coverage -- --filter=<p> … --write-baseline`, which merges only the rows it
+  measured), and the baseline header advertises the same form ahead of the whole-document one;
+  (2) the pull-request planner diffs the baseline against the comparison base
+  (`coverageBaselineRowDelta`): when only `packages` rows changed, the packages those rows name
+  are selected and measured instead of the full workspace, while any change to `epsilon`,
+  `minimum`, `exemptions`, or `follow_ups` — or an unreadable side — keeps the baseline a global
+  input; (3) `standards/**/*.md` is coverage-inert like `docs/` (the `*.jsonc` policy inputs
+  under `standards/` stay global), because a decision-log edit forced two full runs during B10.
+  **Acceptance:** (1) a ratchet failure ends with the remediation block and the command lists
+  every regressed package once; (2) a dirty baseline whose only change is one package's row
+  plans `selected` for that package and runs in that package's time, not the full lane's; (3) a
+  `standards/architecture/*.md`-only change plans `noop`; (4) a `minimum`/`exemptions` edit
+  still plans `full`.
 
 ## Workstream C — Turbo cache: readers, warmth, proof
 

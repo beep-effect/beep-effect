@@ -8,9 +8,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import {
   Console,
   DateTime,
@@ -37,9 +38,14 @@ import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
 import { enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
-import { resolveGitCommit, resolveGitMergeBase } from "../../../internal/repo-run/GitExec.ts";
+import { resolveGitCommit, resolveGitMergeBase, runGitRawOutput } from "../../../internal/repo-run/GitExec.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
-import { changedCoverageOwners, planCoverageAffectedScope, workspaceCoverageScopeOwners } from "./CoverageScope.ts";
+import {
+  CoverageBaselineRowDelta,
+  changedCoverageOwners,
+  planCoverageAffectedScope,
+  workspaceCoverageScopeOwners,
+} from "./CoverageScope.ts";
 import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
@@ -62,6 +68,36 @@ export const coverageRegressionBaselinePath = "standards/coverage.regression-bas
  * @since 0.0.0
  */
 export const coverageRegressionRegenerationCommand = "bun run coverage:baseline:write";
+
+/**
+ * Scoped baseline regeneration command for exactly the named packages.
+ *
+ * **Details**
+ *
+ * A filtered `--write-baseline` run measures only the named packages and
+ * merges their rows into the committed document, leaving every other row
+ * untouched. It is the remediation the ratchet prints for a regression, and
+ * the only regeneration form that does not spend the full workspace run.
+ *
+ * **Example** (Two packages)
+ *
+ * ```ts
+ * import { coverageScopedBaselineWriteCommand } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(coverageScopedBaselineWriteCommand(["@beep/md", "@beep/pandoc-ast"]))
+ * // "bun run coverage -- --filter=@beep/md --filter=@beep/pandoc-ast --write-baseline"
+ * ```
+ *
+ * @param packageNames - Coverage owners whose rows should be re-measured and merged.
+ * @returns The exact command line to run from the repository root.
+ * @category constants
+ * @since 0.0.0
+ */
+export const coverageScopedBaselineWriteCommand = (packageNames: ReadonlyArray<string>): string =>
+  `bun run coverage -- ${A.join(
+    A.map(packageNames, (packageName) => `--filter=${packageName}`),
+    " "
+  )} --write-baseline`;
 
 /**
  * Percentage-point tolerance used when comparing Vitest floating-point pct output.
@@ -1032,7 +1068,7 @@ const replaceMeasuredPackage = (
 ): ((packageName: string) => boolean) => {
   const changedNames = HashSet.fromIterable(packageNames);
   return Bool.match(replaceAll, {
-    onTrue: () => () => true,
+    onTrue: () => thunkTrue,
     onFalse:
       () =>
       (packageName: string): boolean =>
@@ -1233,6 +1269,171 @@ const coverageBaselineGitAdapter: GitCommandErrorAdapter<QualityTaskConfiguratio
     QualityTaskConfigurationError.new(`${commandLine} failed with exit code ${exitCode}.`),
   onTruncated: O.none(),
 };
+
+const packageBaselineEquivalence = S.toEquivalence(CoveragePackageBaseline);
+const tieredMinimumEquivalence = S.toEquivalence(CoverageTieredMinimum);
+const rationaleRecordEquivalence = S.toEquivalence(S.Record(S.String, S.NonEmptyString));
+
+/**
+ * Name the packages whose baseline rows differ between two baseline documents,
+ * when nothing else in the document differs.
+ *
+ * **Details**
+ *
+ * A baseline edit that only touches `packages` rows can be validated by
+ * measuring exactly those packages, so the pull-request planner keeps such a
+ * change scoped instead of falling back to the full workspace run. Any change
+ * to `epsilon`, `minimum`, `exemptions`, or `follow_ups` alters how every row
+ * is judged and yields `None`, which the planner treats as a global input.
+ * Provenance fields (`generated_at`, `git_sha`, `command`) never affect the
+ * verdict and are ignored.
+ *
+ * **Example** (One changed row)
+ *
+ * ```ts
+ * import {
+ *   coverageBaselineRowDelta,
+ *   CoveragePackageBaseline,
+ *   CoverageRegressionBaseline,
+ *   CoverageUncoveredCounts
+ * } from "@beep/repo-cli/test/Quality"
+ * import { NonNegativeInt } from "@beep/schema/Number"
+ * import { Percentage } from "@beep/schema/Percentage"
+ *
+ * const pct = (value: number) => ({
+ *   lines: Percentage.make(value),
+ *   statements: Percentage.make(value),
+ *   branches: Percentage.make(value),
+ *   functions: Percentage.make(value)
+ * })
+ * const row = (value: number) =>
+ *   CoveragePackageBaseline.make({
+ *     path: "packages/example",
+ *     ...pct(value),
+ *     uncovered: CoverageUncoveredCounts.make({
+ *       lines: NonNegativeInt.make(0),
+ *       statements: NonNegativeInt.make(0),
+ *       branches: NonNegativeInt.make(0),
+ *       functions: NonNegativeInt.make(0)
+ *     }),
+ *     files: {}
+ *   })
+ * const document = (value: number) =>
+ *   CoverageRegressionBaseline.make({
+ *     schema_version: 2,
+ *     generated_at: "2026-08-25T00:00:00.000Z",
+ *     git_sha: "example",
+ *     command: "bun run coverage:baseline:write",
+ *     epsilon: 0.001,
+ *     minimum: pct(0),
+ *     exemptions: {},
+ *     follow_ups: {},
+ *     packages: { "@beep/example": row(value) }
+ *   })
+ *
+ * console.log(coverageBaselineRowDelta(document(50), document(60))) // Some({ present: ["@beep/example"], removed: [] })
+ * ```
+ *
+ * @param previous - Baseline document at the comparison base.
+ * @param current - Baseline document under test.
+ * @returns Sorted present (added or changed) and removed row package names; `None` when a non-row field changed.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageBaselineRowDelta: {
+  (current: CoverageRegressionBaseline): (previous: CoverageRegressionBaseline) => O.Option<CoverageBaselineRowDelta>;
+  (previous: CoverageRegressionBaseline, current: CoverageRegressionBaseline): O.Option<CoverageBaselineRowDelta>;
+} = dual(
+  2,
+  (previous: CoverageRegressionBaseline, current: CoverageRegressionBaseline): O.Option<CoverageBaselineRowDelta> => {
+    if (
+      previous.epsilon !== current.epsilon ||
+      !tieredMinimumEquivalence(previous.minimum, current.minimum) ||
+      !rationaleRecordEquivalence(previous.exemptions, current.exemptions) ||
+      !rationaleRecordEquivalence(previous.follow_ups, current.follow_ups)
+    ) {
+      return O.none();
+    }
+
+    // A present row is added or changed relative to the base; a removed row
+    // exists only at the base.
+    const presentDiffers = ([packageName, after]: readonly [string, CoveragePackageBaseline]): boolean =>
+      O.match(R.get(previous.packages, packageName), {
+        onNone: thunkTrue,
+        onSome: (before) => !packageBaselineEquivalence(before, after),
+      });
+
+    return O.some(
+      CoverageBaselineRowDelta.make({
+        present: pipe(
+          R.toEntries(current.packages),
+          A.filter(presentDiffers),
+          A.map(([packageName]) => packageName),
+          A.sort(Order.String)
+        ),
+        removed: pipe(
+          R.keys(previous.packages),
+          A.filter((packageName) => !R.has(current.packages, packageName)),
+          A.sort(Order.String)
+        ),
+      })
+    );
+  }
+);
+
+/**
+ * Compute {@link coverageBaselineRowDelta} between the committed base revision
+ * and the baseline currently on disk.
+ *
+ * **Details**
+ *
+ * Any failure to obtain or decode either side — the file is absent at the base,
+ * the base is a legacy schema-v1 document, the working copy does not parse —
+ * yields `None`, so the caller's only safe interpretation is "treat the
+ * baseline as a global coverage input".
+ *
+ * **Example** (Build the delta effect)
+ *
+ * ```ts
+ * import { coverageBaselineRowDeltaFromBase } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(coverageBaselineRowDeltaFromBase(process.cwd(), "origin/main"))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root.
+ * @param base - Git revision the pull request is compared against.
+ * @returns Package names whose rows changed, or `None` when the change is not row-only.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageBaselineRowDeltaFromBase = Effect.fn("CoverageRegression.coverageBaselineRowDeltaFromBase")(
+  function* (
+    repoRoot: string,
+    base: string
+  ): Effect.fn.Return<
+    O.Option<CoverageBaselineRowDelta>,
+    never,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  > {
+    // Changed-file discovery diffs `base...HEAD`, i.e. from the merge base, so
+    // the document must come from that same commit: reading the ref's tip would
+    // compare against rows main changed after this branch diverged.
+    const previous = yield* resolveGitMergeBase(repoRoot, base, "HEAD", coverageBaselineGitAdapter).pipe(
+      Effect.flatMap((mergeBase) =>
+        runGitRawOutput(
+          repoRoot,
+          ["show", `${mergeBase}:${coverageRegressionBaselinePath}`],
+          coverageBaselineGitAdapter
+        )
+      ),
+      Effect.flatMap(decodeJsoncTextAs(CoverageRegressionBaseline)),
+      Effect.option
+    );
+    const current = yield* Effect.option(readBaseline(repoRoot));
+    return O.flatMap(O.all([previous, current]), ([before, after]) => coverageBaselineRowDelta(before, after));
+  }
+);
 
 /**
  * Remove the generated baseline artifact from the writer's changed-file input.
@@ -1479,7 +1680,8 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
   );
   return [
     "// Coverage regression baseline. Do not edit by hand.",
-    `// Regenerate with: ${coverageRegressionRegenerationCommand}`,
+    `// Regenerate the rows you changed with: ${coverageScopedBaselineWriteCommand(["<package>"])}`,
+    `// Regenerate the whole document with: ${coverageRegressionRegenerationCommand}`,
     "// Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.",
     jsonc,
   ].join("\n");
@@ -2245,9 +2447,68 @@ const regressionLines = (
         ...A.map(gaps, (packageName) => `  - ${coverageDiagnosticFragment(packageName)}`),
       ],
     }),
+    ...renderCoverageRemediation(result),
   ];
   return sections;
 };
+
+const failurePackageNames = (failures: ReadonlyArray<CoverageComparisonFailure>): ReadonlyArray<string> =>
+  pipe(
+    A.map(failures, (failure) => failure.packageName),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+
+/**
+ * Render the remediation block the ratchet prints after a regression.
+ *
+ * **Details**
+ *
+ * Baseline regressions get the exact scoped regeneration command for the
+ * regressed packages so an agent never reaches for the repo-wide writer, with
+ * the two legitimate outcomes stated: restore the coverage, or accept the new
+ * floors after review. Tier-minimum breaches get a restore-only hint: the
+ * writer records floors, it cannot lift a package above the repository tier.
+ * Missing summaries and disposition gaps get no command because they are
+ * configuration problems, not floors.
+ *
+ * **Example** (Nothing regressed)
+ *
+ * ```ts
+ * import { CoverageComparisonResult, renderCoverageRemediation } from "@beep/repo-cli/test/Quality"
+ *
+ * const clean = CoverageComparisonResult.make({
+ *   comparedCount: 0,
+ *   failures: [],
+ *   minimumFailures: [],
+ *   missingActuals: [],
+ *   newPackages: [],
+ *   followUpDebt: []
+ * })
+ * console.log(renderCoverageRemediation(clean)) // []
+ * ```
+ *
+ * @param result - Comparison result the ratchet is about to enforce.
+ * @returns Remediation lines, empty when no package floor regressed.
+ * @category rendering
+ * @since 0.0.0
+ */
+export const renderCoverageRemediation = (result: CoverageComparisonResult): ReadonlyArray<string> => [
+  ...A.match(failurePackageNames(result.failures), {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (packageNames) => [
+      "[coverage-ratchet] remediation: restore the lost coverage with tests, or, once a reviewer accepts the new floors, regenerate only the regressed rows:",
+      `  ${sanitizeCoverageDiagnostic(coverageScopedBaselineWriteCommand(packageNames))}`,
+      `  (the scoped run measures only those packages and merges their rows; never run ${coverageRegressionRegenerationCommand} for a per-package drop)`,
+    ],
+  }),
+  ...A.match(failurePackageNames(result.minimumFailures), {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (packageNames) => [
+      `[coverage-minimum] remediation: ${sanitizeCoverageDiagnostic(A.join(packageNames, ", "))} sit below the repository tier; only added coverage fixes this — the baseline writer records floors and cannot lift a package above the tier.`,
+    ],
+  }),
+];
 
 /**
  * Compare generated package coverage summaries against the committed baseline.

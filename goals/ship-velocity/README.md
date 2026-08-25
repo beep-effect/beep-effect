@@ -33,3 +33,6 @@ posture so local, PR, and main-push runs measure identical per-file rows; the 15
 that motivated it is the 2026-08-24 receipt in [research/OPPORTUNITIES.md](research/OPPORTUNITIES.md).
 B10 followed the same day: the pull-request coverage planner now measures workspace dependents
 of a changed owner, so a dependent's ratchet drop fails the PR instead of `main` after the merge.
+B11 (2026-08-25) closed the regeneration treadmill: the ratchet prints the exact scoped
+`--filter … --write-baseline` command for the regressed packages, and a baseline edit that only
+touches package rows measures those packages (24 s) instead of the full workspace (9–15 min).
