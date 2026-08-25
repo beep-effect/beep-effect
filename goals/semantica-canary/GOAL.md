@@ -37,13 +37,18 @@ Execution:
    the W1 manifest (first 25 of the 76 on-disk PDFs by id; sha256 + bytes) +
    `gold/v1`.
 2. P2 C0: first vertical slice (F1 + one G-relation paper, live then
-   `--offline`), then all three G-relation papers. Schemas first, then
-   `Context.Service` contracts, then first-probe Layers.
+   `--offline`), then all three G-relation papers, then the R2 gate (5). Schemas
+   first, then `Context.Service` contracts, then first-probe Layers.
 3. P3 C1 only after the sibling `openai-driver` packet is merged: vector table
-   + RDF rebuild; rebuild identity; alternate-dimension fixture.
-4. P4 C2: ρdf closure + EYE oracle, crash injection, Tier-L bars.
-5. After each pass, write the verdict entry to `DECISIONS.md` before touching
-   the atlas. Yeet each stage to `merge-ready: yes`.
+   + RDF rebuild; `G-projection` expectations first, then rebuild identity;
+   alternate-dimension fixture; then the R2 gate.
+4. P4 C2: ρdf closure + EYE oracle, crash injection, Tier-L bars read from
+   the live run's `EvalRunTelemetry`; then the R2 gate.
+5. R2 gate before any verdict: full W1 (25 papers) + F1 live then
+   `--offline`, equal `reportDigest`s, zero unexpected typed-degraded document
+   failures (F1 malformed specimens degrade as declared; a W1 paper degrading
+   fails). Then write the verdict entry to `DECISIONS.md` before touching the
+   atlas. Yeet each stage to `merge-ready: yes`.
 6. P5: `/reflect`, evidence under `history/`, state flip in the final PR.
 
 Non-negotiable:
@@ -51,7 +56,8 @@ Non-negotiable:
 - `CanonicalText` = `ResolvedSourceText`; spans = `TextAnchor`; every span
   passes `verifyTextAnchor`. No loss map.
 - The provider cache is the determinism; network-off replay must reproduce
-  report bytes. Typed degraded states, never success-shaped fallbacks.
+  the `reportDigest` (telemetry sidecar excluded). Typed degraded states,
+  never success-shaped fallbacks.
 - Gold proposer's provider family ≠ extractor's (schema refinement).
 - Dimension-keyed vectors; no DDL names a dimension; no id brand truncates.
 - Closure equality + per-event rule validation at C2, never premise-set
