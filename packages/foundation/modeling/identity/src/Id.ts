@@ -105,16 +105,11 @@ const adoptDeclaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivale
  * workspace) is produced by calling `make`, which itself throws
  * {@link IdentityInterpolationError} and {@link IdentitySegmentCountError} --
  * so those two classes cannot depend on a composer derived from `make`. This
- * shim mirrors `IdentityComposer#annote`'s call shape (and adds the same
+ * shim mirrors `IdentityComposer#annoteError`'s call shape (and adds the same
  * interned `schemaId` symbol) using only primitives already available at
  * this point in module evaluation.
  */
 const $I = {
-  annote: <const Extras extends Record<string, unknown>>(identifier: string, extras: Extras) => ({
-    schemaId: Symbol.for(identifier),
-    identifier,
-    ...extras,
-  }),
   annoteError: <Self>(identifier: string, extras: S.Annotations.Documentation<Self>): ErrorAnnotationRecord<Self> => ({
     ...extras,
     schemaId: Symbol.for(identifier),
