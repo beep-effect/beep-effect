@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
 ## Phases
 
@@ -10,9 +10,9 @@ Status: `active`
 | --- | --- | --- | --- |
 | P0 Research | complete | Normalize live/source evidence into stable atlas entries; close the remaining user-visible activation-path evidence gaps; lock the minimal descriptor contract. | The entry gate and activation-path gate are both closed, with compatibility gaps explicit and descriptor fields justified by evidence. |
 | P1 Implement | complete | Add the `@beep/editor` schemas/resolver/command projection, compatibility defaults, Storybook profiles, and synthetic dock panel. | All implementation acceptance criteria and focused tests pass without new document semantics or product persistence. |
-| P2 Verify | in-progress | Run package/app proof and the recorded browser QA loop across keyboard, pointer, responsive/touch, and accessibility scenarios. | Targeted proof and full `bun run beep yeet verify` are green; QA inventory has zero required findings. |
-| P3 Yeet: PR to mergeable | pending | Publish intentionally through Yeet and close exact-head hosted checks and review threads. | PR is mergeable with required hosted checks and reviews green. |
-| P4 Close | pending | Record final evidence, reflection, packet lifecycle, and Goal B handoff. | Closeout reflection validates; atlas/profile handoff is durable; packet and index are updated in the final PR. |
+| P2 Verify | complete | Run package/app proof and the recorded browser QA loop across keyboard, pointer, responsive/touch, and accessibility scenarios. | Targeted proof and full `bun run beep yeet verify` are green; QA inventory has zero required findings. |
+| P3 Yeet: PR to mergeable | complete | Publish intentionally through Yeet and close exact-head hosted checks and review threads. | PR is mergeable with required hosted checks and reviews green. |
+| P4 Close | complete | Record final evidence, reflection, packet lifecycle, and Goal B handoff. | Closeout reflection validates; atlas/profile handoff is durable; packet and index are updated in the final PR. |
 
 ## P0 Research Checklist
 

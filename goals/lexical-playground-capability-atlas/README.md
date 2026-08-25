@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,8 +37,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research and P1 Implement are complete; P2 Verify holds a green recorded
-browser QA loop and closes with the full `bun run beep yeet verify` proof.
+All phases are complete as of 2026-08-25; the closeout PR carries the full
+`bun run beep yeet verify` proof, the reflection
+([`history/reflections/2026-08-25-claude.md`](./history/reflections/2026-08-25-claude.md)),
+and the Goal B handoff.
 
 - P1 landed the ratified contract
   ([`research/P1-CAPABILITY-CONTRACT.md`](./research/P1-CAPABILITY-CONTRACT.md)):
