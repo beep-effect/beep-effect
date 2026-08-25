@@ -708,13 +708,7 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
   DocgenLaneMode.$match(options.mode, {
     none: A.empty<QualityTaskStep>,
     affected: () => [
-      rootScriptStep(repoRoot, "ci:docgen", "docgen:local", [
-        "--base",
-        options.base,
-        "--head",
-        options.head,
-        "--parallel=3",
-      ]),
+      rootScriptStep(repoRoot, "ci:docgen", "docgen:local", ["--base", options.base, "--head", options.head]),
     ],
     full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],
   });

@@ -1,7 +1,7 @@
 # Runner trust-boundary friction receipts
 
-These receipts were captured during P1 and P2 on 2026-08-24 and P3 on
-2026-08-25. They record
+These receipts were captured during P1 and P2 on 2026-08-24 and P3, P4, and
+the closeout on 2026-08-25. They record
 operational friction without expanding this packet's ownership.
 
 ## Bake identity was not discoverable
@@ -239,3 +239,52 @@ configuration level: one alarm, no relaunch, until an operator changes the
 deployment. Until the module offers that, treat sustained launch-and-terminate
 churn with zero registrations as the signature of a group or permission
 misconfiguration.
+
+## The replay probe waits out its timeout after the rejection
+
+**What.** Probe M classifies the replay from the listener log after the
+listener exits, and the listener keeps retrying its session after GitHub
+refuses it, so every replay run spends the full 90-second window even when
+the decisive rejection arrived in the first seconds.
+
+**Evidence.** P4 run `32893112867`: the scratch listener started at
+`20:03:34Z` and the probe printed `JIT replay: rejected (A session for this
+runner already exists.)` at `20:05:04Z`, exactly at the `timeout 90` limit.
+
+**What would have prevented it.** Tail the listener log while it runs and
+stop the listener at the first phrase-anchored rejection or acceptance match,
+keeping the timeout only as the inconclusive fallback. The classification
+would be identical and the probe would return in seconds.
+
+## Dashboard closure has no API and no export of closure state
+
+**What.** The Codex findings dashboard exposes closure only through the
+signed-in SPA. Reading which of the packet's IDs were already closed, and
+closing the rest, required a browser lane with the operator's session, and
+the earlier closure draft lived only in a session scratchpad that did not
+survive.
+
+**Evidence.** P6 on 2026-08-25 needed a read-only browser capture before any
+closure could be recorded, because four of the six IDs had been closed on
+2026-08-24 without a tracked ledger entry; the packet's own prose still called
+them open.
+
+**What would have prevented it.** Land `ops/closures.json` in the same PR as
+any dashboard action, and treat a closure without a ledger row as
+unrecorded. The CSV export covers open findings; a closure record has to be
+written by the agent that clicks.
+
+## A lockfile refresh re-stales the sealed image the same day it is proved
+
+**What.** Every `bun.lock` change on `main` re-stales the serving image, so
+the fleet falls back to full setup until a matching bake is deployed. #812
+merged twenty-one seconds before the P4 head and moved every heavy lane back
+to the slow path while the packet was proving the image.
+
+**Evidence.** Checkout digest `2a4bb737…` against image key `f81ab29f…`
+after `19:57:05Z` on 2026-08-25; the last positive fast path was probe run
+`32880023142` at `17:49Z`.
+
+**What would have prevented it.** A bake triggered by lockfile changes on
+`main`, deployed through the existing pin command, so the integrity check
+rejects for at most one bake cycle. Owned by `ci-fleet-endgame`.
