@@ -1,8 +1,10 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import { Console, Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
+import { CorpusManifest, ManifestWriteFailed } from "@/corpus/Manifest";
+import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 
 const $I = $SemanticaId.create("canary/Command");
 
@@ -39,7 +41,7 @@ type CanaryStage = typeof CanaryStage.Type;
  * import * as O from "effect/Option"
  *
  * const options = CanaryOptions.make({
- *   manifest: "w1.manifest.json",
+ *   manifest: "fixtures/w1.manifest.json",
  *   offline: true,
  *   paper: O.some("paper-001")
  * })
@@ -73,7 +75,7 @@ export class CanaryOptions extends S.Class<CanaryOptions>($I`CanaryOptions`)(
  *   message: "Canary stage c0 is not implemented.",
  *   stage: "c0",
  *   options: CanaryOptions.make({
- *     manifest: "w1.manifest.json",
+ *     manifest: "fixtures/w1.manifest.json",
  *     offline: true,
  *     paper: O.none()
  *   })
@@ -96,8 +98,8 @@ export class StageNotImplemented extends S.TaggedError<StageNotImplemented>($I`S
   })
 ) {}
 
-const manifest = Flag.path("manifest").pipe(
-  Flag.withDefault("w1.manifest.json"),
+const stageManifest = Flag.path("manifest").pipe(
+  Flag.withDefault("fixtures/w1.manifest.json"),
   Flag.withDescription("Committed W1 corpus manifest (id, sha256, bytes per paper); never a directory.")
 );
 const offline = Flag.boolean("offline").pipe(
@@ -115,7 +117,7 @@ const stageDescriptions: Record<CanaryStage, string> = {
   c2: "C2 reasoning: rho-df closure against the EYE oracle, crash injection, Tier-L bars.",
 };
 
-const CanaryFlags = { manifest, offline, paper };
+const CanaryFlags = { manifest: stageManifest, offline, paper };
 
 const failStage = Effect.fn("SemanticaCanary.failStage")(function* (stage: CanaryStage, options: CanaryOptions) {
   return yield* StageNotImplemented.make({
@@ -130,8 +132,66 @@ const makeStageCommand = (stage: CanaryStage) =>
     Command.withDescription(stageDescriptions[stage])
   );
 
+const ManifestJson = S.fromJsonString(CorpusManifest, { space: 2 });
+
+const manifestOutput = Flag.path("out").pipe(
+  Flag.withDescription("Output path for the generated, pretty-printed W1 manifest.")
+);
+
+const manifestInput = Flag.path("manifest").pipe(
+  Flag.withDefault("fixtures/w1.manifest.json"),
+  Flag.withDescription("Committed W1 manifest to decode and verify against SEMANTICA_CORPUS_ROOT.")
+);
+
+const buildManifest = Effect.fn("SemanticaCanary.buildManifest")(function* ({ out }: { readonly out: string }) {
+  const builder = yield* CorpusManifestBuilder;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const built = yield* builder.build;
+  const json = yield* S.encodeEffect(ManifestJson)(built).pipe(Effect.orDie);
+  yield* fs.makeDirectory(path.dirname(out), { recursive: true }).pipe(
+    Effect.mapError(() =>
+      ManifestWriteFailed.make({
+        message: "The W1 manifest output directory could not be created.",
+        manifestPath: out,
+      })
+    )
+  );
+  yield* fs.writeFileString(out, `${json}\n`).pipe(
+    Effect.mapError(() =>
+      ManifestWriteFailed.make({
+        message: "The generated W1 manifest could not be written.",
+        manifestPath: out,
+      })
+    )
+  );
+  yield* Console.log(built.corpusHash);
+});
+
+const checkManifest = Effect.fn("SemanticaCanary.checkManifest")(function* ({
+  manifest,
+}: {
+  readonly manifest: string;
+}) {
+  const builder = yield* CorpusManifestBuilder;
+  const checked = yield* builder.check(manifest);
+  yield* Console.log(checked.corpusHash);
+});
+
+const ManifestCommand = Command.make("manifest").pipe(
+  Command.withDescription("Build or check the committed manifest that defines the 25-paper W1 corpus."),
+  Command.withSubcommands([
+    Command.make("build", { out: manifestOutput }, buildManifest).pipe(
+      Command.withDescription("Build W1 from the first 25 sorted corpus ids and write its manifest.")
+    ),
+    Command.make("check", { manifest: manifestInput }, checkManifest).pipe(
+      Command.withDescription("Decode the W1 manifest and report row-level filesystem drift.")
+    ),
+  ])
+);
+
 /**
- * Headless Semantica canary command with C0, C1, and C2 subcommands.
+ * Headless Semantica canary command with manifest, C0, C1, and C2 subcommands.
  *
  * **Details**
  *
@@ -154,6 +214,7 @@ const makeStageCommand = (stage: CanaryStage) =>
 export const CanaryCommand = Command.make("canary").pipe(
   Command.withDescription("Headless Semantica canary over F1 + the W1 manifest; each stage runs live, then --offline."),
   Command.withSubcommands([
+    ManifestCommand,
     makeStageCommand(CanaryStage.Enum.c0),
     makeStageCommand(CanaryStage.Enum.c1),
     makeStageCommand(CanaryStage.Enum.c2),

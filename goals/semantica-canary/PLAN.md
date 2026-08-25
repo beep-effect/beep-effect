@@ -7,7 +7,9 @@ Status: `active`
 P1 Scaffold is in progress: step 1 (the lab mint, PR C) landed on its own PR
 with the one local `cargo check` recorded under
 [`history/p1-cargo-check.md`](./history/p1-cargo-check.md); step 2 (F1, the
-W1 manifest, `gold/v1`) follows. P2-P5 pending.
+W1 manifest) landed on `feat/semantica-p1-fixtures`
+([`history/p1-w1-manifest.md`](./history/p1-w1-manifest.md)); `gold/v1` rides
+the first C0 slice PR. P2-P5 pending.
 
 ## Phases
 

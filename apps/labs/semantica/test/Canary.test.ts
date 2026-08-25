@@ -60,7 +60,7 @@ describe("Semantica canary command", () => {
           _tag: "StageNotImplemented",
           message: `Canary stage ${stage} is not implemented.`,
           options: {
-            manifest: "w1.manifest.json",
+            manifest: "fixtures/w1.manifest.json",
             offline: true,
             paper: O.none(),
           },
