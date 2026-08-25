@@ -103,3 +103,37 @@ contrary to D25.
 **What would have prevented it:** a verifier or goals-doctor check that requires
 each Exception Ledger owner to resolve to either `goals/<slug>` or a named
 `explorations/full-document-editor/MAP.md` row.
+
+## 2026-08-25 — The touch table has no scaffold path for a `ui-system` concept module
+
+**What was happening:** starting P1 by adding the `src/capability/` module
+(schemas, errors, resolver, projections) to `packages/foundation/ui-system/editor`.
+`AGENTS.md` routes "New slice / concept / role file" to `bun run beep architecture`.
+
+**Evidence:** `bun run beep architecture add concept --help` and
+`... add role --help` take `<slice> <concept> [role]` with
+`--domain-kind aggregates|entities|values` and `--stage core|persistence|...`;
+they scaffold bounded-context slices, not concept modules inside a
+`foundation/ui-system` package. This package's existing convention is flat
+lowercase role files (`src/chat/config.ts`, `src/chat/atoms.ts`), which the
+slice scaffold would contradict. The module was hand-authored to the package
+convention and the design was recorded in `research/P1-CAPABILITY-CONTRACT.md`.
+
+**What would have prevented it:** either scope the touch-table row to slices
+(`packages/<family>/<slice>`), or give `beep architecture add concept` a
+`ui-system`/`modeling` target that emits the package's own role-file layout.
+
+## 2026-08-25 — `jq` edits reflow the biome-formatted atlas artifact
+
+**What was happening:** correcting seven compatibility rows in
+`research/capability-atlas.json` (evidence from the live Lexical codec).
+
+**Evidence:** `jq '...' file > tmp && mv tmp file` produced a 3,759-line diff
+(`3089 insertions(+), 670 deletions(-)`) for a seven-row change because the
+artifact is biome-formatted (the `biome.jsonc` override only raises `maxSize`
+for it). `bunx biome format --write <atlas>` restored the layout and the diff
+collapsed to `18 insertions(+), 18 deletions(-)`.
+
+**What would have prevented it:** an `ops/` recipe (or a `beep goals atlas
+set` subcommand) that applies a row edit and re-formats in one step, so an
+agent never has to know the formatter is part of the artifact's identity.

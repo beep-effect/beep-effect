@@ -39,6 +39,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./artifact-ref-node": "./src/artifact-ref-node.tsx",
+    "./capability": "./src/capability/index.ts",
+    "./capability/*": "./src/capability/*.ts",
     "./chat": "./src/chat/index.ts",
     "./chat/attachment-model": "./src/chat/attachment-model.ts",
     "./chat/attachments": "./src/chat/attachments.tsx",
@@ -62,8 +64,8 @@
     "./viewer": "./src/viewer.tsx",
     "./youtube-embed": "./src/youtube-embed.tsx",
     "./youtube-node": "./src/youtube-node.tsx",
-    "./internal/*": null,
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./internal/*": null
   },
   "files": [
     "src/**/*.ts",
@@ -80,6 +82,8 @@
     "exports": {
       ".": "./dist/index.js",
       "./artifact-ref-node": "./dist/artifact-ref-node.js",
+      "./capability": "./dist/capability/index.js",
+      "./capability/*": "./dist/capability/*.js",
       "./chat": "./dist/chat/index.js",
       "./chat/attachment-model": "./dist/chat/attachment-model.js",
       "./chat/attachments": "./dist/chat/attachments.js",
@@ -103,8 +107,8 @@
       "./viewer": "./dist/viewer.js",
       "./youtube-embed": "./dist/youtube-embed.js",
       "./youtube-node": "./dist/youtube-node.js",
-      "./internal/*": null,
-      "./package.json": "./package.json"
+      "./package.json": "./package.json",
+      "./internal/*": null
     }
   },
   "dependencies": {
