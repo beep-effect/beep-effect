@@ -9,8 +9,8 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Stage `graduate` (MAP v1.0 ratified, M1–M6): PR A = `@beep/nlp` Handoff mentions fix (own branch); PR B = docs-only ceremony (goals `semantica-canary` + `openai-driver` scaffolded, exploration flipped `graduated`, ROADMAP funnel clause); PR C = lab mint (`semantica-canary` P1 step 1, after B). BRIEF v1.1, shared-schema v1.3, contract v1.3 are the contracts in force | MAP v0.1 "draft MAP → graduate → scaffold" |
-| Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is EvalReport telemetry, never a gate | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier |
+| Next work | Stage `graduate` (MAP v1.0 ratified, M1–M6): PR A = `@beep/nlp` Handoff mentions fix (own branch); PR B = docs-only ceremony (goals `semantica-canary` + `openai-driver` scaffolded, exploration flipped `graduated`, ROADMAP funnel clause); PR C = lab mint (`semantica-canary` P1 step 1, after B). BRIEF v1.1, shared-schema v1.4, contract v1.4 (R1–R3) are the contracts in force | MAP v0.1 "draft MAP → graduate → scaffold" |
+| Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
 | Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
@@ -19,8 +19,8 @@ holds now; when a log entry disagrees with it, the table wins.
 | Spans | compose, not build: the lab's `CanonicalText` = `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text, spans = `@beep/provenance` `TextAnchor`, C0 tripwire = `verifyTextAnchor`; raw extracted text IS canonical, normalization is locator-only, no raw→canonical loss map; lab-local NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness` (M1) | shared-schema v1.1 `CanonicalText` loss map; BRIEF rabbit hole 1 |
 | Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
 | Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict, written at C0, where G-relation now scores (S7) | the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
-| Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run with equal digests (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
-| Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are EvalReport telemetry (Tier-D) | B5/A8 2GB/250MB/600MB as gates |
+| Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures (F1 malformed specimens decode to their declared degraded states; any W1 paper degrading fails the gate) (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
+| Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are Tier-D telemetry in the per-run `EvalRunTelemetry` sidecar, never in the report digest (R1) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the `EvalReport` digest with network off; Tier-L/Tier-D numbers live in a per-run `EvalRunTelemetry` sidecar outside the digest (R1) | A8's fully-offline M1; "byte-identical EvalReports" |
 | Atlas writes | only final `park`/`drop` today; `adopt`/`pick-one` values wait for a passed canary stage | D3 columns as live verdicts |
 | Atlas backlog | O3 verbatim (M4): template exemplars, IR row-fill and the 27 module analyses are async codex batches off the critical path, not a goal and not gated; `semantica-atlas-sync` = the D5 render/diff sync pipeline only, re-entry = semantica 0.6.7+ or atlas-edit need | MAP v0.1 "gate = C0 pass" |
@@ -501,15 +501,16 @@ Explorer/UI milestone shape (decided inside `semantica-canary` SPEC per D16).
 Source: three P1 findings from the Codex review of PR #802 on `goals/semantica-canary/SPEC.md`,
 each a loophole in the ratified acceptance wording rather than a new decision.
 
-- **R1 (report digest vs telemetry).** "Byte-identical `EvalReport`s" could not hold while the
+- **R1 (report digest vs telemetry; amends G4, G7 and S1's "telemetry in every EvalReport" / "byte-stably" wording).** "Byte-identical `EvalReport`s" could not hold while the
   report carried wall-clock and other Tier-D telemetry. **Answer:** `EvalReport` is the
-  replay-stable, content-addressed payload (`reportDigest`); per-run numbers move to an
+  replay-stable, content-addressed payload (`reportDigest` = sha256 over the canonical JSON of
+  the report body with the `reportDigest` field omitted); per-run numbers move to an
   `EvalRunTelemetry` sidecar that references the digest and is never compared for identity.
   Tier-L bars are read from the live run's sidecar. Shared-schema v1.4, contract v1.4.
 - **R2 (full-W1 gate per stage).** C0's gold-scored pass used three papers and no later stage
   required the 25-paper manifest, so family verdicts could rest on a biased subset. **Answer:**
   every stage pass also requires the full W1 manifest + F1 to run end-to-end live and replay
-  with equal digests and zero typed-degraded document failures, before any verdict is written.
+  with equal digests and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate — before any verdict is written.
 - **R3 (C1 semantic content).** Rebuild identity alone passes on empty projections. **Answer:**
   a small `G-projection` gold set (known kNN neighbour pair, non-empty SPARQL result sets over
   F1 + one W1 paper) must match before rebuild identity is checked; empty or mismatched

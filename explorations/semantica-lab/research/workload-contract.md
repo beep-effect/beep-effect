@@ -57,7 +57,7 @@ file are dated DECISIONS entries.
 ## Budgets (G4 two-tier; accounting is bundle-level per B5)
 
 Tier-L is the lab's hard bar on the primary machine. Tier-D is the distribution watchpoint:
-laptop-class numbers every EvalReport records as telemetry so a future graduation to
+laptop-class numbers every run's `EvalRunTelemetry` sidecar records (R1) so a future graduation to
 professional-desktop knows the portability bill. Tier-D numbers never park a candidate.
 
 | Metric | Tier-L (hard bar) | Tier-D (telemetry only) |
@@ -89,7 +89,8 @@ sidecar (Tier-L measurements, Tier-D telemetry) that is never part of the report
 
 **Offline (G7):** after the first hosted fetch, every provider result is cached
 content-addressed with its model identity. A second run with the network disabled must
-reproduce the `EvalReport` digest (`reportDigest`); the telemetry sidecar is expected to differ (R1). API-unavailable is a typed degraded state, never a silent
+reproduce the `EvalReport` digest (`reportDigest` = sha256 over the canonical JSON of the report body
+with the `reportDigest` field omitted); the telemetry sidecar is expected to differ (R1). API-unavailable is a typed degraded state, never a silent
 fallback. Fully-offline live inference is not an M1 criterion.
 
 **Determinism:** content-addressed ids, pinned model identities, stable ordering. Re-running W1
@@ -102,6 +103,6 @@ to decompose rather than relaxing this contract silently. Passing means the rubr
 plus the two Tier-L gates (cold start <5s, p95 <100ms) plus a quality floor (beat the
 G-structure/G-entity baselines set by the first passing run). Wall-clock per stage and per run
 is recorded as Tier-D telemetry and never gates. Every stage pass additionally requires the full W1
-manifest (25 papers) + F1 to run end-to-end live and replay with equal report digests and zero
-typed-degraded document failures (R2); gold-scored criteria on the gold subsets never substitute
+manifest (25 papers) + F1 to run end-to-end live and replay with equal report digests and
+zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate (R2); gold-scored criteria on the gold subsets never substitute
 for the full run.

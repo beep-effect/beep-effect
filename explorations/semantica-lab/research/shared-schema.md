@@ -57,7 +57,8 @@ compatibility round checks composition.
   schema, dependency edges; interpreted by services. No raw callables in definitions.
 - **EvalReport** *(re-scoped v1.4, R1)* — the replay-stable, content-addressed payload: corpus
   hash, gold version, per-call `ModelIdentity` + provider-cache keys, per-metric results;
-  `reportDigest` = sha256 of its canonical JSON; schema-validated (qa-inventory pattern). Replay
+  `reportDigest` = sha256 over the canonical JSON of the report body with the `reportDigest`
+  field itself omitted; schema-validated (qa-inventory pattern). Replay
   identity (G7) is `reportDigest` equality — nothing time-dependent may live in it.
 - **EvalRunTelemetry** *(added v1.4, R1)* — the per-run sidecar referencing a `reportDigest`:
   run id, mode (`live | replay`), wall-clock, cold start, p95, RSS, disk growth, dependency and

@@ -42,7 +42,7 @@ Benjamin: "I don't see a reason to delay anything if prerequisite work & require
 What bounds the work is Shape Up's circuit breaker, denominated in probes: each family enters a
 stage with its first-probe candidate; a stage failure buys that family exactly one more
 candidate; a second failure parks the family and drops the packet back to decompose. Wall-clock
-is Tier-D telemetry in every EvalReport and never gates. This keeps the contract's falsifier
+is Tier-D telemetry in every run's `EvalRunTelemetry` sidecar (R1) and never gates. This keeps the contract's falsifier
 ("the bundle or the shape is wrong") able to fire without pretending a solo lab with agent
 fan-out has a six-week cycle to protect.
 
@@ -98,7 +98,7 @@ flowchart LR
     subgraph C2 ["C2 — reasoning + crash + budgets"]
         L --> RS["RDFS-lite closure (runtime)<br/>InferenceEvent + proof DAG"]
         EYE["EYE WASM — test-time oracle<br/>gold conclusions + proofs"] -.->|"decode · compare"| RS
-        RS --> ER2["EvalReport + G-entailment<br/>crash injection · Tier-L bars"]
+        RS --> ER2["EvalReport + G-entailment<br/>crash injection · Tier-L bars (EvalRunTelemetry)"]
     end
     CACHE[("Provider cache<br/>content-addressed · provider/model/prompt hash")] -.-> EX
     CACHE -.-> V
@@ -113,7 +113,7 @@ flowchart LR
   runs in the same stage that writes the Extractor verdict). **Pass** = second run with the
   network disabled reproduces the `EvalReport` digest from the provider cache (G7; telemetry lives
   in the `EvalRunTelemetry` sidecar and is never part of the digest, R1); the full W1 manifest + F1
-  run end-to-end live and replay with equal digests (R2); every span
+  run end-to-end live and replay with equal digests and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate (R2); every span
   slices back to its text; relation count on the G-relation papers is non-zero.
 - **C1** adds the two derived projections: a dimension-keyed vector table with exact kNN in
   DuckDB, and an RDF projection rebuilt from the ledger into Oxigraph per run, queried by
@@ -165,8 +165,9 @@ boundaries; `Effect.fn`/`Effect.fnUntraced` for generators.
 ### What "done" looks like for Goal 1
 
 A CLI/test entry in the lab runs W1 (25 manifest papers) + F1 end-to-end twice — once live, once
-with the network off — and both runs emit `EvalReport`s with equal `reportDigest`s (corpus hash, `gold/v1` version, per-call
-`ModelIdentity`, per-metric scores) plus per-run `EvalRunTelemetry` sidecars carrying Tier-L
+with the network off — and both runs emit `EvalReport`s with equal `reportDigest`s (sha256 over the
+canonical JSON of the report body with the `reportDigest` field omitted; the report carries corpus
+hash, `gold/v1` version, per-call `ModelIdentity`, per-metric scores) plus per-run `EvalRunTelemetry` sidecars carrying Tier-L
 results and Tier-D telemetry (R1). Each canary stage's
 pass flips its families from park-pending-canary to a real verdict in `DECISIONS.md`, and only
 then in the atlas.
@@ -235,8 +236,8 @@ Each is patched here or graduates as an explicit constraint the goal packet inhe
    schema is part of the shared schema, not an implementation detail.
 6. **Embedding dimension freeze.** Patch (B4 defaults): vector tables are dimension-keyed; the
    dimension is frozen only by C1 with an alternate-dimension fixture proving the keying.
-7. **Bundle-level budgets.** Per-family passes were vacuous (B5). Patch: every EvalReport
-   records the sum of loaded winners; Tier-L bars (cold start, p95) are the only hard gates;
+7. **Bundle-level budgets.** Per-family passes were vacuous (B5). Patch: every run's
+   `EvalRunTelemetry` sidecar records the sum of loaded winners (R1); Tier-L bars (cold start, p95) are the only hard gates;
    RSS/deps/model bytes are alarms and Tier-D telemetry (G4).
 8. **Oxigraph at canary scale.** Fresh-store-per-request plus an ignored `timeoutMs` is
    acceptable for rebuild-per-run over 25 papers but cannot bound a runaway SPARQL. Patch: the

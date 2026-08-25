@@ -65,7 +65,9 @@ papers.
 1. Define the lab-local schemas before any service: `SourceDocument`,
    `Chunk`, `EvidenceBatch`/`EvidenceClaim`/`ConflictWitness`,
    `ProvenanceEvent`, `ModelIdentity`, the `ProviderCache` key, `EvalRun`
-   (with the S2 refinement), `EvalReport`
+   (with the S2 refinement), `EvalReport` with its `reportDigest` (sha256 over
+   the canonical JSON of the report body with the `reportDigest` field
+   omitted), and the `EvalRunTelemetry` sidecar that references it (R1)
    ([`shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
    v1.4). `CanonicalText` is composed from `ResolvedSourceText` + `TextAnchor`,
    not built (M1).
@@ -80,7 +82,11 @@ papers.
    malformed specimens, report fields present.
 5. Extend to all three G-relation papers; run hybrid (LangExtract shape) and
    pattern-only (Wink) under the same gold probe (S7).
-6. On pass: write the Extractor and Input family verdicts to the exploration's
+6. Full-manifest gate (R2): `canary c0` over the full W1 manifest (25 papers)
+   + F1 live, then `--offline`; equal `reportDigest`s and zero unexpected
+   typed-degraded document failures (the F1 malformed specimens decode to
+   their declared degraded states; any W1 paper degrading fails the gate).
+7. On pass: write the Extractor and Input family verdicts to the exploration's
    `DECISIONS.md` as a dated entry. On failure: apply the breaker (one retry
    from the sheet's slate, then park and drop to `decompose`).
 
@@ -99,7 +105,11 @@ edge; do not let it block P1 or P2.
    Effect-level timeout; `QuadDelta`-shaped rebuild-identity witness.
 4. `canary c1` live and `--offline`; `G-projection` expectations first, then the rebuild identity test
    (drop, rebuild, identical query results); rebuild cost recorded as telemetry.
-5. On pass: Storage and Embeddings verdicts to `DECISIONS.md`; the embedding
+5. Full-manifest gate (R2): `canary c1` over the full W1 + F1 live, then
+   `--offline`; equal `reportDigest`s and zero unexpected typed-degraded
+   document failures (F1 malformed specimens decode to their declared degraded
+   states; any W1 paper degrading fails the gate).
+6. On pass: Storage and Embeddings verdicts to `DECISIONS.md`; the embedding
    dimension is frozen from here.
 
 ## P4 C2
@@ -113,9 +123,14 @@ edge; do not let it block P1 or P2.
    validation (S8); never premise-set identity.
 4. Crash injection: kill after ledger commit, before projection rebuild;
    restart; identical rebuild (rabbit hole 10).
-5. Tier-L bars at bundle level: cold start < 5 s, p95 < 100 ms; Tier-D
-   telemetry recorded (G4, B5).
-6. On pass: Reasoning verdict to `DECISIONS.md`; the queued
+5. Tier-L bars at bundle level: cold start < 5 s, p95 < 100 ms, read from
+   the live run's `EvalRunTelemetry` sidecar; Tier-D telemetry recorded there
+   too, never in the report digest (G4, B5, R1).
+6. Full-manifest gate (R2): `canary c2` over the full W1 + F1 live, then
+   `--offline`; equal `reportDigest`s and zero unexpected typed-degraded
+   document failures (F1 malformed specimens decode to their declared degraded
+   states; any W1 paper degrading fails the gate).
+7. On pass: Reasoning verdict to `DECISIONS.md`; the queued
    `semantica-storage-inversion` and `semantica-reasoning-spike` gates become
    eligible (re-entry at `decompose`, not scaffolded from here).
 
@@ -126,7 +141,8 @@ edge; do not let it block P1 or P2.
 2. Write the closeout reflection via `/reflect` to
    `history/reflections/<YYYY-MM-DD>-<agent>.md`; run
    `bun run beep lint reflection-artifacts`.
-3. Archive stage evidence (EvalReports, replay diffs, crash-identity logs,
+3. Archive stage evidence (`EvalReport`s and their `EvalRunTelemetry`
+   sidecars, replay diffs, crash-identity logs,
    the `cargo check` record) under `history/`.
 4. Flip `README.md`, this plan, and `ops/manifest.json` to
    `completed-retained` in the same final PR.
