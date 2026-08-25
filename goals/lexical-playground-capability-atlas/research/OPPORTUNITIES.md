@@ -159,3 +159,23 @@ sees app errors.
 **What would have prevented it:** the collector answering `OPTIONS` and every
 `/events` response with the allow-origin header for whitelisted origins, plus a
 `qa doctor` probe that posts from an https origin and asserts a clean console.
+
+## 2026-08-25 — Root tsconfig alias drift surfaced only on the third full proof
+
+**What was happening:** driving the closeout PR through `bun run beep yeet
+verify`. Proofs one and two failed on knip/fallow findings; after those were
+fixed and `origin/main` was merged, proof three failed on a single new step.
+
+**Evidence:** `repo-sanity:tsconfig-sync` reported `tsconfig.json
+[root-aliases] aliases: add 6` — the generated path aliases for the new
+`@beep/editor/capability*` package exports (`bun run beep tsconfig-sync`
+applied them in one command, commit `d5b04d2acb`). The same exports existed
+during proofs one and two, which did not report the drift, so a ~20-minute
+full proof was spent discovering a check that `docgen:local`, package
+`check`, and the fallow/knip lanes do not run.
+
+**What would have prevented it:** running the cheap generated-config checks
+(`bun run config-sync:check`, `goals index --check`) as a first-tier gate
+before the full proof — or having `yeet repair` apply `tsconfig-sync` when
+a package's `exports` map changed — so alias drift never reaches the
+20-minute lane.
