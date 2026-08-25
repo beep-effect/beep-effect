@@ -101,6 +101,20 @@ const PackageJsonDependencyRecord = S.Record(S.String, S.String);
  * workspace-internal edges to dependents; every bucket is optional because a
  * manifest may omit any of them.
  *
+ * **Example** (Describe a manifest with one workspace dependency)
+ *
+ * ```ts
+ * import { PackageJson } from "@beep/repo-cli/commands/Quality/internal/QualityArtifactSupport"
+ * import * as R from "effect/Record"
+ *
+ * const manifest = PackageJson.make({
+ *   name: "@beep/pandoc-ast",
+ *   scripts: { coverage: "vitest run --coverage" },
+ *   dependencies: { "@beep/md": "workspace:^" }
+ * })
+ * console.log(R.keys(manifest.dependencies ?? {})) // ["@beep/md"]
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
