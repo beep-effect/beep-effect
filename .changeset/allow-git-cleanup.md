@@ -2,4 +2,4 @@
 "@beep/ai-sync": patch
 ---
 
-Allow local and remote branch and worktree cleanup in the checked-in Claude permission policy: the required deny domain drops the three worktree entries (19 -> 16) and the approved allow domain gains `git worktree remove`, `git worktree prune`, `git push --delete` and `git push origin --delete` (46 -> 50).
+Allow guarded branch and worktree cleanup in the checked-in Claude permission policy. The approved allow domain adds `git worktree prune` and `bun run beep yeet sweep` (46 -> 48), while the required deny domain keeps forced raw and Beep worktree removal blocked (19 -> 18). Agents can remove clean managed worktrees and let Yeet delete exact merged branch tips without receiving broad raw remote-delete access.

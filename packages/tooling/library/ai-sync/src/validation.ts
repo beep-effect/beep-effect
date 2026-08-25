@@ -94,7 +94,6 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(git show:*)",
   "Bash(git branch:*)",
   "Bash(git worktree list:*)",
-  "Bash(git worktree remove:*)",
   "Bash(git worktree prune:*)",
   "Bash(gh pr view:*)",
   "Bash(gh pr checks:*)",
@@ -110,8 +109,6 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(git add:*)",
   "Bash(git commit:*)",
   "Bash(git fetch:*)",
-  "Bash(git push --delete:*)",
-  "Bash(git push origin --delete:*)",
   "Bash(git rebase:*)",
   "Bash(git switch:*)",
   "Bash(git checkout -b:*)",
@@ -124,6 +121,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(bun run beep yeet publish:*)",
   "Bash(bun run beep yeet monitor:*)",
   "Bash(bun run beep yeet closeout:*)",
+  "Bash(bun run beep yeet sweep:*)",
   "Bash(bun run beep worktree new:*)",
   "Bash(bun run beep worktree doctor:*)",
   "Bash(bun run beep worktree remove:*)",
@@ -136,7 +134,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 50-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and local/remote branch and worktree cleanup.",
+      "Exact 48-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and guarded branch and worktree cleanup.",
   })
 );
 
@@ -150,6 +148,8 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
   "Bash(git stash clear:*)",
   "Bash(git stash drop:*)",
   "Bash(git stash pop:*)",
+  "Bash(git worktree remove --force:*)",
+  "Bash(bun run beep worktree remove --force:*)",
   "Bash(git clean:*)",
   "Bash(git reset --hard:*)",
   "Bash(git checkout .)",
@@ -162,7 +162,7 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("RequiredClaudeRepoDenyPermission", {
     description:
-      "Exact 16-value Claude deny domain required to block history rewrites, stash destruction, admin merges, repository deletion, and protected-file edits.",
+      "Exact 18-value Claude deny domain required to block history rewrites, forced worktree removal, stash destruction, admin merges, repository deletion, and protected-file edits.",
   })
 );
 
