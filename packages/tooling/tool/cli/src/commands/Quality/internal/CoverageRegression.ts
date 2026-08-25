@@ -1286,11 +1286,47 @@ const rationaleRecordEquivalence = S.toEquivalence(S.Record(S.String, S.NonEmpty
  * **Example** (One changed row)
  *
  * ```ts
- * import { coverageBaselineRowDelta, CoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
+ * import {
+ *   coverageBaselineRowDelta,
+ *   CoveragePackageBaseline,
+ *   CoverageRegressionBaseline,
+ *   CoverageUncoveredCounts
+ * } from "@beep/repo-cli/test/Quality"
+ * import { NonNegativeInt } from "@beep/schema/Number"
+ * import { Percentage } from "@beep/schema/Percentage"
  *
- * declare const previous: CoverageRegressionBaseline
- * declare const current: CoverageRegressionBaseline
- * console.log(coverageBaselineRowDelta(previous, current)._tag) // "Some" or "None"
+ * const pct = (value: number) => ({
+ *   lines: Percentage.make(value),
+ *   statements: Percentage.make(value),
+ *   branches: Percentage.make(value),
+ *   functions: Percentage.make(value)
+ * })
+ * const row = (value: number) =>
+ *   CoveragePackageBaseline.make({
+ *     path: "packages/example",
+ *     ...pct(value),
+ *     uncovered: CoverageUncoveredCounts.make({
+ *       lines: NonNegativeInt.make(0),
+ *       statements: NonNegativeInt.make(0),
+ *       branches: NonNegativeInt.make(0),
+ *       functions: NonNegativeInt.make(0)
+ *     }),
+ *     files: {}
+ *   })
+ * const document = (value: number) =>
+ *   CoverageRegressionBaseline.make({
+ *     schema_version: 2,
+ *     generated_at: "2026-08-25T00:00:00.000Z",
+ *     git_sha: "example",
+ *     command: "bun run coverage:baseline:write",
+ *     epsilon: 0.001,
+ *     minimum: pct(0),
+ *     exemptions: {},
+ *     follow_ups: {},
+ *     packages: { "@beep/example": row(value) }
+ *   })
+ *
+ * console.log(coverageBaselineRowDelta(document(50), document(60))) // Some(["@beep/example"])
  * ```
  *
  * @param previous - Baseline document at the comparison base.
@@ -1361,11 +1397,20 @@ export const coverageBaselineRowDeltaFromBase = Effect.fn("CoverageRegression.co
     never,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > {
-    const previous = yield* runGitRawOutput(
-      repoRoot,
-      ["show", `${base}:${coverageRegressionBaselinePath}`],
-      coverageBaselineGitAdapter
-    ).pipe(Effect.flatMap(decodeJsoncTextAs(CoverageRegressionBaseline)), Effect.option);
+    // Changed-file discovery diffs `base...HEAD`, i.e. from the merge base, so
+    // the document must come from that same commit: reading the ref's tip would
+    // compare against rows main changed after this branch diverged.
+    const previous = yield* resolveGitMergeBase(repoRoot, base, "HEAD", coverageBaselineGitAdapter).pipe(
+      Effect.flatMap((mergeBase) =>
+        runGitRawOutput(
+          repoRoot,
+          ["show", `${mergeBase}:${coverageRegressionBaselinePath}`],
+          coverageBaselineGitAdapter
+        )
+      ),
+      Effect.flatMap(decodeJsoncTextAs(CoverageRegressionBaseline)),
+      Effect.option
+    );
     const current = yield* Effect.option(readBaseline(repoRoot));
     return O.flatMap(O.all([previous, current]), ([before, after]) => coverageBaselineRowDelta(before, after));
   }
@@ -2388,12 +2433,9 @@ const regressionLines = (
   return sections;
 };
 
-const regressedPackageNames = (result: CoverageComparisonResult): ReadonlyArray<string> =>
+const failurePackageNames = (failures: ReadonlyArray<CoverageComparisonFailure>): ReadonlyArray<string> =>
   pipe(
-    A.appendAll(
-      A.map(result.failures, (failure) => failure.packageName),
-      A.map(result.minimumFailures, (failure) => failure.packageName)
-    ),
+    A.map(failures, (failure) => failure.packageName),
     A.dedupe,
     A.sort(Order.String)
   );
@@ -2403,11 +2445,13 @@ const regressedPackageNames = (result: CoverageComparisonResult): ReadonlyArray<
  *
  * **Details**
  *
- * The block names the exact scoped regeneration command for the regressed
- * packages so an agent never reaches for the repo-wide writer, and states the
- * two legitimate outcomes: restore the coverage, or accept the new floors
- * after review. Missing summaries and disposition gaps get no command because
- * they are configuration problems, not floors.
+ * Baseline regressions get the exact scoped regeneration command for the
+ * regressed packages so an agent never reaches for the repo-wide writer, with
+ * the two legitimate outcomes stated: restore the coverage, or accept the new
+ * floors after review. Tier-minimum breaches get a restore-only hint: the
+ * writer records floors, it cannot lift a package above the repository tier.
+ * Missing summaries and disposition gaps get no command because they are
+ * configuration problems, not floors.
  *
  * **Example** (Nothing regressed)
  *
@@ -2430,15 +2474,22 @@ const regressedPackageNames = (result: CoverageComparisonResult): ReadonlyArray<
  * @category rendering
  * @since 0.0.0
  */
-export const renderCoverageRemediation = (result: CoverageComparisonResult): ReadonlyArray<string> =>
-  A.match(regressedPackageNames(result), {
+export const renderCoverageRemediation = (result: CoverageComparisonResult): ReadonlyArray<string> => [
+  ...A.match(failurePackageNames(result.failures), {
     onEmpty: A.empty<string>,
     onNonEmpty: (packageNames) => [
       "[coverage-ratchet] remediation: restore the lost coverage with tests, or, once a reviewer accepts the new floors, regenerate only the regressed rows:",
       `  ${sanitizeCoverageDiagnostic(coverageScopedBaselineWriteCommand(packageNames))}`,
       `  (the scoped run measures only those packages and merges their rows; never run ${coverageRegressionRegenerationCommand} for a per-package drop)`,
     ],
-  });
+  }),
+  ...A.match(failurePackageNames(result.minimumFailures), {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (packageNames) => [
+      `[coverage-minimum] remediation: ${sanitizeCoverageDiagnostic(A.join(packageNames, ", "))} sit below the repository tier; only added coverage fixes this — the baseline writer records floors and cannot lift a package above the tier.`,
+    ],
+  }),
+];
 
 /**
  * Compare generated package coverage summaries against the committed baseline.

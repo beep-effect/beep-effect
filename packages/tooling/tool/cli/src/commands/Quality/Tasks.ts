@@ -677,6 +677,8 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   );
   // A row-only baseline edit is validated by measuring the packages whose rows
   // changed; anything else in the document keeps the baseline a global input.
+  // This line reports the diff only — the planner's own scope line below is
+  // the authority on what runs, since a row can still force `full` or `noop`.
   const baselineRowPackages = A.contains(changedFiles, coverageRegressionBaselinePath)
     ? yield* coverageBaselineRowDeltaFromBase(repoRoot, base)
     : O.none<ReadonlyArray<string>>();
@@ -685,8 +687,8 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
     onSome: (packageNames) =>
       Console.log(
         A.isReadonlyArrayNonEmpty(packageNames)
-          ? `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} changed only the row(s) for ${A.join(packageNames, ", ")}; measuring those instead of the full workspace`
-          : `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} changed only provenance fields; no package row needs measuring`
+          ? `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} differs from ${base} only in the row(s) for ${A.join(packageNames, ", ")}; planning from those rows`
+          : `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} differs from ${base} only in provenance fields`
       ),
   });
   const scope = yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles, baselineRowPackages);

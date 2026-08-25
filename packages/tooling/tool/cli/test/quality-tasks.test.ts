@@ -2660,6 +2660,25 @@ describe("quality task adapter", () => {
 
             yield* fs.writeFileString(baselinePath, "{ not jsonc");
             expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.none());
+
+            // The diff anchors on the merge base, not the base ref's tip: rows
+            // that `main` changed after the branch diverged are not attributed
+            // to the branch.
+            yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a") }));
+            yield* runGit(repoRoot, ["checkout", "-q", "-b", "trunk"]);
+            yield* runGit(repoRoot, ["checkout", "-q", "-b", "feature"]);
+            yield* runGit(repoRoot, ["checkout", "-q", "trunk"]);
+            yield* writeBaseline(
+              withRows({
+                "@beep/a": coveragePackageBaseline("packages/a"),
+                "@beep/z": coveragePackageBaseline("packages/z"),
+              })
+            );
+            yield* runGit(repoRoot, ["add", "--all"]);
+            yield* runGit(repoRoot, ["commit", "-m", "trunk adds z"]);
+            yield* runGit(repoRoot, ["checkout", "-q", "feature"]);
+            yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a", 61) }));
+            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "trunk")).toEqual(O.some(["@beep/a"]));
           })
         )
       ));
@@ -2743,9 +2762,23 @@ describe("quality task adapter", () => {
         "bun run coverage -- --filter=@beep/md --filter=@beep/pandoc-ast --write-baseline"
       );
       const lines = renderCoverageRemediation(result);
+      expect(lines).toHaveLength(3);
       expect(lines[0]).toContain("[coverage-ratchet] remediation:");
       expect(lines[1]).toBe("  bun run coverage -- --filter=@beep/a --filter=@beep/b --write-baseline");
       expect(lines[2]).toContain("never run bun run coverage:baseline:write for a per-package drop");
+
+      // A tier-minimum breach is not a floor the writer can move: no write command.
+      const tiered = CoverageRegressionBaseline.make({ ...baseline, minimum: coveragePercentages(60) });
+      const belowTier = renderCoverageRemediation(
+        compareCoverageRegressionSnapshotsForTesting(
+          tiered,
+          [{ packageName: "@beep/ok", baseline: coveragePackageBaseline("packages/ok", 50) }],
+          false
+        )
+      );
+      expect(belowTier).toHaveLength(1);
+      expect(belowTier[0]).toContain("[coverage-minimum] remediation: @beep/ok sit below the repository tier");
+      expect(belowTier[0]).not.toContain("--write-baseline");
       expect(
         renderCoverageRemediation(
           compareCoverageRegressionSnapshotsForTesting(
