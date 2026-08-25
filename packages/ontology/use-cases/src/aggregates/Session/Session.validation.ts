@@ -317,7 +317,7 @@ export class OntologyValidationError extends S.TaggedError<OntologyValidationErr
     reason: LiteralKit(["shaclFailed", "repairVerificationFailed", "actorIdentityMissing"]),
     message: S.String,
   },
-  $I.annote("OntologyValidationError", {
+  $I.annoteError<OntologyValidationError>("OntologyValidationError", {
     description: "Ontology validation failure.",
   })
 ) {}

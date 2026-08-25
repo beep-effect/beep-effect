@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -35,9 +36,9 @@ export class QualityArtifactGeneratorError extends S.TaggedError<QualityArtifact
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     filePath: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("QualityArtifactGeneratorError", {
+  $I.annoteError<QualityArtifactGeneratorError>("QualityArtifactGeneratorError", {
     description: "Typed failure raised by repo quality artifact generators.",
   })
 ) {
@@ -89,8 +90,31 @@ export const JsonRecord = S.Record(S.String, S.Unknown).pipe(
  */
 export type JsonRecord = typeof JsonRecord.Type;
 
+// Dependency names mapped to version specifiers for one package.json bucket.
+const PackageJsonDependencyRecord = S.Record(S.String, S.String);
+
 /**
  * Package manifest fields consumed by Quality artifact generators.
+ *
+ * **Details**
+ *
+ * The four dependency buckets are read so coverage scope planning can follow
+ * workspace-internal edges to dependents; every bucket is optional because a
+ * manifest may omit any of them.
+ *
+ * **Example** (Describe a manifest with one workspace dependency)
+ *
+ * ```ts
+ * import { PackageJson } from "@beep/repo-cli/commands/Quality/internal/QualityArtifactSupport"
+ * import * as R from "effect/Record"
+ *
+ * const manifest = PackageJson.make({
+ *   name: "@beep/pandoc-ast",
+ *   scripts: { coverage: "vitest run --coverage" },
+ *   dependencies: { "@beep/md": "workspace:^" }
+ * })
+ * console.log(R.keys(manifest.dependencies ?? {})) // ["@beep/md"]
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -101,6 +125,10 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
     scripts: S.optionalKey(S.Record(S.String, S.String)),
     workspaces: S.optionalKey(S.Unknown),
     exports: S.optionalKey(S.Unknown),
+    dependencies: S.optionalKey(PackageJsonDependencyRecord),
+    devDependencies: S.optionalKey(PackageJsonDependencyRecord),
+    peerDependencies: S.optionalKey(PackageJsonDependencyRecord),
+    optionalDependencies: S.optionalKey(PackageJsonDependencyRecord),
   },
   $I.annote("PackageJson", {
     description: "Package manifest fields used by repo CLI support scripts.",

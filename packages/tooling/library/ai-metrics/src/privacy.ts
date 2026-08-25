@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Encoding, flow, Order, pipe, SchemaTransformation } from "effect";
@@ -306,10 +306,10 @@ export class AiMetricsPrivacyCheckResult extends S.Class<AiMetricsPrivacyCheckRe
 export class AiMetricsPrivacyError extends S.TaggedError<AiMetricsPrivacyError>($I`AiMetricsPrivacyError`)(
   "AiMetricsPrivacyError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsPrivacyError", {
+  $I.annoteError<AiMetricsPrivacyError>("AiMetricsPrivacyError", {
     description: "Typed failure raised by AI metrics privacy and hashing helpers.",
   })
 ) {}

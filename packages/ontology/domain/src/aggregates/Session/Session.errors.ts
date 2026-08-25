@@ -80,7 +80,7 @@ export class SessionChangeRejected extends S.TaggedError<SessionChangeRejected>(
     reason: SessionChangeRejectedReason,
     message: S.String,
   },
-  $I.annote("SessionChangeRejected", {
+  $I.annoteError<SessionChangeRejected>("SessionChangeRejected", {
     description: "Typed domain error for rejected ontology session changes.",
   })
 ) {}

@@ -6,6 +6,7 @@
  *
  * @since 0.0.0
  */
+
 import {
   append,
   empty,
@@ -25,6 +26,7 @@ import { getOrElse, isSome } from "effect/Option";
 import { isTagged, not, or } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
+import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 import type { Option } from "effect/Option";
 import type { Top } from "effect/Schema";
 import type { AST } from "effect/SchemaAST";
@@ -39,9 +41,14 @@ import type * as Meta from "./Meta.ts";
  */
 export class DeriveColumnError extends TaggedError<DeriveColumnError>("@beep/effect-drizzle/DeriveColumnError")(
   "DeriveColumnError",
-  { message: StringSchema, fieldName: StringSchema, astTag: StringSchema },
+  {
+    message: StringSchema,
+    fieldName: StringSchema,
+    astTag: StringSchema,
+  },
   {
     description: "A bare schema field's column could not be derived from its encoded AST.",
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<DeriveColumnError>(typeParameters),
   }
 ) {}
 

@@ -30,7 +30,7 @@ class NodeFileSystemUnavailableError extends S.TaggedError<NodeFileSystemUnavail
   {
     module: S.Literal("node:fs"),
   },
-  $I.annote("NodeFileSystemUnavailableError", {
+  $I.annoteError<NodeFileSystemUnavailableError>("NodeFileSystemUnavailableError", {
     description: "Thrown when node:fs is unavailable to sync file system helpers.",
   })
 ) {}

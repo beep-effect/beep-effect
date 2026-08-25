@@ -76,7 +76,7 @@ export class VerifiedSpanError extends S.TaggedError<VerifiedSpanError>($I`Verif
     message: S.String,
     reason: VerifiedSpanErrorReason,
   },
-  $I.annote("VerifiedSpanError", {
+  $I.annoteError<VerifiedSpanError>("VerifiedSpanError", {
     description: "Sanitized failure from bounded strict source-text reconstruction or locator mapping.",
   })
 ) {

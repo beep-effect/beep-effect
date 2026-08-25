@@ -480,7 +480,7 @@ export class RedactedCauseError extends S.TaggedError<RedactedCauseError>($I`Red
   {
     redacted: RedactedCause,
   },
-  $I.annote("RedactedCauseError", {
+  $I.annoteError<RedactedCauseError>("RedactedCauseError", {
     description: "Boundary failure carrying only a sanitized, bounded representation of the originating cause.",
   })
 ) {}

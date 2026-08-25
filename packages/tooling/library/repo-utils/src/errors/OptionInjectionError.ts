@@ -41,7 +41,7 @@ export class OptionInjectionError extends S.TaggedError<OptionInjectionError>($I
     message: S.String,
     value: S.String,
   },
-  $I.annote("OptionInjectionError", {
+  $I.annoteError<OptionInjectionError>("OptionInjectionError", {
     title: "Option Injection Error",
     description:
       "Raised when a data-derived child-process argument is shaped like a\ncommand-line option and would be reinterpreted as a flag by the spawned\nprocess instead of being treated as a literal positional argument.",

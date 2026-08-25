@@ -46,7 +46,7 @@ export class OntologyActionError extends S.TaggedError<OntologyActionError>($I`O
   {
     message: S.String,
   },
-  $I.annote("OntologyActionError", {
+  $I.annoteError<OntologyActionError>("OntologyActionError", {
     description: "Client-safe failure raised when an ontology workbench action cannot be completed.",
   })
 ) {

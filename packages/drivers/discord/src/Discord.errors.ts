@@ -57,36 +57,6 @@ export const DiscordErrorReason = DiscordErrorReasonBase.pipe(
  */
 export type DiscordErrorReason = typeof DiscordErrorReason.Type;
 
-const DiscordErrorFields = {
-  cause: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Sanitized technical cause string when one is safe to retain.",
-    })
-  ),
-  method: S.OptionFromOptionalKey(S.Literals(["GET", "POST"])).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Discord REST method involved in the failure.",
-    })
-  ),
-  path: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Discord REST path involved in the failure.",
-    })
-  ),
-  reason: DiscordErrorReason,
-  status: S.OptionFromOptionalKey(DiscordHttpStatus).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "HTTP status code involved in the failure when it was a recognized status.",
-    })
-  ),
-} satisfies S.Struct.Fields;
-const sameDiscordErrorFields = S.toEquivalence(S.TaggedStruct("DiscordError", DiscordErrorFields));
-const sameDiscordError = (self: DiscordError, that: DiscordError): boolean => sameDiscordErrorFields(self, that);
-
 /**
  * Redacted technical failure raised by the Discord REST driver.
  *
@@ -118,12 +88,34 @@ const sameDiscordError = (self: DiscordError, that: DiscordError): boolean => sa
  */
 export class DiscordError extends S.TaggedError<DiscordError>($I`DiscordError`)(
   "DiscordError",
-  DiscordErrorFields,
-  $I.annoteClass<S.declare<DiscordError>, readonly [S.TaggedStruct<"DiscordError", typeof DiscordErrorFields>]>(
-    "DiscordError",
-    {
-      description: "Redacted technical failure raised by the Discord REST driver.",
-      toEquivalence: () => sameDiscordError,
-    }
-  )
+  {
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Sanitized technical cause string when one is safe to retain.",
+      })
+    ),
+    method: S.OptionFromOptionalKey(S.Literals(["GET", "POST"])).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Discord REST method involved in the failure.",
+      })
+    ),
+    path: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Discord REST path involved in the failure.",
+      })
+    ),
+    reason: DiscordErrorReason,
+    status: S.OptionFromOptionalKey(DiscordHttpStatus).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "HTTP status code involved in the failure when it was a recognized status.",
+      })
+    ),
+  },
+  $I.annoteError<DiscordError>("DiscordError", {
+    description: "Redacted technical failure raised by the Discord REST driver.",
+  })
 ) {}

@@ -17,13 +17,6 @@ import type { SchemaAST } from "effect";
 import type { LiteralKit as LiteralKitSchema, LiteralToKey } from "../LiteralKit/index.ts";
 
 const $I = $SchemaId.create("MappedLiteralKit");
-const MappedLiteralDuplicateErrorFields = {
-  side: S.Literals(["from", "to"]),
-  literal: S.Union([S.String, S.BigInt, S.Boolean, S.Finite]),
-  firstIndex: S.Int.check(isNonNegative),
-  secondIndex: S.Int.check(isNonNegative),
-} satisfies S.Struct.Fields;
-
 type LiteralValue = SchemaAST.LiteralValue;
 type Literals = A.NonEmptyReadonlyArray<LiteralValue>;
 type MappedPair = readonly [LiteralValue, LiteralValue];
@@ -92,8 +85,13 @@ export class MappedLiteralDuplicateError extends S.TaggedError<MappedLiteralDupl
   $I.make("MappedLiteralDuplicateError")
 )(
   "MappedLiteralDuplicateError",
-  MappedLiteralDuplicateErrorFields,
-  $I.annote("MappedLiteralDuplicateError", {
+  {
+    side: S.Literals(["from", "to"]),
+    literal: S.Union([S.String, S.BigInt, S.Boolean, S.Finite]),
+    firstIndex: S.Int.check(isNonNegative),
+    secondIndex: S.Int.check(isNonNegative),
+  },
+  $I.annoteError<MappedLiteralDuplicateError>("MappedLiteralDuplicateError", {
     title: "Mapped Literal Duplicate Error",
     description: "Thrown when mapped literal entries are not one-to-one.",
   })

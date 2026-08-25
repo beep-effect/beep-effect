@@ -50,7 +50,7 @@ describe("labs ceremony scoping", () => {
           [coveredLabOwner, productOwner],
           ["apps/labs/demo/src/App.tsx", "packages/a/src/A.ts"]
         )
-      ).toEqual({ _tag: "selected", packageNames: ["@beep/a"] });
+      ).toEqual({ _tag: "selected", packageNames: ["@beep/a"], dependentPackageNames: [] });
     });
   });
 

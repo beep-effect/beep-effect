@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import { dual } from "effect/Function";
@@ -15,7 +16,7 @@ const $I = $RepoCliId.create("commands/Files/Files.errors");
 
 class PlatformErrorOptions extends S.Class<PlatformErrorOptions>($I`PlatformErrorOptions`)(
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
   $I.annote("PlatformErrorOptions", {
     description: "Options for platform errors, including a cause.",
@@ -41,13 +42,13 @@ export class FilesCommandError extends S.TaggedError<FilesCommandError>($I`Files
   "FilesCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
     exitCode: S.optionalKey(S.Literals([1, 2])).annotateKey({
       description:
         "Process exit-code hint per the file-processing SPEC: 2 for configuration/engine-discovery failures, 1 (default) otherwise.",
     }),
   },
-  $I.annote("FilesCommandError", {
+  $I.annoteError<FilesCommandError>("FilesCommandError", {
     description: "A failure raised while preparing or applying a file curation operation.",
   })
 ) {

@@ -49,7 +49,7 @@ export class ThreadStoreNotFound extends S.TaggedError<ThreadStoreNotFound>($I`T
       description: "Thread id requested by the failed operation.",
     }),
   },
-  $I.annote("ThreadStoreNotFound", {
+  $I.annoteError<ThreadStoreNotFound>("ThreadStoreNotFound", {
     title: "Thread store not found",
     description: "The ThreadStore could not find the requested thread.",
   })
@@ -88,7 +88,7 @@ export class ThreadStoreConflict extends S.TaggedError<ThreadStoreConflict>($I`T
       description: "Non-empty explanation of the rejected write.",
     }),
   },
-  $I.annote("ThreadStoreConflict", {
+  $I.annoteError<ThreadStoreConflict>("ThreadStoreConflict", {
     title: "Thread store conflict",
     description: "The ThreadStore rejected a conflicting write.",
   })
@@ -116,7 +116,7 @@ export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable
       description: "Non-empty explanation of the unavailable persistence operation.",
     }),
   },
-  $I.annote("ThreadStoreUnavailable", {
+  $I.annoteError<ThreadStoreUnavailable>("ThreadStoreUnavailable", {
     title: "Thread store unavailable",
     description: "The ThreadStore could not serve the request.",
   })

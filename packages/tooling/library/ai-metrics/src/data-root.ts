@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Fn, LiteralKit } from "@beep/schema";
+import { Defect, Fn, LiteralKit } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
@@ -14,7 +14,6 @@ import * as S from "effect/Schema";
 import { AiMetricsDeployTarget } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("data-root");
-
 const dankserverDataRoot = "/srv/data/ai-metrics";
 const absolutePathPattern = /^(?:[A-Za-z]:[\\/]|\\\\|\/)/u;
 
@@ -181,10 +180,10 @@ export class AiMetricsDataRoot extends S.Class<AiMetricsDataRoot>($I`AiMetricsDa
 export class AiMetricsDataRootError extends S.TaggedError<AiMetricsDataRootError>($I`AiMetricsDataRootError`)(
   "AiMetricsDataRootError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsDataRootError", {
+  $I.annoteError<AiMetricsDataRootError>("AiMetricsDataRootError", {
     description: "Typed failure raised when an AI metrics data root is not an absolute path.",
   })
 ) {}

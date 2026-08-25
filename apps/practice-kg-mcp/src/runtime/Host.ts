@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $PracticeKgMcpId } from "@beep/identity/packages";
 import {
   makePracticeKgServerLayer,
   PracticeKgBundle,
@@ -17,37 +16,19 @@ import * as OptionUtils from "@beep/utils/Option";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PracticeKgHostError } from "../PracticeKgMcp.errors.ts";
 import { makePracticeKgDuckDbLayer } from "./DuckDb.ts";
 import { makePracticeKgPgliteLayer } from "./Pglite.ts";
 
-const $I = $PracticeKgMcpId.create("runtime/Host");
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
 
 /**
- * Sanitized startup failure while resolving a portable practice KG bundle.
- *
- * **Example** (Make PracticeKgHostError)
- *
- * ```ts
- * import { PracticeKgHostError } from "../../src/runtime/Host.ts"
- *
- * const error = PracticeKgHostError.make({ message: "Bundle directory is required." })
- * console.log(error._tag)
- * ```
+ * Host error re-exported from the runtime-neutral errors module for callers that import it here.
  *
  * @category errors
  * @since 0.0.0
  */
-export class PracticeKgHostError extends S.TaggedError<PracticeKgHostError>($I`PracticeKgHostError`)(
-  "PracticeKgHostError",
-  {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    message: S.NonEmptyString,
-  },
-  $I.annote("PracticeKgHostError", {
-    description: "Sanitized startup failure while resolving a portable practice KG bundle.",
-  })
-) {}
+export { PracticeKgHostError } from "../PracticeKgMcp.errors.ts";
 
 /**
  * Read and validate the bundle manifest before either database is opened.

@@ -361,7 +361,7 @@ export class ShaclValidationError extends S.TaggedError<ShaclValidationError>($I
     reason: ShaclValidationErrorReason,
     message: S.String,
   },
-  $I.annote("ShaclValidationError", {
+  $I.annoteError<ShaclValidationError>("ShaclValidationError", {
     description: "Typed SHACL validation error.",
     semanticSchemaMetadata: serviceContractMetadata("ShaclValidationError", "Typed SHACL validation error."),
   })

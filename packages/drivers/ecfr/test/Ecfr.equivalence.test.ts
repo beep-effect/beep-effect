@@ -13,4 +13,12 @@ describe("eCFR declared-field equivalence", () => {
     expect(sameEcfrError(a, b)).toBe(true);
     expect(sameEcfrError(a, c)).toBe(false);
   });
+
+  it("treats defect-only differences as equivalent", () => {
+    const a = EcfrError.config(new Error("first failure"));
+    const b = EcfrError.config(new Error("second failure"));
+
+    // the defect cause is payload, never identity
+    expect(sameEcfrError(a, b)).toBe(true);
+  });
 });

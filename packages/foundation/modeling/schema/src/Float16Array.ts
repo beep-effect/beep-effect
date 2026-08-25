@@ -31,7 +31,7 @@ class UnsupportedFloat16ArrayRuntimeError extends S.TaggedError<UnsupportedFloat
   {
     message: S.String,
   },
-  $I.annote("UnsupportedFloat16ArrayRuntimeError", {
+  $I.annoteError<UnsupportedFloat16ArrayRuntimeError>("UnsupportedFloat16ArrayRuntimeError", {
     description: "Float16Array helpers were used in a runtime that does not expose globalThis.Float16Array.",
   })
 ) {}

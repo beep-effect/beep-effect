@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -87,13 +87,13 @@ export class PathSafetyError extends S.TaggedError<PathSafetyError>($I`PathSafet
   "PathSafetyError",
   {
     candidate: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
     message: S.String,
     reason: PathSafetyViolationReason,
     resolved: S.OptionFromOptionalKey(S.String),
     root: S.String,
   },
-  $I.annote("PathSafetyError", {
+  $I.annoteError<PathSafetyError>("PathSafetyError", {
     description:
       "Typed, fail-closed error raised when a candidate path escapes its allowed root or cannot be canonicalized.",
   })

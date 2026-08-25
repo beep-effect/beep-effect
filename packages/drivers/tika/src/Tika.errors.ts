@@ -90,26 +90,6 @@ export class TikaErrorOptions extends S.Class<TikaErrorOptions>($I`TikaErrorOpti
   })
 ) {}
 
-const TikaErrorFields = {
-  cause: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Sanitized technical cause string when one is safe to retain.",
-    })
-  ),
-  reason: TikaErrorReason.annotateKey({
-    description: "Redacted technical error reason.",
-  }),
-  statusCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "HTTP or process status code associated with the Tika failure when one was available.",
-    })
-  ),
-} satisfies S.Struct.Fields;
-const sameTikaErrorFields = S.toEquivalence(S.TaggedStruct("TikaError", TikaErrorFields));
-const sameTikaError = (self: TikaError, that: TikaError): boolean => sameTikaErrorFields(self, that);
-
 /**
  * Technical failure raised inside the Tika driver boundary.
  *
@@ -127,10 +107,25 @@ const sameTikaError = (self: TikaError, that: TikaError): boolean => sameTikaErr
  */
 export class TikaError extends S.TaggedError<TikaError>($I`TikaError`)(
   "TikaError",
-  TikaErrorFields,
-  $I.annoteClass<S.declare<TikaError>, readonly [S.TaggedStruct<"TikaError", typeof TikaErrorFields>]>("TikaError", {
+  {
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Sanitized technical cause string when one is safe to retain.",
+      })
+    ),
+    reason: TikaErrorReason.annotateKey({
+      description: "Redacted technical error reason.",
+    }),
+    statusCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "HTTP or process status code associated with the Tika failure when one was available.",
+      })
+    ),
+  },
+  $I.annoteError<TikaError>("TikaError", {
     description: "Redacted technical failure raised inside the Tika driver boundary.",
-    toEquivalence: () => sameTikaError,
   })
 ) {
   /**

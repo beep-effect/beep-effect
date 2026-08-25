@@ -12,13 +12,13 @@
  */
 
 import { $DuckdbId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $DuckdbId.create("DuckDb.errors");
-const DuckDbDefect = S.Defect({ includeStack: true });
+const DuckDbDefect = Defect({ includeStack: true });
 
 type DuckDbErrorContextInput = {
   readonly cause?: unknown;
@@ -135,19 +135,6 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
   })
 ) {}
 
-const DuckDbErrorFields = {
-  ...DuckDbErrorLeadingContextFields,
-  message: S.String.annotateKey({
-    description: "Human-readable failure summary.",
-  }),
-  operation: DuckDbOperation.annotateKey({
-    description: "DuckDB driver operation that failed.",
-  }),
-  ...DuckDbErrorTrailingContextFields,
-} satisfies S.Struct.Fields;
-const sameDuckDbErrorFields = S.toEquivalence(S.TaggedStruct("DuckDbError", DuckDbErrorFields));
-const sameDuckDbError = (self: DuckDbError, that: DuckDbError): boolean => sameDuckDbErrorFields(self, that);
-
 /**
  * Recoverable technical failure raised by the DuckDB driver boundary.
  *
@@ -181,14 +168,19 @@ const sameDuckDbError = (self: DuckDbError, that: DuckDbError): boolean => sameD
  */
 export class DuckDbError extends S.TaggedError<DuckDbError>($I`DuckDbError`)(
   "DuckDbError",
-  DuckDbErrorFields,
-  $I.annoteClass<S.declare<DuckDbError>, readonly [S.TaggedStruct<"DuckDbError", typeof DuckDbErrorFields>]>(
-    "DuckDbError",
-    {
-      description: "Technical DuckDB driver failure scoped to a driver operation.",
-      toEquivalence: () => sameDuckDbError,
-    }
-  )
+  {
+    ...DuckDbErrorLeadingContextFields,
+    message: S.String.annotateKey({
+      description: "Human-readable failure summary.",
+    }),
+    operation: DuckDbOperation.annotateKey({
+      description: "DuckDB driver operation that failed.",
+    }),
+    ...DuckDbErrorTrailingContextFields,
+  },
+  $I.annoteError<DuckDbError>("DuckDbError", {
+    description: "Technical DuckDB driver failure scoped to a driver operation.",
+  })
 ) {
   static readonly is = S.is(DuckDbError);
 

@@ -122,7 +122,7 @@ export class EcosystemPolaritySummary extends S.Class<EcosystemPolaritySummary>(
 export class EcosystemPolarityError extends S.TaggedError<EcosystemPolarityError>($I`EcosystemPolarityError`)(
   "EcosystemPolarityError",
   { message: S.String },
-  $I.annote("EcosystemPolarityError", {
+  $I.annoteError<EcosystemPolarityError>("EcosystemPolarityError", {
     description: "An ecosystem package could not be discovered, read, or decoded for polarity linting.",
   })
 ) {

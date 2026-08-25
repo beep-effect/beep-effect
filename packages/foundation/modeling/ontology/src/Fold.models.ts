@@ -726,7 +726,7 @@ export class OntologyAssemblyError extends S.TaggedError<OntologyAssemblyError>(
     subjectIri: S.OptionFromOptionalKey(IRI),
     objectIri: S.OptionFromOptionalKey(IRI),
   },
-  $I.annote("OntologyAssemblyError", {
+  $I.annoteError<OntologyAssemblyError>("OntologyAssemblyError", {
     description: "Typed diagnostics-ledger failure for the ontology fold.",
   })
 ) {}

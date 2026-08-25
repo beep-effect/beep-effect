@@ -37,7 +37,7 @@ export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>(
     message: S.String,
     cycles: S.String.pipe(S.Array, S.Array),
   },
-  $I.annote("CyclicDependencyError", {
+  $I.annoteError<CyclicDependencyError>("CyclicDependencyError", {
     title: "Cyclic Dependency Error",
     description:
       "Raised when topological sorting or cycle detection finds circular\ndependencies in the workspace dependency graph.",

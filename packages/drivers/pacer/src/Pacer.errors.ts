@@ -65,16 +65,6 @@ export const PacerAuthErrorReason = LiteralKit([
  */
 export type PacerAuthErrorReason = typeof PacerAuthErrorReason.Type;
 
-const PacerAuthErrorFields = {
-  reason: PacerAuthErrorReason,
-  loginResult: S.optionalKey(S.String),
-  description: S.optionalKey(S.String),
-  cause: S.optionalKey(S.String),
-} satisfies S.Struct.Fields;
-const samePacerAuthErrorFields = S.toEquivalence(S.TaggedStruct("PacerAuthError", PacerAuthErrorFields));
-const samePacerAuthError = (self: PacerAuthError, that: PacerAuthError): boolean =>
-  samePacerAuthErrorFields(self, that);
-
 /**
  * Failure raised by the PACER Authentication boundary.
  *
@@ -92,14 +82,15 @@ const samePacerAuthError = (self: PacerAuthError, that: PacerAuthError): boolean
  */
 export class PacerAuthError extends S.TaggedError<PacerAuthError>($I`PacerAuthError`)(
   "PacerAuthError",
-  PacerAuthErrorFields,
-  $I.annoteClass<S.declare<PacerAuthError>, readonly [S.TaggedStruct<"PacerAuthError", typeof PacerAuthErrorFields>]>(
-    "PacerAuthError",
-    {
-      description: "Typed failure from the PACER cso-auth / cso-logout flow.",
-      toEquivalence: () => samePacerAuthError,
-    }
-  )
+  {
+    reason: PacerAuthErrorReason,
+    loginResult: S.optionalKey(S.String),
+    description: S.optionalKey(S.String),
+    cause: S.optionalKey(S.String),
+  },
+  $I.annoteError<PacerAuthError>("PacerAuthError", {
+    description: "Typed failure from the PACER cso-auth / cso-logout flow.",
+  })
 ) {
   /**
    * Build an auth error directly from a `loginResult` code + `errorDescription`.
@@ -186,15 +177,6 @@ export const PacerPclErrorReason = LiteralKit([
  */
 export type PacerPclErrorReason = typeof PacerPclErrorReason.Type;
 
-const PacerPclErrorFields = {
-  reason: PacerPclErrorReason,
-  status: S.optionalKey(NonNegativeInt),
-  description: S.optionalKey(S.String),
-  cause: S.optionalKey(S.String),
-} satisfies S.Struct.Fields;
-const samePacerPclErrorFields = S.toEquivalence(S.TaggedStruct("PacerPclError", PacerPclErrorFields));
-const samePacerPclError = (self: PacerPclError, that: PacerPclError): boolean => samePacerPclErrorFields(self, that);
-
 /**
  * Failure raised by the PCL Case Locator boundary.
  *
@@ -212,14 +194,15 @@ const samePacerPclError = (self: PacerPclError, that: PacerPclError): boolean =>
  */
 export class PacerPclError extends S.TaggedError<PacerPclError>($I`PacerPclError`)(
   "PacerPclError",
-  PacerPclErrorFields,
-  $I.annoteClass<S.declare<PacerPclError>, readonly [S.TaggedStruct<"PacerPclError", typeof PacerPclErrorFields>]>(
-    "PacerPclError",
-    {
-      description: "Typed failure from a PCL Case Locator search.",
-      toEquivalence: () => samePacerPclError,
-    }
-  )
+  {
+    reason: PacerPclErrorReason,
+    status: S.optionalKey(NonNegativeInt),
+    description: S.optionalKey(S.String),
+    cause: S.optionalKey(S.String),
+  },
+  $I.annoteError<PacerPclError>("PacerPclError", {
+    description: "Typed failure from a PCL Case Locator search.",
+  })
 ) {
   /**
    * Map a PCL HTTP status code to a typed error.
@@ -263,13 +246,6 @@ export class PacerPclError extends S.TaggedError<PacerPclError>($I`PacerPclError
     });
 }
 
-const PacerConfigErrorFields = {
-  cause: S.optionalKey(S.String),
-} satisfies S.Struct.Fields;
-const samePacerConfigErrorFields = S.toEquivalence(S.TaggedStruct("PacerConfigError", PacerConfigErrorFields));
-const samePacerConfigError = (self: PacerConfigError, that: PacerConfigError): boolean =>
-  samePacerConfigErrorFields(self, that);
-
 /**
  * Failure raised while loading PACER configuration / secrets.
  *
@@ -287,13 +263,11 @@ const samePacerConfigError = (self: PacerConfigError, that: PacerConfigError): b
  */
 export class PacerConfigError extends S.TaggedError<PacerConfigError>($I`PacerConfigError`)(
   "PacerConfigError",
-  PacerConfigErrorFields,
-  $I.annoteClass<
-    S.declare<PacerConfigError>,
-    readonly [S.TaggedStruct<"PacerConfigError", typeof PacerConfigErrorFields>]
-  >("PacerConfigError", {
+  {
+    cause: S.optionalKey(S.String),
+  },
+  $I.annoteError<PacerConfigError>("PacerConfigError", {
     description: "Missing or unreadable PACER configuration / secret.",
-    toEquivalence: () => samePacerConfigError,
   })
 ) {
   /**

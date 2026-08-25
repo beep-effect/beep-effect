@@ -35,7 +35,7 @@ export class CliReportedExit extends S.TaggedError<CliReportedExit>($I`CliReport
     message: S.String,
     exitCode: S.Finite,
   },
-  $I.annote("CliReportedExit", {
+  $I.annoteError<CliReportedExit>("CliReportedExit", {
     description: "Silent non-zero process exit requested after command output was rendered.",
   })
 ) {

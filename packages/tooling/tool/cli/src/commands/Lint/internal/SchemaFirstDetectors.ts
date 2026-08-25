@@ -1098,8 +1098,16 @@ const isToEquivalenceAnnotationProperty = (node: Node): boolean =>
   (Node.isPropertyAssignment(node) || Node.isShorthandPropertyAssignment(node) || Node.isMethodDeclaration(node)) &&
   node.getName() === "toEquivalence";
 
+const isErrorAnnotationCall = (node: Node): boolean => {
+  if (!Node.isCallExpression(node)) {
+    return false;
+  }
+  const callee = node.getExpression();
+  return Node.isPropertyAccessExpression(callee) && callee.getName() === "annoteError";
+};
+
 const annotationCarriesToEquivalence = (annotation: Node, depth = 0): boolean => {
-  if (A.some(annotation.getDescendants(), isToEquivalenceAnnotationProperty)) {
+  if (isErrorAnnotationCall(annotation) || A.some(annotation.getDescendants(), isToEquivalenceAnnotationProperty)) {
     return true;
   }
   if (depth >= 3) {
@@ -1138,7 +1146,7 @@ const taggedErrorEquivalenceEntryFromClassDeclaration = (
         ruleId: "SFV4-tagged-error-equivalence",
         line: declaration.getSourceFile().getLineAndColumnAtPos(declaration.getStart()).line,
         owner,
-        reason: `S.TaggedError declaration "${symbol}" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.`,
+        reason: `S.TaggedError declaration "${symbol}" must declare fields-only equivalence at the class declaration: pass $I.annoteError<${symbol}>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.`,
       });
     })
   );

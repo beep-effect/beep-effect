@@ -59,7 +59,7 @@ export class WorkItemNotFound extends S.TaggedError<WorkItemNotFound>($I`WorkIte
   {
     workItemId: DomainWorkItem.WorkItemId,
   },
-  $I.annote("WorkItemNotFound", {
+  $I.annoteError<WorkItemNotFound>("WorkItemNotFound", {
     title: "WorkItem not found",
     description: "The requested architecture lab WorkItem does not exist.",
   })
@@ -96,7 +96,7 @@ export class WorkItemConflict extends S.TaggedError<WorkItemConflict>($I`WorkIte
       description: "Non-empty public conflict reason.",
     }),
   },
-  $I.annote("WorkItemConflict", {
+  $I.annoteError<WorkItemConflict>("WorkItemConflict", {
     title: "WorkItem conflict",
     description: "The requested WorkItem command conflicts with persisted state.",
   })
@@ -133,7 +133,7 @@ export class WorkItemActionRejected extends S.TaggedError<WorkItemActionRejected
       description: "Non-empty public rejection reason.",
     }),
   },
-  $I.annote("WorkItemActionRejected", {
+  $I.annoteError<WorkItemActionRejected>("WorkItemActionRejected", {
     title: "WorkItem action rejected",
     description: "The WorkItem aggregate rejected the requested action.",
   })
@@ -162,7 +162,7 @@ export class WorkItemActionFailed extends S.TaggedError<WorkItemActionFailed>($I
       description: "Non-empty public failure reason with internal repository details redacted.",
     }),
   },
-  $I.annote("WorkItemActionFailed", {
+  $I.annoteError<WorkItemActionFailed>("WorkItemActionFailed", {
     title: "WorkItem action failed",
     description: "The WorkItem use-case action could not be completed.",
   })

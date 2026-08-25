@@ -884,7 +884,14 @@ export class CiFleetController extends pulumi.ComponentResource {
         // one self-reaping VM instead of a stranded lane.
         enable_job_queued_check: false,
         enable_managed_runner_security_group: false,
-        enable_organization_runners: false,
+        /**
+         * Register only in the named organization group. If the group is
+         * absent or rejects the runner, the module fails registration. It
+         * does not fall back to `Default` or repository registration;
+         * `Default` also rejects public repositories in this organization.
+         */
+        enable_organization_runners: true,
+        runner_group_name: "beep-ec2-heavy",
         /**
          * Require an exact label-set match so ordinary `self-hosted` jobs
          * cannot reach the fleet without naming its dedicated label.

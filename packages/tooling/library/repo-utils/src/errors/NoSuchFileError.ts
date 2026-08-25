@@ -36,7 +36,7 @@ export class NoSuchFileError extends S.TaggedError<NoSuchFileError>($I`NoSuchFil
     path: S.String,
     message: S.String,
   },
-  $I.annote("NoSuchFileError", {
+  $I.annoteError<NoSuchFileError>("NoSuchFileError", {
     title: "No Such File Error",
     description: "Raised when a required file or directory cannot be located on the filesystem.",
   })

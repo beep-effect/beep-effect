@@ -103,7 +103,7 @@ export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput
 export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFound>($I`TaxonomyConceptNotFound`)(
   "TaxonomyConceptNotFound",
   { conceptIri: IRIReference },
-  $I.annote("TaxonomyConceptNotFound", {
+  $I.annoteError<TaxonomyConceptNotFound>("TaxonomyConceptNotFound", {
     description: "The requested concept IRI is absent from the loaded taxonomy registry.",
   })
 ) {}
@@ -124,8 +124,11 @@ export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFou
  */
 export class UnsupportedDocumentClass extends S.TaggedError<UnsupportedDocumentClass>($I`UnsupportedDocumentClass`)(
   "UnsupportedDocumentClass",
-  { conceptIri: IRIReference, documentClass: DocumentClass },
-  $I.annote("UnsupportedDocumentClass", {
+  {
+    conceptIri: IRIReference,
+    documentClass: DocumentClass,
+  },
+  $I.annoteError<UnsupportedDocumentClass>("UnsupportedDocumentClass", {
     description: "The selected taxonomy concept does not admit the requested document class.",
   })
 ) {}

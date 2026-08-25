@@ -33,7 +33,7 @@ export class ProfessionalRuntimeValidationError extends S.TaggedError<Profession
   {
     message: S.String,
   },
-  $I.annote("ProfessionalRuntimeValidationError", {
+  $I.annoteError<ProfessionalRuntimeValidationError>("ProfessionalRuntimeValidationError", {
     description: "Raised when runtime request or proposal data violates SDK validation rules.",
   })
 ) {
@@ -80,7 +80,7 @@ export class ProfessionalRuntimePromotionBlocked extends S.TaggedError<Professio
       description: "Opaque subject whose candidate promotion was refused.",
     }),
   },
-  $I.annote("ProfessionalRuntimePromotionBlocked", {
+  $I.annoteError<ProfessionalRuntimePromotionBlocked>("ProfessionalRuntimePromotionBlocked", {
     description: "A consulted vertical policy refused candidate output promotion for the subject.",
   })
 ) {

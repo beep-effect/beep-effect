@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`; P2 complete 2026-08-24, P3 next
+Lifecycle: `active`; P2 complete 2026-08-24, P3 cut over 2026-08-25
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -68,12 +68,18 @@ Use this command for execution-capable sessions:
    realization, IAM edges, boot handoff, proof plan, and operator steps.
 9. [`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md) - rollout incident,
    canaries, IAM semantics, deployed proof, residuals, and closure-ready maps.
-10. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 and P2
-   friction receipts and prevention notes.
-11. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
-   ledger.
-12. The three source packets named in the transfer table.
-13. The fleet packet evidence named above.
+10. [`research/P3-DESIGN.md`](./research/P3-DESIGN.md) - organization
+    admission, reusable-workflow cutover, check contexts, replay probe, and
+    proof plan.
+11. [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md) - cutover
+    timeline, deployed group state, admission probes, and the retained P3
+    residual.
+12. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 and P2
+    friction receipts and prevention notes.
+12. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
+    ledger.
+13. The three source packets named in the transfer table.
+14. The fleet packet evidence named above.
 
 ## Current Phase
 
@@ -81,8 +87,16 @@ P2 Workload identity boundary completed on 2026-08-24 with closure-ready
 evidence retained in
 [`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md). Launch-template v13
 remains the fleet default after a clean canary and deployed red-team proof. P3
-Admission defense in depth is next. P4 still owns the operator-controlled JIT
-replay probe; informational probe K found visible argv residue.
+Admission defense in depth cut over on 2026-08-25: #805 staged `heavy.yml`
+through a local reusable-workflow call, the five required contexts were renamed
+to their `Heavy / ...` forms, and #808 pinned the call to `heavy.yml@main` while
+organization group `beep-ec2-heavy` was restricted to the four protected
+default-branch workflows. The controller's organization registration deployed,
+failed closed on a missing installation permission (which itself proved the
+no-fallback half of the admission design), and rolled back; accepting the
+permission and redeploying is the remaining P3 step. Evidence:
+[`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md). P4 owns the live JIT
+replay run; its operator-controlled probe is implemented.
 
 ## Latest Evidence
 

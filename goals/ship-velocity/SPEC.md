@@ -134,6 +134,43 @@ be closed, not tolerated.
   hosted Coverage Regression job on the PR reports the same `EnvConfig.ts` row as the local
   run; (4) the prebuild step keeps its remote-cache reads on main pushes (it never receives the
   coverage env).
+- **B10 Dependents in pull-request coverage scope.** The `--affected` planner selected only the
+  direct owners of changed files, so a change to `@beep/md` measured `@beep/md` in 110 s and
+  went green while the dependent `@beep/pandoc-ast` row dropped — surfacing only in `main`'s
+  full run after the merge (7 red pushes, 3 inherited PR reds, hand-fixed in #783). The
+  planner now reads every workspace-internal dependency edge from the owner inventory
+  (`CoverageScopeOwner.workspaceDependencies`) and selects the transitive coverage-bearing
+  dependents of every changed owner whose non-test files changed; a `test/`-only change stays
+  scoped to its owner, labs and coverage-less packages are walked through but never selected,
+  and the repository root is excluded from the inventory. Selections heavier than the proven
+  single-invocation budget (300 s of planner weight) execute like the full lane — one prebuild
+  filtered to the selection, then weighted `--only` shards — because dependents make wide
+  selections routine (`@beep/md` → 18 owners, the seven foundation packages → ≥111 of 128).
+  Baseline adoption on `--write-baseline` stays the direct owners (DECISIONS 2026-08-24).
+  **Acceptance:** (1) `planCoverageAffectedScope` on the live workspace selects
+  `@beep/pandoc-ast` for a `@beep/md` source change and only `@beep/schema` for a
+  `@beep/schema` test change; (2) a wide selection dispatches `coverage:prebuild` with one
+  `--filter` per selected owner and no empty shard; (3) a real `coverage --affected` run under
+  `CI=true` executes the sharded selected path and the ratchet compares every selected row.
+- **B11 Scoped remediation and row-only baseline scoping.** The ratchet's failure output never
+  named a fix, and the only command an agent could find was the baseline header's repo-wide
+  `bun run coverage:baseline:write` — a 9–15 minute run that re-measures 128 packages to
+  change one row, and the origin of the regen treadmill (39 baseline commits in 90 days, every
+  one a full-fallback run on the PR). Three changes: (1) the ratchet prints a remediation block
+  naming the exact scoped command for the regressed packages
+  (`bun run coverage -- --filter=<p> … --write-baseline`, which merges only the rows it
+  measured), and the baseline header advertises the same form ahead of the whole-document one;
+  (2) the pull-request planner diffs the baseline against the comparison base
+  (`coverageBaselineRowDelta`): when only `packages` rows changed, the packages those rows name
+  are selected and measured instead of the full workspace, while any change to `epsilon`,
+  `minimum`, `exemptions`, or `follow_ups` — or an unreadable side — keeps the baseline a global
+  input; (3) `standards/**/*.md` is coverage-inert like `docs/` (the `*.jsonc` policy inputs
+  under `standards/` stay global), because a decision-log edit forced two full runs during B10.
+  **Acceptance:** (1) a ratchet failure ends with the remediation block and the command lists
+  every regressed package once; (2) a dirty baseline whose only change is one package's row
+  plans `selected` for that package and runs in that package's time, not the full lane's; (3) a
+  `standards/architecture/*.md`-only change plans `noop`; (4) a `minimum`/`exemptions` edit
+  still plans `full`.
 
 ## Workstream C — Turbo cache: readers, warmth, proof
 

@@ -28,7 +28,9 @@ const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.
 export class ProviderInstanceNotFound extends S.TaggedError<ProviderInstanceNotFound>($I`ProviderInstanceNotFound`)(
   "ProviderInstanceNotFound",
   { providerInstanceId: Agents.ProviderInstanceId },
-  $I.annote("ProviderInstanceNotFound", { description: "The requested provider instance does not exist." })
+  $I.annoteError<ProviderInstanceNotFound>("ProviderInstanceNotFound", {
+    description: "The requested provider instance does not exist.",
+  })
 ) {}
 
 /**
@@ -48,8 +50,13 @@ export class ProviderInstanceNotFound extends S.TaggedError<ProviderInstanceNotF
  */
 export class ProviderUnauthenticated extends S.TaggedError<ProviderUnauthenticated>($I`ProviderUnauthenticated`)(
   "ProviderUnauthenticated",
-  { providerInstanceId: Agents.ProviderInstanceId, guidance: S.NonEmptyString },
-  $I.annote("ProviderUnauthenticated", { description: "The provider CLI is unauthenticated and requires login." })
+  {
+    providerInstanceId: Agents.ProviderInstanceId,
+    guidance: S.NonEmptyString,
+  },
+  $I.annoteError<ProviderUnauthenticated>("ProviderUnauthenticated", {
+    description: "The provider CLI is unauthenticated and requires login.",
+  })
 ) {}
 
 /**
@@ -69,7 +76,7 @@ export class ProviderUnauthenticated extends S.TaggedError<ProviderUnauthenticat
 export class ProviderProbeUnavailable extends S.TaggedError<ProviderProbeUnavailable>($I`ProviderProbeUnavailable`)(
   "ProviderProbeUnavailable",
   { guidance: S.NonEmptyString },
-  $I.annote("ProviderProbeUnavailable", {
+  $I.annoteError<ProviderProbeUnavailable>("ProviderProbeUnavailable", {
     description: "The provider probe or its persistence boundary is unavailable.",
   })
 ) {}

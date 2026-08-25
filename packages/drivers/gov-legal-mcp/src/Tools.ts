@@ -70,15 +70,6 @@ export class EcfrListTitlesParams extends S.Class<EcfrListTitlesParams>($I`EcfrL
   })
 ) {}
 
-const GovinfoSearchFailureFields = {
-  reason: GovinfoErrorReason,
-} satisfies S.Struct.Fields;
-const sameGovinfoSearchFailureFields = S.toEquivalence(
-  S.TaggedStruct("GovinfoSearchFailure", GovinfoSearchFailureFields)
-);
-const sameGovinfoSearchFailure = (self: GovinfoSearchFailure, that: GovinfoSearchFailure): boolean =>
-  sameGovinfoSearchFailureFields(self, that);
-
 /**
  * Sanitized GovInfo search failure returned across the MCP host boundary.
  * Raw driver causes and request URLs are deliberately omitted.
@@ -98,13 +89,11 @@ const sameGovinfoSearchFailure = (self: GovinfoSearchFailure, that: GovinfoSearc
  */
 export class GovinfoSearchFailure extends S.TaggedError<GovinfoSearchFailure>($I`GovinfoSearchFailure`)(
   "GovinfoSearchFailure",
-  GovinfoSearchFailureFields,
-  $I.annoteClass<
-    S.declare<GovinfoSearchFailure>,
-    readonly [S.TaggedStruct<"GovinfoSearchFailure", typeof GovinfoSearchFailureFields>]
-  >("GovinfoSearchFailure", {
+  {
+    reason: GovinfoErrorReason,
+  },
+  $I.annoteError<GovinfoSearchFailure>("GovinfoSearchFailure", {
     description: "Sanitized GovInfo search failure that omits raw driver causes and HTTP request details.",
-    toEquivalence: () => sameGovinfoSearchFailure,
   })
 ) {}
 

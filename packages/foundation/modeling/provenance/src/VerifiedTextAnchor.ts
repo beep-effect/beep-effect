@@ -83,7 +83,7 @@ export class VerifiedTextAnchorError extends S.TaggedError<VerifiedTextAnchorErr
     message: S.String,
     reason: VerifiedTextAnchorErrorReason,
   },
-  $I.annote("VerifiedTextAnchorError", {
+  $I.annoteError<VerifiedTextAnchorError>("VerifiedTextAnchorError", {
     description: "Sanitized failure emitted when an anchor cannot be proven against the expected exact source.",
   })
 ) {
