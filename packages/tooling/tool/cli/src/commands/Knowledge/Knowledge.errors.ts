@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
+import { Defect, NonNegativeInt } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -75,9 +75,9 @@ export class KnowledgeOperationalError extends S.TaggedError<KnowledgeOperationa
   "KnowledgeOperationalError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("KnowledgeOperationalError", {
+  $I.annoteError<KnowledgeOperationalError>("KnowledgeOperationalError", {
     description:
       "A Git, tree-resolution, archive, UTF-8, manifest-decode, command-probe, or index-probe failure that must fail closed.",
   })
@@ -172,7 +172,7 @@ export class KnowledgeProbeBootError extends S.TaggedError<KnowledgeProbeBootErr
   {
     message: S.String,
   },
-  $I.annote("KnowledgeProbeBootError", {
+  $I.annoteError<KnowledgeProbeBootError>("KnowledgeProbeBootError", {
     description: "A current-checkout probe over archive data that exited before emitting structured output.",
   })
 ) {}
@@ -211,7 +211,7 @@ export class KnowledgeIntroducedFindingsError extends S.TaggedError<KnowledgeInt
     message: S.String,
     introducedCount: NonNegativeInt,
   },
-  $I.annote("KnowledgeIntroducedFindingsError", {
+  $I.annoteError<KnowledgeIntroducedFindingsError>("KnowledgeIntroducedFindingsError", {
     description: "The report contains one or more introduced blocking Stage-1 findings.",
   })
 ) {}
@@ -252,7 +252,7 @@ export class KnowledgeHostPathDebtError extends S.TaggedError<KnowledgeHostPathD
     message: S.String,
     liveDebtCount: NonNegativeInt,
   },
-  $I.annote("KnowledgeHostPathDebtError", {
+  $I.annoteError<KnowledgeHostPathDebtError>("KnowledgeHostPathDebtError", {
     description: "The checked census carries live host-path observations in the gated classes.",
   })
 ) {}
@@ -290,7 +290,7 @@ export class KnowledgeCloneAttributesError extends S.TaggedError<KnowledgeCloneA
     message: S.String,
     attributesPath: S.String,
   },
-  $I.annote("KnowledgeCloneAttributesError", {
+  $I.annoteError<KnowledgeCloneAttributesError>("KnowledgeCloneAttributesError", {
     description: "A non-empty clone-local git attributes file would silently rewrite hermetic archive bytes.",
   })
 ) {

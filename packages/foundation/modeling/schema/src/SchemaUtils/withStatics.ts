@@ -36,7 +36,7 @@ class WithStaticsStaticRedefinitionError extends S.TaggedError<WithStaticsStatic
     key: S.String,
     message: S.String,
   },
-  $I.annote("WithStaticsStaticRedefinitionError", {
+  $I.annoteError<WithStaticsStaticRedefinitionError>("WithStaticsStaticRedefinitionError", {
     description: "Raised when schema statics would redefine a non-configurable property with a different value.",
   })
 ) {}

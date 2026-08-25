@@ -12,7 +12,7 @@ import { DefaultVaultFilingContext, slugVaultSegment } from "@beep/documents-dom
 import { DocumentsRpcs, IntakeDroppedFilePayload } from "@beep/documents-use-cases/public";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, N, O, P } from "@beep/utils";
 import { SetWorkspaceVaultInput, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
@@ -519,24 +519,54 @@ export const intakeDroppedFilePayload = (input: DroppedDocumentInput): IntakeDro
     filingContext: DefaultVaultFilingContext,
   });
 
-class VaultDirectoryPickerInvocationError extends S.TaggedError<VaultDirectoryPickerInvocationError>(
+/**
+ * Technical failure raised while invoking the Tauri workspace vault picker.
+ *
+ * **Example** (Create an invocation failure)
+ *
+ * ```ts
+ * import { VaultDirectoryPickerInvocationError } from "@/intake/Intake.atoms"
+ *
+ * const error = VaultDirectoryPickerInvocationError.make({ cause: new Error("dialog unavailable") })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class VaultDirectoryPickerInvocationError extends S.TaggedError<VaultDirectoryPickerInvocationError>(
   $I`VaultDirectoryPickerInvocationError`
 )(
   "VaultDirectoryPickerInvocationError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
-  $I.annote("VaultDirectoryPickerInvocationError", {
+  $I.annoteError<VaultDirectoryPickerInvocationError>("VaultDirectoryPickerInvocationError", {
     description: "Technical failure raised while invoking the Tauri workspace vault picker.",
   })
 ) {}
 
-class BrowserFileReadError extends S.TaggedError<BrowserFileReadError>($I`BrowserFileReadError`)(
+/**
+ * Technical failure raised while reading a browser `File` into memory.
+ *
+ * **Example** (Create a file-read failure)
+ *
+ * ```ts
+ * import { BrowserFileReadError } from "@/intake/Intake.atoms"
+ *
+ * const error = BrowserFileReadError.make({ cause: new Error("read failed") })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class BrowserFileReadError extends S.TaggedError<BrowserFileReadError>($I`BrowserFileReadError`)(
   "BrowserFileReadError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
-  $I.annote("BrowserFileReadError", {
+  $I.annoteError<BrowserFileReadError>("BrowserFileReadError", {
     description: "Technical failure raised while reading a browser File into memory.",
   })
 ) {}

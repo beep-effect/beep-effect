@@ -34,7 +34,7 @@ const $I = $HtmlId.create("Html.attributes");
 class HtmlAttributeDomainError extends S.TaggedError<HtmlAttributeDomainError>($I`HtmlAttributeDomainError`)(
   "HtmlAttributeDomainError",
   { message: S.String },
-  $I.annote("HtmlAttributeDomainError", {
+  $I.annoteError<HtmlAttributeDomainError>("HtmlAttributeDomainError", {
     description: "Invalid fixed registry supplied to an HTML attribute schema factory.",
   })
 ) {}

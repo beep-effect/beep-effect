@@ -6,7 +6,7 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -150,7 +150,7 @@ const readCauseReasons = (cause: Cause.Cause<unknown>): ReadonlyArray<Cause.Reas
   );
 
 const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
-  P.hasInspectableObjectShape(value) && safeBoolean(() => S.is(S.Defect({ includeStack: true }))(value))
+  P.hasInspectableObjectShape(value) && safeBoolean(() => S.is(Defect({ includeStack: true }))(value))
     ? O.some(value)
     : O.none();
 
@@ -275,25 +275,6 @@ const extractNativeQueryContext = (cause: unknown, seen: ReadonlyArray<object> =
   });
 };
 
-const DrizzleErrorFields = {
-  operation: DrizzleOperation.annotateKey({
-    description: "Driver operation being normalized.",
-  }),
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description: "Inspectable defect retained as the normalized technical cause.",
-    }),
-  query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Optional SQL statement text retained for diagnostics.",
-  }),
-  params: S.OptionFromOptionalKey(RedactedSqlParams).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Optional SQL parameter values after redaction.",
-  }),
-} satisfies S.Struct.Fields;
-const sameDrizzleErrorFields = S.toEquivalence(S.TaggedStruct("DrizzleError", DrizzleErrorFields));
-const sameDrizzleError = (self: DrizzleError, that: DrizzleError): boolean => sameDrizzleErrorFields(self, that);
-
 /**
  * Technical failure normalized at the `@beep/drizzle` driver boundary.
  *
@@ -327,14 +308,25 @@ const sameDrizzleError = (self: DrizzleError, that: DrizzleError): boolean => sa
  */
 export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
   "DrizzleError",
-  DrizzleErrorFields,
-  $I.annoteClass<S.declare<DrizzleError>, readonly [S.TaggedStruct<"DrizzleError", typeof DrizzleErrorFields>]>(
-    "DrizzleError",
-    {
-      description: "Technical Drizzle driver failure scoped to a driver operation.",
-      toEquivalence: () => sameDrizzleError,
-    }
-  )
+  {
+    operation: DrizzleOperation.annotateKey({
+      description: "Driver operation being normalized.",
+    }),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Inspectable defect retained as the normalized technical cause.",
+      }),
+    query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional SQL statement text retained for diagnostics.",
+    }),
+    params: S.OptionFromOptionalKey(RedactedSqlParams).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional SQL parameter values after redaction.",
+    }),
+  },
+  $I.annoteError<DrizzleError>("DrizzleError", {
+    description: "Technical Drizzle driver failure scoped to a driver operation.",
+  })
 ) {
   static readonly is = (value: unknown): value is DrizzleError => safeBoolean(() => S.is(DrizzleError)(value));
 

@@ -107,7 +107,7 @@ export class WorkspaceVaultStoreUnavailable extends S.TaggedError<WorkspaceVault
   {
     reason: S.NonEmptyString,
   },
-  $I.annote("WorkspaceVaultStoreUnavailable", {
+  $I.annoteError<WorkspaceVaultStoreUnavailable>("WorkspaceVaultStoreUnavailable", {
     description: "The workspace vault store could not serve the request.",
   })
 ) {}
@@ -136,7 +136,7 @@ export class WorkspaceVaultRootInvalid extends S.TaggedError<WorkspaceVaultRootI
     path: S.String,
     reason: S.NonEmptyString,
   },
-  $I.annote("WorkspaceVaultRootInvalid", {
+  $I.annoteError<WorkspaceVaultRootInvalid>("WorkspaceVaultRootInvalid", {
     description: "The selected workspace vault root is not an existing writable directory.",
   })
 ) {}
@@ -196,7 +196,7 @@ export class WorkspaceVaultActionError extends S.TaggedError<WorkspaceVaultActio
   {
     message: S.String,
   },
-  $I.annote("WorkspaceVaultActionError", {
+  $I.annoteError<WorkspaceVaultActionError>("WorkspaceVaultActionError", {
     description: "Client-safe workspace vault configuration failure.",
   })
 ) {

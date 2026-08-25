@@ -13,4 +13,13 @@ describe("Postgres declared-field equivalence", () => {
     expect(samePostgresError(a, b)).toBe(true);
     expect(samePostgresError(a, c)).toBe(false);
   });
+
+  it("treats defect-only differences as equivalent", () => {
+    const context = { message: "connection reset", sourceLocation: "db.ts:1:1" };
+    const a = PostgresError.fromUnknown("connect", new Error("first failure"), context);
+    const b = PostgresError.fromUnknown("connect", new Error("second failure"), context);
+
+    // the defect cause is payload, never identity
+    expect(samePostgresError(a, b)).toBe(true);
+  });
 });

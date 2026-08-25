@@ -6,13 +6,13 @@
  */
 
 import { $FfmpegId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $FfmpegId.create("FFmpeg.errors");
-const FFmpegDefect = S.Defect({ includeStack: true });
+const FFmpegDefect = Defect({ includeStack: true });
 const isFFmpegDefect = S.is(FFmpegDefect);
 
 /**
@@ -193,60 +193,6 @@ export class FFmpegErrorFromUnknownOptions extends S.Class<FFmpegErrorFromUnknow
   })
 ) {}
 
-const FFmpegErrorFields = {
-  command: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("FFmpegError.command", {
-      description: "Native executable path or command name involved in the failure, when available.",
-    })
-  ),
-  cause: S.OptionFromOptionalKey(FFmpegDefect).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("FFmpegError.cause", {
-      description: "Inspectable originating defect, when available.",
-    })
-  ),
-  exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("FFmpegError.exitCode", {
-      description: "Native process exit status, when the process returned one.",
-    })
-  ),
-  message: S.String.pipe(
-    $I.annoteKey("FFmpegError.message", {
-      description: "Human-readable FFmpeg driver failure summary.",
-    })
-  ),
-  operation: S.String.pipe(
-    $I.annoteKey("FFmpegError.operation", {
-      description: "Driver operation that emitted the failure.",
-    })
-  ),
-  stderr: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("FFmpegError.stderr", {
-      description: "Captured standard error text, when available.",
-    })
-  ),
-  stdout: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    $I.annoteKey("FFmpegError.stdout", {
-      description: "Captured standard output text, when available.",
-    })
-  ),
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const FFmpegErrorEquivalenceFields = {
-  command: FFmpegErrorFields.command,
-  exitCode: FFmpegErrorFields.exitCode,
-  message: FFmpegErrorFields.message,
-  operation: FFmpegErrorFields.operation,
-  stderr: FFmpegErrorFields.stderr,
-  stdout: FFmpegErrorFields.stdout,
-} satisfies S.Struct.Fields;
-const sameFFmpegErrorFields = S.toEquivalence(S.TaggedStruct("FFmpegError", FFmpegErrorEquivalenceFields));
-const sameFFmpegError = (self: FFmpegError, that: FFmpegError): boolean => sameFFmpegErrorFields(self, that);
-
 /**
  * Technical failure raised by the `@beep/ffmpeg` driver boundary.
  *
@@ -264,14 +210,51 @@ const sameFFmpegError = (self: FFmpegError, that: FFmpegError): boolean => sameF
  */
 export class FFmpegError extends S.TaggedError<FFmpegError>($I`FFmpegError`)(
   "FFmpegError",
-  FFmpegErrorFields,
-  $I.annoteClass<S.declare<FFmpegError>, readonly [S.TaggedStruct<"FFmpegError", typeof FFmpegErrorFields>]>(
-    "FFmpegError",
-    {
-      description: "Technical FFmpeg driver failure scoped to a driver operation.",
-      toEquivalence: () => sameFFmpegError,
-    }
-  )
+  {
+    command: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.command", {
+        description: "Native executable path or command name involved in the failure, when available.",
+      })
+    ),
+    cause: S.OptionFromOptionalKey(FFmpegDefect).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.cause", {
+        description: "Inspectable originating defect, when available.",
+      })
+    ),
+    exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.exitCode", {
+        description: "Native process exit status, when the process returned one.",
+      })
+    ),
+    message: S.String.pipe(
+      $I.annoteKey("FFmpegError.message", {
+        description: "Human-readable FFmpeg driver failure summary.",
+      })
+    ),
+    operation: S.String.pipe(
+      $I.annoteKey("FFmpegError.operation", {
+        description: "Driver operation that emitted the failure.",
+      })
+    ),
+    stderr: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.stderr", {
+        description: "Captured standard error text, when available.",
+      })
+    ),
+    stdout: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.stdout", {
+        description: "Captured standard output text, when available.",
+      })
+    ),
+  },
+  $I.annoteError<FFmpegError>("FFmpegError", {
+    description: "Technical FFmpeg driver failure scoped to a driver operation.",
+  })
 ) {
   static readonly is = S.is(FFmpegError);
 

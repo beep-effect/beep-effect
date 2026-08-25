@@ -84,9 +84,9 @@ brief carries the rationale.
    [`BRIEF.md`](../../explorations/semantica-lab/BRIEF.md) v1.1,
    [`MAP.md`](../../explorations/semantica-lab/MAP.md) v1.0,
    [`research/shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
-   v1.3,
+   v1.4,
    [`research/workload-contract.md`](../../explorations/semantica-lab/research/workload-contract.md)
-   v1.3.
+   v1.4.
 5. The sibling `openai-driver` packet's SPEC, for the C1 embeddings Layer.
 6. This `SPEC.md`.
 7. `PLAN.md`.
@@ -186,7 +186,7 @@ Goal 1 executes against, cited by row and amendment id, one line each.
 | Extraction (S7) | Hybrid and pattern-only run the same gold probe; one family verdict at C0, where G-relation scores. |
 | Canary (G1) | Staged C0 then C1 then C2, each bounded by the breaker; code lives in the lab. |
 | Budgets (G4, B5) | Tier-L hard bar: cold start < 5 s, p95 < 100 ms; 16 GB bundle-RSS alarm; laptop-class numbers are Tier-D telemetry. |
-| Offline (G7) | Replay-offline, hosted-live: every provider result cached content-addressed; the network-off re-run reproduces the `EvalReport`. |
+| Offline (G7) | Replay-offline, hosted-live: every provider result cached content-addressed; the network-off re-run reproduces the `EvalReport` `reportDigest`; the `EvalRunTelemetry` sidecar is excluded (R1). |
 | Atlas writes (B1, A9) | Only final park/drop today; `adopt`/`pick-one` wait for a passed stage. |
 | Repo defects (O1, M2) | Handoff mention/span drop fixed in its own PR (`nlp-ir/1.1`); the relation drop stays a draft issue, cleanup-on-touch. |
 | Graduation (M5, M6) | Three PRs: fix → docs-only ceremony → lab mint; the canary is slot-free on the ROADMAP Labs line. |
@@ -200,6 +200,9 @@ Goal 1 executes against, cited by row and amendment id, one line each.
 | M4 | Atlas gate restored to O3 verbatim; no atlas work in this packet. |
 | M5 | Both packets graduate in one ceremony PR; the lab mint is its own PR. |
 | M6 | ROADMAP funnel: lab canaries are slot-free; drift recorded. |
+| R1 (PR #802 review) | `EvalReport` = content-addressed replay-stable payload (`reportDigest` = sha256 over the canonical JSON of the report body with the `reportDigest` field omitted); per-run Tier-L/Tier-D numbers live in an `EvalRunTelemetry` sidecar never compared for identity. |
+| R2 (PR #802 review) | Every stage pass includes the full W1 manifest + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate — before any verdict. |
+| R3 (PR #802 review) | C1 checks committed `G-projection` expectations (known kNN neighbour pair, non-empty SPARQL results) before rebuild identity; empty projections fail. |
 
 ### Explorer/UI milestone (D16, A5, D12)
 
@@ -226,35 +229,45 @@ Canonicalizer row).
 - [ ] **First vertical slice**
       ([`MAP.md` §First Vertical Slice](../../explorations/semantica-lab/MAP.md#first-vertical-slice)):
       C0 on F1 + one G-relation W1 paper, run live and then with the network
-      off; the two `EvalReport`s are byte-identical; every span in every claim
+      off; the two `EvalReport`s have equal `reportDigest`s (telemetry sidecars excluded,
+      R1); every span in every claim
       passes `verifyTextAnchor`; the hosted extractor's G-relation count on the
       paper is non-zero; the F1 malformed specimens decode to typed degraded
       states; the report carries corpus hash, `gold/v1`, `ModelIdentity` for
-      every hosted call, Tier-L results, and Tier-D telemetry. Passing the
-      slice does not pass C0.
+      every hosted call; the `EvalRunTelemetry` sidecar carries Tier-L results and
+      Tier-D telemetry (R1). Passing the slice does not pass C0.
 - [ ] **C0 pass** over F1 + all three G-relation W1 papers — "second run with
-      the network disabled reproduces the EvalReport bytes from the provider
-      cache (G7); every span slices back to its text; relation count on the
+      the network disabled reproduces the `EvalReport` digest from the provider
+      cache (G7; telemetry sidecar excluded, R1); every span slices back to its text; relation count on the
       G-relation papers is non-zero." Scoring covers G-structure, G-entity,
       and G-relation (S7); "every span slices back" is proven by
-      `verifyTextAnchor` succeeding for every span.
-- [ ] **C1 pass** — "rebuild identity (drop projections, rebuild, identical
-      query results); embedding dimension is frozen by this stage with an
-      alternate-dimension fixture proving the keying (B4 defaults)."
+      `verifyTextAnchor` succeeding for every span. The full W1 manifest + F1 runs
+      end-to-end live and replay with equal digests and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate — before the Extractor/Input verdicts are written (R2).
+- [ ] **C1 pass** — projections match the committed `G-projection` expectations
+      first (a known kNN neighbour pair and non-empty SPARQL result sets; empty or
+      mismatched projections fail, R3), then "rebuild identity (drop projections,
+      rebuild, identical query results); embedding dimension is frozen by this stage with an
+      alternate-dimension fixture proving the keying (B4 defaults)." The full W1 manifest + F1
+      runs end-to-end live and replay with equal `reportDigest`s and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate — before the Storage/Embeddings verdicts are written (R2).
 - [ ] **C2 pass** (S8) — "the derived conclusion set equals EYE's on every
       gold case (closure equality), AND every `InferenceEvent` validates
       against its own rule (premises present in inputs-or-closure, rule
       instance correct); crash identity; cold start <5 s; p95 <100 ms.
       Matching EYE's particular premise set is not required — an entailment
-      with two valid derivations must not fail C2."
+      with two valid derivations must not fail C2." Tier-L numbers are read from the
+      live run's `EvalRunTelemetry` (R1). The full W1 manifest + F1 runs end-to-end live and replay with equal `reportDigest`s and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate — before the Reasoning verdict is written (R2).
 - [ ] Each stage's pass writes its families' verdicts into the exploration's
       `DECISIONS.md` as a dated entry before any atlas value changes (B1).
 - [ ] The lab is minted by `bun run beep create-package` with `--lab`, passes
       its Labs lane on its own PR, carries the one local `cargo check` result
       in `history/`, and never exports a reusable surface (labs law).
 - [ ] Every `EvalReport` is schema-validated and carries corpus hash,
-      `gold/v1` version, per-metric scores (metric names from upstream #574,
-      T3), Tier-L results, and Tier-D telemetry including wall-clock.
+      `gold/v1` version, per-call `ModelIdentity` + provider-cache keys, and
+      per-metric scores (metric names from upstream #574, T3) — nothing
+      time-dependent. Every run also writes an `EvalRunTelemetry` sidecar
+      referencing the `reportDigest`; the Tier-L measurements and the Tier-D
+      telemetry including wall-clock are required solely there and never enter
+      the report digest (R1).
 - [ ] Base packet checks and `bun run beep yeet verify` are green; each stage
       ships as a PR driven to mergeable; P5 records a valid closeout
       reflection.
@@ -275,9 +288,9 @@ Proof is a lab test or a CLI run, never a screenshot (A5, S4).
 | Reflection | `bun run beep lint reflection-artifacts` | Green at closeout |
 | Repo quality | `bun run beep yeet verify` | Green |
 | Lab tests | the lab's `test` script (vitest) in the Labs lane | Green per stage |
-| Canary CLI | the headless entry (server/main.ts) run as `canary c0`, `canary c1`, `canary c2`, each live then `--offline`; reports archived under `history/` | Byte-identical `EvalReport`s per stage |
-| Tier-L bars | cold start and p95 recorded in every `EvalReport` | < 5 s and < 100 ms (hard gates at C2) |
-| Tier-D telemetry | wall-clock, RSS, disk growth, dependency and model bytes in every `EvalReport` | Recorded; alarms only, never a park |
+| Canary CLI | the headless entry (server/main.ts) run as `canary c0`, `canary c1`, `canary c2`, each live then `--offline`; reports archived under `history/` | Equal `reportDigest`s per stage; telemetry sidecars excluded (R1) |
+| Tier-L bars | cold start and p95 recorded in the live run's `EvalRunTelemetry` sidecar, never in the report digest (R1) | < 5 s and < 100 ms (hard gates at C2) |
+| Tier-D telemetry | wall-clock, RSS, disk growth, dependency and model bytes in every `EvalRunTelemetry` sidecar, never in the report digest (R1) | Recorded; alarms only, never a park |
 | Hosted completion | `bun run beep yeet monitor` after each stage's publication | `merge-ready: yes`; zero unresolved threads |
 
 ## Stop Conditions

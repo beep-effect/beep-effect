@@ -40,7 +40,7 @@ export class WorkItemAlreadyArchived extends S.TaggedError<WorkItemAlreadyArchiv
       description: "WorkItem aggregate id that is already archived.",
     }),
   },
-  $I.annote("WorkItemAlreadyArchived", {
+  $I.annoteError<WorkItemAlreadyArchived>("WorkItemAlreadyArchived", {
     title: "WorkItem already archived",
     description: "The WorkItem is archived and no further lifecycle transition is allowed.",
   })
@@ -82,7 +82,7 @@ export class WorkItemInvalidTransition extends S.TaggedError<WorkItemInvalidTran
       description: "Requested WorkItem lifecycle status.",
     }),
   },
-  $I.annote("WorkItemInvalidTransition", {
+  $I.annoteError<WorkItemInvalidTransition>("WorkItemInvalidTransition", {
     title: "WorkItem invalid transition",
     description: "The requested lifecycle transition is not valid for the current WorkItem state.",
   })
@@ -147,7 +147,7 @@ export class WorkItemAssigneeRequired extends S.TaggedError<WorkItemAssigneeRequ
       description: "WorkItem aggregate id that requires an assignee.",
     }),
   },
-  $I.annote("WorkItemAssigneeRequired", {
+  $I.annoteError<WorkItemAssigneeRequired>("WorkItemAssigneeRequired", {
     title: "WorkItem assignee required",
     description: "Assigning a WorkItem requires a valid Worker identity.",
   })

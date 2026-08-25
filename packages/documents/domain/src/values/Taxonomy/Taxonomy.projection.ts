@@ -43,7 +43,7 @@ export class TaxonomyProjectionError extends S.TaggedError<TaxonomyProjectionErr
       description: "Deterministic projection failure reason.",
     }),
   },
-  $I.annote("TaxonomyProjectionError", {
+  $I.annoteError<TaxonomyProjectionError>("TaxonomyProjectionError", {
     description: "Failure raised when deterministic vault path projection cannot be completed.",
   })
 ) {}

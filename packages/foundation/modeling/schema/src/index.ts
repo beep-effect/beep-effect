@@ -323,6 +323,13 @@ export * from "./MutableHashMap.ts";
  */
 export * from "./MutableHashSet.ts";
 /**
+ * Opaque payload schemas (`Defect`, `OpaqueUnknown`) whose equivalence is declared always-true.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Opaque.ts";
+/**
  * @since 0.0.0
  * @category validation
  */

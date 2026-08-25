@@ -89,7 +89,7 @@ export class FileProcessingOperationError extends S.TaggedError<FileProcessingOp
     operationId: S.optionalKey(OperationId),
     reason: FileProcessingOperationErrorReason,
   },
-  $I.annote("FileProcessingOperationError", {
+  $I.annoteError<FileProcessingOperationError>("FileProcessingOperationError", {
     description: "Sanitized operation-level error exposed by the file-processing capability boundary.",
   })
 ) {

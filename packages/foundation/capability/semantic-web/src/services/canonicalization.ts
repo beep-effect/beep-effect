@@ -144,7 +144,7 @@ export class CanonicalizationError extends S.TaggedError<CanonicalizationError>(
     reason: CanonicalizationErrorReason,
     message: S.String,
   },
-  $I.annote("CanonicalizationError", {
+  $I.annoteError<CanonicalizationError>("CanonicalizationError", {
     description: "Typed canonicalization error.",
     semanticSchemaMetadata: serviceContractMetadata("CanonicalizationError", "Typed canonicalization error."),
   })

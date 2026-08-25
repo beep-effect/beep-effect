@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Random, Schedule } from "effect";
@@ -22,7 +22,6 @@ import {
 import type { PlatformError } from "effect";
 
 const $I = $RepoAiMetricsId.create("identity-registry");
-
 const identityRegistryVersion = "ai-metrics-identity-registry/v1";
 const hashSaltNamespaceMarker = "ai-metrics-hash-salt-namespace/v1";
 const identityDirName = "identity";
@@ -309,10 +308,10 @@ export class AiMetricsIdentityRegistryError extends S.TaggedError<AiMetricsIdent
 )(
   "AiMetricsIdentityRegistryError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsIdentityRegistryError", {
+  $I.annoteError<AiMetricsIdentityRegistryError>("AiMetricsIdentityRegistryError", {
     description: "Typed failure raised while deriving or persisting AI metrics root identity.",
   })
 ) {}

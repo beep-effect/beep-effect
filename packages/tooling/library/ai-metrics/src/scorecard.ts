@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -28,7 +28,6 @@ import {
 import { hashPublicTextSha256, redactAiMetricsSensitiveText } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("scorecard");
-
 // Canonical coverage-gap code domain — one source of truth for the conditional detector
 // (coverageGapsFor) and the empty-scorecards fallback list.
 const AiMetricsCoverageGap = LiteralKit([
@@ -66,10 +65,10 @@ const AiMetricsCoverageGap = LiteralKit([
 export class AiMetricsScorecardError extends S.TaggedError<AiMetricsScorecardError>($I`AiMetricsScorecardError`)(
   "AiMetricsScorecardError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsScorecardError", {
+  $I.annoteError<AiMetricsScorecardError>("AiMetricsScorecardError", {
     description: "Typed failure raised by AI metrics label, benchmark, and scorecard workflows.",
   })
 ) {}

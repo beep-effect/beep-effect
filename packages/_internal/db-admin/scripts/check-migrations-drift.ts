@@ -5,22 +5,43 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Console, Effect, FileSystem, HashSet, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import type { Equivalence } from "effect/Equivalence";
 
-class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()("MigrationsDriftError", {
-  message: S.String,
-  newFolders: S.Array(S.String),
-}) {}
+// Effect calls the hook with the declared struct equivalence; narrowing it from `never` to `Self`
+// is the contravariant direction (`Self` extends the struct type), so the assertion is sound.
+const declaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>
+  typeParameters[0] as Equivalence<Self>;
 
-class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>()("MigrationGenerationError", {
-  exitCode: S.Int,
-  message: S.String,
-}) {}
+class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>("@beep/db-admin/MigrationsDriftError")(
+  "MigrationsDriftError",
+  {
+    message: S.String,
+    newFolders: S.Array(S.String),
+  },
+  {
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<MigrationsDriftError>(typeParameters),
+  }
+) {}
+
+class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>(
+  "@beep/db-admin/MigrationGenerationError"
+)(
+  "MigrationGenerationError",
+  {
+    exitCode: S.Int,
+    message: S.String,
+  },
+  {
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<MigrationGenerationError>(typeParameters),
+  }
+) {}
 
 const program = Effect.scoped(
   Effect.gen(function* () {

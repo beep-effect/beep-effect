@@ -104,7 +104,7 @@ export class IrToLawExtractionError extends S.TaggedError<IrToLawExtractionError
       description: "Machine-readable reason for rejecting the extraction output.",
     }),
   },
-  $I.annote("IrToLawExtractionError", {
+  $I.annoteError<IrToLawExtractionError>("IrToLawExtractionError", {
     description: "Sanitized failure emitted when office-action extraction output cannot be grounded.",
   })
 ) {

@@ -19,7 +19,7 @@
  */
 
 import { $EditorId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
 import { dual, P } from "@beep/utils";
 import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
@@ -179,7 +179,7 @@ export class AttachmentTooLarge extends S.TaggedError<AttachmentTooLarge>($I`Att
     size: AttachmentByteCount.annotateKey({ description: "Rejected file size in bytes." }),
     maxBytes: AttachmentByteCount.annotateKey({ description: "Effective byte limit used during capture." }),
   },
-  $I.annote("AttachmentTooLarge", {
+  $I.annoteError<AttachmentTooLarge>("AttachmentTooLarge", {
     description: "A captured file rejected because it exceeds the (clamped) byte budget.",
   })
 ) {}
@@ -210,7 +210,7 @@ export class AttachmentInvalidMimeType extends S.TaggedError<AttachmentInvalidMi
     filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
     mimeType: S.String.annotateKey({ description: "Raw browser File.type string that failed MIME decoding." }),
   },
-  $I.annote("AttachmentInvalidMimeType", {
+  $I.annoteError<AttachmentInvalidMimeType>("AttachmentInvalidMimeType", {
     description: "A captured file rejected because its `file.type` is empty or not a recognized MIME type.",
   })
 ) {}
@@ -238,11 +238,11 @@ export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I
   "AttachmentPortFailed",
   {
     message: S.String.annotateKey({ description: "User-safe upload-port failure message." }),
-    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
       description: "Optional underlying defect retained for structured logs, never rendered directly.",
     }),
   },
-  $I.annote("AttachmentPortFailed", {
+  $I.annoteError<AttachmentPortFailed>("AttachmentPortFailed", {
     description: "The consumer's `onAttach` upload port rejected the current attachment batch.",
   })
 ) {}

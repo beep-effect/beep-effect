@@ -7,7 +7,7 @@
 
 import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { Defect, NonNegativeInt } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Effect, Inspectable, Layer } from "effect";
 import { dual } from "effect/Function";
@@ -141,20 +141,6 @@ const sanitizeNGramResult = (
   };
 };
 
-const WinkUtilsErrorFields = {
-  cause: S.Defect({ includeStack: true }),
-  message: S.String,
-  operation: S.String,
-} satisfies S.Struct.Fields;
-const WinkUtilsErrorEquivalenceFields = {
-  message: WinkUtilsErrorFields.message,
-  operation: WinkUtilsErrorFields.operation,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameWinkUtilsErrorFields = S.toEquivalence(S.TaggedStruct("WinkUtilsError", WinkUtilsErrorEquivalenceFields));
-const sameWinkUtilsError = (self: WinkUtilsError, that: WinkUtilsError): boolean =>
-  sameWinkUtilsErrorFields(self, that);
-
 /**
  * Typed failure for `wink-nlp-utils` string, token, and n-gram helpers.
  *
@@ -172,14 +158,14 @@ const sameWinkUtilsError = (self: WinkUtilsError, that: WinkUtilsError): boolean
  */
 export class WinkUtilsError extends S.TaggedError<WinkUtilsError>($I`WinkUtilsError`)(
   "WinkUtilsError",
-  WinkUtilsErrorFields,
-  $I.annoteClass<S.declare<WinkUtilsError>, readonly [S.TaggedStruct<"WinkUtilsError", typeof WinkUtilsErrorFields>]>(
-    "WinkUtilsError",
-    {
-      description: "Failure raised while calling wink-nlp-utils helpers.",
-      toEquivalence: () => sameWinkUtilsError,
-    }
-  )
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.String,
+    operation: S.String,
+  },
+  $I.annoteError<WinkUtilsError>("WinkUtilsError", {
+    description: "Failure raised while calling wink-nlp-utils helpers.",
+  })
 ) {
   /**
    * Convert an unknown cause into a typed wink-utils error.

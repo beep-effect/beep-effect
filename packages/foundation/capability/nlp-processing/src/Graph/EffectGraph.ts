@@ -122,7 +122,7 @@ export class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>($I`NodeN
   {
     nodeId: NodeId,
   },
-  $I.annote("NodeNotFoundError", {
+  $I.annoteError<NodeNotFoundError>("NodeNotFoundError", {
     description: "Raised when a graph node id cannot be resolved during traversal.",
   })
 ) {}

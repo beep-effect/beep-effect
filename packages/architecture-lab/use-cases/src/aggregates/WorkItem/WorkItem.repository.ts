@@ -42,7 +42,7 @@ export class WorkItemRepositoryNotFound extends S.TaggedError<WorkItemRepository
   {
     workItemId: DomainWorkItem.WorkItemId,
   },
-  $I.annote("WorkItemRepositoryNotFound", {
+  $I.annoteError<WorkItemRepositoryNotFound>("WorkItemRepositoryNotFound", {
     title: "WorkItem repository not found",
     description: "The WorkItem repository could not find the requested aggregate.",
   })
@@ -81,7 +81,7 @@ export class WorkItemRepositoryConflict extends S.TaggedError<WorkItemRepository
       description: "Non-empty repository conflict diagnostic.",
     }),
   },
-  $I.annote("WorkItemRepositoryConflict", {
+  $I.annoteError<WorkItemRepositoryConflict>("WorkItemRepositoryConflict", {
     title: "WorkItem repository conflict",
     description: "The WorkItem repository rejected a conflicting write.",
   })
@@ -114,7 +114,7 @@ export class WorkItemRepositoryUnavailable extends S.TaggedError<WorkItemReposit
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("WorkItemRepositoryUnavailable", {
+  $I.annoteError<WorkItemRepositoryUnavailable>("WorkItemRepositoryUnavailable", {
     title: "WorkItem repository unavailable",
     description: "The WorkItem repository could not serve the request.",
   })

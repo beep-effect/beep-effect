@@ -128,7 +128,7 @@ export class SyncItemRepositoryConflict extends S.TaggedError<SyncItemRepository
       description: "Non-empty repository conflict diagnostic.",
     }),
   },
-  $I.annote("SyncItemRepositoryConflict", {
+  $I.annoteError<SyncItemRepositoryConflict>("SyncItemRepositoryConflict", {
     title: "SyncItem repository conflict",
     description: "The SyncItem repository rejected a conflicting write.",
   })
@@ -164,7 +164,7 @@ export class SyncItemRepositoryNotFound extends S.TaggedError<SyncItemRepository
       description: "SyncItem identity that could not be found.",
     }),
   },
-  $I.annote("SyncItemRepositoryNotFound", {
+  $I.annoteError<SyncItemRepositoryNotFound>("SyncItemRepositoryNotFound", {
     title: "SyncItem repository not found",
     description: "The SyncItem repository could not find the requested entity.",
   })
@@ -196,7 +196,7 @@ export class SyncItemRepositoryUnavailable extends S.TaggedError<SyncItemReposit
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("SyncItemRepositoryUnavailable", {
+  $I.annoteError<SyncItemRepositoryUnavailable>("SyncItemRepositoryUnavailable", {
     title: "SyncItem repository unavailable",
     description: "The SyncItem repository could not serve the request.",
   })

@@ -237,6 +237,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     path: "packages/architecture-lab/domain/test/WorkPriority.test.ts",
     writer: "template",
   }),
+  AcceptedProofFile.make({
+    role: "domain",
+    stage: "core",
+    path: "packages/architecture-lab/domain/test/TaggedError.equivalence.test.ts",
+    writer: "template",
+  }),
 
   ...rolePackageFiles("use-cases", "core"),
   AcceptedProofFile.make({
@@ -363,6 +369,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "use-cases",
     stage: "core",
     path: "packages/architecture-lab/use-cases/test/Worker.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "use-cases",
+    stage: "core",
+    path: "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
     writer: "template",
   }),
 

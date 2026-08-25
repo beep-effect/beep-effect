@@ -43,9 +43,9 @@ Use this command for execution-capable sessions:
    [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) (Current
    law table + M1-M6),
    [`research/shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
-   v1.3, and
+   v1.4, and
    [`research/workload-contract.md`](../../explorations/semantica-lab/research/workload-contract.md)
-   v1.3.
+   v1.4.
 7. [`history/`](./history/) - stage evidence and the closeout reflection.
 
 ## Current phase

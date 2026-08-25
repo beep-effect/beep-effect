@@ -17,7 +17,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Inspectable, pipe, Struct } from "effect";
 import { dual } from "effect/Function";
@@ -68,7 +68,7 @@ export class BackendNotSupported extends S.TaggedError<BackendNotSupported>($I`B
     message: S.String,
     operation: S.String,
   },
-  $I.annote("BackendNotSupported", {
+  $I.annoteError<BackendNotSupported>("BackendNotSupported", {
     description: "Failure raised when an NLP backend does not support a requested operation.",
   })
 ) {
@@ -109,10 +109,10 @@ export class BackendInitError extends S.TaggedError<BackendInitError>($I`Backend
   "BackendInitError",
   {
     backend: S.String,
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("BackendInitError", {
+  $I.annoteError<BackendInitError>("BackendInitError", {
     description: "Failure raised when an NLP backend fails to initialize.",
   })
 ) {
@@ -154,11 +154,11 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
   "BackendOperationError",
   {
     backend: S.String,
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
     operation: S.String,
   },
-  $I.annote("BackendOperationError", {
+  $I.annoteError<BackendOperationError>("BackendOperationError", {
     description: "Failure raised when an NLP backend operation fails at runtime.",
   })
 ) {

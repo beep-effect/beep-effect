@@ -293,20 +293,6 @@ class FirecrawlErrorOptionsInput extends S.Class<FirecrawlErrorOptionsInput>($I`
   })
 ) {}
 
-const FirecrawlErrorFields = {
-  cause: optionalString,
-  failure: S.OptionFromOptionalKey(FirecrawlApiFailure).pipe(SchemaUtils.withNoneDefault),
-  method: S.OptionFromOptionalKey(FirecrawlMethodName).pipe(SchemaUtils.withNoneDefault),
-  reason: FirecrawlErrorReason,
-  retryAfterSeconds: optionalNonNegativeInt,
-  retryable: optionalBoolean,
-  sdkVersion: optionalString,
-  status: optionalNonNegativeInt,
-} satisfies S.Struct.Fields;
-const sameFirecrawlErrorFields = S.toEquivalence(S.TaggedStruct("FirecrawlError", FirecrawlErrorFields));
-const sameFirecrawlError = (self: FirecrawlError, that: FirecrawlError): boolean =>
-  sameFirecrawlErrorFields(self, that);
-
 /**
  * Technical failure raised by the Firecrawl driver boundary.
  *
@@ -324,14 +310,19 @@ const sameFirecrawlError = (self: FirecrawlError, that: FirecrawlError): boolean
  */
 export class FirecrawlError extends S.TaggedError<FirecrawlError>($I`FirecrawlError`)(
   "FirecrawlError",
-  FirecrawlErrorFields,
-  $I.annoteClass<S.declare<FirecrawlError>, readonly [S.TaggedStruct<"FirecrawlError", typeof FirecrawlErrorFields>]>(
-    "FirecrawlError",
-    {
-      description: "Sanitized technical failure raised by the Firecrawl driver boundary.",
-      toEquivalence: () => sameFirecrawlError,
-    }
-  )
+  {
+    cause: optionalString,
+    failure: S.OptionFromOptionalKey(FirecrawlApiFailure).pipe(SchemaUtils.withNoneDefault),
+    method: S.OptionFromOptionalKey(FirecrawlMethodName).pipe(SchemaUtils.withNoneDefault),
+    reason: FirecrawlErrorReason,
+    retryAfterSeconds: optionalNonNegativeInt,
+    retryable: optionalBoolean,
+    sdkVersion: optionalString,
+    status: optionalNonNegativeInt,
+  },
+  $I.annoteError<FirecrawlError>("FirecrawlError", {
+    description: "Sanitized technical failure raised by the Firecrawl driver boundary.",
+  })
 ) {
   /**
    * Create a Firecrawl driver error.

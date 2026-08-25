@@ -85,7 +85,7 @@ export class DockCommandRejected extends S.TaggedError<DockCommandRejected>($I`D
     reason: DockRejectionReason,
     message: S.String,
   },
-  $I.annote("DockCommandRejected", {
+  $I.annoteError<DockCommandRejected>("DockCommandRejected", {
     description: "An expected command rejection that leaves state untouched.",
   })
 ) {}
@@ -155,7 +155,7 @@ export class DockInvariantViolation extends S.TaggedError<DockInvariantViolation
     reason: DockInvariantReason,
     message: S.String,
   },
-  $I.annote("DockInvariantViolation", {
+  $I.annoteError<DockInvariantViolation>("DockInvariantViolation", {
     description: "A workspace invariant failed before state publication.",
   })
 ) {}
@@ -218,7 +218,7 @@ export class DockInputError extends S.TaggedError<DockInputError>($I`DockInputEr
     boundary: DockInputBoundary,
     message: S.String,
   },
-  $I.annote("DockInputError", {
+  $I.annoteError<DockInputError>("DockInputError", {
     description: "Schema decoding failure mapped at a public POC boundary.",
   })
 ) {}
@@ -281,7 +281,7 @@ export class DockPersistenceError extends S.TaggedError<DockPersistenceError>($I
     operation: DockPersistenceOperation,
     message: S.String,
   },
-  $I.annote("DockPersistenceError", {
+  $I.annoteError<DockPersistenceError>("DockPersistenceError", {
     description: "Failure while loading or saving a dock snapshot.",
   })
 ) {}
@@ -306,7 +306,7 @@ export class DockSnapshotMissing extends S.TaggedError<DockSnapshotMissing>($I`D
   {
     message: S.String,
   },
-  $I.annote("DockSnapshotMissing", {
+  $I.annoteError<DockSnapshotMissing>("DockSnapshotMissing", {
     description: "No persisted snapshot exists for a restore action.",
   })
 ) {}

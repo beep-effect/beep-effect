@@ -13,4 +13,18 @@ describe("Sanity declared-field equivalence", () => {
     expect(sameSanityError(a, b)).toBe(true);
     expect(sameSanityError(a, c)).toBe(false);
   });
+
+  it("treats defect-only differences as equivalent", () => {
+    const a = SanityError.fromReason("transport", {
+      cause: new Error("first failure"),
+      url: "https://api.sanity.io/query",
+    });
+    const b = SanityError.fromReason("transport", {
+      cause: new Error("second failure"),
+      url: "https://api.sanity.io/query",
+    });
+
+    // the defect cause is payload, never identity
+    expect(sameSanityError(a, b)).toBe(true);
+  });
 });

@@ -17,6 +17,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runEntrypoint } from "./entrypoint.ts";
+import { SmokeFailure } from "./PracticeKgMcp.errors.ts";
 import { makePracticeKgBuildLayer } from "./runtime/Layer.ts";
 
 const $I = $PracticeKgMcpId.create("smoke");
@@ -94,15 +95,6 @@ class SmokeCallResult extends S.Class<SmokeCallResult>($I`SmokeCallResult`)(
 class SmokeCallResponse extends S.Class<SmokeCallResponse>($I`SmokeCallResponse`)(
   { result: SmokeCallResult },
   $I.annote("SmokeCallResponse", { description: "Tool-call JSON-RPC response from the compiled MCP host." })
-) {}
-
-class SmokeFailure extends S.TaggedError<SmokeFailure>($I`SmokeFailure`)(
-  "SmokeFailure",
-  {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    message: S.NonEmptyString,
-  },
-  $I.annote("SmokeFailure", { description: "Sanitized compiled-host smoke failure." })
 ) {}
 
 const decodeInitialize = S.decodeUnknownEffect(S.fromJsonString(SmokeInitializeResponse));

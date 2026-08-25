@@ -6,7 +6,7 @@
  */
 
 import { $GovinfoId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -114,7 +114,7 @@ export type GovinfoHttpStatus = typeof GovinfoHttpStatus.Type;
  */
 export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`GovinfoErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
@@ -131,24 +131,6 @@ export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`Govinfo
     description: "Options for configuring GovinfoError instances.",
   })
 ) {}
-
-const GovinfoErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Original native or third-party defect when one was available.",
-    })
-  ),
-  reason: GovinfoErrorReason,
-  status: S.OptionFromOptionalKey(GovinfoHttpStatus).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "HTTP response status associated with the GovInfo failure when one was available.",
-    })
-  ),
-} satisfies S.Struct.Fields;
-const sameGovinfoErrorFields = S.toEquivalence(S.TaggedStruct("GovinfoError", GovinfoErrorFields));
-const sameGovinfoError = (self: GovinfoError, that: GovinfoError): boolean => sameGovinfoErrorFields(self, that);
 
 /**
  * Technical failure raised by the GovInfo REST API driver boundary.
@@ -167,14 +149,24 @@ const sameGovinfoError = (self: GovinfoError, that: GovinfoError): boolean => sa
  */
 export class GovinfoError extends S.TaggedError<GovinfoError>($I`GovinfoError`)(
   "GovinfoError",
-  GovinfoErrorFields,
-  $I.annoteClass<S.declare<GovinfoError>, readonly [S.TaggedStruct<"GovinfoError", typeof GovinfoErrorFields>]>(
-    "GovinfoError",
-    {
-      description: "Redacted technical failure raised by the GovInfo REST API driver boundary.",
-      toEquivalence: () => sameGovinfoError,
-    }
-  )
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Original native or third-party defect when one was available.",
+      })
+    ),
+    reason: GovinfoErrorReason,
+    status: S.OptionFromOptionalKey(GovinfoHttpStatus).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "HTTP response status associated with the GovInfo failure when one was available.",
+      })
+    ),
+  },
+  $I.annoteError<GovinfoError>("GovinfoError", {
+    description: "Redacted technical failure raised by the GovInfo REST API driver boundary.",
+  })
 ) {
   /**
    * Create a GovInfo driver error for a reason, optionally carrying a cause and status.

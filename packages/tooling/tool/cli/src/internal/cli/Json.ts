@@ -5,6 +5,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { P } from "@beep/utils";
 import { Context, Effect, Result } from "effect";
@@ -118,9 +119,9 @@ export class CliJsonError extends S.TaggedError<CliJsonError>($I`CliJsonError`)(
   "CliJsonError",
   {
     message: S.String,
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
-  $I.annote("CliJsonError", {
+  $I.annoteError<CliJsonError>("CliJsonError", {
     description: "Failure raised when a repo-cli command cannot encode a JSON payload.",
   })
 ) {}

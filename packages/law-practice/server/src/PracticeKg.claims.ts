@@ -21,7 +21,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
-import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
+import { Defect, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Unknown } from "@beep/schema/Unknown";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
@@ -173,10 +173,10 @@ export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I
 export class PracticeKgClaimsError extends S.TaggedError<PracticeKgClaimsError>($I`PracticeKgClaimsError`)(
   "PracticeKgClaimsError",
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
     message: S.NonEmptyString,
   },
-  $I.annote("PracticeKgClaimsError", {
+  $I.annoteError<PracticeKgClaimsError>("PracticeKgClaimsError", {
     description: "Failure while extracting or persisting the practice KG claims batch.",
   })
 ) {}

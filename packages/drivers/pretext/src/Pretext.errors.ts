@@ -56,18 +56,6 @@ export const PretextMeasurementUnavailableReason = LiteralKit(["missingCanvas2d"
  */
 export type PretextMeasurementUnavailableReason = typeof PretextMeasurementUnavailableReason.Type;
 
-const PretextMeasurementUnavailableErrorFields = {
-  reason: PretextMeasurementUnavailableReason,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const samePretextMeasurementUnavailableErrorFields = S.toEquivalence(
-  S.TaggedStruct("PretextMeasurementUnavailableError", PretextMeasurementUnavailableErrorFields)
-);
-const samePretextMeasurementUnavailableError = (
-  self: PretextMeasurementUnavailableError,
-  that: PretextMeasurementUnavailableError
-): boolean => samePretextMeasurementUnavailableErrorFields(self, that);
-
 /**
  * The runtime lacks a capability the capture surface requires. Capture needs
  * `Intl.Segmenter` and a Canvas 2D context (`OffscreenCanvas` or a DOM
@@ -93,27 +81,14 @@ export class PretextMeasurementUnavailableError extends S.TaggedError<PretextMea
   $I`PretextMeasurementUnavailableError`
 )(
   "PretextMeasurementUnavailableError",
-  PretextMeasurementUnavailableErrorFields,
-  $I.annoteClass<
-    S.declare<PretextMeasurementUnavailableError>,
-    readonly [S.TaggedStruct<"PretextMeasurementUnavailableError", typeof PretextMeasurementUnavailableErrorFields>]
-  >("PretextMeasurementUnavailableError", {
+  {
+    reason: PretextMeasurementUnavailableReason,
+    message: S.String,
+  },
+  $I.annoteError<PretextMeasurementUnavailableError>("PretextMeasurementUnavailableError", {
     description: "The runtime lacks a capability the pretext capture surface requires.",
-    toEquivalence: () => samePretextMeasurementUnavailableError,
   })
 ) {}
-
-const PretextUnsupportedFontErrorFields = {
-  font: S.String,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const samePretextUnsupportedFontErrorFields = S.toEquivalence(
-  S.TaggedStruct("PretextUnsupportedFontError", PretextUnsupportedFontErrorFields)
-);
-const samePretextUnsupportedFontError = (
-  self: PretextUnsupportedFontError,
-  that: PretextUnsupportedFontError
-): boolean => samePretextUnsupportedFontErrorFields(self, that);
 
 /**
  * The requested font is rejected for measurement accuracy. `system-ui` is the
@@ -140,13 +115,12 @@ export class PretextUnsupportedFontError extends S.TaggedError<PretextUnsupporte
   $I`PretextUnsupportedFontError`
 )(
   "PretextUnsupportedFontError",
-  PretextUnsupportedFontErrorFields,
-  $I.annoteClass<
-    S.declare<PretextUnsupportedFontError>,
-    readonly [S.TaggedStruct<"PretextUnsupportedFontError", typeof PretextUnsupportedFontErrorFields>]
-  >("PretextUnsupportedFontError", {
+  {
+    font: S.String,
+    message: S.String,
+  },
+  $I.annoteError<PretextUnsupportedFontError>("PretextUnsupportedFontError", {
     description: "The requested font is rejected for measurement accuracy.",
-    toEquivalence: () => samePretextUnsupportedFontError,
   })
 ) {}
 
@@ -191,16 +165,6 @@ export const PretextSnapshotCodecOperation = LiteralKit(["decode", "encode"]).pi
  */
 export type PretextSnapshotCodecOperation = typeof PretextSnapshotCodecOperation.Type;
 
-const PretextSnapshotCodecErrorFields = {
-  operation: PretextSnapshotCodecOperation,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const samePretextSnapshotCodecErrorFields = S.toEquivalence(
-  S.TaggedStruct("PretextSnapshotCodecError", PretextSnapshotCodecErrorFields)
-);
-const samePretextSnapshotCodecError = (self: PretextSnapshotCodecError, that: PretextSnapshotCodecError): boolean =>
-  samePretextSnapshotCodecErrorFields(self, that);
-
 /**
  * A font-metrics snapshot failed to decode or encode against the versioned
  * contract.
@@ -223,13 +187,12 @@ const samePretextSnapshotCodecError = (self: PretextSnapshotCodecError, that: Pr
  */
 export class PretextSnapshotCodecError extends S.TaggedError<PretextSnapshotCodecError>($I`PretextSnapshotCodecError`)(
   "PretextSnapshotCodecError",
-  PretextSnapshotCodecErrorFields,
-  $I.annoteClass<
-    S.declare<PretextSnapshotCodecError>,
-    readonly [S.TaggedStruct<"PretextSnapshotCodecError", typeof PretextSnapshotCodecErrorFields>]
-  >("PretextSnapshotCodecError", {
+  {
+    operation: PretextSnapshotCodecOperation,
+    message: S.String,
+  },
+  $I.annoteError<PretextSnapshotCodecError>("PretextSnapshotCodecError", {
     description: "A font-metrics snapshot failed to decode or encode against the versioned contract.",
-    toEquivalence: () => samePretextSnapshotCodecError,
   })
 ) {}
 
@@ -274,16 +237,6 @@ export const PretextMeasurementOperation = LiteralKit(["measureText", "fixtureCa
  */
 export type PretextMeasurementOperation = typeof PretextMeasurementOperation.Type;
 
-const PretextMeasurementErrorFields = {
-  operation: PretextMeasurementOperation,
-  message: S.String,
-} satisfies S.Struct.Fields;
-const samePretextMeasurementErrorFields = S.toEquivalence(
-  S.TaggedStruct("PretextMeasurementError", PretextMeasurementErrorFields)
-);
-const samePretextMeasurementError = (self: PretextMeasurementError, that: PretextMeasurementError): boolean =>
-  samePretextMeasurementErrorFields(self, that);
-
 /**
  * A measurement operation failed: an unmeasured word was requested from a
  * fixture, or the underlying pretext engine rejected an input.
@@ -306,12 +259,11 @@ const samePretextMeasurementError = (self: PretextMeasurementError, that: Pretex
  */
 export class PretextMeasurementError extends S.TaggedError<PretextMeasurementError>($I`PretextMeasurementError`)(
   "PretextMeasurementError",
-  PretextMeasurementErrorFields,
-  $I.annoteClass<
-    S.declare<PretextMeasurementError>,
-    readonly [S.TaggedStruct<"PretextMeasurementError", typeof PretextMeasurementErrorFields>]
-  >("PretextMeasurementError", {
+  {
+    operation: PretextMeasurementOperation,
+    message: S.String,
+  },
+  $I.annoteError<PretextMeasurementError>("PretextMeasurementError", {
     description: "A pretext measurement operation failed.",
-    toEquivalence: () => samePretextMeasurementError,
   })
 ) {}
