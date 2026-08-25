@@ -164,13 +164,20 @@ changes. P3 is in progress.
       organization registration deployed at `05:11:47Z`, failed on a missing
       installation permission, and rolled back at `05:36:51Z`. See
       [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md).
-- [ ] Accept the organization self-hosted-runners permission on the
+- [x] Accept the organization self-hosted-runners permission on the
       fleet-controller installation, redeploy the committed controller source,
-      and drain pre-deploy runners.
-- [ ] Prove a PR heavy job runs from the protected reusable workflow and a
-      non-allowlisted workflow remains queued without runner assignment.
-- [ ] Prove a missing or rejecting named group fails registration without
-      `Default` or repository fallback.
+      and drain pre-deploy runners; accepted before `17:36:57Z`, redeployed
+      `17:37:02Z` to `17:38:58Z`, drained by `17:48:09Z` on 2026-08-25.
+- [x] Prove a PR heavy job runs from the protected reusable workflow and a
+      non-allowlisted workflow remains queued without runner assignment; #810
+      run `32880339636` (all five `Heavy / ...` jobs on group-4 runners through
+      `heavy.yml@refs/heads/main`) and probe run `32880025557` (queued five
+      minutes with no runner beside an idle group runner). See
+      [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md).
+- [x] Prove a missing or rejecting named group fails registration without
+      `Default` or repository fallback; the `05:19Z` to `05:36Z` registration
+      incident left every candidate offline with no fallback registration,
+      and the redeployed fleet registers only in group 4.
 
 ## Rollback posture
 

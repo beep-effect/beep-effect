@@ -1,6 +1,7 @@
 # Runner trust-boundary friction receipts
 
-These receipts were captured during P1 and P2 on 2026-08-24. They record
+These receipts were captured during P1 and P2 on 2026-08-24 and P3 on
+2026-08-25. They record
 operational friction without expanding this packet's ownership.
 
 ## Bake identity was not discoverable
@@ -176,3 +177,41 @@ instance-initiated shutdown behavior set to `terminate`.
 Access Analyzer and add a live dry-run for intended self-scoped actions. The
 module should replace the unsupported key or remove the dead statement if
 external teardown remains authoritative.
+
+## Installation permission acceptance was invisible until deploy
+
+**What.** Adding `organization_self_hosted_runners` to the fleet-controller
+GitHub App did not grant it to the organization installation; an
+administrator must accept the pending permission request in the organization
+UI. The first organization-registration deploy therefore failed on every
+scale-up and rolled back.
+
+**Evidence.** `GET /orgs/beep-effect/actions/runner-groups` returned
+`403 Resource not accessible by integration` with
+`x-accepted-github-permissions: organization_self_hosted_runners=read`, while
+`gh api /orgs/beep-effect/installations` showed the permission absent on the
+installation. The redeploy after acceptance changed nothing but the same
+three resources and passed the probes.
+
+**What would have prevented it.** A pre-deploy guard that reads the
+installation's permissions through `/orgs/{org}/installations` and refuses
+to enable organization registration until the required permission is present
+on the installation, not only on the App. The redeploy script for this step
+now carries that guard; it belongs in the fleet deploy command.
+
+## Non-allowlisted dispatches still cost a candidate launch
+
+**What.** The controller launches one candidate per queued `workflow_job`
+event before GitHub applies the group's workflow restriction, so a job the
+group will never admit still produces an instance that idles for
+`minimum_running_time_in_minutes` and then terminates.
+
+**Evidence.** Negative probe run `32880025557` launched
+`i-0068158da32258747` at `17:48:47Z`; the job stayed queued for five minutes
+while that runner sat online and idle, until it took an allowlisted job from
+#810 instead. Admission held; the launch was spent regardless.
+
+**What would have prevented it.** The scale-up lambda could resolve the
+job's workflow reference from the event and skip launches whose reference is
+outside the group's selected workflows. Until then, treat a repeated
+out-of-allowlist dispatch as a cost signal in the fleet dashboard.
