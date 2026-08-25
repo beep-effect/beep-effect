@@ -131,9 +131,12 @@ runs a second `Runner.Listener` from a scratch copy of `bin` and `externals`.
 It captures output in the ephemeral runner temp directory.
 
 The probe classifies replay as rejected only when the listener log reports a
-recognized rejection marker: `already`, `invalid`, `expired`, `Unauthorized`,
-`not found`, or `denied`. It classifies replay as accepted when the listener
-reports `Listening for Jobs` or `Connected to GitHub`, or survives to the
+recognized server-side rejection phrase. Markers are case-sensitive and
+phrase-anchored (`already registered|used|configured|exists`, `invalid
+JIT|runner config|token`, `token|configuration expired`, `Unauthorized`,
+`runner not found`, `access|permission denied`) so a local diagnostic that
+merely contains a keyword cannot pass as a rejection. It classifies replay as
+accepted when the listener reports `Listening for Jobs` or `Connected to GitHub`, or survives to the
 timeout without a rejection. Every other exit is inconclusive and fails the
 gate — including a marker-free non-zero exit, which reports its exit status
 and redacted first log line without passing.
