@@ -81,6 +81,7 @@ import {
   turboStepLocalEnvForTesting,
   validateCoverageTaskArgsForTesting,
   withoutUnusableRemoteCacheForTesting,
+  workspaceCoverageScopeOwners,
   workspaceTaskFiltersForTesting,
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
@@ -2400,6 +2401,61 @@ describe("quality task adapter", () => {
       ).toEqual({ _tag: "selected", packageNames: ["@beep/repo-cli"], dependentPackageNames: [] });
     });
 
+    it("reads workspace edges from the live inventory and never lists the repository root as an owner", () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const writePackage = (dir: string, manifest: Record<string, unknown>) =>
+              fs
+                .makeDirectory(path.join(repoRoot, dir), { recursive: true })
+                .pipe(
+                  Effect.andThen(fs.writeFileString(path.join(repoRoot, dir, "package.json"), encodeJson(manifest)))
+                );
+
+            // The root carries the aggregate `coverage` script and a workspace
+            // dependency, exactly the shape that would otherwise make it a
+            // dependent of nearly every package.
+            yield* fs.writeFileString(
+              path.join(repoRoot, "package.json"),
+              encodeJson({
+                name: "@beep/root",
+                private: true,
+                workspaces: ["packages/*"],
+                scripts: { coverage: "beep-cli coverage" },
+                devDependencies: { "@beep/a": "workspace:*" },
+              })
+            );
+            yield* writePackage("packages/a", {
+              name: "@beep/a",
+              scripts: { coverage: "vitest" },
+              dependencies: { "@beep/b": "workspace:*", effect: "*" },
+              devDependencies: { "@beep/c": "workspace:*" },
+              peerDependencies: { "@beep/a": "workspace:*" },
+            });
+            yield* writePackage("packages/b", { name: "@beep/b", scripts: { coverage: "vitest" } });
+            yield* writePackage("packages/c", { name: "@beep/c", scripts: { test: "vitest" } });
+
+            const owners = yield* workspaceCoverageScopeOwners(repoRoot);
+            expect(A.map(owners, (owner) => owner.packageName)).toEqual(["@beep/a", "@beep/b", "@beep/c"]);
+            expect(A.map(owners, (owner) => owner.workspaceDependencies)).toEqual([["@beep/b", "@beep/c"], [], []]);
+
+            expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["packages/b/src/B.ts"])).toEqual({
+              _tag: "selected",
+              packageNames: ["@beep/a", "@beep/b"],
+              dependentPackageNames: ["@beep/a"],
+            });
+            expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["packages/c/src/C.ts"])).toEqual({
+              _tag: "selected",
+              packageNames: ["@beep/a"],
+              dependentPackageNames: ["@beep/a"],
+            });
+          })
+        )
+      ));
+
     it("terminates on dependency cycles and excludes the seeds themselves", () => {
       const owners = [
         owner("x", { dependsOn: ["y"] }),
@@ -2416,22 +2472,27 @@ describe("quality task adapter", () => {
       expect(coverageScopeWeightSeconds(["@beep/unknown-a", "@beep/unknown-b"])).toBe(30);
     });
 
-    it("runs a narrow selection as one Turbo invocation on hosted runners", () =>
-      withEnvVar("CI", "true", () => {
-        const steps = coverageSelectedStepsForTesting("/repo", ["@beep/a", "@beep/b"], [], false);
+    it("runs a narrow selection as one Turbo invocation on hosted runners", () => {
+      const steps = coverageSelectedStepsForTesting("/repo", ["@beep/a", "@beep/b"], [], {
+        hosted: true,
+        writeBaseline: false,
+      });
 
-        expect(A.map(steps, (step) => step.label)).toEqual(["coverage:ratchet"]);
-        expect(A.take(steps[0]?.args ?? [], 3)).toEqual(["turbo", "run", "coverage"]);
-        expect(steps[0]?.args).toEqual(
-          expect.arrayContaining(["--concurrency=4", "--filter=@beep/a", "--filter=@beep/b"])
-        );
-        expect(steps[0]?.args).not.toContain("--only");
-      }));
+      expect(A.map(steps, (step) => step.label)).toEqual(["coverage:ratchet"]);
+      expect(A.take(steps[0]?.args ?? [], 3)).toEqual(["turbo", "run", "coverage"]);
+      expect(steps[0]?.args).toEqual(expect.arrayContaining(["--filter=@beep/a", "--filter=@beep/b"]));
+      expect(steps[0]?.args).not.toContain("--only");
+    });
 
+    // CI=true here only fixes the prebuild's Turbo cache posture (turboRunArgs
+    // reads it); the shard decision is the explicit `hosted` option.
     it("shards a wide selection like the full lane, prebuilding only the selected owners", () =>
       withEnvVar("CI", "true", () => {
         const packageNames = ["@beep/repo-cli", "@beep/a", "@beep/b"];
-        const steps = coverageSelectedStepsForTesting("/repo", packageNames, ["--output-logs=errors-only"], false);
+        const steps = coverageSelectedStepsForTesting("/repo", packageNames, ["--output-logs=errors-only"], {
+          hosted: true,
+          writeBaseline: false,
+        });
 
         expect(A.map(steps, (step) => step.label)).toEqual([
           "coverage:prebuild",
@@ -2461,21 +2522,24 @@ describe("quality task adapter", () => {
         expect(A.every(A.drop(steps, 1), (step) => step.env?.VITEST_COVERAGE_REPORT_ONLY === undefined)).toBe(true);
       }));
 
-    it("keeps a wide local ratchet on Turbo's own scheduling but shards a wide baseline write", () =>
-      withEnvVar("CI", undefined, () => {
-        const packageNames = ["@beep/repo-cli", "@beep/a"];
+    it("keeps a wide local ratchet on Turbo's own scheduling but shards a wide baseline write", () => {
+      const packageNames = ["@beep/repo-cli", "@beep/a"];
+      const localOptions = { hosted: false, writeBaseline: false };
 
-        expect(A.map(coverageSelectedStepsForTesting("/repo", packageNames, [], false), (step) => step.label)).toEqual([
-          "coverage:ratchet",
-        ]);
-        const writeSteps = coverageSelectedStepsForTesting("/repo", packageNames, [], true);
-        expect(A.map(writeSteps, (step) => step.label)).toEqual([
-          "coverage:prebuild",
-          "coverage:shard-1",
-          "coverage:shard-2",
-        ]);
-        expect(A.every(A.drop(writeSteps, 1), (step) => step.env?.VITEST_COVERAGE_REPORT_ONLY === "1")).toBe(true);
-      }));
+      expect(
+        A.map(coverageSelectedStepsForTesting("/repo", packageNames, [], localOptions), (step) => step.label)
+      ).toEqual(["coverage:ratchet"]);
+      const writeSteps = coverageSelectedStepsForTesting("/repo", packageNames, [], {
+        hosted: false,
+        writeBaseline: true,
+      });
+      expect(A.map(writeSteps, (step) => step.label)).toEqual([
+        "coverage:prebuild",
+        "coverage:shard-1",
+        "coverage:shard-2",
+      ]);
+      expect(A.every(A.drop(writeSteps, 1), (step) => step.env?.VITEST_COVERAGE_REPORT_ONLY === "1")).toBe(true);
+    });
   });
 
   it("selects repo-cli for tracked goal artifacts consumed by its tests", () => {

@@ -2292,8 +2292,9 @@ const coverageSelectedShardedSteps = (
   );
 
 // Mirrors the full-run rule: hosted runs and baseline writes take the weighted
-// shard executor; a local ratchet keeps turbo's own scheduling.
-const usesShardedCoverageExecutor = (writeBaseline: boolean): boolean => isCi() || writeBaseline;
+// shard executor; a local ratchet keeps turbo's own scheduling. `hosted` is
+// passed in (production reads `isCi()`) so the decision is a pure function.
+const usesShardedCoverageExecutor = (hosted: boolean, writeBaseline: boolean): boolean => hosted || writeBaseline;
 
 const isWideSelectedCoverage = (options: CoverageTaskOptions): boolean =>
   options.scoped &&
@@ -2302,9 +2303,10 @@ const isWideSelectedCoverage = (options: CoverageTaskOptions): boolean =>
 
 const coverageSelectedSteps = (
   repoRoot: string,
-  options: CoverageTaskOptions
+  options: CoverageTaskOptions,
+  shardedExecutor: boolean
 ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] =>
-  usesShardedCoverageExecutor(options.writeBaseline) && isWideSelectedCoverage(options)
+  shardedExecutor && isWideSelectedCoverage(options)
     ? coverageSelectedShardedSteps(repoRoot, options)
     : [coverageStep(repoRoot, options)];
 
@@ -2323,14 +2325,14 @@ const coverageSelectedSteps = (
  * ```ts
  * import { coverageSelectedStepsForTesting } from "@beep/repo-cli/test/Quality"
  *
- * const steps = coverageSelectedStepsForTesting("/repo", ["@beep/types"], [], false)
+ * const steps = coverageSelectedStepsForTesting("/repo", ["@beep/types"], [], { hosted: true, writeBaseline: false })
  * console.log(steps.length) // 1
  * ```
  *
  * @param repoRoot - Repository root directory.
  * @param packageNames - Exact selected coverage owners, dependents included.
  * @param args - Turbo arguments the planner already resolved for the selection.
- * @param writeBaseline - Whether the run regenerates the coverage baseline.
+ * @param options - Whether the run is hosted (`CI=true` in production) and whether it regenerates the baseline.
  * @returns One ratchet step, or a prebuild step followed by the selected shards.
  * @category testing
  * @since 0.0.0
@@ -2339,13 +2341,13 @@ export const coverageSelectedStepsForTesting: {
   (
     packageNames: ReadonlyArray<string>,
     args: ReadonlyArray<string>,
-    writeBaseline: boolean
+    options: { readonly hosted: boolean; readonly writeBaseline: boolean }
   ): (repoRoot: string) => readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>];
   (
     repoRoot: string,
     packageNames: ReadonlyArray<string>,
     args: ReadonlyArray<string>,
-    writeBaseline: boolean
+    options: { readonly hosted: boolean; readonly writeBaseline: boolean }
   ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>];
 } = dual(
   4,
@@ -2353,16 +2355,20 @@ export const coverageSelectedStepsForTesting: {
     repoRoot: string,
     packageNames: ReadonlyArray<string>,
     args: ReadonlyArray<string>,
-    writeBaseline: boolean
+    options: { readonly hosted: boolean; readonly writeBaseline: boolean }
   ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] =>
-    coverageSelectedSteps(repoRoot, {
-      args: coverageTurboArgs([...args, ...packageFilterArgs(packageNames)]),
-      expectedPackageNames: packageNames,
-      replaceAll: false,
-      scoped: true,
-      skip: false,
-      writeBaseline,
-    })
+    coverageSelectedSteps(
+      repoRoot,
+      {
+        args: coverageTurboArgs([...args, ...packageFilterArgs(packageNames)]),
+        expectedPackageNames: packageNames,
+        replaceAll: false,
+        scoped: true,
+        skip: false,
+        writeBaseline: options.writeBaseline,
+      },
+      usesShardedCoverageExecutor(options.hosted, options.writeBaseline)
+    )
 );
 
 /**
@@ -2433,7 +2439,7 @@ const runSelectedCoverage = Effect.fn("QualityTasks.runSelectedCoverage")(functi
   repoRoot: string,
   options: CoverageTaskOptions
 ) {
-  const steps = coverageSelectedSteps(repoRoot, options);
+  const steps = coverageSelectedSteps(repoRoot, options, usesShardedCoverageExecutor(isCi(), options.writeBaseline));
   if (A.isReadonlyArrayNonEmpty(A.tailNonEmpty(steps))) {
     yield* Console.log(
       `[beep-cli] coverage:affected: selection weighs ${Math.round(coverageScopeWeightSeconds(options.expectedPackageNames))}s of planner budget (> ${COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS}s); using the weighted shard executor`
@@ -2460,7 +2466,7 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   }
 
   yield* cleanCoverageRegressionOutputs(repoRoot);
-  if (!options.scoped && usesShardedCoverageExecutor(options.writeBaseline)) {
+  if (!options.scoped && usesShardedCoverageExecutor(isCi(), options.writeBaseline)) {
     yield* runFullShardedCoverage(repoRoot, options.args);
   } else {
     yield* runSelectedCoverage(repoRoot, options);
