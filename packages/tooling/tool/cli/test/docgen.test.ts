@@ -24,6 +24,7 @@ import {
   loadDocgenConfigDocument,
   makeQualityWorkerRunpodEvalPodCreateInput,
   requiredQualityWorkerRunpodEvalModel,
+  runDocgenLocal,
   runDocgenQualityWorkerRunpodEval,
   selectDocgenLocalPackagesForTesting,
   selectQualityWorkerRunpodTemplate,
@@ -35,19 +36,33 @@ import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { Pod, Runpod, Template } from "@beep/runpod";
 import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
-import { A, O } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Cause, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Ref, Runtime } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import {
+  Cause,
+  ConfigProvider,
+  Duration,
+  Effect,
+  Exit,
+  FileSystem,
+  Layer,
+  Path,
+  pipe,
+  Ref,
+  Runtime,
+  Sink,
+  Stream,
+} from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import { ChildProcess } from "effect/unstable/process";
-import { describe, expect, it } from "vitest";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { DocgenQualityWorkerEvalRunner } from "@beep/repo-cli/test/Docgen";
 
 const provideScopedLayer =
@@ -78,6 +93,50 @@ const decodeDocgenConfigDocument = S.decodeUnknownSync(DocgenConfigDocument);
 const decodeWorkerEvalReportJson = S.decodeUnknownSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
 const isString = (value: unknown): value is string => typeof value === "string";
 const DOCGEN_COMMAND_TEST_TIMEOUT = 30_000;
+
+const stubHandle = ChildProcessSpawner.makeHandle({
+  all: Stream.empty,
+  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+  getInputFd: () => Sink.drain,
+  getOutputFd: () => Stream.empty,
+  isRunning: Effect.succeed(false),
+  kill: () => Effect.void,
+  pid: ChildProcessSpawner.ProcessId(1),
+  stderr: Stream.empty,
+  stdin: Sink.drain,
+  stdout: Stream.empty,
+  unref: Effect.succeed(Effect.void),
+});
+
+const recordingSpawnerLayer = (spawned: Array<string>) =>
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) =>
+      Effect.sync(() => {
+        if (ChildProcess.isStandardCommand(command)) {
+          A.appendInPlace(spawned, A.join([command.command, ...command.args], " "));
+        }
+        return stubHandle;
+      })
+    )
+  );
+
+const rangeRejectingSpawnerLayer = (spawned: Array<string>) =>
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) =>
+      Effect.gen(function* () {
+        if (ChildProcess.isStandardCommand(command)) {
+          const commandText = A.join([command.command, ...command.args], " ");
+          A.appendInPlace(spawned, commandText);
+          if (command.command === "git" && Str.includes("origin/main...HEAD")(commandText)) {
+            return yield* Effect.die(new Error("range query rejected by test stub"));
+          }
+        }
+        return stubHandle;
+      })
+    )
+  );
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
   expect(Exit.isFailure(exit)).toBe(true);
@@ -143,6 +202,33 @@ const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
         yield* fs.remove(tmpDir, { recursive: true });
       })
   ).pipe(provideScopedLayer(CommandTestLayer));
+
+const withConfigEnv = <A, E, R>(
+  env: { readonly [key: string]: string },
+  use: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(use);
+
+const seedDocgenPackage = Effect.fn("DocgenTest.seedDocgenPackage")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const tmpDir = process.cwd();
+  yield* fs.writeFileString(
+    path.join(tmpDir, "package.json"),
+    encodeJson({
+      name: "@beep/test-root",
+      private: true,
+      workspaces: ["packages/foundation/*/*"],
+    })
+  );
+
+  const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
+  yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(packageDir, "package.json"),
+    encodeJson({ name: "@beep/schema", version: "0.0.0" })
+  );
+  yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+});
 
 describe("Docgen operations", () => {
   it("defaults docgen config source fields in the schema without changing explicit wire shape", () => {
@@ -382,6 +468,50 @@ export const ProofFixture = 1;
       )
     ));
 
+  it.effect("builds a full plan without querying the configured git range", () => {
+    const spawned = A.empty<string>();
+    return withTempRepo(
+      Effect.gen(function* () {
+        const plan = yield* buildDocgenLocalPlan({
+          allowFull: false,
+          base: "origin/main",
+          full: true,
+          head: "HEAD",
+          json: false,
+          packageSelector: O.none(),
+          parallel: 1,
+          plan: true,
+        }).pipe(provideScopedLayer(rangeRejectingSpawnerLayer(spawned)));
+
+        expect(plan.mode).toBe("full");
+        expect(spawned).toEqual([]);
+      })
+    );
+  });
+
+  it.effect("queries the configured git range when building an affected plan", () => {
+    const spawned = A.empty<string>();
+    return withTempRepo(
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(
+          buildDocgenLocalPlan({
+            allowFull: false,
+            base: "origin/main",
+            full: false,
+            head: "HEAD",
+            json: false,
+            packageSelector: O.none(),
+            parallel: 1,
+            plan: true,
+          }).pipe(provideScopedLayer(rangeRejectingSpawnerLayer(spawned)))
+        );
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(A.some(spawned, Str.includes("git diff --no-renames --name-only origin/main...HEAD"))).toBe(true);
+      })
+    );
+  });
+
   it(
     "prints a local docgen package plan from the command surface",
     {
@@ -422,6 +552,83 @@ export const ProofFixture = 1;
         )
       )
   );
+
+  it.effect("plans full docgen with configured concurrency and both execution steps", () =>
+    withTempRepoCommand(
+      withConfigEnv(
+        { BEEP_DOCGEN_CONCURRENCY: "6" },
+        Effect.gen(function* () {
+          yield* seedDocgenPackage();
+          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema"]);
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(output).toContain("- mode: full");
+          expect(output).toContain("- package concurrency: 6");
+          expect(output).toContain("- full turbo command: node_modules/.bin/turbo run docgen --concurrency=6");
+          expect(output).toContain("- full aggregate command: bun run docs:aggregate");
+        })
+      )
+    )
+  );
+
+  it.effect("prefers the local --parallel flag over configured concurrency", () =>
+    withTempRepoCommand(
+      withConfigEnv(
+        { BEEP_DOCGEN_CONCURRENCY: "6" },
+        Effect.gen(function* () {
+          yield* seedDocgenPackage();
+          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema", "--parallel", "8"]);
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(output).toContain("- package concurrency: 8");
+          expect(output).toContain("--concurrency=8");
+          expect(output).not.toContain("--concurrency=6");
+        })
+      )
+    )
+  );
+
+  it.effect("defaults local docgen concurrency to three", () =>
+    withTempRepoCommand(
+      withConfigEnv(
+        {},
+        Effect.gen(function* () {
+          yield* seedDocgenPackage();
+          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema"]);
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(output).toContain("- package concurrency: 3");
+          expect(output).toContain("--concurrency=3");
+        })
+      )
+    )
+  );
+
+  it.effect("executes full docgen through direct Turbo and aggregate steps", () => {
+    const spawned = A.empty<string>();
+    return withTempRepo(
+      Effect.gen(function* () {
+        yield* seedDocgenPackage();
+        const repoRoot = process.cwd();
+        const plan = yield* runDocgenLocal({
+          allowFull: false,
+          base: "origin/main",
+          full: true,
+          head: "HEAD",
+          json: false,
+          packageSelector: O.some("@beep/schema"),
+          parallel: 6,
+          plan: false,
+        }).pipe(provideScopedLayer(recordingSpawnerLayer(spawned)));
+
+        expect(plan.mode).toBe("full");
+        expect(spawned).toEqual([
+          `${repoRoot}/node_modules/.bin/turbo run docgen --concurrency=6`,
+          "bun run docs:aggregate",
+        ]);
+      })
+    );
+  });
 
   it(
     "rejects local docgen JSON output without plan mode",

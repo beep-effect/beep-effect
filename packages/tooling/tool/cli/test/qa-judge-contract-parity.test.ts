@@ -48,7 +48,9 @@ import {
   GateSummaryReceipt,
   GateSummaryVerifier,
   SemanticallyApplied,
+  SkillArtifactVerdict,
   SkillContract,
+  verifySkillArtifact,
 } from "@beep/skill-contract";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -59,6 +61,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import type { EvidencePredicateType, GateDeclaration } from "@beep/skill-contract";
 
@@ -598,5 +601,40 @@ describe("commands/Qa aggregate cross-check settlement", () => {
         expect(nothingMissing.message).toContain("Expected at least one missing artifact path or event id");
       })
     )
+  );
+});
+
+describe("commands/Qa judge contract SKILL.md projection", () => {
+  const committedArtifact = Effect.fnUntraced(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return yield* fs.readFileString(path.join(process.cwd(), "skills", "qa-inventory-judge", "SKILL.md"));
+  });
+
+  it.effect("verifies the committed qa-inventory judge SKILL.md artifact", () =>
+    Effect.gen(function* () {
+      const committed = yield* committedArtifact();
+      const verdict = yield* verifySkillArtifact({ committed, contract: QaJudgeContract });
+
+      expect(verdict.verdict).toBe("allowed");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("denies a mutated copy of the committed SKILL.md artifact", () =>
+    Effect.gen(function* () {
+      const committed = yield* committedArtifact();
+      const verdict = yield* verifySkillArtifact({
+        committed: Str.replace("Mode: none", "Mode: tampered")(committed),
+        contract: QaJudgeContract,
+      });
+
+      expect(verdict.verdict).toBe("denied");
+      expect(
+        SkillArtifactVerdict.match(verdict, {
+          allowed: () => [],
+          denied: ({ reasons }) => reasons,
+        })
+      ).toEqual(["rerender-mismatch"]);
+    }).pipe(provideScopedLayer(PlatformLayer))
   );
 });

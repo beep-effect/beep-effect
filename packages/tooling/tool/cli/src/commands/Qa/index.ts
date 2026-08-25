@@ -76,6 +76,13 @@ export * from "./JudgeLint.ts";
  */
 export * from "./JudgePack.ts";
 /**
+ * The `qa judge-skill` SKILL.md projection writer.
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export * from "./JudgeSkill.ts";
+/**
  * Command definitions for recorded UI verification.
  *
  * @category commands

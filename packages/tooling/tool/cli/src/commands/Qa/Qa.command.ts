@@ -24,6 +24,7 @@ import { runQaExtract } from "./Extract.ts";
 import { runQaJudgeIngest } from "./JudgeIngest.ts";
 import { runQaJudgeLint } from "./JudgeLint.ts";
 import { runQaJudgePack } from "./JudgePack.ts";
+import { runQaJudgeSkill } from "./JudgeSkill.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import {
   DEFAULT_SCENARIO_PATH,
@@ -135,6 +136,10 @@ const surfaceFlag = Flag.string("surface").pipe(
 const fromFlag = Flag.file("from", { mustExist: true }).pipe(
   Flag.withDescription("File holding the judge transcript; the last fenced JSON block is ingested")
 );
+const writeSkillFlag = Flag.string("write").pipe(
+  Flag.withDescription("Write the rendered qa-inventory judge SKILL.md to this path instead of stdout"),
+  Flag.optional
+);
 const dataFlag = Flag.string("data").pipe(
   Flag.withDescription("Extra text appended to the marker label (witness markers carry a label only)"),
   Flag.optional
@@ -144,7 +149,9 @@ const labelArgument = Argument.string("label").pipe(
 );
 
 const printQaIndex = () =>
-  printLines(["qa commands: record, stop, mark, extract, report, doctor, judge-pack, judge-ingest, judge-lint"]);
+  printLines([
+    "qa commands: record, stop, mark, extract, report, doctor, judge-pack, judge-ingest, judge-lint, judge-skill",
+  ]);
 
 const runRecordCommand = Effect.fn("QaCommand.record")(function* (options: unknown) {
   const decoded = yield* decodeQaRecordOptions(options).pipe(QaCommandError.mapError("Invalid `qa record` options."));
@@ -287,6 +294,11 @@ const qaJudgeLintCommand = Command.make("judge-lint", { round: requiredRoundFlag
   Command.provide(QaCommandLayers)
 );
 
+const qaJudgeSkillCommand = Command.make("judge-skill", { write: writeSkillFlag }, runQaJudgeSkill).pipe(
+  Command.withDescription("Render the qa-inventory judge contract as deterministic SKILL.md"),
+  Command.provide(QaCommandLayers)
+);
+
 /**
  * Recorded-QA command group.
  *
@@ -316,7 +328,8 @@ export const qaCommand = Command.make("qa", {}, printQaIndex).pipe(
       qaDoctorCommand,
       qaJudgePackCommand,
       qaJudgeIngestCommand,
-      qaJudgeLintCommand
+      qaJudgeLintCommand,
+      qaJudgeSkillCommand
     )
   )
 );
