@@ -54,7 +54,6 @@ const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
   "Bash(git stash clear:*)",
   "Bash(git stash drop:*)",
   "Bash(git stash pop:*)",
-  "Bash(git worktree prune:*)",
   "Bash(git worktree remove --force:*)",
   "Bash(bun run beep worktree remove --force:*)",
   "Bash(git clean:*)",
@@ -546,7 +545,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
   );
 
   it.effect(
-    "keeps checked-in Claude grants inside the exact 46-value allow domain",
+    "keeps checked-in Claude grants inside the exact 47-value allow domain",
     Effect.fn(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -560,7 +559,13 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         )
       )(settingsText);
 
-      assert.lengthOf(settings.permissions.allow, 46);
+      assert.lengthOf(settings.permissions.allow, 47);
+      assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(bun run beep yeet sweep)");
+      assert.notInclude(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git worktree remove:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git push --delete:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git push origin --delete:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git push:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep yeet publish:*)");
       yield* validateRepoSafetyPolicy({ repoRoot, config: ".claude/settings.json" });
