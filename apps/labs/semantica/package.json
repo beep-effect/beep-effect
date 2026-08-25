@@ -33,7 +33,6 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@effect/platform-bun": "catalog:",
-    "@tauri-apps/api": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

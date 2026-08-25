@@ -26,14 +26,8 @@ export const CanaryStage = LiteralKit(["c0", "c1", "c2"]).pipe(
   })
 );
 
-/**
- * Runtime value accepted by {@link CanaryStage}.
- *
- * @see {@link CanaryStage} for the runtime schema and stage helpers.
- * @category models
- * @since 0.0.0
- */
-export type CanaryStage = typeof CanaryStage.Type;
+// Runtime value accepted by `CanaryStage`; app-local until a consumer outside this module exists.
+type CanaryStage = typeof CanaryStage.Type;
 
 /**
  * Parsed options shared by every Semantica canary stage.
