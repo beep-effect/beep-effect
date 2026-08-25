@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "packet": "runner-trust-boundary",
+    "dashboard": "Codex Cloud security findings, repository beep-effect/beep-effect",
+    "recordedOn": "2026-08-25",
+    "note": "Sanitized exact-ID closure ledger. The dashboard shows the close reason and the additional-context note but does not display a closure timestamp; closedAt is the operator session date, and closedAtUtc is the time recorded immediately before Submit where the closing session captured it. The dashboard's archive detail renders the 'Already fixed' choice as 'Reason: Fixed'. Bodies, authors, and emails are never stored here.",
+    "reconciliation": {
+      "readOn": "2026-08-25",
+      "before": {
+        "open": 2,
+        "closed": 418
+      },
+      "after": {
+        "open": 0,
+        "closed": 420
+      },
+      "openOutsideAllowlist": 0
+    },
+    "exceptions": "SPEC.md exception ledger: E1 post-release JIT replay untested; E2 four IDs closed on 2026-08-24 before the P4 re-proof."
+  },
+  "closures": [
+    {
+      "codexId": "08ee74d0eb18819187fd02f570b4d57c",
+      "finding": "PR code now runs on self-hosted EC2 CI lanes",
+      "lane": "admission",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-08-25",
+      "closedAtUtc": "2026-08-25T20:18:00Z",
+      "gate": "P4 final-head proof (run 32893112867) after remediation PRs #800, #805, #808 merged",
+      "evidence": {
+        "pullRequests": [800, 805, 808, 814],
+        "runs": [32893112867, 32880339636, 32880025557, 32882220360],
+        "records": ["research/P3-EVIDENCE.md", "research/P4-EVIDENCE.md"]
+      }
+    },
+    {
+      "codexId": "a3a281b2a3d881919fdcbf68ee2364f0",
+      "finding": "PR code now runs on owned EC2 CI runners",
+      "lane": "admission",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-08-25",
+      "closedAtUtc": "2026-08-25T20:18:35Z",
+      "gate": "P4 final-head proof (run 32893112867) after remediation PRs #783, #796, #800, #805, #808 merged",
+      "evidence": {
+        "pullRequests": [783, 796, 800, 805, 808, 814],
+        "runs": [32893112867, 32763957629, 32763957329],
+        "records": [
+          "research/P1-EVIDENCE.md",
+          "research/P3-EVIDENCE.md",
+          "research/P4-EVIDENCE.md"
+        ]
+      }
+    },
+    {
+      "codexId": "c799c2269d748191997ff176ce4bfd48",
+      "finding": "Shadow runner exposes AWS role creds to job code",
+      "lane": "workload identity",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-08-24",
+      "gate": "Operator-authorized after remediation PR #800 merged; re-proved on the final head by run 32893112867",
+      "evidence": {
+        "pullRequests": [800],
+        "runs": [32786883010, 32787722297, 32893112867],
+        "records": ["research/P2-EVIDENCE.md", "research/P4-EVIDENCE.md"]
+      },
+      "exceptions": ["E1", "E2"]
+    },
+    {
+      "codexId": "33cd94a12d788191afbec1edc25c433f",
+      "finding": "Red-team gate misses sudo IMDS credential path",
+      "lane": "workload identity",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-08-24",
+      "gate": "Operator-authorized after remediation PR #800 merged; Gates F through M re-passed on the final head by run 32893112867",
+      "evidence": {
+        "pullRequests": [800],
+        "runs": [32786883010, 32787722297, 32893112867],
+        "records": ["research/P2-EVIDENCE.md", "research/P4-EVIDENCE.md"]
+      },
+      "exceptions": ["E1", "E2"]
+    },
+    {
+      "codexId": "9459410104b881919cd820b97c673b67",
+      "finding": "Baked runner trusts mutable Bun binary",
+      "lane": "P1 deployment proof",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-08-24",
+      "gate": "Operator-authorized after remediation PRs #783 and #796 merged; stale-image rejection re-observed on the final head",
+      "evidence": {
+        "pullRequests": [783, 796],
+        "runs": [32763957629, 32763957329, 32761137404],
+        "records": ["research/P1-EVIDENCE.md", "research/P4-EVIDENCE.md"]
+      },
+      "exceptions": ["E2"]
+    },
+    {
+      "codexId": "d1f026deb21881919d853e63780734fe",
+      "finding": "IMDS hook can silently remain unarmed",
+      "lane": "P1 deployment proof",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-08-24",
+      "gate": "Operator-authorized after remediation PRs #783 and #796 merged; E_RUNNER_IMDS_HOOK and J_HOOK_STILL_ARMED re-passed on the final head by run 32893112867",
+      "evidence": {
+        "pullRequests": [783, 796, 800],
+        "runs": [32763957629, 32893112867],
+        "records": ["research/P1-EVIDENCE.md", "research/P4-EVIDENCE.md"]
+      },
+      "exceptions": ["E2"]
+    }
+  ],
+  "historicalClosed": [
+    {
+      "codexId": "382c538bc3c8819195f83b4a36b002fb",
+      "finding": "Non-ephemeral CI runners expose PR jobs to trusted push secrets",
+      "status": "closed",
+      "reason": "Already fixed",
+      "note": "Auto-closed by the scanner before this packet; not reopened or reclassified."
+    },
+    {
+      "codexId": "ca9a4a0353e481919011a7d8380f5068",
+      "finding": "CI runner IMDS firewall rollback exposes AWS role creds",
+      "status": "closed",
+      "reason": "Already fixed",
+      "note": "Closed before this packet; not reopened or reclassified."
+    },
+    {
+      "codexId": "e841bb5393c08191a74ff574c0108bd8",
+      "finding": "PR code can steal EC2 runner IAM credentials",
+      "status": "closed",
+      "reason": "Already fixed",
+      "note": "Closed before this packet; not reopened or reclassified."
+    }
+  ]
+}
