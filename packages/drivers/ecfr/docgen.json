@@ -1,6 +1,6 @@
 {
   "$schema": "../../../packages/tooling/tool/docgen/schema.json",
-  "exclude": ["src/internal/**/*.ts"],
+  "exclude": ["src/internal/**/*.ts", "src/_generated/**/*.ts"],
   "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/ecfr/src/",
   "examplesCompilerOptions": {
     "noEmit": true,

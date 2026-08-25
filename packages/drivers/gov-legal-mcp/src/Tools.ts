@@ -11,14 +11,12 @@
  */
 
 import {
+  EcfrApi,
   EcfrDatedTitleParams,
   EcfrError,
   EcfrSearchParams,
-  getStructureOperation,
-  listTitlesOperation,
   SearchResultsResponse,
   StructureNode,
-  searchResultsOperation,
   TitlesResponse,
 } from "@beep/ecfr";
 import { GovinfoErrorReason, Search } from "@beep/govinfo";
@@ -42,9 +40,12 @@ const productionToolName = <const WireName extends string>(
   );
 
 const govinfoSearchToolName = productionToolName("govinfo", "search", "govinfo_search");
-const ecfrListTitlesToolName = productionToolName("ecfr", listTitlesOperation.operationId, "ecfr_list_titles");
-const ecfrSearchResultsToolName = productionToolName("ecfr", searchResultsOperation.operationId, "ecfr_search_results");
-const ecfrGetStructureToolName = productionToolName("ecfr", getStructureOperation.operationId, "ecfr_get_structure");
+const ecfrListTitlesOperationId = EcfrApi.groups.default.endpoints.listTitles.identifier;
+const ecfrSearchResultsOperationId = EcfrApi.groups.default.endpoints.searchResults.identifier;
+const ecfrGetStructureOperationId = EcfrApi.groups.default.endpoints.getStructure.identifier;
+const ecfrListTitlesToolName = productionToolName("ecfr", ecfrListTitlesOperationId, "ecfr_list_titles");
+const ecfrSearchResultsToolName = productionToolName("ecfr", ecfrSearchResultsOperationId, "ecfr_search_results");
+const ecfrGetStructureToolName = productionToolName("ecfr", ecfrGetStructureOperationId, "ecfr_get_structure");
 
 /**
  * Empty object accepted by the upstream `listTitles` operation.
@@ -141,7 +142,7 @@ export const GovinfoSearchTool = annotateFourHints(
  */
 export const EcfrListTitlesTool = annotateFourHints(
   Tool.make(ecfrListTitlesToolName, {
-    description: `List the official CFR title catalog. Upstream operationId: ${listTitlesOperation.operationId}.`,
+    description: `List the official CFR title catalog. Upstream operationId: ${ecfrListTitlesOperationId}.`,
     failure: EcfrError,
     failureMode: "return",
     parameters: EcfrListTitlesParams,
@@ -167,7 +168,7 @@ export const EcfrListTitlesTool = annotateFourHints(
  */
 export const EcfrSearchResultsTool = annotateFourHints(
   Tool.make(ecfrSearchResultsToolName, {
-    description: `Search paginated eCFR content. Upstream operationId: ${searchResultsOperation.operationId}.`,
+    description: `Search paginated eCFR content. Upstream operationId: ${ecfrSearchResultsOperationId}.`,
     failure: EcfrError,
     failureMode: "return",
     parameters: EcfrSearchParams,
@@ -193,7 +194,7 @@ export const EcfrSearchResultsTool = annotateFourHints(
  */
 export const EcfrGetStructureTool = annotateFourHints(
   Tool.make(ecfrGetStructureToolName, {
-    description: `Fetch a dated CFR title hierarchy. Upstream operationId: ${getStructureOperation.operationId}.`,
+    description: `Fetch a dated CFR title hierarchy. Upstream operationId: ${ecfrGetStructureOperationId}.`,
     failure: EcfrError,
     failureMode: "return",
     parameters: EcfrDatedTitleParams,
