@@ -37,14 +37,27 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research is complete. The entry gate is closed with 153 exercised entries
-and 10 `unverified` entries covered by user-approved Exception Ledger waivers.
-The activation-path gate is also closed: P0.5 exercised 10 remaining paths and
-approved scope waivers cover `table.column-reorder/context-menu`,
-`document.read-only/read-only`, and `interchange.canonical-json/importer`.
-P1 implementation is next. The exercise harness has been hermetic since PR
-#793.
+P0 Research and P1 Implement are complete; P2 Verify holds a green recorded
+browser QA loop and closes with the full `bun run beep yeet verify` proof.
 
+- P1 landed the ratified contract
+  ([`research/P1-CAPABILITY-CONTRACT.md`](./research/P1-CAPABILITY-CONTRACT.md)):
+  `@beep/editor/capability` schemas, typed resolution errors, a deterministic
+  resolver, command/help/slash projections, runtime bindings with a guarded
+  keybinding plugin, `CapabilityComposer`, the `minimal` and `document-proof`
+  reference profiles, Storybook proof, and the closed-by-default
+  `editor-proof` Professional Desktop shell panel. Lane reports live under
+  [`history/p1-implement/2026-08-25/`](./history/p1-implement/2026-08-25/).
+- P2 ran four recorded playwright rounds against the real dock UI; round 4 is
+  `CAPTURE-GREEN` (82/82 assertions, zero app console errors) with a
+  `gpt-5.6-sol` vision-judge inventory of zero findings. The round ledger,
+  harness, judged round-3 and final round-4 evidence live under
+  [`history/p2-qa/2026-08-25/`](./history/p2-qa/2026-08-25/).
+- The atlas gained five codec-backed compatibility corrections
+  (`format.strikethrough` lossless end-to-end; the case transforms and
+  `transformer.highlight` unsupported for `beep-md`). The
+  `interchange.canonical-json` importer waiver retired: round 4 recorded the
+  canonical JSON import lifecycle and the atlas path is `verified-live`.
 - [`research/capability-atlas.json`](./research/capability-atlas.json) is the
   normative `editor-capability-atlas/v1` artifact.
 - [`ops/CapabilityAtlas.schemas.ts`](./ops/CapabilityAtlas.schemas.ts) defines

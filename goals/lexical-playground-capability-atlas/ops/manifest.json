@@ -5,12 +5,12 @@
     "title": "Lexical Playground Capability Atlas",
     "status": "active",
     "created": "2026-08-04",
-    "updated": "2026-08-24",
+    "updated": "2026-08-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lexical-playground-capability-atlas",
   "lifecycle": "active",
-  "statusNote": "P0 complete on 2026-08-24: the entry gate and activation-path gate are closed; P1 implementation is next.",
+  "statusNote": "P1 complete on 2026-08-25: the schema-backed capability contract, resolver, projections, Storybook profiles, and the synthetic Professional Desktop panel landed; P2 recorded browser QA is in progress.",
   "mission": "Version the complete Lexical Playground capability atlas and prove the minimal schema-backed editor profile resolver in Storybook and a synthetic Professional Desktop dock panel.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -91,12 +91,12 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

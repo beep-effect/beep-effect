@@ -24246,9 +24246,17 @@
             "detail": "Pinned interchange evidence used to classify Canonical @beep/md JSON."
           }
         ],
-        "live": []
+        "live": [
+          {
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p2-qa/2026-08-25/ROUNDS.md",
+            "screenshots": [
+              "goals/lexical-playground-capability-atlas/history/p2-qa/2026-08-25/round-4/screenshots/canonical-json-import-lifecycle--after-valid-import.png"
+            ],
+            "detail": "P2 round 4 (recorded playwright lane, judged requiredCount 0) imported edited canonical @beep/md JSON through the editor-proof panel: the remounted editor shows the imported heading, an invalid document surfaces a typed alert while the editor stays mounted, and Reload from canonical keeps the imported document."
+          }
+        ]
       },
-      "evidenceStatus": "verified-source",
+      "evidenceStatus": "verified-live",
       "category": "interchange",
       "disposition": {
         "kind": "implement",
@@ -24270,7 +24278,7 @@
         {
           "surface": "importer",
           "action": "Import through the Canonical @beep/md JSON boundary.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         },
         {
           "surface": "programmatic",

@@ -1,0 +1,14 @@
+```json
+{
+  "schemaVersion": "qa-inventory/v1",
+  "round": 4,
+  "sessionRef": "session.json",
+  "judge": {
+    "model": "gpt-5.6-sol",
+    "effort": "high"
+  },
+  "findings": [],
+  "requiredCount": 0
+}
+```
+REQUIRED FINDINGS: 0
