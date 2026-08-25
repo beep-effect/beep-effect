@@ -179,3 +179,28 @@ full proof was spent discovering a check that `docgen:local`, package
 before the full proof — or having `yeet repair` apply `tsconfig-sync` when
 a package's `exports` map changed — so alias drift never reaches the
 20-minute lane.
+
+## 2026-08-25 — Full proofs surface one gate at a time
+
+**What was happening:** driving the closeout PR to a green
+`bun run beep yeet verify`. Six full proofs (~20-45 minutes each on a busy
+machine) each failed on exactly one gate the previous proof had not reached:
+knip + fallow (unused exports, a clone, five complexity findings) →
+`repo-sanity:tsconfig-sync` (six generated aliases) → `check:tsgo:rules`
+(`vitest.aliases.generated.json` must equal the tsconfig paths, with no
+generator script) → `lint:effect-imports` (four stable-module imports) →
+`lint:schema-first` (a codec-heavy test without arbitrary coverage) →
+`quality:jsdoc-ratchet` (one newly exported value without an Example).
+
+**Evidence:** `.beep/yeet/runs/feat_lexical-atlas-p1-resolver-*/verdict.json`
+across the runs; commits `07dc2305c1`, `2e7f2b9691`, `d5b04d2acb`,
+`79084bdcfd`, `89c6f4950c`, `79c00baea5`, `592024b8f1`. Running
+`bun run beep lint policy --full` standalone before proof six caught the
+schema-first advisory in ~3 minutes instead of ~30.
+
+**What would have prevented it:** a first-tier "cheap gates" target
+(`config-sync:check`, `quality tsgo-rules`, `laws effect-imports --check`,
+`lint policy --full`, `ci lane jsdoc-ratchet`, `quality knip`, `fallow
+audit`) that `yeet repair` runs and reports together before the full proof,
+and a documented generator for `vitest.aliases.generated.json` so alias
+drift is a one-command fix.
