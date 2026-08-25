@@ -21,16 +21,28 @@
 {"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":21}
 {"action":"type","detail":"insert \"![evidence](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==)\" in css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":22}
 {"action":"expect-selector","detail":"css=.editor-image img is visible","entryId":"node.image","outcome":"pass","step":23}
-{"action":"screenshot","detail":"activation-path-3","entryId":"node.image","outcome":"pass","step":24}
-{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":25}
-{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":26}
-{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":27}
-{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"node.image","outcome":"pass","step":28}
-{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"node.image","outcome":"pass","step":29}
-{"action":"set-viewport","detail":"480x900","entryId":"node.image","outcome":"pass","step":30}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.image","outcome":"pass","step":31}
-{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"node.image","outcome":"pass","step":32}
-{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":33}
-{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":34}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.image","outcome":"pass","step":35}
-{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"node.image","outcome":"pass","step":36}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":24}
+{"action":"file-paste","detail":"css=.ContentEditable__root paste-drop-evidence.png (image/png)","entryId":"node.image","outcome":"pass","step":25}
+{"action":"expect-selector","detail":"css=.editor-image img[alt=\"paste-drop-evidence.png\"] is visible","entryId":"node.image","outcome":"pass","step":26}
+{"action":"click","detail":"role=button name=\"Convert to html\"","entryId":"node.image","outcome":"pass","step":27}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__code is visible","entryId":"node.image","outcome":"pass","step":28}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":29}
+{"action":"type","detail":"insert \"<figure><img src=\\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=\\\" alt=\\\"importer evidence\\\"><figcaption>Importer caption</figcaption></figure>\" in css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":30}
+{"action":"click","detail":"role=button name=\"Convert from html\"","entryId":"node.image","outcome":"pass","step":31}
+{"action":"expect-selector","detail":"css=.editor-image img[alt=\"paste-drop-evidence.png\"] is visible","entryId":"node.image","outcome":"pass","step":32}
+{"action":"expect-selector","detail":"css=.editor-image img[alt=\"importer evidence\"] is visible","entryId":"node.image","outcome":"pass","step":33}
+{"action":"expect-text","detail":"css=.ContentEditable__root contains \"Importer caption\"","entryId":"node.image","outcome":"pass","step":34}
+{"action":"expect-selector","detail":"css=.editor-image img is visible","entryId":"node.image","outcome":"pass","step":35}
+{"action":"screenshot","detail":"markdown-shortcut-paste-drop-importer","entryId":"node.image","outcome":"pass","step":36}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":37}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":38}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":39}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"node.image","outcome":"pass","step":40}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"node.image","outcome":"pass","step":41}
+{"action":"set-viewport","detail":"480x900","entryId":"node.image","outcome":"pass","step":42}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.image","outcome":"pass","step":43}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"node.image","outcome":"pass","step":44}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":45}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.image","outcome":"pass","step":46}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.image","outcome":"pass","step":47}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"node.image","outcome":"pass","step":48}

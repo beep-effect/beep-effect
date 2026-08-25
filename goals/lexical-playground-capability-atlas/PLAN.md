@@ -8,7 +8,7 @@ Status: `active`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | in-progress | Normalize live/source evidence into stable atlas entries; close the remaining user-visible activation-path evidence gaps; lock the minimal descriptor contract. | The entry gate and activation-path gate are both closed, with compatibility gaps explicit and descriptor fields justified by evidence. |
+| P0 Research | complete | Normalize live/source evidence into stable atlas entries; close the remaining user-visible activation-path evidence gaps; lock the minimal descriptor contract. | The entry gate and activation-path gate are both closed, with compatibility gaps explicit and descriptor fields justified by evidence. |
 | P1 Implement | pending | Add the `@beep/editor` schemas/resolver/command projection, compatibility defaults, Storybook profiles, and synthetic dock panel. | All implementation acceptance criteria and focused tests pass without new document semantics or product persistence. |
 | P2 Verify | pending | Run package/app proof and the recorded browser QA loop across keyboard, pointer, responsive/touch, and accessibility scenarios. | Targeted proof and full `bun run beep yeet verify` are green; QA inventory has zero required findings. |
 | P3 Yeet: PR to mergeable | pending | Publish intentionally through Yeet and close exact-head hosted checks and review threads. | PR is mergeable with required hosted checks and reviews green. |
@@ -30,7 +30,7 @@ Status: `active`
    read-only fallback, accessibility/responsive contract, and evidence link.
 - [x] Derive the smallest public capability/profile schema from the reconciled
    atlas; record alternatives and migration of current `ComposerFeatures`.
-- [ ] Exercise every production-eligible user-visible capability and activation
+- [x] Exercise every production-eligible user-visible capability and activation
    path through its applicable lifecycle with screenshot/interaction evidence.
    Close every current unverified item or obtain a user-approved, owner-backed
    waiver in the Exception Ledger.
@@ -87,22 +87,16 @@ Status: `active`
 
 ## Execution Notes
 
-- 2026-08-24: The P0 entry gate closed through exercise plus 10 approved
-  waivers. The activation-path gate remains OPEN for
-  `node.image/paste-drop`, `node.image/importer`,
-  `setting.tree-view/settings-panel`, `format.bold/markdown-shortcut`,
-  `format.italic/markdown-shortcut`, `format.strikethrough/markdown-shortcut`,
-  `format.inline-code/markdown-shortcut`,
-  `format.semantic-highlight/markdown-shortcut`, `extension.history/toolbar`,
-  `authoring.autocomplete/selection`, `table.column-reorder/context-menu`, and
-  `document.read-only/read-only`, plus `interchange.canonical-json/importer`
-  on a `verified-source` entry (13 in total). The 22 `programmatic` paths are
-  classified as source/P1-proven. P0.5: exercise or waive the 13 user-visible
-  paths, then flip P0.
-  The verifier also reconciles 38 root nodes, 41 effective rich-text nodes, 29
-  settings, 73 top-level registrations, 23 Markdown transformers, 32 observed
-  keybindings, 11 document actions, and 17 screenshots. The exercise harness
-  has been hermetic since PR #793.
+- 2026-08-24: P0 is complete. The entry gate closes 153 exercised entries
+  plus 10 approved entry-level waivers. P0.5 closed the 13 activation paths
+  that remained: 10 passed live assertions, while
+  `table.column-reorder/context-menu`, `document.read-only/read-only`, and
+  `interchange.canonical-json/importer` close through approved scope waivers.
+  The activation-path gate has zero open paths. The 22 `programmatic` paths
+  remain source/P1-proven. The verifier also reconciles 38 root nodes, 41
+  effective rich-text nodes, 29 settings, 73 top-level registrations, 23
+  Markdown transformers, 32 observed keybindings, 11 document actions, and 17
+  screenshots. The exercise harness has been hermetic since PR #793.
 - Preserve unrelated worktree changes and inspect current state before edits.
 - Use live source/barrel discovery; do not use the retired export catalog.
 - Keep `SPEC.md` normative. Record new user decisions in the source

@@ -25,7 +25,8 @@ const panelSetting = (
   title: string,
   key: SettingKey,
   label: string,
-  behavior: ReadonlyArray<Step> = [type(EDITOR, `${title} evidence`)]
+  behavior: ReadonlyArray<Step> = [type(EDITOR, `${title} evidence`)],
+  enabledScreenshotLabel = "enabled-and-serialized"
 ) => {
   const control = settingSwitch(label);
   return scenario({
@@ -41,7 +42,7 @@ const panelSetting = (
       expectAttr(control, "aria-checked", "true"),
       ...behavior,
       click(ACTION.exportJson, { downloadSlot: "setting-enabled-json" }),
-      screenshot("enabled-and-serialized"),
+      screenshot(enabledScreenshotLabel),
       setViewport(480, 900),
       keyboard("Tab"),
       screenshot("enabled-narrow-keyboard"),
@@ -259,6 +260,14 @@ export const scenarios = [
     "Table of contents diagnostic",
     SETTING_QUERY.tableOfContents,
     "Table Of Contents"
+  ),
+  panelSetting(
+    "setting.tree-view",
+    "Tree and state debug view",
+    SETTING_QUERY.treeView,
+    "Debug View",
+    [type(EDITOR, "Tree view evidence"), expectSelector(OUTPUT.treeView)],
+    "settings-panel-tree-view"
   ),
   panelSetting(
     "setting.visible-non-printing",

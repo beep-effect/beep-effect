@@ -37,11 +37,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research is in progress. The entry gate is closed with 152 exercised entries
+P0 Research is complete. The entry gate is closed with 153 exercised entries
 and 10 `unverified` entries covered by user-approved Exception Ledger waivers.
-The activation-path gate remains open for 13 user-visible paths (12 on
-`verified-live` entries plus `interchange.canonical-json/importer` on a
-`verified-source` entry). The exercise harness has been hermetic since PR #793.
+The activation-path gate is also closed: P0.5 exercised 10 remaining paths and
+approved scope waivers cover `table.column-reorder/context-menu`,
+`document.read-only/read-only`, and `interchange.canonical-json/importer`.
+P1 implementation is next. The exercise harness has been hermetic since PR
+#793.
 
 - [`research/capability-atlas.json`](./research/capability-atlas.json) is the
   normative `editor-capability-atlas/v1` artifact.
