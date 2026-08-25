@@ -72,6 +72,10 @@ the C5 metric correction and the new C7 item below.
 - B9 deterministic coverage runtime — done 2026-08-24: `coverageEnvironment()` spreads the
   pull-request Turbo posture and `readTurboCacheEnvironment` is pure; prerequisite of B2/B4
   (a local coverage run that mints floors hosted cannot reach is worse than none).
+- B10 dependents in pull-request coverage scope — done 2026-08-24: the planner follows
+  workspace-internal dependency edges to coverage-bearing dependents (test-only changes stay
+  scoped) and wide selections run through the weighted shard executor; closes the
+  "green PR, red main" inheritance class (#780 → #783).
 - B2 coverage in local proof (#698 landed — build on its scoping).
 - B3 missing cheap lanes; B7 docgen predicate into CLI.
 - B4 `--ci-parity` merged-tree pre-publish tier + PR-posture env.

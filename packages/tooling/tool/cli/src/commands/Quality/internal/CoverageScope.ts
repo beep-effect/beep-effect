@@ -6,8 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, MutableHashMap, Order, Path, pipe } from "effect";
+import { Effect, MutableHashMap, MutableHashSet, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -16,6 +17,7 @@ import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
 import type { FileSystem } from "effect";
+import type { PackageJson } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScope");
 
@@ -238,6 +240,13 @@ const hasPrefix = (prefixes: ReadonlyArray<string>, filePath: string): boolean =
 /**
  * Workspace metadata needed to map a changed file to a coverage owner.
  *
+ * **Details**
+ *
+ * `workspaceDependencies` lists the workspace-internal packages this owner
+ * depends on across every `package.json` dependency bucket. The planner
+ * inverts those edges to select dependents of a changed owner. It defaults to
+ * no edges so an owner built without graph knowledge stays a leaf.
+ *
  * **Example** (Describe one coverage owner)
  *
  * ```ts
@@ -246,9 +255,10 @@ const hasPrefix = (prefixes: ReadonlyArray<string>, filePath: string): boolean =
  * const owner = CoverageScopeOwner.make({
  *   packageName: "@beep/schema",
  *   packagePath: "packages/foundation/modeling/schema",
- *   hasCoverage: true
+ *   hasCoverage: true,
+ *   workspaceDependencies: ["@beep/utils"]
  * })
- * console.log(owner.packageName)
+ * console.log(owner.workspaceDependencies)
  * ```
  *
  * @category models
@@ -259,14 +269,42 @@ export class CoverageScopeOwner extends S.Class<CoverageScopeOwner>($I`CoverageS
     hasCoverage: S.Boolean,
     packageName: S.String,
     packagePath: S.String,
+    workspaceDependencies: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
   },
   $I.annote("CoverageScopeOwner", {
-    description: "Workspace path and coverage capability used by pull-request scope planning.",
+    description:
+      "Workspace path, coverage capability, and workspace-internal dependencies used by pull-request scope planning.",
   })
 ) {}
 
 const workspacePackageHasCoverage = (scripts: Readonly<Record<string, string>> | undefined): boolean =>
   pipe(scripts ?? {}, R.get("coverage"), O.isSome);
+
+const WORKSPACE_ROOT_PACKAGE_PATH = ".";
+
+const isWorkspaceRootPackage = (info: { readonly path: string }): boolean => info.path === WORKSPACE_ROOT_PACKAGE_PATH;
+
+const PACKAGE_JSON_DEPENDENCY_BUCKETS = [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+] as const;
+
+// Every dependency name declared in any bucket, restricted to names that are
+// workspace packages. Bucket kind is irrelevant to coverage: a devDependency
+// can change a dependent's measured behaviour exactly like a runtime one.
+const workspaceDependencyNames = (
+  packageJson: PackageJson,
+  workspaceNames: MutableHashSet.MutableHashSet<string>
+): ReadonlyArray<string> =>
+  pipe(
+    PACKAGE_JSON_DEPENDENCY_BUCKETS,
+    A.flatMap((bucket) => R.keys(packageJson[bucket] ?? {})),
+    A.filter((name) => MutableHashSet.has(workspaceNames, name) && name !== packageJson.name),
+    A.dedupe,
+    A.sort(Order.String)
+  );
 
 /**
  * Discover the workspace owners consumed by affected coverage planning.
@@ -302,14 +340,20 @@ export const workspaceCoverageScopeOwners = Effect.fn("CoverageScope.workspaceCo
   const packageMap = yield* discoverWorkspacePackages(repoRoot, path).pipe(
     QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage scope planning.")
   );
+  const workspaceNames = MutableHashSet.fromIterable(MutableHashMap.keys(packageMap));
 
   return pipe(
     A.fromIterable(MutableHashMap.values(packageMap)),
+    // The repository root declares a `coverage` script (the aggregate runner)
+    // and depends on workspace packages, so it would otherwise be selected as
+    // a dependent of nearly everything and recurse into the root task.
+    A.filter((info) => !isWorkspaceRootPackage(info)),
     A.map((info) =>
       CoverageScopeOwner.make({
         hasCoverage: workspacePackageHasCoverage(info.packageJson.scripts),
         packageName: info.name,
         packagePath: info.path,
+        workspaceDependencies: workspaceDependencyNames(info.packageJson, workspaceNames),
       })
     ),
     A.sort(Order.mapInput(Order.String, (owner: CoverageScopeOwner) => owner.packageName))
@@ -326,9 +370,13 @@ class CoverageFullScope extends S.TaggedClass<CoverageFullScope>($I`CoverageFull
 
 class CoverageSelectedScope extends S.TaggedClass<CoverageSelectedScope>($I`CoverageSelectedScope`)(
   "selected",
-  { packageNames: S.Array(S.String) },
+  {
+    packageNames: S.Array(S.String),
+    dependentPackageNames: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
+  },
   $I.annote("CoverageSelectedScope", {
-    description: "Coverage plan containing the exact directly changed workspace owners that define coverage.",
+    description:
+      "Coverage plan containing every coverage owner to measure: the directly changed owners plus the coverage-bearing workspace dependents listed in dependentPackageNames.",
   })
 ) {}
 
@@ -548,12 +596,148 @@ const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: 
   );
 };
 
+const isMeasurableOwner = (owner: CoverageScopeOwner): boolean =>
+  owner.hasCoverage && !isLabsWorkspacePath(owner.packagePath);
+
 const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: string): O.Option<string> =>
   pipe(
     repositoryFixtureCoverageOwnerForFile(owners, filePath),
     O.orElse(() => ownerForFile(owners, filePath)),
-    O.filter((owner) => owner.hasCoverage && !isLabsWorkspacePath(owner.packagePath)),
+    O.filter(isMeasurableOwner),
     O.map((owner) => owner.packageName)
+  );
+
+// A package's own test tree is not part of what dependents import, so a
+// change confined to it cannot alter a dependent's measured behaviour.
+const isOwnerTestPath = (owner: CoverageScopeOwner, filePath: string): boolean =>
+  Str.startsWith(`${owner.packagePath}/test/`)(filePath);
+
+// Owners whose exported surface may have changed. Coverage capability is not
+// required here: a package without a coverage task can still change what its
+// coverage-bearing dependents execute. Lab paths stay coverage-inert
+// (lab-apps-lifecycle D2) and repository fixtures only feed their owner's own
+// tests, so neither seeds dependents.
+const dependentSeedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: string): O.Option<string> =>
+  pipe(
+    ownerForFile(owners, filePath),
+    O.filter((owner) => !isLabsWorkspacePath(owner.packagePath) && !isOwnerTestPath(owner, filePath)),
+    O.map((owner) => owner.packageName)
+  );
+
+const dependentsByPackageName = (
+  owners: ReadonlyArray<CoverageScopeOwner>
+): MutableHashMap.MutableHashMap<string, ReadonlyArray<string>> => {
+  const dependents = MutableHashMap.empty<string, ReadonlyArray<string>>();
+  for (const owner of owners) {
+    for (const dependency of owner.workspaceDependencies) {
+      MutableHashMap.set(
+        dependents,
+        dependency,
+        A.append(O.getOrElse(MutableHashMap.get(dependents, dependency), A.empty<string>), owner.packageName)
+      );
+    }
+  }
+  return dependents;
+};
+
+/**
+ * Collect the coverage-bearing workspace packages that transitively depend on
+ * the given seed packages.
+ *
+ * **Details**
+ *
+ * Edges come from each owner's `workspaceDependencies`; the closure walks the
+ * inverted graph from every seed and keeps only measurable owners (coverage
+ * task present, not a lab). Seeds are never returned, even when they depend on
+ * one another, so the result composes with the directly changed owners by
+ * plain union.
+ *
+ * **Example** (Find one transitive dependent)
+ *
+ * ```ts
+ * import { coverageDependentOwners, CoverageScopeOwner } from "@beep/repo-cli/test/Quality"
+ *
+ * const owners = [
+ *   CoverageScopeOwner.make({ packageName: "@beep/md", packagePath: "packages/md", hasCoverage: true }),
+ *   CoverageScopeOwner.make({
+ *     packageName: "@beep/pandoc-ast",
+ *     packagePath: "packages/pandoc-ast",
+ *     hasCoverage: true,
+ *     workspaceDependencies: ["@beep/md"]
+ *   })
+ * ]
+ * console.log(coverageDependentOwners(owners, ["@beep/md"])) // ["@beep/pandoc-ast"]
+ * ```
+ *
+ * @param owners - Current workspace packages with their workspace-internal dependencies.
+ * @param seedPackageNames - Package names whose exported surface may have changed.
+ * @returns Sorted unique measurable dependents, excluding the seeds themselves.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageDependentOwners: {
+  (seedPackageNames: ReadonlyArray<string>): (owners: ReadonlyArray<CoverageScopeOwner>) => ReadonlyArray<string>;
+  (owners: ReadonlyArray<CoverageScopeOwner>, seedPackageNames: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(
+  2,
+  (owners: ReadonlyArray<CoverageScopeOwner>, seedPackageNames: ReadonlyArray<string>): ReadonlyArray<string> => {
+    const dependents = dependentsByPackageName(owners);
+    const visited = MutableHashSet.fromIterable(seedPackageNames);
+    const pending = A.copy(seedPackageNames);
+    const reached = MutableHashSet.empty<string>();
+
+    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+      for (const dependent of O.getOrElse(MutableHashMap.get(dependents, next), A.empty<string>)) {
+        if (!MutableHashSet.has(visited, dependent)) {
+          MutableHashSet.add(visited, dependent);
+          MutableHashSet.add(reached, dependent);
+          pending.push(dependent);
+        }
+      }
+    }
+
+    const measurable = MutableHashSet.fromIterable(
+      pipe(
+        owners,
+        A.filter(isMeasurableOwner),
+        A.map((owner) => owner.packageName)
+      )
+    );
+    return pipe(
+      A.fromIterable(reached),
+      A.filter((packageName) => MutableHashSet.has(measurable, packageName)),
+      A.sort(Order.String)
+    );
+  }
+);
+
+/**
+ * Sum the hosted task weights of the given coverage owners.
+ *
+ * **Details**
+ *
+ * Uses the same live and profiled per-package seconds that place owners into
+ * full-run shards, so an executor can compare a selected scope against the
+ * single-invocation budget with the planner's own currency.
+ *
+ * **Example** (Weigh two owners)
+ *
+ * ```ts
+ * import { coverageScopeWeightSeconds } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(coverageScopeWeightSeconds(["@beep/schema", "@beep/types"]) > 0) // true
+ * ```
+ *
+ * @param packageNames - Coverage owners to weigh; duplicates count once.
+ * @returns Estimated sequential seconds for the owners.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageScopeWeightSeconds = (packageNames: ReadonlyArray<string>): number =>
+  pipe(
+    A.dedupe(packageNames),
+    A.map(coverageTaskWeightSeconds),
+    A.reduce(0, (total, weight) => total + weight)
   );
 
 /**
@@ -604,36 +788,59 @@ export const changedCoverageOwners: {
     )
 );
 
+const dependentSeedOwners = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  changedFiles: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  pipe(
+    A.getSomes(A.map(changedFiles, (filePath) => dependentSeedOwnerForFile(owners, filePath))),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+
 /**
  * Derive a conservative coverage plan from changed files and current workspace owners.
  *
  * **Details**
  *
  * Global coverage inputs, unknown paths, shared test-kit changes, and package
- * manifest changes force a full run. Otherwise only directly changed owners
- * that currently define coverage are selected.
+ * manifest changes force a full run. Otherwise the selection is the directly
+ * changed owners that define coverage plus every coverage-bearing workspace
+ * package that transitively depends on a changed owner whose non-test files
+ * changed ({@link coverageDependentOwners}). A dependent that was never
+ * measured on the pull request used to surface only in the full run on `main`,
+ * turning `main` red after the merge.
  *
  * **Gotchas**
  *
  * A full verdict controls measurement breadth only. Baseline adoption remains
  * the package owners returned by {@link changedCoverageOwners} unless the
- * operator explicitly passes `--replace-all`.
+ * operator explicitly passes `--replace-all`; dependents are measured and
+ * compared, never adopted.
  *
- * **Example** (Select a directly changed owner)
+ * **Example** (Select a changed owner and its dependent)
  *
  * ```ts
  * import { CoverageScopeOwner, planCoverageAffectedScope } from "@beep/repo-cli/test/Quality"
  *
- * const owner = CoverageScopeOwner.make({
- *   packageName: "@beep/schema",
- *   packagePath: "packages/foundation/modeling/schema",
- *   hasCoverage: true
- * })
- * const scope = planCoverageAffectedScope([owner], ["packages/foundation/modeling/schema/src/index.ts"])
- * console.log(scope._tag)
+ * const owners = [
+ *   CoverageScopeOwner.make({
+ *     packageName: "@beep/schema",
+ *     packagePath: "packages/foundation/modeling/schema",
+ *     hasCoverage: true
+ *   }),
+ *   CoverageScopeOwner.make({
+ *     packageName: "@beep/identity",
+ *     packagePath: "packages/foundation/identity",
+ *     hasCoverage: true,
+ *     workspaceDependencies: ["@beep/schema"]
+ *   })
+ * ]
+ * const scope = planCoverageAffectedScope(owners, ["packages/foundation/modeling/schema/src/index.ts"])
+ * console.log(scope._tag === "selected" ? scope.packageNames : scope._tag) // ["@beep/identity", "@beep/schema"]
  * ```
  *
- * @param owners - Current workspace packages and whether each defines coverage.
+ * @param owners - Current workspace packages, their coverage capability, and workspace dependencies.
  * @param changedFiles - Sorted or unsorted repository-relative changed paths.
  * @returns A deterministic full, selected, or no-op scope.
  * @category utilities
@@ -652,9 +859,14 @@ export const planCoverageAffectedScope: {
     return CoverageFullScope.make({ reasons });
   }
 
-  const packageNames = changedCoverageOwners(owners, changedFiles);
+  const directPackageNames = changedCoverageOwners(owners, changedFiles);
+  const dependentPackageNames = pipe(
+    coverageDependentOwners(owners, dependentSeedOwners(owners, changedFiles)),
+    A.difference(directPackageNames)
+  );
+  const packageNames = pipe(A.union(directPackageNames, dependentPackageNames), A.sort(Order.String));
   return A.isReadonlyArrayNonEmpty(packageNames)
-    ? CoverageSelectedScope.make({ packageNames })
+    ? CoverageSelectedScope.make({ packageNames, dependentPackageNames })
     : CoverageNoopScope.make();
 });
 

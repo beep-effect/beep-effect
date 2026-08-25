@@ -64,7 +64,11 @@ import {
   compareCoverageRegressionBaseline,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
-import { planCoverageFullShards, planWorkspaceCoverageAffectedScope } from "./internal/CoverageScope.ts";
+import {
+  coverageScopeWeightSeconds,
+  planCoverageFullShards,
+  planWorkspaceCoverageAffectedScope,
+} from "./internal/CoverageScope.ts";
 import {
   detectNoLocationTs2589Flake,
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
@@ -144,6 +148,13 @@ const COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
 const COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG = "--maxWorkers=2";
 const COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG = "--maxWorkers=1";
 const COVERAGE_FULL_VITEST_WORKER_CAP = 11;
+// Planner weight (sequential seconds) above which a selected scope runs through
+// the weighted shard executor instead of one Turbo invocation. The 45 hosted
+// scoped jobs in the 2026-08-24 sweep all finished under 300 s wall-clock on
+// the single-invocation path; dependents widen selections well past that
+// (`@beep/md` alone pulls 17 owners including `@beep/professional-desktop`),
+// where the full run's prebuild + capped-worker shards are the proven shape.
+const COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS = 300;
 const COVERAGE_SCOPED_BASELINE_VITEST_ARGS = [
   "--",
   COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
@@ -671,8 +682,14 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
         Console.log(`[beep-cli] coverage:affected: full fallback (${A.join(reasons, "; ")})`).pipe(
           Effect.as(parseCoverageTaskOptions(passthroughArgs))
         ),
-      selected: ({ packageNames }) =>
-        Console.log(`[beep-cli] coverage:affected: selected ${A.join(packageNames, ", ")}`).pipe(
+      selected: ({ packageNames, dependentPackageNames }) =>
+        Console.log(
+          `[beep-cli] coverage:affected: selected ${A.join(packageNames, ", ")}${
+            A.isReadonlyArrayNonEmpty(dependentPackageNames)
+              ? ` (dependents: ${A.join(dependentPackageNames, ", ")})`
+              : ""
+          }`
+        ).pipe(
           Effect.as({
             args: coverageTurboArgs([...passthroughArgs, ...A.map(packageNames, (name) => `--filter=${name}`)]),
             expectedPackageNames: packageNames,
@@ -2213,14 +2230,19 @@ export const rootQualityStepsForTesting: {
     rootStepsFor(repoRoot, invocation)
 );
 
-const coverageFullSteps = (
+const coverageShardedSteps = (
   repoRoot: string,
   packageNames: ReadonlyArray<string>,
-  args: ReadonlyArray<string>
+  passthroughArgs: ReadonlyArray<string>,
+  writeBaseline: boolean,
+  prebuildFilterArgs: ReadonlyArray<string>
 ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
-  const writeBaseline = A.some(args, isCoverageWriteBaselineArg);
-  const passthroughArgs = coverageFullPassthroughArgs(args);
-  const shards = planCoverageFullShards(packageNames, COVERAGE_FULL_SHARD_COUNT);
+  // A shard count above the owner count leaves empty shards; an empty shard
+  // would hand turbo a filter-less `coverage` run over the whole workspace.
+  const shards = pipe(
+    planCoverageFullShards(packageNames, COVERAGE_FULL_SHARD_COUNT),
+    A.filter((shard) => A.isReadonlyArrayNonEmpty(shard.packageNames))
+  );
 
   return [
     // The prebuild turbo task is `build`, which stays outside
@@ -2230,13 +2252,124 @@ const coverageFullSteps = (
       repoRoot,
       "coverage:prebuild",
       ["build"],
-      [CI_TURBO_CONCURRENCY_ARG, "--summarize", LABS_TURBO_EXCLUDE_FILTER, ...passthroughArgs]
+      [CI_TURBO_CONCURRENCY_ARG, "--summarize", LABS_TURBO_EXCLUDE_FILTER, ...prebuildFilterArgs, ...passthroughArgs]
     ),
     ...A.map(shards, (shard) =>
       coverageFullShardStep(repoRoot, shard.index, shard.packageNames, passthroughArgs, writeBaseline)
     ),
   ];
 };
+
+const coverageFullSteps = (
+  repoRoot: string,
+  packageNames: ReadonlyArray<string>,
+  args: ReadonlyArray<string>
+): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] =>
+  coverageShardedSteps(
+    repoRoot,
+    packageNames,
+    coverageFullPassthroughArgs(args),
+    A.some(args, isCoverageWriteBaselineArg),
+    A.empty<string>()
+  );
+
+const packageFilterArgs: (packageNames: ReadonlyArray<string>) => ReadonlyArray<string> = A.map(
+  (packageName: string) => `--filter=${packageName}`
+);
+
+const coverageSelectedShardedSteps = (
+  repoRoot: string,
+  options: CoverageTaskOptions
+): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] =>
+  coverageShardedSteps(
+    repoRoot,
+    options.expectedPackageNames,
+    coverageFullPassthroughArgs(options.args),
+    options.writeBaseline,
+    // Build only the selected owners (turbo adds their `^build` dependencies);
+    // the shards then run `--only` against that prebuilt graph.
+    packageFilterArgs(options.expectedPackageNames)
+  );
+
+// Mirrors the full-run rule: hosted runs and baseline writes take the weighted
+// shard executor; a local ratchet keeps turbo's own scheduling. `hosted` is
+// passed in (production reads `isCi()`) so the decision is a pure function.
+const usesShardedCoverageExecutor = (hosted: boolean, writeBaseline: boolean): boolean => hosted || writeBaseline;
+
+const isWideSelectedCoverage = (options: CoverageTaskOptions): boolean =>
+  options.scoped &&
+  A.isReadonlyArrayNonEmpty(options.expectedPackageNames) &&
+  coverageScopeWeightSeconds(options.expectedPackageNames) > COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS;
+
+const coverageSelectedSteps = (
+  repoRoot: string,
+  options: CoverageTaskOptions,
+  shardedExecutor: boolean
+): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] =>
+  shardedExecutor && isWideSelectedCoverage(options)
+    ? coverageSelectedShardedSteps(repoRoot, options)
+    : [coverageStep(repoRoot, options)];
+
+/**
+ * Build the steps a planned selected coverage scope executes.
+ *
+ * **Details**
+ *
+ * Narrow selections stay one Turbo invocation. A selection whose planner
+ * weight exceeds the single-invocation budget runs like the full lane on
+ * hosted runners and baseline writes: one prebuild filtered to the selected
+ * owners, then weighted `--only` shards with capped Vitest workers.
+ *
+ * **Example** (Inspect a narrow selection)
+ *
+ * ```ts
+ * import { coverageSelectedStepsForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const steps = coverageSelectedStepsForTesting("/repo", ["@beep/types"], [], { hosted: true, writeBaseline: false })
+ * console.log(steps.length) // 1
+ * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @param packageNames - Exact selected coverage owners, dependents included.
+ * @param args - Turbo arguments the planner already resolved for the selection.
+ * @param options - Whether the run is hosted (`CI=true` in production) and whether it regenerates the baseline.
+ * @returns One ratchet step, or a prebuild step followed by the selected shards.
+ * @category testing
+ * @since 0.0.0
+ */
+export const coverageSelectedStepsForTesting: {
+  (
+    packageNames: ReadonlyArray<string>,
+    args: ReadonlyArray<string>,
+    options: { readonly hosted: boolean; readonly writeBaseline: boolean }
+  ): (repoRoot: string) => readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>];
+  (
+    repoRoot: string,
+    packageNames: ReadonlyArray<string>,
+    args: ReadonlyArray<string>,
+    options: { readonly hosted: boolean; readonly writeBaseline: boolean }
+  ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>];
+} = dual(
+  4,
+  (
+    repoRoot: string,
+    packageNames: ReadonlyArray<string>,
+    args: ReadonlyArray<string>,
+    options: { readonly hosted: boolean; readonly writeBaseline: boolean }
+  ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] =>
+    coverageSelectedSteps(
+      repoRoot,
+      {
+        args: coverageTurboArgs([...args, ...packageFilterArgs(packageNames)]),
+        expectedPackageNames: packageNames,
+        replaceAll: false,
+        scoped: true,
+        skip: false,
+        writeBaseline: options.writeBaseline,
+      },
+      usesShardedCoverageExecutor(options.hosted, options.writeBaseline)
+    )
+);
 
 /**
  * Build the prebuild and weighted shard steps for a full hosted coverage run.
@@ -2287,12 +2420,33 @@ const runFullShardedCoverage = Effect.fn("QualityTasks.runFullShardedCoverage")(
     return yield* QualityTaskConfigurationError.new("No workspace packages define coverage.");
   }
 
-  const [prebuildStep, ...shardSteps] = coverageFullSteps(repoRoot, packageNames, args);
+  yield* runShardedCoverage("coverage:full", coverageFullSteps(repoRoot, packageNames, args));
+});
+
+const runShardedCoverage = Effect.fn("QualityTasks.runShardedCoverage")(function* (
+  label: string,
+  steps: readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>]
+) {
+  const [prebuildStep, ...shardSteps] = steps;
   yield* Console.log(
-    `[beep-cli] coverage:full: prebuild once, then ${A.length(shardSteps)} weighted in-job shard(s) with aggregate Vitest worker cap ${COVERAGE_FULL_VITEST_WORKER_CAP}`
+    `[beep-cli] ${label}: prebuild once, then ${A.length(shardSteps)} weighted in-job shard(s) with aggregate Vitest worker cap ${COVERAGE_FULL_VITEST_WORKER_CAP}`
   );
   yield* runStep(prebuildStep);
-  yield* runStreamingStepGroup("coverage:full", shardSteps, COVERAGE_FULL_SHARD_COUNT);
+  yield* runStreamingStepGroup(label, shardSteps, COVERAGE_FULL_SHARD_COUNT);
+});
+
+const runSelectedCoverage = Effect.fn("QualityTasks.runSelectedCoverage")(function* (
+  repoRoot: string,
+  options: CoverageTaskOptions
+) {
+  const steps = coverageSelectedSteps(repoRoot, options, usesShardedCoverageExecutor(isCi(), options.writeBaseline));
+  if (A.isReadonlyArrayNonEmpty(A.tailNonEmpty(steps))) {
+    yield* Console.log(
+      `[beep-cli] coverage:affected: selection weighs ${Math.round(coverageScopeWeightSeconds(options.expectedPackageNames))}s of planner budget (> ${COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS}s); using the weighted shard executor`
+    );
+    return yield* runShardedCoverage("coverage:selected", steps);
+  }
+  yield* runStep(A.headNonEmpty(steps));
 });
 
 const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(function* (
@@ -2312,10 +2466,10 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   }
 
   yield* cleanCoverageRegressionOutputs(repoRoot);
-  if (!options.scoped && (isCi() || options.writeBaseline)) {
+  if (!options.scoped && usesShardedCoverageExecutor(isCi(), options.writeBaseline)) {
     yield* runFullShardedCoverage(repoRoot, options.args);
   } else {
-    yield* runStep(coverageStep(repoRoot, options));
+    yield* runSelectedCoverage(repoRoot, options);
   }
 
   if (options.writeBaseline) {

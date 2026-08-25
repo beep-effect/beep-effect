@@ -1277,8 +1277,8 @@ const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
   const fullReasons = Match.value(scope).pipe(
     Match.discriminatorsExhaustive("_tag")({
       full: ({ reasons }) => reasons,
-      selected: () => A.empty<string>(),
-      noop: () => A.empty<string>(),
+      selected: A.empty<string>,
+      noop: A.empty<string>,
     })
   );
 

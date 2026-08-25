@@ -1486,6 +1486,47 @@ environment drift across the document.
 This supersedes the prior unscoped-regeneration behaviour, which replaced every
 row from the local run.
 
+## 2026-08-24: Pull-Request Coverage Scope Measures Workspace Dependents
+
+- **Status:** Active
+
+Decision:
+
+The `--affected` coverage planner selects, in addition to the directly changed
+coverage owners, every coverage-bearing workspace package that transitively
+depends on a changed owner whose non-test files changed. Dependency edges are
+the workspace-internal names in all four `package.json` buckets, inverted from
+the shared owner inventory (`CoverageScopeOwner.workspaceDependencies`). A
+change confined to a package's `test/` tree seeds no dependents. Lab packages
+and packages without a coverage task are walked through but never selected;
+the repository root is not an owner. The selected scope is the union, with the
+dependents recorded separately, and it is the exact set the ratchet compares
+and the completeness check requires. Selections heavier than the proven
+single-invocation budget execute like the full lane (one prebuild filtered to
+the selection, then weighted `--only` shards, empty shards dropped). Baseline
+adoption on a scoped `--write-baseline` remains the direct owners of the
+changed files: dependents are measured and compared, never adopted.
+
+Rationale:
+
+A direct-owners-only selection let `@beep/md` change go green in 110 s while
+the dependent `@beep/pandoc-ast` row dropped; the drop surfaced only in the
+full run on `main` after the merge and cost seven red `main` pushes plus three
+inherited pull-request reds before a hand fix (#780 → #783). The dependent's
+measurement is a consequence of the change under review, so it belongs on the
+pull request. Test-only changes cannot alter what dependents import, so
+widening on them would only spend the lane. The width guard exists because
+dependents make wide selections routine — the seven foundation packages close
+over at least 111 of 128 owners and `@beep/md` alone over 18 — and the full
+lane's prebuild-plus-capped-shards shape is the one hosted memory ceilings
+were proven against. Adoption stays narrow so that a dependent's legitimate
+drop is a visible decision (hand-pin the row or scope it explicitly) rather
+than a silent import of downstream drift; widening adoption to dependents is
+deferred to the comparator-policy decision.
+
+This supersedes the direct-owners-only selection introduced with the
+weighted-shard pull-request scoping.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
