@@ -13,20 +13,18 @@
 import { Exiftool } from "@beep/exiftool";
 import { FFmpeg } from "@beep/ffmpeg";
 import { CaptureLane, ClockCorrelator, Collector, ExtractionRuleSet, SessionStore, Witness } from "@beep/qa-capture";
-import { renderSkillMarkdown } from "@beep/skill-contract";
 import { A } from "@beep/utils";
-import { Effect, FileSystem, Layer, Path } from "effect";
-import * as O from "effect/Option";
+import { Effect, Layer, Path } from "effect";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { markLiveSession, stopLiveSession } from "./Control.ts";
 import { isBlockingProbe, renderDoctorReport, runQaDoctor } from "./Doctor.ts";
 import { runQaExtract } from "./Extract.ts";
-import { QaJudgeContract } from "./JudgeContract.ts";
 import { runQaJudgeIngest } from "./JudgeIngest.ts";
 import { runQaJudgeLint } from "./JudgeLint.ts";
 import { runQaJudgePack } from "./JudgePack.ts";
+import { runQaJudgeSkill } from "./JudgeSkill.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import {
   DEFAULT_SCENARIO_PATH,
@@ -219,26 +217,6 @@ const runJudgeLintCommand = Effect.fn("QaCommand.judgeLint")(function* (options:
   yield* runQaJudgeLint(process.cwd(), decoded);
 });
 
-const runJudgeSkillCommand = Effect.fn("QaCommand.judgeSkill")(function* (options: {
-  readonly write: O.Option<string>;
-}) {
-  const markdown = yield* Effect.fromResult(renderSkillMarkdown(QaJudgeContract));
-  yield* O.match(options.write, {
-    // Raw bytes, not the line printer: the committed artifact has no trailing
-    // newline, so `judge-skill > SKILL.md` must reproduce the renderer output exactly.
-    onNone: () =>
-      Effect.sync(() => {
-        process.stdout.write(markdown);
-      }),
-    onSome: Effect.fn(function* (outputPath) {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      yield* fs.makeDirectory(path.dirname(outputPath), { recursive: true });
-      yield* fs.writeFileString(outputPath, markdown);
-    }),
-  });
-});
-
 const qaRecordCommand = Command.make(
   "record",
   {
@@ -316,7 +294,7 @@ const qaJudgeLintCommand = Command.make("judge-lint", { round: requiredRoundFlag
   Command.provide(QaCommandLayers)
 );
 
-const qaJudgeSkillCommand = Command.make("judge-skill", { write: writeSkillFlag }, runJudgeSkillCommand).pipe(
+const qaJudgeSkillCommand = Command.make("judge-skill", { write: writeSkillFlag }, runQaJudgeSkill).pipe(
   Command.withDescription("Render the qa-inventory judge contract as deterministic SKILL.md"),
   Command.provide(QaCommandLayers)
 );

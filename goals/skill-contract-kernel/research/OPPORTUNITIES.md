@@ -43,3 +43,9 @@ Receipts recorded when work is slower or riskier than the repo workflow should m
 - **Doing:** proving the new exported projection API against the repository JSDoc grammar and sort-tag rules.
 - **Evidence:** `quality jsdoc-quality` only supports repo-wide `--all` analysis and exited 1 on 11,416 inherited missing-example failures. The focused ESLint check, JSDoc ratchet, module-tag guard, and package docgen all passed.
 - **Prevented by:** a package or changed-file scope for `quality jsdoc-quality`, aligned with `docgen:local -- --package`.
+
+## 2026-08-25: coverage ignore hints depend on which runner measured
+
+- **Doing:** shipping `SkillProjection.ts` with one unreachable `RenderError` arm annotated `/* istanbul ignore next */`, after the Codex sandbox proved 100% coverage with the Istanbul provider (`vitest.config.ts` picks Istanbul under Bun).
+- **Evidence:** the hosted `Heavy / Coverage Regression` lane measures with the v8 provider (`vitest.shared.ts`), which ignores Istanbul hints, so the new-file rule failed on #817's first head; the `@beep/html` precedent is `/* v8 ignore next -- reason */`.
+- **Prevented by:** one provider for local and hosted coverage (or a lint that rejects `istanbul ignore` when the ratchet provider is v8), so an ignore hint proven locally is the hint the lane honours.
