@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`; P2 complete 2026-08-24, P3 cut over 2026-08-25
+Lifecycle: `active`; P2 complete 2026-08-24, P3 complete 2026-08-25
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -91,10 +91,13 @@ Admission defense in depth cut over on 2026-08-25: #805 staged `heavy.yml`
 through a local reusable-workflow call, the five required contexts were renamed
 to their `Heavy / ...` forms, and #808 pinned the call to `heavy.yml@main` while
 organization group `beep-ec2-heavy` was restricted to the four protected
-default-branch workflows. The controller's organization registration deployed,
+default-branch workflows. The controller's organization registration first
 failed closed on a missing installation permission (which itself proved the
-no-fallback half of the admission design), and rolled back; accepting the
-permission and redeploying is the remaining P3 step. Evidence:
+no-fallback half of the admission design) and rolled back; after the
+permission was accepted it redeployed, the fleet drained, and the admission
+probes passed: a pull-request heavy job reached a group runner through
+`heavy.yml@refs/heads/main`, and a fleet-labelled dispatch from a non-default
+branch stayed queued beside an idle group runner. P3 is complete. Evidence:
 [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md). P4 owns the live JIT
 replay run; its operator-controlled probe is implemented.
 

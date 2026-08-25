@@ -314,6 +314,7 @@ export const OUTPUT = {
   tableRow: css(".PlaygroundEditorTheme__table tr", 0),
   tableScrollable: css(".PlaygroundEditorTheme__tableScrollableWrapper"),
   tableStriped: css(".PlaygroundEditorTheme__tableRowStriping"),
+  treeView: css(".tree-view-output"),
   alignCenter: css('.PlaygroundEditorTheme__paragraph[style*="text-align: center"]'),
   alignEnd: css('.PlaygroundEditorTheme__paragraph[style*="text-align: end"]'),
   alignJustify: css('.PlaygroundEditorTheme__paragraph[style*="text-align: justify"]'),
@@ -401,6 +402,10 @@ export const AUTOCOMPLETE_PREFIX = "collab";
 // Source: packages/lexical-playground/src/plugins/MarkdownTransformers/index.ts and
 // packages/lexical-markdown/src/MarkdownTransformers.ts at the same pinned revision.
 export const MARKDOWN = {
+  boldItalicStar: "***bold italic star***",
+  boldItalicUnderscore: "___bold italic underscore___",
+  boldStar: "**bold star**",
+  boldUnderscore: "__bold underscore__",
   checkList: "- [ ] evidence",
   codeBlock: "```",
   emoji: ":smile:",
@@ -411,6 +416,8 @@ export const MARKDOWN = {
   horizontalRule: "---",
   image: "![evidence](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==)",
   inlineCode: "`evidence`",
+  italicStar: "*italic star*",
+  italicUnderscore: "_italic underscore_",
   link: "[evidence](https://example.com)",
   orderedList: "1. ",
   quote: "> ",
