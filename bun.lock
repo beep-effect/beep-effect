@@ -63,6 +63,30 @@
         "@types/node": "catalog:",
       },
     },
+    "apps/labs/semantica": {
+      "name": "@beep/semantica",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
+      "devDependencies": {
+        "@tauri-apps/cli": "catalog:",
+        "@testing-library/dom": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "@vitejs/plugin-react": "catalog:",
+        "jsdom": "catalog:",
+        "typescript": "catalog:",
+        "vite": "catalog:",
+      },
+    },
     "apps/labs/trustgraph-workbench": {
       "name": "@beep/trustgraph-workbench",
       "version": "0.0.0",
@@ -3336,6 +3360,8 @@
     "@beep/scratchpad": ["@beep/scratchpad@workspace:scratchpad"],
 
     "@beep/semantic-web": ["@beep/semantic-web@workspace:packages/foundation/capability/semantic-web"],
+
+    "@beep/semantica": ["@beep/semantica@workspace:apps/labs/semantica"],
 
     "@beep/shacl": ["@beep/shacl@workspace:packages/drivers/shacl"],
 

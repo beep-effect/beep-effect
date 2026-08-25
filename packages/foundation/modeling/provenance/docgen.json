@@ -1,6 +1,4 @@
 {
-  "entryPoint": "src/index.ts",
-  "out": "docs/modules",
   "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/provenance/src/",
   "$schema": "../../../../packages/tooling/tool/docgen/schema.json",
   "examplesCompilerOptions": {

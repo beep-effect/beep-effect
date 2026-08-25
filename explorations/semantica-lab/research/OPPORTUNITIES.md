@@ -69,6 +69,26 @@ ratifies.
 
 ## Friction receipts
 
+- **2026-08-25 — Effect reference checkout drifted from the installed rc.111 API.** P1 API
+  verification found the checkout platform package at
+  `.repos/effect/packages/platform/bun`, not the contracted
+  `.repos/effect/packages/platform-bun` path. The checkout's `Config.ts` also exposes
+  `Config.NonEmptyString` and `Config.Boolean`, while installed `effect@4.0.0-rc.111` exposes
+  the lowercase `Config.nonEmptyString` and `Config.boolean` used by this repository. The installed
+  package also exposes `Schema.toArbitrary` and `effect/testing`'s `FastCheck`; neither export is in
+  the checkout. The installed version must win, but resolving the mismatch adds a second source
+  lookup for affected APIs. Prevention: pin the reference checkout to the exact lockfile artifact
+  or add a lightweight source-API parity check to agent bootstrap.
+
+- **2026-08-25 — Bun install could not refresh the minted workspace in the managed sandbox.**
+  The default run failed with `EROFS accessing temporary directory`. Dedicated `BUN_INSTALL`,
+  `BUN_TMPDIR`, and process temp paths under `/tmp` passed that point, but the restricted network
+  then produced `DNSResolveFailed downloading package manifest` for already-locked catalog
+  packages, including `effect` and `@effect/platform-bun`; `--offline` behaved the same way. The
+  dependencies were already installed, so compile and runtime verification remained available.
+  Prevention: give managed repo sessions a writable Bun cache/temp root populated from the lock,
+  or make Bun's offline install consume the existing lock without registry manifest refreshes.
+
 - **2026-08-24 — Knowledge gates vs future/external paths cost two verify cycles.** The refs
   gate requires backticked governed-root paths to exist in-tree (a planned lab path fails) and
   bans live `~/` host anchors in packet-root files, so the hygiene pass's absolute→`~/` rewrite

@@ -1,5 +1,6 @@
 // Coverage regression baseline. Do not edit by hand.
-// Regenerate with: bun run coverage:baseline:write
+// Regenerate the rows you changed with: bun run coverage -- --filter=<package> --write-baseline
+// Regenerate the whole document with: bun run coverage:baseline:write
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
@@ -26193,15 +26194,15 @@
     },
     "@beep/repo-docgen": {
       "path": "packages/tooling/tool/docgen",
-      "lines": 58.94,
-      "statements": 59.2,
-      "branches": 57.39,
-      "functions": 59.05,
+      "lines": 62.45,
+      "statements": 62.53,
+      "branches": 62.29,
+      "functions": 61.4,
       "uncovered": {
-        "lines": 406,
-        "statements": 421,
-        "branches": 98,
-        "functions": 138
+        "lines": 377,
+        "statements": 393,
+        "branches": 92,
+        "functions": 132
       },
       "files": {
         "packages/tooling/tool/docgen/src/CLI.ts": {
@@ -26211,27 +26212,27 @@
           "functions": 0,
           "uncovered": {
             "lines": 36,
-            "statements": 36,
+            "statements": 37,
             "branches": 0,
-            "functions": 9
+            "functions": 10
           }
         },
         "packages/tooling/tool/docgen/src/Checker.ts": {
-          "lines": 68.51,
-          "statements": 67.27,
-          "branches": 69.23,
-          "functions": 64,
+          "lines": 94.64,
+          "statements": 92.98,
+          "branches": 88.23,
+          "functions": 88,
           "uncovered": {
-            "lines": 17,
-            "statements": 18,
-            "branches": 4,
-            "functions": 9
+            "lines": 3,
+            "statements": 4,
+            "branches": 2,
+            "functions": 3
           }
         },
         "packages/tooling/tool/docgen/src/Configuration.ts": {
           "lines": 81.39,
           "statements": 84,
-          "branches": 58.33,
+          "branches": 64.28,
           "functions": 80,
           "uncovered": {
             "lines": 16,
@@ -26241,15 +26242,15 @@
           }
         },
         "packages/tooling/tool/docgen/src/Core.ts": {
-          "lines": 19.39,
-          "statements": 19.21,
-          "branches": 16.36,
-          "functions": 11.49,
+          "lines": 20.28,
+          "statements": 20.06,
+          "branches": 17.64,
+          "functions": 11.76,
           "uncovered": {
-            "lines": 241,
-            "statements": 248,
-            "branches": 46,
-            "functions": 77
+            "lines": 224,
+            "statements": 231,
+            "branches": 42,
+            "functions": 75
           }
         },
         "packages/tooling/tool/docgen/src/Domain.ts": {
@@ -26265,10 +26266,10 @@
           }
         },
         "packages/tooling/tool/docgen/src/Parser.ts": {
-          "lines": 90,
-          "statements": 90.24,
-          "branches": 78.2,
-          "functions": 92.59,
+          "lines": 90.66,
+          "statements": 90.9,
+          "branches": 81.11,
+          "functions": 92.85,
           "uncovered": {
             "lines": 24,
             "statements": 24,
@@ -26289,15 +26290,27 @@
           }
         },
         "packages/tooling/tool/docgen/src/ProofManifest.ts": {
-          "lines": 30,
-          "statements": 28.23,
+          "lines": 30.76,
+          "statements": 28.91,
           "branches": 0,
           "functions": 0,
           "uncovered": {
-            "lines": 56,
-            "statements": 61,
+            "lines": 54,
+            "statements": 59,
             "branches": 10,
-            "functions": 21
+            "functions": 19
+          }
+        },
+        "packages/tooling/tool/docgen/src/Version.ts": {
+          "lines": 90,
+          "statements": 90,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         },
         "packages/tooling/tool/docgen/src/bin.ts": {
@@ -26306,8 +26319,8 @@
           "branches": 0,
           "functions": 0,
           "uncovered": {
-            "lines": 8,
-            "statements": 8,
+            "lines": 9,
+            "statements": 9,
             "branches": 2,
             "functions": 2
           }
@@ -26324,16 +26337,16 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/docgen/src/internal/version.ts": {
-          "lines": 100,
-          "statements": 100,
+        "packages/tooling/tool/docgen/src/internal/JsonFile.ts": {
+          "lines": 66.66,
+          "statements": 66.66,
           "branches": 100,
-          "functions": 100,
+          "functions": 33.33,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 2,
+            "statements": 2,
             "branches": 0,
-            "functions": 0
+            "functions": 2
           }
         }
       }

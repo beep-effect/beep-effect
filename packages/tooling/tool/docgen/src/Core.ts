@@ -194,8 +194,7 @@ const parseModules = (files: ReadonlyArray<Domain.File>) =>
     )
   );
 
-const typeCheckAndRunExamples = Effect.fn("typeCheckAndRunExamples")(function* (modules: ReadonlyArray<Domain.Module>) {
-  const config = yield* Configuration.Configuration;
+const typeCheckExamples = Effect.fn("typeCheckExamples")(function* (modules: ReadonlyArray<Domain.Module>) {
   yield* cleanupExamples;
   const files = yield* getExampleFiles(modules);
   const len = files.length;
@@ -206,12 +205,6 @@ const typeCheckAndRunExamples = Effect.fn("typeCheckAndRunExamples")(function* (
     yield* createExamplesTsConfigJson;
     yield* Effect.logInfo("Typechecking examples...");
     yield* runTscOnExamples;
-    if (config.runExamples) {
-      yield* Effect.logInfo("Running examples...");
-      yield* runBunOnExamples;
-    } else {
-      yield* Effect.logInfo(chalk.gray("Skipping running examples"));
-    }
   } else {
     yield* Effect.logInfo("No examples found.");
   }
@@ -626,36 +619,6 @@ const runTscOnExamples = Effect.gen(function* () {
   }
 });
 
-const runBunOnExamples = Effect.gen(function* () {
-  const config = yield* Configuration.Configuration;
-  const process = yield* Domain.Process;
-  const cwd = yield* process.cwd;
-  const path = yield* Path.Path;
-  const examplesDir = path.normalize(path.join(cwd, config.outDir, "examples"));
-  const index = path.join(examplesDir, "index.ts");
-  const command = ChildProcess.make("bun", [index], {
-    cwd: examplesDir,
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  yield* Effect.logDebug("Running bun on examples...");
-  const { output, exitCode } = yield* collectCommandOutput(command).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[Core.runBunOnExamples] Failed to run bun examples\n${String(cause)}`,
-      })
-    )
-  );
-
-  if (exitCode !== 0) {
-    return yield* Domain.DocgenError.make({
-      message: `Something went wrong while running example files:\n\n${output}`,
-    });
-  }
-});
-
 const writeExamplesToOutDir = Effect.fn("writeExamplesToOutDir")(function* (examples: ReadonlyArray<Domain.File>) {
   yield* Effect.logDebug("Writing examples...");
   const entryPoint = yield* getExamplesEntryPoint(examples);
@@ -894,7 +857,7 @@ export const program = Effect.gen(function* () {
             message: `The following errors occurred while checking the modules:\n\n${A.join("\n\n")(errors)}`,
           });
         }
-        yield* typeCheckAndRunExamples(modules);
+        yield* typeCheckExamples(modules);
       }),
       Effect.gen(function* () {
         yield* Effect.logInfo("Creating markdown files...");
