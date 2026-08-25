@@ -121,7 +121,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(bun run beep yeet publish:*)",
   "Bash(bun run beep yeet monitor:*)",
   "Bash(bun run beep yeet closeout:*)",
-  "Bash(bun run beep yeet sweep:*)",
+  "Bash(bun run beep yeet sweep)",
   "Bash(bun run beep worktree new:*)",
   "Bash(bun run beep worktree doctor:*)",
   "Bash(bun run beep worktree remove:*)",

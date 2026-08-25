@@ -561,7 +561,8 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
 
       assert.lengthOf(settings.permissions.allow, 48);
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
-      assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
+      assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep)");
+      assert.notInclude(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git worktree remove:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git push --delete:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git push origin --delete:*)");
