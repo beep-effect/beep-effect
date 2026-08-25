@@ -6,10 +6,9 @@ import { referenceProfiles } from "@beep/editor/capability/profiles";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema";
 import * as Md from "@beep/md/Md.model";
-import { Effect, pipe, Result } from "effect";
+import { Effect, pipe, Result, SchemaIssue } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SchemaIssue from "effect/SchemaIssue";
 import { Atom } from "effect/unstable/reactivity";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 

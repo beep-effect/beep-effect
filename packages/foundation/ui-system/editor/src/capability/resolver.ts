@@ -6,10 +6,7 @@
  */
 
 import { A, dual, O } from "@beep/utils";
-import { Effect, Equal, pipe, Result } from "effect";
-import * as Graph from "effect/Graph";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
+import { Effect, Equal, Graph, MutableHashMap, MutableHashSet, pipe, Result } from "effect";
 import {
   CapabilityConflictError,
   DependencyCycleError,
