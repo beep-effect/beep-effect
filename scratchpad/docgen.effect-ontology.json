@@ -13,7 +13,6 @@
   "enforceDescriptions": true,
   "enforceExamples": true,
   "enforceVersion": true,
-  "runExamples": true,
   "parseCompilerOptions": {
     "noEmit": true,
     "strict": true,

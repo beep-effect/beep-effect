@@ -11,7 +11,6 @@ export const defaultDocgenConfig: Configuration.ConfigurationShape = {
   enforceDescriptions: false,
   enforceExamples: false,
   enforceVersion: true,
-  runExamples: false,
   tscExecutable: "tsc",
   include: [],
   exclude: [],

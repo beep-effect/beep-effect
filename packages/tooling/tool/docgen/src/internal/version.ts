@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import packageJson from "../../package.json" with { type: "json" };
 
 /**
  * Runtime package version shown in the CLI banner.
@@ -20,4 +21,4 @@
  * @category configuration
  * @since 0.0.0
  */
-export const moduleVersion = "0.0.0";
+export const moduleVersion = packageJson.version;

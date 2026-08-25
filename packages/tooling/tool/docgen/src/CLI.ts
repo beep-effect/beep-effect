@@ -71,11 +71,6 @@ const enforceVersion = Flag.boolean("enforce-version").pipe(
   Flag.optional
 );
 
-const runExamples = Flag.boolean("run-examples").pipe(
-  Flag.withDescription("Whether to execute examples discovered in the source files"),
-  Flag.optional
-);
-
 const include = Flag.string("include").pipe(
   Flag.withDescription("Comma-separated package-relative or srcDir-relative file globs to include"),
   Flag.optional
@@ -129,7 +124,6 @@ const options = {
   enforceDescriptions,
   enforceExamples,
   enforceVersion,
-  runExamples,
   include,
   exclude,
   tscExecutable,
@@ -184,7 +178,6 @@ export const docgenCommand = Command.make(
       enforceExamples: input.enforceExamples,
       enforceVersion: input.enforceVersion,
       tscExecutable: input.tscExecutable,
-      runExamples: input.runExamples,
       include: input.include.pipe(O.map(splitGlobList)),
       exclude: input.exclude.pipe(O.map(A.of)),
       parseCompilerOptions,

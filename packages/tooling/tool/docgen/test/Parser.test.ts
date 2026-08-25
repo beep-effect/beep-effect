@@ -256,6 +256,28 @@ Since v1.0.0`
   });
 
   describe("parseFunctions", () => {
+    it.effect("strips internal properties from rendered signatures", () =>
+      Effect.gen(function* () {
+        const functions = yield* runInLayer(
+          makeParserTestLayer(`/**
+ * Reads the public state.
+ *
+ * @since 1.0.0
+ */
+export function readState(): {
+  readonly visible: string
+  /** @internal */
+  readonly hidden?: number
+} {
+  return { visible: "ready" }
+}`),
+          Parser.parseFunctions
+        );
+
+        expect(functions[0]?.signature).toBe("declare const readState: () => { readonly visible: string; }");
+      })
+    );
+
     it.effect(
       `should remove all metadata from typedcript code blocks when the theme is ${Configuration.DEFAULT_THEME}`,
       () =>
