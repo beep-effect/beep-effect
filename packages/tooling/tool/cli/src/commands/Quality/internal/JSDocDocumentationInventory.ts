@@ -10,6 +10,12 @@ import { Node, SyntaxKind } from "ts-morph";
 import { formatJsonc } from "../../../internal/artifacts/index.ts";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { globPatternToRegExp as sharedGlobPatternToRegExp } from "../../../internal/GlobPattern.ts";
+import {
+  jsDocSectionBodyText,
+  jsDocSectionOrder,
+  ParseJSDocSectionsOptions,
+  parseJSDocSections,
+} from "../../../internal/jsdoc/JSDocSections.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.ts";
 import {
@@ -33,6 +39,7 @@ import {
 } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { SourceFile } from "ts-morph";
+import type { JSDocSectionName } from "../../../internal/jsdoc/JSDocSections.ts";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 
@@ -313,107 +320,14 @@ const extractExamples = (commentText: string): ReadonlyArray<string> => {
   return A.map(extractFencedCodeBlocks(cleaned)[0], (example) => example.code);
 };
 
-const JSDocSectionName = LiteralKit(["When to use", "Details", "Gotchas", "Example"]).pipe(
-  $I.annoteSchema("JSDocSectionName", {
-    description: "Canonical body-section names accepted by the JSDoc documentation law.",
-  })
-);
-
-type JSDocSectionName = typeof JSDocSectionName.Type;
-
-class JSDocSection extends S.Class<JSDocSection>($I`JSDocSection`)(
-  {
-    name: JSDocSectionName,
-    title: S.optionalKey(S.String),
-    lineOffset: S.Int,
-    body: S.Array(S.String),
-  },
-  $I.annote("JSDocSection", {
-    description: "One parsed canonical JSDoc body section and its unfenced source lines.",
-  })
-) {}
-
-const sectionOrder: Record<Exclude<JSDocSectionName, "Example">, number> = {
-  "When to use": 0,
-  Details: 1,
-  Gotchas: 2,
-};
-
-const blankLinesLike = (value: string): string =>
-  A.join(
-    A.map(Str.split(/\r?\n/)(value), () => ""),
-    "\n"
-  );
-
-// The docgen extractor remains the single fence parser. Normalizing only the
-// info-string lets it identify every fence, after which code bodies are masked
-// before section headings are inspected.
-const maskFencedContent = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
-  const normalized = A.join(
-    A.map(lines, (line) => Str.replace(/^(\s*)(```|~~~).*$/, "$1$2ts")(line)),
-    "\n"
-  );
-  const [blocks] = extractFencedCodeBlocks(normalized);
-  const masked = A.reduce(blocks, normalized, (text, block) =>
-    Str.isEmpty(block.code)
-      ? text
-      : Str.replace(new RegExp(escapeRegExp(block.code), "g"), blankLinesLike(block.code))(text)
-  );
-  return Str.split(/\r?\n/)(masked);
-};
-
-const dropFramingBlankLines = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
-  const withoutLeading = Str.isEmpty(Str.trim(lines[0] ?? "")) ? A.drop(lines, 1) : lines;
-  return Str.isEmpty(Str.trim(withoutLeading[withoutLeading.length - 1] ?? ""))
-    ? A.dropRight(withoutLeading, 1)
-    : withoutLeading;
-};
-
-const sectionHeadingPattern = /^\s*\*\*(When to use|Details|Gotchas|Example)\*\*(?:\s*\((.*)\))?\s*$/;
-
-const parseSections = (
-  commentText: string
-): {
-  readonly bodyLines: ReadonlyArray<string>;
-  readonly sections: ReadonlyArray<JSDocSection>;
-} => {
-  const bodyLines = dropFramingBlankLines(stripCommentFraming(commentText));
-  const maskedLines = maskFencedContent(bodyLines);
-  const tagIndex = A.findFirstIndex(maskedLines, (line) => /^\s*@\w/.test(line)).pipe(
-    O.getOrElse(() => bodyLines.length)
-  );
-  const maskedBodyLines = A.take(maskedLines, tagIndex);
-  const sectionStarts: Array<{
-    readonly index: number;
-    readonly name: JSDocSectionName;
-    readonly title: string | undefined;
-  }> = [];
-  const isSectionName = S.is(JSDocSectionName);
-  for (const [index, line] of A.entries(maskedBodyLines)) {
-    const match = sectionHeadingPattern.exec(line);
-    if (match !== null && isSectionName(match[1])) {
-      A.appendInPlace(sectionStarts, { index, name: match[1], title: match[2] });
-    }
-  }
-  const sections = A.map(sectionStarts, (section, index) => {
-    const next = sectionStarts[index + 1];
-    return JSDocSection.make({
-      name: section.name,
-      lineOffset: section.index + 1,
-      body: A.slice(bodyLines, { start: section.index + 1, end: next?.index ?? tagIndex }),
-      ...O.getSomesStruct({ title: O.map(O.fromUndefinedOr(section.title), Str.trim) }),
-    });
-  });
-  return { bodyLines: A.take(bodyLines, tagIndex), sections };
-};
-
 const nonEmptyLines = (lines: ReadonlyArray<string>): ReadonlyArray<string> => A.filter(lines, Str.isNonEmpty);
-
-const sectionBodyText = (section: JSDocSection): string => A.join(section.body, "\n");
 
 const hasExampleCarrier = (commentText: string): boolean =>
   A.contains(tagsFromComment(commentText), "@example") ||
-  A.some(parseSections(commentText).sections, (section) => section.name === "Example");
+  A.some(
+    parseJSDocSections(ParseJSDocSectionsOptions.make({ commentText })).sections,
+    (section) => section.name === "Example"
+  );
 
 const isPureTypeLevelExport = (declaration: Node): boolean =>
   Node.isTypeAliasDeclaration(declaration) ||
@@ -459,7 +373,7 @@ const missingRequiredExportTags = (
 // fallow-ignore-next-line complexity -- this flat pass preserves the documented section-order state machine in one auditable rule boundary
 export const documentationShapeViolations = (commentText: string): ReadonlyArray<DocumentationIssue> => {
   const findings: Array<DocumentationIssue> = [];
-  const { bodyLines, sections } = parseSections(commentText);
+  const { bodyLines, sections } = parseJSDocSections(ParseJSDocSectionsOptions.make({ commentText }));
   const hasNewStyleSections = A.isReadonlyArrayNonEmpty(sections);
 
   for (const value of valuesForTag(commentText, "@see")) {
@@ -497,7 +411,7 @@ export const documentationShapeViolations = (commentText: string): ReadonlyArray
   let exampleFenceCount = 0;
 
   for (const section of sections) {
-    const bodyText = sectionBodyText(section);
+    const bodyText = jsDocSectionBodyText(section);
     const meaningfulBody = nonEmptyLines(A.map(section.body, Str.trim));
     if (A.isReadonlyArrayEmpty(meaningfulBody)) {
       A.appendInPlace(findings, { rule: "empty-section", lineOffset: section.lineOffset, detail: section.name });
@@ -540,7 +454,7 @@ export const documentationShapeViolations = (commentText: string): ReadonlyArray
       A.appendInPlace(findings, { rule: "duplicate-section", lineOffset: section.lineOffset, detail: section.name });
     }
     MutableHashSet.add(seenSections, section.name);
-    const currentOrder = sectionOrder[section.name];
+    const currentOrder = jsDocSectionOrder[section.name];
     if (currentOrder < lastSectionOrder) {
       A.appendInPlace(findings, { rule: "section-out-of-order", lineOffset: section.lineOffset, detail: section.name });
     }

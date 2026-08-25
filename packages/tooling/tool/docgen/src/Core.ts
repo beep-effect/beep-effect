@@ -44,6 +44,44 @@ class FencedCodeBlock extends S.Class<FencedCodeBlock>($I`FencedCodeBlock`)(
   })
 ) {}
 
+/**
+ * Detailed source spans for one extracted TypeScript fence.
+ *
+ * **When to use**
+ *
+ * Use when a caller must edit fence metadata or code against the exact source
+ * slice that was analyzed.
+ *
+ * **Example** (Inspect a fence info span)
+ *
+ * ```ts
+ * import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core"
+ *
+ * const source = ["~~" + "~ts name=sample", "const value = 1", "~~" + "~"].join("\n")
+ * const [fences] = extractFencedCodeBlockDetails(source)
+ * console.log(fences[0]?.infoString) // "ts name=sample"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FencedCodeBlockDetail extends S.Class<FencedCodeBlockDetail>($I`FencedCodeBlockDetail`)(
+  {
+    code: S.String,
+    extension: FencedCodeBlockExtension,
+    infoString: S.String,
+    fenceStart: S.Natural,
+    fenceEnd: S.Natural,
+    infoStart: S.Natural,
+    infoEnd: S.Natural,
+    codeStart: S.Natural,
+    codeEnd: S.Natural,
+  },
+  $I.annote("FencedCodeBlockDetail", {
+    description: "Extracted TypeScript fence with raw metadata and half-open source offsets.",
+  })
+) {}
+
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
 const isDocgenSourceFile = (filePath: string): boolean =>
@@ -270,6 +308,24 @@ const isTypeScriptFence = (metadata: string): boolean =>
     A.some((prefix) => Str.startsWith(prefix)(metadata))
   );
 
+const fencePattern = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
+
+const fenceMatches = (content: string): ReadonlyArray<RegExpMatchArray> =>
+  pipe(content, Str.matchAll(fencePattern), A.fromIterable);
+
+const fenceWarnings = (content: string, matches: ReadonlyArray<RegExpMatchArray>): Array<string> =>
+  pipe(
+    matches,
+    A.filter((match) => match[3] === undefined),
+    A.map(() => `Code block does not have a matching closing fence:\n${content}`)
+  );
+
+const isTypeCheckableFenceMatch = (match: RegExpMatchArray): boolean => {
+  const metadata = Str.toLowerCase(match[1] ?? "");
+  const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
+  return isTypeScriptFence(metadata) && !isSkipTypeChecking;
+};
+
 /**
  * Extracts type-checkable fenced TypeScript code blocks with their generated file extensions.
  *
@@ -306,21 +362,12 @@ const isTypeScriptFence = (metadata: string): boolean =>
 export const extractFencedCodeBlocks = (
   content: string
 ): [examples: Array<FencedCodeBlock>, warnings: Array<string>] => {
-  const fenceRegex = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
-  const matches = pipe(content, Str.matchAll(fenceRegex), A.fromIterable);
-  const warnings = pipe(
-    matches,
-    A.filter((match) => match[3] === undefined),
-    A.map(() => `Code block does not have a matching closing fence:\n${content}`)
-  );
+  const matches = fenceMatches(content);
+  const warnings = fenceWarnings(content, matches);
 
   const examples = pipe(
     matches,
-    A.filter((match) => {
-      const metadata = Str.toLowerCase(match[1] ?? "");
-      const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
-      return isTypeScriptFence(metadata) && !isSkipTypeChecking;
-    }),
+    A.filter(isTypeCheckableFenceMatch),
     A.map((match) =>
       FencedCodeBlock.make({
         code: Str.trim(match[2] ?? ""),
@@ -330,6 +377,70 @@ export const extractFencedCodeBlocks = (
   );
 
   return [examples, warnings];
+};
+
+/**
+ * Extracts TypeScript fences with raw info strings and half-open source spans.
+ *
+ * **When to use**
+ *
+ * Use when a codemod must prove that the opening fence and body have not
+ * changed between analysis and mutation.
+ *
+ * **Details**
+ *
+ * This extractor shares the same match pass, language filtering, and warnings
+ * as {@link extractFencedCodeBlocks}; offsets refer to the supplied string.
+ *
+ * **Example** (Read exact source offsets)
+ *
+ * ```ts
+ * import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core"
+ *
+ * const source = ["before", "~~" + "~ts", "const value = 1", "~~" + "~", "after"].join("\n")
+ * const [fences] = extractFencedCodeBlockDetails(source)
+ * const fence = fences[0]
+ * console.log(fence === undefined ? "" : source.slice(fence.infoStart, fence.infoEnd)) // "ts"
+ * ```
+ *
+ * @param content - Markdown or JSDoc text scanned for fenced TypeScript blocks.
+ * @returns Detailed fences and the same unterminated-fence warnings as the compatibility extractor.
+ * @see {@link extractFencedCodeBlocks} for the stable code-and-extension output shape.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const extractFencedCodeBlockDetails = (
+  content: string
+): [examples: Array<FencedCodeBlockDetail>, warnings: Array<string>] => {
+  const matches = fenceMatches(content);
+  const examples = pipe(
+    matches,
+    A.filter(isTypeCheckableFenceMatch),
+    A.map((match) => {
+      const matched = match[0];
+      const infoString = match[1] ?? "";
+      const rawCode = match[2] ?? "";
+      const fenceStart = match.index ?? 0;
+      const infoStart = fenceStart + 3;
+      const infoEnd = infoStart + infoString.length;
+      const codeStart = infoEnd + 1;
+      const closingLength = match[3]?.length ?? 0;
+      const fenceEnd = fenceStart + matched.length;
+      const codeEnd = fenceEnd - closingLength;
+      return FencedCodeBlockDetail.make({
+        code: Str.trim(rawCode),
+        extension: fenceExtension(infoString),
+        infoString,
+        fenceStart,
+        fenceEnd,
+        infoStart,
+        infoEnd,
+        codeStart,
+        codeEnd,
+      });
+    })
+  );
+  return [examples, fenceWarnings(content, matches)];
 };
 
 const getExampleFiles = Effect.fn("getExampleFiles")(function* (modules: ReadonlyArray<Domain.Module>) {
