@@ -196,6 +196,8 @@ const stepDetail = (step: Step): string => {
   switch (step.action) {
     case "goto":
       return `${step.path} ${stableStringify(step.query ?? {})}`;
+    case "reload":
+      return "reload current URL";
     case "click":
       return describeLocator(step.locator);
     case "hover":
@@ -218,6 +220,8 @@ const stepDetail = (step: Step): string => {
       return describeLocator(step.locator);
     case "clipboard-paste":
       return `${describeLocator(step.locator)} ${step.payload?.mimeType ?? "system clipboard"}`;
+    case "file-paste":
+      return `${describeLocator(step.locator)} ${step.fileName} (${step.mimeType})`;
     case "clipboard-verify":
       return `${describeLocator(step.locator)} system clipboard matches captured editor text`;
     case "paste-verify":
@@ -226,6 +230,8 @@ const stepDetail = (step: Step): string => {
       return `download-slot=${step.downloadSlot} editorState.root contains captured editor text`;
     case "set-viewport":
       return `${step.width}x${step.height}`;
+    case "touch-swipe":
+      return `${describeLocator(step.locator)} delta=${stableStringify(step.delta)}`;
     case "mark-manual":
       return step.reason;
   }
@@ -307,6 +313,9 @@ const executeStep = async (
   switch (step.action) {
     case "goto":
       await page.goto(gotoUrl(step), { waitUntil: "domcontentloaded" });
+      return;
+    case "reload":
+      await page.reload({ waitUntil: "domcontentloaded" });
       return;
     case "click":
       await executeClick(page, context, step, downloads, entryDirectory);
@@ -398,6 +407,8 @@ const executeStep = async (
       if (step.payload === undefined) {
         await locator.press("Control+V");
       } else {
+        await locator.focus();
+        await locator.evaluate(() => navigator.clipboard.writeText(""));
         await locator.evaluate((element, payload) => {
           const transfer = new DataTransfer();
           transfer.setData(payload.mimeType, payload.text);
@@ -406,6 +417,25 @@ const executeStep = async (
           );
         }, step.payload);
       }
+      return;
+    }
+    case "file-paste": {
+      const locator = toLocator(page, step.locator);
+      const base64 = Str.replace(/^data:[^,]+,/, "")(step.dataUri);
+      await locator.focus();
+      await locator.evaluate(() => navigator.clipboard.writeText(""));
+      await locator.evaluate(
+        (element, payload) => {
+          const decoded = atob(payload.base64);
+          const bytes = Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+          const transfer = new DataTransfer();
+          transfer.items.add(new File([bytes], payload.fileName, { type: payload.mimeType }));
+          element.dispatchEvent(
+            new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: transfer })
+          );
+        },
+        { base64, fileName: step.fileName, mimeType: step.mimeType }
+      );
       return;
     }
     case "clipboard-verify": {
@@ -480,6 +510,55 @@ const executeStep = async (
     }
     case "set-viewport":
       await page.setViewportSize({ height: step.height, width: step.width });
+      return;
+    case "touch-swipe":
+      await toLocator(page, step.locator).evaluate((element, delta) => {
+        const bounds = element.getBoundingClientRect();
+        const startX = bounds.left + bounds.width / 4;
+        const startY = bounds.top + bounds.height / 2;
+        const endX = startX + delta.x;
+        const endY = startY + delta.y;
+        const start = new Touch({
+          clientX: startX,
+          clientY: startY,
+          identifier: 1,
+          pageX: startX,
+          pageY: startY,
+          screenX: startX,
+          screenY: startY,
+          target: element,
+        });
+        const end = new Touch({
+          clientX: endX,
+          clientY: endY,
+          identifier: 1,
+          pageX: endX,
+          pageY: endY,
+          screenX: endX,
+          screenY: endY,
+          target: element,
+        });
+        element.dispatchEvent(
+          new TouchEvent("touchstart", {
+            bubbles: true,
+            cancelable: true,
+            changedTouches: [start],
+            composed: true,
+            targetTouches: [start],
+            touches: [start],
+          })
+        );
+        element.dispatchEvent(
+          new TouchEvent("touchend", {
+            bubbles: true,
+            cancelable: true,
+            changedTouches: [end],
+            composed: true,
+            targetTouches: [],
+            touches: [],
+          })
+        );
+      }, step.delta);
       return;
     case "mark-manual":
       return;
@@ -634,7 +713,7 @@ const validateInventory = async (): Promise<BatchManifest> => {
   }
   const extra = Object.keys(manifest).filter((id) => !seen.has(id));
   if (extra.length > 0) throw new Error(`Unexpected batches.json entries: ${extra.join(", ")}`);
-  if (seen.size !== 162) throw new Error(`Expected 162 scenarios, found ${seen.size}`);
+  if (seen.size !== 163) throw new Error(`Expected 163 scenarios, found ${seen.size}`);
   return manifest;
 };
 

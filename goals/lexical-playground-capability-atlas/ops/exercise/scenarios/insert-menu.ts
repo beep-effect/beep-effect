@@ -1,6 +1,7 @@
-import { click, clipboardPaste, drag, expectSelector, keyboard, type } from "./dsl.ts";
+import { click, clipboardPaste, css, drag, expectSelector, expectText, filePaste, keyboard, type } from "./dsl.ts";
 import { GROUP, INSERT_ITEM, multiPathLifecycle, nodeLifecycle, scenario } from "./helpers.ts";
 import {
+  ACTION,
   AUTO_EMBED,
   CUSTOM_OUTPUT,
   EDITOR,
@@ -22,6 +23,12 @@ import {
   YOUTUBE_URL,
 } from "./sourced.ts";
 import type { LocatorSpec, Step } from "./dsl.ts";
+
+const TINY_PNG_DATA_URI =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+const PASTE_DROP_IMAGE = css('.editor-image img[alt="paste-drop-evidence.png"]');
+const IMPORTED_IMAGE = css('.editor-image img[alt="importer evidence"]');
+const IMAGE_IMPORT_HTML = `<figure><img src="${TINY_PNG_DATA_URI}" alt="importer evidence"><figcaption>Importer caption</figcaption></figure>`;
 
 const insert = (item: LocatorSpec): ReadonlyArray<Step> => [click(INSERT_MENU), click(item)];
 const slash = (item: LocatorSpec): ReadonlyArray<Step> => [type(EDITOR, "/"), click(item)];
@@ -137,16 +144,38 @@ export const scenarios = [
     title: "Horizontal rule",
   }),
   scenario({
-    activationExercise: "Insert a sample image through Insert, slash picker, and the image Markdown transformer.",
+    activationExercise:
+      "Insert an image through Insert, slash picker, Markdown, file paste, and the figure/image HTML importer.",
     group: GROUP.insertMenu,
     id: "node.image",
     steps: multiPathLifecycle(
       [
         [...insert(INSERT_ITEM.image), click(IMAGE_DIALOG.sample)],
         [...slash(SLASH_ITEM.image), click(IMAGE_DIALOG.sample)],
-        [type(EDITOR, MARKDOWN.image)],
+        [
+          type(EDITOR, MARKDOWN.image),
+          expectSelector(CUSTOM_OUTPUT.image),
+          keyboard("Control+End", EDITOR),
+          filePaste(EDITOR, {
+            dataUri: TINY_PNG_DATA_URI,
+            fileName: "paste-drop-evidence.png",
+            mimeType: "image/png",
+          }),
+          expectSelector(PASTE_DROP_IMAGE),
+          click(ACTION.htmlTo),
+          expectSelector(OUTPUT.code),
+          keyboard("Control+End", EDITOR),
+          type(EDITOR, IMAGE_IMPORT_HTML),
+          click(ACTION.htmlFrom),
+          expectSelector(PASTE_DROP_IMAGE),
+          expectSelector(IMPORTED_IMAGE),
+          expectText(EDITOR, "Importer caption"),
+        ],
       ],
-      CUSTOM_OUTPUT.image
+      CUSTOM_OUTPUT.image,
+      {
+        screenshotLabels: ["activation-path-1", "activation-path-2", "markdown-shortcut-paste-drop-importer"],
+      }
     ),
     title: "Image",
   }),
