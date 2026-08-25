@@ -471,13 +471,13 @@ const captureTextStream = (
  * @category errors
  * @since 0.0.0
  */
-class CapturePipeWedgedError extends S.TaggedError<CapturePipeWedgedError>($I`CapturePipeWedgedError`)(
+export class CapturePipeWedgedError extends S.TaggedError<CapturePipeWedgedError>($I`CapturePipeWedgedError`)(
   "CapturePipeWedgedError",
   {
     commandLine: S.String,
     message: S.String,
   },
-  $I.annote("CapturePipeWedgedError", {
+  $I.annoteError<CapturePipeWedgedError>("CapturePipeWedgedError", {
     description:
       "Capture pipe still open after child exit and process-group reap; an escaped descendant holds the write end.",
   })
@@ -497,7 +497,7 @@ export class CaptureCommandTimedOutError extends S.TaggedError<CaptureCommandTim
     commandLine: S.String,
     message: S.String,
   },
-  $I.annote("CaptureCommandTimedOutError", {
+  $I.annoteError<CaptureCommandTimedOutError>("CaptureCommandTimedOutError", {
     description: "Captured command exceeded its configured runtime budget and was interrupted.",
   })
 ) {}

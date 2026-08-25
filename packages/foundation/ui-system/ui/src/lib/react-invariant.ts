@@ -66,7 +66,7 @@ export class ReactContextInvariantError extends S.TaggedError<ReactContextInvari
       })
     ),
   },
-  $I.annote("ReactContextInvariantError", {
+  $I.annoteError<ReactContextInvariantError>("ReactContextInvariantError", {
     description: "Synchronous React context invariant failure.",
   })
 ) {}

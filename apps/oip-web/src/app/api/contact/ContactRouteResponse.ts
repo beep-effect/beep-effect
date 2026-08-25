@@ -27,12 +27,27 @@ const ContactRoutePayloadErrorReason = LiteralKit(["form-data", "schema"]).pipe(
 
 type ContactRoutePayloadErrorReason = typeof ContactRoutePayloadErrorReason.Type;
 
-class ContactRoutePayloadError extends S.TaggedError<ContactRoutePayloadError>($I`ContactRoutePayloadError`)(
+/**
+ * Typed failure raised when the OIP contact route cannot decode a form payload.
+ *
+ * **Example** (Create a schema payload failure)
+ *
+ * ```ts
+ * import { ContactRoutePayloadError } from "@/app/api/contact/ContactRouteResponse"
+ *
+ * const error = ContactRoutePayloadError.fromReason("schema")
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ContactRoutePayloadError extends S.TaggedError<ContactRoutePayloadError>($I`ContactRoutePayloadError`)(
   "ContactRoutePayloadError",
   {
     reason: ContactRoutePayloadErrorReason,
   },
-  $I.annote("ContactRoutePayloadError", {
+  $I.annoteError<ContactRoutePayloadError>("ContactRoutePayloadError", {
     description: "Typed OIP contact route form payload failure.",
   })
 ) {

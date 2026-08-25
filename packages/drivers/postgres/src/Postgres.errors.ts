@@ -6,7 +6,7 @@
  */
 
 import { $PostgresId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, pipe, Result } from "effect";
 import * as S from "effect/Schema";
@@ -340,31 +340,9 @@ const optionFrom = <A>(value: A | undefined): O.Option<A> => O.fromUndefinedOr(v
 const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
   !isCause(value) &&
   P.hasInspectableObjectShape(value) &&
-  safeBoolean(() => S.is(S.Defect({ includeStack: true }))(value))
+  safeBoolean(() => S.is(Defect({ includeStack: true }))(value))
     ? optionFrom(value)
     : O.none();
-
-const PostgresErrorFields = {
-  operation: S.String.annotateKey({ description: "Driver operation being performed when the failure occurred." }),
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({ description: "Schema-safe defect captured from the original failure when available." }),
-  ...PostgresDiagnosticFields,
-  sqlState: S.OptionFromOptionalKey(S.String)
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({ description: "Five-character SQLSTATE code reported by Postgres." }),
-  sqlStateName: S.OptionFromOptionalKey(S.String)
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({ description: "Canonical SQLSTATE name derived from the SQLSTATE code." }),
-  where: S.OptionFromOptionalKey(S.String)
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({ description: "Contextual where-clause or stack detail reported by Postgres." }),
-  sourceLocation: S.OptionFromOptionalKey(S.String)
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({ description: "Best-effort source file and position associated with the failure." }),
-} satisfies S.Struct.Fields;
-const samePostgresErrorFields = S.toEquivalence(S.TaggedStruct("PostgresError", PostgresErrorFields));
-const samePostgresError = (self: PostgresError, that: PostgresError): boolean => samePostgresErrorFields(self, that);
 
 /**
  * Technical failure raised by the `@beep/postgres` driver boundary.
@@ -383,14 +361,28 @@ const samePostgresError = (self: PostgresError, that: PostgresError): boolean =>
  */
 export class PostgresError extends S.TaggedError<PostgresError>($I`PostgresError`)(
   "PostgresError",
-  PostgresErrorFields,
-  $I.annoteClass<S.declare<PostgresError>, readonly [S.TaggedStruct<"PostgresError", typeof PostgresErrorFields>]>(
-    "PostgresError",
-    {
-      description: "Technical Postgres driver failure scoped to a driver operation.",
-      toEquivalence: () => samePostgresError,
-    }
-  )
+  {
+    operation: S.String.annotateKey({ description: "Driver operation being performed when the failure occurred." }),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Schema-safe defect captured from the original failure when available." }),
+    ...PostgresDiagnosticFields,
+    sqlState: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Five-character SQLSTATE code reported by Postgres." }),
+    sqlStateName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Canonical SQLSTATE name derived from the SQLSTATE code." }),
+    where: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Contextual where-clause or stack detail reported by Postgres." }),
+    sourceLocation: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Best-effort source file and position associated with the failure." }),
+  },
+  $I.annoteError<PostgresError>("PostgresError", {
+    description: "Technical Postgres driver failure scoped to a driver operation.",
+  })
 ) {
   static readonly is = S.is(PostgresError);
 

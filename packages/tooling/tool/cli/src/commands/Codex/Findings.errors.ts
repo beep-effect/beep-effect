@@ -12,7 +12,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Runtime } from "effect";
 import * as S from "effect/Schema";
@@ -129,9 +129,9 @@ export class CodexFindingsIngestError extends S.TaggedError<CodexFindingsIngestE
   {
     reason: CodexIngestFailureReason,
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("CodexFindingsIngestError", {
+  $I.annoteError<CodexFindingsIngestError>("CodexFindingsIngestError", {
     description: "Failure raised while reading or decoding a Codex findings capture payload.",
   })
 ) {
@@ -230,7 +230,7 @@ export class CodexFindingsRedactionError extends S.TaggedError<CodexFindingsReda
     message: S.String,
     surfaces: S.Array(S.String),
   },
-  $I.annote("CodexFindingsRedactionError", {
+  $I.annoteError<CodexFindingsRedactionError>("CodexFindingsRedactionError", {
     description: "Failure raised when captured content carries secret-shaped or private material.",
   })
 ) {
@@ -262,9 +262,9 @@ export class CodexPacketWriteError extends S.TaggedError<CodexPacketWriteError>(
   {
     reason: CodexPacketWriteFailureReason,
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("CodexPacketWriteError", {
+  $I.annoteError<CodexPacketWriteError>("CodexPacketWriteError", {
     description: "Failure raised while staging or committing a generated Codex findings packet.",
   })
 ) {

@@ -10,6 +10,8 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 
+export { CliReportedExit } from "./ExitCodeError.ts";
+
 const $I = $RepoCliId.create("internal/cli/Stdin");
 
 /**
@@ -32,7 +34,7 @@ export class StdinDocumentError extends S.TaggedError<StdinDocumentError>($I`Std
   {
     message: S.String,
   },
-  $I.annote("StdinDocumentError", {
+  $I.annoteError<StdinDocumentError>("StdinDocumentError", {
     description: "Failure while reading a stdin document for a --from-stdin command flag.",
   })
 ) {}

@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Stream } from "effect";
@@ -28,7 +28,6 @@ import {
 } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("source-discovery");
-
 const DEFAULT_MAX_FILES = 200;
 
 /**
@@ -281,10 +280,10 @@ export class AiMetricsSourceDiscoveryError extends S.TaggedError<AiMetricsSource
 )(
   "AiMetricsSourceDiscoveryError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsSourceDiscoveryError", {
+  $I.annoteError<AiMetricsSourceDiscoveryError>("AiMetricsSourceDiscoveryError", {
     description: "Typed failure raised by AI metrics source discovery.",
   })
 ) {}

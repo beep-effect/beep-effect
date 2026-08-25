@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -42,10 +42,10 @@ export class AiMetricsFileInventoryError extends S.TaggedError<AiMetricsFileInve
 )(
   "AiMetricsFileInventoryError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     operation: AiMetricsFileInventoryOperation,
   },
-  $I.annote("AiMetricsFileInventoryError", {
+  $I.annoteError<AiMetricsFileInventoryError>("AiMetricsFileInventoryError", {
     description: "Failure to inspect a file or read a directory in an AI metrics storage tree.",
   })
 ) {}

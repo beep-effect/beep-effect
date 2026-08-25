@@ -449,7 +449,7 @@ export class HtmlPolicyError extends S.TaggedError<HtmlPolicyError>($I`HtmlPolic
   {
     issues: S.NonEmptyArray(HtmlPolicyIssue),
   },
-  $I.annote("HtmlPolicyError", {
+  $I.annoteError<HtmlPolicyError>("HtmlPolicyError", {
     description: "Conformant HTML failed one or more safe-output policy rules.",
   })
 ) {}

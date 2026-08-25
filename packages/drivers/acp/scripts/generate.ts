@@ -26,7 +26,7 @@ class GenerateCommandError extends S.TaggedError<GenerateCommandError>($I`Genera
   {
     message: S.String,
   },
-  $I.annote("GenerateCommandError", {
+  $I.annoteError<GenerateCommandError>("GenerateCommandError", {
     description: "An error occurred while generating the ACP schema.",
   })
 ) {}
@@ -89,7 +89,7 @@ class AcpGeneratorOutputError extends S.TaggedError<AcpGeneratorOutputError>($I`
   {
     message: S.String,
   },
-  $I.annote("AcpGeneratorOutputError", {
+  $I.annoteError<AcpGeneratorOutputError>("AcpGeneratorOutputError", {
     description: "Generator output from the upstream JSON-schema converter was not in the expected shape.",
   })
 ) {}

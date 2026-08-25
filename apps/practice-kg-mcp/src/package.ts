@@ -18,6 +18,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { runEntrypoint } from "./entrypoint.ts";
+import { PackageFailure } from "./PracticeKgMcp.errors.ts";
 
 const $I = $PracticeKgMcpId.create("package");
 
@@ -75,17 +76,6 @@ const TargetSpecs = {
     platform: "win32",
   },
 } as const satisfies Record<Exclude<PackageTarget, "all">, Record<string, string>>;
-
-class PackageFailure extends S.TaggedError<PackageFailure>($I`PackageFailure`)(
-  "PackageFailure",
-  {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    message: S.NonEmptyString,
-  },
-  $I.annote("PackageFailure", {
-    description: "Sanitized failure from compiling or assembling an MCPB artifact.",
-  })
-) {}
 
 const target = Flag.choice("target", PackageTarget.literals).pipe(Flag.withDefault("all" satisfies PackageTarget));
 const output = Flag.directory("output").pipe(Flag.withDefault("apps/practice-kg-mcp/dist/mcpb"));

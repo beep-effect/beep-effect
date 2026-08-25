@@ -13,4 +13,12 @@ describe("Phoenix declared-field equivalence", () => {
     expect(samePhoenixError(a, b)).toBe(true);
     expect(samePhoenixError(a, c)).toBe(false);
   });
+
+  it("treats defect-only differences as equivalent", () => {
+    const a = PhoenixError.operation("doctor", "transport", { cause: new TypeError("boom") });
+    const b = PhoenixError.operation("doctor", "transport", { cause: new RangeError("boom") });
+
+    // the defect cause is payload, never identity
+    expect(samePhoenixError(a, b)).toBe(true);
+  });
 });

@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { Defect } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import { Cause, Effect, Inspectable, pipe, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -114,11 +115,11 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
 export class ExportedToolError extends S.TaggedError<ExportedToolError>($I`ExportedToolError`)(
   "ExportedToolError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
     message: S.String,
     toolName: S.String,
   },
-  $I.annote("ExportedToolError", {
+  $I.annoteError<ExportedToolError>("ExportedToolError", {
     description: "Failure raised while exporting or executing a positional NLP tool.",
   })
 ) {

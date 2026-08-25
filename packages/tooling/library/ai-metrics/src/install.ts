@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Match, pipe } from "effect";
@@ -27,7 +27,6 @@ import { shellQuote } from "./shell.ts";
 import { AiMetricsSourceDiscoveryResult, AiMetricsSourceStatus } from "./source-discovery.ts";
 
 const $I = $RepoAiMetricsId.create("install");
-
 const defaultCandidateTools = [
   AiMetricsTool.Enum.langfuse,
   AiMetricsTool.Enum.phoenix,
@@ -138,10 +137,10 @@ export class AiMetricsInstallConfigurationError extends S.TaggedError<AiMetricsI
 )(
   "AiMetricsInstallConfigurationError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsInstallConfigurationError", {
+  $I.annoteError<AiMetricsInstallConfigurationError>("AiMetricsInstallConfigurationError", {
     description:
       "Typed failure raised when a requested AI metrics install target is missing required safety configuration.",
   })

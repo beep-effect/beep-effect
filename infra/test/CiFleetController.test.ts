@@ -149,6 +149,8 @@ describe("@beep/infra CiFleetController", () => {
       const modulePostInstall = MutableHashMap.empty<string, string>();
       const moduleManagedPolicyArns = MutableHashMap.empty<string, unknown>();
       const moduleMetadataOptions = MutableHashMap.empty<string, unknown>();
+      const moduleOrganizationRunnerEnabled = MutableHashMap.empty<string, unknown>();
+      const moduleRunnerGroupNames = MutableHashMap.empty<string, unknown>();
       const policyDocuments = MutableHashMap.empty<string, string>();
 
       yield* Effect.acquireUseRelease(
@@ -166,6 +168,12 @@ describe("@beep/infra CiFleetController", () => {
                     args.inputs.runner_iam_role_managed_policy_arns
                   );
                   MutableHashMap.set(moduleMetadataOptions, args.name, args.inputs.runner_metadata_options);
+                  MutableHashMap.set(
+                    moduleOrganizationRunnerEnabled,
+                    args.name,
+                    args.inputs.enable_organization_runners
+                  );
+                  MutableHashMap.set(moduleRunnerGroupNames, args.name, args.inputs.runner_group_name);
                 }
                 const policy = args.inputs.policy;
                 if (args.type === "aws:iam/policy:Policy" && isString(policy)) {
@@ -206,15 +214,24 @@ describe("@beep/infra CiFleetController", () => {
       const captured = MutableHashMap.get(modulePostInstall, "ci-fleet-controller-test");
       const capturedManagedPolicyArns = MutableHashMap.get(moduleManagedPolicyArns, "ci-fleet-controller-test");
       const capturedMetadataOptions = MutableHashMap.get(moduleMetadataOptions, "ci-fleet-controller-test");
+      const capturedOrganizationRunnerEnabled = MutableHashMap.get(
+        moduleOrganizationRunnerEnabled,
+        "ci-fleet-controller-test"
+      );
+      const capturedRunnerGroupName = MutableHashMap.get(moduleRunnerGroupNames, "ci-fleet-controller-test");
       const capturedPolicy = MutableHashMap.get(policyDocuments, "ci-fleet-controller-test-runner-imds-disable");
       assert.isTrue(O.isSome(captured));
       assert.isTrue(O.isSome(capturedManagedPolicyArns));
       assert.isTrue(O.isSome(capturedMetadataOptions));
+      assert.isTrue(O.isSome(capturedOrganizationRunnerEnabled));
+      assert.isTrue(O.isSome(capturedRunnerGroupName));
       assert.isTrue(O.isSome(capturedPolicy));
       if (
         O.isNone(captured) ||
         O.isNone(capturedManagedPolicyArns) ||
         O.isNone(capturedMetadataOptions) ||
+        O.isNone(capturedOrganizationRunnerEnabled) ||
+        O.isNone(capturedRunnerGroupName) ||
         O.isNone(capturedPolicy)
       ) {
         return;
@@ -222,6 +239,8 @@ describe("@beep/infra CiFleetController", () => {
 
       const postInstall = captured.value;
       expect(capturedManagedPolicyArns.value).toEqual(["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"]);
+      expect(capturedOrganizationRunnerEnabled.value).toBe(true);
+      expect(capturedRunnerGroupName.value).toBe("beep-ec2-heavy");
       expect(capturedMetadataOptions.value).toEqual({
         http_endpoint: "enabled",
         http_put_response_hop_limit: 1,

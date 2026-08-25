@@ -16,11 +16,17 @@ describe("DrizzleError declared-field equivalence", () => {
       operation: DrizzleOperation.Enum.execute,
     });
     const c = DrizzleError.make({
+      cause: O.some(new Error("query failed")),
+      operation: DrizzleOperation.Enum.withTransaction,
+    });
+    const d = DrizzleError.make({
       cause: O.some(new Error("other failure")),
       operation: DrizzleOperation.Enum.execute,
     });
 
     expect(sameDrizzleError(a, b)).toBe(true);
     expect(sameDrizzleError(a, c)).toBe(false);
+    // the defect cause is payload, never identity
+    expect(sameDrizzleError(a, d)).toBe(true);
   });
 });

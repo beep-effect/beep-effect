@@ -85,6 +85,7 @@ const DEFAULT_TSCONFIG_FILE_NAME = "tsconfig.json";
 const utf8Encoder = new TextEncoder();
 
 const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
+
 /**
  * Typed error retained for compatibility with older placeholder service wiring.
  *
@@ -107,7 +108,7 @@ export class TsMorphServiceUnavailableError extends S.TaggedError<TsMorphService
     method: S.String,
     message: S.String,
   },
-  $I.annote("TsMorphServiceUnavailableError", {
+  $I.annoteError<TsMorphServiceUnavailableError>("TsMorphServiceUnavailableError", {
     description:
       "Typed compatibility error for placeholder TSMorphService methods; the current read-only live methods should not emit it.",
   })
@@ -135,7 +136,7 @@ export class TsMorphScopeResolutionError extends S.TaggedError<TsMorphScopeResol
     entrypoint: S.String,
     message: S.String,
   },
-  $I.annote("TsMorphScopeResolutionError", {
+  $I.annoteError<TsMorphScopeResolutionError>("TsMorphScopeResolutionError", {
     description:
       "Typed error indicating that a repository path or tsconfig scope could not be resolved for TSMorphService.",
   })
@@ -162,7 +163,7 @@ export class TsMorphProjectLoadError extends S.TaggedError<TsMorphProjectLoadErr
     tsConfigPath: TsConfigFilePath,
     message: S.String,
   },
-  $I.annote("TsMorphProjectLoadError", {
+  $I.annoteError<TsMorphProjectLoadError>("TsMorphProjectLoadError", {
     description: "Typed error indicating that a ts-morph Project could not be initialized for a resolved scope.",
   })
 ) {}
@@ -188,7 +189,7 @@ export class TsMorphSourceFileError extends S.TaggedError<TsMorphSourceFileError
     filePath: S.Option(TypeScriptFilePath),
     message: S.String,
   },
-  $I.annote("TsMorphSourceFileError", {
+  $I.annoteError<TsMorphSourceFileError>("TsMorphSourceFileError", {
     description:
       "Typed error indicating that a TypeScript source file could not be loaded or normalized by TSMorphService.",
   })
@@ -239,7 +240,7 @@ export class TsMorphSymbolNotFoundError extends S.TaggedError<TsMorphSymbolNotFo
     symbolId: SymbolId,
     message: S.String,
   },
-  $I.annote("TsMorphSymbolNotFoundError", {
+  $I.annoteError<TsMorphSymbolNotFoundError>("TsMorphSymbolNotFoundError", {
     description: "Typed error indicating that a stable symbol id could not be resolved inside a ts-morph scope.",
     reason: "Raised when a requested stable symbol id is absent from the scope-local symbol index.",
     owner: "repo-utils",
@@ -269,7 +270,7 @@ export class TsMorphUnsupportedFileError extends S.TaggedError<TsMorphUnsupporte
     filePath: TypeScriptFilePath,
     message: S.String,
   },
-  $I.annote("TsMorphUnsupportedFileError", {
+  $I.annoteError<TsMorphUnsupportedFileError>("TsMorphUnsupportedFileError", {
     description:
       "Typed error indicating that a TypeScript file is valid input but is not yet supported by the current TSMorphService operation.",
   })

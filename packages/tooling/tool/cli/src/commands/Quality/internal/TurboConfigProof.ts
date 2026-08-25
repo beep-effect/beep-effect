@@ -14,7 +14,11 @@ import { Effect, Order, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { commandErrorFields } from "../../../internal/cli/CommandErrorFields.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
+
+export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";
+
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
@@ -99,13 +103,8 @@ export type TurboConfigProofSelectorMode = typeof TurboConfigProofSelectorMode.T
  */
 export class TurboConfigProofError extends S.TaggedError<TurboConfigProofError>($I`TurboConfigProofError`)(
   "TurboConfigProofError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("TurboConfigProofError", {
+  commandErrorFields,
+  $I.annoteError<TurboConfigProofError>("TurboConfigProofError", {
     description: "Failure raised by the Turbo scoped-config proof harness.",
   })
 ) {

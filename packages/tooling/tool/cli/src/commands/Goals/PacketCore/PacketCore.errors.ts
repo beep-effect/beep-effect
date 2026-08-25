@@ -39,7 +39,7 @@ export class PacketStreamError extends S.TaggedError<PacketStreamError>($I`Packe
     packet: S.String,
     message: S.String,
   },
-  $I.annote("PacketStreamError", {
+  $I.annoteError<PacketStreamError>("PacketStreamError", {
     description: "A packet event stream cannot be read, decoded, or safely appended to.",
   })
 ) {
@@ -93,7 +93,7 @@ export class PacketCasConflictError extends S.TaggedError<PacketCasConflictError
     actualRevision: S.Finite,
     message: S.String,
   },
-  $I.annote("PacketCasConflictError", {
+  $I.annoteError<PacketCasConflictError>("PacketCasConflictError", {
     description: "A compare-and-set append lost to a concurrent write; the transition is refused whole.",
   })
 ) {}

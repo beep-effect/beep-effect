@@ -7,7 +7,7 @@
 
 import { randomUUID } from "node:crypto";
 import { $TestUtilsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -57,7 +57,6 @@ const TestDatabaseDriver = LiteralKit([
     description: "Driver identifier for reusable SQL integration-test harnesses.",
   })
 );
-
 const PgExternalIsolationMode = LiteralKit(["schema", "none"]).pipe(
   $I.annoteSchema("PgExternalIsolationMode", {
     description: "Isolation mode for shared external PostgreSQL SQL test drivers.",
@@ -537,7 +536,7 @@ export class TestDatabaseInfo extends Context.Service<TestDatabaseInfo, TestData
 export class SqlTestHarnessError extends S.TaggedError<SqlTestHarnessError>($I`SqlTestHarnessError`)(
   "SqlTestHarnessError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       $I.annoteKey("SqlTestHarnessError.cause", {
         description: "Optional underlying defect captured while provisioning or preparing the SQL test harness.",
@@ -559,7 +558,7 @@ export class SqlTestHarnessError extends S.TaggedError<SqlTestHarnessError>($I`S
       })
     ),
   },
-  $I.annote("SqlTestHarnessError", {
+  $I.annoteError<SqlTestHarnessError>("SqlTestHarnessError", {
     description: "Typed integration-test harness error for SQL database provisioning and setup hooks.",
   })
 ) {

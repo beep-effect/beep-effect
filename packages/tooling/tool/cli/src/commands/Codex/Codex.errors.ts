@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
@@ -37,9 +38,9 @@ export class CodexCommandError extends S.TaggedError<CodexCommandError>($I`Codex
   {
     message: S.String,
     exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("CodexCommandError", {
+  $I.annoteError<CodexCommandError>("CodexCommandError", {
     description: "Failure raised by Codex helper commands.",
   })
 ) {

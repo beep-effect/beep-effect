@@ -6,12 +6,12 @@
     "title": "Runner Trust Boundary",
     "status": "active",
     "created": "2026-08-24",
-    "updated": "2026-08-24",
+    "updated": "2026-08-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/runner-trust-boundary",
   "lifecycle": "active",
-  "statusNote": "P0 was ratified and P1 plus P2 completed on 2026-08-24 with closure-ready evidence retained. All four P1/P2 findings remain open through the P5 merge gate; P3 Admission defense in depth is next, and P4 retains the JIT replay probe.",
+  "statusNote": "P0 was ratified and P1 plus P2 completed on 2026-08-24 with closure-ready evidence retained. All four P1/P2 findings remain open through the P5 merge gate. P3 Admission defense in depth cut over on 2026-08-25: heavy lanes route through heavy.yml@main, organization group beep-ec2-heavy is restricted to the four protected default-branch workflows, the controller deployment for organization registration failed closed on a missing installation permission and was rolled back pending its acceptance and redeploy (the remaining P3 step), alongside the JIT replay probe, which is implemented but not yet run.",
   "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -36,6 +36,8 @@
     "goals/runner-trust-boundary/research/P1-EVIDENCE.md",
     "goals/runner-trust-boundary/research/P2-DESIGN.md",
     "goals/runner-trust-boundary/research/P2-EVIDENCE.md",
+    "goals/runner-trust-boundary/research/P3-DESIGN.md",
+    "goals/runner-trust-boundary/research/P3-EVIDENCE.md",
     "goals/runner-trust-boundary/research/OPPORTUNITIES.md",
     "goals/runner-trust-boundary/research/SOURCES.md",
     "goals/codex-security-findings-2026-08-10/ops/triage.json",
@@ -52,6 +54,8 @@
     "research/P1-EVIDENCE.md",
     "research/P2-DESIGN.md",
     "research/P2-EVIDENCE.md",
+    "research/P3-DESIGN.md",
+    "research/P3-EVIDENCE.md",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md"
   ],
@@ -85,7 +89,7 @@
     {
       "id": "P3",
       "name": "Admission defense in depth",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",

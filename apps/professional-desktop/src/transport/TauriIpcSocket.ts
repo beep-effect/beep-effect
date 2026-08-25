@@ -149,16 +149,28 @@ const sidecarClosedMessage = (payload: SidecarClosedPayload): string =>
  * `sidecar://closed`, carrying the decoded payload so callers keep the typed
  * close reason.
  *
+ * **Example** (Create a terminal sidecar failure)
+ *
+ * ```ts
+ * import { SidecarClosedError, SidecarClosedPayload } from "@/transport/TauriIpcSocket"
+ *
+ * const error = SidecarClosedError.make({
+ *   message: "sidecar terminated",
+ *   payload: SidecarClosedPayload.make({ kind: "terminated" })
+ * })
+ * console.log(error.payload.kind)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-class SidecarClosedError extends S.TaggedError<SidecarClosedError>($I`SidecarClosedError`)(
+export class SidecarClosedError extends S.TaggedError<SidecarClosedError>($I`SidecarClosedError`)(
   "SidecarClosedError",
   {
     message: S.String,
     payload: SidecarClosedPayload,
   },
-  $I.annote("SidecarClosedError", {
+  $I.annoteError<SidecarClosedError>("SidecarClosedError", {
     description: "The sidecar emitted a terminal `sidecar://closed` lifecycle event.",
   })
 ) {}
@@ -167,16 +179,28 @@ class SidecarClosedError extends S.TaggedError<SidecarClosedError>($I`SidecarClo
  * Raised when writing an outbound frame to the sidecar's stdin via the
  * `sidecar_send` command fails at the Tauri boundary.
  *
+ * **Example** (Create a sidecar send failure)
+ *
+ * ```ts
+ * import { SidecarSendError } from "@/transport/TauriIpcSocket"
+ *
+ * const error = SidecarSendError.make({
+ *   causeMessage: "stdin closed",
+ *   message: "sidecar send failed: stdin closed"
+ * })
+ * console.log(error.causeMessage)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-class SidecarSendError extends S.TaggedError<SidecarSendError>($I`SidecarSendError`)(
+export class SidecarSendError extends S.TaggedError<SidecarSendError>($I`SidecarSendError`)(
   "SidecarSendError",
   {
     causeMessage: S.String,
     message: S.String,
   },
-  $I.annote("SidecarSendError", {
+  $I.annoteError<SidecarSendError>("SidecarSendError", {
     description: "Writing an outbound ndjson frame to the sidecar's stdin failed.",
   })
 ) {}

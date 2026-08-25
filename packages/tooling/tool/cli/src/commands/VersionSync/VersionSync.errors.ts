@@ -5,25 +5,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
-import { Inspectable } from "effect";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/VersionSync.errors");
-
-const causeMessage = (cause: unknown): string => {
-  if (P.isError(cause)) {
-    return cause.message;
-  }
-  if (P.hasProperty(cause, "message") && P.isString(cause.message)) {
-    return cause.message;
-  }
-  return Inspectable.toStringUnknown(cause, 0);
-};
-
-const messageWithCause = (message: string, cause: unknown): string => `${message}: ${causeMessage(cause)}`;
 
 /**
  * Operational error during version sync (file read/write, parse failures).
@@ -45,9 +33,9 @@ export class VersionSyncError extends S.TaggedError<VersionSyncError>($I`Version
   {
     message: S.String,
     file: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("VersionSyncError", {
+  $I.annoteError<VersionSyncError>("VersionSyncError", {
     title: "Version Sync Error",
     description: "Failed to read, resolve, or update a version pin",
   })
@@ -96,7 +84,7 @@ export class VersionSyncError extends S.TaggedError<VersionSyncError>($I`Version
 export class NetworkUnavailableError extends S.TaggedError<NetworkUnavailableError>($I`NetworkUnavailableError`)(
   "NetworkUnavailableError",
   { message: S.String },
-  $I.annote("NetworkUnavailableError", {
+  $I.annoteError<NetworkUnavailableError>("NetworkUnavailableError", {
     title: "Network Unavailable",
     description: "Upstream version resolution failed due to network",
   })
@@ -129,7 +117,7 @@ export class VersionSyncDriftError extends S.TaggedError<VersionSyncDriftError>(
     message: S.String,
     driftCount: S.Finite,
   },
-  $I.annote("VersionSyncDriftError", {
+  $I.annoteError<VersionSyncDriftError>("VersionSyncDriftError", {
     title: "Version Sync Drift Error",
     description: "Version drift detected in check mode",
   })

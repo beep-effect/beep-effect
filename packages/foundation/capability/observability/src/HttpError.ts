@@ -27,7 +27,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { makeStatusCauseError, StatusCauseFields } from "@beep/schema";
+import { Defect, makeStatusCauseError, StatusCauseFields } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { ErrorReporter } from "effect";
 import { dual } from "effect/Function";
@@ -95,9 +95,9 @@ export class ClientHttpError extends S.TaggedError<ClientHttpError>($I`ClientHtt
   {
     message: S.String,
     status: HttpStatus.HttpStatus4XX,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("ClientHttpError", {
+  $I.annoteError<ClientHttpError>("ClientHttpError", {
     description: "Shared tagged error for 4xx HTTP responses.",
   })
 ) {
@@ -131,9 +131,9 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHtt
   {
     message: S.String,
     status: HttpStatus.HttpStatus5XX,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("ServerHttpError", {
+  $I.annoteError<ServerHttpError>("ServerHttpError", {
     description: "Shared tagged error for 5xx HTTP responses.",
   })
 ) {
@@ -160,7 +160,7 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHtt
 export class BadRequestError extends S.TaggedError<BadRequestError>($I`BadRequestError`)(
   "BadRequestError",
   statusFields(HttpStatus.BadRequest),
-  $I.annote("BadRequestError", {
+  $I.annoteError<BadRequestError>("BadRequestError", {
     description: "400 tagged error.",
   })
 ) {
@@ -187,7 +187,7 @@ export class BadRequestError extends S.TaggedError<BadRequestError>($I`BadReques
 export class UnauthorizedError extends S.TaggedError<UnauthorizedError>($I`UnauthorizedError`)(
   "UnauthorizedError",
   statusFields(HttpStatus.Unauthorized),
-  $I.annote("UnauthorizedError", {
+  $I.annoteError<UnauthorizedError>("UnauthorizedError", {
     description: "401 tagged error.",
   })
 ) {
@@ -214,7 +214,7 @@ export class UnauthorizedError extends S.TaggedError<UnauthorizedError>($I`Unaut
 export class ForbiddenError extends S.TaggedError<ForbiddenError>($I`ForbiddenError`)(
   "ForbiddenError",
   statusFields(HttpStatus.Forbidden),
-  $I.annote("ForbiddenError", {
+  $I.annoteError<ForbiddenError>("ForbiddenError", {
     description: "403 tagged error.",
   })
 ) {
@@ -241,7 +241,7 @@ export class ForbiddenError extends S.TaggedError<ForbiddenError>($I`ForbiddenEr
 export class NotFoundError extends S.TaggedError<NotFoundError>($I`NotFoundError`)(
   "NotFoundError",
   statusFields(HttpStatus.NotFound),
-  $I.annote("NotFoundError", {
+  $I.annoteError<NotFoundError>("NotFoundError", {
     description: "404 tagged error.",
   })
 ) {
@@ -268,7 +268,7 @@ export class NotFoundError extends S.TaggedError<NotFoundError>($I`NotFoundError
 export class ConflictError extends S.TaggedError<ConflictError>($I`ConflictError`)(
   "ConflictError",
   statusFields(HttpStatus.Conflict),
-  $I.annote("ConflictError", {
+  $I.annoteError<ConflictError>("ConflictError", {
     description: "409 tagged error.",
   })
 ) {
@@ -295,7 +295,7 @@ export class ConflictError extends S.TaggedError<ConflictError>($I`ConflictError
 export class UnprocessableEntityError extends S.TaggedError<UnprocessableEntityError>($I`UnprocessableEntityError`)(
   "UnprocessableEntityError",
   statusFields(HttpStatus.UnprocessableEntity),
-  $I.annote("UnprocessableEntityError", {
+  $I.annoteError<UnprocessableEntityError>("UnprocessableEntityError", {
     description: "422 tagged error.",
   })
 ) {
@@ -322,7 +322,7 @@ export class UnprocessableEntityError extends S.TaggedError<UnprocessableEntityE
 export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError>($I`TooManyRequestsError`)(
   "TooManyRequestsError",
   statusFields(HttpStatus.TooManyRequests),
-  $I.annote("TooManyRequestsError", {
+  $I.annoteError<TooManyRequestsError>("TooManyRequestsError", {
     description: "429 tagged error.",
   })
 ) {
@@ -349,7 +349,7 @@ export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError>($I
 export class InternalServerErrorError extends S.TaggedError<InternalServerErrorError>($I`InternalServerErrorError`)(
   "InternalServerErrorError",
   statusFields(HttpStatus.InternalServerError),
-  $I.annote("InternalServerErrorError", {
+  $I.annoteError<InternalServerErrorError>("InternalServerErrorError", {
     description: "500 tagged error.",
   })
 ) {
@@ -376,7 +376,7 @@ export class InternalServerErrorError extends S.TaggedError<InternalServerErrorE
 export class BadGatewayError extends S.TaggedError<BadGatewayError>($I`BadGatewayError`)(
   "BadGatewayError",
   statusFields(HttpStatus.BadGateway),
-  $I.annote("BadGatewayError", {
+  $I.annoteError<BadGatewayError>("BadGatewayError", {
     description: "502 tagged error.",
   })
 ) {
@@ -403,7 +403,7 @@ export class BadGatewayError extends S.TaggedError<BadGatewayError>($I`BadGatewa
 export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableError>($I`ServiceUnavailableError`)(
   "ServiceUnavailableError",
   statusFields(HttpStatus.ServiceUnavailable),
-  $I.annote("ServiceUnavailableError", {
+  $I.annoteError<ServiceUnavailableError>("ServiceUnavailableError", {
     description: "503 tagged error.",
   })
 ) {
@@ -430,7 +430,7 @@ export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableErr
 export class GatewayTimeoutError extends S.TaggedError<GatewayTimeoutError>($I`GatewayTimeoutError`)(
   "GatewayTimeoutError",
   statusFields(HttpStatus.GatewayTimeout),
-  $I.annote("GatewayTimeoutError", {
+  $I.annoteError<GatewayTimeoutError>("GatewayTimeoutError", {
     description: "504 tagged error.",
   })
 ) {

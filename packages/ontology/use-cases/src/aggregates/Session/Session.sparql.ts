@@ -253,7 +253,7 @@ export class OntologySparqlError extends S.TaggedError<OntologySparqlError>($I`O
     ),
     message: S.String,
   },
-  $I.annote("OntologySparqlError", {
+  $I.annoteError<OntologySparqlError>("OntologySparqlError", {
     description: "SPARQL safeguard validation failure.",
   })
 ) {}

@@ -6,26 +6,13 @@
  */
 
 import { $AcpId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AcpSchema from "./_generated/schema.gen.ts";
 
 const $I = $AcpId.create("errors");
-
-const AcpSpawnErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description: "Original spawn failure cause, when one was available.",
-    }),
-  command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "ACP command that failed to spawn, when available.",
-  }),
-} satisfies S.Struct.Fields;
-const sameAcpSpawnErrorFields = S.toEquivalence(S.TaggedStruct("AcpSpawnError", AcpSpawnErrorFields));
-const sameAcpSpawnError = (self: AcpSpawnError, that: AcpSpawnError): boolean => sameAcpSpawnErrorFields(self, that);
 
 /**
  * Failure raised when an ACP child process cannot be spawned.
@@ -45,14 +32,19 @@ const sameAcpSpawnError = (self: AcpSpawnError, that: AcpSpawnError): boolean =>
  */
 export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError`)(
   "AcpSpawnError",
-  AcpSpawnErrorFields,
-  $I.annoteClass<S.declare<AcpSpawnError>, readonly [S.TaggedStruct<"AcpSpawnError", typeof AcpSpawnErrorFields>]>(
-    "AcpSpawnError",
-    {
-      description: "Failure raised when an ACP child process cannot be spawned.",
-      toEquivalence: () => sameAcpSpawnError,
-    }
-  )
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Original spawn failure cause, when one was available.",
+      }),
+    command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "ACP command that failed to spawn, when available.",
+    }),
+  },
+  $I.annoteError<AcpSpawnError>("AcpSpawnError", {
+    description: "Failure raised when an ACP child process cannot be spawned.",
+  })
 ) {
   override get message() {
     return O.match(this.command, {
@@ -61,24 +53,6 @@ export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError
     });
   }
 }
-
-const AcpProcessExitedErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description: "Original process-exit cause, when one was available.",
-    }),
-  code: S.OptionFromOptionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0)))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description: "Non-negative ACP process exit code, when the process returned one.",
-    }),
-} satisfies S.Struct.Fields;
-const sameAcpProcessExitedErrorFields = S.toEquivalence(
-  S.TaggedStruct("AcpProcessExitedError", AcpProcessExitedErrorFields)
-);
-const sameAcpProcessExitedError = (self: AcpProcessExitedError, that: AcpProcessExitedError): boolean =>
-  sameAcpProcessExitedErrorFields(self, that);
 
 /**
  * Failure raised when an ACP process exits before the protocol completes.
@@ -98,13 +72,20 @@ const sameAcpProcessExitedError = (self: AcpProcessExitedError, that: AcpProcess
  */
 export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>($I`AcpProcessExitedError`)(
   "AcpProcessExitedError",
-  AcpProcessExitedErrorFields,
-  $I.annoteClass<
-    S.declare<AcpProcessExitedError>,
-    readonly [S.TaggedStruct<"AcpProcessExitedError", typeof AcpProcessExitedErrorFields>]
-  >("AcpProcessExitedError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Original process-exit cause, when one was available.",
+      }),
+    code: S.OptionFromOptionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0)))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Non-negative ACP process exit code, when the process returned one.",
+      }),
+  },
+  $I.annoteError<AcpProcessExitedError>("AcpProcessExitedError", {
     description: "Failure raised when an ACP process exits before the protocol completes.",
-    toEquivalence: () => sameAcpProcessExitedError,
   })
 ) {
   override get message() {
@@ -114,22 +95,6 @@ export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>(
     });
   }
 }
-
-const AcpProtocolParseErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description: "Original parse failure cause, when one was available.",
-    }),
-  detail: S.String.annotateKey({
-    description: "Human-readable parse failure detail.",
-  }),
-} satisfies S.Struct.Fields;
-const sameAcpProtocolParseErrorFields = S.toEquivalence(
-  S.TaggedStruct("AcpProtocolParseError", AcpProtocolParseErrorFields)
-);
-const sameAcpProtocolParseError = (self: AcpProtocolParseError, that: AcpProtocolParseError): boolean =>
-  sameAcpProtocolParseErrorFields(self, that);
 
 /**
  * Failure raised when ACP wire data cannot be encoded or decoded.
@@ -148,13 +113,18 @@ const sameAcpProtocolParseError = (self: AcpProtocolParseError, that: AcpProtoco
  */
 export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>($I`AcpProtocolParseError`)(
   "AcpProtocolParseError",
-  AcpProtocolParseErrorFields,
-  $I.annoteClass<
-    S.declare<AcpProtocolParseError>,
-    readonly [S.TaggedStruct<"AcpProtocolParseError", typeof AcpProtocolParseErrorFields>]
-  >("AcpProtocolParseError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Original parse failure cause, when one was available.",
+      }),
+    detail: S.String.annotateKey({
+      description: "Human-readable parse failure detail.",
+    }),
+  },
+  $I.annoteError<AcpProtocolParseError>("AcpProtocolParseError", {
     description: "Failure raised when ACP wire data cannot be encoded or decoded.",
-    toEquivalence: () => sameAcpProtocolParseError,
   })
 ) {
   override get message() {
@@ -174,20 +144,6 @@ export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>(
   );
 }
 
-const AcpTransportErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description: "Original transport failure cause, when one was available.",
-    }),
-  detail: S.String.annotateKey({
-    description: "Human-readable transport failure detail.",
-  }),
-} satisfies S.Struct.Fields;
-const sameAcpTransportErrorFields = S.toEquivalence(S.TaggedStruct("AcpTransportError", AcpTransportErrorFields));
-const sameAcpTransportError = (self: AcpTransportError, that: AcpTransportError): boolean =>
-  sameAcpTransportErrorFields(self, that);
-
 /**
  * Failure raised by the ACP transport boundary.
  *
@@ -205,30 +161,20 @@ const sameAcpTransportError = (self: AcpTransportError, that: AcpTransportError)
  */
 export class AcpTransportError extends S.TaggedError<AcpTransportError>($I`AcpTransportError`)(
   "AcpTransportError",
-  AcpTransportErrorFields,
-  $I.annoteClass<
-    S.declare<AcpTransportError>,
-    readonly [S.TaggedStruct<"AcpTransportError", typeof AcpTransportErrorFields>]
-  >("AcpTransportError", {
+  {
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Original transport failure cause, when one was available.",
+      }),
+    detail: S.String.annotateKey({
+      description: "Human-readable transport failure detail.",
+    }),
+  },
+  $I.annoteError<AcpTransportError>("AcpTransportError", {
     description: "Failure raised by the ACP transport boundary.",
-    toEquivalence: () => sameAcpTransportError,
   })
 ) {}
-
-const AcpRequestErrorFields = {
-  code: AcpSchema.ErrorCode.annotateKey({
-    description: "JSON-RPC error code returned by the ACP peer.",
-  }),
-  data: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Optional JSON-RPC error data returned by the ACP peer; wire JSON only.",
-  }),
-  errorMessage: S.String.annotateKey({
-    description: "JSON-RPC error message returned by the ACP peer.",
-  }),
-} satisfies S.Struct.Fields;
-const sameAcpRequestErrorFields = S.toEquivalence(S.TaggedStruct("AcpRequestError", AcpRequestErrorFields));
-const sameAcpRequestError = (self: AcpRequestError, that: AcpRequestError): boolean =>
-  sameAcpRequestErrorFields(self, that);
 
 /**
  * JSON-RPC request failure returned by an ACP peer.
@@ -247,13 +193,19 @@ const sameAcpRequestError = (self: AcpRequestError, that: AcpRequestError): bool
  */
 export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpRequestError`)(
   "AcpRequestError",
-  AcpRequestErrorFields,
-  $I.annoteClass<
-    S.declare<AcpRequestError>,
-    readonly [S.TaggedStruct<"AcpRequestError", typeof AcpRequestErrorFields>]
-  >("AcpRequestError", {
+  {
+    code: AcpSchema.ErrorCode.annotateKey({
+      description: "JSON-RPC error code returned by the ACP peer.",
+    }),
+    data: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional JSON-RPC error data returned by the ACP peer; wire JSON only.",
+    }),
+    errorMessage: S.String.annotateKey({
+      description: "JSON-RPC error message returned by the ACP peer.",
+    }),
+  },
+  $I.annoteError<AcpRequestError>("AcpRequestError", {
     description: "JSON-RPC request failure returned by an ACP peer.",
-    toEquivalence: () => sameAcpRequestError,
   })
 ) {
   static readonly is = S.is(AcpRequestError);

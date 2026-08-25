@@ -54,6 +54,7 @@ type FromEntries<E extends readonly [PropertyKey, unknown]> = Simplify<{
 }>;
 
 const NonEmptyStringKeys = S.NonEmptyArray(S.String);
+// input is opaque unknown data: equivalence is declared diagnostic identity, input stays payload.
 
 /**
  * Thrown when a struct expected to have at least one string key is empty.
@@ -73,10 +74,10 @@ const NonEmptyStringKeys = S.NonEmptyArray(S.String);
 export class EmptyStructError extends S.TaggedError<EmptyStructError>($I`EmptyStructError`)(
   "EmptyStructError",
   {
-    input: S.Unknown,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    input: S.Unknown.annotate({ toEquivalence: () => () => true }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).annotate({ toEquivalence: () => () => true })),
   },
-  $I.annote("EmptyStructError", {
+  $I.annoteError<EmptyStructError>("EmptyStructError", {
     description: "Invariant violation thrown when a struct expected to have at least one string key is empty.",
   })
 ) {}

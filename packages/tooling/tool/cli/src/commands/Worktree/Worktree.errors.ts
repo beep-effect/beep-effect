@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
@@ -43,9 +44,9 @@ export class WorktreeCommandError extends S.TaggedError<WorktreeCommandError>($I
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     path: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("WorktreeCommandError", {
+  $I.annoteError<WorktreeCommandError>("WorktreeCommandError", {
     description: "Failure raised while planning or executing a git worktree operation.",
   })
 ) {
@@ -97,7 +98,7 @@ export class WorktreeDirtyError extends S.TaggedError<WorktreeDirtyError>($I`Wor
     path: S.String,
     changeCount: S.Finite,
   },
-  $I.annote("WorktreeDirtyError", {
+  $I.annoteError<WorktreeDirtyError>("WorktreeDirtyError", {
     description: "Worktree removal was refused because the target has uncommitted changes.",
   })
 ) {
@@ -141,7 +142,7 @@ export class WorktreeExistsError extends S.TaggedError<WorktreeExistsError>($I`W
     message: S.String,
     path: S.String,
   },
-  $I.annote("WorktreeExistsError", {
+  $I.annoteError<WorktreeExistsError>("WorktreeExistsError", {
     description: "Worktree creation was refused because a directory already exists at the target path.",
   })
 ) {

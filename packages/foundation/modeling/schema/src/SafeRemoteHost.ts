@@ -45,6 +45,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { Defect } from "./Opaque.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("SafeRemoteHost");
@@ -103,14 +104,14 @@ export class BlockedHostError extends S.TaggedError<BlockedHostError>($I`Blocked
     message: S.String.annotateKey({
       description: "Safe diagnostic message explaining why the host was blocked.",
     }),
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Underlying parse failure when the URL could not be decoded.",
       })
     ),
   },
-  $I.annote("BlockedHostError", {
+  $I.annoteError<BlockedHostError>("BlockedHostError", {
     description: "Raised when an outbound request targets internal network space or an unparseable URL.",
   })
 ) {}
