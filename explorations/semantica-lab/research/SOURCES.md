@@ -17,8 +17,10 @@ the extractor, schema, and report are committed.
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| `semantica-agi/semantica` (local: `~/YeeBois/workstation-apps/semantica` @ `add1c006`, branch `danklocal`) | MIT (Hawksight AI, verified in `LICENSE`) | port-with-attribution (ideas ported schema-first, not vendored code) | concepts: provenance events, storage capability families, ContextGraph, ontology lifecycle, typed inference explanations, pipeline DAG contract |
-| `beep-effect-logos` (local: `~/YeeBois/projects/beep-effect-logos`, archived v3 beep-effect) | Apache-2.0 (verified in its LICENSE) | salvage with Apache-2.0 attribution/NOTICE for copied code and tests; re-derived patterns need none | `rete` SALVAGE (network topology + behavioral test oracle), `rules` PATTERN (operator taxonomy), `logos` PATTERN (rule-AST + validator semantics) — per `grounding-v3-logos.md` §5 |
+| unpdf (npm `unpdf` ^1.8.1, root dep; used by `@beep/doc-text`) https://github.com/unjs/unpdf | MIT (node_modules `unpdf/package.json`) | reuse as dependency | PDF text extraction (`getDocumentProxy`, `extractText`, `extractTextItems`); the first PDF probe (M1) |
+| PDF.js (Mozilla) https://github.com/mozilla/pdf.js | Apache-2.0 upstream; **vendored inside `unpdf/dist/pdfjs.mjs` (6.1.200) with no license header, no `pdfjs-dist` package in this repo** — attribution/NOTICE obligation must be verified against upstream, not node_modules | reference via unpdf | text items, `disableNormalization` switch, NFKC behaviour (the breaker retry, M1) |
+| `semantica-agi/semantica` (out-of-repo workstation clone under workstation-apps/semantica @ `add1c006`, branch `danklocal`) | MIT (Hawksight AI, verified in `LICENSE`) | port-with-attribution (ideas ported schema-first, not vendored code) | concepts: provenance events, storage capability families, ContextGraph, ontology lifecycle, typed inference explanations, pipeline DAG contract |
+| `beep-effect-logos` (out-of-repo workstation clone under projects/beep-effect-logos, archived v3 beep-effect) | Apache-2.0 (verified in its LICENSE) | salvage with Apache-2.0 attribution/NOTICE for copied code and tests; re-derived patterns need none | `rete` SALVAGE (network topology + behavioral test oracle), `rules` PATTERN (operator taxonomy), `logos` PATTERN (rule-AST + validator semantics) — per `grounding-v3-logos.md` §5 |
 | `scratchpad/effect-ontology` (in-repo quarantined experiment) | in-repo; upstream was MIT per its ledger | reference + pattern; explicitly non-importable, promotion unauthorized | PORTING_LEDGER per-symbol method as template precedent; Effect v4 ontology idioms |
 
 Benjamin's `danklocal` branch carries 3 unique local fixes not upstream (explorer ontology
@@ -59,8 +61,8 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
     Bowman, Feng 2024, "LLM Evaluators Recognize and Favor Their Own Generations"
     https://arxiv.org/abs/2404.13076 ; Yang et al. 2023 (rephrased-sample contamination)
     https://arxiv.org/abs/2311.04850
-  - S3 embeddings — `Effect-TS/effect` main `packages/effect/src/unstable/ai/EmbeddingModel.ts`
-    and `packages/ai/openai/src/OpenAiEmbeddingModel.ts` (local `.repos/effect`, 02a5146d69);
+  - S3 embeddings — `Effect-TS/effect` main `.repos/effect/packages/effect/src/unstable/ai/EmbeddingModel.ts`
+    and `.repos/effect/packages/ai/openai/src/OpenAiEmbeddingModel.ts` (reference checkout, 02a5146d69);
     OpenAI `POST /embeddings` wire format
     https://raw.githubusercontent.com/openai/openai-openapi/master/openapi.yaml
   - S4 lab shape — Tauri v2 process model https://v2.tauri.app/concept/process-model/ ; sidecar
@@ -84,11 +86,14 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
 | File/document processing | `@beep/file-processing`, `@beep/md`, `@beep/html`, `@beep/tika` (default lane: HTTP localhost:9998 — envelope analysis needed), `@beep/pandoc-ast` | reuse (input-stack bake-off, per-stage) |
 | NLP + extraction | `@beep/nlp`, `@beep/nlp-processing`, `@beep/langextract` | reuse (input/extraction sheets) |
 | RDF terms & provenance primitives | `@beep/rdf` (term model), `@beep/provenance` (TextAnchor — NOT a PROV-O log) | reuse/extend (shared-schema input, A7) |
+| Span owner (M1) | `@beep/provenance` (`SourceTextIdentity`, `SourceTextExtractor`, `TextAnchor`, `VerifiedTextAnchor`, `verifyTextAnchor`, `TextAnchorVerificationReceipt`), `@beep/file-processing` `SourceText` (`ResolvedSourceText`, `SourceTextResolver`), `goals/citation-verified-span-substrate` constraint 4 | compose — `CanonicalText` is not built |
+| PDF text extraction (M1) | `@beep/doc-text` (`packages/drivers/doc-text`, unpdf; single normalized string, `empty-text-layer` fail-closed) | reuse as first probe; direct `unpdf` items as retry |
+| Witness / ledger precedents (M1) | `@beep/epistemic-domain` `ContradictionCandidate`, `Activity`, `UsageRecord` | pattern for `ConflictWitness` and the `ProvenanceEvent` write model |
 | Embedded analytics | `@beep/duckdb` (shipping in practice-kg-mcp) | reuse candidate (storage projections) |
 | Embedded Postgres + ORM | `@beep/pglite`, `@beep/postgres` | reuse (storage bake-off; pgvector-on-PGlite convergence) |
 | Property graph in-memory | `effect/Graph` (Effect v4) | reuse candidate |
 | LLM providers / agent chat | agents slice (`@beep/agents-client` etc.) | already-have (LLM multiplexing auto-parked, D10) |
-| Embeddings (S3-rev, one row) | contract `effect/unstable/ai` `EmbeddingModel` (4.0.0-rc.111) + shipped `@effect/ai-openai` `OpenAiEmbeddingModel.layer` (root dep; verified in `.repos/effect/packages/ai/openai/src/OpenAiEmbeddingModel.ts`) wrapped by a new `@beep/openai` driver mirroring `@beep/anthropic`; lab owns `EmbeddingVector` + `ModelIdentity` | reuse contract + Layer; NET-NEW = thin driver only. Superseded: a hand-written `EmbeddingModel.make` Layer over `@beep/venice-ai` `createEmbedding` (S3, rejected) |
+| Embeddings (S3-rev, one row; M3) | contract `effect/unstable/ai` `EmbeddingModel` (4.0.0-rc.111) + shipped `@effect/ai-openai` `OpenAiEmbeddingModel` (`.model()` when `Dimensions` is needed; `.layer` yields `EmbeddingModel` only; verified in `.repos/effect/packages/ai/openai/src/OpenAiEmbeddingModel.ts`) wrapped by a new `@beep/openai` driver mirroring `@beep/anthropic` — its own goal packet `openai-driver`; lab owns `EmbeddingVector` + `ModelIdentity` | reuse contract + Layer; NET-NEW = thin driver only. Superseded: a hand-written `EmbeddingModel.make` Layer over `@beep/venice-ai` `createEmbedding` (S3, rejected) |
 | effect-ontology shapes (`ProviderMetadata`, `toReifiedTriples`, `Timeline`, `QuadDelta`, `ProvenanceUri`) | `scratchpad/effect-ontology` — non-importable | borrow-shape / pattern-only per `effect-ontology-map.md` (S6) |
 | Reasoning oracle (test-time) | — (no EYE driver in `packages/drivers`; `n3`, `oxigraph`, `shacl`, `rdf-canonize` exist) | NET-NEW wiring: EYE WASM decode for C2 gold proofs (G3/G5) |
 | Local practice-KG precedent (PGlite + DuckDB + read-only MCP) | `apps/practice-kg-mcp` | pattern |
@@ -106,5 +111,6 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
   [`grounding-beep-labs.md`](./grounding-beep-labs.md),
   [`grounding-notion-semantica.md`](./grounding-notion-semantica.md),
   [`grounding-v3-logos.md`](./grounding-v3-logos.md)
+- Graduated goals (2026-08-24, primary consumers of this ledger): [`goals/semantica-canary`](../../../goals/semantica-canary/research/SOURCES.md), [`goals/openai-driver`](../../../goals/openai-driver/research/SOURCES.md) — each carries a goal-side mirror of this ledger and links back here as primary.
 - Sibling doctrine: `goals/lab-apps-lifecycle/` (D13 names `semantica` a first-wave lab source);
   `docs/BEEPGRAPH_ARCHITECTURE.md` (trustgraph direction)
