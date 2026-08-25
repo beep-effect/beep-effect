@@ -207,8 +207,12 @@ call it from `check.yml` with
 `uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main`. Create
 organization group `beep-ec2-heavy` with public-repository access enabled,
 visibility `selected` for only `beep-effect/beep-effect`, and workflow
-restriction enabled for `heavy.yml`, `fleet-shadow-check.yml`, and
-`fleet-lane-probe.yml`, each at `refs/heads/main`.
+restriction enabled for `heavy.yml`, `fleet-shadow-check.yml`,
+`fleet-lane-probe.yml`, and `check.yml`, each at `refs/heads/main`. The
+`check.yml` entry (ratified 2026-08-25 during the P3 cutover) exists only for
+the push-only `Build` job, which runs on the fleet directly from `check.yml`;
+a push to `main` executes default-branch code by construction, and the
+pull-request merge reference of `check.yml` stays outside the list.
 
 The controller must use organization-scoped registration with
 `enable_organization_runners` and `runner_group_name`. A missing or rejecting
@@ -260,8 +264,10 @@ manifest, and index state together.
 - [ ] P4 proves that replay of the one-use JIT configuration is rejected and
       scrubs the operator-retained probe value. P2 records the visible argv
       residue without claiming replay rejection.
-- [ ] Runner-group controls use the default-branch reusable workflow, match the
-      selected-repository and three-workflow design, and cannot fall back.
+- [x] Runner-group controls use the default-branch reusable workflow, match the
+      selected-repository and four-workflow design, and cannot fall back.
+      Proven 2026-08-25 in `research/P3-EVIDENCE.md` (proofs 1 through 4,
+      including the absent-group probe).
 - [ ] The complete final-head red-team matrix, runner deregistration, and EC2
       teardown pass after P3. P2's deployed A-through-J-plus-L proof is retained
       in `research/P2-EVIDENCE.md`.

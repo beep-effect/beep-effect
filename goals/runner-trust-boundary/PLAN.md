@@ -7,7 +7,9 @@ Status: `active`. P0 was ratified on 2026-08-24 in
 with closure-ready evidence retained. P2 completed on 2026-08-24 with
 closure-ready evidence retained in
 [`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md). P3 Admission defense in
-depth is in progress.
+depth completed on 2026-08-25 with admission evidence retained in
+[`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md). P4 Boundary
+verification is next.
 
 ## Phases
 
@@ -16,7 +18,7 @@ depth is in progress.
 | P0 Posture validation and grill gate | ratified 2026-08-24 | Validate the posture against live GitHub, AWS, AMI, identity, lifecycle, and lane-placement facts; ratify mechanism, sequencing, rollback, and proof. | The sanitized facts, threat model, mechanism, and operator grill record exist. |
 | P1 08-24 CSF-003/CSF-009 deployment proof | complete 2026-08-24 (closure-ready evidence retained) | Bake and deploy a fresh sealed image before the bootstrap rewrite, prove the setup fast path, run all five red-team gates, and prove teardown. | Every `SPEC.md` deployment-proof requirement passes; closure-ready evidence exists for the two held exact IDs. |
 | P2 Workload identity boundary | complete 2026-08-24 (closure-ready evidence retained) | Keep the boundary-capped role for root-owned bootstrap, then disable IMDS fail-closed before runner startup. | No ordinary or privileged probe can obtain usable application role credentials; bootstrap, registration, and teardown still work. |
-| P3 Admission defense in depth | in progress | Move the five heavy lanes to a default-branch reusable workflow and admit them through the selected organization runner group. | Group policy, workflow refs, membership, and fail-closed registration match the ratified design. |
+| P3 Admission defense in depth | complete 2026-08-25 (admission evidence retained) | Move the five heavy lanes to a default-branch reusable workflow and admit them through the selected organization runner group. | Group policy, workflow refs, membership, and fail-closed registration match the ratified design. |
 | P4 Boundary verification | pending | Run the complete deployed threat matrix and prepare exact-ID reconciliation. | Admission, identity, AMI, lifecycle, red-team, and teardown evidence satisfy `SPEC.md`; all six packet-owned open IDs are closure-ready. |
 | P5 Yeet publish, review, and merge gate | pending | Publish through Yeet, close required checks and review threads, and merge with explicit operator authority. | Yeet reports `merge-ready: yes`, unresolved review threads are zero, and the remediation PR is merged. |
 | P6 Dashboard closure | pending | Close the six exact Codex IDs only after the P5 merge gate. | All six IDs are closed as Already fixed with sanitized per-ID evidence, and the live dashboard reconciles to the allowlist. |
@@ -134,8 +136,10 @@ change that lacks per-job version pinning:
    clean. Keep the candidate only after the operator records the clean result.
 
 The recipe bounded launch-template v11 and v12 failures and allowed v13 to
-remain only after the clean canary. Apply the same discipline to P3 admission
-changes. P3 is in progress.
+remain only after the clean canary. The same discipline applied to the P3
+admission changes; the redeploy's deviation from step 3 is recorded and
+ratified in
+[`research/P3-EVIDENCE.md` § Canary-window deviation](./research/P3-EVIDENCE.md#canary-window-deviation).
 
 ## P3 Admission defense in depth checklist
 
@@ -175,9 +179,13 @@ changes. P3 is in progress.
       minutes with no runner beside an idle group runner). See
       [`research/P3-EVIDENCE.md`](./research/P3-EVIDENCE.md).
 - [x] Prove a missing or rejecting named group fails registration without
-      `Default` or repository fallback; the `05:19Z` to `05:36Z` registration
-      incident left every candidate offline with no fallback registration,
-      and the redeployed fleet registers only in group 4.
+      `Default` or repository fallback; the absent-group probe (`18:08:45Z`
+      to `18:16:22Z`, run `32882220360`) deployed a group name that does not
+      exist, launched and terminated eleven candidates on `Runner group
+      beep-ec2-heavy-absent does not exist` with zero organization or
+      repository registrations, restored automatically, and then ran the same
+      queued job on a group-4 runner. The `05:19Z` permission incident is
+      retained as a second fail-closed record.
 
 ## Rollback posture
 
