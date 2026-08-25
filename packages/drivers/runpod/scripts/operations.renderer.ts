@@ -4,6 +4,7 @@ import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, Struct } from "@beep/utils";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
 import { Effect, Match, Order, pipe } from "effect";
+import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -166,6 +167,7 @@ type RequestField = {
 };
 
 const HTTP_METHODS = RunpodGeneratorHttpMethod.From.Options;
+const UnauthenticatedOperationId = LiteralKit(["GetOpenAPI", "GetDocs"]);
 const DYNAMIC_ENUM_HINTS = [
   "accelerator",
   "cpuFlavor",
@@ -224,17 +226,34 @@ export const renderRunpodOperations: {
   (config: GenerateConfig, refresh: boolean, fetch: Parameters<ExtraRenderer>[2]): ReturnType<ExtraRenderer>;
 } = dual(3, renderOperations);
 
-const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
-  let methodCounts: Record<string, number> = {};
-  let operations: readonly Operation[] = [];
+type BuiltOperation = {
+  readonly methodCounts: Record<string, number>;
+  readonly operation: Operation;
+};
 
-  for (const [path, pathItem] of Struct.entries(document.paths)) {
-    for (const openApiMethod of HTTP_METHODS) {
-      const operation = pathItem[openApiMethod];
-      if (operation === undefined) {
-        continue;
-      }
+const mediaSchema = (content: Record<string, OpenApiMedia>, mediaType: string): O.Option<JsonSchema> =>
+  pipe(
+    R.get(content, mediaType),
+    O.flatMap((media) => O.fromUndefinedOr(media.schema))
+  );
 
+const requestBodySchema = (operation: OpenApiOperation): JsonSchema | undefined =>
+  pipe(
+    O.fromUndefinedOr(operation.requestBody),
+    O.flatMap((body) => O.fromUndefinedOr(body.content)),
+    O.flatMap((content) => mediaSchema(content, "application/json")),
+    O.getOrUndefined
+  );
+
+const buildOperation = (
+  path: string,
+  pathItem: OpenApiPathItem,
+  openApiMethod: (typeof HTTP_METHODS)[number],
+  methodCounts: Record<string, number>
+): O.Option<BuiltOperation> =>
+  pipe(
+    O.fromUndefinedOr(pathItem[openApiMethod]),
+    O.map((operation) => {
       const method = RunpodGeneratorHttpMethod.Enum[openApiMethod];
       const baseMethodName = lowerFirst(operation.operationId);
       const disambiguated = disambiguateMethodName({
@@ -243,37 +262,51 @@ const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
         methodCounts,
         path,
       });
-      methodCounts = disambiguated.methodCounts;
       const methodName = disambiguated.methodName;
-      const requestClassName = `${upperFirst(methodName)}Request`;
-      const descriptorName = `${methodName}Operation`;
       const parameters = mergeParameters(pathItem.parameters, operation.parameters);
-      const bodySchema = operation.requestBody?.content?.["application/json"]?.schema;
       const requestBodyRequired = operation.requestBody?.required === true;
-      const requestFields = renderRequestFields(parameters, bodySchema, requestBodyRequired);
+      const requestFields = renderRequestFields(parameters, requestBodySchema(operation), requestBodyRequired);
       const response = chooseResponse(methodName, operation.responses);
-      const operationId = stableOperationId(operation.operationId, method, path);
 
-      operations = A.append(operations, {
-        descriptorName,
-        hasRequiredRequest: pipe(
+      return {
+        methodCounts: disambiguated.methodCounts,
+        operation: {
+          descriptorName: `${methodName}Operation`,
+          hasRequiredRequest: pipe(
+            requestFields,
+            A.some((field) => field.required)
+          ),
+          method,
+          methodName,
+          operationId: stableOperationId(operation.operationId, method, path),
+          path,
+          requestBodyRequired,
+          requestClassName: `${upperFirst(methodName)}Request`,
           requestFields,
-          A.some((field) => field.required)
-        ),
-        method,
-        methodName,
-        operationId,
-        path,
-        requestBodyRequired,
-        requestClassName,
-        requestFields,
-        responseBody: response.body,
-        responseSchemaExpression: response.schemaExpression,
-        responseSchemaName: response.schemaName,
-        responseTypeExpression: response.typeExpression,
-        status: response.status,
-        summary: operation.summary,
-      });
+          responseBody: response.body,
+          responseSchemaExpression: response.schemaExpression,
+          responseSchemaName: response.schemaName,
+          responseTypeExpression: response.typeExpression,
+          status: response.status,
+          summary: operation.summary,
+        },
+      };
+    })
+  );
+
+const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
+  let methodCounts: Record<string, number> = {};
+  let operations: readonly Operation[] = [];
+
+  for (const [path, pathItem] of Struct.entries(document.paths)) {
+    for (const openApiMethod of HTTP_METHODS) {
+      pipe(
+        buildOperation(path, pathItem, openApiMethod, methodCounts),
+        O.map((built) => {
+          methodCounts = built.methodCounts;
+          operations = A.append(operations, built.operation);
+        })
+      );
     }
   }
 
@@ -355,71 +388,94 @@ const mergeParameters = (
     A.dedupeWith((left, right) => left.name === right.name && left.in === right.in)
   );
 
-const chooseResponse = (
-  methodName: string,
-  responses: Record<string, OpenApiResponse>
-): {
+type ChosenResponse = {
   readonly body: OperationResponseBodyKind;
   readonly schemaExpression?: string;
   readonly schemaName?: string;
   readonly status: string;
   readonly typeExpression: string;
-} => {
-  const status = pipe(
+};
+
+const selectResponseStatus = (responses: Record<string, OpenApiResponse>): string =>
+  pipe(
     ["200", "201", "202", "204"],
-    A.findFirst((candidate) => responses[candidate] !== undefined)
+    A.findFirst((candidate) => R.has(responses, candidate)),
+    O.orElse(() => pipe(Struct.keys(responses), A.head)),
+    O.getOrElse(() => "200")
   );
-  const selectedStatus = pipe(
-    status,
-    O.getOrElse(() =>
-      pipe(
-        Struct.keys(responses),
-        A.head,
-        O.getOrElse(() => "200")
-      )
-    )
-  );
-  const response = responses[selectedStatus];
-  const content = response?.content ?? {};
-  const jsonSchema = content["application/json"]?.schema;
-  const textSchema = content["text/plain"]?.schema ?? content["text/html"]?.schema ?? content["text/markdown"]?.schema;
 
-  if (jsonSchema !== undefined) {
-    const refName = refNameFromSchema(jsonSchema);
-    if (O.isSome(refName)) {
-      return {
+const responseContent = (
+  responses: Record<string, OpenApiResponse>,
+  selectedStatus: string
+): Record<string, OpenApiMedia> =>
+  pipe(
+    R.get(responses, selectedStatus),
+    O.flatMap((response) => O.fromUndefinedOr(response.content)),
+    O.getOrElse(R.empty<string, OpenApiMedia>)
+  );
+
+const chooseJsonResponse = (methodName: string, selectedStatus: string, jsonSchema: JsonSchema): ChosenResponse =>
+  pipe(
+    refNameFromSchema(jsonSchema),
+    O.match({
+      onNone: () => {
+        const schemaName = `${upperFirst(methodName)}Status${selectedStatus}Response`;
+        return {
+          body: OperationResponseBodyKind.Enum.json,
+          schemaExpression: schemaExpression(jsonSchema, schemaName),
+          schemaName,
+          status: selectedStatus,
+          typeExpression: schemaName,
+        };
+      },
+      onSome: (refName) => ({
         body: OperationResponseBodyKind.Enum.json,
-        schemaExpression: `Models.${refName.value}`,
+        schemaExpression: `Models.${refName}`,
         status: selectedStatus,
-        typeExpression: `Models.${refName.value}`,
-      };
-    }
+        typeExpression: `Models.${refName}`,
+      }),
+    })
+  );
 
-    const schemaName = `${upperFirst(methodName)}Status${selectedStatus}Response`;
-    return {
-      body: OperationResponseBodyKind.Enum.json,
-      schemaExpression: schemaExpression(jsonSchema, schemaName),
-      schemaName,
-      status: selectedStatus,
-      typeExpression: schemaName,
-    };
-  }
+const chooseTextResponse = (methodName: string, selectedStatus: string): ChosenResponse => ({
+  body: OperationResponseBodyKind.Enum.text,
+  schemaExpression: "S.String",
+  schemaName: `${upperFirst(methodName)}Status${selectedStatus}TextResponse`,
+  status: selectedStatus,
+  typeExpression: "string",
+});
 
-  if (textSchema !== undefined || R.has(content, "text/html")) {
-    return {
-      body: OperationResponseBodyKind.Enum.text,
-      schemaExpression: "S.String",
-      schemaName: `${upperFirst(methodName)}Status${selectedStatus}TextResponse`,
-      status: selectedStatus,
-      typeExpression: "string",
-    };
-  }
+const chooseEmptyResponse = (selectedStatus: string): ChosenResponse => ({
+  body: OperationResponseBodyKind.Enum.none,
+  status: selectedStatus,
+  typeExpression: "void",
+});
 
-  return {
-    body: OperationResponseBodyKind.Enum.none,
-    status: selectedStatus,
-    typeExpression: "void",
-  };
+const textResponse = (
+  methodName: string,
+  selectedStatus: string,
+  content: Record<string, OpenApiMedia>
+): O.Option<ChosenResponse> =>
+  pipe(
+    O.firstSomeOf([
+      mediaSchema(content, "text/plain"),
+      mediaSchema(content, "text/html"),
+      mediaSchema(content, "text/markdown"),
+    ]),
+    O.orElse(() => pipe(R.get(content, "text/html"), O.as(true))),
+    O.as(chooseTextResponse(methodName, selectedStatus))
+  );
+
+const chooseResponse = (methodName: string, responses: Record<string, OpenApiResponse>): ChosenResponse => {
+  const selectedStatus = selectResponseStatus(responses);
+  const content = responseContent(responses, selectedStatus);
+
+  return pipe(
+    mediaSchema(content, "application/json"),
+    O.map((jsonSchema) => chooseJsonResponse(methodName, selectedStatus, jsonSchema)),
+    O.orElse(() => textResponse(methodName, selectedStatus, content)),
+    O.getOrElse(() => chooseEmptyResponse(selectedStatus))
+  );
 };
 
 const renderGeneratedFile = (input: {
@@ -905,6 +961,27 @@ export class RunpodOperationDescriptor extends S.Class<RunpodOperationDescriptor
 }`;
 };
 
+const renderBooleanLiteral = Bool.match({
+  onFalse: () => "false",
+  onTrue: () => "true",
+});
+
+const renderAuthentication = Match.type<string>().pipe(
+  Match.when(UnauthenticatedOperationId.is.GetOpenAPI, () => "false"),
+  Match.when(UnauthenticatedOperationId.is.GetDocs, () => "false"),
+  Match.orElse(() => "true")
+);
+
+const renderRequestBodyKind = (requestFields: readonly RequestField[]): string =>
+  pipe(
+    requestFields,
+    A.some((field) => field.name === "body"),
+    Bool.match({
+      onFalse: () => JSON.stringify(OperationRequestBodyKind.Enum.none),
+      onTrue: () => JSON.stringify(OperationRequestBodyKind.Enum.json),
+    })
+  );
+
 const renderOperationDescriptor = (operation: Operation): string => {
   const pathParams = pipe(
     operation.requestFields,
@@ -932,22 +1009,15 @@ const renderOperationDescriptor = (operation: Operation): string => {
  * @since 0.1.0
  */
 export const ${operation.descriptorName} = RunpodOperationDescriptor.make({
-  authenticated: ${operation.operationId === "GetOpenAPI" || operation.operationId === "GetDocs" ? "false" : "true"},
+  authenticated: ${renderAuthentication(operation.operationId)},
   method: "${operation.method}",
   methodName: "${operation.methodName}",
   operationId: "${operation.operationId}",
   path: "${operation.path}",
   pathParams: ${JSON.stringify(pathParams)},
   queryParams: ${JSON.stringify(queryParams)},
-  requestBody: ${
-    pipe(
-      operation.requestFields,
-      A.some((field) => field.name === "body")
-    )
-      ? JSON.stringify(OperationRequestBodyKind.Enum.json)
-      : JSON.stringify(OperationRequestBodyKind.Enum.none)
-  },
-  requestBodyRequired: ${operation.requestBodyRequired ? "true" : "false"},
+  requestBody: ${renderRequestBodyKind(operation.requestFields)},
+  requestBodyRequired: ${renderBooleanLiteral(operation.requestBodyRequired)},
   responseBody: ${JSON.stringify(operation.responseBody)},
   status: "${operation.status}",
 });`;
@@ -1017,61 +1087,112 @@ ${pipe(methods, A.join("\n"))}
 }`;
 };
 
-const schemaExpression = (schema: JsonSchema, hint: string): string => {
-  const refName = refNameFromSchema(schema);
-  if (O.isSome(refName)) {
-    return wrapNullable(schema, `S.suspend(() => Models.${refName.value})`);
-  }
+const referencedSchemaExpression = (schema: JsonSchema): O.Option<string> =>
+  pipe(
+    refNameFromSchema(schema),
+    O.map((refName) => wrapNullable(schema, `S.suspend(() => Models.${refName})`))
+  );
 
+const enumSchemaExpression = (schema: JsonSchema, hint: string): O.Option<string> => {
   const values = pipe(schema.enum, O.fromUndefinedOr, O.getOrElse(A.empty<unknown>), A.filter(P.isString));
-  if (A.isReadonlyArrayNonEmpty(values)) {
-    if (shouldTrackAdvisoryEnum(hint)) {
-      return wrapNullable(schema, "S.String");
-    }
 
-    return wrapNullable(schema, `LiteralKit(${JSON.stringify(values)})`);
-  }
+  return pipe(
+    values,
+    O.liftPredicate(A.isReadonlyArrayNonEmpty),
+    O.map((enumValues) =>
+      pipe(
+        shouldTrackAdvisoryEnum(hint),
+        Bool.match({
+          onFalse: () => wrapNullable(schema, `LiteralKit(${JSON.stringify(enumValues)})`),
+          onTrue: () => wrapNullable(schema, "S.String"),
+        })
+      )
+    )
+  );
+};
 
-  const type = P.isString(schema.type) ? schema.type : schema.type?.[0];
+const renderStructProperty = (
+  required: readonly string[],
+  propertyName: string,
+  propertySchema: JsonSchema
+): string => {
+  const expression = schemaExpression(propertySchema, propertyName);
+  const renderedExpression = pipe(
+    required,
+    A.contains(propertyName),
+    Bool.match({
+      onFalse: () => optionalExpression(expression),
+      onTrue: () => expression,
+    })
+  );
 
-  return Match.type<string | undefined>().pipe(
+  return `    ${propertyName}: ${renderedExpression},`;
+};
+
+const structSchemaExpression = (schema: JsonSchema): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(schema.properties),
+    O.map((properties) => {
+      const required = pipe(schema.required, O.fromUndefinedOr, O.getOrElse(A.empty<string>));
+      const renderedProperties = pipe(
+        Struct.entries(properties),
+        A.map(([propertyName, propertySchema]) => renderStructProperty(required, propertyName, propertySchema)),
+        A.join("\n")
+      );
+
+      return wrapNullable(schema, `S.Struct({\n${renderedProperties}\n  })`);
+    })
+  );
+
+const additionalPropertySchemaExpression = (additionalProperties: true | JsonSchema, hint: string): string =>
+  Match.type<true | JsonSchema>().pipe(
+    Match.when(P.isBoolean, () => "S.Unknown"),
+    Match.orElse((propertySchema) => schemaExpression(propertySchema, hint))
+  )(additionalProperties);
+
+const recordSchemaExpression = (schema: JsonSchema, hint: string): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(schema.additionalProperties),
+    O.filter((additionalProperties): additionalProperties is true | JsonSchema => additionalProperties !== false),
+    O.map((additionalProperties) =>
+      wrapNullable(schema, `S.Record(S.String, ${additionalPropertySchemaExpression(additionalProperties, hint)})`)
+    )
+  );
+
+const objectSchemaExpression = (schema: JsonSchema, hint: string): string =>
+  pipe(
+    structSchemaExpression(schema),
+    O.orElse(() => recordSchemaExpression(schema, hint)),
+    O.getOrElse(() => wrapNullable(schema, "S.Record(S.String, S.Unknown)"))
+  );
+
+const schemaTypeOption = Match.type<string | readonly string[]>().pipe(
+  Match.when(P.isString, (type): O.Option<string> => O.some(type)),
+  Match.orElse((types): O.Option<string> => A.head(types))
+);
+
+const schemaType = (schema: JsonSchema): string | undefined =>
+  pipe(O.fromUndefinedOr(schema.type), O.flatMap(schemaTypeOption), O.getOrUndefined);
+
+const primitiveSchemaExpression = (schema: JsonSchema, hint: string): string =>
+  Match.type<string | undefined>().pipe(
     Match.when("array", () =>
       wrapNullable(schema, pipeExpression(schemaExpression(schema.items ?? UnknownJsonSchema, hint), "S.Array"))
     ),
     Match.when("boolean", () => wrapNullable(schema, "S.Boolean")),
     Match.when("integer", () => wrapNullable(schema, "S.Int")),
     Match.when("number", () => wrapNullable(schema, "S.Finite")),
-    Match.when("object", () => {
-      if (schema.properties !== undefined) {
-        const required = pipe(schema.required, O.fromUndefinedOr, O.getOrElse(A.empty<string>));
-        const properties = pipe(
-          Struct.entries(schema.properties),
-          A.map(([propertyName, propertySchema]) => {
-            const expression = schemaExpression(propertySchema, propertyName);
-            const renderedExpression = pipe(required, A.contains(propertyName))
-              ? expression
-              : optionalExpression(expression);
-
-            return `    ${propertyName}: ${renderedExpression},`;
-          })
-        );
-
-        return wrapNullable(schema, `S.Struct({\n${pipe(properties, A.join("\n"))}\n  })`);
-      }
-
-      if (schema.additionalProperties !== undefined && schema.additionalProperties !== false) {
-        const valueSchema =
-          schema.additionalProperties === true ? "S.Unknown" : schemaExpression(schema.additionalProperties, hint);
-
-        return wrapNullable(schema, `S.Record(S.String, ${valueSchema})`);
-      }
-
-      return wrapNullable(schema, "S.Record(S.String, S.Unknown)");
-    }),
+    Match.when("object", () => objectSchemaExpression(schema, hint)),
     Match.when("string", () => wrapNullable(schema, "S.String")),
     Match.orElse(() => wrapNullable(schema, "S.Unknown"))
-  )(type);
-};
+  )(schemaType(schema));
+
+const schemaExpression = (schema: JsonSchema, hint: string): string =>
+  pipe(
+    referencedSchemaExpression(schema),
+    O.orElse(() => enumSchemaExpression(schema, hint)),
+    O.getOrElse(() => primitiveSchemaExpression(schema, hint))
+  );
 
 const pipeExpression = (expression: string, operation: string): string => {
   const pipeMatch = /^([^\n]*\.pipe\()([\s\S]*)\)$/.exec(expression);

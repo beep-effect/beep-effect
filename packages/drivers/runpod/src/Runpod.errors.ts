@@ -392,43 +392,52 @@ class RunpodDocsErrorOptionsInput extends S.Class<RunpodDocsErrorOptionsInput>($
   })
 ) {}
 
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown docs failures inside the Runpod boundary
-const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
-  if (!P.isObject(value)) {
-    return O.none();
-  }
+// Keep reflective inspection inside the driver boundary: hostile proxies and
+// throwing getters are treated as absent diagnostic metadata.
+const safelyRead =
+  (key: PropertyKey) =>
+  (value: unknown): O.Option<unknown> =>
+    pipe(
+      value,
+      O.liftPredicate(P.isObject),
+      O.flatMap((object) =>
+        pipe(
+          Result.try(() => Reflect.get(object, key)),
+          Result.getOrElse(() => undefined),
+          O.fromUndefinedOr
+        )
+      )
+    );
 
-  return O.fromUndefinedOr(
-    Result.getOrElse(
-      Result.try(() => Reflect.get(value, key)),
-      () => undefined
-    )
+const stringProperty =
+  (key: PropertyKey) =>
+  (value: unknown): O.Option<string> =>
+    pipe(value, safelyRead(key), O.filter(P.isString));
+
+const isHttpClientCause = (cause: unknown): boolean =>
+  pipe(
+    Result.try(() => HttpClientError.isHttpClientError(cause)),
+    Result.getOrElse(() => false)
   );
-};
-
-const readString: {
-  (value: unknown, key: PropertyKey): O.Option<string>;
-  (key: PropertyKey): (value: unknown) => O.Option<string>;
-} = dual(2, (value: unknown, key: PropertyKey): O.Option<string> => O.filter(readProperty(value, key), P.isString));
-
-const safeBoolean = (evaluate: () => boolean): boolean => Result.getOrElse(Result.try(evaluate), () => false);
 
 const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
-  safeBoolean(() => HttpClientError.isHttpClientError(cause))
-    ? pipe(
-        readProperty(cause, "reason"),
-        O.flatMap(readString("_tag")),
-        O.map((tag) => `HttpClientError:${tag}`)
-      )
-    : O.none();
+  pipe(
+    O.some(cause),
+    O.filter(isHttpClientCause),
+    O.flatMap(safelyRead("reason")),
+    O.flatMap(stringProperty("_tag")),
+    O.map((tag) => `HttpClientError:${tag}`)
+  );
 
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
-  P.isUndefined(cause)
-    ? O.none()
-    : O.firstSomeOf([
-        httpClientCauseLabel(cause),
-        readString(cause, "_tag"),
-        readString(cause, "name"),
-        P.isString(cause) ? O.some("String") : O.none(),
-      ]);
+  pipe(
+    O.fromUndefinedOr(cause),
+    O.flatMap((presentCause) =>
+      O.firstSomeOf([
+        httpClientCauseLabel(presentCause),
+        stringProperty("_tag")(presentCause),
+        stringProperty("name")(presentCause),
+        pipe(presentCause, O.liftPredicate(P.isString), O.as("String")),
+      ])
+    )
+  );

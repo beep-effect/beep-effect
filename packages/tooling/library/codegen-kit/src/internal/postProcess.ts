@@ -196,6 +196,33 @@ const visitNodes = (root: ts.Node, visit: (node: ts.Node) => void): void => {
   ts.forEachChild(root, (child) => visitNodes(child, visit));
 };
 
+type NodeReplacement = (node: ts.Node, sourceFile: ts.SourceFile) => O.Option<Replacement>;
+
+const collectNodeReplacements = (source: string, replacementFor: NodeReplacement): ReadonlyArray<Replacement> => {
+  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const replacements: Array<Replacement> = [];
+  visitNodes(sourceFile, (node) => {
+    pipe(
+      replacementFor(node, sourceFile),
+      O.map((replacement) => replacements.push(replacement))
+    );
+  });
+  return replacements;
+};
+
+type StatementReplacement = (statement: ts.Statement, sourceFile: ts.SourceFile) => O.Option<Replacement>;
+
+const collectStatementReplacements = (
+  source: string,
+  replacementFor: StatementReplacement
+): ReadonlyArray<Replacement> => {
+  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  return pipe(
+    A.fromIterable(sourceFile.statements),
+    A.flatMap((statement) => pipe(replacementFor(statement, sourceFile), O.toArray))
+  );
+};
+
 const rewriteKeyAnnotations = (expression: string): string => {
   const { source, sourceFile } = parseExpression(expression);
   const replacements: Array<Replacement> = [];
@@ -272,37 +299,37 @@ const integerSchemaReceiver = (node: ts.CallExpression): O.Option<ts.Expression>
   );
 };
 
-const normalizeIntegerSchemas = (source: string): string => {
-  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const replacements: Array<Replacement> = [];
-  visitNodes(sourceFile, (node) => {
-    if (!ts.isCallExpression(node)) return;
-    pipe(
-      integerSchemaReceiver(node),
-      O.map((receiver) =>
-        replacements.push(
-          new Replacement(
-            node.getStart(sourceFile),
-            node.getEnd(),
-            Str.replace(/\bS\.Number\b/, "S.Int")(receiver.getText(sourceFile))
-          )
+const integerSchemaReplacement: NodeReplacement = (node, sourceFile) =>
+  pipe(
+    O.some(node),
+    O.filter(ts.isCallExpression),
+    O.flatMap((call) =>
+      pipe(
+        integerSchemaReceiver(call),
+        O.map(
+          (receiver) =>
+            new Replacement(
+              call.getStart(sourceFile),
+              call.getEnd(),
+              Str.replace(/\bS\.Number\b/, "S.Int")(receiver.getText(sourceFile))
+            )
         )
       )
-    );
-  });
-  return applyReplacements(source, replacements);
-};
+    )
+  );
 
-const normalizeFiniteSchemas = (source: string): string => {
-  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const replacements: Array<Replacement> = [];
-  visitNodes(sourceFile, (node) => {
-    if (isSchemaProperty(node, "Number")) {
-      replacements.push(new Replacement(node.getStart(sourceFile), node.getEnd(), "S.Finite"));
-    }
-  });
-  return applyReplacements(source, replacements);
-};
+const normalizeIntegerSchemas = (source: string): string =>
+  applyReplacements(source, collectNodeReplacements(source, integerSchemaReplacement));
+
+const finiteSchemaReplacement: NodeReplacement = (node, sourceFile) =>
+  pipe(
+    O.some(node),
+    O.filter((candidate): candidate is ts.PropertyAccessExpression => isSchemaProperty(candidate, "Number")),
+    O.map((schema) => new Replacement(schema.getStart(sourceFile), schema.getEnd(), "S.Finite"))
+  );
+
+const normalizeFiniteSchemas = (source: string): string =>
+  applyReplacements(source, collectNodeReplacements(source, finiteSchemaReplacement));
 
 const normalizeNumberSchemas = (source: string, config: GenerateConfig): string => {
   const integers = normalizeIntegerSchemas(source);
@@ -312,21 +339,29 @@ const normalizeNumberSchemas = (source: string, config: GenerateConfig): string 
 const isPipeableSchema = (node: ts.Node): node is ts.CallExpression =>
   ts.isCallExpression(node) && (isSchemaCall(node, "Array") || isSchemaCall(node, "Record"));
 
-const normalizePipeableSchemas = (source: string): string => {
-  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const replacements: Array<Replacement> = [];
-  visitNodes(sourceFile, (node) => {
-    if (!ts.isCallExpression(node) || !isSchemaCall(node, "optionalKey")) return;
-    pipe(
-      A.get(A.fromIterable(node.arguments), 0),
-      O.filter(isPipeableSchema),
-      O.map((schema) =>
-        replacements.push(
-          new Replacement(node.getStart(sourceFile), node.getEnd(), `${schema.getText(sourceFile)}.pipe(S.optionalKey)`)
+const pipeableSchemaReplacement: NodeReplacement = (node, sourceFile) =>
+  pipe(
+    O.some(node),
+    O.filter(ts.isCallExpression),
+    O.filter((call) => isSchemaCall(call, "optionalKey")),
+    O.flatMap((call) =>
+      pipe(
+        A.get(A.fromIterable(call.arguments), 0),
+        O.filter(isPipeableSchema),
+        O.map(
+          (schema) =>
+            new Replacement(
+              call.getStart(sourceFile),
+              call.getEnd(),
+              `${schema.getText(sourceFile)}.pipe(S.optionalKey)`
+            )
         )
       )
-    );
-  });
+    )
+  );
+
+const normalizePipeableSchemas = (source: string): string => {
+  const replacements = collectNodeReplacements(source, pipeableSchemaReplacement);
   if (A.isReadonlyArrayEmpty(replacements)) return source;
   const innermost = A.filter(
     replacements,
@@ -649,20 +684,16 @@ const addIdentityContext = (source: string, config: GenerateConfig): string => {
 };
 
 const annotateExportedSchemas = (source: string, config: GenerateConfig): string => {
-  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const replacements = pipe(
-    A.fromIterable(sourceFile.statements),
-    A.flatMap((statement) =>
-      pipe(
-        exportedSchemaDeclaration(statement, sourceFile),
-        O.map(([name, initializer]) => [
+  const replacements = collectStatementReplacements(source, (statement, sourceFile) =>
+    pipe(
+      exportedSchemaDeclaration(statement, sourceFile),
+      O.map(
+        ([name, initializer]) =>
           new Replacement(
             initializer.getStart(sourceFile),
             initializer.getEnd(),
             `${initializer.getText(sourceFile)}.pipe(\n${renderAnnotation(name, [], config)}\n)`
-          ),
-        ]),
-        O.getOrElse(A.empty<Replacement>)
+          )
       )
     )
   );
@@ -671,27 +702,29 @@ const annotateExportedSchemas = (source: string, config: GenerateConfig): string
     : addIdentityContext(applyReplacements(source, replacements), config);
 };
 
-const addExportDocs = (source: string, config: GenerateConfig): string => {
-  const sourceFile = ts.createSourceFile("generated.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const replacements = pipe(
-    A.fromIterable(sourceFile.statements),
-    A.filter(isExported),
-    A.flatMap((statement) =>
+const addExportDocs = (source: string, config: GenerateConfig): string =>
+  applyReplacements(
+    source,
+    collectStatementReplacements(source, (statement, sourceFile) =>
       pipe(
-        declarationName(statement),
-        O.map((name) => [
-          new Replacement(
-            statement.getStart(sourceFile),
-            statement.getStart(sourceFile),
-            `${renderGenericDoc(name, isTypeOnly(statement), config)}\n`
-          ),
-        ]),
-        O.getOrElse(A.empty<Replacement>)
+        O.some(statement),
+        O.filter(isExported),
+        O.flatMap((exportedStatement) =>
+          pipe(
+            declarationName(exportedStatement),
+            O.map(
+              (name) =>
+                new Replacement(
+                  exportedStatement.getStart(sourceFile),
+                  exportedStatement.getStart(sourceFile),
+                  `${renderGenericDoc(name, isTypeOnly(exportedStatement), config)}\n`
+                )
+            )
+          )
+        )
       )
     )
   );
-  return applyReplacements(source, replacements);
-};
 
 const collectIdentifiers = (statement: ts.Statement): ReadonlyArray<string> => {
   const identifiers: Array<string> = [];

@@ -223,9 +223,7 @@ const RunpodUrlParams = S.Record(S.String, RunpodUrlParamValue).pipe(
 
 type RunpodUrlParams = typeof RunpodUrlParams.Type;
 
-interface JsonOperationSpec<Request, Response> {
-  readonly descriptor: G.RunpodOperationDescriptor;
-  readonly request: S.ConstraintDecoder<Request>;
+interface JsonOperationSpec<Request, Response> extends VoidOperationSpec<Request> {
   readonly response: S.ConstraintDecoder<Response>;
 }
 
@@ -490,15 +488,24 @@ const decodeTextResponse = Effect.fnUntraced(function* (
   );
 });
 
+const executeOperationResponse = Effect.fnUntraced(function* <Request>(
+  client: HttpClient.HttpClient,
+  config: ResolvedRunpodConfig,
+  spec: VoidOperationSpec<Request>,
+  request: Request
+): Effect.fn.Return<HttpClientResponse.HttpClientResponse, RunpodError> {
+  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
+  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
+  return yield* ensureSuccessStatus(spec.descriptor, response);
+});
+
 const executeJsonOperation = Effect.fn("Runpod.executeJsonOperation")(function* <Request, Response>(
   client: HttpClient.HttpClient,
   config: ResolvedRunpodConfig,
   spec: JsonOperationSpec<Request, Response>,
   request: Request
 ): Effect.fn.Return<Response, RunpodError> {
-  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
-  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
-  const successfulResponse = yield* ensureSuccessStatus(spec.descriptor, response);
+  const successfulResponse = yield* executeOperationResponse(client, config, spec, request);
   return yield* decodeJsonResponse(spec.descriptor, spec.response, successfulResponse);
 });
 
@@ -508,9 +515,7 @@ const executeTextOperation = Effect.fn("Runpod.executeTextOperation")(function* 
   spec: JsonOperationSpec<Request, string>,
   request: Request
 ): Effect.fn.Return<string, RunpodError> {
-  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
-  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
-  const successfulResponse = yield* ensureSuccessStatus(spec.descriptor, response);
+  const successfulResponse = yield* executeOperationResponse(client, config, spec, request);
   return yield* decodeTextResponse(spec.descriptor, successfulResponse);
 });
 
@@ -520,9 +525,7 @@ const executeVoidOperation = Effect.fn("Runpod.executeVoidOperation")(function* 
   spec: VoidOperationSpec<Request>,
   request: Request
 ): Effect.fn.Return<void, RunpodError> {
-  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
-  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
-  yield* ensureSuccessStatus(spec.descriptor, response);
+  yield* executeOperationResponse(client, config, spec, request);
 });
 
 const requiredJsonOperation = <Request, Response>(
