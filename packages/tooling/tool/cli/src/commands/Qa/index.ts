@@ -48,6 +48,13 @@ export * from "./Inventory.schemas.ts";
  */
 export * from "./JudgeCheck.ts";
 /**
+ * Complete typed gate composition for the qa-inventory judge.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export * from "./JudgeContract.ts";
+/**
  * The `qa judge-ingest` inventory writer.
  *
  * @category use-cases
@@ -68,6 +75,13 @@ export * from "./JudgeLint.ts";
  * @since 0.0.0
  */
 export * from "./JudgePack.ts";
+/**
+ * The `qa judge-skill` SKILL.md projection writer.
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export * from "./JudgeSkill.ts";
 /**
  * Command definitions for recorded UI verification.
  *

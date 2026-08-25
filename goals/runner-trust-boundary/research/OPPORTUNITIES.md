@@ -1,6 +1,7 @@
 # Runner trust-boundary friction receipts
 
-These receipts were captured during P1 and P2 on 2026-08-24. They record
+These receipts were captured during P1 and P2 on 2026-08-24 and P3 on
+2026-08-25. They record
 operational friction without expanding this packet's ownership.
 
 ## Bake identity was not discoverable
@@ -176,3 +177,65 @@ instance-initiated shutdown behavior set to `terminate`.
 Access Analyzer and add a live dry-run for intended self-scoped actions. The
 module should replace the unsupported key or remove the dead statement if
 external teardown remains authoritative.
+
+## Installation permission acceptance was invisible until deploy
+
+**What.** Adding `organization_self_hosted_runners` to the fleet-controller
+GitHub App did not grant it to the organization installation; an
+administrator must accept the pending permission request in the organization
+UI. The first organization-registration deploy therefore failed on every
+scale-up and rolled back.
+
+**Evidence.** `GET /orgs/beep-effect/actions/runner-groups` returned
+`403 Resource not accessible by integration` with
+`x-accepted-github-permissions: organization_self_hosted_runners=read`, while
+`gh api /orgs/beep-effect/installations` showed the permission absent on the
+installation. The redeploy after acceptance changed nothing but the same
+three resources and passed the probes.
+
+**What would have prevented it.** A pre-deploy guard that reads the
+installation's permissions through `/orgs/{org}/installations` and refuses
+to enable organization registration until the required permission is present
+on the installation, not only on the App. The redeploy script for this step
+now carries that guard; it belongs in the fleet deploy command.
+
+## Non-allowlisted dispatches still cost candidate launches
+
+**What.** The controller launches one candidate per queued `workflow_job`
+event before GitHub applies the group's workflow restriction, and its
+`job_retry` setting (`max_attempts: 2`, `delay_in_seconds: 120`,
+`delay_backoff: 2`) launches again while the job is still queued. A job the
+group will never admit therefore costs up to three instances, each idling for
+`minimum_running_time_in_minutes` before it terminates or takes an allowlisted
+job.
+
+**Evidence.** Negative probe run `32880025557` produced three launches: the
+initial candidate at `17:48:47Z` and retries at `17:50:53Z` and `17:52:59Z`,
+matching the retry schedule. The job stayed queued for five minutes
+throughout. Two of the three candidates were absorbed by #810's allowlisted
+jobs; the third idled to termination. Admission held; the launches were spent
+regardless.
+
+**What would have prevented it.** The scale-up lambda could resolve the
+job's workflow reference from the event and skip launches whose reference is
+outside the group's selected workflows. Until then, treat a repeated
+out-of-allowlist dispatch as a cost signal in the fleet dashboard.
+
+## Unresolvable-group failures churn a launch every fifteen seconds
+
+**What.** When the controller cannot resolve its runner group, every queue
+retry for a queued job launches a candidate, fails at the group lookup, and
+terminates it. The failure is a configuration error, but the module treats it
+like a transient one.
+
+**Evidence.** The absent-group probe launched and terminated eleven candidates
+for one queued job in two and a half minutes (`18:10:47Z` to `18:13:20Z`,
+run `32882220360`), each with `Runner group beep-ec2-heavy-absent does not
+exist`. The `05:19Z` permission incident had the same shape.
+
+**What would have prevented it.** Resolve the group before `RunInstances`
+rather than after, and treat a group-lookup error as non-retryable at the
+configuration level: one alarm, no relaunch, until an operator changes the
+deployment. Until the module offers that, treat sustained launch-and-terminate
+churn with zero registrations as the signature of a group or permission
+misconfiguration.

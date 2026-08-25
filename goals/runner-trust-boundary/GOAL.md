@@ -36,11 +36,12 @@ Execution:
    A-through-J-plus-L, lane, and closure-ready record. The self-only Allow
    applies while current state is `enabled`; the boundary denies changes once
    state is `disabled`. Informational JIT argv residue remains P4 work.
-4. P3 Admission defense in depth: first prove selected-workflow ref matching
-   live. Move the five heavy lanes to `heavy.yml@main`; create selected group
-   `beep-ec2-heavy` for the public repository, `heavy.yml`, and the two probe
-   workflows at `refs/heads/main`. Register at organization scope and fail
-   closed without fallback. Obtain `admin:org` or App-equivalent authority.
+4. P3 Admission defense in depth: complete 2026-08-25. Treat
+   `research/P3-EVIDENCE.md` as the cutover, group-state, registration, and
+   admission-probe record. Heavy lanes run through `heavy.yml@main`; group
+   `beep-ec2-heavy` admits only the four protected `refs/heads/main`
+   workflows; the controller registers at organization scope and fails closed
+   without fallback. Do not repeat the cutover or the redeploy.
 5. P4 Boundary verification: run the operator-controlled JIT replay probe,
    rerun the complete deployed proof, and mark all six exact Codex IDs
    closure-ready.
