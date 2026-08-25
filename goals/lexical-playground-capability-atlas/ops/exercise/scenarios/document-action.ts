@@ -1,5 +1,5 @@
 import stableStringify from "fast-json-stable-stringify";
-import { click, expectAttr, expectSelector, expectText, keyboard, text, type } from "./dsl.ts";
+import { click, expectAttr, expectSelector, expectText, keyboard, reload, text, type } from "./dsl.ts";
 import { GROUP, scenario, surfaceLifecycle } from "./helpers.ts";
 import {
   ACTION,
@@ -157,7 +157,8 @@ export const scenarios = [
     title: "Markdown source mode",
   }),
   scenario({
-    activationExercise: "Lock read-only mode, verify contenteditable=false, then unlock and edit.",
+    activationExercise:
+      "Lock read-only mode, unlock and edit, then share, relock, and prove that a same-URL remount resets editable state.",
     group: GROUP.documentAction,
     id: "document.read-only",
     steps: surfaceLifecycle(
@@ -167,8 +168,22 @@ export const scenarios = [
         click(ACTION.unlock),
         expectAttr(EDITOR, "contenteditable", "true"),
         type(EDITOR, " editable"),
+        click(ACTION.share),
+        expectText(ACTION_FEEDBACK.shareToast, "URL copied to clipboard"),
+        click(ACTION.lock),
+        expectAttr(EDITOR, "contenteditable", "false"),
       ],
-      { seed: "Read-only evidence" }
+      {
+        afterActivation: [
+          reload(),
+          expectSelector(text("Read-only evidence editable", { exact: true })),
+          expectText(EDITOR, "Read-only evidence editable", true),
+          expectAttr(EDITOR, "contenteditable", "true"),
+        ],
+        afterScreenshotLabel: "read-only-runtime-lock",
+        narrowScreenshotLabel: "read-only-reload-reset",
+        seed: "Read-only evidence",
+      }
     ),
     title: "Read-only lock",
   }),

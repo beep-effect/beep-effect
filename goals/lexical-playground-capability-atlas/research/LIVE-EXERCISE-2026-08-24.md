@@ -36,7 +36,7 @@ Counts are raw pass/fail observation rows from the final evidence. Manual bounda
 | `node.overflow` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.overflow/` | 24/0 | All 24 rows passed; 3 baseline egress rows were expected. |
 | `node.poll` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.poll/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
 | `node.sticky` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.sticky/` | 26/0 | All 26 rows passed; 4 baseline egress rows were expected. |
-| `node.image` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/` | 36/0 | All 36 rows passed; 3 baseline egress rows were expected. |
+| `node.image` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.image/` | 48/0 | P0.5 regenerated all 48 passing rows and proved the paste/drop and HTML importer paths. |
 | `node.mention` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.mention/` | 28/0 | All 28 rows passed; 3 baseline egress rows were expected. |
 | `node.emoji` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.emoji/` | 25/0 | All 25 rows passed; 3 baseline egress rows were expected. |
 | `node.excalidraw` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/node.excalidraw/` | 36/0 | All 36 rows passed; 3 baseline egress rows were expected. |
@@ -88,23 +88,24 @@ Counts are raw pass/fail observation rows from the final evidence. Manual bounda
 | `setting.lexical-context-menu` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.lexical-context-menu/` | 27/0 | All 27 rows passed; 3 baseline egress rows were expected. |
 | `setting.nested-editor-tree-view` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.nested-editor-tree-view/` | 27/0 | All 27 rows passed; 3 baseline egress rows were expected. |
 | `setting.table-of-contents` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.table-of-contents/` | 27/0 | All 27 rows passed; 3 baseline egress rows were expected. |
+| `setting.tree-view` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.tree-view/` | 28/0 | P0.5 scheduled the previously omitted entry; all 28 rows passed. |
 | `setting.table-cell-background` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.table-cell-background/` | 26/0 | All 26 rows passed; 6 baseline egress rows were expected. |
 | `setting.table-cell-merge` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.table-cell-merge/` | 26/0 | All 26 rows passed; 6 baseline egress rows were expected. |
 | `setting.table-horizontal-scroll` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.table-horizontal-scroll/` | 26/0 | All 26 rows passed; 6 baseline egress rows were expected. |
 | `setting.collaboration-v2` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/setting.collaboration-v2/` | 26/0 | All 26 rows passed; 6 baseline egress rows were expected. |
 | `authoring.undo` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.undo/` | 31/0 | All 31 rows passed; 3 baseline egress rows were expected. |
 | `authoring.redo` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.redo/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
-| `format.bold` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/` | 30/0 | All 30 rows passed; 3 baseline egress rows were expected. |
-| `format.italic` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/` | 30/0 | All 30 rows passed; 3 baseline egress rows were expected. |
+| `format.bold` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.bold/` | 43/0 | P0.5 regenerated all 43 passing rows and proved the four bold delimiter forms. |
+| `format.italic` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.italic/` | 43/0 | P0.5 regenerated all 43 passing rows and proved the four italic delimiter forms. |
 | `format.underline` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.underline/` | 30/0 | All 30 rows passed; 3 baseline egress rows were expected. |
-| `format.strikethrough` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
-| `format.inline-code` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/` | 30/0 | All 30 rows passed; 3 baseline egress rows were expected. |
+| `format.strikethrough` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.strikethrough/` | 39/0 | P0.5 regenerated all 39 passing rows and proved the double-tilde delimiter. |
+| `format.inline-code` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.inline-code/` | 37/0 | P0.5 regenerated all 37 passing rows and proved the backtick delimiter. |
 | `format.subscript` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.subscript/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
 | `format.superscript` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.superscript/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
 | `format.lowercase` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.lowercase/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
 | `format.uppercase` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.uppercase/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
 | `format.capitalize` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.capitalize/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
-| `format.semantic-highlight` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.semantic-highlight/` | 27/0 | All 27 rows passed; 3 baseline egress rows were expected. |
+| `format.semantic-highlight` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.semantic-highlight/` | 32/0 | P0.5 regenerated all 32 passing rows and proved the double-equals delimiter. |
 | `format.clear` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/format.clear/` | 36/0 | All 36 rows passed; 3 baseline egress rows were expected. |
 | `style.font-family` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/style.font-family/` | 27/0 | All 27 rows passed; 3 baseline egress rows were expected. |
 | `style.font-size` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/style.font-size/` | 30/0 | All 30 rows passed; 3 baseline egress rows were expected. |
@@ -118,7 +119,7 @@ Counts are raw pass/fail observation rows from the final evidence. Manual bounda
 | `layout.align-end` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.align-end/` | 22/0 | All 22 rows passed; 3 baseline egress rows were expected. |
 | `layout.indent` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.indent/` | 29/0 | All 29 rows passed; 3 baseline egress rows were expected. |
 | `layout.outdent` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/layout.outdent/` | 33/0 | All 33 rows passed; 3 baseline egress rows were expected. |
-| `extension.history` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.history/` | 31/0 | All 31 rows passed; 3 baseline egress rows were expected. |
+| `extension.history` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.history/` | 38/0 | P0.5 regenerated all 38 passing rows and proved toolbar Undo and Redo. |
 | `extension.toolbar` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.toolbar/` | 31/0 | All 31 rows passed; 3 baseline egress rows were expected. |
 | `extension.floating-toolbar` | unverified | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.floating-toolbar/` | 33/0 | The 33 rows pass after direct toolbar focus. They do not establish an editor-to-toolbar keyboard focus route. |
 | `extension.slash-picker` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.slash-picker/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
@@ -127,7 +128,7 @@ Counts are raw pass/fail observation rows from the final evidence. Manual bounda
 | `extension.click-after-last-block` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.click-after-last-block/` | 35/0 | All 35 rows passed; 3 baseline egress rows were expected. |
 | `extension.shortcut-help` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/extension.shortcut-help/` | 30/0 | All 30 rows passed; 3 baseline egress rows were expected. |
 | `authoring.find-replace` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.find-replace/` | 35/0 | All 35 rows passed; 3 baseline egress rows were expected. |
-| `authoring.autocomplete` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.autocomplete/` | 30/0 | All 30 rows passed; 3 baseline egress rows were expected. |
+| `authoring.autocomplete` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.autocomplete/` | 43/0 | P0.5 regenerated all 43 passing rows and proved swipe-right completion. |
 | `authoring.visible-non-printing` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/authoring.visible-non-printing/` | 28/0 | All 28 rows passed; 3 baseline egress rows were expected. |
 | `table.insert` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.insert/` | 34/0 | All 34 rows passed; 3 baseline egress rows were expected. |
 | `table.rows-columns` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.rows-columns/` | 48/0 | All 48 rows passed; 3 baseline egress rows were expected. |
@@ -139,7 +140,7 @@ Counts are raw pass/fail observation rows from the final evidence. Manual bounda
 | `table.freeze` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.freeze/` | 40/0 | All 40 rows passed; 3 baseline egress rows were expected. |
 | `table.resize-scroll` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.resize-scroll/` | 38/0 | All 38 rows passed; 3 baseline egress rows were expected. |
 | `table.sort` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.sort/` | 39/0 | All 39 rows passed; 3 baseline egress rows were expected. |
-| `table.column-reorder` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.column-reorder/` | 35/0 | All 35 rows passed; 3 baseline egress rows were expected. |
+| `table.column-reorder` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.column-reorder/` | 35/0 | P0.5 regenerated 35 passing rows for the hover-drag route. No context-menu reorder action exists, so that path closes by waiver. |
 | `table.nested` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/table.nested/` | 39/0 | All 39 rows passed; 3 baseline egress rows were expected. |
 | `page.mode` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/page.mode/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
 | `page.size` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/page.size/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
@@ -169,7 +170,7 @@ Counts are raw pass/fail observation rows from the final evidence. Manual bounda
 | `document.export-lexical-json` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.export-lexical-json/` | 28/0 | All 28 rows passed; 3 baseline egress rows were expected. |
 | `document.share-url` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.share-url/` | 29/0 | All 29 rows passed; 3 baseline egress rows were expected. |
 | `document.clear` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.clear/` | 31/0 | All 31 rows passed; 3 baseline egress rows were expected. |
-| `document.read-only` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/` | 32/0 | All 32 rows passed; 3 baseline egress rows were expected. |
+| `document.read-only` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/` | 43/0 | P0.5 regenerated all 43 passing rows. Runtime lock works, but reload resets editability, so the mount path closes by waiver. |
 | `document.markdown-source` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.markdown-source/` | 31/0 | All 31 rows passed; 3 baseline egress rows were expected. |
 | `document.html-source` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.html-source/` | 35/0 | All 35 rows passed; 3 baseline egress rows were expected. |
 | `document.export-dom` | verified-live | `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.export-dom/` | 33/0 | All 33 rows passed; 3 baseline egress rows were expected. |
@@ -219,22 +220,15 @@ The three authorized provider entries recorded 51 capability requests, all passi
 
 ## Unexercised activation paths
 
-A total of 45 activation paths remain unverified. This list includes paths that were not reached and paths whose exercise exposed a blocking defect.
+After P0.5, 35 activation paths retain `evidenceStatus: unverified`. None
+opens the activation-path gate: 22 are source/P1-proven `programmatic` paths,
+10 belong to the original entry-level waiver scopes, and the remaining three
+are the approved P0.5 scope waivers.
 
 | ID | Surface | Action |
 | --- | --- | --- |
-| `node.image` | `paste-drop` | Paste or drop an image/file payload. |
-| `node.image` | `importer` | Import figure/image HTML. |
 | `node.mark` | `floating-toolbar` | Add a comment to a selected range. |
-| `setting.tree-view` | `settings-panel` | Toggle Tree and state debug view when the host exposes the setting. |
-| `format.bold` | `markdown-shortcut` | Type or import the BOLD_STAR, BOLD_UNDERSCORE, BOLD_ITALIC_STAR, BOLD_ITALIC_UNDERSCORE transformer syntax. |
-| `format.italic` | `markdown-shortcut` | Type or import the ITALIC_STAR, ITALIC_UNDERSCORE, BOLD_ITALIC_STAR, BOLD_ITALIC_UNDERSCORE transformer syntax. |
-| `format.strikethrough` | `markdown-shortcut` | Type or import the STRIKETHROUGH transformer syntax. |
-| `format.inline-code` | `markdown-shortcut` | Type or import the INLINE_CODE transformer syntax. |
-| `format.semantic-highlight` | `markdown-shortcut` | Type or import the HIGHLIGHT transformer syntax. |
-| `extension.history` | `toolbar` | Use Undo or Redo. |
 | `extension.floating-toolbar` | `toolbar` | Use the Floating selection toolbar surface. |
-| `authoring.autocomplete` | `selection` | Accept with swipe-right on a supported touch surface. |
 | `table.column-reorder` | `context-menu` | Choose an accessible reorder action. |
 | `transformer.table` | `markdown-shortcut` | Type the transformer syntax in rich-text mode. |
 | `transformer.table` | `programmatic` | Export eligible canonical content to Markdown. |
@@ -280,13 +274,58 @@ The re-judge leaves 10 entries unverified. The expected count of nine does not h
 | `transformer.table` | genuine defect: The shortcut path still creates a malformed nested table. The importer path is flat, but the exercised shortcut defect remains. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.table/01-activation-path-1.png`. |
 | `transformer.tweet` | genuine defect: The Enter-triggered transformer loses selection, raises three real page errors, and unmounts before either expected view appears. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.tweet/observations.ndjson`. |
 | `document.comments-panel` | genuine defect: The Comments panel remains a 300 px fixed overlay while its only toggle is hidden at widths up to 600 px. The rerun hides it before narrowing and therefore does not close the responsive gap. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.comments-panel/02-after.png`. |
-| `document.speech-to-text` | proposed waiver awaiting user approval: Real speech-service, microphone, audible utterance, and permission UX proof is outside fake Chromium. No evidence directory exists. |
-| `interchange.pandoc-docx` | proposed waiver awaiting user approval: The pinned Playground has no Pandoc or DOCX importer, exporter, command, or adapter. No evidence directory exists. |
-| `interchange.pdf` | proposed waiver awaiting user approval: The pinned Playground has no PDF importer, exporter, command, or adapter. No evidence directory exists. |
+| `document.speech-to-text` | approved waiver: Real speech-service, microphone, audible utterance, and permission UX proof is outside fake Chromium. No evidence directory exists. |
+| `interchange.pandoc-docx` | approved waiver: The pinned Playground has no Pandoc or DOCX importer, exporter, command, or adapter. No evidence directory exists. |
+| `interchange.pdf` | approved waiver: The pinned Playground has no PDF importer, exporter, command, or adapter. No evidence directory exists. |
 | `comments.threads` | genuine defect: Pasting a marked thread range at 480 px reopens the Comments panel. The hidden close control leaves the panel over Export; click and export verification fail. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/comments.threads/observations.ndjson:29-30`. |
-| `network.remote-embed-resolution` | proposed waiver awaiting user approval: The pinned Playground has no inert-reference resolver, provider authorization boundary, or consent UI. No evidence directory exists. |
+| `network.remote-embed-resolution` | approved waiver: The pinned Playground has no inert-reference resolver, provider authorization boundary, or consent UI. No evidence directory exists. |
 
-After this pass, entry statuses are `unverified` 10, `verified-live` 154, and `verified-source` 14. Activation-path statuses are `unverified` 45, `verified-live` 245, and `verified-source` 13.
+After P0.5, entry statuses remain `unverified` 10, `verified-live` 154,
+and `verified-source` 14. Activation-path statuses are `unverified` 35,
+`verified-live` 255, and `verified-source` 13.
+
+## P0.5 judge pass, 2026-08-24
+
+The operator ran the 11 regenerated entries sequentially. The runner reported
+11 PASS, 0 FAIL, and exit 0 for every entry. The evidence judge accepted nine
+entries as proof for 10 activation paths. Two runner passes produced negative
+evidence for unavailable upstream paths and therefore close by approved scope
+waivers instead of status flips.
+
+| Entry | Runner | Judge | Activation-path result and proving rows |
+| --- | --- | --- | --- |
+| `authoring.autocomplete` | PASS | PASS | `selection` is `verified-live`: touch-swipe passed at row 37, the ghost detached at row 38, and exact `collaboration` passed at row 39. Screenshot: `04-selection-swipe-right.png`. |
+| `document.read-only` | PASS | FAIL, waived | `read-only` stays `unverified`: runtime lock passed with `contenteditable="false"` at row 16; reload passed at row 19; restored content and `contenteditable="true"` passed at rows 22-24. Screenshots: `02-read-only-runtime-lock.png`, `03-read-only-reload-reset.png`. |
+| `extension.history` | PASS | PASS | `toolbar` is `verified-live`: bold output was visible at row 14, detached after Undo at row 16, and visible after Redo at row 18. Screenshot: `02-toolbar.png`. |
+| `format.bold` | PASS | PASS | `markdown-shortcut` is `verified-live`: the fourth bold theme node passed at row 29. Screenshot: `03-markdown-shortcut.png`. |
+| `format.inline-code` | PASS | PASS | `markdown-shortcut` is `verified-live`: the inline-code theme class passed at row 23. Screenshot: `03-markdown-shortcut.png`. |
+| `format.italic` | PASS | PASS | `markdown-shortcut` is `verified-live`: the fourth italic theme node passed at row 29. Screenshot: `03-markdown-shortcut.png`. |
+| `format.semantic-highlight` | PASS | PASS | `markdown-shortcut` is `verified-live`: the highlight theme class passed at row 15. Screenshot: `01-markdown-shortcut.png`. |
+| `format.strikethrough` | PASS | PASS | `markdown-shortcut` is `verified-live`: the strikethrough theme class passed at row 25. Screenshot: `03-markdown-shortcut.png`. |
+| `node.image` | PASS | PASS | `paste-drop` and `importer` are `verified-live`: file-paste and its named-image assertion passed at rows 25-26; imported image and caption assertions passed at rows 33-34. Screenshot: `03-markdown-shortcut-paste-drop-importer.png`. |
+| `setting.tree-view` | PASS | PASS | `settings-panel` is `verified-live`: `aria-checked="true"` passed at row 9 and `.tree-view-output` passed at row 11. Screenshot: `01-settings-panel-tree-view.png`. |
+| `table.column-reorder` | PASS | FAIL, waived | `context-menu` stays `unverified`: row 14 proves only the hover `Drag to reorder column` control. The pinned action menu has no reorder or move-column item. Screenshot: `02-after.png`. |
+
+The pinned table action menu is
+`packages/lexical-playground/src/plugins/TableActionMenuPlugin/index.tsx:467-670`.
+Column reorder exists only in the hover control at
+`packages/lexical-playground/src/plugins/TableHoverActionsV2Plugin/index.tsx:626-665`,
+backed by `$moveTableColumn` at lines 500-528. The pinned app and settings
+schemas at `packages/lexical-playground/src/App.tsx:326-350` and
+`packages/lexical-playground/src/appSettings.ts:14-44` expose no mount-time
+read-only input. `ActionsPlugin/index.tsx:354-361` changes editability only
+at runtime; its share restore at lines 68-74 and 222-232 restores editor state,
+not editability.
+
+The scenario runner added three step kinds for this pass:
+
+- `file-paste` dispatches a PNG `File` in a page-owned
+  `ClipboardEvent("paste")`.
+- `touch-swipe` dispatches paired `TouchEvent` instances on the editor root.
+- `reload` reloads the current URL and waits for the remounted application.
+
+Ten status flips and three scope waivers close the activation-path gate with
+zero open paths. No entry-level `evidenceStatus` changed.
 
 ## Environment noise
 

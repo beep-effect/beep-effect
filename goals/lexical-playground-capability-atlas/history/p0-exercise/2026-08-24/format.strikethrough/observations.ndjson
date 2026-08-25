@@ -18,15 +18,22 @@
 {"action":"keyboard","detail":"Control+Shift+X on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":18}
 {"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textStrikethrough is visible","entryId":"format.strikethrough","outcome":"pass","step":19}
 {"action":"screenshot","detail":"activation-path-2","entryId":"format.strikethrough","outcome":"pass","step":20}
-{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":21}
-{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":22}
-{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":23}
-{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"format.strikethrough","outcome":"pass","step":24}
-{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"format.strikethrough","outcome":"pass","step":25}
-{"action":"set-viewport","detail":"480x900","entryId":"format.strikethrough","outcome":"pass","step":26}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.strikethrough","outcome":"pass","step":27}
-{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"format.strikethrough","outcome":"pass","step":28}
-{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":29}
-{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":30}
-{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.strikethrough","outcome":"pass","step":31}
-{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"format.strikethrough","outcome":"pass","step":32}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":21}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":23}
+{"action":"type","detail":"insert \"~~evidence~~\" in css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":24}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textStrikethrough is visible","entryId":"format.strikethrough","outcome":"pass","step":25}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__textStrikethrough is visible","entryId":"format.strikethrough","outcome":"pass","step":26}
+{"action":"screenshot","detail":"markdown-shortcut","entryId":"format.strikethrough","outcome":"pass","step":27}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":28}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":29}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":30}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"format.strikethrough","outcome":"pass","step":31}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"format.strikethrough","outcome":"pass","step":32}
+{"action":"set-viewport","detail":"480x900","entryId":"format.strikethrough","outcome":"pass","step":33}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.strikethrough","outcome":"pass","step":34}
+{"action":"screenshot","detail":"narrow-keyboard-copy-paste-serialized","entryId":"format.strikethrough","outcome":"pass","step":35}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":36}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"format.strikethrough","outcome":"pass","step":37}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"format.strikethrough","outcome":"pass","step":38}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"format.strikethrough","outcome":"pass","step":39}
