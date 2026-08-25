@@ -137,3 +137,25 @@ collapsed to `18 insertions(+), 18 deletions(-)`.
 **What would have prevented it:** an `ops/` recipe (or a `beep goals atlas
 set` subcommand) that applies a row edit and re-formats in one step, so an
 agent never has to know the formatter is part of the artifact's identity.
+
+## 2026-08-25 — Witness collector logs CORS rejections from an https app origin while still recording
+
+**What was happening:** P2 round 1 of the recorded browser QA loop against
+`https://professional-desktop.beep.localhost:1355/` (`bun run beep qa record
+--lane playwright --url ... --scenario apps/professional-desktop/.beep/qa-capture.mjs`).
+
+**Evidence:** every scenario's console ledger carried `Access to fetch at
+'http://127.0.0.1:43117/events' from origin 'https://professional-desktop.beep.localhost:1355'
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present`,
+yet `.beep/qa/round-1/events.ndjson` held 777 events including all 58
+scenario/gesture markers and 8 beacon flips. The CLI passes
+`originsOf(url)` (`Qa.session.ts:243`) into `CollectorServeOptions.allowedOrigins`
+(`packages/tooling/library/qa-capture/src/Collector.service.ts:152`), so the
+origin is whitelisted; the header is missing on some request path (preflight or
+keepalive flush) rather than on the accepted posts. The harness now ledgers
+collector-origin console errors as recorder noise so the vision judge only
+sees app errors.
+
+**What would have prevented it:** the collector answering `OPTIONS` and every
+`/events` response with the allow-origin header for whitelisted origins, plus a
+`qa doctor` probe that posts from an https origin and asserts a clean console.

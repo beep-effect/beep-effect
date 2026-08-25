@@ -70,7 +70,10 @@ export function EditorProofPanel(): JSX.Element {
     });
   };
   return (
-    <section className="flex h-full min-h-0 flex-col" data-testid="editor-proof-panel">
+    // The editor region keeps a usable floor; when the dock box is shorter than
+    // controls + drawer + floor (narrow/touch layouts), the panel scrolls as a
+    // whole instead of collapsing the document.
+    <section className="flex h-full min-h-0 flex-col overflow-y-auto" data-testid="editor-proof-panel">
       <div className="flex flex-wrap items-center gap-3 border-b p-3">
         <fieldset className="flex gap-3">
           <legend className="sr-only">Capability profile</legend>
@@ -114,7 +117,7 @@ export function EditorProofPanel(): JSX.Element {
           </div>
         ),
       })}
-      <div className="flex-1 min-h-0 overflow-auto">
+      <div className="min-h-64 flex-1 overflow-hidden">
         <CapabilityComposer
           key={`${profileId}:${revision}`}
           profile={profile}
@@ -122,13 +125,16 @@ export function EditorProofPanel(): JSX.Element {
           onSerializedChange={capture}
         />
       </div>
-      <details className="border-t p-2">
+      <details className="shrink-0 border-t p-2">
         <summary>Canonical JSON</summary>
         <textarea
           aria-label="Canonical JSON"
-          className="mt-2 min-h-40 w-full font-mono text-xs"
+          className="mt-2 h-32 w-full font-mono text-xs"
           value={json}
-          onChange={(event) => setJson(event.currentTarget.value)}
+          onChange={(event) => {
+            setJson(event.currentTarget.value);
+            setFailure(O.none());
+          }}
         />
       </details>
     </section>

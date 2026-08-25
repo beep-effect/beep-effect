@@ -17,6 +17,7 @@ import { logEditorErrorFn } from "../chat/atoms.ts";
 import { SlashPlugin } from "../chat/typeahead.tsx";
 import { decodeEditorStateForRuntimeResult } from "../runtime.ts";
 import { editorTheme } from "../theme.ts";
+import { EditorWireViewer } from "../viewer.tsx";
 import { editorCapabilityCatalog } from "./catalog.ts";
 import { projectSlashItems } from "./projection.ts";
 import { resolveEditorProfile } from "./resolver.ts";
@@ -91,6 +92,13 @@ export function CapabilityComposer({
       const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
         Result.getSuccess(decodeEditorStateForRuntimeResult(state))
       );
+      // D3: content that the live runtime cannot admit stays readable as
+      // escaped wire instead of silently mounting an empty editor.
+      if (initialState !== undefined && O.isNone(runtimeInitialState)) {
+        return (
+          <EditorWireViewer input={initialState} {...O.getSomesStruct({ className: O.fromUndefinedOr(className) })} />
+        );
+      }
       return (
         <LexicalComposer
           initialConfig={{
@@ -101,19 +109,27 @@ export function CapabilityComposer({
             onError: (error) => logEditorError(error),
           }}
         >
-          {A.contains(resolved.registrations.extensions, "ToolbarProjection") ? (
-            <CapabilityToolbar resolved={resolved} platform={platform} />
-          ) : undefined}
-          <div className="relative">
-            <RichTextPlugin
-              contentEditable={
-                <ContentEditable
-                  placeholder={placeholder ?? "Start typing ..."}
-                  {...O.getSomesStruct({ className: O.fromUndefinedOr(className) })}
-                />
-              }
-              ErrorBoundary={LexicalErrorBoundary}
-            />
+          {/* Box-filling column: the toolbar and help are pinned, the
+              editable owns the flexible space and scrolls on its own, so a
+              short dock box never collapses the document. */}
+          <div className="flex h-full min-h-0 flex-col">
+            {A.contains(resolved.registrations.extensions, "ToolbarProjection") ? (
+              <CapabilityToolbar resolved={resolved} platform={platform} />
+            ) : undefined}
+            <div className="relative min-h-0 flex-1 overflow-auto">
+              <RichTextPlugin
+                contentEditable={
+                  <ContentEditable
+                    placeholder={placeholder ?? "Start typing ..."}
+                    {...O.getSomesStruct({ className: O.fromUndefinedOr(className) })}
+                  />
+                }
+                ErrorBoundary={LexicalErrorBoundary}
+              />
+            </div>
+            {A.contains(resolved.registrations.extensions, "ShortcutHelpProjection") ? (
+              <ShortcutHelp resolved={resolved} platform={platform} />
+            ) : undefined}
           </div>
           <ResolvedExtensions resolved={resolved} />
           <KeybindingPlugin resolved={resolved} platform={platform} />
@@ -121,9 +137,6 @@ export function CapabilityComposer({
             <SlashPlugin
               items={projectSlashItems(resolved, (commandId) => (editor) => runCommand(editor, commandId))}
             />
-          ) : undefined}
-          {A.contains(resolved.registrations.extensions, "ShortcutHelpProjection") ? (
-            <ShortcutHelp resolved={resolved} platform={platform} />
           ) : undefined}
           {onSerializedChange === undefined ? undefined : (
             <OnChangePlugin

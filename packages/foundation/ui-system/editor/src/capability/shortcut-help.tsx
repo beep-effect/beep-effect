@@ -26,7 +26,7 @@ export function ShortcutHelp({
 }): JSX.Element {
   const headingId = `shortcut-help-${resolved.profileId}`;
   return (
-    <section aria-labelledby={headingId} className="border-t p-3 text-sm">
+    <section aria-labelledby={headingId} className="max-h-32 shrink-0 overflow-y-auto border-t p-3 text-sm">
       <h2 id={headingId} className="font-semibold">
         Keyboard shortcuts
       </h2>

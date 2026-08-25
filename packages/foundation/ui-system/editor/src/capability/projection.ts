@@ -201,7 +201,9 @@ export const projectSlashItems: {
       SlashItem.make({
         key: command.id,
         label: command.label,
-        hint: command.helpText,
+        // `hint` is the typeahead's short right-aligned slot; the sentence-long
+        // help text belongs in search keywords, not next to the label.
+        keywords: A.filter(Str.split(command.helpText, " "), Str.isNonEmpty),
         onSelect: run(command.id),
       })
     )

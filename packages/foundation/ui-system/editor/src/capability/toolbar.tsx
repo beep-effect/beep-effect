@@ -43,7 +43,7 @@ export function CapabilityToolbar({
     Match.orElse((): O.Option<boolean> => O.none())
   );
   return (
-    <div role="toolbar" aria-label="Editing commands" className="flex flex-wrap gap-1 border-b p-2">
+    <div role="toolbar" aria-label="Editing commands" className="flex shrink-0 flex-wrap gap-1 border-b p-2">
       {A.map(projectCommands(resolved, "toolbar"), (command) => {
         const chord = A.findFirst(command.keybindings, (binding) => binding.platform === platform).pipe(
           O.map((binding) => formatChord(platform, binding.chord))

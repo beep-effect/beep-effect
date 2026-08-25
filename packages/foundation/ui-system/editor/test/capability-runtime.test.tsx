@@ -4,12 +4,13 @@ import { CapabilityComposer } from "@beep/editor/capability/composer";
 import { referenceProfiles } from "@beep/editor/capability/profiles";
 import { chordFromKeyboardEvent } from "@beep/editor/capability/runtime";
 import { CapabilityId, EditorProfile, ProfileId } from "@beep/editor/capability/schemas";
+import { decodeEditorStateForRuntimeResult } from "@beep/editor/runtime";
 import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema";
 import * as Md from "@beep/md/Md.model";
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it } from "@effect/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { afterEach } from "vitest";
@@ -39,6 +40,38 @@ describe("capability runtime", { concurrent: false }, () => {
         modifiers: ["meta"],
         key: "b",
       });
+      yield* Effect.void;
+    })
+  );
+
+  it.effect(
+    "keeps runtime-incompatible initial state readable as escaped wire instead of an empty editor",
+    Effect.fnUntraced(function* () {
+      // A decoded state that later grows a future node is wire-shaped but
+      // rejected by the strict runtime decoder (same construction as
+      // test/runtime.test.ts).
+      const futureWire = Result.getOrThrow(
+        decodeEditorStateForRuntimeResult({
+          root: {
+            type: "root",
+            version: 1,
+            direction: null,
+            format: "",
+            indent: 0,
+            children: [{ type: "paragraph", version: 1, children: [], direction: null, format: "", indent: 0 }],
+          },
+        })
+      );
+      Reflect.set(futureWire.root.children, 1, { type: "future-block", version: 1 });
+      const { container } = render(
+        <CapabilityComposer
+          profile={referenceProfiles.minimal}
+          catalog={editorCapabilityCatalog}
+          initialState={futureWire}
+        />
+      );
+      expect(document.querySelector("[contenteditable='true']")).toBeNull();
+      expect(container.textContent).toContain("future-block");
       yield* Effect.void;
     })
   );
