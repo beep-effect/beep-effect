@@ -1226,6 +1226,29 @@ const byDoctestWorkspaceDirLengthDescending: Order.Order<
   readonly [name: string, dir: string, dependencies: ReadonlyArray<string>]
 > = Order.mapInput(Order.Number, ([, dir]) => -Str.length(dir));
 
+const resolveDeletedDoctestManifestRevision = Effect.fn("CiLane.resolveDeletedDoctestManifestRevision")(function* (
+  repoRoot: string,
+  base: string
+): Effect.fn.Return<string, never, ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* runCaptured({
+    command: "git",
+    args: ["merge-base", base, "HEAD"],
+    cwd: repoRoot,
+    source: "stdout",
+    trim: true,
+  }).pipe(
+    Effect.map((result) =>
+      pipe(
+        result.output,
+        O.liftPredicate(Str.isNonEmpty),
+        O.filter(() => result.exitCode === 0),
+        O.getOrElse(() => base)
+      )
+    ),
+    Effect.orElseSucceed(() => base)
+  );
+});
+
 const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFiles")(function* (
   repoRoot: string,
   base: string,
@@ -1286,10 +1309,17 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
     changedManifestPaths,
     (manifestPath) => !A.contains(manifestPaths, manifestPath)
   );
+  const deletedManifestRevision = yield* pipe(
+    deletedManifestPaths,
+    A.match({
+      onEmpty: () => Effect.succeed(base),
+      onNonEmpty: () => resolveDeletedDoctestManifestRevision(repoRoot, base),
+    })
+  );
   const deletedPackageNames = yield* Effect.forEach(deletedManifestPaths, (manifestPath) =>
     runCaptured({
       command: "git",
-      args: ["show", `${base}:${manifestPath}`],
+      args: ["show", `${deletedManifestRevision}:${manifestPath}`],
       cwd: repoRoot,
       source: "stdout",
     }).pipe(

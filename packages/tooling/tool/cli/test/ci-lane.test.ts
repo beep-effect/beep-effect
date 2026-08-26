@@ -19,6 +19,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const REPO_ROOT = "/repo";
+const MERGE_BASE_SHA = "mergebase1234";
 const encoder = new TextEncoder();
 
 const commandHandle = (output = "", exitCode = 0) =>
@@ -41,7 +42,8 @@ const gitStubResult = (
   changedFiles: ReadonlyArray<string>,
   sources: ReadonlyArray<readonly [string, string]>,
   gitShowResults: ReadonlyArray<readonly [string, string, number?]>,
-  lsFilesExitCode: number
+  lsFilesExitCode: number,
+  mergeBaseResult: readonly [output: string, exitCode?: number]
 ): readonly [output: string, exitCode: number] => {
   if (command.command !== "git") return ["", 0] as const;
   if (command.args[0] === "diff") return [A.join(changedFiles, "\n"), 0] as const;
@@ -50,6 +52,7 @@ const gitStubResult = (
     "\n"
   );
   if (command.args[0] === "ls-files") return [trackedListing, lsFilesExitCode] as const;
+  if (command.args[0] === "merge-base") return [mergeBaseResult[0], mergeBaseResult[1] ?? 0] as const;
   if (command.args[0] === "show") {
     return O.match(
       A.findFirst(gitShowResults, ([revisionPath]) => command.args[1] === revisionPath),
@@ -67,7 +70,8 @@ const doctestCiLayer = (
   sources: ReadonlyArray<readonly [string, string]>,
   spawned: Array<string>,
   lsFilesExitCode = 0,
-  gitShowResults: ReadonlyArray<readonly [revisionPath: string, content: string, exitCode?: number]> = A.empty()
+  gitShowResults: ReadonlyArray<readonly [revisionPath: string, content: string, exitCode?: number]> = A.empty(),
+  mergeBaseResult: readonly [output: string, exitCode?: number] = [MERGE_BASE_SHA]
 ) => {
   const fileSystemLayer = FileSystem.layerNoop({
     exists: (file) =>
@@ -97,7 +101,14 @@ const doctestCiLayer = (
         return Effect.die("the CI lane test never spawns a piped command");
       }
       spawned.push(A.join([command.command, ...command.args], " "));
-      const [output, exitCode] = gitStubResult(command, changedFiles, sources, gitShowResults, lsFilesExitCode);
+      const [output, exitCode] = gitStubResult(
+        command,
+        changedFiles,
+        sources,
+        gitShowResults,
+        lsFilesExitCode,
+        mergeBaseResult
+      );
       return Effect.succeed(commandHandle(output, exitCode));
     })
   );
@@ -846,15 +857,16 @@ layer(
     survivingDeletedWorkspaceSources,
     deletedWorkspaceDoctestCommands,
     0,
-    [["origin/main:packages/x/package.json", '{"name":"@beep/x"}']]
+    [[`${MERGE_BASE_SHA}:packages/x/package.json`, '{"name":"@beep/x"}']]
   )
 )("deleted workspace Doctest CI lane", (it) => {
   it.effect("expands surviving dependents from the deleted workspace base manifest", () =>
     Effect.gen(function* () {
       yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
 
-      expect(deletedWorkspaceDoctestCommands).toHaveLength(4);
-      expect(deletedWorkspaceDoctestCommands[2]).toBe("git show origin/main:packages/x/package.json");
+      expect(deletedWorkspaceDoctestCommands).toHaveLength(5);
+      expect(deletedWorkspaceDoctestCommands[2]).toBe("git merge-base origin/main HEAD");
+      expect(deletedWorkspaceDoctestCommands[3]).toBe(`git show ${MERGE_BASE_SHA}:packages/x/package.json`);
       expect(lastOf(deletedWorkspaceDoctestCommands)).toContain(
         "bunx vitest run --config vitest.docs.ts packages/b/src/marked.tsx"
       );
@@ -872,7 +884,7 @@ layer(
     survivingDeletedWorkspaceSources,
     unreadableDeletedWorkspaceDoctestCommands,
     0,
-    [["origin/main:packages/x/package.json", "", 128]]
+    [[`${MERGE_BASE_SHA}:packages/x/package.json`, "", 128]]
   )
 )("unreadable deleted workspace Doctest CI lane", (it) => {
   it.effect("continues direct attributable work when the deleted base manifest cannot be read", () =>
@@ -885,6 +897,56 @@ layer(
       expect(lastOf(unreadableDeletedWorkspaceDoctestCommands)).not.toContain("packages/b/src/marked.tsx");
       expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
         "[ci] doctest: skipped deleted workspace manifest packages/x/package.json (git show exited 128)"
+      );
+    })
+  );
+});
+
+const nonzeroMergeBaseDoctestCommands = A.empty<string>();
+
+layer(
+  doctestCiLayer(
+    ["packages/x/package.json", "packages/x/src/helper.ts"],
+    survivingDeletedWorkspaceSources,
+    nonzeroMergeBaseDoctestCommands,
+    0,
+    [["origin/main:packages/x/package.json", '{"name":"@beep/x"}']],
+    [MERGE_BASE_SHA, 128]
+  )
+)("deleted workspace Doctest CI lane with a failing merge-base lookup", (it) => {
+  it.effect("falls back to the base ref when git merge-base exits non-zero", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+      expect(nonzeroMergeBaseDoctestCommands[2]).toBe("git merge-base origin/main HEAD");
+      expect(nonzeroMergeBaseDoctestCommands[3]).toBe("git show origin/main:packages/x/package.json");
+      expect(lastOf(nonzeroMergeBaseDoctestCommands)).toContain(
+        "bunx vitest run --config vitest.docs.ts packages/b/src/marked.tsx"
+      );
+    })
+  );
+});
+
+const emptyMergeBaseDoctestCommands = A.empty<string>();
+
+layer(
+  doctestCiLayer(
+    ["packages/x/package.json", "packages/x/src/helper.ts"],
+    survivingDeletedWorkspaceSources,
+    emptyMergeBaseDoctestCommands,
+    0,
+    [["origin/main:packages/x/package.json", '{"name":"@beep/x"}']],
+    [" \n"]
+  )
+)("deleted workspace Doctest CI lane with an empty merge-base lookup", (it) => {
+  it.effect("falls back to the base ref when git merge-base returns no revision", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+      expect(emptyMergeBaseDoctestCommands[2]).toBe("git merge-base origin/main HEAD");
+      expect(emptyMergeBaseDoctestCommands[3]).toBe("git show origin/main:packages/x/package.json");
+      expect(lastOf(emptyMergeBaseDoctestCommands)).toContain(
+        "bunx vitest run --config vitest.docs.ts packages/b/src/marked.tsx"
       );
     })
   );
