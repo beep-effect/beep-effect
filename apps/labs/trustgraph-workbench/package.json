@@ -28,6 +28,7 @@
     "test": "bun run beep:test"
   },
   "dependencies": {
+    "@beep/brand": "workspace:^",
     "@beep/ui": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"

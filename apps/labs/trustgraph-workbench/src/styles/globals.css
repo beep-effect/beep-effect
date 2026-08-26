@@ -1,1 +1,7 @@
+/* Order matters: fonts define the @font-face rules, @beep/ui brings Tailwind and the
+   shadcn tokens, brand.css declares the beep theme, and bridge.css points the shadcn
+   tokens at the brand scale (its var() references need brand.css first). */
+@import "@beep/brand/styles/fonts.css";
 @import "@beep/ui/styles/globals.css";
+@import "@beep/brand/styles/brand.css";
+@import "@beep/brand/styles/bridge.css";

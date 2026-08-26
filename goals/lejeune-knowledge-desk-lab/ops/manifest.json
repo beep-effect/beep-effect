@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "lejeune-knowledge-desk-lab",
+    "packetId": "goal-packet/v1:c6ff07de849c1e828e2f145b0b75dd51397c6c5abb0a7fc1e5bdd9c70e3e8a20",
+    "title": "LeJeune Knowledge Desk Lab",
+    "status": "paused",
+    "created": "2026-08-26",
+    "updated": "2026-08-26",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/lejeune-knowledge-desk-lab",
+  "lifecycle": "paused",
+  "mission": "Build the disposable customer-demo lab that runs the fixed 30-minute LeJeune scenario through review, memory reuse, PO draft, and tailnet delivery.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/lejeune-bolt-agentic-demo",
+    "graduated": "2026-08-26"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/lejeune-knowledge-desk-lab/README.md",
+    "goals/lejeune-knowledge-desk-lab/SPEC.md",
+    "goals/lejeune-knowledge-desk-lab/PLAN.md",
+    "goals/lejeune-knowledge-desk-lab/GOAL.md",
+    "goals/lejeune-knowledge-desk-lab/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/lejeune-knowledge-desk-lab/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": ["lejeune/demo-corpus-and-ontology"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Lab and screen scaffold",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Complete story on stubs",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Bundle integration and review records",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Package, rehearse, and Yeet",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/lejeune-knowledge-desk-lab/GOAL.md)\" -le 4000",
+    "jq . goals/lejeune-knowledge-desk-lab/ops/manifest.json",
+    "rg -n \"lejeune-knowledge-desk-lab|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/lejeune-knowledge-desk-lab",
+    "git diff --check -- goals/lejeune-knowledge-desk-lab",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Paused at scaffold (authored-but-not-started): graduated from explorations/lejeune-bolt-agentic-demo on 2026-08-26; day 1 of the five-day walking-skeleton schedule starts on Benjamin's signal."
+}

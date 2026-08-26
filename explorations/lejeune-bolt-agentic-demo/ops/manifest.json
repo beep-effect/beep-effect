@@ -3,14 +3,15 @@
   "exploration": {
     "slug": "lejeune-bolt-agentic-demo",
     "title": "LeJeune Bolt Agentic Demo",
-    "status": "active",
-    "stage": "shape",
-    "openQuestions": [
-      "Does BRIEF.md hold as shaped (problem, appetite, sketch, rabbit holes, no-gos), or what changes before decompose?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/lejeune-demo-corpus-and-ontology",
+        "goals/lejeune-knowledge-desk-lab"
+      ],
       "docs": [],
       "supersededBy": null
     },

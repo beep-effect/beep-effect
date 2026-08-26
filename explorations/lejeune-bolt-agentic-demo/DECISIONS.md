@@ -341,3 +341,116 @@ The crawler boundary in [`research/08-demo-options.md`](./research/08-demo-optio
 untouched.
 
 **Rejected options:** Changing the crawler identity; solving captchas programmatically.
+
+## Ratified in Benjamin's 2026-08-26 shape review
+
+### 2026-08-26 — Single lab package
+
+**Status:** RATIFIED 2026-08-26 (shape review)
+
+**Question:** How many new workspace packages should the lunch create, and where should the
+corpus and ontology work live?
+
+**Answer:** Create exactly one new workspace package: the proposed `lejeune-bolt-workbench` lab
+(under `apps/labs/`). Both promised-now goal packets deliver into it. The corpus builder,
+ontology schemas, and fixtures stay lab-local as ops scripts and internal modules, while
+machine-local data stays outside the repository.
+
+**Reasoning:** A second corpus or ontology workspace package would double the governance tax and
+contradict the lab-local-until-promotion pin.
+
+**Rejected options:** A second corpus or ontology workspace package.
+
+### 2026-08-26 — Replay-first lunch demo
+
+**Status:** RATIFIED 2026-08-26 (shape review)
+
+**Question:** Should the lunch run live provider extraction first or replay a recorded run?
+
+**Answer:** Use replay-first mode. The recorded golden run is the lunch demo, and every beat is
+deterministic from the local bundle. One live provider extraction is an optional flourish only
+if rehearsal was clean.
+
+**Reasoning:** The lunch story must not depend on provider or network behavior.
+
+**Rejected options:** A live-first demo with replay as fallback.
+
+### 2026-08-26 — Walking-skeleton schedule
+
+**Status:** RATIFIED 2026-08-26 (shape review)
+
+**Question:** How should the five-day build sequence protect the complete lunch story?
+
+**Answer:** Use a walking skeleton. The one-screen story must be clickable end-to-end on stub
+data by the end of day 2, with real projections swapping in on days 3 and 4.
+
+- Day 1: package generator, deterministic bundle skeleton, `@beep/anthropic` live smoke test,
+  and screen scaffold.
+- Day 2: full 30-minute story on stubs and a half-day `@beep/cosmos` browser timebox.
+- Day 3: real extraction for two RFQ layouts, rule checks, citations, and uncertainty.
+- Day 4: veteran correction and temporal rerun, synthetic offers, quote and non-executing PO
+  receipts, and approve/edit/reject records.
+- Day 5: service packaging, `/health`, tailnet Serve, fixed-scenario tests, recorded rehearsal,
+  and offline fallback proof, with roughly half a day reserved for governance gates.
+
+**Reasoning:** The complete interaction lands before real projections, leaving days 3 and 4 to
+replace stubs without risking the one-screen story.
+
+**Rejected options:** None recorded.
+
+### 2026-08-26 — Cosmos timebox and fallback
+
+**Status:** RATIFIED 2026-08-26 (shape review)
+
+**Question:** How long should graph rendering get, and what ships if it misses the limit?
+
+**Answer:** Give `@beep/cosmos` a half-day browser timebox on day 2. If it does not render the
+demo graph in the browser inside that box, the lunch ships table and source with no
+renegotiation.
+
+**Reasoning:** A static-image stand-in would violate the no-AI-magic no-go.
+
+**Rejected options:** A static-image stand-in.
+
+### 2026-08-26 — Day-one provider gate
+
+**Status:** RATIFIED 2026-08-26 (shape review)
+
+**Question:** When must the live model path be proven, and what happens if it fails?
+
+**Answer:** Make one live `@beep/anthropic` extraction call a day-1 acceptance item. On failure,
+fall to `openai-compat`, `venice-ai`, or `xai` the same day.
+
+**Reasoning:** The provider path is settled on day 1 instead of consuming later schedule margin.
+
+**Rejected options:** None recorded.
+
+### 2026-08-26 — Governance tax and recorded QA
+
+**Status:** RATIFIED 2026-08-26 (shape review)
+
+**Question:** How much time should repo governance take, and what proves the gesture-bearing UI?
+
+**Answer:** Budget roughly half a day for new-package gates, schema-first work, and the JSDoc
+rubric. Record the day-5 rehearsal through `bun run beep qa`; it is required browser-QA evidence
+for the gesture-bearing UI and doubles as rehearsal evidence.
+
+**Reasoning:** The five-day schedule includes the repository's required gates and records the
+lunch interaction instead of treating either as follow-up work.
+
+**Rejected options:** None recorded.
+
+### 2026-08-26 — Graduate both promised-now packets
+
+**Status:** RATIFIED 2026-08-26 (shape review)
+
+**Question:** Which candidate packets graduate now, and when does implementation start?
+
+**Answer:** Graduate both promised-now packets to `goals/` now, in work executed separately after
+this doc flip. Start the build on Benjamin's signal. Keep the M365 pilot and TrustGraph donor as
+gated re-entries.
+
+**Reasoning:** The lunch work is ready to become two goal packets, while the consent and donor
+gates remain unresolved by design.
+
+**Rejected options:** Graduating either gated re-entry packet now.
