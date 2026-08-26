@@ -4,13 +4,13 @@
     "id": "lejeune-knowledge-desk-lab",
     "packetId": "goal-packet/v1:c6ff07de849c1e828e2f145b0b75dd51397c6c5abb0a7fc1e5bdd9c70e3e8a20",
     "title": "LeJeune Knowledge Desk Lab",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-26",
     "updated": "2026-08-26",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lejeune-knowledge-desk-lab",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Build the disposable customer-demo lab that runs the fixed 30-minute LeJeune scenario through review, memory reuse, PO draft, and tailnet delivery.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -86,5 +86,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Graduated from explorations/lejeune-bolt-agentic-demo on 2026-08-26; build (day 1 of the five-day walking-skeleton schedule) starts on Benjamin's signal."
+  "statusNote": "Paused at scaffold (authored-but-not-started): graduated from explorations/lejeune-bolt-agentic-demo on 2026-08-26; day 1 of the five-day walking-skeleton schedule starts on Benjamin's signal."
 }

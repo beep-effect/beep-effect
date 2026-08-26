@@ -12,14 +12,15 @@ Build starts on Benjamin's signal.
 
 | Slug | Commitment | Mission | Depends on |
 | --- | --- | --- | --- |
-| `lejeune-demo-corpus-and-ontology` | Promised now for lunch | Build the machine-local public and synthetic fixture bundle, small fastener ontology, exact-span extraction set, and deterministic projections. | None |
-| `lejeune-knowledge-desk-lab` | Promised now for lunch | Build the disposable customer-demo lab that runs the fixed 30-minute scenario through review, memory reuse, PO draft, and tailnet delivery. | `lejeune-demo-corpus-and-ontology` |
+| [`lejeune-demo-corpus-and-ontology`](../../goals/lejeune-demo-corpus-and-ontology/README.md) | Graduated 2026-08-26; paused until Benjamin's signal | Build the machine-local public and synthetic fixture bundle, small fastener ontology, exact-span extraction set, and deterministic projections. | None |
+| [`lejeune-knowledge-desk-lab`](../../goals/lejeune-knowledge-desk-lab/README.md) | Graduated 2026-08-26; paused until Benjamin's signal | Build the disposable customer-demo lab that runs the fixed 30-minute scenario through review, memory reuse, PO draft, and tailnet delivery. | `lejeune-demo-corpus-and-ontology` |
 | `lejeune-m365-pilot` | Gated re-entry | Ingest one consented mailbox or PST, adjudicate veteran claims, and measure RFQ review and citation outcomes. | Lunch proof, consent, pilot scope, and retention terms |
 | `trustgraph-port-licensing-and-component-donor` | Gated re-entry | License Benjamin's TypeScript port, record attribution, prove the trimmed workbench, and identify named components safe to donate. | Benjamin's license decision |
 
-The first two packets are the lunch promise, and both deliver into exactly one new workspace
-package: the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`). The M365 and TrustGraph
-packets do not block that promise. When either gate fires, reopen this exploration at
+The first two packets graduated on 2026-08-26 as paused, authored-but-not-started goal packets;
+both deliver into exactly one new workspace package: the proposed `lejeune-bolt-workbench` lab
+(under `apps/labs/`). Build begins on Benjamin's signal. The M365 and TrustGraph candidates
+remain gated re-entries and did not graduate. When either gate fires, reopen this exploration at
 `decompose` before creating its goal packet, as required by the exploration graduation contract.
 
 ## Capability check
