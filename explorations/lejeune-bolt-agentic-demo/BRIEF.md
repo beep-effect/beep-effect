@@ -1,6 +1,6 @@
 # LeJeune Knowledge Desk brief
 
-**DRAFT — ready for shape review**
+**RATIFIED 2026-08-26 (shape review)**
 
 ## Problem
 
@@ -32,6 +32,10 @@ must rehearse and run from a fixed local bundle without M365, a model provider, 
 [30-minute storyline](./research/07-use-case-evaluation.md#exact-30-minute-demo-storyline),
 [Option C plan](./research/08-demo-options.md#five-day-plan-2).
 
+The lunch is replay-first. Its demo artifact is a recorded golden run whose every beat replays
+deterministically from the local bundle. One live provider extraction is an optional flourish
+only after a clean rehearsal.
+
 The appetite buys one vertical proof, not a platform. It includes two fixed RFQ layouts, a small
 fastener ontology, three specification checks, one veteran correction, synthetic supplier
 offers, approval records, a PO draft, tailnet packaging, and an offline fallback. Broad mail
@@ -39,6 +43,10 @@ backfill, arbitrary OCR, current supplier integrations, and production semantic 
 fit this cut.
 [Five-day constraint](./RESEARCH.md#2026-08-25-constraints-discovered),
 [capability cut](./research/04-in-repo-capability-inventory.md#recommended-five-day-cut).
+
+Reserve roughly half a day for new-package gates, schema-first work, and the JSDoc rubric. The
+day-5 browser rehearsal is recorded through `bun run beep qa` and also proves the offline
+fallback.
 
 ## Solution sketch
 
@@ -86,17 +94,24 @@ corpus contains no current price, stock, lead-time, or supplier authority.
 
 ### Product and deployment boundary
 
-Create the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) through the repo package generator. Keep the screen
-small: RFQ and quote, graph or table, source evidence, approval, and the memory change. Use beep
-branding and the working title "LeJeune Knowledge Desk." Port only named, permissively licensed
-interaction patterns after preserving notices.
+Create exactly one new workspace package through the repo package generator: the proposed
+`lejeune-bolt-workbench` lab (under `apps/labs/`). Both promised-now goal packets deliver into
+it. Its ops scripts and internal modules own the corpus builder, ontology schemas, and fixtures;
+machine-local data stays outside the repository. Keep the screen small: RFQ and quote, graph or
+table, source evidence, approval, and the memory change. Use beep branding and the working title
+"LeJeune Knowledge Desk." Port only named, permissively licensed interaction patterns after
+preserving notices.
 [Option C architecture](./research/08-demo-options.md#architecture-and-pipeline-2),
 [Option C branding](./research/08-demo-options.md#branding-surface-2).
 
+Make one live `@beep/anthropic` extraction call a day-1 acceptance item. If it fails, fall to
+`openai-compat`, `venice-ai`, or `xai` the same day.
+
 Run one web artifact and one Effect API process on Benjamin's tailnet. Mount the immutable bundle
 separately from the mutable approval ledger. Expose `/health` and one Tailscale Serve mapping.
-Keep a table-and-source fallback if graph rendering fails, and a fixed-output fallback if the
-model provider fails.
+Give `@beep/cosmos` a half-day browser timebox on day 2. If it does not render the demo graph
+inside that box, ship table and source with no renegotiation. Do not use a static-image stand-in.
+Keep a fixed-output fallback if the model provider fails.
 [Option C deployment](./research/08-demo-options.md#tailnet-deployment-2),
 [Option C risks](./research/08-demo-options.md#risks-2).
 
