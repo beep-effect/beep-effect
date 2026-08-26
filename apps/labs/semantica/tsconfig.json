@@ -30,7 +30,16 @@
   },
   "references": [
     {
+      "path": "../../../packages/epistemic/domain/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/capability/file-processing/tsconfig.json"
+    },
+    {
       "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/provenance/tsconfig.json"
     },
     {
       "path": "../../../packages/foundation/modeling/schema/tsconfig.json"

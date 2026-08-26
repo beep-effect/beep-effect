@@ -56,7 +56,7 @@
       "relativePath": "documents/html-truncated.html",
       "mediaType": "text/html",
       "expectation": "degraded",
-      "degradedKind": "malformed-structure",
+      "degradedKind": "truncated",
       "sha256": "c106fce0a6387dd9539bc26f6a7b8ada744d17fa4bd329eddbf6e9c9b3aebeaf",
       "bytes": 631,
       "summary": "Academic HTML cut off inside an attribute after a deliberately bogus charset declaration."
@@ -86,7 +86,7 @@
       "relativePath": "documents/pdf-truncated.pdf",
       "mediaType": "application/pdf",
       "expectation": "degraded",
-      "degradedKind": "truncated",
+      "degradedKind": "extraction-failed",
       "sha256": "d6402d6f7cdd4a60fdaadbf0d26ae7ba4c235126d801bb446ccf2aec00991201",
       "bytes": 2672,
       "summary": "The two-column PDF cut immediately before its explicit xref table."

@@ -1,5 +1,5 @@
 /**
- * Service contracts for the doctest fence analyzer and rewriter.
+ * Effect service contracts for Docgen doctest analysis and source rewriting.
  *
  * @packageDocumentation
  * @since 0.0.0

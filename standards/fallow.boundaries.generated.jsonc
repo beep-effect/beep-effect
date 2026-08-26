@@ -3124,12 +3124,18 @@
       {
         "from": "@beep/semantica",
         "allow": [
+          "@beep/epistemic-domain",
+          "@beep/file-processing",
           "@beep/identity",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/semantica"
         ],
         "allowTypeOnly": [
+          "@beep/epistemic-domain",
+          "@beep/file-processing",
           "@beep/identity",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/semantica"
         ]

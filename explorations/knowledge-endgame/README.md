@@ -35,6 +35,10 @@ training-data-flywheel coda is picked up as a real docs-surface goal.
 
 ## Trail
 
+- 2026-08-25 (review follow-up, #830): reopen-trigger list aligned with the
+  `DECISIONS.md` park entry on every surface (fourth trigger: the
+  training-data-flywheel coda as a docs-surface goal); ATLAS now links the
+  authoritative list instead of copying it. Next Open Question unchanged.
 - 2026-08-25: the closing reflection from this conversation was enshrined at
   the repo root as
   [`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`](../../A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md),

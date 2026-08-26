@@ -1,5 +1,5 @@
 /**
- * Schema models for doctest fence analysis, marker planning, and reports.
+ * Schema models for Docgen doctest discovery, assertion marking, and reports.
  *
  * @packageDocumentation
  * @since 0.0.0
