@@ -6377,7 +6377,7 @@ Table.Node.is(node) // => true
 declare const Node: { $is: <Tag extends "compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql">(tag: Tag) => (u: unknown) => u is Extract<{ readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, { readonly _tag: Tag; }>; $match: { <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(cases: Cases): (value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, cases: Cases): Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; }; is: (value: unknown) => value is Node; match: { <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(cases: Cases): (value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, cases: Cases): Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; }; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L359)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L356)
 
 ##### check
 
@@ -6411,7 +6411,7 @@ Table.check("positive_count")(sql<boolean>`count > 0`)._tag // => "check"
 declare const check: { <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">): (expression: SQL<boolean>) => Check; <const Name extends string>(expression: SQL<boolean>, name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">): Check; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L520)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L517)
 
 ##### compositePrimaryKey
 
@@ -6439,7 +6439,7 @@ const extras: Table.Callback<{ leftId: typeof Int; rightId: typeof Int }> =
 declare const compositePrimaryKey: <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>) => CompositePrimaryKey
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L431)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L428)
 
 ##### compositeUnique
 
@@ -6463,7 +6463,7 @@ const extras: Table.Callback<{ first: typeof String; last: typeof String }> =
 declare const compositeUnique: <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>) => CompositeUnique
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L405)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L402)
 
 ##### index
 
@@ -6494,7 +6494,7 @@ const extras: Table.Callback<{ email: typeof String }> = (columns) => [
 declare const index: <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: { readonly where?: SQL<boolean>; }) => Index
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L460)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L457)
 
 ##### uniqueIndex
 
@@ -6524,7 +6524,7 @@ console.log(extras)
 declare const uniqueIndex: <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: { readonly where?: SQL<boolean>; }) => UniqueIndex
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L490)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L487)
 
 ##### unsafeCheckSql
 
@@ -6557,7 +6557,7 @@ Table.unsafeCheckSql("positive_count", "count > 0")._tag
 declare const unsafeCheckSql: <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">, value: string) => UnsafeCheckSql
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L553)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L550)
 
 #### guards
 
@@ -6593,7 +6593,7 @@ Table.isNode(candidate) // => true
 declare const isNode: (value: unknown) => value is Node
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L326)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L339)
 
 #### mappers
 
@@ -6621,7 +6621,7 @@ Table.emit(Table.unsafeCheckSql("positive_count", "count > 0"))
 declare const emit: (node: Node) => SQLiteTableExtraConfigValue
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L636)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L633)
 
 #### models
 
@@ -6651,7 +6651,7 @@ type Node = Table.Check // => tagged typed-check descriptor
 type Check = Extract<Node, { readonly _tag: "check" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L265)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L266)
 
 ##### CompositePrimaryKey (type alias)
 
@@ -6675,7 +6675,7 @@ type Node = Table.CompositePrimaryKey // => tagged compositePrimaryKey descripto
 type CompositePrimaryKey = Extract<Node, { readonly _tag: "compositePrimaryKey" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L205)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L206)
 
 ##### CompositeUnique (type alias)
 
@@ -6699,7 +6699,7 @@ type Node = Table.CompositeUnique // => tagged compositeUnique descriptor
 type CompositeUnique = Extract<Node, { readonly _tag: "compositeUnique" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L188)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L189)
 
 ##### Index (type alias)
 
@@ -6723,7 +6723,7 @@ type Node = Table.Index // => tagged index descriptor
 type Index = Extract<Node, { readonly _tag: "index" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L222)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L223)
 
 ##### Node (type alias)
 
@@ -6768,7 +6768,7 @@ Table.Node.match(node, {
 type Node = TaggedEnum<NodeDefinition>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L171)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L172)
 
 ##### UniqueIndex (type alias)
 
@@ -6797,7 +6797,7 @@ console.log(extras)
 type UniqueIndex = Extract<Node, { readonly _tag: "uniqueIndex" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L244)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L245)
 
 ##### UnsafeCheckSql (type alias)
 
@@ -6829,7 +6829,7 @@ type Node = Table.UnsafeCheckSql // => tagged raw-SQL check descriptor
 type UnsafeCheckSql = Extract<Node, { readonly _tag: "unsafeCheckSql" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L290)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L291)
 
 #### projections
 
@@ -6855,7 +6855,7 @@ type BoundColumns<F> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L98)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L99)
 
 #### tables
 
@@ -6882,7 +6882,7 @@ type BoundColumn<I, Name> = SQLiteColumn & {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L78)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L79)
 
 ##### Callback (type alias)
 
@@ -6912,7 +6912,7 @@ type Callback<F> = (
 ) => ReadonlyArray<Node>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L383)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L380)
 
 ### SQLite models — `@beep/effect-drizzle/sqlite`
 

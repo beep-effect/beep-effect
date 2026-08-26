@@ -17,6 +17,7 @@ import {
   uniqueIndex as drizzleUniqueIndex,
   SQLiteDialect,
 } from "drizzle-orm/sqlite-core";
+import { Match } from "effect";
 import { isArray } from "effect/Array";
 import { taggedEnum } from "effect/Data";
 import { dual } from "effect/Function";
@@ -297,6 +298,18 @@ const hasColumns = (value: unknown, minimum: number): boolean =>
   isArray(value.columns) &&
   value.columns.length >= minimum &&
   value.columns.every(isObject);
+const hasOptionalWhere = (value: unknown): boolean =>
+  hasProperty(value, "where") && (value.where === undefined || isDrizzleEntity(value.where, SQL));
+
+const hasValidNodeDefinition: (value: unknown) => boolean = Match.type<unknown>().pipe(
+  Match.when(Nodes.$is("compositeUnique"), (value) => hasColumns(value, 2)),
+  Match.when(Nodes.$is("compositePrimaryKey"), (value) => hasColumns(value, 2)),
+  Match.when(Nodes.$is("index"), (value) => hasColumns(value, 1) && hasOptionalWhere(value)),
+  Match.when(Nodes.$is("uniqueIndex"), (value) => hasColumns(value, 1) && hasOptionalWhere(value)),
+  Match.when(Nodes.$is("check"), (value) => hasProperty(value, "expression") && isDrizzleEntity(value.expression, SQL)),
+  Match.when(Nodes.$is("unsafeCheckSql"), (value) => hasProperty(value, "sql") && isString(value.sql)),
+  Match.orElse(() => false)
+);
 
 /**
  * Guards the tag and required outer shape of an author-returned SQLite node.
@@ -323,23 +336,7 @@ const hasColumns = (value: unknown, minimum: number): boolean =>
  * @category guards
  * @since 0.0.0
  */
-export const isNode = (value: unknown): value is Node =>
-  isNamed(value) &&
-  (Nodes.$is("compositeUnique")(value)
-    ? hasColumns(value, 2)
-    : Nodes.$is("compositePrimaryKey")(value)
-      ? hasColumns(value, 2)
-      : Nodes.$is("index")(value)
-        ? hasColumns(value, 1) &&
-          hasProperty(value, "where") &&
-          (value.where === undefined || isDrizzleEntity(value.where, SQL))
-        : Nodes.$is("uniqueIndex")(value)
-          ? hasColumns(value, 1) &&
-            hasProperty(value, "where") &&
-            (value.where === undefined || isDrizzleEntity(value.where, SQL))
-          : Nodes.$is("check")(value)
-            ? hasProperty(value, "expression") && isDrizzleEntity(value.expression, SQL)
-            : Nodes.$is("unsafeCheckSql")(value) && hasProperty(value, "sql") && isString(value.sql));
+export const isNode = (value: unknown): value is Node => isNamed(value) && hasValidNodeDefinition(value);
 
 /**
  * Constructors, guard, and exhaustive matcher for SQLite table-extra nodes.

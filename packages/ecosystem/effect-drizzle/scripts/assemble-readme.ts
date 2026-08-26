@@ -16,10 +16,12 @@ import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { declaredFieldsEquivalence } from "../src/core/declaredFieldsEquivalence.ts";
 
 class ReadmeAssemblyError extends S.TaggedError<ReadmeAssemblyError>("@beep/effect-drizzle/ReadmeAssemblyError")(
   "ReadmeAssemblyError",
-  { message: S.String }
+  { message: S.String },
+  { toEquivalence: (typeParameters) => declaredFieldsEquivalence<ReadmeAssemblyError>(typeParameters) }
 ) {}
 
 const START_MARKER = "<!-- docgen:api-reference:start -->";
@@ -84,12 +86,10 @@ const isNoiseLine = (line: string): boolean =>
   line === "---" || Str.startsWith("Added in v")(line) || Str.startsWith("Since v")(line);
 
 const demote = (entry: ModuleEntry) => (line: string) => {
-  if (Str.startsWith("## ")(line) && Str.endsWith(" overview")(line)) {
-    return `### ${entry.label} — \`${entry.importPath}\``;
+  if (Str.startsWith("## ")(line)) {
+    return Str.endsWith(" overview")(line) ? `### ${entry.label} — \`${entry.importPath}\`` : `##### ${line.slice(3)}`;
   }
-  if (Str.startsWith("## ")(line)) return `##### ${line.slice(3)}`;
-  if (Str.startsWith("# ")(line)) return `#### ${line.slice(2)}`;
-  return line;
+  return Str.startsWith("# ")(line) ? `#### ${line.slice(2)}` : line;
 };
 
 type RenderState = { readonly inCode: boolean; readonly out: ReadonlyArray<string> };
