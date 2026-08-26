@@ -2,7 +2,19 @@
 
 import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { ConfigProvider, Duration, Effect, Fiber, FileSystem, Layer, Path, Ref, Result, Stream } from "effect";
+import {
+  ConfigProvider,
+  Deferred,
+  Duration,
+  Effect,
+  Fiber,
+  FileSystem,
+  Layer,
+  Path,
+  Ref,
+  Result,
+  Stream,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -288,6 +300,205 @@ describe("C0 provider cache and language-model boundary", () => {
         )
       )
     ));
+
+  it("lets exactly one contender reclaim a stale lock and reconciles the loser with its published entry", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const cacheDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-cache-reclaim-race-" });
+            const key = makeKey("two stale lock reclaim contenders");
+            const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
+            const entry = ProviderCacheEntry.make({
+              cacheKey,
+              key,
+              response: "single-reclaim-winner",
+              responseDigest: sha256TextSync("single-reclaim-winner"),
+            });
+            const target = path.join(cacheDirectory, `${cacheKey}.json`);
+            const lock = `${target}.lock`;
+            const ownerPath = path.join(lock, "owner.pid");
+            yield* fs.makeDirectory(lock);
+            yield* fs.writeFileString(ownerPath, "0\n");
+            yield* fs.utimes(lock, 0, 0);
+
+            const reclaimAttempts = yield* Ref.make(0);
+            const reclaimWins = yield* Ref.make(0);
+            const reclaimLosses = yield* Ref.make(0);
+            const competingWriteReads = yield* Ref.make(0);
+            const tombstones = yield* Ref.make(A.empty<string>());
+            const secondReclaimReady = yield* Deferred.make<void>();
+            const firstReclaimWon = yield* Deferred.make<void>();
+            const winnerPublished = yield* Deferred.make<void>();
+            const racingFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("ProviderCacheTest.observeReclaimLoserReconciliation")(
+                function* (candidate, encoding) {
+                  if (Str.Equivalence(candidate, target) && (yield* Ref.get(reclaimLosses)) > 0) {
+                    yield* Ref.update(competingWriteReads, (count) => count + 1);
+                  }
+                  return yield* fs.readFileString(candidate, encoding);
+                }
+              ),
+              rename: Effect.fn("ProviderCacheTest.coordinateSingleWinnerReclaim")(function* (from, to) {
+                if (!Str.Equivalence(from, lock)) {
+                  yield* fs.rename(from, to);
+                  if (Str.Equivalence(to, target)) {
+                    yield* Deferred.succeed(winnerPublished, undefined);
+                  }
+                  return;
+                }
+
+                const attempt = yield* Ref.updateAndGet(reclaimAttempts, (count) => count + 1);
+                yield* Ref.update(tombstones, A.append(to));
+                if (attempt === 1) {
+                  yield* Deferred.await(secondReclaimReady);
+                  yield* fs.rename(from, to);
+                  yield* Ref.update(reclaimWins, (count) => count + 1);
+                  yield* Deferred.succeed(firstReclaimWon, undefined);
+                  return;
+                }
+
+                yield* Deferred.succeed(secondReclaimReady, undefined);
+                yield* Deferred.await(firstReclaimWon);
+                yield* fs
+                  .rename(from, to)
+                  .pipe(
+                    Effect.tapError(() =>
+                      Ref.update(reclaimLosses, (count) => count + 1).pipe(
+                        Effect.andThen(Deferred.await(winnerPublished))
+                      )
+                    )
+                  );
+              }),
+            });
+
+            const results = yield* provideScopedLayer(providerCacheTestRuntime(cacheDirectory, racingFileSystem))(
+              ProviderCache.pipe(
+                Effect.flatMap((cache) =>
+                  Effect.all([cache.store(entry).pipe(Effect.result), cache.store(entry).pipe(Effect.result)], {
+                    concurrency: "unbounded",
+                  })
+                )
+              )
+            );
+
+            const reclaimedPaths = yield* Ref.get(tombstones);
+            expect(A.filter(results, Result.isSuccess)).toHaveLength(2);
+            expect(yield* Ref.get(reclaimAttempts)).toBe(2);
+            expect(yield* Ref.get(reclaimWins)).toBe(1);
+            expect(yield* Ref.get(reclaimLosses)).toBe(1);
+            expect(yield* Ref.get(competingWriteReads)).toBe(1);
+            expect(reclaimedPaths).toEqual(
+              expect.arrayContaining([`${lock}.reclaim-${process.pid}-1`, `${lock}.reclaim-${process.pid}-2`])
+            );
+            expect(yield* Effect.forEach(reclaimedPaths, fs.exists)).toEqual([false, false]);
+            expect(yield* fs.exists(lock)).toBe(false);
+            expect(yield* fs.readFileString(target)).toBe(`${yield* encodeProviderCacheEntry(entry)}\n`);
+          })
+        )
+      )
+    ));
+
+  it.each([
+    ["restores the displaced replacement", false],
+    ["preserves a newer replacement when rename-back is blocked", true],
+  ] as const)("handles a replacement swap before reclaim rename: %s", (_scenario, blockRenameBack) =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const cacheDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-cache-reclaim-swap-" });
+            const key = makeKey(`replacement swap before reclaim ${blockRenameBack}`);
+            const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
+            const entry = ProviderCacheEntry.make({
+              cacheKey,
+              key,
+              response: "replacement-winner",
+              responseDigest: sha256TextSync("replacement-winner"),
+            });
+            const target = path.join(cacheDirectory, `${cacheKey}.json`);
+            const lock = `${target}.lock`;
+            const ownerPath = path.join(lock, "owner.pid");
+            const displacedOwner = `${process.pid}\n`;
+            const newerOwner = `${process.ppid}\n`;
+            const json = yield* encodeProviderCacheEntry(entry);
+            yield* fs.makeDirectory(lock);
+            yield* fs.writeFileString(ownerPath, "0\n");
+            yield* fs.utimes(lock, 0, 0);
+
+            const reclaimSwaps = yield* Ref.make(0);
+            const renameBackAttempts = yield* Ref.make(0);
+            const replacementLockRemovals = yield* Ref.make(0);
+            const tombstoneRemovals = yield* Ref.make(0);
+            const promotionAttempts = yield* Ref.make(0);
+            const tombstones = yield* Ref.make(A.empty<string>());
+            const racingFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("ProviderCacheTest.blockReclaimRenameBack")(function* (candidate, encoding) {
+                const content = yield* fs.readFileString(candidate, encoding);
+                if (blockRenameBack && Str.startsWith(`${lock}.reclaim-`)(candidate)) {
+                  yield* fs.makeDirectory(lock);
+                  yield* fs.writeFileString(ownerPath, newerOwner);
+                }
+                return content;
+              }),
+              remove: Effect.fn("ProviderCacheTest.observeReplacementLockRemoval")((candidate, options) => {
+                if (Str.Equivalence(candidate, lock)) {
+                  return Ref.update(replacementLockRemovals, (count) => count + 1).pipe(
+                    Effect.andThen(fs.remove(candidate, options))
+                  );
+                }
+                if (Str.startsWith(`${lock}.reclaim-`)(candidate)) {
+                  return Ref.update(tombstoneRemovals, (count) => count + 1).pipe(
+                    Effect.andThen(fs.remove(candidate, options))
+                  );
+                }
+                return fs.remove(candidate, options);
+              }),
+              rename: Effect.fn("ProviderCacheTest.swapReplacementBeforeReclaim")(function* (from, to) {
+                if (Str.Equivalence(from, lock)) {
+                  yield* fs.remove(lock, { force: true, recursive: true });
+                  yield* fs.makeDirectory(lock);
+                  yield* fs.writeFileString(ownerPath, displacedOwner);
+                  yield* fs.writeFileString(target, `${json}\n`);
+                  yield* Ref.update(reclaimSwaps, (count) => count + 1);
+                  yield* Ref.update(tombstones, A.append(to));
+                  yield* fs.rename(from, to);
+                  return;
+                }
+                if (Str.Equivalence(to, lock) && Str.startsWith(`${lock}.reclaim-`)(from)) {
+                  yield* Ref.update(renameBackAttempts, (count) => count + 1);
+                }
+                if (Str.Equivalence(to, target)) {
+                  yield* Ref.update(promotionAttempts, (count) => count + 1);
+                }
+                yield* fs.rename(from, to);
+              }),
+            });
+
+            yield* provideScopedLayer(providerCacheTestRuntime(cacheDirectory, racingFileSystem))(
+              ProviderCache.pipe(Effect.flatMap((cache) => cache.store(entry)))
+            );
+
+            const reclaimedPaths = yield* Ref.get(tombstones);
+            expect(yield* Ref.get(reclaimSwaps)).toBe(1);
+            expect(yield* Ref.get(renameBackAttempts)).toBe(1);
+            expect(yield* Ref.get(replacementLockRemovals)).toBe(0);
+            expect(yield* Ref.get(tombstoneRemovals)).toBe(blockRenameBack ? 1 : 0);
+            expect(yield* Ref.get(promotionAttempts)).toBe(0);
+            expect(yield* fs.readFileString(ownerPath)).toBe(blockRenameBack ? newerOwner : displacedOwner);
+            expect(yield* Effect.forEach(reclaimedPaths, fs.exists)).toEqual([false]);
+            expect(yield* fs.readFileString(target)).toBe(`${json}\n`);
+          })
+        )
+      )
+    )
+  );
 
   it("abandons stale-lock recovery when the sampled owner is replaced before deletion", () =>
     Effect.runPromise(

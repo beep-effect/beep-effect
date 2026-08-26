@@ -8,6 +8,7 @@ import {
   Layer,
   Number as N,
   Path,
+  Ref,
   Result,
   Schedule,
 } from "effect";
@@ -31,6 +32,7 @@ const staleLockAge = Duration.seconds(60);
 const competingWriterSchedule = Schedule.exponential(Duration.millis(200)).pipe(Schedule.upTo({ times: 7 }));
 const pendingWriterMessage = "The live provider cache writer has not promoted its entry yet.";
 const lockWaitTimeoutMessage = "Timed out waiting for the live provider cache write lock to promote its entry.";
+const sanitizeLockOwner = Str.replace(/[^A-Za-z0-9._-]+/gu, "_");
 
 const corrupt = (message: string): ProviderCacheCorrupt => ProviderCacheCorrupt.make({ message });
 
@@ -40,6 +42,8 @@ const makeProviderCache = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lockOwner = `${process.pid}\n`;
+  const sanitizedLockOwner = sanitizeLockOwner(Str.trim(lockOwner));
+  const reclaimCounter = yield* Ref.make(0);
 
   const cacheKey = Effect.fn("ProviderCache.cacheKey")((key: ProviderCacheKey) =>
     contentDigest(ProviderCacheKey)(key).pipe(
@@ -176,6 +180,54 @@ const makeProviderCache = Effect.gen(function* () {
     }
   });
 
+  const restoreDisplacedLock = Effect.fn("ProviderCache.restoreDisplacedLock")(function* (
+    lock: string,
+    tombstone: string
+  ) {
+    const restored = yield* fs.rename(tombstone, lock).pipe(Effect.result);
+    if (Result.isFailure(restored)) {
+      yield* fs.remove(tombstone, { force: true, recursive: true }).pipe(Effect.ignore);
+    }
+  });
+
+  const reclaimStaleLock = Effect.fn("ProviderCache.reclaimStaleLock")(function* (
+    entry: ProviderCacheEntry,
+    lock: string,
+    ownerPath: string,
+    sampledOwner: O.Option<string>
+  ) {
+    const currentOwner = yield* fs.readFileString(ownerPath).pipe(Effect.option);
+    if (!lockOwnerEquivalence(sampledOwner, currentOwner)) {
+      yield* awaitCompetingWrite(entry);
+      return false;
+    }
+
+    const reclaimSequence = yield* Ref.updateAndGet(reclaimCounter, (current) => current + 1);
+    const tombstone = `${lock}.reclaim-${sanitizedLockOwner}-${reclaimSequence}`;
+    const reclaimed = yield* fs.rename(lock, tombstone).pipe(Effect.result);
+    if (Result.isFailure(reclaimed)) {
+      yield* awaitCompetingWrite(entry);
+      return false;
+    }
+
+    const tombstoneOwnerPath = path.join(tombstone, "owner.pid");
+    const reclaimedOwner = yield* fs.readFileString(tombstoneOwnerPath).pipe(Effect.option);
+    if (!lockOwnerEquivalence(sampledOwner, reclaimedOwner)) {
+      yield* restoreDisplacedLock(lock, tombstone);
+      yield* awaitCompetingWrite(entry);
+      return false;
+    }
+
+    yield* fs
+      .remove(tombstone, { force: true, recursive: true })
+      .pipe(Effect.mapError(() => corrupt("A stale provider cache write lock could not be removed.")));
+    if (yield* tryAcquireLock(lock, ownerPath)) {
+      return true;
+    }
+    yield* awaitCompetingWrite(entry);
+    return false;
+  });
+
   const acquireLock = Effect.fn("ProviderCache.acquireLock")(function* (
     entry: ProviderCacheEntry,
     lock: string,
@@ -199,20 +251,7 @@ const makeProviderCache = Effect.gen(function* () {
       return false;
     }
 
-    const currentOwner = yield* fs.readFileString(ownerPath).pipe(Effect.option);
-    if (!lockOwnerEquivalence(sampledOwner.value, currentOwner)) {
-      yield* awaitCompetingWrite(entry);
-      return false;
-    }
-
-    yield* fs
-      .remove(lock, { force: true, recursive: true })
-      .pipe(Effect.mapError(() => corrupt("A stale provider cache write lock could not be removed.")));
-    if (yield* tryAcquireLock(lock, ownerPath)) {
-      return true;
-    }
-    yield* awaitCompetingWrite(entry);
-    return false;
+    return yield* reclaimStaleLock(entry, lock, ownerPath, sampledOwner.value);
   });
 
   const store = Effect.fn("ProviderCache.store")(function* (entry: ProviderCacheEntry) {
