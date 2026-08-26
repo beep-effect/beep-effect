@@ -11,12 +11,14 @@ import { Console, Crypto, DateTime, Effect, Encoding, FileSystem, flow, Path, pi
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { commandTextForStep } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   artifactDirForContext,
+  proofCoordinatorLockPath,
   runIdForContext,
   runArtifactPathForContext as runOutputPathForContext,
   runStatePathForContext,
@@ -77,22 +79,23 @@ class YeetRunState extends S.Class<YeetRunState>($I`YeetRunState`)(
  */
 class YeetProofLockState extends S.Class<YeetProofLockState>($I`YeetProofLockState`)(
   {
-    schemaVersion: S.Literal("yeet-proof-lock/v1"),
+    schemaVersion: S.Literal("yeet-proof-lock/v2"),
     branch: S.String,
+    checkoutRoot: S.String,
     command: S.String,
     pid: S.Finite,
     proofTier: YeetProofTier,
     startedAt: S.String,
   },
   $I.annote("YeetProofLockState", {
-    description: "Best-effort local lock metadata for heavyweight Yeet proof scheduling.",
+    description: "Machine-local repository coordinator metadata for heavyweight Yeet proof scheduling.",
   })
 ) {}
 
 const decodeYeetRunState = S.decodeUnknownEffect(S.fromJsonString(YeetRunState));
 
 /**
- * Build the full-proof lock path for a Yeet run context.
+ * Build the cross-checkout full-proof lock path for a Yeet run context.
  *
  * **Example** (Build quality-lock path)
  *
@@ -111,20 +114,19 @@ const decodeYeetRunState = S.decodeUnknownEffect(S.fromJsonString(YeetRunState))
  *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
  * })
  *
- * const lockPath = proofLockPathForContext(context).pipe(Effect.map((path) => path.endsWith("quality-lock")))
+ * const lockPath = proofLockPathForContext(context).pipe(Effect.map((path) => path.endsWith(".lock")))
  * ```
  *
- * @param context - Repo context whose artifact directory owns the lock file.
- * @returns An Effect yielding the `quality-lock` path under the run artifacts.
+ * @param context - Repo context whose origin identifies sibling checkouts.
+ * @returns An Effect yielding the machine-local repository coordinator path.
  * @category utilities
  * @since 0.0.0
  */
 export const proofLockPathForContext = Effect.fn("Yeet.proofLockPathForContext")(function* (
   context: RepoRunContext
-): Effect.fn.Return<string, never, Path.Path> {
-  const path = yield* Path.Path;
-  const artifactDir = yield* artifactDirForContext(context);
-  return path.join(artifactDir, "quality-lock");
+): Effect.fn.Return<string, YeetCommandError, Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+  const repositoryIdentity = yield* runGitOutput(context.repoRoot, ["config", "--get", "remote.origin.url"]);
+  return yield* proofCoordinatorLockPath(repositoryIdentity);
 });
 
 const readFingerprintFileBytes = Effect.fn("Yeet.readFingerprintFileBytes")(function* (
@@ -316,10 +318,11 @@ const laneProofStateForStep = Effect.fn("Yeet.laneProofStateForStep")(function* 
  *
  * const state = YeetProofLockStateForTesting.make({
  *   branch: "feature/closeout",
+ *   checkoutRoot: "/repo",
  *   command: "bun run beep yeet verify",
  *   pid: 12345,
  *   proofTier: "full",
- *   schemaVersion: "yeet-proof-lock/v1",
+ *   schemaVersion: "yeet-proof-lock/v2",
  *   startedAt: "2026-07-08T00:00:00.000Z"
  * })
  * console.log(state.branch)
@@ -338,7 +341,7 @@ const isPidAlive = (pid: number): Effect.Effect<boolean> =>
       process.kill(pid, 0);
       return true;
     } catch (error) {
-      return (error as NodeJS.ErrnoException).code === "EPERM";
+      return P.hasProperty(error, "code") && error.code === "EPERM";
     }
   });
 
@@ -360,10 +363,11 @@ const proofLockDisposition = (
  *
  * const state = YeetProofLockStateForTesting.make({
  *   branch: "feature/closeout",
+ *   checkoutRoot: "/repo",
  *   command: "bun run beep yeet verify",
  *   pid: 12345,
  *   proofTier: "full",
- *   schemaVersion: "yeet-proof-lock/v1",
+ *   schemaVersion: "yeet-proof-lock/v2",
  *   startedAt: "2026-07-08T00:00:00.000Z"
  * })
  *
@@ -429,10 +433,10 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
  *   scope: "repo"
  * })
  *
- * const acquired = acquireFullProofLock(context, [step]).pipe(Effect.map((path) => path.includes("quality-lock")))
+ * const acquired = acquireFullProofLock(context, [step]).pipe(Effect.map((path) => path.endsWith(".lock")))
  * ```
  *
- * @param context - Repo context whose artifact directory owns the lock.
+ * @param context - Repo context whose origin identifies sibling checkouts.
  * @param proofSteps - Full-proof steps used to record the owner command.
  * @returns The lock path when this process successfully owns the lock.
  * @category resource-management
@@ -441,7 +445,11 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
 export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(function* (
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
-): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  string,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lockPath = yield* proofLockPathForContext(context);
@@ -449,8 +457,9 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
     .makeDirectory(path.dirname(lockPath), { recursive: true })
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to create Yeet proof lock directory for ${lockPath}.`)));
   const lockState = YeetProofLockState.make({
-    schemaVersion: "yeet-proof-lock/v1",
+    schemaVersion: "yeet-proof-lock/v2",
     branch: context.branch,
+    checkoutRoot: context.repoRoot,
     command: proofCommandForSteps(proofSteps),
     pid: process.pid,
     proofTier: "full",
@@ -491,11 +500,12 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
     existingState,
     O.match({
       onNone: () => "",
-      onSome: (state) => ` Owner pid ${state.pid} started ${state.startedAt}.`,
+      onSome: (state) =>
+        ` Owner checkout ${state.checkoutRoot} on ${state.branch}, pid ${state.pid}, started ${state.startedAt}.`,
     })
   );
   return yield* YeetCommandError.make({
-    message: `Another Yeet full proof appears active at ${lockPath}.${ownerDetail}\n${existingText}\nRun review-fix lanes or remove the stale lock after confirming no full proof is running.`,
+    message: `Another Yeet full proof for this repository is active.${ownerDetail}\nThe machine-local coordinator prevents sibling checkouts from overlapping Docker, Bun-cache, and Turbo work. Wait for it to finish, run the cheap/review-fix tier, or remove ${lockPath} only after confirming its owner is gone.`,
     command: "bun run beep yeet verify",
     exitCode: 1,
   });

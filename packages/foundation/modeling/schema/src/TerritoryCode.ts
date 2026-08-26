@@ -18,12 +18,12 @@ const $I = $SchemaId.create("TerritoryCode");
  *
  * **Example** (Decode territory code US)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode territory code US"
  * import * as S from "effect/Schema"
  * import { TerritoryCode } from "@beep/schema/TerritoryCode"
  *
  * const code = S.decodeUnknownSync(TerritoryCode)("US")
- * console.log(code) // "US"
+ * code // => "US"
  * ```
  *
  * @category schemas
@@ -49,12 +49,12 @@ const territoryNameByCodeEntries = Struct.entriesNonEmpty(TerritoriesData.Territ
  *
  * **Example** (Decode United States name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode United States name"
  * import * as S from "effect/Schema"
  * import { TerritoryName } from "@beep/schema/TerritoryCode"
  *
  * const name = S.decodeUnknownSync(TerritoryName)("United States")
- * console.log(name) // "United States"
+ * name // => "United States"
  * ```
  *
  * @category schemas
@@ -85,12 +85,12 @@ export type TerritoryName = typeof TerritoryName.Type;
  *
  * **Example** (Map code to display name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map code to display name"
  * import * as S from "effect/Schema"
  * import { TerritoryNameFromCode } from "@beep/schema/TerritoryCode"
  *
  * const name = S.decodeUnknownSync(TerritoryNameFromCode)("US")
- * console.log(name) // "United States"
+ * name // => "United States"
  * ```
  *
  * @category schemas
@@ -107,12 +107,12 @@ export const TerritoryNameFromCode = MappedLiteralKit(territoryNameByCodeEntries
  *
  * **Example** (Map name to territory code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map name to territory code"
  * import * as S from "effect/Schema"
  * import { TerritoryCodeFromName } from "@beep/schema/TerritoryCode"
  *
  * const code = S.decodeUnknownSync(TerritoryCodeFromName)("United States")
- * console.log(code) // "US"
+ * code // => "US"
  * ```
  *
  * @category schemas

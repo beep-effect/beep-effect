@@ -188,12 +188,12 @@ const isKnownPredicate = (value: string): boolean => expandPredicate(value) !== 
  * Guard for schema handles at tuple endpoints.
  *
  * **Example** (Usage)
- * ```ts
+ * ```ts import.meta.vitest name="Usage"
  * import { isSchemaHandle } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
- * console.log(isSchemaHandle(S.String)) // true
- * console.log(isSchemaHandle("skos:Concept")) // false
+ * isSchemaHandle(S.String) // => true
+ * isSchemaHandle("skos:Concept") // => false
  * ```
  *
  * @category guards
@@ -262,12 +262,12 @@ const ObjectValue = S.Union([SchemaHandleValue, TermString, TypedLiteralValue]);
  * an instance of schema-is-truth, not an exception.
  *
  * **Example** (Usage)
- * ```ts
+ * ```ts import.meta.vitest name="Usage"
  * import { TripleValue } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownOption(TripleValue)(["skos:Concept", "rdfs:seeAlso", "owl:Thing"])
- * console.log(decoded._tag) // "Some"
+ * decoded._tag // => "Some"
  * ```
  *
  * @category schemas
@@ -299,11 +299,11 @@ export type TripleValue = typeof TripleValue.Type;
  * SKOS classification marker recorded on assembled classes.
  *
  * **Example** (Usage)
- * ```ts
+ * ```ts import.meta.vitest name="Usage"
  * import { SkosClassification } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(SkosClassification)("concept")) // true
+ * S.is(SkosClassification)("concept") // => true
  * ```
  *
  * @category schemas
@@ -338,11 +338,11 @@ export type SkosClassification = typeof SkosClassification.Type;
  * object predicates. The kind is inferred, never declared.
  *
  * **Example** (Usage)
- * ```ts
+ * ```ts import.meta.vitest name="Usage"
  * import { AssembledPredicateKind } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(AssembledPredicateKind)("datatype")) // true
+ * S.is(AssembledPredicateKind)("datatype") // => true
  * ```
  *
  * @category schemas
@@ -400,11 +400,11 @@ export class FactLiteral extends S.Class<FactLiteral>($I`FactLiteral`)(
  * Resolved object position of an assembled fact: an IRI or a literal.
  *
  * **Example** (Usage)
- * ```ts
+ * ```ts import.meta.vitest name="Usage"
  * import { FactObject } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(FactObject)("https://schema.org/CreativeWork")) // true
+ * S.is(FactObject)("https://schema.org/CreativeWork") // => true
  * ```
  *
  * @category schemas
@@ -543,11 +543,11 @@ export class AssembledClass extends S.Class<AssembledClass>($I`AssembledClass`)(
  * Warning codes surfaced by the SKOS integrity gate.
  *
  * **Example** (Usage)
- * ```ts
+ * ```ts import.meta.vitest name="Usage"
  * import { OntologyWarningCode } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(OntologyWarningCode)("missingConceptScheme")) // true
+ * S.is(OntologyWarningCode)("missingConceptScheme") // => true
  * ```
  *
  * @category schemas
@@ -651,11 +651,11 @@ export class AssembledOntology extends S.Class<AssembledOntology>($I`AssembledOn
  * Failure reasons for the ontology fold's diagnostics ledger.
  *
  * **Example** (Usage)
- * ```ts
+ * ```ts import.meta.vitest name="Usage"
  * import { OntologyAssemblyErrorReason } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(OntologyAssemblyErrorReason)("unknownTerm")) // true
+ * S.is(OntologyAssemblyErrorReason)("unknownTerm") // => true
  * ```
  *
  * @category schemas
@@ -735,13 +735,13 @@ export class OntologyAssemblyError extends S.TaggedError<OntologyAssemblyError>(
  * Derived guard for {@link AssembledFact} literal objects.
  *
  * **Example** (Usage)
- * ```ts
+ * ```ts import.meta.vitest name="Usage"
  * import { FactLiteral, isFactLiteral } from "@beep/ontology"
  * import * as O from "effect/Option"
  *
  * const literal = FactLiteral.make({ value: 1, datatypeIri: O.none(), language: O.none() })
- * console.log(isFactLiteral(literal)) // true
- * console.log(isFactLiteral("https://schema.org/CreativeWork")) // false
+ * isFactLiteral(literal) // => true
+ * isFactLiteral("https://schema.org/CreativeWork") // => false
  * ```
  *
  * @category guards

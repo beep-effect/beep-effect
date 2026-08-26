@@ -45,7 +45,7 @@ const promiseAnnotations = {
  *
  * **Example** (Native promise versus thenable)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Native promise versus thenable"
  * import { isPromise } from "@beep/schema/PromiseSchema"
  *
  * const nativePromise = globalThis.Promise.resolve(1)
@@ -55,8 +55,8 @@ const promiseAnnotations = {
  *   finally: () => undefined,
  * }
  *
- * console.log(isPromise(nativePromise)) // true
- * console.log(isPromise(thenable)) // false
+ * isPromise(nativePromise) // => true
+ * isPromise(thenable) // => false
  * ```
  *
  * @param u - The value to test.

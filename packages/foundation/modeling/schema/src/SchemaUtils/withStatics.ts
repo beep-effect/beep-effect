@@ -97,7 +97,7 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  *
  * **Example** (Attach companion empty static)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attach companion empty static"
  * import { $SchemaId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
  * import { withStatics } from "@beep/schema/SchemaUtils/withStatics"
@@ -112,7 +112,7 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  *   })
  * )
  *
- * console.log(MySchema.empty) // ""
+ * MySchema.empty // => ""
  * ```
  *
  * @category constructors

@@ -31,11 +31,11 @@ import { HttpStatusUnofficial } from "./HttpStatus.unofficial.aggregate.ts";
  *
  * **Example** (Decode an extension status code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode an extension status code"
  * import { HttpStatusCode } from "@beep/schema/HttpStatus"
  * import * as S from "effect/Schema"
  *
- * console.log(S.decodeUnknownSync(HttpStatusCode)(599)) // 599
+ * S.decodeUnknownSync(HttpStatusCode)(599) // => 599
  * ```
  *
  * @category validation
@@ -53,11 +53,11 @@ export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, m
  *
  * **Example** (Type an HTTP response status)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type an HTTP response status"
  * import { HttpStatusCode } from "@beep/schema/HttpStatus"
  *
  * const status: HttpStatusCode = HttpStatusCode.make(404)
- * console.log(status) // 404
+ * status // => 404
  * ```
  *
  * @category models
@@ -101,13 +101,13 @@ export const HttpStatus = MappedLiteralKit([
  *
  * **Example** (Decode encoded status name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode encoded status name"
  * import * as S from "effect/Schema"
  * import { HttpStatus } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatus.Encoded = "Continue"
  * const status = S.decodeUnknownSync(HttpStatus)(encoded)
- * console.log(status) // 100
+ * status // => 100
  * ```
  *
  * @category validation
@@ -151,13 +151,13 @@ export const Schema = HttpStatus;
  *
  * **Example** (Decode with Schema alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode with Schema alias"
  * import * as S from "effect/Schema"
  * import type { Schema as HttpStatusValue } from "@beep/schema/HttpStatus"
  * import { Schema as HttpStatusSchema } from "@beep/schema/HttpStatus"
  *
- * const status: HttpStatusValue = S.decodeUnknownSync(HttpStatusSchema)(200)
- * console.log(status)
+ * const status: HttpStatusValue = S.decodeUnknownSync(HttpStatusSchema)("Ok")
+ * status // => 200
  * ```
  *
  * @category models

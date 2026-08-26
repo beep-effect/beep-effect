@@ -27,14 +27,14 @@ const $I = $SkillContractId.create("EvidenceReceipt");
  *
  * **Example** (Bind a SHA-256 digest)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Bind a SHA-256 digest"
  * import { EvidenceDigest } from "@beep/skill-contract"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = EvidenceDigest.make({
  *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * })
- * console.log(digest.sha256.length) // 64
+ * digest.sha256.length // => 64
  * ```
  *
  * @category models
@@ -146,10 +146,10 @@ export const EvidenceReceipt: {
  *
  * **Example** (Inspect attestation resource fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect attestation resource fields"
  * import { AttestationResource } from "@beep/skill-contract"
  *
- * console.log(AttestationResource.fields.uri !== undefined) // true
+ * AttestationResource.fields.uri !== undefined // => true
  * ```
  *
  * @category models
@@ -170,10 +170,10 @@ export class AttestationResource extends S.Class<AttestationResource>($I`Attesta
  *
  * **Example** (Inspect verifier fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect verifier fields"
  * import { GateSummaryVerifier } from "@beep/skill-contract"
  *
- * console.log(GateSummaryVerifier.fields.version !== undefined) // true
+ * GateSummaryVerifier.fields.version !== undefined // => true
  * ```
  *
  * @category models
@@ -194,10 +194,10 @@ export class GateSummaryVerifier extends S.Class<GateSummaryVerifier>($I`GateSum
  *
  * **Example** (Inspect verification results)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect verification results"
  * import { GateVerificationResult } from "@beep/skill-contract"
  *
- * console.log(GateVerificationResult.Options) // ["PASSED", "FAILED"]
+ * GateVerificationResult.Options // => ["PASSED", "FAILED"]
  * ```
  *
  * @category schemas
@@ -270,10 +270,10 @@ const AllowedGateEvidenceCheck = S.makeFilter(
  *
  * **Example** (Inspect gate result fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect gate result fields"
  * import { GateResultSummary } from "@beep/skill-contract"
  *
- * console.log(GateResultSummary.fields.gateId !== undefined) // true
+ * GateResultSummary.fields.gateId !== undefined // => true
  * ```
  *
  * @category models
@@ -347,10 +347,10 @@ const GateSummaryCoherenceCheck = S.makeFilter(
  *
  * **Example** (Inspect gate summary fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect gate summary fields"
  * import { GateSummary } from "@beep/skill-contract"
  *
- * console.log(GateSummary.fields.verificationResult !== undefined) // true
+ * GateSummary.fields.verificationResult !== undefined // => true
  * ```
  *
  * @category models
@@ -386,10 +386,10 @@ export const GateSummaryPredicateType = EvidencePredicateType.make(
  *
  * **Example** (Inspect the pinned predicate field)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect the pinned predicate field"
  * import { GateSummaryReceipt } from "@beep/skill-contract"
  *
- * console.log(GateSummaryReceipt.fields.predicateType !== undefined) // true
+ * GateSummaryReceipt.fields.predicateType !== undefined // => true
  * ```
  *
  * @category schemas

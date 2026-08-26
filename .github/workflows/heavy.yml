@@ -43,6 +43,12 @@ jobs:
             timeout_minutes: 60
             uses_turbo: "false"
             install_typos: "false"
+            docgen_concurrency: 6
+          - id: doctest
+            name: Doctest
+            timeout_minutes: 60
+            uses_turbo: "false"
+            install_typos: "false"
     env:
       # Pull requests stay local-only even when repository secrets are
       # available. Trusted main pushes receive read-write remote-cache access.
@@ -50,6 +56,7 @@ jobs:
       TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
       TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
       TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
+      BEEP_DOCGEN_CONCURRENCY: ${{ matrix.docgen_concurrency || 3 }}
       # Stream task logs line-by-line so a wedged lane task shows its last
       # live output instead of buffering everything behind a group header.
       TURBO_LOG_ORDER: stream
@@ -82,6 +89,7 @@ jobs:
           set -euo pipefail
           should_run=true
           docgen_mode=none
+          doctest_mode=full
 
           if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             docgen_mode=affected
@@ -101,8 +109,45 @@ jobs:
             fi
           fi
 
+          if [[ "${{ matrix.id }}" == "doctest" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            doctest_mode=affected
+            base_ref="origin/${GITHUB_BASE_REF:-main}"
+            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+              git fetch --quiet --no-tags --depth=100 origin \
+                "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+            fi
+
+            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+            if grep -Eq '(^vitest\.docs\.ts$|^vitest\.shared\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/heavy\.yml$|^packages/tooling/tool/cli/src/commands/Docgen/|^packages/tooling/tool/cli/src/internal/jsdoc/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
+              doctest_mode=full
+            else
+              # Any package/app source or package-level config can
+              # affect marked examples in that workspace or its dependents.
+              # The CLI owns package-graph expansion, existence filtering,
+              # and marker discovery.
+              mapfile -t affected_inputs < <(
+                git diff --name-only "${base_ref}...HEAD" -- \
+                  ':(glob)packages/**/src/**/*.ts' \
+                  ':(glob)packages/**/src/**/*.tsx' \
+                  ':(glob)apps/**/src/**/*.ts' \
+                  ':(glob)apps/**/src/**/*.tsx' \
+                  ':(glob)packages/**/package.json' \
+                  ':(glob)packages/**/docgen.json' \
+                  ':(glob)packages/**/tsconfig*.json' \
+                  ':(glob)apps/**/package.json' \
+                  ':(glob)apps/**/docgen.json' \
+                  ':(glob)apps/**/tsconfig*.json'
+              )
+
+              if (( ${#affected_inputs[@]} == 0 )); then
+                should_run=false
+              fi
+            fi
+          fi
+
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
           echo "docgen_mode=$docgen_mode" >> "$GITHUB_OUTPUT"
+          echo "doctest_mode=$doctest_mode" >> "$GITHUB_OUTPUT"
 
       - name: Free runner disk for verification lanes
         # Destructive image cleanup runs on ephemeral hosted images (GitHub-
@@ -131,6 +176,20 @@ jobs:
         with:
           cache-turbo: ${{ matrix.uses_turbo }}
           cache-write: "false"
+
+      # PRs may read main's local Docgen cache but never save it. This keeps
+      # untrusted code restore-only and satisfies CSF-014 without exposing any
+      # TURBO_TOKEN, TURBO_API, or TURBO_TEAM credential to pull requests.
+      - name: Restore main Docgen Turbo cache
+        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'pull_request'
+        id: docgen-turbo-cache-restore
+        continue-on-error: true
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-
 
       - name: Install typos
         if: steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'
@@ -188,7 +247,27 @@ jobs:
                 run_lane ci lane docgen --mode full
               fi
               ;;
+            doctest)
+              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+                run_lane ci lane doctest \
+                  --mode "${{ steps.lane-gate.outputs.doctest_mode }}" \
+                  --base "origin/${GITHUB_BASE_REF:-main}" \
+                  --head HEAD
+              else
+                run_lane ci lane doctest --mode full
+              fi
+              ;;
           esac
+
+      # Only trusted main pushes publish a cache entry. Pull requests have no
+      # save step, so restored main artifacts cannot be poisoned by PR code.
+      - name: Save main Docgen Turbo cache
+        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push'
+        continue-on-error: true
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}
 
       - name: Append Turbo summary
         if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()

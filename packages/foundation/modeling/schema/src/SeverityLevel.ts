@@ -17,12 +17,12 @@ const SeverityLevelBase = LiteralKit(["low", "medium", "high", "critical"]);
  *
  * **Example** (Decode high severity level)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode high severity level"
  * import * as S from "effect/Schema"
  * import { SeverityLevel } from "@beep/schema/SeverityLevel"
  *
  * const level = S.decodeUnknownSync(SeverityLevel)("high")
- * console.log(level) // "high"
+ * level // => "high"
  * ```
  *
  * @category validation
@@ -39,12 +39,12 @@ export const SeverityLevel = SeverityLevelBase.pipe(
  *
  * **Example** (Type critical severity value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type critical severity value"
  * import * as S from "effect/Schema"
  * import { SeverityLevel } from "@beep/schema/SeverityLevel"
  *
  * const severity: SeverityLevel = S.decodeUnknownSync(SeverityLevel)("critical")
- * console.log(severity) // "critical"
+ * severity // => "critical"
  * ```
  *
  * @category models

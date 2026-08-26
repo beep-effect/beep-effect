@@ -296,7 +296,7 @@ const encodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
  *
  * **Example** (Decode CSV with coercion)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode CSV with coercion"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { CSV } from "@beep/schema/Csv"
@@ -306,7 +306,7 @@ const encodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
  *
  * const program = S.decodeUnknownEffect(CsvSchema)("name,age\nAda,36")
  * const rows = await Effect.runPromise(program)
- * console.log(rows[0]?.age) // 36
+ * rows[0]?.age // => 36
  * ```
  *
  * @category validation

@@ -36,11 +36,11 @@ const ReferrerPolicyValueBase = LiteralKit([
  *
  * **Example** (Validate strict-origin value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate strict-origin value"
  * import * as S from "effect/Schema"
  * import { ReferrerPolicyValue } from "@beep/schema/ReferrerPolicy"
  *
- * console.log(S.is(ReferrerPolicyValue)("strict-origin")) // true
+ * S.is(ReferrerPolicyValue)("strict-origin") // => true
  * ```
  *
  * @category schemas

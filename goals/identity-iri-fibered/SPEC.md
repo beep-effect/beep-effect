@@ -29,7 +29,9 @@ layer, and provides local plus test/dev store Layers.
 
 - `@beep/identity`: Fibered, discrete pullback operation, IdentityRegistry
   interface, local layer
-- `@beep/schema`: byte-identical `JSDocTagDefinition.make` migration
+- `@beep/repo-utils`: byte-identical `JSDocTagDefinition.make` migration
+  (P0 audit corrected the SPEC's original `@beep/schema` placement; see
+  `history/p0-blocker-audit.md`)
 - `@beep/semantic-web`: post-move SHACL projection and test/dev store Layers
 - Focused type, behavior, projection, and layer tests
 
@@ -46,16 +48,16 @@ layer, and provides local plus test/dev store Layers.
 
 ## Acceptance Criteria
 
-- [ ] Fibered represents base, fibers, and section for the discrete case with
+- [x] Fibered represents base, fibers, and section for the discrete case with
       type/behavior laws.
-- [ ] The discrete pullback operation is implemented and property-tested
+- [x] The discrete pullback operation is implemented and property-tested
       without version, cartesian-lift, or coherence machinery.
-- [ ] JSDocTagDefinition migration is byte-identical.
-- [ ] IdentityRegistry resolves identity, IRI, and CURIE exactly through a
+- [x] JSDocTagDefinition migration is byte-identical.
+- [x] IdentityRegistry resolves identity, IRI, and CURIE exactly through a
       local Layer.
-- [ ] SHACL projection composes with the post-move contract layer.
-- [ ] Store-backed examples are test/dev Layers only.
-- [ ] No P1 work begins before both textual semantic-web blockers clear.
+- [x] SHACL projection composes with the post-move contract layer.
+- [x] Store-backed examples are test/dev Layers only.
+- [x] No P1 work begins before both textual semantic-web blockers clear.
 
 ## Decision Log
 
@@ -68,11 +70,17 @@ layer, and provides local plus test/dev store Layers.
 | Inline facts | `is:` sugar is not planned. |
 | 2026-08-13 | Fold trigger fired; one goal carries the full MAP row and is blocked by semantic-web PR2+PR3 cleanups. |
 | 2026-08-13 | Discrete case only; post-move SHACL target; stores as test/dev Layers. |
+| 2026-08-25 | P0 audit: both semantic-web blockers evidenced landed; `JSDocTagDefinition` migration target corrected to `@beep/repo-utils`; P1 design in `research/2026-08-25-p1-design.md`. |
 
 ## BlockedBy Note
 
-- semantic-web PR2 cleanup — no goal packet; require landed-content evidence.
-- semantic-web PR3 cleanup — no goal packet; require landed-content evidence.
+Both blockers cleared 2026-08-25 with live-source evidence recorded in
+[`history/p0-blocker-audit.md`](./history/p0-blocker-audit.md):
+
+- semantic-web PR2 cleanup — landed as #695 (`6706b95a75`); bounded validator
+  now in `packages/epistemic/server/src/ShaclValidation/`.
+- semantic-web PR3 cleanup — landed as #687 (`a6ffc516e1`) with follow-ups #711
+  and #715; `semantic-web/src` is the three service contracts only.
 
 ## Stop Conditions
 

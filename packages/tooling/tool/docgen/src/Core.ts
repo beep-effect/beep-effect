@@ -9,12 +9,10 @@
 
 import chalk from "@beep/chalk";
 import { $RepoDocgenId } from "@beep/identity/packages";
-import { Md, renderMarkdownBlock } from "@beep/md";
 import { encodeTSConfigPrettyEffect, FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import markdownToc from "@effect/markdown-toc";
 import { Effect, FileSystem, flow, HashSet, Order, Path, pipe, Stream } from "effect";
-import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as ChildProcess from "effect/unstable/process/ChildProcess";
 import * as Checker from "./Checker.ts";
@@ -46,11 +44,49 @@ class FencedCodeBlock extends S.Class<FencedCodeBlock>($I`FencedCodeBlock`)(
   })
 ) {}
 
-const normalizeSlashes = Str.replace(/\\/g, "/");
+/**
+ * Detailed source spans for one extracted TypeScript fence.
+ *
+ * **When to use**
+ *
+ * Use when a caller must edit fence metadata or code against the exact source
+ * slice that was analyzed.
+ *
+ * **Example** (Inspect a fence info span)
+ *
+ * ```ts
+ * import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core"
+ *
+ * const source = ["~~" + "~ts name=sample", "const value = 1", "~~" + "~"].join("\n")
+ * const [fences] = extractFencedCodeBlockDetails(source)
+ * console.log(fences[0]?.infoString) // "ts name=sample"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FencedCodeBlockDetail extends S.Class<FencedCodeBlockDetail>($I`FencedCodeBlockDetail`)(
+  {
+    code: S.String,
+    extension: FencedCodeBlockExtension,
+    infoString: S.String,
+    fenceStart: S.Natural,
+    fenceEnd: S.Natural,
+    infoStart: S.Natural,
+    infoEnd: S.Natural,
+    codeStart: S.Natural,
+    codeEnd: S.Natural,
+  },
+  $I.annote("FencedCodeBlockDetail", {
+    description: "Extracted TypeScript fence with raw metadata and half-open source offsets.",
+  })
+) {}
+
+const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
 const isDocgenSourceFile = (filePath: string): boolean =>
-  A.some(SOURCE_FILE_EXTENSIONS, (extension) => Str.endsWith(filePath, extension)) &&
-  !A.some(DECLARATION_FILE_EXTENSIONS, (extension) => Str.endsWith(filePath, extension));
+  A.some(SOURCE_FILE_EXTENSIONS, (extension) => Str.endsWith(extension)(filePath)) &&
+  !A.some(DECLARATION_FILE_EXTENSIONS, (extension) => Str.endsWith(extension)(filePath));
 
 const sourceGlobForExtension = (srcDir: string, extension: SourceFileExtension, path: Path.Path): string =>
   path.normalize(path.join(srcDir, "**", `*${extension}`));
@@ -65,17 +101,14 @@ const includePatternToGlob = (srcDir: string, includePattern: string, path: Path
 };
 
 const resolveSourceGlobs = (config: Configuration.ConfigurationShape, path: Path.Path): ReadonlyArray<string> =>
-  A.isReadonlyArrayEmpty(config.include)
+  config.include.length === 0
     ? A.map(SOURCE_FILE_EXTENSIONS, (extension) => sourceGlobForExtension(config.srcDir, extension, path))
     : A.map(config.include, (includePattern) => includePatternToGlob(config.srcDir, includePattern, path));
 
 const globFiles = (pattern: string, exclude: ReadonlyArray<string> = []) =>
   Effect.gen(function* () {
     const fsUtils = yield* FsUtils;
-    return yield* fsUtils.globFiles(
-      pattern,
-      A.isReadonlyArrayEmpty(exclude) ? undefined : { ignore: A.fromIterable(exclude) }
-    );
+    return yield* fsUtils.globFiles(pattern, exclude.length === 0 ? undefined : { ignore: A.fromIterable(exclude) });
   }).pipe(
     Effect.mapError(() =>
       Domain.DocgenError.make({
@@ -97,9 +130,7 @@ const readSourceFiles = Effect.gen(function* () {
   return yield* Effect.forEach(
     paths,
     (filePath) =>
-      pipe(
-        filePath,
-        fs.readFileString,
+      fs.readFileString(filePath).pipe(
         Effect.map((content) => Domain.File.new(filePath, content, { isOverwritable: false })),
         Effect.mapError((cause) =>
           Domain.DocgenError.make({
@@ -163,8 +194,7 @@ const parseModules = (files: ReadonlyArray<Domain.File>) =>
     )
   );
 
-const typeCheckAndRunExamples = Effect.fn("typeCheckAndRunExamples")(function* (modules: ReadonlyArray<Domain.Module>) {
-  const config = yield* Configuration.Configuration;
+const typeCheckExamples = Effect.fn("typeCheckExamples")(function* (modules: ReadonlyArray<Domain.Module>) {
   yield* cleanupExamples;
   const files = yield* getExampleFiles(modules);
   const len = files.length;
@@ -175,12 +205,6 @@ const typeCheckAndRunExamples = Effect.fn("typeCheckAndRunExamples")(function* (
     yield* createExamplesTsConfigJson;
     yield* Effect.logInfo("Typechecking examples...");
     yield* runTscOnExamples;
-    if (config.runExamples) {
-      yield* Effect.logInfo("Running examples...");
-      yield* runBunOnExamples;
-    } else {
-      yield* Effect.logInfo(chalk.gray("Skipping running examples"));
-    }
   } else {
     yield* Effect.logInfo("No examples found.");
   }
@@ -194,14 +218,14 @@ const sanitizeExampleName = (name: string): string => {
   return sanitized.length > 0 ? sanitized : "example";
 };
 
-const extractPrefixedNestedNamespaces: {
-  (doc: Domain.Namespace, prefix: string): ReadonlyArray<readonly [string, Domain.Namespace]>;
-  (prefix: string): (doc: Domain.Namespace) => ReadonlyArray<readonly [string, Domain.Namespace]>;
-} = dual(2, (doc: Domain.Namespace, prefix: string): ReadonlyArray<readonly [string, Domain.Namespace]> => {
+const extractPrefixedNestedNamespaces = (
+  doc: Domain.Namespace,
+  prefix: string
+): ReadonlyArray<readonly [string, Domain.Namespace]> => {
   const newPrefix = Str.isEmpty(prefix) ? doc.name : `${prefix}-${doc.name}`;
   const namespaces = A.flatMap(doc.namespaces, (namespace) => extractPrefixedNestedNamespaces(namespace, newPrefix));
   return A.prepend(namespaces, [prefix, doc] as const);
-});
+};
 
 /**
  * Fence metadata token that removes an example from generated type-check files.
@@ -277,6 +301,24 @@ const isTypeScriptFence = (metadata: string): boolean =>
     A.some((prefix) => Str.startsWith(prefix)(metadata))
   );
 
+const fencePattern = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
+
+const fenceMatches = (content: string): ReadonlyArray<RegExpMatchArray> =>
+  pipe(content, Str.matchAll(fencePattern), A.fromIterable);
+
+const fenceWarnings = (content: string, matches: ReadonlyArray<RegExpMatchArray>): Array<string> =>
+  pipe(
+    matches,
+    A.filter((match) => match[3] === undefined),
+    A.map(() => `Code block does not have a matching closing fence:\n${content}`)
+  );
+
+const isTypeCheckableFenceMatch = (match: RegExpMatchArray): boolean => {
+  const metadata = Str.toLowerCase(match[1] ?? "");
+  const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
+  return isTypeScriptFence(metadata) && !isSkipTypeChecking;
+};
+
 /**
  * Extracts type-checkable fenced TypeScript code blocks with their generated file extensions.
  *
@@ -313,21 +355,12 @@ const isTypeScriptFence = (metadata: string): boolean =>
 export const extractFencedCodeBlocks = (
   content: string
 ): [examples: Array<FencedCodeBlock>, warnings: Array<string>] => {
-  const fenceRegex = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
-  const matches = pipe(content, Str.matchAll(fenceRegex), A.fromIterable);
-  const warnings = pipe(
-    matches,
-    A.filter((match) => match[3] === undefined),
-    A.map(() => `Code block does not have a matching closing fence:\n${content}`)
-  );
+  const matches = fenceMatches(content);
+  const warnings = fenceWarnings(content, matches);
 
   const examples = pipe(
     matches,
-    A.filter((match) => {
-      const metadata = Str.toLowerCase(match[1] ?? "");
-      const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
-      return isTypeScriptFence(metadata) && !isSkipTypeChecking;
-    }),
+    A.filter(isTypeCheckableFenceMatch),
     A.map((match) =>
       FencedCodeBlock.make({
         code: Str.trim(match[2] ?? ""),
@@ -337,6 +370,70 @@ export const extractFencedCodeBlocks = (
   );
 
   return [examples, warnings];
+};
+
+/**
+ * Extracts TypeScript fences with raw info strings and half-open source spans.
+ *
+ * **When to use**
+ *
+ * Use when a codemod must prove that the opening fence and body have not
+ * changed between analysis and mutation.
+ *
+ * **Details**
+ *
+ * This extractor shares the same match pass, language filtering, and warnings
+ * as {@link extractFencedCodeBlocks}; offsets refer to the supplied string.
+ *
+ * **Example** (Read exact source offsets)
+ *
+ * ```ts
+ * import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core"
+ *
+ * const source = ["before", "~~" + "~ts", "const value = 1", "~~" + "~", "after"].join("\n")
+ * const [fences] = extractFencedCodeBlockDetails(source)
+ * const fence = fences[0]
+ * console.log(fence === undefined ? "" : source.slice(fence.infoStart, fence.infoEnd)) // "ts"
+ * ```
+ *
+ * @param content - Markdown or JSDoc text scanned for fenced TypeScript blocks.
+ * @returns Detailed fences and the same unterminated-fence warnings as the compatibility extractor.
+ * @see {@link extractFencedCodeBlocks} for the stable code-and-extension output shape.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const extractFencedCodeBlockDetails = (
+  content: string
+): [examples: Array<FencedCodeBlockDetail>, warnings: Array<string>] => {
+  const matches = fenceMatches(content);
+  const examples = pipe(
+    matches,
+    A.filter(isTypeCheckableFenceMatch),
+    A.map((match) => {
+      const matched = match[0];
+      const infoString = match[1] ?? "";
+      const rawCode = match[2] ?? "";
+      const fenceStart = match.index ?? 0;
+      const infoStart = fenceStart + 3;
+      const infoEnd = infoStart + infoString.length;
+      const codeStart = infoEnd + 1;
+      const closingLength = match[3]?.length ?? 0;
+      const fenceEnd = fenceStart + matched.length;
+      const codeEnd = fenceEnd - closingLength;
+      return FencedCodeBlockDetail.make({
+        code: Str.trim(rawCode),
+        extension: fenceExtension(infoString),
+        infoString,
+        fenceStart,
+        fenceEnd,
+        infoStart,
+        infoEnd,
+        codeStart,
+        codeEnd,
+      });
+    })
+  );
+  return [examples, fenceWarnings(content, matches)];
 };
 
 const getExampleFiles = Effect.fn("getExampleFiles")(function* (modules: ReadonlyArray<Domain.Module>) {
@@ -522,36 +619,6 @@ const runTscOnExamples = Effect.gen(function* () {
   }
 });
 
-const runBunOnExamples = Effect.gen(function* () {
-  const config = yield* Configuration.Configuration;
-  const process = yield* Domain.Process;
-  const cwd = yield* process.cwd;
-  const path = yield* Path.Path;
-  const examplesDir = path.normalize(path.join(cwd, config.outDir, "examples"));
-  const index = path.join(examplesDir, "index.ts");
-  const command = ChildProcess.make("bun", [index], {
-    cwd: examplesDir,
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  yield* Effect.logDebug("Running bun on examples...");
-  const { output, exitCode } = yield* collectCommandOutput(command).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[Core.runBunOnExamples] Failed to run bun examples\n${String(cause)}`,
-      })
-    )
-  );
-
-  if (exitCode !== 0) {
-    return yield* Domain.DocgenError.make({
-      message: `Something went wrong while running example files:\n\n${output}`,
-    });
-  }
-});
-
 const writeExamplesToOutDir = Effect.fn("writeExamplesToOutDir")(function* (examples: ReadonlyArray<Domain.File>) {
   yield* Effect.logDebug("Writing examples...");
   const entryPoint = yield* getExamplesEntryPoint(examples);
@@ -689,18 +756,14 @@ const getModuleMarkdownFiles = (modules: ReadonlyArray<Domain.Module>) =>
       const moduleContent = yield* Printer.printModule(module);
       const toc = markdownToc(moduleContent, { bullets: "-" }).content;
       const frontMatter = Printer.printFrontMatter(module, index + 1);
-      // Byte-compatibility with the historical hand-built block: single "\n"
-      // joins, not the "\n\n" a rendered Document would use.
       const content = pipe(
         `${frontMatter}\n\n${moduleContent}`,
         Str.replace(
           "<!-- toc -->",
-          A.join("\n")([
-            renderMarkdownBlock(Md.hr),
-            renderMarkdownBlock(Md.h2`Exports Grouped by Category`),
-            toc,
-            renderMarkdownBlock(Md.hr),
-          ])
+          `---
+## Exports Grouped by Category
+${toc}
+---`
         )
       );
       const prettified = yield* Printer.prettify(content);
@@ -789,12 +852,12 @@ export const program = Effect.gen(function* () {
       Effect.gen(function* () {
         yield* Effect.logInfo("Checking modules...");
         const errors = yield* Checker.checkModules(modules);
-        if (A.isReadonlyArrayNonEmpty(errors)) {
+        if (errors.length > 0) {
           return yield* Domain.DocgenError.make({
             message: `The following errors occurred while checking the modules:\n\n${A.join("\n\n")(errors)}`,
           });
         }
-        yield* typeCheckAndRunExamples(modules);
+        yield* typeCheckExamples(modules);
       }),
       Effect.gen(function* () {
         yield* Effect.logInfo("Creating markdown files...");
@@ -805,7 +868,7 @@ export const program = Effect.gen(function* () {
     ],
     { concurrency: "unbounded", discard: true }
   );
-  if (A.isReadonlyArrayEmpty(config.include)) {
+  if (config.include.length === 0) {
     yield* writeDocgenProofManifest();
   } else {
     yield* Effect.logInfo(chalk.gray("Skipping proof manifest for focused include run"));

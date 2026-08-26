@@ -12,10 +12,10 @@
  *
  * **Example** (Read the RDF namespace IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the RDF namespace IRI"
  * import { RDF_NAMESPACE } from "@beep/rdf/Vocab/generated/Rdf.terms"
  *
- * console.log(RDF_NAMESPACE.length > 0) // true
+ * RDF_NAMESPACE.length > 0 // => true
  * ```
  *
  * @category constants
@@ -28,10 +28,10 @@ export const RDF_NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#" as co
  *
  * **Example** (Read the RDF term inventory)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the RDF term inventory"
  * import { RDF_TERMS } from "@beep/rdf/Vocab/generated/Rdf.terms"
  *
- * console.log(RDF_TERMS.length > 0) // true
+ * RDF_TERMS.length > 0 // => true
  * ```
  *
  * @category constants

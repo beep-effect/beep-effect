@@ -196,10 +196,10 @@ const registerDescriptor = (
  *
  * **Example** (Width profile membership check)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Width profile membership check"
  * import { SrcsetProfile } from "@beep/html/Html.srcset"
  *
- * console.log(SrcsetProfile.is.width("width")) // true
+ * SrcsetProfile.is.width("width") // => true
  * ```
  *
  * @category schemas
@@ -240,12 +240,12 @@ export type SrcsetProfile = typeof SrcsetProfile.Type;
  *
  * **Example** (Inspect density srcset profile)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect density srcset profile"
  * import { inspectSrcset } from "@beep/html/Html.srcset"
  * import * as O from "effect/Option"
  *
  * const result = inspectSrcset("small.png 1x, large.png 2x", () => true)
- * console.log(O.getOrNull(result)) // "density"
+ * O.getOrNull(result) // => "density"
  * ```
  *
  * @category validation

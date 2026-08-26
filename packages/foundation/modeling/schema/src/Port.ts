@@ -55,13 +55,13 @@ const PortDecimalString = S.String.check(
  *
  * **Example** (Decode HTTPS port number)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode HTTPS port number"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Port } from "@beep/schema/Port"
  *
  * const port = await Effect.runPromise(S.decodeUnknownEffect(Port)(443))
- * console.log(port) // 443
+ * port // => 443
  * ```
  *
  * @invariant Port values are integers from 1 through 65535.
@@ -81,7 +81,7 @@ export const Port = S.Int.check(PortRange).pipe(
  *
  * **Example** (Narrow unknown to Port)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow unknown to Port"
  * import * as S from "effect/Schema"
  * import { Port } from "@beep/schema/Port"
  * import type { Port as PortValue } from "@beep/schema/Port"
@@ -89,7 +89,7 @@ export const Port = S.Int.check(PortRange).pipe(
  * const input: unknown = 5432
  * if (S.is(Port)(input)) {
  *   const port: PortValue = input
- *   console.log(port) // 5432
+ *   port // => 5432
  * }
  * ```
  *
@@ -109,13 +109,13 @@ export type Port = typeof Port.Type;
  *
  * **Example** (Decode decimal port string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode decimal port string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { PortFromString } from "@beep/schema/Port"
  *
  * const port = await Effect.runPromise(S.decodeUnknownEffect(PortFromString)("8080"))
- * console.log(port) // 8080
+ * port // => 8080
  * ```
  *
  * @invariant Decoded values satisfy {@link Port}.
@@ -134,7 +134,7 @@ export const PortFromString = PortDecimalString.pipe(
  *
  * **Example** (Decoded string as Port type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoded string as Port type"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Port, PortFromString } from "@beep/schema/Port"
@@ -143,7 +143,7 @@ export const PortFromString = PortDecimalString.pipe(
  * const input: unknown = "3000"
  * const acceptsPortStringValue = (value: PortFromStringValue) => S.is(Port)(value)
  * const value = await Effect.runPromise(S.decodeUnknownEffect(PortFromString)(input))
- * console.log(acceptsPortStringValue(value)) // true
+ * acceptsPortStringValue(value) // => true
  * ```
  *
  * @category models

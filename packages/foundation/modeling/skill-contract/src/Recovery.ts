@@ -33,11 +33,11 @@ const BudgetDurationCheck = S.makeFilter(
  *
  * **Example** (Construct a budget duration)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a budget duration"
  * import { BudgetDuration } from "@beep/skill-contract"
  * import * as Duration from "effect/Duration"
  *
- * console.log(Duration.toMillis(BudgetDuration.make(Duration.seconds(5)))) // 5000
+ * Duration.toMillis(BudgetDuration.make(Duration.seconds(5))) // => 5000
  * ```
  *
  * @category schemas
@@ -63,10 +63,10 @@ export type BudgetDuration = typeof BudgetDuration.Type;
  *
  * **Example** (Inspect recovery budget fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect recovery budget fields"
  * import { RecoveryBudget } from "@beep/skill-contract"
  *
- * console.log(RecoveryBudget.fields.maxAttempts !== undefined) // true
+ * RecoveryBudget.fields.maxAttempts !== undefined // => true
  * ```
  *
  * @category models
@@ -89,10 +89,10 @@ export class RecoveryBudget extends S.Class<RecoveryBudget>($I`RecoveryBudget`)(
  *
  * **Example** (Inspect consumed budget fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect consumed budget fields"
  * import { RecoveryBudgetConsumed } from "@beep/skill-contract"
  *
- * console.log(RecoveryBudgetConsumed.fields.elapsed !== undefined) // true
+ * RecoveryBudgetConsumed.fields.elapsed !== undefined // => true
  * ```
  *
  * @category models
@@ -114,10 +114,10 @@ export class RecoveryBudgetConsumed extends S.Class<RecoveryBudgetConsumed>($I`R
  *
  * **Example** (Inspect attempt outcomes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect attempt outcomes"
  * import { RecoveryAttemptOutcome } from "@beep/skill-contract"
  *
- * console.log(RecoveryAttemptOutcome.Options) // ["succeeded", "failed", "aborted"]
+ * RecoveryAttemptOutcome.Options // => ["succeeded", "failed", "aborted"]
  * ```
  *
  * @category schemas
@@ -142,10 +142,10 @@ export type RecoveryAttemptOutcome = typeof RecoveryAttemptOutcome.Type;
  *
  * **Example** (Inspect recovery attempt fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect recovery attempt fields"
  * import { RecoveryAttemptReceipt } from "@beep/skill-contract"
  *
- * console.log(RecoveryAttemptReceipt.fields.observations !== undefined) // true
+ * RecoveryAttemptReceipt.fields.observations !== undefined // => true
  * ```
  *
  * @category models
@@ -283,10 +283,10 @@ const RecoveryBudgetCoherenceCheck = S.makeFilter(
  *
  * **Example** (Inspect failure predicate fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect failure predicate fields"
  * import { FailureReceiptPredicate } from "@beep/skill-contract"
  *
- * console.log(FailureReceiptPredicate.fields.partialEffects !== undefined) // true
+ * FailureReceiptPredicate.fields.partialEffects !== undefined // => true
  * ```
  *
  * @category models
@@ -322,10 +322,10 @@ export const FailurePredicateType = EvidencePredicateType.make(
  *
  * **Example** (Inspect the pinned failure predicate field)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect the pinned failure predicate field"
  * import { FailureReceipt } from "@beep/skill-contract"
  *
- * console.log(FailureReceipt.fields.predicateType !== undefined) // true
+ * FailureReceipt.fields.predicateType !== undefined // => true
  * ```
  *
  * @category schemas
@@ -346,10 +346,10 @@ export type FailureReceipt = typeof FailureReceipt.Type;
  *
  * **Example** (Disable recovery)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Disable recovery"
  * import { NoRecoveryPolicy } from "@beep/skill-contract"
  *
- * console.log(NoRecoveryPolicy.make({}).mode) // "none"
+ * NoRecoveryPolicy.make({}).mode // => "none"
  * ```
  *
  * @category models
@@ -369,10 +369,10 @@ export class NoRecoveryPolicy extends S.Class<NoRecoveryPolicy>($I`NoRecoveryPol
  *
  * **Example** (Inspect bounded recovery fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect bounded recovery fields"
  * import { BoundedRecoveryPolicy } from "@beep/skill-contract"
  *
- * console.log(BoundedRecoveryPolicy.fields.budget !== undefined) // true
+ * BoundedRecoveryPolicy.fields.budget !== undefined // => true
  * ```
  *
  * @category models
@@ -400,10 +400,10 @@ export class BoundedRecoveryPolicy extends S.Class<BoundedRecoveryPolicy>($I`Bou
  *
  * **Example** (Inspect recovery policy variants)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect recovery policy variants"
  * import { RecoveryPolicy } from "@beep/skill-contract"
  *
- * console.log(RecoveryPolicy.discriminants) // ["none", "bounded"]
+ * RecoveryPolicy.discriminants // => ["none", "bounded"]
  * ```
  *
  * @category schemas

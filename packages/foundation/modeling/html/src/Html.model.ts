@@ -77,11 +77,11 @@ const taggedUnion = <A extends Tagged, E extends Tagged>(
  *
  * **Example** (Check an empty HtmlChildren list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an empty HtmlChildren list"
  * import { HtmlChildren } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlChildren)([])) // true
+ * S.is(HtmlChildren)([]) // => true
  * ```
  *
  * @category models
@@ -95,11 +95,11 @@ export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlChild.Type, HtmlCh
  *
  * **Example** (Annotate an HtmlChildren value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate an HtmlChildren value"
  * import type { HtmlChildren } from "@beep/html/Html.model"
  *
  * const children: HtmlChildren = []
- * console.log(children.length) // 0
+ * children.length // => 0
  * ```
  *
  * @category models
@@ -111,11 +111,11 @@ export type HtmlChildren = typeof HtmlChildren.Type;
  *
  * **Example** (Annotate an HtmlChildren.Type value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate an HtmlChildren.Type value"
  * import type { HtmlChildren } from "@beep/html/Html.model"
  *
  * const children: HtmlChildren.Type = []
- * console.log(children.length) // 0
+ * children.length // => 0
  * ```
  *
  * @category models
@@ -133,11 +133,11 @@ export declare namespace HtmlChildren {
  *
  * **Example** (Construct the Fragment node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Fragment node"
  * import { Fragment } from "@beep/html/Html.model"
  *
  * const node = Fragment.make({ children: [] })
- * console.log(node._tag) // "#fragment"
+ * node._tag // => "#fragment"
  * ```
  *
  * @category models
@@ -153,11 +153,11 @@ export class Fragment extends S.TaggedClass<Fragment>($I`Fragment`)(
  *
  * **Example** (Encoded shape of Fragment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Fragment"
  * import { Fragment } from "@beep/html/Html.model"
  *
  * const encoded: Fragment.Encoded = { _tag: "#fragment", children: [] }
- * console.log(encoded._tag) // "#fragment"
+ * encoded._tag // => "#fragment"
  * ```
  *
  * @category models
@@ -175,11 +175,11 @@ export declare namespace Fragment {
  *
  * **Example** (Construct a Document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a Document"
  * import { Document } from "@beep/html/Html.model"
  *
  * const document = Document.make({ children: [] })
- * console.log(document._tag) // "#document"
+ * document._tag // => "#document"
  * ```
  *
  * @category models
@@ -199,11 +199,11 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
  *
  * **Example** (Encoded shape of Document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Document"
  * import type { Document } from "@beep/html/Html.model"
  *
  * const document: Document.Encoded = { _tag: "#document", children: [] }
- * console.log(document._tag) // "#document"
+ * document._tag // => "#document"
  * ```
  *
  * @category models
@@ -229,10 +229,10 @@ export declare namespace Document {
  *
  * **Example** (Check a ForeignNamespace value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a ForeignNamespace value"
  * import { ForeignNamespace } from "@beep/html/Html.model"
  *
- * console.log(ForeignNamespace.is.svg("svg")) // true
+ * ForeignNamespace.is.svg("svg") // => true
  * ```
  *
  * @category models
@@ -247,11 +247,11 @@ export const ForeignNamespace = LiteralKit(["svg", "mathml"]).pipe(
  *
  * **Example** (Annotate a ForeignNamespace value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a ForeignNamespace value"
  * import type { ForeignNamespace } from "@beep/html/Html.model"
  *
  * const namespace: ForeignNamespace = "svg"
- * console.log(namespace)
+ * namespace // => "svg"
  * ```
  *
  * @category models
@@ -269,11 +269,11 @@ export type ForeignNamespace = typeof ForeignNamespace.Type;
  *
  * **Example** (Construct a ForeignElement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a ForeignElement"
  * import { ForeignElement } from "@beep/html/Html.model"
  *
  * const svg = ForeignElement.make({ namespace: "svg", name: "svg", children: [] })
- * console.log(svg.name) // "svg"
+ * svg.name // => "svg"
  * ```
  *
  * @category models
@@ -295,7 +295,7 @@ export class ForeignElement extends S.TaggedClass<ForeignElement>($I`ForeignElem
  *
  * **Example** (Encoded shape of ForeignElement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of ForeignElement"
  * import type { ForeignElement } from "@beep/html/Html.model"
  *
  * const svg: ForeignElement.Encoded = {
@@ -304,7 +304,7 @@ export class ForeignElement extends S.TaggedClass<ForeignElement>($I`ForeignElem
  *   name: "svg",
  *   children: []
  * }
- * console.log(svg.name) // "svg"
+ * svg.name // => "svg"
  * ```
  *
  * @category models
@@ -334,11 +334,11 @@ export declare namespace ForeignElement {
  *
  * **Example** (Construct the A node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the A node"
  * import { A } from "@beep/html/Html.model"
  *
  * const node = A.make({ children: [] })
- * console.log(node._tag) // "a"
+ * node._tag // => "a"
  * ```
  *
  * @category elements
@@ -372,11 +372,11 @@ export class A extends S.TaggedClass<A>($I`A`)(
  *
  * **Example** (Encoded shape of A)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of A"
  * import { A } from "@beep/html/Html.model"
  *
  * const encoded: A.Encoded = { _tag: "a", children: [] }
- * console.log(encoded._tag) // "a"
+ * encoded._tag // => "a"
  * ```
  *
  * @category elements
@@ -440,11 +440,11 @@ export declare namespace A {
  *
  * **Example** (Construct the Abbr node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Abbr node"
  * import { Abbr } from "@beep/html/Html.model"
  *
  * const node = Abbr.make({ children: [] })
- * console.log(node._tag) // "abbr"
+ * node._tag // => "abbr"
  * ```
  *
  * @category elements
@@ -463,11 +463,11 @@ export class Abbr extends S.TaggedClass<Abbr>($I`Abbr`)(
  *
  * **Example** (Encoded shape of Abbr)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Abbr"
  * import { Abbr } from "@beep/html/Html.model"
  *
  * const encoded: Abbr.Encoded = { _tag: "abbr", children: [] }
- * console.log(encoded._tag) // "abbr"
+ * encoded._tag // => "abbr"
  * ```
  *
  * @category elements
@@ -491,11 +491,11 @@ export declare namespace Abbr {
  *
  * **Example** (Construct the Acronym node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Acronym node"
  * import { Acronym } from "@beep/html/Html.model"
  *
  * const node = Acronym.make({ children: [] })
- * console.log(node._tag) // "acronym"
+ * node._tag // => "acronym"
  * ```
  *
  * @category elements
@@ -514,11 +514,11 @@ export class Acronym extends S.TaggedClass<Acronym>($I`Acronym`)(
  *
  * **Example** (Encoded shape of Acronym)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Acronym"
  * import { Acronym } from "@beep/html/Html.model"
  *
  * const encoded: Acronym.Encoded = { _tag: "acronym", children: [] }
- * console.log(encoded._tag) // "acronym"
+ * encoded._tag // => "acronym"
  * ```
  *
  * @category elements
@@ -542,11 +542,11 @@ export declare namespace Acronym {
  *
  * **Example** (Construct the Address node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Address node"
  * import { Address } from "@beep/html/Html.model"
  *
  * const node = Address.make({ children: [] })
- * console.log(node._tag) // "address"
+ * node._tag // => "address"
  * ```
  *
  * @category elements
@@ -565,11 +565,11 @@ export class Address extends S.TaggedClass<Address>($I`Address`)(
  *
  * **Example** (Encoded shape of Address)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Address"
  * import { Address } from "@beep/html/Html.model"
  *
  * const encoded: Address.Encoded = { _tag: "address", children: [] }
- * console.log(encoded._tag) // "address"
+ * encoded._tag // => "address"
  * ```
  *
  * @category elements
@@ -593,11 +593,11 @@ export declare namespace Address {
  *
  * **Example** (Construct the Applet node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Applet node"
  * import { Applet } from "@beep/html/Html.model"
  *
  * const node = Applet.make({ children: [] })
- * console.log(node._tag) // "applet"
+ * node._tag // => "applet"
  * ```
  *
  * @category elements
@@ -616,11 +616,11 @@ export class Applet extends S.TaggedClass<Applet>($I`Applet`)(
  *
  * **Example** (Encoded shape of Applet)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Applet"
  * import { Applet } from "@beep/html/Html.model"
  *
  * const encoded: Applet.Encoded = { _tag: "applet", children: [] }
- * console.log(encoded._tag) // "applet"
+ * encoded._tag // => "applet"
  * ```
  *
  * @category elements
@@ -644,11 +644,11 @@ export declare namespace Applet {
  *
  * **Example** (Construct the Area node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Area node"
  * import { Area } from "@beep/html/Html.model"
  *
  * const node = Area.make({})
- * console.log(node._tag) // "area"
+ * node._tag // => "area"
  * ```
  *
  * @category elements
@@ -680,11 +680,11 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
  *
  * **Example** (Encoded shape of Area)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Area"
  * import { Area } from "@beep/html/Html.model"
  *
  * const encoded: Area.Encoded = { _tag: "area" }
- * console.log(encoded._tag) // "area"
+ * encoded._tag // => "area"
  * ```
  *
  * @category elements
@@ -740,11 +740,11 @@ export declare namespace Area {
  *
  * **Example** (Construct the Article node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Article node"
  * import { Article } from "@beep/html/Html.model"
  *
  * const node = Article.make({ children: [] })
- * console.log(node._tag) // "article"
+ * node._tag // => "article"
  * ```
  *
  * @category elements
@@ -763,11 +763,11 @@ export class Article extends S.TaggedClass<Article>($I`Article`)(
  *
  * **Example** (Encoded shape of Article)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Article"
  * import { Article } from "@beep/html/Html.model"
  *
  * const encoded: Article.Encoded = { _tag: "article", children: [] }
- * console.log(encoded._tag) // "article"
+ * encoded._tag // => "article"
  * ```
  *
  * @category elements
@@ -791,11 +791,11 @@ export declare namespace Article {
  *
  * **Example** (Construct the Aside node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Aside node"
  * import { Aside } from "@beep/html/Html.model"
  *
  * const node = Aside.make({ children: [] })
- * console.log(node._tag) // "aside"
+ * node._tag // => "aside"
  * ```
  *
  * @category elements
@@ -814,11 +814,11 @@ export class Aside extends S.TaggedClass<Aside>($I`Aside`)(
  *
  * **Example** (Encoded shape of Aside)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Aside"
  * import { Aside } from "@beep/html/Html.model"
  *
  * const encoded: Aside.Encoded = { _tag: "aside", children: [] }
- * console.log(encoded._tag) // "aside"
+ * encoded._tag // => "aside"
  * ```
  *
  * @category elements
@@ -842,11 +842,11 @@ export declare namespace Aside {
  *
  * **Example** (Construct the Audio node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Audio node"
  * import { Audio } from "@beep/html/Html.model"
  *
  * const node = Audio.make({ children: [] })
- * console.log(node._tag) // "audio"
+ * node._tag // => "audio"
  * ```
  *
  * @category elements
@@ -877,11 +877,11 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
  *
  * **Example** (Encoded shape of Audio)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Audio"
  * import { Audio } from "@beep/html/Html.model"
  *
  * const encoded: Audio.Encoded = { _tag: "audio", children: [] }
- * console.log(encoded._tag) // "audio"
+ * encoded._tag // => "audio"
  * ```
  *
  * @category elements
@@ -921,11 +921,11 @@ export declare namespace Audio {
  *
  * **Example** (Construct the B node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the B node"
  * import { B } from "@beep/html/Html.model"
  *
  * const node = B.make({ children: [] })
- * console.log(node._tag) // "b"
+ * node._tag // => "b"
  * ```
  *
  * @category elements
@@ -944,11 +944,11 @@ export class B extends S.TaggedClass<B>($I`B`)(
  *
  * **Example** (Encoded shape of B)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of B"
  * import { B } from "@beep/html/Html.model"
  *
  * const encoded: B.Encoded = { _tag: "b", children: [] }
- * console.log(encoded._tag) // "b"
+ * encoded._tag // => "b"
  * ```
  *
  * @category elements
@@ -972,11 +972,11 @@ export declare namespace B {
  *
  * **Example** (Construct the Base node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Base node"
  * import { Base } from "@beep/html/Html.model"
  *
  * const node = Base.make({})
- * console.log(node._tag) // "base"
+ * node._tag // => "base"
  * ```
  *
  * @category elements
@@ -996,11 +996,11 @@ export class Base extends S.TaggedClass<Base>($I`Base`)(
  *
  * **Example** (Encoded shape of Base)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Base"
  * import { Base } from "@beep/html/Html.model"
  *
  * const encoded: Base.Encoded = { _tag: "base" }
- * console.log(encoded._tag) // "base"
+ * encoded._tag // => "base"
  * ```
  *
  * @category elements
@@ -1026,11 +1026,11 @@ export declare namespace Base {
  *
  * **Example** (Construct the Basefont node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Basefont node"
  * import { Basefont } from "@beep/html/Html.model"
  *
  * const node = Basefont.make({})
- * console.log(node._tag) // "basefont"
+ * node._tag // => "basefont"
  * ```
  *
  * @category elements
@@ -1048,11 +1048,11 @@ export class Basefont extends S.TaggedClass<Basefont>($I`Basefont`)(
  *
  * **Example** (Encoded shape of Basefont)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Basefont"
  * import { Basefont } from "@beep/html/Html.model"
  *
  * const encoded: Basefont.Encoded = { _tag: "basefont" }
- * console.log(encoded._tag) // "basefont"
+ * encoded._tag // => "basefont"
  * ```
  *
  * @category elements
@@ -1074,11 +1074,11 @@ export declare namespace Basefont {
  *
  * **Example** (Construct the Bdi node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Bdi node"
  * import { Bdi } from "@beep/html/Html.model"
  *
  * const node = Bdi.make({ children: [] })
- * console.log(node._tag) // "bdi"
+ * node._tag // => "bdi"
  * ```
  *
  * @category elements
@@ -1097,11 +1097,11 @@ export class Bdi extends S.TaggedClass<Bdi>($I`Bdi`)(
  *
  * **Example** (Encoded shape of Bdi)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Bdi"
  * import { Bdi } from "@beep/html/Html.model"
  *
  * const encoded: Bdi.Encoded = { _tag: "bdi", children: [] }
- * console.log(encoded._tag) // "bdi"
+ * encoded._tag // => "bdi"
  * ```
  *
  * @category elements
@@ -1125,11 +1125,11 @@ export declare namespace Bdi {
  *
  * **Example** (Construct the Bdo node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Bdo node"
  * import { Bdo } from "@beep/html/Html.model"
  *
  * const node = Bdo.make({ children: [] })
- * console.log(node._tag) // "bdo"
+ * node._tag // => "bdo"
  * ```
  *
  * @category elements
@@ -1148,11 +1148,11 @@ export class Bdo extends S.TaggedClass<Bdo>($I`Bdo`)(
  *
  * **Example** (Encoded shape of Bdo)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Bdo"
  * import { Bdo } from "@beep/html/Html.model"
  *
  * const encoded: Bdo.Encoded = { _tag: "bdo", children: [] }
- * console.log(encoded._tag) // "bdo"
+ * encoded._tag // => "bdo"
  * ```
  *
  * @category elements
@@ -1176,11 +1176,11 @@ export declare namespace Bdo {
  *
  * **Example** (Construct the Bgsound node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Bgsound node"
  * import { Bgsound } from "@beep/html/Html.model"
  *
  * const node = Bgsound.make({})
- * console.log(node._tag) // "bgsound"
+ * node._tag // => "bgsound"
  * ```
  *
  * @category elements
@@ -1198,11 +1198,11 @@ export class Bgsound extends S.TaggedClass<Bgsound>($I`Bgsound`)(
  *
  * **Example** (Encoded shape of Bgsound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Bgsound"
  * import { Bgsound } from "@beep/html/Html.model"
  *
  * const encoded: Bgsound.Encoded = { _tag: "bgsound" }
- * console.log(encoded._tag) // "bgsound"
+ * encoded._tag // => "bgsound"
  * ```
  *
  * @category elements
@@ -1224,11 +1224,11 @@ export declare namespace Bgsound {
  *
  * **Example** (Construct the Big node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Big node"
  * import { Big } from "@beep/html/Html.model"
  *
  * const node = Big.make({ children: [] })
- * console.log(node._tag) // "big"
+ * node._tag // => "big"
  * ```
  *
  * @category elements
@@ -1247,11 +1247,11 @@ export class Big extends S.TaggedClass<Big>($I`Big`)(
  *
  * **Example** (Encoded shape of Big)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Big"
  * import { Big } from "@beep/html/Html.model"
  *
  * const encoded: Big.Encoded = { _tag: "big", children: [] }
- * console.log(encoded._tag) // "big"
+ * encoded._tag // => "big"
  * ```
  *
  * @category elements
@@ -1275,11 +1275,11 @@ export declare namespace Big {
  *
  * **Example** (Construct the Blink node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Blink node"
  * import { Blink } from "@beep/html/Html.model"
  *
  * const node = Blink.make({ children: [] })
- * console.log(node._tag) // "blink"
+ * node._tag // => "blink"
  * ```
  *
  * @category elements
@@ -1298,11 +1298,11 @@ export class Blink extends S.TaggedClass<Blink>($I`Blink`)(
  *
  * **Example** (Encoded shape of Blink)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Blink"
  * import { Blink } from "@beep/html/Html.model"
  *
  * const encoded: Blink.Encoded = { _tag: "blink", children: [] }
- * console.log(encoded._tag) // "blink"
+ * encoded._tag // => "blink"
  * ```
  *
  * @category elements
@@ -1326,11 +1326,11 @@ export declare namespace Blink {
  *
  * **Example** (Construct the Blockquote node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Blockquote node"
  * import { Blockquote } from "@beep/html/Html.model"
  *
  * const node = Blockquote.make({ children: [] })
- * console.log(node._tag) // "blockquote"
+ * node._tag // => "blockquote"
  * ```
  *
  * @category elements
@@ -1350,11 +1350,11 @@ export class Blockquote extends S.TaggedClass<Blockquote>($I`Blockquote`)(
  *
  * **Example** (Encoded shape of Blockquote)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Blockquote"
  * import { Blockquote } from "@beep/html/Html.model"
  *
  * const encoded: Blockquote.Encoded = { _tag: "blockquote", children: [] }
- * console.log(encoded._tag) // "blockquote"
+ * encoded._tag // => "blockquote"
  * ```
  *
  * @category elements
@@ -1380,11 +1380,11 @@ export declare namespace Blockquote {
  *
  * **Example** (Construct the Body node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Body node"
  * import { Body } from "@beep/html/Html.model"
  *
  * const node = Body.make({ children: [] })
- * console.log(node._tag) // "body"
+ * node._tag // => "body"
  * ```
  *
  * @category elements
@@ -1432,11 +1432,11 @@ export class Body extends S.TaggedClass<Body>($I`Body`)(
  *
  * **Example** (Encoded shape of Body)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Body"
  * import { Body } from "@beep/html/Html.model"
  *
  * const encoded: Body.Encoded = { _tag: "body", children: [] }
- * console.log(encoded._tag) // "body"
+ * encoded._tag // => "body"
  * ```
  *
  * @category elements
@@ -1518,11 +1518,11 @@ export declare namespace Body {
  *
  * **Example** (Construct the Br node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Br node"
  * import { Br } from "@beep/html/Html.model"
  *
  * const node = Br.make({})
- * console.log(node._tag) // "br"
+ * node._tag // => "br"
  * ```
  *
  * @category elements
@@ -1541,11 +1541,11 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
  *
  * **Example** (Encoded shape of Br)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Br"
  * import { Br } from "@beep/html/Html.model"
  *
  * const encoded: Br.Encoded = { _tag: "br" }
- * console.log(encoded._tag) // "br"
+ * encoded._tag // => "br"
  * ```
  *
  * @category elements
@@ -1569,11 +1569,11 @@ export declare namespace Br {
  *
  * **Example** (Construct the Button node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Button node"
  * import { Button } from "@beep/html/Html.model"
  *
  * const node = Button.make({ children: [] })
- * console.log(node._tag) // "button"
+ * node._tag // => "button"
  * ```
  *
  * @category elements
@@ -1620,11 +1620,11 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
  *
  * **Example** (Encoded shape of Button)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Button"
  * import { Button } from "@beep/html/Html.model"
  *
  * const encoded: Button.Encoded = { _tag: "button", children: [] }
- * console.log(encoded._tag) // "button"
+ * encoded._tag // => "button"
  * ```
  *
  * @category elements
@@ -1688,11 +1688,11 @@ export declare namespace Button {
  *
  * **Example** (Construct the Canvas node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Canvas node"
  * import { Canvas } from "@beep/html/Html.model"
  *
  * const node = Canvas.make({ children: [] })
- * console.log(node._tag) // "canvas"
+ * node._tag // => "canvas"
  * ```
  *
  * @category elements
@@ -1713,11 +1713,11 @@ export class Canvas extends S.TaggedClass<Canvas>($I`Canvas`)(
  *
  * **Example** (Encoded shape of Canvas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Canvas"
  * import { Canvas } from "@beep/html/Html.model"
  *
  * const encoded: Canvas.Encoded = { _tag: "canvas", children: [] }
- * console.log(encoded._tag) // "canvas"
+ * encoded._tag // => "canvas"
  * ```
  *
  * @category elements
@@ -1745,11 +1745,11 @@ export declare namespace Canvas {
  *
  * **Example** (Construct the Caption node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Caption node"
  * import { Caption } from "@beep/html/Html.model"
  *
  * const node = Caption.make({ children: [] })
- * console.log(node._tag) // "caption"
+ * node._tag // => "caption"
  * ```
  *
  * @category elements
@@ -1769,11 +1769,11 @@ export class Caption extends S.TaggedClass<Caption>($I`Caption`)(
  *
  * **Example** (Encoded shape of Caption)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Caption"
  * import { Caption } from "@beep/html/Html.model"
  *
  * const encoded: Caption.Encoded = { _tag: "caption", children: [] }
- * console.log(encoded._tag) // "caption"
+ * encoded._tag // => "caption"
  * ```
  *
  * @category elements
@@ -1799,11 +1799,11 @@ export declare namespace Caption {
  *
  * **Example** (Construct the Center node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Center node"
  * import { Center } from "@beep/html/Html.model"
  *
  * const node = Center.make({ children: [] })
- * console.log(node._tag) // "center"
+ * node._tag // => "center"
  * ```
  *
  * @category elements
@@ -1822,11 +1822,11 @@ export class Center extends S.TaggedClass<Center>($I`Center`)(
  *
  * **Example** (Encoded shape of Center)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Center"
  * import { Center } from "@beep/html/Html.model"
  *
  * const encoded: Center.Encoded = { _tag: "center", children: [] }
- * console.log(encoded._tag) // "center"
+ * encoded._tag // => "center"
  * ```
  *
  * @category elements
@@ -1850,11 +1850,11 @@ export declare namespace Center {
  *
  * **Example** (Construct the Cite node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Cite node"
  * import { Cite } from "@beep/html/Html.model"
  *
  * const node = Cite.make({ children: [] })
- * console.log(node._tag) // "cite"
+ * node._tag // => "cite"
  * ```
  *
  * @category elements
@@ -1873,11 +1873,11 @@ export class Cite extends S.TaggedClass<Cite>($I`Cite`)(
  *
  * **Example** (Encoded shape of Cite)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Cite"
  * import { Cite } from "@beep/html/Html.model"
  *
  * const encoded: Cite.Encoded = { _tag: "cite", children: [] }
- * console.log(encoded._tag) // "cite"
+ * encoded._tag // => "cite"
  * ```
  *
  * @category elements
@@ -1901,11 +1901,11 @@ export declare namespace Cite {
  *
  * **Example** (Construct the Code node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Code node"
  * import { Code } from "@beep/html/Html.model"
  *
  * const node = Code.make({ children: [] })
- * console.log(node._tag) // "code"
+ * node._tag // => "code"
  * ```
  *
  * @category elements
@@ -1924,11 +1924,11 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
  *
  * **Example** (Encoded shape of Code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Code"
  * import { Code } from "@beep/html/Html.model"
  *
  * const encoded: Code.Encoded = { _tag: "code", children: [] }
- * console.log(encoded._tag) // "code"
+ * encoded._tag // => "code"
  * ```
  *
  * @category elements
@@ -1952,11 +1952,11 @@ export declare namespace Code {
  *
  * **Example** (Construct the Col node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Col node"
  * import { Col } from "@beep/html/Html.model"
  *
  * const node = Col.make({})
- * console.log(node._tag) // "col"
+ * node._tag // => "col"
  * ```
  *
  * @category elements
@@ -1980,11 +1980,11 @@ export class Col extends S.TaggedClass<Col>($I`Col`)(
  *
  * **Example** (Encoded shape of Col)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Col"
  * import { Col } from "@beep/html/Html.model"
  *
  * const encoded: Col.Encoded = { _tag: "col" }
- * console.log(encoded._tag) // "col"
+ * encoded._tag // => "col"
  * ```
  *
  * @category elements
@@ -2018,11 +2018,11 @@ export declare namespace Col {
  *
  * **Example** (Construct the Colgroup node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Colgroup node"
  * import { Colgroup } from "@beep/html/Html.model"
  *
  * const node = Colgroup.make({ children: [] })
- * console.log(node._tag) // "colgroup"
+ * node._tag // => "colgroup"
  * ```
  *
  * @category elements
@@ -2042,11 +2042,11 @@ export class Colgroup extends S.TaggedClass<Colgroup>($I`Colgroup`)(
  *
  * **Example** (Encoded shape of Colgroup)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Colgroup"
  * import { Colgroup } from "@beep/html/Html.model"
  *
  * const encoded: Colgroup.Encoded = { _tag: "colgroup", children: [] }
- * console.log(encoded._tag) // "colgroup"
+ * encoded._tag // => "colgroup"
  * ```
  *
  * @category elements
@@ -2072,11 +2072,11 @@ export declare namespace Colgroup {
  *
  * **Example** (Construct the Data node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Data node"
  * import { Data } from "@beep/html/Html.model"
  *
  * const node = Data.make({ children: [] })
- * console.log(node._tag) // "data"
+ * node._tag // => "data"
  * ```
  *
  * @category elements
@@ -2096,11 +2096,11 @@ export class Data extends S.TaggedClass<Data>($I`Data`)(
  *
  * **Example** (Encoded shape of Data)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Data"
  * import { Data } from "@beep/html/Html.model"
  *
  * const encoded: Data.Encoded = { _tag: "data", children: [] }
- * console.log(encoded._tag) // "data"
+ * encoded._tag // => "data"
  * ```
  *
  * @category elements
@@ -2126,11 +2126,11 @@ export declare namespace Data {
  *
  * **Example** (Construct the Datalist node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Datalist node"
  * import { Datalist } from "@beep/html/Html.model"
  *
  * const node = Datalist.make({ children: [] })
- * console.log(node._tag) // "datalist"
+ * node._tag // => "datalist"
  * ```
  *
  * @category elements
@@ -2149,11 +2149,11 @@ export class Datalist extends S.TaggedClass<Datalist>($I`Datalist`)(
  *
  * **Example** (Encoded shape of Datalist)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Datalist"
  * import { Datalist } from "@beep/html/Html.model"
  *
  * const encoded: Datalist.Encoded = { _tag: "datalist", children: [] }
- * console.log(encoded._tag) // "datalist"
+ * encoded._tag // => "datalist"
  * ```
  *
  * @category elements
@@ -2177,11 +2177,11 @@ export declare namespace Datalist {
  *
  * **Example** (Construct the Dd node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Dd node"
  * import { Dd } from "@beep/html/Html.model"
  *
  * const node = Dd.make({ children: [] })
- * console.log(node._tag) // "dd"
+ * node._tag // => "dd"
  * ```
  *
  * @category elements
@@ -2200,11 +2200,11 @@ export class Dd extends S.TaggedClass<Dd>($I`Dd`)(
  *
  * **Example** (Encoded shape of Dd)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Dd"
  * import { Dd } from "@beep/html/Html.model"
  *
  * const encoded: Dd.Encoded = { _tag: "dd", children: [] }
- * console.log(encoded._tag) // "dd"
+ * encoded._tag // => "dd"
  * ```
  *
  * @category elements
@@ -2228,11 +2228,11 @@ export declare namespace Dd {
  *
  * **Example** (Construct the Del node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Del node"
  * import { Del } from "@beep/html/Html.model"
  *
  * const node = Del.make({ children: [] })
- * console.log(node._tag) // "del"
+ * node._tag // => "del"
  * ```
  *
  * @category elements
@@ -2253,11 +2253,11 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
  *
  * **Example** (Encoded shape of Del)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Del"
  * import { Del } from "@beep/html/Html.model"
  *
  * const encoded: Del.Encoded = { _tag: "del", children: [] }
- * console.log(encoded._tag) // "del"
+ * encoded._tag // => "del"
  * ```
  *
  * @category elements
@@ -2285,11 +2285,11 @@ export declare namespace Del {
  *
  * **Example** (Construct the Details node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Details node"
  * import { Details } from "@beep/html/Html.model"
  *
  * const node = Details.make({ children: [] })
- * console.log(node._tag) // "details"
+ * node._tag // => "details"
  * ```
  *
  * @category elements
@@ -2310,11 +2310,11 @@ export class Details extends S.TaggedClass<Details>($I`Details`)(
  *
  * **Example** (Encoded shape of Details)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Details"
  * import { Details } from "@beep/html/Html.model"
  *
  * const encoded: Details.Encoded = { _tag: "details", children: [] }
- * console.log(encoded._tag) // "details"
+ * encoded._tag // => "details"
  * ```
  *
  * @category elements
@@ -2342,11 +2342,11 @@ export declare namespace Details {
  *
  * **Example** (Construct the Dfn node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Dfn node"
  * import { Dfn } from "@beep/html/Html.model"
  *
  * const node = Dfn.make({ children: [] })
- * console.log(node._tag) // "dfn"
+ * node._tag // => "dfn"
  * ```
  *
  * @category elements
@@ -2365,11 +2365,11 @@ export class Dfn extends S.TaggedClass<Dfn>($I`Dfn`)(
  *
  * **Example** (Encoded shape of Dfn)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Dfn"
  * import { Dfn } from "@beep/html/Html.model"
  *
  * const encoded: Dfn.Encoded = { _tag: "dfn", children: [] }
- * console.log(encoded._tag) // "dfn"
+ * encoded._tag // => "dfn"
  * ```
  *
  * @category elements
@@ -2393,11 +2393,11 @@ export declare namespace Dfn {
  *
  * **Example** (Construct the Dialog node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Dialog node"
  * import { Dialog } from "@beep/html/Html.model"
  *
  * const node = Dialog.make({ children: [] })
- * console.log(node._tag) // "dialog"
+ * node._tag // => "dialog"
  * ```
  *
  * @category elements
@@ -2420,11 +2420,11 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
  *
  * **Example** (Encoded shape of Dialog)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Dialog"
  * import { Dialog } from "@beep/html/Html.model"
  *
  * const encoded: Dialog.Encoded = { _tag: "dialog", children: [] }
- * console.log(encoded._tag) // "dialog"
+ * encoded._tag // => "dialog"
  * ```
  *
  * @category elements
@@ -2452,11 +2452,11 @@ export declare namespace Dialog {
  *
  * **Example** (Construct the DirElement node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the DirElement node"
  * import { DirElement } from "@beep/html/Html.model"
  *
  * const node = DirElement.make({ children: [] })
- * console.log(node._tag) // "dir"
+ * node._tag // => "dir"
  * ```
  *
  * @category elements
@@ -2475,11 +2475,11 @@ export class DirElement extends S.TaggedClass<DirElement>($I`DirElement`)(
  *
  * **Example** (Encoded shape of DirElement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of DirElement"
  * import { DirElement } from "@beep/html/Html.model"
  *
  * const encoded: DirElement.Encoded = { _tag: "dir", children: [] }
- * console.log(encoded._tag) // "dir"
+ * encoded._tag // => "dir"
  * ```
  *
  * @category elements
@@ -2503,11 +2503,11 @@ export declare namespace DirElement {
  *
  * **Example** (Construct the Div node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Div node"
  * import { Div } from "@beep/html/Html.model"
  *
  * const node = Div.make({ children: [] })
- * console.log(node._tag) // "div"
+ * node._tag // => "div"
  * ```
  *
  * @category elements
@@ -2527,11 +2527,11 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
  *
  * **Example** (Encoded shape of Div)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Div"
  * import { Div } from "@beep/html/Html.model"
  *
  * const encoded: Div.Encoded = { _tag: "div", children: [] }
- * console.log(encoded._tag) // "div"
+ * encoded._tag // => "div"
  * ```
  *
  * @category elements
@@ -2557,11 +2557,11 @@ export declare namespace Div {
  *
  * **Example** (Construct the Dl node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Dl node"
  * import { Dl } from "@beep/html/Html.model"
  *
  * const node = Dl.make({ children: [] })
- * console.log(node._tag) // "dl"
+ * node._tag // => "dl"
  * ```
  *
  * @category elements
@@ -2581,11 +2581,11 @@ export class Dl extends S.TaggedClass<Dl>($I`Dl`)(
  *
  * **Example** (Encoded shape of Dl)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Dl"
  * import { Dl } from "@beep/html/Html.model"
  *
  * const encoded: Dl.Encoded = { _tag: "dl", children: [] }
- * console.log(encoded._tag) // "dl"
+ * encoded._tag // => "dl"
  * ```
  *
  * @category elements
@@ -2611,11 +2611,11 @@ export declare namespace Dl {
  *
  * **Example** (Construct the Dt node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Dt node"
  * import { Dt } from "@beep/html/Html.model"
  *
  * const node = Dt.make({ children: [] })
- * console.log(node._tag) // "dt"
+ * node._tag // => "dt"
  * ```
  *
  * @category elements
@@ -2634,11 +2634,11 @@ export class Dt extends S.TaggedClass<Dt>($I`Dt`)(
  *
  * **Example** (Encoded shape of Dt)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Dt"
  * import { Dt } from "@beep/html/Html.model"
  *
  * const encoded: Dt.Encoded = { _tag: "dt", children: [] }
- * console.log(encoded._tag) // "dt"
+ * encoded._tag // => "dt"
  * ```
  *
  * @category elements
@@ -2662,11 +2662,11 @@ export declare namespace Dt {
  *
  * **Example** (Construct the Em node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Em node"
  * import { Em } from "@beep/html/Html.model"
  *
  * const node = Em.make({ children: [] })
- * console.log(node._tag) // "em"
+ * node._tag // => "em"
  * ```
  *
  * @category elements
@@ -2685,11 +2685,11 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
  *
  * **Example** (Encoded shape of Em)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Em"
  * import { Em } from "@beep/html/Html.model"
  *
  * const encoded: Em.Encoded = { _tag: "em", children: [] }
- * console.log(encoded._tag) // "em"
+ * encoded._tag // => "em"
  * ```
  *
  * @category elements
@@ -2713,11 +2713,11 @@ export declare namespace Em {
  *
  * **Example** (Construct the Embed node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Embed node"
  * import { Embed } from "@beep/html/Html.model"
  *
  * const node = Embed.make({})
- * console.log(node._tag) // "embed"
+ * node._tag // => "embed"
  * ```
  *
  * @category elements
@@ -2743,11 +2743,11 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
  *
  * **Example** (Encoded shape of Embed)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Embed"
  * import { Embed } from "@beep/html/Html.model"
  *
  * const encoded: Embed.Encoded = { _tag: "embed" }
- * console.log(encoded._tag) // "embed"
+ * encoded._tag // => "embed"
  * ```
  *
  * @category elements
@@ -2785,11 +2785,11 @@ export declare namespace Embed {
  *
  * **Example** (Construct the Fieldset node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Fieldset node"
  * import { Fieldset } from "@beep/html/Html.model"
  *
  * const node = Fieldset.make({ children: [] })
- * console.log(node._tag) // "fieldset"
+ * node._tag // => "fieldset"
  * ```
  *
  * @category elements
@@ -2812,11 +2812,11 @@ export class Fieldset extends S.TaggedClass<Fieldset>($I`Fieldset`)(
  *
  * **Example** (Encoded shape of Fieldset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Fieldset"
  * import { Fieldset } from "@beep/html/Html.model"
  *
  * const encoded: Fieldset.Encoded = { _tag: "fieldset", children: [] }
- * console.log(encoded._tag) // "fieldset"
+ * encoded._tag // => "fieldset"
  * ```
  *
  * @category elements
@@ -2848,11 +2848,11 @@ export declare namespace Fieldset {
  *
  * **Example** (Construct the Figcaption node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Figcaption node"
  * import { Figcaption } from "@beep/html/Html.model"
  *
  * const node = Figcaption.make({ children: [] })
- * console.log(node._tag) // "figcaption"
+ * node._tag // => "figcaption"
  * ```
  *
  * @category elements
@@ -2871,11 +2871,11 @@ export class Figcaption extends S.TaggedClass<Figcaption>($I`Figcaption`)(
  *
  * **Example** (Encoded shape of Figcaption)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Figcaption"
  * import { Figcaption } from "@beep/html/Html.model"
  *
  * const encoded: Figcaption.Encoded = { _tag: "figcaption", children: [] }
- * console.log(encoded._tag) // "figcaption"
+ * encoded._tag // => "figcaption"
  * ```
  *
  * @category elements
@@ -2899,11 +2899,11 @@ export declare namespace Figcaption {
  *
  * **Example** (Construct the Figure node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Figure node"
  * import { Figure } from "@beep/html/Html.model"
  *
  * const node = Figure.make({ children: [] })
- * console.log(node._tag) // "figure"
+ * node._tag // => "figure"
  * ```
  *
  * @category elements
@@ -2922,11 +2922,11 @@ export class Figure extends S.TaggedClass<Figure>($I`Figure`)(
  *
  * **Example** (Encoded shape of Figure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Figure"
  * import { Figure } from "@beep/html/Html.model"
  *
  * const encoded: Figure.Encoded = { _tag: "figure", children: [] }
- * console.log(encoded._tag) // "figure"
+ * encoded._tag // => "figure"
  * ```
  *
  * @category elements
@@ -2950,11 +2950,11 @@ export declare namespace Figure {
  *
  * **Example** (Construct the Font node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Font node"
  * import { Font } from "@beep/html/Html.model"
  *
  * const node = Font.make({ children: [] })
- * console.log(node._tag) // "font"
+ * node._tag // => "font"
  * ```
  *
  * @category elements
@@ -2973,11 +2973,11 @@ export class Font extends S.TaggedClass<Font>($I`Font`)(
  *
  * **Example** (Encoded shape of Font)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Font"
  * import { Font } from "@beep/html/Html.model"
  *
  * const encoded: Font.Encoded = { _tag: "font", children: [] }
- * console.log(encoded._tag) // "font"
+ * encoded._tag // => "font"
  * ```
  *
  * @category elements
@@ -3001,11 +3001,11 @@ export declare namespace Font {
  *
  * **Example** (Construct the Footer node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Footer node"
  * import { Footer } from "@beep/html/Html.model"
  *
  * const node = Footer.make({ children: [] })
- * console.log(node._tag) // "footer"
+ * node._tag // => "footer"
  * ```
  *
  * @category elements
@@ -3024,11 +3024,11 @@ export class Footer extends S.TaggedClass<Footer>($I`Footer`)(
  *
  * **Example** (Encoded shape of Footer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Footer"
  * import { Footer } from "@beep/html/Html.model"
  *
  * const encoded: Footer.Encoded = { _tag: "footer", children: [] }
- * console.log(encoded._tag) // "footer"
+ * encoded._tag // => "footer"
  * ```
  *
  * @category elements
@@ -3052,11 +3052,11 @@ export declare namespace Footer {
  *
  * **Example** (Construct the Form node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Form node"
  * import { Form } from "@beep/html/Html.model"
  *
  * const node = Form.make({ children: [] })
- * console.log(node._tag) // "form"
+ * node._tag // => "form"
  * ```
  *
  * @category elements
@@ -3094,11 +3094,11 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
  *
  * **Example** (Encoded shape of Form)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Form"
  * import { Form } from "@beep/html/Html.model"
  *
  * const encoded: Form.Encoded = { _tag: "form", children: [] }
- * console.log(encoded._tag) // "form"
+ * encoded._tag // => "form"
  * ```
  *
  * @category elements
@@ -3152,11 +3152,11 @@ export declare namespace Form {
  *
  * **Example** (Construct the Frame node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Frame node"
  * import { Frame } from "@beep/html/Html.model"
  *
  * const node = Frame.make({})
- * console.log(node._tag) // "frame"
+ * node._tag // => "frame"
  * ```
  *
  * @category elements
@@ -3174,11 +3174,11 @@ export class Frame extends S.TaggedClass<Frame>($I`Frame`)(
  *
  * **Example** (Encoded shape of Frame)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Frame"
  * import { Frame } from "@beep/html/Html.model"
  *
  * const encoded: Frame.Encoded = { _tag: "frame" }
- * console.log(encoded._tag) // "frame"
+ * encoded._tag // => "frame"
  * ```
  *
  * @category elements
@@ -3200,11 +3200,11 @@ export declare namespace Frame {
  *
  * **Example** (Construct the Frameset node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Frameset node"
  * import { Frameset } from "@beep/html/Html.model"
  *
  * const node = Frameset.make({ children: [] })
- * console.log(node._tag) // "frameset"
+ * node._tag // => "frameset"
  * ```
  *
  * @category elements
@@ -3223,11 +3223,11 @@ export class Frameset extends S.TaggedClass<Frameset>($I`Frameset`)(
  *
  * **Example** (Encoded shape of Frameset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Frameset"
  * import { Frameset } from "@beep/html/Html.model"
  *
  * const encoded: Frameset.Encoded = { _tag: "frameset", children: [] }
- * console.log(encoded._tag) // "frameset"
+ * encoded._tag // => "frameset"
  * ```
  *
  * @category elements
@@ -3251,11 +3251,11 @@ export declare namespace Frameset {
  *
  * **Example** (Construct the H1 node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the H1 node"
  * import { H1 } from "@beep/html/Html.model"
  *
  * const node = H1.make({ children: [] })
- * console.log(node._tag) // "h1"
+ * node._tag // => "h1"
  * ```
  *
  * @category elements
@@ -3275,11 +3275,11 @@ export class H1 extends S.TaggedClass<H1>($I`H1`)(
  *
  * **Example** (Encoded shape of H1)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of H1"
  * import { H1 } from "@beep/html/Html.model"
  *
  * const encoded: H1.Encoded = { _tag: "h1", children: [] }
- * console.log(encoded._tag) // "h1"
+ * encoded._tag // => "h1"
  * ```
  *
  * @category elements
@@ -3305,11 +3305,11 @@ export declare namespace H1 {
  *
  * **Example** (Construct the H2 node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the H2 node"
  * import { H2 } from "@beep/html/Html.model"
  *
  * const node = H2.make({ children: [] })
- * console.log(node._tag) // "h2"
+ * node._tag // => "h2"
  * ```
  *
  * @category elements
@@ -3329,11 +3329,11 @@ export class H2 extends S.TaggedClass<H2>($I`H2`)(
  *
  * **Example** (Encoded shape of H2)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of H2"
  * import { H2 } from "@beep/html/Html.model"
  *
  * const encoded: H2.Encoded = { _tag: "h2", children: [] }
- * console.log(encoded._tag) // "h2"
+ * encoded._tag // => "h2"
  * ```
  *
  * @category elements
@@ -3359,11 +3359,11 @@ export declare namespace H2 {
  *
  * **Example** (Construct the H3 node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the H3 node"
  * import { H3 } from "@beep/html/Html.model"
  *
  * const node = H3.make({ children: [] })
- * console.log(node._tag) // "h3"
+ * node._tag // => "h3"
  * ```
  *
  * @category elements
@@ -3383,11 +3383,11 @@ export class H3 extends S.TaggedClass<H3>($I`H3`)(
  *
  * **Example** (Encoded shape of H3)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of H3"
  * import { H3 } from "@beep/html/Html.model"
  *
  * const encoded: H3.Encoded = { _tag: "h3", children: [] }
- * console.log(encoded._tag) // "h3"
+ * encoded._tag // => "h3"
  * ```
  *
  * @category elements
@@ -3413,11 +3413,11 @@ export declare namespace H3 {
  *
  * **Example** (Construct the H4 node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the H4 node"
  * import { H4 } from "@beep/html/Html.model"
  *
  * const node = H4.make({ children: [] })
- * console.log(node._tag) // "h4"
+ * node._tag // => "h4"
  * ```
  *
  * @category elements
@@ -3437,11 +3437,11 @@ export class H4 extends S.TaggedClass<H4>($I`H4`)(
  *
  * **Example** (Encoded shape of H4)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of H4"
  * import { H4 } from "@beep/html/Html.model"
  *
  * const encoded: H4.Encoded = { _tag: "h4", children: [] }
- * console.log(encoded._tag) // "h4"
+ * encoded._tag // => "h4"
  * ```
  *
  * @category elements
@@ -3467,11 +3467,11 @@ export declare namespace H4 {
  *
  * **Example** (Construct the H5 node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the H5 node"
  * import { H5 } from "@beep/html/Html.model"
  *
  * const node = H5.make({ children: [] })
- * console.log(node._tag) // "h5"
+ * node._tag // => "h5"
  * ```
  *
  * @category elements
@@ -3491,11 +3491,11 @@ export class H5 extends S.TaggedClass<H5>($I`H5`)(
  *
  * **Example** (Encoded shape of H5)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of H5"
  * import { H5 } from "@beep/html/Html.model"
  *
  * const encoded: H5.Encoded = { _tag: "h5", children: [] }
- * console.log(encoded._tag) // "h5"
+ * encoded._tag // => "h5"
  * ```
  *
  * @category elements
@@ -3521,11 +3521,11 @@ export declare namespace H5 {
  *
  * **Example** (Construct the H6 node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the H6 node"
  * import { H6 } from "@beep/html/Html.model"
  *
  * const node = H6.make({ children: [] })
- * console.log(node._tag) // "h6"
+ * node._tag // => "h6"
  * ```
  *
  * @category elements
@@ -3545,11 +3545,11 @@ export class H6 extends S.TaggedClass<H6>($I`H6`)(
  *
  * **Example** (Encoded shape of H6)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of H6"
  * import { H6 } from "@beep/html/Html.model"
  *
  * const encoded: H6.Encoded = { _tag: "h6", children: [] }
- * console.log(encoded._tag) // "h6"
+ * encoded._tag // => "h6"
  * ```
  *
  * @category elements
@@ -3575,11 +3575,11 @@ export declare namespace H6 {
  *
  * **Example** (Construct the Head node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Head node"
  * import { Head } from "@beep/html/Html.model"
  *
  * const node = Head.make({ children: [] })
- * console.log(node._tag) // "head"
+ * node._tag // => "head"
  * ```
  *
  * @category elements
@@ -3599,11 +3599,11 @@ export class Head extends S.TaggedClass<Head>($I`Head`)(
  *
  * **Example** (Encoded shape of Head)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Head"
  * import { Head } from "@beep/html/Html.model"
  *
  * const encoded: Head.Encoded = { _tag: "head", children: [] }
- * console.log(encoded._tag) // "head"
+ * encoded._tag // => "head"
  * ```
  *
  * @category elements
@@ -3629,11 +3629,11 @@ export declare namespace Head {
  *
  * **Example** (Construct the Header node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Header node"
  * import { Header } from "@beep/html/Html.model"
  *
  * const node = Header.make({ children: [] })
- * console.log(node._tag) // "header"
+ * node._tag // => "header"
  * ```
  *
  * @category elements
@@ -3652,11 +3652,11 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
  *
  * **Example** (Encoded shape of Header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Header"
  * import { Header } from "@beep/html/Html.model"
  *
  * const encoded: Header.Encoded = { _tag: "header", children: [] }
- * console.log(encoded._tag) // "header"
+ * encoded._tag // => "header"
  * ```
  *
  * @category elements
@@ -3680,11 +3680,11 @@ export declare namespace Header {
  *
  * **Example** (Construct the Hgroup node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Hgroup node"
  * import { Hgroup } from "@beep/html/Html.model"
  *
  * const node = Hgroup.make({ children: [] })
- * console.log(node._tag) // "hgroup"
+ * node._tag // => "hgroup"
  * ```
  *
  * @category elements
@@ -3703,11 +3703,11 @@ export class Hgroup extends S.TaggedClass<Hgroup>($I`Hgroup`)(
  *
  * **Example** (Encoded shape of Hgroup)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Hgroup"
  * import { Hgroup } from "@beep/html/Html.model"
  *
  * const encoded: Hgroup.Encoded = { _tag: "hgroup", children: [] }
- * console.log(encoded._tag) // "hgroup"
+ * encoded._tag // => "hgroup"
  * ```
  *
  * @category elements
@@ -3731,11 +3731,11 @@ export declare namespace Hgroup {
  *
  * **Example** (Construct the Hr node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Hr node"
  * import { Hr } from "@beep/html/Html.model"
  *
  * const node = Hr.make({})
- * console.log(node._tag) // "hr"
+ * node._tag // => "hr"
  * ```
  *
  * @category elements
@@ -3758,11 +3758,11 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
  *
  * **Example** (Encoded shape of Hr)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Hr"
  * import { Hr } from "@beep/html/Html.model"
  *
  * const encoded: Hr.Encoded = { _tag: "hr" }
- * console.log(encoded._tag) // "hr"
+ * encoded._tag // => "hr"
  * ```
  *
  * @category elements
@@ -3794,11 +3794,11 @@ export declare namespace Hr {
  *
  * **Example** (Construct the Html node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Html node"
  * import { Html } from "@beep/html/Html.model"
  *
  * const node = Html.make({ children: [] })
- * console.log(node._tag) // "html"
+ * node._tag // => "html"
  * ```
  *
  * @category elements
@@ -3819,11 +3819,11 @@ export class Html extends S.TaggedClass<Html>($I`Html`)(
  *
  * **Example** (Encoded shape of Html)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Html"
  * import { Html } from "@beep/html/Html.model"
  *
  * const encoded: Html.Encoded = { _tag: "html", children: [] }
- * console.log(encoded._tag) // "html"
+ * encoded._tag // => "html"
  * ```
  *
  * @category elements
@@ -3851,11 +3851,11 @@ export declare namespace Html {
  *
  * **Example** (Construct the I node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the I node"
  * import { I } from "@beep/html/Html.model"
  *
  * const node = I.make({ children: [] })
- * console.log(node._tag) // "i"
+ * node._tag // => "i"
  * ```
  *
  * @category elements
@@ -3874,11 +3874,11 @@ export class I extends S.TaggedClass<I>($I`I`)(
  *
  * **Example** (Encoded shape of I)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of I"
  * import { I } from "@beep/html/Html.model"
  *
  * const encoded: I.Encoded = { _tag: "i", children: [] }
- * console.log(encoded._tag) // "i"
+ * encoded._tag // => "i"
  * ```
  *
  * @category elements
@@ -3902,11 +3902,11 @@ export declare namespace I {
  *
  * **Example** (Construct the Iframe node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Iframe node"
  * import { Iframe } from "@beep/html/Html.model"
  *
  * const node = Iframe.make({ content: "" })
- * console.log(node._tag) // "iframe"
+ * node._tag // => "iframe"
  * ```
  *
  * @category elements
@@ -3963,11 +3963,11 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
  *
  * **Example** (Encoded shape of Iframe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Iframe"
  * import { Iframe } from "@beep/html/Html.model"
  *
  * const encoded: Iframe.Encoded = { _tag: "iframe", content: "" }
- * console.log(encoded._tag) // "iframe"
+ * encoded._tag // => "iframe"
  * ```
  *
  * @category elements
@@ -4041,11 +4041,11 @@ export declare namespace Iframe {
  *
  * **Example** (Construct the Img node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Img node"
  * import { Img } from "@beep/html/Html.model"
  *
  * const node = Img.make({})
- * console.log(node._tag) // "img"
+ * node._tag // => "img"
  * ```
  *
  * @category elements
@@ -4090,11 +4090,11 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
  *
  * **Example** (Encoded shape of Img)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Img"
  * import { Img } from "@beep/html/Html.model"
  *
  * const encoded: Img.Encoded = { _tag: "img" }
- * console.log(encoded._tag) // "img"
+ * encoded._tag // => "img"
  * ```
  *
  * @category elements
@@ -4168,11 +4168,11 @@ export declare namespace Img {
  *
  * **Example** (Construct the Input node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Input node"
  * import { Input } from "@beep/html/Html.model"
  *
  * const node = Input.make({})
- * console.log(node._tag) // "input"
+ * node._tag // => "input"
  * ```
  *
  * @category elements
@@ -4261,11 +4261,11 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
  *
  * **Example** (Encoded shape of Input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Input"
  * import { Input } from "@beep/html/Html.model"
  *
  * const encoded: Input.Encoded = { _tag: "input" }
- * console.log(encoded._tag) // "input"
+ * encoded._tag // => "input"
  * ```
  *
  * @category elements
@@ -4390,11 +4390,11 @@ export declare namespace Input {
  *
  * **Example** (Construct the Ins node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Ins node"
  * import { Ins } from "@beep/html/Html.model"
  *
  * const node = Ins.make({ children: [] })
- * console.log(node._tag) // "ins"
+ * node._tag // => "ins"
  * ```
  *
  * @category elements
@@ -4415,11 +4415,11 @@ export class Ins extends S.TaggedClass<Ins>($I`Ins`)(
  *
  * **Example** (Encoded shape of Ins)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Ins"
  * import { Ins } from "@beep/html/Html.model"
  *
  * const encoded: Ins.Encoded = { _tag: "ins", children: [] }
- * console.log(encoded._tag) // "ins"
+ * encoded._tag // => "ins"
  * ```
  *
  * @category elements
@@ -4447,11 +4447,11 @@ export declare namespace Ins {
  *
  * **Example** (Construct the Isindex node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Isindex node"
  * import { Isindex } from "@beep/html/Html.model"
  *
  * const node = Isindex.make({})
- * console.log(node._tag) // "isindex"
+ * node._tag // => "isindex"
  * ```
  *
  * @category elements
@@ -4469,11 +4469,11 @@ export class Isindex extends S.TaggedClass<Isindex>($I`Isindex`)(
  *
  * **Example** (Encoded shape of Isindex)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Isindex"
  * import { Isindex } from "@beep/html/Html.model"
  *
  * const encoded: Isindex.Encoded = { _tag: "isindex" }
- * console.log(encoded._tag) // "isindex"
+ * encoded._tag // => "isindex"
  * ```
  *
  * @category elements
@@ -4495,11 +4495,11 @@ export declare namespace Isindex {
  *
  * **Example** (Construct the Kbd node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Kbd node"
  * import { Kbd } from "@beep/html/Html.model"
  *
  * const node = Kbd.make({ children: [] })
- * console.log(node._tag) // "kbd"
+ * node._tag // => "kbd"
  * ```
  *
  * @category elements
@@ -4518,11 +4518,11 @@ export class Kbd extends S.TaggedClass<Kbd>($I`Kbd`)(
  *
  * **Example** (Encoded shape of Kbd)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Kbd"
  * import { Kbd } from "@beep/html/Html.model"
  *
  * const encoded: Kbd.Encoded = { _tag: "kbd", children: [] }
- * console.log(encoded._tag) // "kbd"
+ * encoded._tag // => "kbd"
  * ```
  *
  * @category elements
@@ -4546,11 +4546,11 @@ export declare namespace Kbd {
  *
  * **Example** (Construct the Keygen node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Keygen node"
  * import { Keygen } from "@beep/html/Html.model"
  *
  * const node = Keygen.make({})
- * console.log(node._tag) // "keygen"
+ * node._tag // => "keygen"
  * ```
  *
  * @category elements
@@ -4568,11 +4568,11 @@ export class Keygen extends S.TaggedClass<Keygen>($I`Keygen`)(
  *
  * **Example** (Encoded shape of Keygen)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Keygen"
  * import { Keygen } from "@beep/html/Html.model"
  *
  * const encoded: Keygen.Encoded = { _tag: "keygen" }
- * console.log(encoded._tag) // "keygen"
+ * encoded._tag // => "keygen"
  * ```
  *
  * @category elements
@@ -4594,11 +4594,11 @@ export declare namespace Keygen {
  *
  * **Example** (Construct the Label node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Label node"
  * import { Label } from "@beep/html/Html.model"
  *
  * const node = Label.make({ children: [] })
- * console.log(node._tag) // "label"
+ * node._tag // => "label"
  * ```
  *
  * @category elements
@@ -4618,11 +4618,11 @@ export class Label extends S.TaggedClass<Label>($I`Label`)(
  *
  * **Example** (Encoded shape of Label)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Label"
  * import { Label } from "@beep/html/Html.model"
  *
  * const encoded: Label.Encoded = { _tag: "label", children: [] }
- * console.log(encoded._tag) // "label"
+ * encoded._tag // => "label"
  * ```
  *
  * @category elements
@@ -4648,11 +4648,11 @@ export declare namespace Label {
  *
  * **Example** (Construct the Legend node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Legend node"
  * import { Legend } from "@beep/html/Html.model"
  *
  * const node = Legend.make({ children: [] })
- * console.log(node._tag) // "legend"
+ * node._tag // => "legend"
  * ```
  *
  * @category elements
@@ -4672,11 +4672,11 @@ export class Legend extends S.TaggedClass<Legend>($I`Legend`)(
  *
  * **Example** (Encoded shape of Legend)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Legend"
  * import { Legend } from "@beep/html/Html.model"
  *
  * const encoded: Legend.Encoded = { _tag: "legend", children: [] }
- * console.log(encoded._tag) // "legend"
+ * encoded._tag // => "legend"
  * ```
  *
  * @category elements
@@ -4702,11 +4702,11 @@ export declare namespace Legend {
  *
  * **Example** (Construct the Li node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Li node"
  * import { Li } from "@beep/html/Html.model"
  *
  * const node = Li.make({ children: [] })
- * console.log(node._tag) // "li"
+ * node._tag // => "li"
  * ```
  *
  * @category elements
@@ -4727,11 +4727,11 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
  *
  * **Example** (Encoded shape of Li)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Li"
  * import { Li } from "@beep/html/Html.model"
  *
  * const encoded: Li.Encoded = { _tag: "li", children: [] }
- * console.log(encoded._tag) // "li"
+ * encoded._tag // => "li"
  * ```
  *
  * @category elements
@@ -4759,11 +4759,11 @@ export declare namespace Li {
  *
  * **Example** (Construct the Link node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Link node"
  * import { Link } from "@beep/html/Html.model"
  *
  * const node = Link.make({})
- * console.log(node._tag) // "link"
+ * node._tag // => "link"
  * ```
  *
  * @category elements
@@ -4820,11 +4820,11 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
  *
  * **Example** (Encoded shape of Link)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Link"
  * import { Link } from "@beep/html/Html.model"
  *
  * const encoded: Link.Encoded = { _tag: "link" }
- * console.log(encoded._tag) // "link"
+ * encoded._tag // => "link"
  * ```
  *
  * @category elements
@@ -4912,11 +4912,11 @@ export declare namespace Link {
  *
  * **Example** (Construct the Listing node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Listing node"
  * import { Listing } from "@beep/html/Html.model"
  *
  * const node = Listing.make({ children: [] })
- * console.log(node._tag) // "listing"
+ * node._tag // => "listing"
  * ```
  *
  * @category elements
@@ -4935,11 +4935,11 @@ export class Listing extends S.TaggedClass<Listing>($I`Listing`)(
  *
  * **Example** (Encoded shape of Listing)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Listing"
  * import { Listing } from "@beep/html/Html.model"
  *
  * const encoded: Listing.Encoded = { _tag: "listing", children: [] }
- * console.log(encoded._tag) // "listing"
+ * encoded._tag // => "listing"
  * ```
  *
  * @category elements
@@ -4963,11 +4963,11 @@ export declare namespace Listing {
  *
  * **Example** (Construct the Main node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Main node"
  * import { Main } from "@beep/html/Html.model"
  *
  * const node = Main.make({ children: [] })
- * console.log(node._tag) // "main"
+ * node._tag // => "main"
  * ```
  *
  * @category elements
@@ -4986,11 +4986,11 @@ export class Main extends S.TaggedClass<Main>($I`Main`)(
  *
  * **Example** (Encoded shape of Main)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Main"
  * import { Main } from "@beep/html/Html.model"
  *
  * const encoded: Main.Encoded = { _tag: "main", children: [] }
- * console.log(encoded._tag) // "main"
+ * encoded._tag // => "main"
  * ```
  *
  * @category elements
@@ -5014,11 +5014,11 @@ export declare namespace Main {
  *
  * **Example** (Construct the MapElement node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the MapElement node"
  * import { MapElement } from "@beep/html/Html.model"
  *
  * const node = MapElement.make({ children: [] })
- * console.log(node._tag) // "map"
+ * node._tag // => "map"
  * ```
  *
  * @category elements
@@ -5038,11 +5038,11 @@ export class MapElement extends S.TaggedClass<MapElement>($I`MapElement`)(
  *
  * **Example** (Encoded shape of MapElement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of MapElement"
  * import { MapElement } from "@beep/html/Html.model"
  *
  * const encoded: MapElement.Encoded = { _tag: "map", children: [] }
- * console.log(encoded._tag) // "map"
+ * encoded._tag // => "map"
  * ```
  *
  * @category elements
@@ -5068,11 +5068,11 @@ export declare namespace MapElement {
  *
  * **Example** (Construct the Mark node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Mark node"
  * import { Mark } from "@beep/html/Html.model"
  *
  * const node = Mark.make({ children: [] })
- * console.log(node._tag) // "mark"
+ * node._tag // => "mark"
  * ```
  *
  * @category elements
@@ -5091,11 +5091,11 @@ export class Mark extends S.TaggedClass<Mark>($I`Mark`)(
  *
  * **Example** (Encoded shape of Mark)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Mark"
  * import { Mark } from "@beep/html/Html.model"
  *
  * const encoded: Mark.Encoded = { _tag: "mark", children: [] }
- * console.log(encoded._tag) // "mark"
+ * encoded._tag // => "mark"
  * ```
  *
  * @category elements
@@ -5119,11 +5119,11 @@ export declare namespace Mark {
  *
  * **Example** (Construct the Marquee node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Marquee node"
  * import { Marquee } from "@beep/html/Html.model"
  *
  * const node = Marquee.make({ children: [] })
- * console.log(node._tag) // "marquee"
+ * node._tag // => "marquee"
  * ```
  *
  * @category elements
@@ -5146,11 +5146,11 @@ export class Marquee extends S.TaggedClass<Marquee>($I`Marquee`)(
  *
  * **Example** (Encoded shape of Marquee)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Marquee"
  * import { Marquee } from "@beep/html/Html.model"
  *
  * const encoded: Marquee.Encoded = { _tag: "marquee", children: [] }
- * console.log(encoded._tag) // "marquee"
+ * encoded._tag // => "marquee"
  * ```
  *
  * @category elements
@@ -5182,11 +5182,11 @@ export declare namespace Marquee {
  *
  * **Example** (Construct the Menu node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Menu node"
  * import { Menu } from "@beep/html/Html.model"
  *
  * const node = Menu.make({ children: [] })
- * console.log(node._tag) // "menu"
+ * node._tag // => "menu"
  * ```
  *
  * @category elements
@@ -5208,11 +5208,11 @@ export class Menu extends S.TaggedClass<Menu>($I`Menu`)(
  *
  * **Example** (Encoded shape of Menu)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Menu"
  * import { Menu } from "@beep/html/Html.model"
  *
  * const encoded: Menu.Encoded = { _tag: "menu", children: [] }
- * console.log(encoded._tag) // "menu"
+ * encoded._tag // => "menu"
  * ```
  *
  * @category elements
@@ -5242,11 +5242,11 @@ export declare namespace Menu {
  *
  * **Example** (Construct the Menuitem node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Menuitem node"
  * import { Menuitem } from "@beep/html/Html.model"
  *
  * const node = Menuitem.make({ children: [] })
- * console.log(node._tag) // "menuitem"
+ * node._tag // => "menuitem"
  * ```
  *
  * @category elements
@@ -5265,11 +5265,11 @@ export class Menuitem extends S.TaggedClass<Menuitem>($I`Menuitem`)(
  *
  * **Example** (Encoded shape of Menuitem)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Menuitem"
  * import { Menuitem } from "@beep/html/Html.model"
  *
  * const encoded: Menuitem.Encoded = { _tag: "menuitem", children: [] }
- * console.log(encoded._tag) // "menuitem"
+ * encoded._tag // => "menuitem"
  * ```
  *
  * @category elements
@@ -5293,11 +5293,11 @@ export declare namespace Menuitem {
  *
  * **Example** (Construct the Meta node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Meta node"
  * import { Meta } from "@beep/html/Html.model"
  *
  * const node = Meta.make({})
- * console.log(node._tag) // "meta"
+ * node._tag // => "meta"
  * ```
  *
  * @category elements
@@ -5329,11 +5329,11 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
  *
  * **Example** (Encoded shape of Meta)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Meta"
  * import { Meta } from "@beep/html/Html.model"
  *
  * const encoded: Meta.Encoded = { _tag: "meta" }
- * console.log(encoded._tag) // "meta"
+ * encoded._tag // => "meta"
  * ```
  *
  * @category elements
@@ -5369,11 +5369,11 @@ export declare namespace Meta {
  *
  * **Example** (Construct the Meter node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Meter node"
  * import { Meter } from "@beep/html/Html.model"
  *
  * const node = Meter.make({ children: [] })
- * console.log(node._tag) // "meter"
+ * node._tag // => "meter"
  * ```
  *
  * @category elements
@@ -5398,11 +5398,11 @@ export class Meter extends S.TaggedClass<Meter>($I`Meter`)(
  *
  * **Example** (Encoded shape of Meter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Meter"
  * import { Meter } from "@beep/html/Html.model"
  *
  * const encoded: Meter.Encoded = { _tag: "meter", children: [] }
- * console.log(encoded._tag) // "meter"
+ * encoded._tag // => "meter"
  * ```
  *
  * @category elements
@@ -5438,11 +5438,11 @@ export declare namespace Meter {
  *
  * **Example** (Construct the Multicol node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Multicol node"
  * import { Multicol } from "@beep/html/Html.model"
  *
  * const node = Multicol.make({ children: [] })
- * console.log(node._tag) // "multicol"
+ * node._tag // => "multicol"
  * ```
  *
  * @category elements
@@ -5461,11 +5461,11 @@ export class Multicol extends S.TaggedClass<Multicol>($I`Multicol`)(
  *
  * **Example** (Encoded shape of Multicol)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Multicol"
  * import { Multicol } from "@beep/html/Html.model"
  *
  * const encoded: Multicol.Encoded = { _tag: "multicol", children: [] }
- * console.log(encoded._tag) // "multicol"
+ * encoded._tag // => "multicol"
  * ```
  *
  * @category elements
@@ -5489,11 +5489,11 @@ export declare namespace Multicol {
  *
  * **Example** (Construct the Nav node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Nav node"
  * import { Nav } from "@beep/html/Html.model"
  *
  * const node = Nav.make({ children: [] })
- * console.log(node._tag) // "nav"
+ * node._tag // => "nav"
  * ```
  *
  * @category elements
@@ -5512,11 +5512,11 @@ export class Nav extends S.TaggedClass<Nav>($I`Nav`)(
  *
  * **Example** (Encoded shape of Nav)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Nav"
  * import { Nav } from "@beep/html/Html.model"
  *
  * const encoded: Nav.Encoded = { _tag: "nav", children: [] }
- * console.log(encoded._tag) // "nav"
+ * encoded._tag // => "nav"
  * ```
  *
  * @category elements
@@ -5540,11 +5540,11 @@ export declare namespace Nav {
  *
  * **Example** (Construct the Nextid node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Nextid node"
  * import { Nextid } from "@beep/html/Html.model"
  *
  * const node = Nextid.make({})
- * console.log(node._tag) // "nextid"
+ * node._tag // => "nextid"
  * ```
  *
  * @category elements
@@ -5562,11 +5562,11 @@ export class Nextid extends S.TaggedClass<Nextid>($I`Nextid`)(
  *
  * **Example** (Encoded shape of Nextid)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Nextid"
  * import { Nextid } from "@beep/html/Html.model"
  *
  * const encoded: Nextid.Encoded = { _tag: "nextid" }
- * console.log(encoded._tag) // "nextid"
+ * encoded._tag // => "nextid"
  * ```
  *
  * @category elements
@@ -5588,11 +5588,11 @@ export declare namespace Nextid {
  *
  * **Example** (Construct the Nobr node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Nobr node"
  * import { Nobr } from "@beep/html/Html.model"
  *
  * const node = Nobr.make({ children: [] })
- * console.log(node._tag) // "nobr"
+ * node._tag // => "nobr"
  * ```
  *
  * @category elements
@@ -5611,11 +5611,11 @@ export class Nobr extends S.TaggedClass<Nobr>($I`Nobr`)(
  *
  * **Example** (Encoded shape of Nobr)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Nobr"
  * import { Nobr } from "@beep/html/Html.model"
  *
  * const encoded: Nobr.Encoded = { _tag: "nobr", children: [] }
- * console.log(encoded._tag) // "nobr"
+ * encoded._tag // => "nobr"
  * ```
  *
  * @category elements
@@ -5639,11 +5639,11 @@ export declare namespace Nobr {
  *
  * **Example** (Construct the Noembed node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Noembed node"
  * import { Noembed } from "@beep/html/Html.model"
  *
  * const node = Noembed.make({ content: "" })
- * console.log(node._tag) // "noembed"
+ * node._tag // => "noembed"
  * ```
  *
  * @category elements
@@ -5662,11 +5662,11 @@ export class Noembed extends S.TaggedClass<Noembed>($I`Noembed`)(
  *
  * **Example** (Encoded shape of Noembed)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Noembed"
  * import { Noembed } from "@beep/html/Html.model"
  *
  * const encoded: Noembed.Encoded = { _tag: "noembed", content: "" }
- * console.log(encoded._tag) // "noembed"
+ * encoded._tag // => "noembed"
  * ```
  *
  * @category elements
@@ -5690,11 +5690,11 @@ export declare namespace Noembed {
  *
  * **Example** (Construct the Noframes node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Noframes node"
  * import { Noframes } from "@beep/html/Html.model"
  *
  * const node = Noframes.make({ content: "" })
- * console.log(node._tag) // "noframes"
+ * node._tag // => "noframes"
  * ```
  *
  * @category elements
@@ -5713,11 +5713,11 @@ export class Noframes extends S.TaggedClass<Noframes>($I`Noframes`)(
  *
  * **Example** (Encoded shape of Noframes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Noframes"
  * import { Noframes } from "@beep/html/Html.model"
  *
  * const encoded: Noframes.Encoded = { _tag: "noframes", content: "" }
- * console.log(encoded._tag) // "noframes"
+ * encoded._tag // => "noframes"
  * ```
  *
  * @category elements
@@ -5741,11 +5741,11 @@ export declare namespace Noframes {
  *
  * **Example** (Construct the Noscript node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Noscript node"
  * import { Noscript } from "@beep/html/Html.model"
  *
  * const node = Noscript.make({ children: [] })
- * console.log(node._tag) // "noscript"
+ * node._tag // => "noscript"
  * ```
  *
  * @category elements
@@ -5764,11 +5764,11 @@ export class Noscript extends S.TaggedClass<Noscript>($I`Noscript`)(
  *
  * **Example** (Encoded shape of Noscript)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Noscript"
  * import { Noscript } from "@beep/html/Html.model"
  *
  * const encoded: Noscript.Encoded = { _tag: "noscript", children: [] }
- * console.log(encoded._tag) // "noscript"
+ * encoded._tag // => "noscript"
  * ```
  *
  * @category elements
@@ -5792,11 +5792,11 @@ export declare namespace Noscript {
  *
  * **Example** (Construct the ObjectElement node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the ObjectElement node"
  * import { ObjectElement } from "@beep/html/Html.model"
  *
  * const node = ObjectElement.make({ children: [] })
- * console.log(node._tag) // "object"
+ * node._tag // => "object"
  * ```
  *
  * @category elements
@@ -5836,11 +5836,11 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
  *
  * **Example** (Encoded shape of ObjectElement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of ObjectElement"
  * import { ObjectElement } from "@beep/html/Html.model"
  *
  * const encoded: ObjectElement.Encoded = { _tag: "object", children: [] }
- * console.log(encoded._tag) // "object"
+ * encoded._tag // => "object"
  * ```
  *
  * @category elements
@@ -5906,11 +5906,11 @@ export declare namespace ObjectElement {
  *
  * **Example** (Construct the Ol node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Ol node"
  * import { Ol } from "@beep/html/Html.model"
  *
  * const node = Ol.make({ children: [] })
- * console.log(node._tag) // "ol"
+ * node._tag // => "ol"
  * ```
  *
  * @category elements
@@ -5933,11 +5933,11 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
  *
  * **Example** (Encoded shape of Ol)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Ol"
  * import { Ol } from "@beep/html/Html.model"
  *
  * const encoded: Ol.Encoded = { _tag: "ol", children: [] }
- * console.log(encoded._tag) // "ol"
+ * encoded._tag // => "ol"
  * ```
  *
  * @category elements
@@ -5969,11 +5969,11 @@ export declare namespace Ol {
  *
  * **Example** (Construct the Optgroup node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Optgroup node"
  * import { Optgroup } from "@beep/html/Html.model"
  *
  * const node = Optgroup.make({ children: [] })
- * console.log(node._tag) // "optgroup"
+ * node._tag // => "optgroup"
  * ```
  *
  * @category elements
@@ -5994,11 +5994,11 @@ export class Optgroup extends S.TaggedClass<Optgroup>($I`Optgroup`)(
  *
  * **Example** (Encoded shape of Optgroup)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Optgroup"
  * import { Optgroup } from "@beep/html/Html.model"
  *
  * const encoded: Optgroup.Encoded = { _tag: "optgroup", children: [] }
- * console.log(encoded._tag) // "optgroup"
+ * encoded._tag // => "optgroup"
  * ```
  *
  * @category elements
@@ -6026,11 +6026,11 @@ export declare namespace Optgroup {
  *
  * **Example** (Construct the Option node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Option node"
  * import { Option } from "@beep/html/Html.model"
  *
  * const node = Option.make({ children: [] })
- * console.log(node._tag) // "option"
+ * node._tag // => "option"
  * ```
  *
  * @category elements
@@ -6054,11 +6054,11 @@ export class Option extends S.TaggedClass<Option>($I`Option`)(
  *
  * **Example** (Encoded shape of Option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Option"
  * import { Option } from "@beep/html/Html.model"
  *
  * const encoded: Option.Encoded = { _tag: "option", children: [] }
- * console.log(encoded._tag) // "option"
+ * encoded._tag // => "option"
  * ```
  *
  * @category elements
@@ -6092,11 +6092,11 @@ export declare namespace Option {
  *
  * **Example** (Construct the Output node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Output node"
  * import { Output } from "@beep/html/Html.model"
  *
  * const node = Output.make({ children: [] })
- * console.log(node._tag) // "output"
+ * node._tag // => "output"
  * ```
  *
  * @category elements
@@ -6120,11 +6120,11 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
  *
  * **Example** (Encoded shape of Output)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Output"
  * import { Output } from "@beep/html/Html.model"
  *
  * const encoded: Output.Encoded = { _tag: "output", children: [] }
- * console.log(encoded._tag) // "output"
+ * encoded._tag // => "output"
  * ```
  *
  * @category elements
@@ -6158,11 +6158,11 @@ export declare namespace Output {
  *
  * **Example** (Construct the P node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the P node"
  * import { P } from "@beep/html/Html.model"
  *
  * const node = P.make({ children: [] })
- * console.log(node._tag) // "p"
+ * node._tag // => "p"
  * ```
  *
  * @category elements
@@ -6182,11 +6182,11 @@ export class P extends S.TaggedClass<P>($I`P`)(
  *
  * **Example** (Encoded shape of P)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of P"
  * import { P } from "@beep/html/Html.model"
  *
  * const encoded: P.Encoded = { _tag: "p", children: [] }
- * console.log(encoded._tag) // "p"
+ * encoded._tag // => "p"
  * ```
  *
  * @category elements
@@ -6212,11 +6212,11 @@ export declare namespace P {
  *
  * **Example** (Construct the Param node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Param node"
  * import { Param } from "@beep/html/Html.model"
  *
  * const node = Param.make({})
- * console.log(node._tag) // "param"
+ * node._tag // => "param"
  * ```
  *
  * @category elements
@@ -6234,11 +6234,11 @@ export class Param extends S.TaggedClass<Param>($I`Param`)(
  *
  * **Example** (Encoded shape of Param)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Param"
  * import { Param } from "@beep/html/Html.model"
  *
  * const encoded: Param.Encoded = { _tag: "param" }
- * console.log(encoded._tag) // "param"
+ * encoded._tag // => "param"
  * ```
  *
  * @category elements
@@ -6260,11 +6260,11 @@ export declare namespace Param {
  *
  * **Example** (Construct the Picture node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Picture node"
  * import { Picture } from "@beep/html/Html.model"
  *
  * const node = Picture.make({ children: [] })
- * console.log(node._tag) // "picture"
+ * node._tag // => "picture"
  * ```
  *
  * @category elements
@@ -6283,11 +6283,11 @@ export class Picture extends S.TaggedClass<Picture>($I`Picture`)(
  *
  * **Example** (Encoded shape of Picture)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Picture"
  * import { Picture } from "@beep/html/Html.model"
  *
  * const encoded: Picture.Encoded = { _tag: "picture", children: [] }
- * console.log(encoded._tag) // "picture"
+ * encoded._tag // => "picture"
  * ```
  *
  * @category elements
@@ -6311,11 +6311,11 @@ export declare namespace Picture {
  *
  * **Example** (Construct the Plaintext node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Plaintext node"
  * import { Plaintext } from "@beep/html/Html.model"
  *
  * const node = Plaintext.make({ content: "" })
- * console.log(node._tag) // "plaintext"
+ * node._tag // => "plaintext"
  * ```
  *
  * @category elements
@@ -6334,11 +6334,11 @@ export class Plaintext extends S.TaggedClass<Plaintext>($I`Plaintext`)(
  *
  * **Example** (Encoded shape of Plaintext)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Plaintext"
  * import { Plaintext } from "@beep/html/Html.model"
  *
  * const encoded: Plaintext.Encoded = { _tag: "plaintext", content: "" }
- * console.log(encoded._tag) // "plaintext"
+ * encoded._tag // => "plaintext"
  * ```
  *
  * @category elements
@@ -6362,11 +6362,11 @@ export declare namespace Plaintext {
  *
  * **Example** (Construct the Pre node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Pre node"
  * import { Pre } from "@beep/html/Html.model"
  *
  * const node = Pre.make({ children: [] })
- * console.log(node._tag) // "pre"
+ * node._tag // => "pre"
  * ```
  *
  * @category elements
@@ -6386,11 +6386,11 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
  *
  * **Example** (Encoded shape of Pre)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Pre"
  * import { Pre } from "@beep/html/Html.model"
  *
  * const encoded: Pre.Encoded = { _tag: "pre", children: [] }
- * console.log(encoded._tag) // "pre"
+ * encoded._tag // => "pre"
  * ```
  *
  * @category elements
@@ -6416,11 +6416,11 @@ export declare namespace Pre {
  *
  * **Example** (Construct the Progress node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Progress node"
  * import { Progress } from "@beep/html/Html.model"
  *
  * const node = Progress.make({ children: [] })
- * console.log(node._tag) // "progress"
+ * node._tag // => "progress"
  * ```
  *
  * @category elements
@@ -6441,11 +6441,11 @@ export class Progress extends S.TaggedClass<Progress>($I`Progress`)(
  *
  * **Example** (Encoded shape of Progress)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Progress"
  * import { Progress } from "@beep/html/Html.model"
  *
  * const encoded: Progress.Encoded = { _tag: "progress", children: [] }
- * console.log(encoded._tag) // "progress"
+ * encoded._tag // => "progress"
  * ```
  *
  * @category elements
@@ -6473,11 +6473,11 @@ export declare namespace Progress {
  *
  * **Example** (Construct the Q node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Q node"
  * import { Q } from "@beep/html/Html.model"
  *
  * const node = Q.make({ children: [] })
- * console.log(node._tag) // "q"
+ * node._tag // => "q"
  * ```
  *
  * @category elements
@@ -6497,11 +6497,11 @@ export class Q extends S.TaggedClass<Q>($I`Q`)(
  *
  * **Example** (Encoded shape of Q)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Q"
  * import { Q } from "@beep/html/Html.model"
  *
  * const encoded: Q.Encoded = { _tag: "q", children: [] }
- * console.log(encoded._tag) // "q"
+ * encoded._tag // => "q"
  * ```
  *
  * @category elements
@@ -6527,11 +6527,11 @@ export declare namespace Q {
  *
  * **Example** (Construct the Rb node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Rb node"
  * import { Rb } from "@beep/html/Html.model"
  *
  * const node = Rb.make({ children: [] })
- * console.log(node._tag) // "rb"
+ * node._tag // => "rb"
  * ```
  *
  * @category elements
@@ -6550,11 +6550,11 @@ export class Rb extends S.TaggedClass<Rb>($I`Rb`)(
  *
  * **Example** (Encoded shape of Rb)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Rb"
  * import { Rb } from "@beep/html/Html.model"
  *
  * const encoded: Rb.Encoded = { _tag: "rb", children: [] }
- * console.log(encoded._tag) // "rb"
+ * encoded._tag // => "rb"
  * ```
  *
  * @category elements
@@ -6578,11 +6578,11 @@ export declare namespace Rb {
  *
  * **Example** (Construct the Rp node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Rp node"
  * import { Rp } from "@beep/html/Html.model"
  *
  * const node = Rp.make({ children: [] })
- * console.log(node._tag) // "rp"
+ * node._tag // => "rp"
  * ```
  *
  * @category elements
@@ -6601,11 +6601,11 @@ export class Rp extends S.TaggedClass<Rp>($I`Rp`)(
  *
  * **Example** (Encoded shape of Rp)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Rp"
  * import { Rp } from "@beep/html/Html.model"
  *
  * const encoded: Rp.Encoded = { _tag: "rp", children: [] }
- * console.log(encoded._tag) // "rp"
+ * encoded._tag // => "rp"
  * ```
  *
  * @category elements
@@ -6629,11 +6629,11 @@ export declare namespace Rp {
  *
  * **Example** (Construct the Rt node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Rt node"
  * import { Rt } from "@beep/html/Html.model"
  *
  * const node = Rt.make({ children: [] })
- * console.log(node._tag) // "rt"
+ * node._tag // => "rt"
  * ```
  *
  * @category elements
@@ -6652,11 +6652,11 @@ export class Rt extends S.TaggedClass<Rt>($I`Rt`)(
  *
  * **Example** (Encoded shape of Rt)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Rt"
  * import { Rt } from "@beep/html/Html.model"
  *
  * const encoded: Rt.Encoded = { _tag: "rt", children: [] }
- * console.log(encoded._tag) // "rt"
+ * encoded._tag // => "rt"
  * ```
  *
  * @category elements
@@ -6680,11 +6680,11 @@ export declare namespace Rt {
  *
  * **Example** (Construct the Rtc node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Rtc node"
  * import { Rtc } from "@beep/html/Html.model"
  *
  * const node = Rtc.make({ children: [] })
- * console.log(node._tag) // "rtc"
+ * node._tag // => "rtc"
  * ```
  *
  * @category elements
@@ -6703,11 +6703,11 @@ export class Rtc extends S.TaggedClass<Rtc>($I`Rtc`)(
  *
  * **Example** (Encoded shape of Rtc)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Rtc"
  * import { Rtc } from "@beep/html/Html.model"
  *
  * const encoded: Rtc.Encoded = { _tag: "rtc", children: [] }
- * console.log(encoded._tag) // "rtc"
+ * encoded._tag // => "rtc"
  * ```
  *
  * @category elements
@@ -6731,11 +6731,11 @@ export declare namespace Rtc {
  *
  * **Example** (Construct the Ruby node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Ruby node"
  * import { Ruby } from "@beep/html/Html.model"
  *
  * const node = Ruby.make({ children: [] })
- * console.log(node._tag) // "ruby"
+ * node._tag // => "ruby"
  * ```
  *
  * @category elements
@@ -6754,11 +6754,11 @@ export class Ruby extends S.TaggedClass<Ruby>($I`Ruby`)(
  *
  * **Example** (Encoded shape of Ruby)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Ruby"
  * import { Ruby } from "@beep/html/Html.model"
  *
  * const encoded: Ruby.Encoded = { _tag: "ruby", children: [] }
- * console.log(encoded._tag) // "ruby"
+ * encoded._tag // => "ruby"
  * ```
  *
  * @category elements
@@ -6782,11 +6782,11 @@ export declare namespace Ruby {
  *
  * **Example** (Construct the SElement node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the SElement node"
  * import { SElement } from "@beep/html/Html.model"
  *
  * const node = SElement.make({ children: [] })
- * console.log(node._tag) // "s"
+ * node._tag // => "s"
  * ```
  *
  * @category elements
@@ -6805,11 +6805,11 @@ export class SElement extends S.TaggedClass<SElement>($I`SElement`)(
  *
  * **Example** (Encoded shape of SElement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of SElement"
  * import { SElement } from "@beep/html/Html.model"
  *
  * const encoded: SElement.Encoded = { _tag: "s", children: [] }
- * console.log(encoded._tag) // "s"
+ * encoded._tag // => "s"
  * ```
  *
  * @category elements
@@ -6833,11 +6833,11 @@ export declare namespace SElement {
  *
  * **Example** (Construct the Samp node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Samp node"
  * import { Samp } from "@beep/html/Html.model"
  *
  * const node = Samp.make({ children: [] })
- * console.log(node._tag) // "samp"
+ * node._tag // => "samp"
  * ```
  *
  * @category elements
@@ -6856,11 +6856,11 @@ export class Samp extends S.TaggedClass<Samp>($I`Samp`)(
  *
  * **Example** (Encoded shape of Samp)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Samp"
  * import { Samp } from "@beep/html/Html.model"
  *
  * const encoded: Samp.Encoded = { _tag: "samp", children: [] }
- * console.log(encoded._tag) // "samp"
+ * encoded._tag // => "samp"
  * ```
  *
  * @category elements
@@ -6884,11 +6884,11 @@ export declare namespace Samp {
  *
  * **Example** (Construct the Script node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Script node"
  * import { Script } from "@beep/html/Html.model"
  *
  * const node = Script.make({ content: "" })
- * console.log(node._tag) // "script"
+ * node._tag // => "script"
  * ```
  *
  * @category elements
@@ -6923,11 +6923,11 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
  *
  * **Example** (Encoded shape of Script)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Script"
  * import { Script } from "@beep/html/Html.model"
  *
  * const encoded: Script.Encoded = { _tag: "script", content: "" }
- * console.log(encoded._tag) // "script"
+ * encoded._tag // => "script"
  * ```
  *
  * @category elements
@@ -6989,11 +6989,11 @@ export declare namespace Script {
  *
  * **Example** (Construct the Search node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Search node"
  * import { Search } from "@beep/html/Html.model"
  *
  * const node = Search.make({ children: [] })
- * console.log(node._tag) // "search"
+ * node._tag // => "search"
  * ```
  *
  * @category elements
@@ -7012,11 +7012,11 @@ export class Search extends S.TaggedClass<Search>($I`Search`)(
  *
  * **Example** (Encoded shape of Search)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Search"
  * import { Search } from "@beep/html/Html.model"
  *
  * const encoded: Search.Encoded = { _tag: "search", children: [] }
- * console.log(encoded._tag) // "search"
+ * encoded._tag // => "search"
  * ```
  *
  * @category elements
@@ -7040,11 +7040,11 @@ export declare namespace Search {
  *
  * **Example** (Construct the Section node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Section node"
  * import { Section } from "@beep/html/Html.model"
  *
  * const node = Section.make({ children: [] })
- * console.log(node._tag) // "section"
+ * node._tag // => "section"
  * ```
  *
  * @category elements
@@ -7063,11 +7063,11 @@ export class Section extends S.TaggedClass<Section>($I`Section`)(
  *
  * **Example** (Encoded shape of Section)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Section"
  * import { Section } from "@beep/html/Html.model"
  *
  * const encoded: Section.Encoded = { _tag: "section", children: [] }
- * console.log(encoded._tag) // "section"
+ * encoded._tag // => "section"
  * ```
  *
  * @category elements
@@ -7091,11 +7091,11 @@ export declare namespace Section {
  *
  * **Example** (Construct the Select node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Select node"
  * import { Select } from "@beep/html/Html.model"
  *
  * const node = Select.make({ children: [] })
- * console.log(node._tag) // "select"
+ * node._tag // => "select"
  * ```
  *
  * @category elements
@@ -7121,11 +7121,11 @@ export class Select extends S.TaggedClass<Select>($I`Select`)(
  *
  * **Example** (Encoded shape of Select)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Select"
  * import { Select } from "@beep/html/Html.model"
  *
  * const encoded: Select.Encoded = { _tag: "select", children: [] }
- * console.log(encoded._tag) // "select"
+ * encoded._tag // => "select"
  * ```
  *
  * @category elements
@@ -7163,11 +7163,11 @@ export declare namespace Select {
  *
  * **Example** (Construct the Selectedcontent node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Selectedcontent node"
  * import { Selectedcontent } from "@beep/html/Html.model"
  *
  * const node = Selectedcontent.make({ children: [] })
- * console.log(node._tag) // "selectedcontent"
+ * node._tag // => "selectedcontent"
  * ```
  *
  * @category elements
@@ -7186,11 +7186,11 @@ export class Selectedcontent extends S.TaggedClass<Selectedcontent>($I`Selectedc
  *
  * **Example** (Encoded shape of Selectedcontent)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Selectedcontent"
  * import { Selectedcontent } from "@beep/html/Html.model"
  *
  * const encoded: Selectedcontent.Encoded = { _tag: "selectedcontent", children: [] }
- * console.log(encoded._tag) // "selectedcontent"
+ * encoded._tag // => "selectedcontent"
  * ```
  *
  * @category elements
@@ -7214,11 +7214,11 @@ export declare namespace Selectedcontent {
  *
  * **Example** (Construct the Slot node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Slot node"
  * import { Slot } from "@beep/html/Html.model"
  *
  * const node = Slot.make({ children: [] })
- * console.log(node._tag) // "slot"
+ * node._tag // => "slot"
  * ```
  *
  * @category elements
@@ -7238,11 +7238,11 @@ export class Slot extends S.TaggedClass<Slot>($I`Slot`)(
  *
  * **Example** (Encoded shape of Slot)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Slot"
  * import { Slot } from "@beep/html/Html.model"
  *
  * const encoded: Slot.Encoded = { _tag: "slot", children: [] }
- * console.log(encoded._tag) // "slot"
+ * encoded._tag // => "slot"
  * ```
  *
  * @category elements
@@ -7268,11 +7268,11 @@ export declare namespace Slot {
  *
  * **Example** (Construct the Small node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Small node"
  * import { Small } from "@beep/html/Html.model"
  *
  * const node = Small.make({ children: [] })
- * console.log(node._tag) // "small"
+ * node._tag // => "small"
  * ```
  *
  * @category elements
@@ -7291,11 +7291,11 @@ export class Small extends S.TaggedClass<Small>($I`Small`)(
  *
  * **Example** (Encoded shape of Small)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Small"
  * import { Small } from "@beep/html/Html.model"
  *
  * const encoded: Small.Encoded = { _tag: "small", children: [] }
- * console.log(encoded._tag) // "small"
+ * encoded._tag // => "small"
  * ```
  *
  * @category elements
@@ -7319,11 +7319,11 @@ export declare namespace Small {
  *
  * **Example** (Construct the Source node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Source node"
  * import { Source } from "@beep/html/Html.model"
  *
  * const node = Source.make({})
- * console.log(node._tag) // "source"
+ * node._tag // => "source"
  * ```
  *
  * @category elements
@@ -7348,11 +7348,11 @@ export class Source extends S.TaggedClass<Source>($I`Source`)(
  *
  * **Example** (Encoded shape of Source)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Source"
  * import { Source } from "@beep/html/Html.model"
  *
  * const encoded: Source.Encoded = { _tag: "source" }
- * console.log(encoded._tag) // "source"
+ * encoded._tag // => "source"
  * ```
  *
  * @category elements
@@ -7388,11 +7388,11 @@ export declare namespace Source {
  *
  * **Example** (Construct the Spacer node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Spacer node"
  * import { Spacer } from "@beep/html/Html.model"
  *
  * const node = Spacer.make({})
- * console.log(node._tag) // "spacer"
+ * node._tag // => "spacer"
  * ```
  *
  * @category elements
@@ -7410,11 +7410,11 @@ export class Spacer extends S.TaggedClass<Spacer>($I`Spacer`)(
  *
  * **Example** (Encoded shape of Spacer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Spacer"
  * import { Spacer } from "@beep/html/Html.model"
  *
  * const encoded: Spacer.Encoded = { _tag: "spacer" }
- * console.log(encoded._tag) // "spacer"
+ * encoded._tag // => "spacer"
  * ```
  *
  * @category elements
@@ -7436,11 +7436,11 @@ export declare namespace Spacer {
  *
  * **Example** (Construct the Span node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Span node"
  * import { Span } from "@beep/html/Html.model"
  *
  * const node = Span.make({ children: [] })
- * console.log(node._tag) // "span"
+ * node._tag // => "span"
  * ```
  *
  * @category elements
@@ -7459,11 +7459,11 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
  *
  * **Example** (Encoded shape of Span)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Span"
  * import { Span } from "@beep/html/Html.model"
  *
  * const encoded: Span.Encoded = { _tag: "span", children: [] }
- * console.log(encoded._tag) // "span"
+ * encoded._tag // => "span"
  * ```
  *
  * @category elements
@@ -7487,11 +7487,11 @@ export declare namespace Span {
  *
  * **Example** (Construct the Strike node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Strike node"
  * import { Strike } from "@beep/html/Html.model"
  *
  * const node = Strike.make({ children: [] })
- * console.log(node._tag) // "strike"
+ * node._tag // => "strike"
  * ```
  *
  * @category elements
@@ -7510,11 +7510,11 @@ export class Strike extends S.TaggedClass<Strike>($I`Strike`)(
  *
  * **Example** (Encoded shape of Strike)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Strike"
  * import { Strike } from "@beep/html/Html.model"
  *
  * const encoded: Strike.Encoded = { _tag: "strike", children: [] }
- * console.log(encoded._tag) // "strike"
+ * encoded._tag // => "strike"
  * ```
  *
  * @category elements
@@ -7538,11 +7538,11 @@ export declare namespace Strike {
  *
  * **Example** (Construct the Strong node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Strong node"
  * import { Strong } from "@beep/html/Html.model"
  *
  * const node = Strong.make({ children: [] })
- * console.log(node._tag) // "strong"
+ * node._tag // => "strong"
  * ```
  *
  * @category elements
@@ -7561,11 +7561,11 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
  *
  * **Example** (Encoded shape of Strong)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Strong"
  * import { Strong } from "@beep/html/Html.model"
  *
  * const encoded: Strong.Encoded = { _tag: "strong", children: [] }
- * console.log(encoded._tag) // "strong"
+ * encoded._tag // => "strong"
  * ```
  *
  * @category elements
@@ -7589,11 +7589,11 @@ export declare namespace Strong {
  *
  * **Example** (Construct the Style node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Style node"
  * import { Style } from "@beep/html/Html.model"
  *
  * const node = Style.make({ content: "" })
- * console.log(node._tag) // "style"
+ * node._tag // => "style"
  * ```
  *
  * @category elements
@@ -7615,11 +7615,11 @@ export class Style extends S.TaggedClass<Style>($I`Style`)(
  *
  * **Example** (Encoded shape of Style)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Style"
  * import { Style } from "@beep/html/Html.model"
  *
  * const encoded: Style.Encoded = { _tag: "style", content: "" }
- * console.log(encoded._tag) // "style"
+ * encoded._tag // => "style"
  * ```
  *
  * @category elements
@@ -7649,11 +7649,11 @@ export declare namespace Style {
  *
  * **Example** (Construct the Sub node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Sub node"
  * import { Sub } from "@beep/html/Html.model"
  *
  * const node = Sub.make({ children: [] })
- * console.log(node._tag) // "sub"
+ * node._tag // => "sub"
  * ```
  *
  * @category elements
@@ -7672,11 +7672,11 @@ export class Sub extends S.TaggedClass<Sub>($I`Sub`)(
  *
  * **Example** (Encoded shape of Sub)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Sub"
  * import { Sub } from "@beep/html/Html.model"
  *
  * const encoded: Sub.Encoded = { _tag: "sub", children: [] }
- * console.log(encoded._tag) // "sub"
+ * encoded._tag // => "sub"
  * ```
  *
  * @category elements
@@ -7700,11 +7700,11 @@ export declare namespace Sub {
  *
  * **Example** (Construct the Summary node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Summary node"
  * import { Summary } from "@beep/html/Html.model"
  *
  * const node = Summary.make({ children: [] })
- * console.log(node._tag) // "summary"
+ * node._tag // => "summary"
  * ```
  *
  * @category elements
@@ -7723,11 +7723,11 @@ export class Summary extends S.TaggedClass<Summary>($I`Summary`)(
  *
  * **Example** (Encoded shape of Summary)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Summary"
  * import { Summary } from "@beep/html/Html.model"
  *
  * const encoded: Summary.Encoded = { _tag: "summary", children: [] }
- * console.log(encoded._tag) // "summary"
+ * encoded._tag // => "summary"
  * ```
  *
  * @category elements
@@ -7751,11 +7751,11 @@ export declare namespace Summary {
  *
  * **Example** (Construct the Sup node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Sup node"
  * import { Sup } from "@beep/html/Html.model"
  *
  * const node = Sup.make({ children: [] })
- * console.log(node._tag) // "sup"
+ * node._tag // => "sup"
  * ```
  *
  * @category elements
@@ -7774,11 +7774,11 @@ export class Sup extends S.TaggedClass<Sup>($I`Sup`)(
  *
  * **Example** (Encoded shape of Sup)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Sup"
  * import { Sup } from "@beep/html/Html.model"
  *
  * const encoded: Sup.Encoded = { _tag: "sup", children: [] }
- * console.log(encoded._tag) // "sup"
+ * encoded._tag // => "sup"
  * ```
  *
  * @category elements
@@ -7802,11 +7802,11 @@ export declare namespace Sup {
  *
  * **Example** (Construct the Table node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Table node"
  * import { Table } from "@beep/html/Html.model"
  *
  * const node = Table.make({ children: [] })
- * console.log(node._tag) // "table"
+ * node._tag // => "table"
  * ```
  *
  * @category elements
@@ -7837,11 +7837,11 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
  *
  * **Example** (Encoded shape of Table)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Table"
  * import { Table } from "@beep/html/Html.model"
  *
  * const encoded: Table.Encoded = { _tag: "table", children: [] }
- * console.log(encoded._tag) // "table"
+ * encoded._tag // => "table"
  * ```
  *
  * @category elements
@@ -7889,11 +7889,11 @@ export declare namespace Table {
  *
  * **Example** (Construct the Tbody node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Tbody node"
  * import { Tbody } from "@beep/html/Html.model"
  *
  * const node = Tbody.make({ children: [] })
- * console.log(node._tag) // "tbody"
+ * node._tag // => "tbody"
  * ```
  *
  * @category elements
@@ -7917,11 +7917,11 @@ export class Tbody extends S.TaggedClass<Tbody>($I`Tbody`)(
  *
  * **Example** (Encoded shape of Tbody)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Tbody"
  * import { Tbody } from "@beep/html/Html.model"
  *
  * const encoded: Tbody.Encoded = { _tag: "tbody", children: [] }
- * console.log(encoded._tag) // "tbody"
+ * encoded._tag // => "tbody"
  * ```
  *
  * @category elements
@@ -7955,11 +7955,11 @@ export declare namespace Tbody {
  *
  * **Example** (Construct the Td node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Td node"
  * import { Td } from "@beep/html/Html.model"
  *
  * const node = Td.make({ children: [] })
- * console.log(node._tag) // "td"
+ * node._tag // => "td"
  * ```
  *
  * @category elements
@@ -7996,11 +7996,11 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
  *
  * **Example** (Encoded shape of Td)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Td"
  * import { Td } from "@beep/html/Html.model"
  *
  * const encoded: Td.Encoded = { _tag: "td", children: [] }
- * console.log(encoded._tag) // "td"
+ * encoded._tag // => "td"
  * ```
  *
  * @category elements
@@ -8052,11 +8052,11 @@ export declare namespace Td {
  *
  * **Example** (Construct the Template node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Template node"
  * import { Template } from "@beep/html/Html.model"
  *
  * const node = Template.make({ children: [] })
- * console.log(node._tag) // "template"
+ * node._tag // => "template"
  * ```
  *
  * @category elements
@@ -8085,11 +8085,11 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
  *
  * **Example** (Encoded shape of Template)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Template"
  * import { Template } from "@beep/html/Html.model"
  *
  * const encoded: Template.Encoded = { _tag: "template", children: [] }
- * console.log(encoded._tag) // "template"
+ * encoded._tag // => "template"
  * ```
  *
  * @category elements
@@ -8125,11 +8125,11 @@ export declare namespace Template {
  *
  * **Example** (Construct the Textarea node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Textarea node"
  * import { Textarea } from "@beep/html/Html.model"
  *
  * const node = Textarea.make({ content: "" })
- * console.log(node._tag) // "textarea"
+ * node._tag // => "textarea"
  * ```
  *
  * @category elements
@@ -8163,11 +8163,11 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
  *
  * **Example** (Encoded shape of Textarea)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Textarea"
  * import { Textarea } from "@beep/html/Html.model"
  *
  * const encoded: Textarea.Encoded = { _tag: "textarea", content: "" }
- * console.log(encoded._tag) // "textarea"
+ * encoded._tag // => "textarea"
  * ```
  *
  * @category elements
@@ -8217,11 +8217,11 @@ export declare namespace Textarea {
  *
  * **Example** (Construct the Tfoot node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Tfoot node"
  * import { Tfoot } from "@beep/html/Html.model"
  *
  * const node = Tfoot.make({ children: [] })
- * console.log(node._tag) // "tfoot"
+ * node._tag // => "tfoot"
  * ```
  *
  * @category elements
@@ -8240,11 +8240,11 @@ export class Tfoot extends S.TaggedClass<Tfoot>($I`Tfoot`)(
  *
  * **Example** (Encoded shape of Tfoot)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Tfoot"
  * import { Tfoot } from "@beep/html/Html.model"
  *
  * const encoded: Tfoot.Encoded = { _tag: "tfoot", children: [] }
- * console.log(encoded._tag) // "tfoot"
+ * encoded._tag // => "tfoot"
  * ```
  *
  * @category elements
@@ -8268,11 +8268,11 @@ export declare namespace Tfoot {
  *
  * **Example** (Construct the Th node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Th node"
  * import { Th } from "@beep/html/Html.model"
  *
  * const node = Th.make({ children: [] })
- * console.log(node._tag) // "th"
+ * node._tag // => "th"
  * ```
  *
  * @category elements
@@ -8311,11 +8311,11 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
  *
  * **Example** (Encoded shape of Th)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Th"
  * import { Th } from "@beep/html/Html.model"
  *
  * const encoded: Th.Encoded = { _tag: "th", children: [] }
- * console.log(encoded._tag) // "th"
+ * encoded._tag // => "th"
  * ```
  *
  * @category elements
@@ -8367,11 +8367,11 @@ export declare namespace Th {
  *
  * **Example** (Construct the Thead node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Thead node"
  * import { Thead } from "@beep/html/Html.model"
  *
  * const node = Thead.make({ children: [] })
- * console.log(node._tag) // "thead"
+ * node._tag // => "thead"
  * ```
  *
  * @category elements
@@ -8390,11 +8390,11 @@ export class Thead extends S.TaggedClass<Thead>($I`Thead`)(
  *
  * **Example** (Encoded shape of Thead)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Thead"
  * import { Thead } from "@beep/html/Html.model"
  *
  * const encoded: Thead.Encoded = { _tag: "thead", children: [] }
- * console.log(encoded._tag) // "thead"
+ * encoded._tag // => "thead"
  * ```
  *
  * @category elements
@@ -8418,11 +8418,11 @@ export declare namespace Thead {
  *
  * **Example** (Construct the Time node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Time node"
  * import { Time } from "@beep/html/Html.model"
  *
  * const node = Time.make({ children: [] })
- * console.log(node._tag) // "time"
+ * node._tag // => "time"
  * ```
  *
  * @category elements
@@ -8442,11 +8442,11 @@ export class Time extends S.TaggedClass<Time>($I`Time`)(
  *
  * **Example** (Encoded shape of Time)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Time"
  * import { Time } from "@beep/html/Html.model"
  *
  * const encoded: Time.Encoded = { _tag: "time", children: [] }
- * console.log(encoded._tag) // "time"
+ * encoded._tag // => "time"
  * ```
  *
  * @category elements
@@ -8472,11 +8472,11 @@ export declare namespace Time {
  *
  * **Example** (Construct the Title node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Title node"
  * import { Title } from "@beep/html/Html.model"
  *
  * const node = Title.make({ content: "" })
- * console.log(node._tag) // "title"
+ * node._tag // => "title"
  * ```
  *
  * @category elements
@@ -8495,11 +8495,11 @@ export class Title extends S.TaggedClass<Title>($I`Title`)(
  *
  * **Example** (Encoded shape of Title)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Title"
  * import { Title } from "@beep/html/Html.model"
  *
  * const encoded: Title.Encoded = { _tag: "title", content: "" }
- * console.log(encoded._tag) // "title"
+ * encoded._tag // => "title"
  * ```
  *
  * @category elements
@@ -8523,11 +8523,11 @@ export declare namespace Title {
  *
  * **Example** (Construct the Tr node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Tr node"
  * import { Tr } from "@beep/html/Html.model"
  *
  * const node = Tr.make({ children: [] })
- * console.log(node._tag) // "tr"
+ * node._tag // => "tr"
  * ```
  *
  * @category elements
@@ -8552,11 +8552,11 @@ export class Tr extends S.TaggedClass<Tr>($I`Tr`)(
  *
  * **Example** (Encoded shape of Tr)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Tr"
  * import { Tr } from "@beep/html/Html.model"
  *
  * const encoded: Tr.Encoded = { _tag: "tr", children: [] }
- * console.log(encoded._tag) // "tr"
+ * encoded._tag // => "tr"
  * ```
  *
  * @category elements
@@ -8592,11 +8592,11 @@ export declare namespace Tr {
  *
  * **Example** (Construct the Track node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Track node"
  * import { Track } from "@beep/html/Html.model"
  *
  * const node = Track.make({})
- * console.log(node._tag) // "track"
+ * node._tag // => "track"
  * ```
  *
  * @category elements
@@ -8621,11 +8621,11 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
  *
  * **Example** (Encoded shape of Track)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Track"
  * import { Track } from "@beep/html/Html.model"
  *
  * const encoded: Track.Encoded = { _tag: "track" }
- * console.log(encoded._tag) // "track"
+ * encoded._tag // => "track"
  * ```
  *
  * @category elements
@@ -8657,11 +8657,11 @@ export declare namespace Track {
  *
  * **Example** (Construct the Tt node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Tt node"
  * import { Tt } from "@beep/html/Html.model"
  *
  * const node = Tt.make({ children: [] })
- * console.log(node._tag) // "tt"
+ * node._tag // => "tt"
  * ```
  *
  * @category elements
@@ -8680,11 +8680,11 @@ export class Tt extends S.TaggedClass<Tt>($I`Tt`)(
  *
  * **Example** (Encoded shape of Tt)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Tt"
  * import { Tt } from "@beep/html/Html.model"
  *
  * const encoded: Tt.Encoded = { _tag: "tt", children: [] }
- * console.log(encoded._tag) // "tt"
+ * encoded._tag // => "tt"
  * ```
  *
  * @category elements
@@ -8708,11 +8708,11 @@ export declare namespace Tt {
  *
  * **Example** (Construct the U node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the U node"
  * import { U } from "@beep/html/Html.model"
  *
  * const node = U.make({ children: [] })
- * console.log(node._tag) // "u"
+ * node._tag // => "u"
  * ```
  *
  * @category elements
@@ -8731,11 +8731,11 @@ export class U extends S.TaggedClass<U>($I`U`)(
  *
  * **Example** (Encoded shape of U)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of U"
  * import { U } from "@beep/html/Html.model"
  *
  * const encoded: U.Encoded = { _tag: "u", children: [] }
- * console.log(encoded._tag) // "u"
+ * encoded._tag // => "u"
  * ```
  *
  * @category elements
@@ -8759,11 +8759,11 @@ export declare namespace U {
  *
  * **Example** (Construct the Ul node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Ul node"
  * import { Ul } from "@beep/html/Html.model"
  *
  * const node = Ul.make({ children: [] })
- * console.log(node._tag) // "ul"
+ * node._tag // => "ul"
  * ```
  *
  * @category elements
@@ -8784,11 +8784,11 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
  *
  * **Example** (Encoded shape of Ul)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Ul"
  * import { Ul } from "@beep/html/Html.model"
  *
  * const encoded: Ul.Encoded = { _tag: "ul", children: [] }
- * console.log(encoded._tag) // "ul"
+ * encoded._tag // => "ul"
  * ```
  *
  * @category elements
@@ -8816,11 +8816,11 @@ export declare namespace Ul {
  *
  * **Example** (Construct the Var node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Var node"
  * import { Var } from "@beep/html/Html.model"
  *
  * const node = Var.make({ children: [] })
- * console.log(node._tag) // "var"
+ * node._tag // => "var"
  * ```
  *
  * @category elements
@@ -8839,11 +8839,11 @@ export class Var extends S.TaggedClass<Var>($I`Var`)(
  *
  * **Example** (Encoded shape of Var)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Var"
  * import { Var } from "@beep/html/Html.model"
  *
  * const encoded: Var.Encoded = { _tag: "var", children: [] }
- * console.log(encoded._tag) // "var"
+ * encoded._tag // => "var"
  * ```
  *
  * @category elements
@@ -8867,11 +8867,11 @@ export declare namespace Var {
  *
  * **Example** (Construct the Video node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Video node"
  * import { Video } from "@beep/html/Html.model"
  *
  * const node = Video.make({ children: [] })
- * console.log(node._tag) // "video"
+ * node._tag // => "video"
  * ```
  *
  * @category elements
@@ -8906,11 +8906,11 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
  *
  * **Example** (Encoded shape of Video)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Video"
  * import { Video } from "@beep/html/Html.model"
  *
  * const encoded: Video.Encoded = { _tag: "video", children: [] }
- * console.log(encoded._tag) // "video"
+ * encoded._tag // => "video"
  * ```
  *
  * @category elements
@@ -8958,11 +8958,11 @@ export declare namespace Video {
  *
  * **Example** (Construct the Wbr node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Wbr node"
  * import { Wbr } from "@beep/html/Html.model"
  *
  * const node = Wbr.make({})
- * console.log(node._tag) // "wbr"
+ * node._tag // => "wbr"
  * ```
  *
  * @category elements
@@ -8980,11 +8980,11 @@ export class Wbr extends S.TaggedClass<Wbr>($I`Wbr`)(
  *
  * **Example** (Encoded shape of Wbr)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Wbr"
  * import { Wbr } from "@beep/html/Html.model"
  *
  * const encoded: Wbr.Encoded = { _tag: "wbr" }
- * console.log(encoded._tag) // "wbr"
+ * encoded._tag // => "wbr"
  * ```
  *
  * @category elements
@@ -9006,11 +9006,11 @@ export declare namespace Wbr {
  *
  * **Example** (Construct the Xmp node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct the Xmp node"
  * import { Xmp } from "@beep/html/Html.model"
  *
  * const node = Xmp.make({ content: "" })
- * console.log(node._tag) // "xmp"
+ * node._tag // => "xmp"
  * ```
  *
  * @category elements
@@ -9029,11 +9029,11 @@ export class Xmp extends S.TaggedClass<Xmp>($I`Xmp`)(
  *
  * **Example** (Encoded shape of Xmp)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of Xmp"
  * import { Xmp } from "@beep/html/Html.model"
  *
  * const encoded: Xmp.Encoded = { _tag: "xmp", content: "" }
- * console.log(encoded._tag) // "xmp"
+ * encoded._tag // => "xmp"
  * ```
  *
  * @category elements
@@ -9057,12 +9057,12 @@ export declare namespace Xmp {
  *
  * **Example** (Match a text node against HtmlChild)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match a text node against HtmlChild"
  * import { HtmlChild } from "@beep/html/Html.model"
  * import { Text } from "@beep/html/Html.nodes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlChild)(Text.make({ value: "hello" }))) // true
+ * S.is(HtmlChild)(Text.make({ value: "hello" })) // => true
  * ```
  *
  * @category models
@@ -9225,11 +9225,11 @@ export const HtmlChild = taggedUnion<HtmlChild.Type, HtmlChild.Encoded>(
  *
  * **Example** (Encoded shape of HtmlChild)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of HtmlChild"
  * import type { HtmlChild } from "@beep/html/Html.model"
  *
  * const child: HtmlChild.Encoded = { _tag: "#text", value: "hello" }
- * console.log(child._tag) // "#text"
+ * child._tag // => "#text"
  * ```
  *
  * @category models
@@ -9537,11 +9537,11 @@ export declare namespace HtmlChild {
  *
  * **Example** (Match a fragment against HtmlRoot)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match a fragment against HtmlRoot"
  * import { Fragment, HtmlRoot } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlRoot)(Fragment.make({ children: [] }))) // true
+ * S.is(HtmlRoot)(Fragment.make({ children: [] })) // => true
  * ```
  *
  * @category models
@@ -9706,11 +9706,11 @@ export const HtmlRoot = taggedUnion<HtmlRoot.Type, HtmlRoot.Encoded>(
  *
  * **Example** (Encoded shape of HtmlRoot)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded shape of HtmlRoot"
  * import type { HtmlRoot } from "@beep/html/Html.model"
  *
  * const root: HtmlRoot.Encoded = { _tag: "#fragment", children: [] }
- * console.log(root._tag) // "#fragment"
+ * root._tag // => "#fragment"
  * ```
  *
  * @category models
@@ -10023,11 +10023,11 @@ export declare namespace HtmlRoot {
  *
  * **Example** (Match an anchor against HtmlNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match an anchor against HtmlNode"
  * import { A, HtmlNode } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlNode)(A.make({ children: [] }))) // true
+ * S.is(HtmlNode)(A.make({ children: [] })) // => true
  * ```
  *
  * @category models
@@ -10192,12 +10192,12 @@ export const HtmlNode = taggedUnion<HtmlNode.Type, HtmlNode.Encoded>(
  *
  * **Example** (Build an HtmlNode.Type value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build an HtmlNode.Type value"
  * import { A } from "@beep/html/Html.model"
  * import type { HtmlNode } from "@beep/html/Html.model"
  *
  * const node: HtmlNode.Type = A.make({ children: [] })
- * console.log(node._tag) // "a"
+ * node._tag // => "a"
  * ```
  *
  * @category models
@@ -10512,11 +10512,11 @@ export declare namespace HtmlNode {
  *
  * **Example** (Match Base against Metadata)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match Base against Metadata"
  * import { Base, Metadata } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Metadata)(Base.make({}))) // true
+ * S.is(Metadata)(Base.make({})) // => true
  * ```
  *
  * @category schemas
@@ -10540,11 +10540,11 @@ export const Metadata = taggedUnion<
  *
  * **Example** (Match A against Flow)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match A against Flow"
  * import { A, Flow } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Flow)(A.make({ children: [] }))) // true
+ * S.is(Flow)(A.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -10815,11 +10815,11 @@ export const Flow = taggedUnion<
  *
  * **Example** (Match Article against Sectioning)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match Article against Sectioning"
  * import { Article, Sectioning } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Sectioning)(Article.make({ children: [] }))) // true
+ * S.is(Sectioning)(Article.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -10836,11 +10836,11 @@ export const Sectioning = taggedUnion<
  *
  * **Example** (Match H1 against Heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match H1 against Heading"
  * import { H1, Heading } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Heading)(H1.make({ children: [] }))) // true
+ * S.is(Heading)(H1.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -10857,11 +10857,11 @@ export const Heading = taggedUnion<
  *
  * **Example** (Match A against Phrasing)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match A against Phrasing"
  * import { A, Phrasing } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Phrasing)(A.make({ children: [] }))) // true
+ * S.is(Phrasing)(A.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -11039,11 +11039,11 @@ export const Phrasing = taggedUnion<
  *
  * **Example** (Match Audio against Embedded)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match Audio against Embedded"
  * import { Audio, Embedded } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Embedded)(Audio.make({ children: [] }))) // true
+ * S.is(Embedded)(Audio.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -11076,11 +11076,11 @@ export const Embedded = taggedUnion<
  *
  * **Example** (Match A against Interactive)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match A against Interactive"
  * import { A, Interactive } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Interactive)(A.make({ children: [] }))) // true
+ * S.is(Interactive)(A.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -11138,11 +11138,11 @@ export const Interactive = taggedUnion<
  *
  * **Example** (Match A against Palpable)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match A against Palpable"
  * import { A, Palpable } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Palpable)(A.make({ children: [] }))) // true
+ * S.is(Palpable)(A.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -11377,11 +11377,11 @@ export const Palpable = taggedUnion<
  *
  * **Example** (Match Script against ScriptSupporting)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match Script against ScriptSupporting"
  * import { Script, ScriptSupporting } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ScriptSupporting)(Script.make({ content: "" }))) // true
+ * S.is(ScriptSupporting)(Script.make({ content: "" })) // => true
  * ```
  *
  * @category schemas

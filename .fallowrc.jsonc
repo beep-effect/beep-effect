@@ -116,6 +116,9 @@
     // Identity-as-IRI exploration prototype assets are packet evidence, not
     // package/app entrypoints in the production dead-code graph.
     "explorations/identity-as-iri/assets/ontology-prototype/**",
+    // LeJeune Bolt exploration ops script is packet tooling (machine-local corpus
+    // miner run ad hoc via `bun run`), not a package/app entrypoint.
+    "explorations/lejeune-bolt-agentic-demo/ops/**",
     // @beep/html: generated AST (one TaggedClass per HTML element) is intentionally
     // repetitive; the codegen script and vendored spec data are tooling, not
     // hand-authored source subject to dead-code/duplication/complexity review.
@@ -131,7 +134,13 @@
     // schema) are intentionally repetitive, not hand-authored source subject to
     // dead-code/duplication/complexity review; the acp resync regeneration surfaced
     // 27 self-clone findings inside the single generated file.
-    "packages/drivers/acp/src/_generated/**"
+    "packages/drivers/acp/src/_generated/**",
+    // @beep/ecfr, @beep/govinfo, and @beep/runpod: generator-emitted OpenAPI
+    // modules are intentionally repetitive artifacts, not hand-authored source.
+    // Keep this package-specific so no authored source path is excluded.
+    "packages/drivers/ecfr/src/_generated/**",
+    "packages/drivers/govinfo/src/_generated/**",
+    "packages/drivers/runpod/src/_generated/**"
   ],
   // Exact compatibility list for authored `.ts` specifiers whose source file
   // is TSX. Do not broaden this to `**/*.ts`: real unresolved imports must keep

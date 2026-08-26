@@ -58,6 +58,15 @@ export {
   type SerializedArtifactRefNode,
 } from "./artifact-ref-node.tsx";
 /**
+ * The capability facade owns compiler-visible migration metadata for capability
+ * descriptors, resolver APIs, profiles, and projections; export-star preserves
+ * those annotated aliases at the deprecated package root.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./capability/index.ts";
+/**
  * The chat facade owns the compiler-visible migration metadata for every chat
  * symbol; export-star preserves those annotated alias symbols at the root.
  *

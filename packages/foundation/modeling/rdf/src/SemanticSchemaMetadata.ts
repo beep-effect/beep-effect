@@ -27,12 +27,12 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *
  * **Example** (Validate kind membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate kind membership"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaMetadataKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
- * console.log(S.is(SemanticSchemaMetadataKind)("identifier")) // true
- * console.log(S.is(SemanticSchemaMetadataKind)("unknown")) // false
+ * S.is(SemanticSchemaMetadataKind)("identifier") // => true
+ * S.is(SemanticSchemaMetadataKind)("unknown") // => false
  * ```
  *
  * @category models
@@ -75,12 +75,12 @@ export type SemanticSchemaMetadataKind = typeof SemanticSchemaMetadataKind.Type;
  *
  * **Example** (Validate status membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate status membership"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaStatus } from "@beep/rdf/SemanticSchemaMetadata"
  *
- * console.log(S.is(SemanticSchemaStatus)("stable")) // true
- * console.log(S.is(SemanticSchemaStatus)("draft")) // false
+ * S.is(SemanticSchemaStatus)("stable") // => true
+ * S.is(SemanticSchemaStatus)("draft") // => false
  * ```
  *
  * @category models
@@ -114,12 +114,12 @@ export type SemanticSchemaStatus = typeof SemanticSchemaStatus.Type;
  *
  * **Example** (Decode disposition value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode disposition value"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaSpecificationDisposition } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const disposition = S.decodeUnknownSync(SemanticSchemaSpecificationDisposition)("normative")
- * console.log(disposition) // "normative"
+ * disposition // => "normative"
  * ```
  *
  * @category models
@@ -153,12 +153,12 @@ export type SemanticSchemaSpecificationDisposition = typeof SemanticSchemaSpecif
  *
  * **Example** (Validate representation kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate representation kind"
  * import * as S from "effect/Schema"
  * import { SemanticRepresentationKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
- * console.log(S.is(SemanticRepresentationKind)("JSON-LD")) // true
- * console.log(S.is(SemanticRepresentationKind)("CSV")) // false
+ * S.is(SemanticRepresentationKind)("JSON-LD") // => true
+ * S.is(SemanticRepresentationKind)("CSV") // => false
  * ```
  *
  * @category models
@@ -199,7 +199,7 @@ export type SemanticRepresentationKind = typeof SemanticRepresentationKind.Type;
  *
  * **Example** (Decode specification reference)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode specification reference"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaSpecification } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -208,7 +208,7 @@ export type SemanticRepresentationKind = typeof SemanticRepresentationKind.Type;
  *   section: "Graph Data Model",
  *   disposition: "normative"
  * })
- * console.log(specification.name) // "RDF 1.1 Concepts"
+ * specification.name // => "RDF 1.1 Concepts"
  * ```
  *
  * @category models
@@ -233,7 +233,7 @@ export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecifica
  *
  * **Example** (Decode representation note)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode representation note"
  * import * as S from "effect/Schema"
  * import { SemanticRepresentation } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -241,7 +241,7 @@ export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecifica
  *   kind: "JSON-LD",
  *   note: "Compacted document shape."
  * })
- * console.log(representation.kind) // "JSON-LD"
+ * representation.kind // => "JSON-LD"
  * ```
  *
  * @category models
@@ -262,7 +262,7 @@ export class SemanticRepresentation extends S.Class<SemanticRepresentation>($I`S
  *
  * **Example** (Decode full metadata payload)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode full metadata payload"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -274,7 +274,7 @@ export class SemanticRepresentation extends S.Class<SemanticRepresentation>($I`S
  *   specifications: [{ name: "RDF/JS Data Model", disposition: "normative" }],
  *   equivalenceBasis: "IRI equality."
  * })
- * console.log(metadata.canonicalName) // "NamedNode"
+ * metadata.canonicalName // => "NamedNode"
  * ```
  *
  * @category models
@@ -353,7 +353,7 @@ declare module "effect/Schema" {
  *
  * **Example** (Build validated metadata)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build validated metadata"
  * import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const metadata = makeSemanticSchemaMetadata({
@@ -364,7 +364,7 @@ declare module "effect/Schema" {
  *   specifications: [{ name: "Example Profile", disposition: "informative" }],
  *   equivalenceBasis: "String equality.",
  * })
- * console.log(metadata.kind) // "identifier"
+ * metadata.kind // => "identifier"
  * ```
  *
  * @param metadata - Encoded metadata payload.

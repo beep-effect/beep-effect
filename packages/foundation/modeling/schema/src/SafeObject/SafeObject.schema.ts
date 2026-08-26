@@ -23,7 +23,7 @@ const $I = $SchemaId.create("SafeObject");
  *
  * **Example** (Decode branded safe object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode branded safe object"
  * import { SafeObject } from "@beep/schema/SafeObject"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -31,7 +31,7 @@ const $I = $SchemaId.create("SafeObject");
  * const value = await Effect.runPromise(
  *   S.decodeUnknownEffect(SafeObject)({ enabled: true, count: 1 })
  * )
- * console.log(value.enabled) // true
+ * value.enabled // => true
  * ```
  *
  * @category validation
@@ -49,12 +49,12 @@ export const SafeObject = UnknownRecord.pipe(
  *
  * **Example** (Construct typed SafeObject)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct typed SafeObject"
  * import { SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject"
  * import type { SafeObject } from "@beep/schema/SafeObject"
  *
  * const value: SafeObject = SafeObjectSchema.make({ enabled: true })
- * console.log(value.enabled) // true
+ * value.enabled // => true
  * ```
  *
  * @category models
@@ -76,7 +76,7 @@ export type SafeObject = typeof SafeObject.Type;
  *
  * **Example** (Normalize array into object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize array into object"
  * import { SafeObjectFromObjectKeyword } from "@beep/schema/SafeObject"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -84,7 +84,7 @@ export type SafeObject = typeof SafeObject.Type;
  * const value = await Effect.runPromise(
  *   S.decodeUnknownEffect(SafeObjectFromObjectKeyword)(["first", "second"])
  * )
- * console.log(value) // { "0": "first", "1": "second" }
+ * value // => { "0": "first", "1": "second" }
  * ```
  *
  * @category codecs
@@ -115,12 +115,12 @@ export const SafeObjectFromObjectKeyword = S.ObjectKeyword.pipe(
  *
  * **Example** (Construct typed normalized object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct typed normalized object"
  * import { SafeObjectFromObjectKeyword as SafeObjectSchema } from "@beep/schema/SafeObject"
  * import type { SafeObjectFromObjectKeyword } from "@beep/schema/SafeObject"
  *
  * const value: SafeObjectFromObjectKeyword = SafeObjectSchema.make({ enabled: true })
- * console.log(value.enabled) // true
+ * value.enabled // => true
  * ```
  *
  * @category models
@@ -133,7 +133,7 @@ export type SafeObjectFromObjectKeyword = typeof SafeObjectFromObjectKeyword.Typ
  *
  * **Example** (Decode via namespace alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode via namespace alias"
  * import * as SafeObject from "@beep/schema/SafeObject"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -141,7 +141,7 @@ export type SafeObjectFromObjectKeyword = typeof SafeObjectFromObjectKeyword.Typ
  * const value = await Effect.runPromise(
  *   S.decodeUnknownEffect(SafeObject.Schema)({ enabled: true })
  * )
- * console.log(value.enabled) // true
+ * value.enabled // => true
  * ```
  *
  * @category schemas

@@ -42,13 +42,13 @@ const ProtobufNumber = S.declare<number>(P.isNumber, {
  *
  * **Example** (Decode double number value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode double number value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Double } from "@beep/schema/Double"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Double)(1.25))
- * console.log(value) // 1.25
+ * value // => 1.25
  * ```
  *
  * @invariant Values are JavaScript numbers in the protobuf `double` domain, including IEEE-754 special values.
@@ -77,7 +77,7 @@ export const Double = ProtobufNumber.annotate({
  *
  * **Example** (Narrow unknown to Double)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow unknown to Double"
  * import * as S from "effect/Schema"
  * import { Double } from "@beep/schema/Double"
  * import type { Double as DoubleValue } from "@beep/schema/Double"
@@ -85,7 +85,7 @@ export const Double = ProtobufNumber.annotate({
  * const input: unknown = 1.25
  * if (S.is(Double)(input)) {
  *   const value: DoubleValue = input
- *   console.log(value) // 1.25
+ *   value // => 1.25
  * }
  * ```
  *

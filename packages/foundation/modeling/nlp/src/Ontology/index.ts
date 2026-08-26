@@ -11,10 +11,10 @@
  *
  * **Example** (Checking kind containment)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Checking kind containment"
  * import { Kind } from "@beep/nlp/Ontology"
  *
- * console.log(Kind.canContain("Document", "Sentence")) // true
+ * Kind.canContain("Document", "Sentence") // => true
  * ```
  *
  * @category models

@@ -43,9 +43,9 @@ export const SemanticFoundationSchemeIri = iri(scheme.iri);
  *
  * **Example** (Log the seed title)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the seed title"
  * import { SemanticFoundationSeed } from "@beep/ontology/SemanticFoundation.seed"
- * console.log(SemanticFoundationSeed.title) // "Legal intake taxonomy"
+ * SemanticFoundationSeed.title // => "Legal intake taxonomy"
  * ```
  *
  * @category constants

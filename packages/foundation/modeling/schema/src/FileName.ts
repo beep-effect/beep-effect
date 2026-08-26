@@ -9,7 +9,7 @@
  *
  * **Example** (Decode basename with extension)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode basename with extension"
  * import * as S from "effect/Schema";
  * import { FileName } from "@beep/schema/FileName";
  *
@@ -109,7 +109,7 @@ const FileNameChecks = S.makeFilterGroup(
  *
  * **Example** (Decode portable file names)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode portable file names"
  * import * as S from "effect/Schema";
  * import { FileName } from "@beep/schema/FileName";
  *
@@ -163,12 +163,12 @@ export const FileName: S.Codec<`${string}.${string}`, `${string}.${string}`> = F
  *
  * **Example** (Type a decoded file name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a decoded file name"
  * import * as S from "effect/Schema"
  * import { FileName } from "@beep/schema/FileName"
  *
  * const file: FileName = S.decodeUnknownSync(FileName)("readme.txt")
- * console.log(file) // "readme.txt"
+ * file // => "readme.txt"
  * ```
  *
  * @category models

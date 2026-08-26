@@ -16,13 +16,13 @@ const $I = $SchemaId.create("NumberChecks");
  *
  * **Example** (Decode positive finite number)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode positive finite number"
  * import * as S from "effect/Schema"
  * import { isPositive } from "@beep/schema/Number"
  *
  * const PosNum = S.Finite.check(isPositive)
  * const value = S.decodeUnknownSync(PosNum)(5)
- * console.log(value) // 5
+ * value // => 5
  * ```
  *
  * @category validation
@@ -80,13 +80,13 @@ export const isPostgresSerialInt = S.makeFilterGroup(
  *
  * **Example** (Decode non-negative finite numbers)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-negative finite numbers"
  * import * as S from "effect/Schema"
  * import { isNonNegative } from "@beep/schema/Number"
  *
  * const NonNeg = S.Finite.check(isNonNegative)
- * console.log(S.decodeUnknownSync(NonNeg)(0)) // 0
- * console.log(S.decodeUnknownSync(NonNeg)(42)) // 42
+ * S.decodeUnknownSync(NonNeg)(0) // => 0
+ * S.decodeUnknownSync(NonNeg)(42) // => 42
  * ```
  *
  * @category validation
@@ -99,13 +99,13 @@ export const isNonNegative = S.isGreaterThanOrEqualTo(0);
  *
  * **Example** (Decode negative finite number)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode negative finite number"
  * import * as S from "effect/Schema"
  * import { isNegative } from "@beep/schema/Number"
  *
  * const NegNum = S.Finite.check(isNegative)
  * const value = S.decodeUnknownSync(NegNum)(-1)
- * console.log(value) // -1
+ * value // => -1
  * ```
  *
  * @category validation
@@ -118,13 +118,13 @@ export const isNegative = S.isLessThan(0);
  *
  * **Example** (Decode non-positive finite numbers)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-positive finite numbers"
  * import * as S from "effect/Schema"
  * import { isNonPositive } from "@beep/schema/Number"
  *
  * const NonPos = S.Finite.check(isNonPositive)
- * console.log(S.decodeUnknownSync(NonPos)(0)) // 0
- * console.log(S.decodeUnknownSync(NonPos)(-10)) // -10
+ * S.decodeUnknownSync(NonPos)(0) // => 0
+ * S.decodeUnknownSync(NonPos)(-10) // => -10
  * ```
  *
  * @category validation
@@ -137,12 +137,12 @@ export const isNonPositive = S.isLessThanOrEqualTo(0);
  *
  * **Example** (Decode non-negative branded number)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-negative branded number"
  * import * as S from "effect/Schema"
  * import { NonNegNum } from "@beep/schema/Number"
  *
- * console.log(S.decodeUnknownSync(NonNegNum)(0)) // 0
- * console.log(S.decodeUnknownSync(NonNegNum)(100)) // 100
+ * S.decodeUnknownSync(NonNegNum)(0) // => 0
+ * S.decodeUnknownSync(NonNegNum)(100) // => 100
  * ```
  *
  * @category validation
@@ -159,12 +159,12 @@ export const NonNegNum = S.Finite.check(isNonNegative).pipe(
  *
  * **Example** (Type non-negative branded value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type non-negative branded value"
  * import * as S from "effect/Schema"
  * import { NonNegNum } from "@beep/schema/Number"
  *
  * const index: NonNegNum = S.decodeUnknownSync(NonNegNum)(0)
- * console.log(index >= 0) // true
+ * index >= 0 // => true
  * ```
  *
  * @category models
@@ -177,12 +177,12 @@ export type NonNegNum = typeof NonNegNum.Type;
  *
  * **Example** (Decode non-negative branded integer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-negative branded integer"
  * import * as S from "effect/Schema"
  * import { NonNegativeInt } from "@beep/schema/Number"
  *
- * console.log(S.decodeUnknownSync(NonNegativeInt)(0)) // 0
- * console.log(S.decodeUnknownSync(NonNegativeInt)(100)) // 100
+ * S.decodeUnknownSync(NonNegativeInt)(0) // => 0
+ * S.decodeUnknownSync(NonNegativeInt)(100) // => 100
  * ```
  *
  * @category validation
@@ -214,12 +214,12 @@ export const NonNegativeInt = S.Int.pipe(S.brand("Int"))
  *
  * **Example** (Type non-negative integer value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type non-negative integer value"
  * import * as S from "effect/Schema"
  * import { NonNegativeInt } from "@beep/schema/Number"
  *
  * const index: NonNegativeInt = S.decodeUnknownSync(NonNegativeInt)(0)
- * console.log(index >= 0) // true
+ * index >= 0 // => true
  * ```
  *
  * @category models

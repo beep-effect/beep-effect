@@ -2,12 +2,13 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-This goal is scaffolded but blocked by the semantic-web PR2 and PR3 cleanups,
-which have no goal packets. Their completion must be recorded before P1.
+Completed-retained 2026-08-25: the full MAP row shipped on
+`feat/identity-iri-fibered` (evidence in `history/p1-p2-evidence.md`, reflection
+in `history/reflections/2026-08-25-claude.md`), published through Yeet.
 
 ## Mission
 
@@ -31,11 +32,14 @@ ratified MAP row.
 
 ## Current Phase
 
-P0 blocked audit: identify evidence that semantic-web PR2 and PR3 cleanups have
-landed, then bind the post-move contract layer before implementation.
+P4 Close — complete. `Fibered` + `IdentityRegistry` (`@beep/identity`),
+byte-identical `JSDocTagDefinition.make` migration (`@beep/repo-utils`), identity
+RDF binding + `layerDataset` + SHACL policy projection (`@beep/semantic-web`),
+end-to-end proof in `packages/epistemic/server/test`.
 
 ## Latest Evidence
 
 `identity-iri-fold` merged as PR #536 on 2026-08-01, firing this goal's
-trigger; the remaining blockers are recorded as text because they have no goal
-packets.
+trigger. P0 (2026-08-25) evidenced semantic-web PR2 (#695) and PR3 (#687,
+#711, #715) landed from live source and identified the post-move SHACL
+contract (`semantic-web/src/services/shacl-validation.ts`).

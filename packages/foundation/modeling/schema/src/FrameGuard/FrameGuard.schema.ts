@@ -29,11 +29,11 @@ const FrameGuardModeBase = LiteralKit(["deny", "sameorigin"]);
  *
  * **Example** (Validate deny mode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate deny mode"
  * import * as S from "effect/Schema"
  * import { FrameGuardMode } from "@beep/schema/FrameGuard"
  *
- * console.log(S.is(FrameGuardMode)("deny")) // true
+ * S.is(FrameGuardMode)("deny") // => true
  * ```
  *
  * @category schemas

@@ -14,13 +14,13 @@ const $I = $SchemaId.create("Primitive");
  *
  * **Example** (Decode string number null)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode string number null"
  * import * as S from "effect/Schema"
  * import { Primitive } from "@beep/schema/Primitive"
  *
- * console.log(S.decodeUnknownSync(Primitive)("hello")) // "hello"
- * console.log(S.decodeUnknownSync(Primitive)(42)) // 42
- * console.log(S.decodeUnknownSync(Primitive)(null)) // null
+ * S.decodeUnknownSync(Primitive)("hello") // => "hello"
+ * S.decodeUnknownSync(Primitive)(42) // => 42
+ * S.decodeUnknownSync(Primitive)(null) // => null
  * ```
  *
  * @category validation

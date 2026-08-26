@@ -22,14 +22,14 @@ const childText = (children: ReadonlyArray<LexicalNode.Type>): string => A.join(
  *
  * **Example** (Linebreak node to newline)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Linebreak node to newline"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  * import { nodeToPlainText } from "@beep/lexical-schema/Lexical.behavior"
  *
  * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(Result.isSuccess(result) && nodeToPlainText(result.success) === "\n") // true
+ * Result.isSuccess(result) && nodeToPlainText(result.success) === "\n" // => true
  * ```
  *
  * @category getters
@@ -59,7 +59,7 @@ export const nodeToPlainText: (node: LexicalNode.Type) => string = LexicalNode.m
  *
  * **Example** (Empty editor state text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Empty editor state text"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
@@ -74,7 +74,7 @@ export const nodeToPlainText: (node: LexicalNode.Type) => string = LexicalNode.m
  *     }]
  *   }
  * })
- * console.log(Result.isSuccess(result) && editorStateToPlainText(result.success) === "") // true
+ * Result.isSuccess(result) && editorStateToPlainText(result.success) === "" // => true
  * ```
  *
  * @category getters

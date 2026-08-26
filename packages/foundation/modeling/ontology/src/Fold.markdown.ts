@@ -34,11 +34,11 @@ const $I = $OntologyId.create("Fold/markdown");
  *
  * **Example** (Guard a link mode literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard a link mode literal"
  * import { MarkdownLinkMode } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(MarkdownLinkMode)("portable")) // true
+ * S.is(MarkdownLinkMode)("portable") // => true
  * ```
  *
  * @category schemas

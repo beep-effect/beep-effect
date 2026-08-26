@@ -48,12 +48,12 @@ export type VocabShape = Readonly<
  *
  * **Example** (Make and validate entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make and validate entry"
  * import * as S from "effect/Schema"
  * import { VocabEntry } from "@beep/identity"
  *
  * const entry = VocabEntry.make({ iri: "https://example.test/ns#", terms: ["Thing"] })
- * console.log(S.is(VocabEntry)(entry)) // true
+ * S.is(VocabEntry)(entry) // => true
  * ```
  *
  * @category models
@@ -115,11 +115,11 @@ type TermOf<V extends VocabShape, Prefix extends keyof V & string> = V[Prefix]["
  *
  * **Example** (Build IRI from CoreVocab)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build IRI from CoreVocab"
  * import { CoreVocab } from "@beep/identity"
  *
  * const iri = `${CoreVocab.skos.iri}prefLabel`
- * console.log(iri) // "http://www.w3.org/2004/02/skos/core#prefLabel"
+ * iri // => "http://www.w3.org/2004/02/skos/core#prefLabel"
  * ```
  *
  * @category constants
@@ -452,7 +452,7 @@ type MergedVocab<Base extends VocabShape, Extension extends VocabShape> = Omit<B
  *
  * **Example** (Merge CoreVocab with extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Merge CoreVocab with extension"
  * import { CoreVocab, mergeVocab } from "@beep/identity"
  *
  * const vocab = mergeVocab(CoreVocab, {
@@ -462,7 +462,7 @@ type MergedVocab<Base extends VocabShape, Extension extends VocabShape> = Omit<B
  *   },
  * })
  *
- * console.log(vocab.ex.terms[0]) // "Thing"
+ * vocab.ex.terms[0] // => "Thing"
  * ```
  *
  * @category combinators
@@ -483,11 +483,11 @@ export const mergeVocab: {
  *
  * **Example** (Access beep foundation terms)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access beep foundation terms"
  * import { SemanticFoundationVocab } from "@beep/identity"
  *
- * console.log(SemanticFoundationVocab.beep.iri) // "https://ns.beep.sh/"
- * console.log(SemanticFoundationVocab.beep.terms.includes("ontology/semantic-foundation")) // true
+ * SemanticFoundationVocab.beep.iri // => "https://ns.beep.sh/"
+ * SemanticFoundationVocab.beep.terms.includes("ontology/semantic-foundation") // => true
  * ```
  *
  * @category constants

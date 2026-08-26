@@ -2,20 +2,22 @@
 
 ## Status
 
-Status: `pending`
+Status: `complete`
 
-Blocked: semantic-web PR2 and PR3 cleanup notes require landed-content
-evidence before P1.
+Blockers cleared 2026-08-25 (`history/p0-blocker-audit.md`); P1–P2 evidence in
+`history/p1-p2-evidence.md`; closeout reflection in
+`history/reflections/2026-08-25-claude.md`; P3 ships as the PR carrying this
+flip, driven to merge-ready via Yeet.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Blocker and contract audit | pending | Prove semantic-web PR2+PR3 landed and bind post-move contracts. | Both textual blockers clear with evidence. |
-| P1 Implement | pending | Add Fibered, migration, registry, projection, and test/dev Layers. | Full MAP row works. |
-| P2 Verify | pending | Run type/behavior/byte/projection/layer proof. | Required gates pass. |
-| P3 Yeet: PR to mergeable | pending | Publish and close hosted gates. | Merge-ready. |
-| P4 Close | pending | Reflect and sync lifecycle/evidence. | Closeout complete. |
+| P0 Blocker and contract audit | complete | Prove semantic-web PR2+PR3 landed and bind post-move contracts. | Both textual blockers clear with evidence. |
+| P1 Implement | complete | Add Fibered, migration, registry, projection, and test/dev Layers. | Full MAP row works. |
+| P2 Verify | complete | Run type/behavior/byte/projection/layer proof. | Required gates pass. |
+| P3 Yeet: PR to mergeable | complete | Publish and close hosted gates. | Merge-ready. |
+| P4 Close | complete | Reflect and sync lifecycle/evidence. | Closeout complete. |
 
 ## Execution Notes
 

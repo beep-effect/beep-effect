@@ -39,6 +39,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`lejeune-bolt-agentic-demo`](./lejeune-bolt-agentic-demo/README.md) — shape
+  (2026-08-26): lunch pitch next week to LeJeune Bolt (Burnsville MN structural
+  fastener distributor; stadium/bridge/TNA work) whose veterans are retiring.
+  Six research lanes synthesized; operator-ratified thesis: Option C — a
+  disposable version of the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`), working
+  title "LeJeune Knowledge Desk," composing beep bricks, deployed to the tailnet only, and
+  running a fixed 30-minute scenario over the public site corpus plus synthetic Office records.
+  Align completed with Benjamin (17 decisions ratified). Next: shape review of the brief;
+  graduation follows decompose.
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
   (digest-named global protocol type + projections + journal-audited
@@ -151,6 +160,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Parked
 
+- [`knowledge-endgame`](./knowledge-endgame/README.md) — parked 2026-08-25 at
+  capture by design: preservation of the four-part knowledge-endgame
+  synthesis (join layer over five laws; practice-as-repo / lint-as-trust;
+  agents as FDEs; clone-and-go distribution) plus the training-data-flywheel
+  coda. Critical path already lives in packet-system-redesign Amendments
+  H/I/J and protocol-as-value. Reopen triggers are recorded in the packet's
+  [`DECISIONS.md`](./knowledge-endgame/DECISIONS.md) 2026-08-25 park entry
+  (the authoritative list).
 - [`project-intelligence`](./project-intelligence/README.md) — parked
   2026-08-13, superseded by the operating loop in
   `goals/nightly-research-routine`; resume when a legal-grade provenance

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "knowledge-endgame",
+    "title": "Knowledge Endgame",
+    "status": "parked",
+    "stage": "capture",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-25",
+    "updated": "2026-08-25"
+  }
+}

@@ -50,12 +50,12 @@ const stringifyUnknown = (value: unknown): string => {
  *
  * **Example** (Decode trimmed non-empty string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode trimmed non-empty string"
  * import * as S from "effect/Schema"
  * import { NonEmptyTrimmedStr } from "@beep/schema/String"
  *
  * const value = S.decodeUnknownSync(NonEmptyTrimmedStr)("  hello  ")
- * console.log(value) // "hello"
+ * value // => "hello"
  * ```
  *
  * @category validation
@@ -74,12 +74,12 @@ export const NonEmptyTrimmedStr = S.Trim.check(S.isNonEmpty({ message: "String m
  *
  * **Example** (Annotate decoded trimmed string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate decoded trimmed string"
  * import * as S from "effect/Schema"
  * import { NonEmptyTrimmedStr } from "@beep/schema/String"
  *
  * const label: NonEmptyTrimmedStr = S.decodeUnknownSync(NonEmptyTrimmedStr)("  hello  ")
- * console.log(label) // "hello"
+ * label // => "hello"
  * ```
  *
  * @category models
@@ -135,12 +135,12 @@ export type UUID = typeof UUID.Type;
  *
  * **Example** (Decode string or null)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode string or null"
  * import * as S from "effect/Schema"
  * import { NullableStr } from "@beep/schema/String"
  *
- * console.log(S.decodeUnknownSync(NullableStr)("hello")) // "hello"
- * console.log(S.decodeUnknownSync(NullableStr)(null)) // null
+ * S.decodeUnknownSync(NullableStr)("hello") // => "hello"
+ * S.decodeUnknownSync(NullableStr)(null) // => null
  * ```
  *
  * @category validation
@@ -158,12 +158,12 @@ export const NullableStr = S.String.pipe(
  *
  * **Example** (Annotate nullable string type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate nullable string type"
  * import * as S from "effect/Schema"
  * import { NullableStr } from "@beep/schema/String"
  *
  * const name: NullableStr = S.decodeUnknownSync(NullableStr)(null)
- * console.log(name) // null
+ * name // => null
  * ```
  *
  * @category models
@@ -199,13 +199,13 @@ export const OptionFromNullableStr = S.String.pipe(
  *
  * **Example** (Annotate Option string type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate Option string type"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OptionFromNullableStr } from "@beep/schema/String"
  *
  * const value: OptionFromNullableStr = S.decodeUnknownSync(OptionFromNullableStr)("hello")
- * console.log(O.isSome(value)) // true
+ * O.isSome(value) // => true
  * ```
  *
  * @category models
@@ -224,7 +224,7 @@ export type OptionFromNullableStr = typeof OptionFromNullableStr.Type;
  *
  * **Example** (Decode object to JSON string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode object to JSON string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { StrFromUnknown } from "@beep/schema/String"
@@ -232,7 +232,7 @@ export type OptionFromNullableStr = typeof OptionFromNullableStr.Type;
  * const program = S.decodeUnknownEffect(StrFromUnknown)({ ok: true })
  * const value = Effect.runSync(program)
  *
- * console.log(value) // "{\"ok\":true}"
+ * value // => "{\"ok\":true}"
  * ```
  *
  * @category codecs
@@ -256,13 +256,13 @@ export const StrFromUnknown = S.Unknown.pipe(
  *
  * **Example** (Decode Error to message)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Error to message"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { StrFromUnknown } from "@beep/schema/String"
  *
  * const text: StrFromUnknown = Effect.runSync(S.decodeUnknownEffect(StrFromUnknown)(new Error("boom")))
- * console.log(text) // "boom"
+ * text // => "boom"
  * ```
  *
  * @category models

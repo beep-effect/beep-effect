@@ -33,11 +33,11 @@ const PermittedCrossDomainPoliciesValueBase = LiteralKit([
  *
  * **Example** (Validate none policy value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate none policy value"
  * import * as S from "effect/Schema"
  * import { PermittedCrossDomainPoliciesValue } from "@beep/schema/PermittedCrossDomainPolicies"
  *
- * console.log(S.is(PermittedCrossDomainPoliciesValue)("none")) // true
+ * S.is(PermittedCrossDomainPoliciesValue)("none") // => true
  * ```
  *
  * @category schemas

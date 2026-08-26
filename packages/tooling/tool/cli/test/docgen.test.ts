@@ -13,6 +13,7 @@ import {
   DocgenLocalSelectedPackage,
   DocgenPackageAnalysis,
   DocgenQualityWorkerEvalReport,
+  DoctestReport,
   discoverDocgenWorkspacePackages,
   discoverOrphanDocgenConfigPaths,
   docgenLocalFullReasonsForTesting,
@@ -24,6 +25,7 @@ import {
   loadDocgenConfigDocument,
   makeQualityWorkerRunpodEvalPodCreateInput,
   requiredQualityWorkerRunpodEvalModel,
+  runDocgenLocal,
   runDocgenQualityWorkerRunpodEval,
   selectDocgenLocalPackagesForTesting,
   selectQualityWorkerRunpodTemplate,
@@ -35,19 +37,34 @@ import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { Pod, Runpod, Template } from "@beep/runpod";
 import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
-import { A, currentHostPlatform, O } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Cause, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Ref, Runtime } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import {
+  Cause,
+  ConfigProvider,
+  Duration,
+  Effect,
+  Exit,
+  FileSystem,
+  Layer,
+  Match,
+  Path,
+  pipe,
+  Ref,
+  Runtime,
+  Sink,
+  Stream,
+} from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import { ChildProcess } from "effect/unstable/process";
-import { describe, expect, it } from "vitest";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { DocgenQualityWorkerEvalRunner } from "@beep/repo-cli/test/Docgen";
 
 const provideScopedLayer =
@@ -78,6 +95,53 @@ const decodeDocgenConfigDocument = S.decodeUnknownSync(DocgenConfigDocument);
 const decodeWorkerEvalReportJson = S.decodeUnknownSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
 const isString = (value: unknown): value is string => typeof value === "string";
 const DOCGEN_COMMAND_TEST_TIMEOUT = 30_000;
+const DOCTEST_FIXTURE_DIR = new URL("./fixtures/doctest/", import.meta.url).pathname;
+const DOCTEST_FIXTURE_PACKAGE = "packages/doctest-fixture";
+const decodeDoctestReport = S.decodeUnknownEffect(S.fromJsonString(DoctestReport));
+
+const stubHandle = ChildProcessSpawner.makeHandle({
+  all: Stream.empty,
+  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+  getInputFd: () => Sink.drain,
+  getOutputFd: () => Stream.empty,
+  isRunning: Effect.succeed(false),
+  kill: () => Effect.void,
+  pid: ChildProcessSpawner.ProcessId(1),
+  stderr: Stream.empty,
+  stdin: Sink.drain,
+  stdout: Stream.empty,
+  unref: Effect.succeed(Effect.void),
+});
+
+const recordingSpawnerLayer = (spawned: Array<string>) =>
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) =>
+      Effect.sync(() => {
+        if (ChildProcess.isStandardCommand(command)) {
+          A.appendInPlace(spawned, A.join([command.command, ...command.args], " "));
+        }
+        return stubHandle;
+      })
+    )
+  );
+
+const rangeRejectingSpawnerLayer = (spawned: Array<string>) =>
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) =>
+      Effect.gen(function* () {
+        if (ChildProcess.isStandardCommand(command)) {
+          const commandText = A.join([command.command, ...command.args], " ");
+          A.appendInPlace(spawned, commandText);
+          if (command.command === "git" && Str.includes("origin/main...HEAD")(commandText)) {
+            return yield* Effect.die(new Error("range query rejected by test stub"));
+          }
+        }
+        return stubHandle;
+      })
+    )
+  );
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
   expect(Exit.isFailure(exit)).toBe(true);
@@ -143,6 +207,108 @@ const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
         yield* fs.remove(tmpDir, { recursive: true });
       })
   ).pipe(provideScopedLayer(CommandTestLayer));
+
+const withConfigEnv = <A, E, R>(
+  env: { readonly [key: string]: string },
+  use: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(use);
+
+const seedDocgenPackage = Effect.fn("DocgenTest.seedDocgenPackage")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const tmpDir = process.cwd();
+  yield* fs.writeFileString(
+    path.join(tmpDir, "package.json"),
+    encodeJson({
+      name: "@beep/test-root",
+      private: true,
+      workspaces: ["packages/foundation/*/*"],
+    })
+  );
+
+  const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
+  yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(packageDir, "package.json"),
+    encodeJson({ name: "@beep/schema", version: "0.0.0" })
+  );
+  yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+});
+
+const writeDoctestCommandFixtureRepo = Effect.fn("DocgenTest.writeDoctestCommandFixtureRepo")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = process.cwd();
+  const packageDir = path.join(repoRoot, DOCTEST_FIXTURE_PACKAGE);
+  const srcDir = path.join(packageDir, "src");
+
+  yield* fs.writeFileString(
+    path.join(repoRoot, "package.json"),
+    encodeJson({ name: "@beep/doctest-test-root", private: true, workspaces: ["packages/*"] })
+  );
+  yield* fs.makeDirectory(srcDir, { recursive: true });
+  yield* fs.writeFileString(
+    path.join(packageDir, "package.json"),
+    encodeJson({ name: "@beep/doctest-fixture", version: "0.0.0" })
+  );
+  yield* Effect.forEach(
+    ["assertions", "console-rewrites", "markers", "purity"],
+    Effect.fnUntraced(function* (fixtureName) {
+      const fixture = yield* fs.readFileString(path.join(DOCTEST_FIXTURE_DIR, `${fixtureName}.ts.txt`));
+      const fixtureLines = Str.split(fixture, "\n");
+      const selectedLines =
+        fixtureName === "console-rewrites"
+          ? A.map(A.take(fixtureLines, 1), Str.replace('console.log("ok") // "ok"', "console.log(1 + 1) // 2"))
+          : fixtureLines;
+      const commentBody = A.join(
+        A.map(selectedLines, (line) => ` * ${line}`),
+        "\n"
+      );
+      const source = pipe(
+        Match.value(fixtureName),
+        Match.when(
+          "console-rewrites",
+          () => `/**
+ * **Example** (Console rewrites)
+ *
+ * \`\`\`ts
+${commentBody}
+ * \`\`\`
+ */
+export const consoleRewriteFixture = true;
+`
+        ),
+        Match.when(
+          "assertions",
+          () => `/**
+ * **Example** (Assertion validation)
+ *
+ * \`\`\`ts
+${commentBody}
+ * \`\`\`
+ */
+export const assertionFixture = true;
+`
+        ),
+        Match.when(
+          "markers",
+          () => `/**
+ * **Example** (Marker fixtures)
+ *
+${commentBody}
+ */
+export const markerFixture = true;
+`
+        ),
+        Match.orElse(() => fixture)
+      );
+      yield* fs.writeFileString(path.join(srcDir, `${fixtureName}.ts`), source);
+    }),
+    { discard: true }
+  );
+
+  return { packageDir, repoRoot, srcDir };
+});
 
 describe("Docgen operations", () => {
   it("defaults docgen config source fields in the schema without changing explicit wire shape", () => {
@@ -302,7 +468,7 @@ export const ProofFixture = 1;
             Process.of({
               argv: Effect.succeed([]),
               cwd: Effect.succeed(packageDir),
-              platform: Effect.succeed(currentHostPlatform),
+              platform: Effect.succeed(process.platform),
             })
           );
           const packageConfigurationLayer = Configuration.layer({
@@ -317,7 +483,6 @@ export const ProofFixture = 1;
             parseCompilerOptions: defaultCompilerOptions,
             projectHomepage: "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/schema",
             projectName: "@beep/schema",
-            runExamples: false,
             srcDir: "src",
             srcLink: "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/schema/src/",
             theme: DEFAULT_THEME,
@@ -383,6 +548,50 @@ export const ProofFixture = 1;
       )
     ));
 
+  it.effect("builds a full plan without querying the configured git range", () => {
+    const spawned = A.empty<string>();
+    return withTempRepo(
+      Effect.gen(function* () {
+        const plan = yield* buildDocgenLocalPlan({
+          allowFull: false,
+          base: "origin/main",
+          full: true,
+          head: "HEAD",
+          json: false,
+          packageSelector: O.none(),
+          parallel: 1,
+          plan: true,
+        }).pipe(provideScopedLayer(rangeRejectingSpawnerLayer(spawned)));
+
+        expect(plan.mode).toBe("full");
+        expect(spawned).toEqual([]);
+      })
+    );
+  });
+
+  it.effect("queries the configured git range when building an affected plan", () => {
+    const spawned = A.empty<string>();
+    return withTempRepo(
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(
+          buildDocgenLocalPlan({
+            allowFull: false,
+            base: "origin/main",
+            full: false,
+            head: "HEAD",
+            json: false,
+            packageSelector: O.none(),
+            parallel: 1,
+            plan: true,
+          }).pipe(provideScopedLayer(rangeRejectingSpawnerLayer(spawned)))
+        );
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(A.some(spawned, Str.includes("git diff --no-renames --name-only origin/main...HEAD"))).toBe(true);
+      })
+    );
+  });
+
   it(
     "prints a local docgen package plan from the command surface",
     {
@@ -423,6 +632,83 @@ export const ProofFixture = 1;
         )
       )
   );
+
+  it.effect("plans full docgen with configured concurrency and both execution steps", () =>
+    withTempRepoCommand(
+      withConfigEnv(
+        { BEEP_DOCGEN_CONCURRENCY: "6" },
+        Effect.gen(function* () {
+          yield* seedDocgenPackage();
+          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema"]);
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(output).toContain("- mode: full");
+          expect(output).toContain("- package concurrency: 6");
+          expect(output).toContain("- full turbo command: node_modules/.bin/turbo run docgen --concurrency=6");
+          expect(output).toContain("- full aggregate command: bun run docs:aggregate");
+        })
+      )
+    )
+  );
+
+  it.effect("prefers the local --parallel flag over configured concurrency", () =>
+    withTempRepoCommand(
+      withConfigEnv(
+        { BEEP_DOCGEN_CONCURRENCY: "6" },
+        Effect.gen(function* () {
+          yield* seedDocgenPackage();
+          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema", "--parallel", "8"]);
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(output).toContain("- package concurrency: 8");
+          expect(output).toContain("--concurrency=8");
+          expect(output).not.toContain("--concurrency=6");
+        })
+      )
+    )
+  );
+
+  it.effect("defaults local docgen concurrency to three", () =>
+    withTempRepoCommand(
+      withConfigEnv(
+        {},
+        Effect.gen(function* () {
+          yield* seedDocgenPackage();
+          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema"]);
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(output).toContain("- package concurrency: 3");
+          expect(output).toContain("--concurrency=3");
+        })
+      )
+    )
+  );
+
+  it.effect("executes full docgen through direct Turbo and aggregate steps", () => {
+    const spawned = A.empty<string>();
+    return withTempRepo(
+      Effect.gen(function* () {
+        yield* seedDocgenPackage();
+        const repoRoot = process.cwd();
+        const plan = yield* runDocgenLocal({
+          allowFull: false,
+          base: "origin/main",
+          full: true,
+          head: "HEAD",
+          json: false,
+          packageSelector: O.some("@beep/schema"),
+          parallel: 6,
+          plan: false,
+        }).pipe(provideScopedLayer(recordingSpawnerLayer(spawned)));
+
+        expect(plan.mode).toBe("full");
+        expect(spawned).toEqual([
+          `${repoRoot}/node_modules/.bin/turbo run docgen --concurrency=6`,
+          "bun run docs:aggregate",
+        ]);
+      })
+    );
+  });
 
   it(
     "rejects local docgen JSON output without plan mode",
@@ -3489,7 +3775,7 @@ export const ProofFixture = 1;
             Process.of({
               argv: Effect.succeed([]),
               cwd: Effect.succeed(packageDir),
-              platform: Effect.succeed(currentHostPlatform),
+              platform: Effect.succeed(process.platform),
             })
           );
           const packageConfigurationLayer = Configuration.layer({
@@ -3504,7 +3790,6 @@ export const ProofFixture = 1;
             parseCompilerOptions: defaultCompilerOptions,
             projectHomepage: "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/schema",
             projectName: "@beep/schema",
-            runExamples: false,
             srcDir: "src",
             srcLink: "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/schema/src/",
             theme: DEFAULT_THEME,
@@ -4220,6 +4505,148 @@ export const ValidExport = packageDocAnchor;
           expect(process.exitCode ?? 0).toBe(0);
         })
       )
+    )
+  );
+
+  it.effect("previews selected doctest rewrites as a schema-valid JSON report without writing", () =>
+    withTempRepoCommand(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { srcDir } = yield* writeDoctestCommandFixtureRepo();
+        const sourcePath = path.join(srcDir, "console-rewrites.ts");
+        const before = yield* fs.readFileString(sourcePath);
+
+        yield* runDocgenCommand([
+          "doctest",
+          "mark",
+          "--filter",
+          "@beep/doctest-fixture",
+          "--include",
+          `${DOCTEST_FIXTURE_PACKAGE}/src/console-rewrites.ts`,
+          "--json",
+        ]);
+
+        const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        const report = yield* decodeDoctestReport(output);
+        expect(report.config).toMatchObject({
+          filter: "@beep/doctest-fixture",
+          include: [`${DOCTEST_FIXTURE_PACKAGE}/src/console-rewrites.ts`],
+          json: true,
+          write: false,
+        });
+        expect(report.counts.files).toBe(1);
+        expect(report.counts.plannedConsoleRewrites).toBe(1);
+        expect(report.changedFiles).toEqual([`${DOCTEST_FIXTURE_PACKAGE}/src/console-rewrites.ts`]);
+        expect(yield* fs.readFileString(sourcePath)).toBe(before);
+      })
+    )
+  );
+
+  it.effect("resolves a filtered Doctest include relative to the selected package src directory", () =>
+    withTempRepoCommand(
+      Effect.gen(function* () {
+        yield* writeDoctestCommandFixtureRepo();
+
+        yield* runDocgenCommand([
+          "doctest",
+          "mark",
+          "--filter",
+          "@beep/doctest-fixture",
+          "--include",
+          "console-rewrites.ts",
+          "--json",
+        ]);
+
+        const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        const report = yield* decodeDoctestReport(output);
+        expect(report.config.include).toEqual(["console-rewrites.ts"]);
+        expect(report.counts.files).toBe(1);
+        expect(report.changedFiles).toEqual([`${DOCTEST_FIXTURE_PACKAGE}/src/console-rewrites.ts`]);
+      })
+    )
+  );
+
+  it.effect("writes canonical doctest markers and renders the human summary", () =>
+    withTempRepoCommand(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { srcDir } = yield* writeDoctestCommandFixtureRepo();
+        const sourcePath = path.join(srcDir, "markers.ts");
+
+        yield* runDocgenCommand([
+          "doctest",
+          "mark",
+          "--write",
+          "--filter",
+          "@beep/doctest-fixture",
+          "--include",
+          `${DOCTEST_FIXTURE_PACKAGE}/src/markers.ts`,
+        ]);
+
+        const rewritten = yield* fs.readFileString(sourcePath);
+        const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        expect(rewritten).toContain('```ts import.meta.vitest name="Marker fixtures"');
+        expect(output).toContain("doctest: 1 file(s), 3 fence(s)");
+        expect(output).toContain("missing-example-title");
+      })
+    )
+  );
+
+  it.effect("keeps pure-unmarked doctest findings warning-only", () =>
+    withTempRepoCommand(
+      Effect.gen(function* () {
+        yield* writeDoctestCommandFixtureRepo();
+        yield* runDocgenCommand(["doctest", "verify", "--include", `${DOCTEST_FIXTURE_PACKAGE}/src/purity.ts`]);
+
+        const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        expect(output).toContain("pure-unmarked");
+        expect(yield* TestConsole.errorLines).toEqual([]);
+      })
+    )
+  );
+
+  it.effect("returns a reported error exit for blocking doctest findings after rendering JSON", () =>
+    withTempRepoCommand(
+      Effect.gen(function* () {
+        yield* writeDoctestCommandFixtureRepo();
+        const exit = yield* Effect.exit(
+          runDocgenCommand([
+            "doctest",
+            "verify",
+            "--filter",
+            "@beep/doctest-fixture",
+            "--include",
+            `${DOCTEST_FIXTURE_PACKAGE}/src/markers.ts`,
+            "--json",
+          ])
+        );
+
+        const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        const report = yield* decodeDoctestReport(output);
+        expect(A.map(report.findings, (finding) => finding.kind)).toContain("missing-example-title");
+        expect(A.join(A.filter(yield* TestConsole.errorLines, isString), "\n")).toContain(
+          "Doctest verification found 2 blocking finding(s)."
+        );
+        expectReportedExit(exit);
+      })
+    )
+  );
+
+  it.effect("reports an invalid doctest mark preview through the rewrite error boundary", () =>
+    withTempRepoCommand(
+      Effect.gen(function* () {
+        yield* writeDoctestCommandFixtureRepo();
+        const exit = yield* Effect.exit(
+          runDocgenCommand(["doctest", "mark", "--include", `${DOCTEST_FIXTURE_PACKAGE}/src/assertions.ts`])
+        );
+
+        expect(A.join(A.filter(yield* TestConsole.errorLines, isString), "\n")).toContain(
+          "Rewritten fence failed upstream doctest transform validation."
+        );
+        expectReportedExit(exit);
+      })
     )
   );
 });

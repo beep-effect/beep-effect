@@ -129,9 +129,6 @@ export class ConfigurationSchema extends S.Class<ConfigurationSchema>($I`Configu
     projectHomepage: S.optionalKey(S.String).annotateKey({
       description: "Project homepage URL used as the base for generated links.",
     }),
-    runExamples: booleanKeyDefault(false).annotateKey({
-      description: "Whether generated examples are executed after type-checking.",
-    }),
     srcDir: stringKeyDefault("src").annotateKey({
       description: "Source directory scanned by docgen.",
     }),
@@ -195,7 +192,6 @@ export type ConfigurationDocument = ConfigurationSchema;
  *   parseCompilerOptions: defaultCompilerOptions,
  *   projectHomepage: "https://github.com/beep-effect/beep-effect",
  *   projectName: "@beep/repo-docgen",
- *   runExamples: false,
  *   srcDir: "src",
  *   srcLink: "https://github.com/beep-effect/beep-effect/blob/main/packages/tooling/tool/docgen/src",
  *   theme: DEFAULT_THEME,
@@ -243,9 +239,6 @@ export class ConfigurationShape extends S.Class<ConfigurationShape>($I`Configura
     projectName: S.String.annotateKey({
       description: "Resolved package name read from package.json.",
     }),
-    runExamples: S.Boolean.annotateKey({
-      description: "Whether generated examples are executed after type-checking.",
-    }),
     srcDir: S.String.annotateKey({
       description: "Resolved source directory scanned by docgen.",
     }),
@@ -290,7 +283,6 @@ export class ConfigurationShape extends S.Class<ConfigurationShape>($I`Configura
  *   parseCompilerOptions: defaultCompilerOptions,
  *   projectHomepage: "https://github.com/beep-effect/beep-effect",
  *   projectName: "@beep/repo-docgen",
- *   runExamples: false,
  *   srcDir: "src",
  *   srcLink: "https://github.com/beep-effect/beep-effect/blob/main/packages/tooling/tool/docgen/src",
  *   theme: DEFAULT_THEME,
@@ -361,7 +353,6 @@ type LoadArgs = {
   readonly outDir: O.Option<string>;
   readonly parseCompilerOptions: O.Option<CompilerOptionsInput>;
   readonly projectHomepage: O.Option<string>;
-  readonly runExamples: O.Option<boolean>;
   readonly srcDir: O.Option<string>;
   readonly srcLink: O.Option<string>;
   readonly theme: O.Option<string>;
@@ -537,7 +528,6 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
  *   outDir: O.none(),
  *   parseCompilerOptions: O.none(),
  *   projectHomepage: O.none(),
- *   runExamples: O.none(),
  *   srcDir: O.none(),
  *   srcLink: O.none(),
  *   theme: O.none(),
@@ -582,7 +572,6 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
   const enforceExamples = O.getOrElse(args.enforceExamples, () => docgenConfig.enforceExamples);
   const enforceVersion = O.getOrElse(args.enforceVersion, () => docgenConfig.enforceVersion);
   const tscExecutable = O.getOrElse(args.tscExecutable, () => docgenConfig.tscExecutable);
-  const runExamples = O.getOrElse(args.runExamples, () => docgenConfig.runExamples);
   const include = O.getOrElse(args.include, () => docgenConfig.include);
   const exclude = O.getOrElse(args.exclude, () => docgenConfig.exclude);
   const parseCompilerOptions = yield* resolveCompilerOptions(
@@ -619,7 +608,6 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
     parseCompilerOptions,
     projectHomepage,
     projectName,
-    runExamples,
     srcDir,
     srcLink,
     theme,

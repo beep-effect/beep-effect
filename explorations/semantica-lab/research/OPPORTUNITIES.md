@@ -69,6 +69,91 @@ ratifies.
 
 ## Friction receipts
 
+- **2026-08-26: Two documented verification commands do not match the installed tools.**
+  `bun run fallow dead-code --check` exits with `unexpected argument '--check'`; the working
+  regression gate requires `--fail-on-regression` plus the tracked dead-code baseline. The
+  package-scoped JSDoc loop also exits because `apps/labs/semantica` has no `docgen.json`, even
+  though the lab exports documented services and layers. Prevention: expose a stable root
+  dead-code check script and initialize docgen when a workspace first adds public source exports.
+
+- **2026-08-26 — PR B lock refresh still requires registry access despite an existing lock and install.**
+  `bun install --lockfile-only --ignore-scripts` first failed with `EROFS accessing temporary
+  directory`; explicit task-local `BUN_TMPDIR` and `BUN_INSTALL` paths under `/tmp` passed that
+  point, but the lock-only run then failed on `DNSResolveFailed downloading package manifest` for
+  already-installed catalog packages. The new workspace edges compile and all lab tests run from
+  the existing install, but Bun cannot regenerate the workspace lock stanza in this managed
+  sandbox. Prevention: make lock-only installs resolve catalog metadata from the existing lock and
+  cache, or provide managed sessions a writable populated Bun cache with registry access.
+
+- **2026-08-25 — C0 schema verification reproduced two managed-sandbox Bun failures.** `bun install`
+  failed immediately with `EROFS accessing temporary directory`; setting `BUN_TMPDIR=/tmp` did
+  not change the result, so the lockfile could not be refreshed. The exact app proof then reached
+  `bunx --bun vitest run` but produced no worker results until interrupted; the authorized fallback
+  `node ../../../node_modules/vitest/vitest.mjs run` completed all 40 tests. Prevention: provide Bun
+  a writable effective temp/cache root in managed sessions and route lab Vitest scripts through the
+  direct Node entrypoint when Bun worker startup is known to hang.
+
+- **2026-08-25 — Git `text=auto` silently rewrote a byte-exact fixture at commit time.** The
+  root `.gitattributes` normalizes every auto-detected text file, so the committed blob of the
+  CRLF span-fidelity specimen `md-unicode.md` lost its `\r` bytes (sha `886330…` in the index
+  versus `a40ded…` on disk and in `fixtures/f1/index.json`); CI checkouts would have failed
+  `F1Catalog` drift while every local run passed. Evidence: `git show HEAD:<file> | sha256sum`
+  versus `sha256sum <file>` after the first commit. Fix: a lab-local
+  `fixtures/f1/documents/.gitattributes` with `* -text -diff -merge` plus `git add --renormalize`.
+  Prevention: any committed byte-exact evidence directory needs its own `-text` attribute the
+  moment it is created; a test that hashes `git show :<path>` (the index) rather than the
+  worktree file would have caught it before the hook ran.
+
+- **2026-08-25 — A Bun root import made the PDF generator untestable under Node.**
+  The direct Vitest lane failed with `Cannot find package 'bun'` from
+  `@effect/platform-bun/dist/BunRedis.js` when it imported the PDF generator. The generator used
+  the platform package root only for `BunRuntime`, which pulled unrelated BunRedis exports into
+  Node. Switching runtime and service imports to the explicit `BunRuntime` and `BunServices`
+  subpaths restored the 14-test lane. Prevention: lint platform-bun root imports in modules that
+  can be imported by Node tests.
+
+- **2026-08-25 — The requested zero-argument service methods conflict with the v4 compiler law.**
+  Modeling `CorpusManifestBuilder.build()` and `F1Catalog.load()` exactly as zero-argument
+  functions returning `Effect` made `bun run check` fail with `effect(lazyEffect)`: Effect is
+  already lazy, so the wrapper adds unnecessary indirection. The services therefore expose
+  effect-valued `build` and `load` members while `check(manifestPath)` remains a method.
+  Prevention: phrase v4 service contracts as effect-valued members when no runtime arguments are
+  required, or revise the compiler policy before requiring zero-argument Effect methods.
+
+- **2026-08-25 — Biome treats the deliberately truncated HTML fixture as source input.**
+  The F1 formatting pass failed before linting with `Missing closing quote` and `expected > but
+  instead the file ends` on `fixtures/f1/documents/html-truncated.html`. Those bytes are the
+  requested malformed specimen, so making the document parseable would erase the test case.
+  Prevention: lab fixture generators or lint geometry should support a narrow committed-fixture
+  exclusion for intentionally malformed parser inputs.
+
+- **2026-08-25 — Bun's Vitest wrapper stalled after test startup in the managed sandbox.**
+  The P1 step-2 baseline reached `RUN v4.1.11` for `bun run test` but produced no test
+  results before the command runner returned, so the chained baseline never reached its build
+  step. The task already names this sandbox failure mode and authorizes the direct Node runner.
+  Prevention: use `node ../../../node_modules/vitest/vitest.mjs run` for Semantica test proof in
+  managed sandboxes, while retaining `bun run test` as the host lane command.
+
+- **2026-08-25 — Effect reference checkout drifted from the installed rc.111 API.** P1 API
+  verification found the checkout platform package at
+  `.repos/effect/packages/platform/bun`, not the contracted
+  `.repos/effect/packages/platform-bun` path. The checkout's `Config.ts` also exposes
+  `Config.NonEmptyString` and `Config.Boolean`, while installed `effect@4.0.0-rc.111` exposes
+  the lowercase `Config.nonEmptyString` and `Config.boolean` used by this repository. The installed
+  package also exposes `Schema.toArbitrary` and `effect/testing`'s `FastCheck`; neither export is in
+  the checkout. The installed version must win, but resolving the mismatch adds a second source
+  lookup for affected APIs. Prevention: pin the reference checkout to the exact lockfile artifact
+  or add a lightweight source-API parity check to agent bootstrap.
+
+- **2026-08-25 — Bun install could not refresh the minted workspace in the managed sandbox.**
+  The default run failed with `EROFS accessing temporary directory`. Dedicated `BUN_INSTALL`,
+  `BUN_TMPDIR`, and process temp paths under `/tmp` passed that point, but the restricted network
+  then produced `DNSResolveFailed downloading package manifest` for already-locked catalog
+  packages, including `effect` and `@effect/platform-bun`; `--offline` behaved the same way. The
+  dependencies were already installed, so compile and runtime verification remained available.
+  Prevention: give managed repo sessions a writable Bun cache/temp root populated from the lock,
+  or make Bun's offline install consume the existing lock without registry manifest refreshes.
+
 - **2026-08-24 — Knowledge gates vs future/external paths cost two verify cycles.** The refs
   gate requires backticked governed-root paths to exist in-tree (a planned lab path fails) and
   bans live `~/` host anchors in packet-root files, so the hygiene pass's absolute→`~/` rewrite

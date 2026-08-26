@@ -231,7 +231,7 @@ const normalizeGlobErrorCause = (cause: GlobErrorCauseInput): GlobError["cause"]
  *
  * **Example** (Run glob via service)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Run glob via service"
  * import { Effect } from "effect"
  * import { Glob, layer } from "@beep/utils/Glob"
  *
@@ -255,7 +255,7 @@ export interface Glob {
  *
  * **Example** (Access Glob service tag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access Glob service tag"
  * import { Effect } from "effect"
  * import { Glob, layer } from "@beep/utils/Glob"
  *
@@ -531,7 +531,7 @@ const makeGlob = Effect.fn("Glob.glob")(function* (
  *
  * **Example** (Provide Glob Effect layer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Provide Glob Effect layer"
  * import { Effect } from "effect"
  * import { Glob, layer } from "@beep/utils/Glob"
  *

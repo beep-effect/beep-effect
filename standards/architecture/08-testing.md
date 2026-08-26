@@ -6,6 +6,20 @@ The test runner is Vitest through the repo/package scripts: use `bun run test`
 from a package/root script, or `bunx --bun vitest run ...` for a targeted local
 lane. Never `bun test` — Bun's runner breaks `@effect/vitest`.
 
+## Documentation runtime tests
+
+`@effect/doctest` runs marked JSDoc TypeScript fences as isolated Vitest modules.
+Use `ts import.meta.vitest name="<Example title>"` on a runnable fence and place
+`// => expected` after an expression statement or one initialized `const`
+identifier. The lane checks runtime behavior and Effect equality only. Docgen's
+TypeScript example gate remains authoritative for imports and types, including
+type-only examples.
+
+Run all marked examples with `bun run doctest`. Run the hosted-lane shape with
+`bun run beep ci lane doctest --mode affected --base origin/main --head HEAD` or
+`--mode full`. The pull-request lane executes only changed source files which
+contain `import.meta.vitest`; pushes execute the full marked corpus.
+
 The executable proof target for the architecture is `packages/architecture-lab/*`
 with `apps/architecture-lab-proof`. It carries focused runtime tests for
 boundary subpaths, package shape, and strict port-to-action error translation

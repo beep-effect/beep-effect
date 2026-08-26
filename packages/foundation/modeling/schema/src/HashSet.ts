@@ -68,7 +68,7 @@ export interface HashSet<Value extends S.Top> extends S.decodeTo<S.HashSet<S.toT
  *
  * **Example** (Round-trip a stored set)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Round-trip a stored set"
  * import { HashSet } from "@beep/schema/HashSet"
  * import * as HashSet_ from "effect/HashSet"
  * import * as S from "effect/Schema"
@@ -76,8 +76,8 @@ export interface HashSet<Value extends S.Top> extends S.decodeTo<S.HashSet<S.toT
  * const StringSet = HashSet(S.String)
  *
  * const decoded = S.decodeUnknownSync(StringSet)(["a", "b", "a"])
- * console.log(HashSet_.size(decoded)) // 2
- * console.log(S.encodeSync(StringSet)(decoded).length) // 2
+ * HashSet_.size(decoded) // => 2
+ * S.encodeSync(StringSet)(decoded).length // => 2
  * ```
  *
  * @param value - Element schema for set members.

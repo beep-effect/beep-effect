@@ -616,15 +616,15 @@ const makeFromJsonString =
  *
  * **Example** (Attach sync codec statics via pipe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attach sync codec statics via pipe"
  * import * as S from "effect/Schema"
  * import { withSyncCodecStatics } from "@beep/schema/SchemaUtils/codecStatics"
  *
  * const Count = S.NumberFromString.pipe(withSyncCodecStatics)
  *
- * console.log(Count.is(42)) // true
- * console.log(Count.decodeUnknownSync("42")) // 42
- * console.log(Count.encodeSync(42)) // "42"
+ * Count.is(42) // => true
+ * Count.decodeUnknownSync("42") // => 42
+ * Count.encodeSync(42) // => "42"
  * ```
  *
  * @typeParam Sch - Service-free schema receiving the sync codec statics.
@@ -671,15 +671,15 @@ export const withSyncCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sc
  *
  * **Example** (Attach Promise codec statics via pipe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attach Promise codec statics via pipe"
  * import * as S from "effect/Schema"
  * import { withPromiseCodecStatics } from "@beep/schema/SchemaUtils/codecStatics"
  *
  * const Count = S.NumberFromString.pipe(withPromiseCodecStatics)
  *
- * console.log(Count.is(42)) // true
- * console.log(await Count.decodeUnknownPromise("42")) // 42
- * console.log(await Count.encodePromise(42)) // "42"
+ * Count.is(42) // => true
+ * await Count.decodeUnknownPromise("42") // => 42
+ * await Count.encodePromise(42) // => "42"
  * ```
  *
  * @typeParam Sch - Service-free schema receiving the Promise codec statics.
@@ -720,16 +720,16 @@ export const withPromiseCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self:
  *
  * **Example** (Attach Effect codec statics via pipe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attach Effect codec statics via pipe"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { withEffectCodecStatics } from "@beep/schema/SchemaUtils/codecStatics"
  *
  * const Count = S.NumberFromString.pipe(withEffectCodecStatics)
  *
- * console.log(Count.is(42)) // true
- * console.log(await Effect.runPromise(Count.decodeUnknownEffect("42"))) // 42
- * console.log(await Effect.runPromise(Count.encodeEffect(42))) // "42"
+ * Count.is(42) // => true
+ * await Effect.runPromise(Count.decodeUnknownEffect("42")) // => 42
+ * await Effect.runPromise(Count.encodeEffect(42)) // => "42"
  * ```
  *
  * @typeParam Sch - Schema receiving the Effect codec statics.
@@ -775,16 +775,16 @@ export const withEffectCodecStatics = <Sch extends EffectCapableCodec<Sch>>(self
  *
  * **Example** (Attach Exit codec statics via pipe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attach Exit codec statics via pipe"
  * import * as Exit from "effect/Exit"
  * import * as S from "effect/Schema"
  * import { withExitCodecStatics } from "@beep/schema/SchemaUtils/codecStatics"
  *
  * const Count = S.NumberFromString.pipe(withExitCodecStatics)
  *
- * console.log(Count.is(42)) // true
- * console.log(Exit.isSuccess(Count.decodeUnknownExit("42"))) // true
- * console.log(Exit.isSuccess(Count.encodeExit(42))) // true
+ * Count.is(42) // => true
+ * Exit.isSuccess(Count.decodeUnknownExit("42")) // => true
+ * Exit.isSuccess(Count.encodeExit(42)) // => true
  * ```
  *
  * @typeParam Sch - Service-free schema receiving the Exit codec statics.
@@ -830,16 +830,16 @@ export const withExitCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sc
  *
  * **Example** (Attach Option codec statics via pipe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attach Option codec statics via pipe"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { withOptionCodecStatics } from "@beep/schema/SchemaUtils/codecStatics"
  *
  * const Count = S.NumberFromString.pipe(withOptionCodecStatics)
  *
- * console.log(Count.is(42)) // true
- * console.log(O.isSome(Count.decodeUnknownOption("42"))) // true
- * console.log(O.isNone(Count.decodeUnknownOption(null))) // true
+ * Count.is(42) // => true
+ * O.isSome(Count.decodeUnknownOption("42")) // => true
+ * O.isNone(Count.decodeUnknownOption(null)) // => true
  * ```
  *
  * @typeParam Sch - Service-free schema receiving the Option codec statics.
@@ -885,16 +885,16 @@ export const withOptionCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: 
  *
  * **Example** (Attach Result codec statics via pipe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attach Result codec statics via pipe"
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  * import { withResultCodecStatics } from "@beep/schema/SchemaUtils/codecStatics"
  *
  * const Count = S.NumberFromString.pipe(withResultCodecStatics)
  *
- * console.log(Count.is(42)) // true
- * console.log(Result.isSuccess(Count.decodeUnknownResult("42"))) // true
- * console.log(Result.isFailure(Count.decodeUnknownResult(null))) // true
+ * Count.is(42) // => true
+ * Result.isSuccess(Count.decodeUnknownResult("42")) // => true
+ * Result.isFailure(Count.decodeUnknownResult(null)) // => true
  * ```
  *
  * @typeParam Sch - Service-free schema receiving the Result codec statics.

@@ -1,7 +1,7 @@
 /**
  * Professional Desktop React workbench shell bootstrap.
  *
- * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): thirteen
+ * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): fourteen
  * keep-alive dock panels — Home, Chat ({@link ChatApp}), Vault sync,
  * contradiction triage, and the nine ontology workbench regions — in one
  * workspace whose layout the user can rearrange and which persists to
@@ -50,6 +50,7 @@ import { Component, lazy, Suspense } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
+import { EditorProofPanel } from "./editor-proof/EditorProofPanel.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
 import { BrowserFailureSource, reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
 import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runtime/ProfessionalAtomRuntime.ts";
@@ -152,10 +153,12 @@ const sidecarTransportAtom = professionalBrowserRuntime.atom(readSidecarTranspor
 // what this session is and how to unlock it.
 const DesktopSessionNotice = ({ label }: { readonly label: string }): JSX.Element => (
   <div
-    className="grid h-full place-items-center p-6 text-center text-sm text-muted-foreground"
+    className="grid h-full min-w-0 place-items-center overflow-hidden p-6 text-center text-sm text-muted-foreground"
     data-testid="desktop-session-required"
   >
-    <div className="max-w-md">
+    {/* Env-var tokens have no break opportunities; let them wrap inside a
+        narrow pane instead of clipping at its edge. */}
+    <div className="min-w-0 max-w-md break-words [overflow-wrap:anywhere]">
       <p>{label} needs the desktop shell or an authenticated desktop HTTP session.</p>
       <p className="mt-2 text-xs">
         This browser session is chat-only. Launch the sidecar with BEEP_DESKTOP_RPC_SESSION_TOKEN and start Vite with
@@ -572,6 +575,7 @@ const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPa
   return {
     home: () => wrap("Home", <HomeSurface />),
     chat: () => wrap("Chat", <ChatApp />),
+    "editor-proof": () => wrap("Editor proof", <EditorProofPanel />),
     sync: () => wrapDesktop("Vault sync", <VaultSyncPanel floating={false} />),
     "contradiction-triage": () => wrapDesktop("Contradiction Triage", <ContradictionTriagePanel />),
     "ontology-explorer": () => wrapDesktop("Explorer", <OntologyExplorerRegion />),

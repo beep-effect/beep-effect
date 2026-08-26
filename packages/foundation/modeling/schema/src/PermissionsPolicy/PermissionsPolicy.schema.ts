@@ -57,11 +57,11 @@ const PermissionsPolicyDirectiveBase = LiteralKit([
  *
  * **Example** (Validate camera directive name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate camera directive name"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyDirective } from "@beep/schema/PermissionsPolicy"
  *
- * console.log(S.is(PermissionsPolicyDirective)("camera")) // true
+ * S.is(PermissionsPolicyDirective)("camera") // => true
  * ```
  *
  * @category schemas
@@ -187,11 +187,11 @@ const PermissionsPolicyDirectiveValueSingleBase = LiteralKit(["*", "self", "none
  *
  * **Example** (Validate self allowlist token)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate self allowlist token"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyDirectiveValueSingle } from "@beep/schema/PermissionsPolicy"
  *
- * console.log(S.is(PermissionsPolicyDirectiveValueSingle)("self")) // true
+ * S.is(PermissionsPolicyDirectiveValueSingle)("self") // => true
  * ```
  *
  * @category schemas

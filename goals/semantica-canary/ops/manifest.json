@@ -5,12 +5,12 @@
     "title": "Semantica Canary",
     "status": "active",
     "created": "2026-08-24",
-    "updated": "2026-08-24",
+    "updated": "2026-08-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantica-canary",
   "lifecycle": "active",
-  "statusNote": "Scaffolded 2026-08-24 by the docs-only graduation ceremony (M5, PR B); P1 step 1 (the lab mint) lands on its own PR next.",
+  "statusNote": "P1 Scaffold nearly complete: lab mint (PR #819) + F1 fixtures and the W1 manifest (history/p1-w1-manifest.md); gold/v1 rides its own gold-proposer PR before the first C0 slice (ids frozen from the manifest order, D-C0-9).",
   "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -53,7 +53,7 @@
     {
       "id": "P1",
       "name": "Scaffold",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

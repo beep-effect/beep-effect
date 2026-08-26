@@ -52,12 +52,12 @@ export class ExpectCTConfig extends S.Class<ExpectCTConfig>($I`ExpectCTConfig`)(
  *
  * **Example** (Decoding enabled Expect-CT)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding enabled Expect-CT"
  * import * as S from "effect/Schema"
- * import { ExpectCTConfig, ExpectCTEnabled } from "@beep/schema/ExpectCt"
+ * import { ExpectCTEnabled } from "@beep/schema/ExpectCt"
  *
- * const enabled = S.decodeUnknownSync(ExpectCTEnabled)([true, ExpectCTConfig.make({ enforce: true })])
- * console.log(enabled[0])
+ * const enabled = S.decodeUnknownSync(ExpectCTEnabled)([true, { enforce: true }])
+ * enabled[0] // => true
  * ```
  *
  * @category schemas

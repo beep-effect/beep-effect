@@ -85,11 +85,11 @@ const defaultGraph = DefaultGraph.make({ termType: "DefaultGraph", value: "" });
  *
  * **Example** (Inspect a codec failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect a codec failure"
  * import { ProvRdfCodecError } from "@beep/rdf/ProvRdf"
  *
  * const error = ProvRdfCodecError.make({ message: "Unsupported PROV record" })
- * console.log(error._tag) // "ProvRdfCodecError"
+ * error._tag // => "ProvRdfCodecError"
  * ```
  *
  * @category errors
@@ -108,7 +108,7 @@ export class ProvRdfCodecError extends S.TaggedError<ProvRdfCodecError>($I`ProvR
  *
  * **Example** (Select a named audit graph)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Select a named audit graph"
  * import * as O from "effect/Option"
  * import { ProvRdfCodecOptions } from "@beep/rdf/ProvRdf"
  * import { makeNamedNode } from "@beep/rdf/Rdf"
@@ -116,7 +116,7 @@ export class ProvRdfCodecError extends S.TaggedError<ProvRdfCodecError>($I`ProvR
  * const options = ProvRdfCodecOptions.make({
  *   graph: O.some(makeNamedNode("urn:example:audit"))
  * })
- * console.log(O.isSome(options.graph)) // true
+ * O.isSome(options.graph) // => true
  * ```
  *
  * @category configuration
@@ -548,13 +548,13 @@ const isProvBundleDataFirst = (args: IArguments): boolean => S.is(ProvBundle)(ar
  *
  * **Example** (Project an empty bundle)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Project an empty bundle"
  * import * as Result from "effect/Result"
  * import { ProvBundle } from "@beep/rdf/Prov"
  * import { provBundleToDataset } from "@beep/rdf/ProvRdf"
  *
  * const projected = provBundleToDataset(ProvBundle.make({ records: [] }))
- * console.log(Result.isSuccess(projected)) // true
+ * Result.isSuccess(projected) // => true
  * ```
  *
  * @category serialization
@@ -953,12 +953,12 @@ const isDatasetDataFirst = (args: IArguments): boolean => S.is(Dataset)(args[0])
  *
  * **Example** (Decode an empty dataset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode an empty dataset"
  * import * as Result from "effect/Result"
  * import { datasetToProvBundle } from "@beep/rdf/ProvRdf"
  * import { makeDataset } from "@beep/rdf/Rdf"
  *
- * console.log(Result.isSuccess(datasetToProvBundle(makeDataset([])))) // true
+ * Result.isSuccess(datasetToProvBundle(makeDataset([]))) // => true
  * ```
  *
  * @category decoding

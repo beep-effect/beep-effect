@@ -1930,6 +1930,28 @@
       ],
       "@beep/skill-contract/*": [
         "./packages/foundation/modeling/skill-contract/src/*"
+      ],
+      "@beep/codegen-kit": [
+        "./packages/tooling/library/codegen-kit/src/index.ts"
+      ],
+      "@beep/codegen-kit/*": ["./packages/tooling/library/codegen-kit/src/*"],
+      "@beep/editor/capability": [
+        "./packages/foundation/ui-system/editor/src/capability/index.ts"
+      ],
+      "@beep/editor/capability/*": [
+        "./packages/foundation/ui-system/editor/src/capability/*"
+      ],
+      "@beep/editor/capability/composer": [
+        "./packages/foundation/ui-system/editor/src/capability/composer.tsx"
+      ],
+      "@beep/editor/capability/runtime": [
+        "./packages/foundation/ui-system/editor/src/capability/runtime.tsx"
+      ],
+      "@beep/editor/capability/shortcut-help": [
+        "./packages/foundation/ui-system/editor/src/capability/shortcut-help.tsx"
+      ],
+      "@beep/editor/capability/toolbar": [
+        "./packages/foundation/ui-system/editor/src/capability/toolbar.tsx"
       ]
     }
   }

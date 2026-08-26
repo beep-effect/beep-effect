@@ -228,26 +228,88 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
   });
 });
 
+const runPhaseStep = Effect.fn("Yeet.runPhaseStep")(function* (
+  context: RepoRunContext,
+  step: RepoPlanStep,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
+) {
+  const fallbackStartedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const [duration, result] = yield* executeStepWithArtifacts(context, step).pipe(Effect.timed);
+  const fallbackEndedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const elapsedMs = result.elapsedMs ?? Duration.toMillis(duration);
+  const timedResult = RepoStepRunResult.make({
+    ...result,
+    startedAt: result.startedAt ?? fallbackStartedAt,
+    endedAt: result.endedAt ?? fallbackEndedAt,
+    elapsedMs,
+  });
+  yield* Ref.update(recorder, A.append(YeetExecutedStep.make({ durationMs: elapsedMs, result: timedResult, step })));
+  return timedResult;
+});
+
 const runProofPhase = Effect.fn("Yeet.runProofPhase")(function* (
   context: RepoRunContext,
   steps: ReadonlyArray<RepoPlanStep>,
-  tier: YeetProofTier,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
 ): Effect.fn.Return<
   ReadonlyArray<RepoStepRunResult>,
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  if (tier !== "full") {
-    return yield* runPhase(context, steps, recorder);
+  let results = A.empty<RepoStepRunResult>();
+  for (const step of steps) {
+    const result = yield* runPhaseStep(context, step, recorder);
+    results = A.append(results, result);
+    if (result.exitCode !== 0) {
+      return results;
+    }
   }
-
-  return yield* Effect.acquireUseRelease(
-    acquireFullProofLock(context, steps),
-    () => runPhase(context, steps, recorder),
-    releaseProofLock
-  );
+  return results;
 });
+
+const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator")(function* <
+  Success,
+  Error,
+  Requirements,
+>(context: RepoRunContext, proofSteps: ReadonlyArray<RepoPlanStep>, use: Effect.Effect<Success, Error, Requirements>) {
+  return yield* Effect.acquireUseRelease(acquireFullProofLock(context, proofSteps), () => use, releaseProofLock);
+});
+
+/**
+ * Run proof steps with fail-fast behavior between top-level proof steps.
+ *
+ * **Example** (Reference the proof-phase test helper)
+ *
+ * ```ts
+ * import { runProofPhaseForTesting } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const helper = Effect.succeed(runProofPhaseForTesting)
+ * console.log(Effect.isEffect(helper)) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runProofPhaseForTesting = runProofPhase;
+
+/**
+ * Run an effect while holding the cross-checkout full-proof coordinator.
+ *
+ * **Example** (Reference the coordinator-scope test helper)
+ *
+ * ```ts
+ * import { runWithFullProofCoordinatorForTesting } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const helper = Effect.succeed(runWithFullProofCoordinatorForTesting)
+ * console.log(Effect.isEffect(helper)) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runWithFullProofCoordinatorForTesting = runWithFullProofCoordinator;
 
 const runPhase = Effect.fn("Yeet.runPhase")(function* (
   context: RepoRunContext,
@@ -258,27 +320,7 @@ const runPhase = Effect.fn("Yeet.runPhase")(function* (
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  return yield* Effect.forEach(
-    steps,
-    Effect.fnUntraced(function* (step: RepoPlanStep) {
-      const fallbackStartedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-      const [duration, result] = yield* executeStepWithArtifacts(context, step).pipe(Effect.timed);
-      const fallbackEndedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-      const elapsedMs = result.elapsedMs ?? Duration.toMillis(duration);
-      const timedResult = RepoStepRunResult.make({
-        ...result,
-        startedAt: result.startedAt ?? fallbackStartedAt,
-        endedAt: result.endedAt ?? fallbackEndedAt,
-        elapsedMs,
-      });
-      yield* Ref.update(
-        recorder,
-        A.append(YeetExecutedStep.make({ durationMs: elapsedMs, result: timedResult, step }))
-      );
-      return timedResult;
-    }),
-    { concurrency: 1 }
-  );
+  return yield* Effect.forEach(steps, (step) => runPhaseStep(context, step, recorder), { concurrency: 1 });
 });
 
 const runVerifyMode = Effect.fn("Yeet.runVerifyMode")(function* (
@@ -291,7 +333,7 @@ const runVerifyMode = Effect.fn("Yeet.runVerifyMode")(function* (
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const verifyResults = yield* runProofPhase(context, fullSteps, tier, recorder);
+  const verifyResults = yield* runProofPhase(context, fullSteps, recorder);
   if (A.some(verifyResults, (result) => result.exitCode !== 0)) {
     return yield* failWithIssueArtifacts(context, fullSteps, verifyResults, "yeet verification proof failed.");
   }
@@ -469,74 +511,86 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
       yield* Console.log(
         "[yeet] start-pr-early: pushing before local proof; full proof and hosted monitor remain required"
       );
-      const preflightSteps = A.filter(earlyPublishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
-      yield* runRequiredPhase(
+      yield* runWithFullProofCoordinator(
         plan.context,
-        preflightSteps,
-        recorder,
-        "yeet clean-HEAD install preflight failed before the early push."
-      );
-      yield* warnOnMismatchedPublishUpstream(plan.context);
-      const earlyPushSteps = A.filter(
-        earlyPublishSteps,
-        (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
-      );
-      const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
-      if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
-        return yield* failWithIssueArtifacts(
-          plan.context,
-          earlyPushSteps,
-          earlyPublishResults,
-          "yeet start-pr-early push phase failed."
-        );
-      }
+        fullSteps,
+        Effect.gen(function* () {
+          const preflightSteps = A.filter(earlyPublishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
+          yield* runRequiredPhase(
+            plan.context,
+            preflightSteps,
+            recorder,
+            "yeet clean-HEAD install preflight failed before the early push."
+          );
+          yield* warnOnMismatchedPublishUpstream(plan.context);
+          const earlyPushSteps = A.filter(
+            earlyPublishSteps,
+            (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+          );
+          const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
+          if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
+            return yield* failWithIssueArtifacts(
+              plan.context,
+              earlyPushSteps,
+              earlyPublishResults,
+              "yeet start-pr-early push phase failed."
+            );
+          }
 
-      if (options.pr) {
-        yield* ensurePullRequest(
-          plan.context,
-          recorder,
-          A.findFirst(plan.steps, (step) => step.id === "publish:02-pr-create")
-        );
-      }
+          if (options.pr) {
+            yield* ensurePullRequest(
+              plan.context,
+              recorder,
+              A.findFirst(plan.steps, (step) => step.id === "publish:02-pr-create")
+            );
+          }
 
-      const fullResults = yield* runProofPhase(plan.context, fullSteps, "full", recorder);
-      if (A.some(fullResults, (result) => result.exitCode !== 0)) {
-        return yield* failWithIssueArtifacts(
-          plan.context,
-          fullSteps,
-          fullResults,
-          "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again."
-        );
-      }
-      yield* writeVerifiedState(plan.context, "full", fullSteps);
-      yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
+          const fullResults = yield* runProofPhase(plan.context, fullSteps, recorder);
+          if (A.some(fullResults, (result) => result.exitCode !== 0)) {
+            return yield* failWithIssueArtifacts(
+              plan.context,
+              fullSteps,
+              fullResults,
+              "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again."
+            );
+          }
+          yield* writeVerifiedState(plan.context, "full", fullSteps);
+          yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
+        })
+      );
 
       return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
     }
 
-    const preflightSteps = A.filter(publishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
-    yield* runRequiredPhase(
+    yield* runWithFullProofCoordinator(
       plan.context,
-      preflightSteps,
-      recorder,
-      "yeet clean-HEAD install preflight failed before proof and push."
-    );
-
-    if (!options.reuseVerified) {
-      const fullResults = yield* runProofPhase(plan.context, fullSteps, "full", recorder);
-      if (A.some(fullResults, (result) => result.exitCode !== 0)) {
-        return yield* failWithIssueArtifacts(
+      fullSteps,
+      Effect.gen(function* () {
+        const preflightSteps = A.filter(publishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
+        yield* runRequiredPhase(
           plan.context,
-          fullSteps,
-          fullResults,
-          "yeet publish proof failed after creating the local commit. Fix the issue, then amend or reset the commit that has not yet been pushed before retrying."
+          preflightSteps,
+          recorder,
+          "yeet clean-HEAD install preflight failed before proof and push."
         );
-      }
-      yield* writeVerifiedState(plan.context, "full", fullSteps);
-    } else {
-      yield* Console.log("[yeet] skipped local full proof after exact reusable proof-state match");
-    }
-    yield* validatePostCommitProofDidNotChangeWorktree(plan.context);
+
+        if (!options.reuseVerified) {
+          const fullResults = yield* runProofPhase(plan.context, fullSteps, recorder);
+          if (A.some(fullResults, (result) => result.exitCode !== 0)) {
+            return yield* failWithIssueArtifacts(
+              plan.context,
+              fullSteps,
+              fullResults,
+              "yeet publish proof failed after creating the local commit. Fix the issue, then amend or reset the commit that has not yet been pushed before retrying."
+            );
+          }
+          yield* writeVerifiedState(plan.context, "full", fullSteps);
+        } else {
+          yield* Console.log("[yeet] skipped local full proof after exact reusable proof-state match");
+        }
+        yield* validatePostCommitProofDidNotChangeWorktree(plan.context);
+      })
+    );
 
     yield* warnOnMismatchedPublishUpstream(plan.context);
     const pushSteps = A.filter(
@@ -1148,7 +1202,12 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
     });
   });
 
-  return yield* execution.pipe(
+  const coordinatedExecution =
+    options.mode === "verify" && options.tier === "full"
+      ? runWithFullProofCoordinator(plan.context, fullSteps, execution)
+      : execution;
+
+  return yield* coordinatedExecution.pipe(
     Effect.tapError((error) =>
       options.mode === "status"
         ? Effect.void

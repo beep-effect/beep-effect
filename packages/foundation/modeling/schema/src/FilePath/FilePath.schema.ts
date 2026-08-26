@@ -141,7 +141,7 @@ const FilePathChecks = S.makeFilterGroup(
  *
  * **Example** (Decode valid file paths)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode valid file paths"
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
  *

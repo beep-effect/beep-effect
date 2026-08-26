@@ -7,11 +7,11 @@
 import { FsUtilsLive } from "@beep/repo-utils";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer, Runtime } from "effect";
-import * as Command from "effect/unstable/cli/Command";
+import { Effect, Exit, Layer, Runtime } from "effect";
+import { Command } from "effect/unstable/cli";
 import { docgenCommand } from "./CLI.ts";
 import * as Domain from "./Domain.ts";
-import * as InternalVersion from "./internal/version.ts";
+import * as Version from "./Version.ts";
 
 const BaseLayers = Layer.mergeAll(BunServices.layer, Domain.Process.layer);
 
@@ -19,21 +19,24 @@ const DerivedLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
 
 const program = Effect.scoped(
   Layer.build(DerivedLayers).pipe(
-    Effect.flatMap((ctx) =>
-      Command.run(docgenCommand, { version: `v${InternalVersion.moduleVersion}` }).pipe(Effect.provide(ctx))
+    Effect.flatMap(
+      Effect.fnUntraced(function* (context) {
+        const version = yield* Version.readModuleVersion().pipe(Effect.provide(context));
+        return yield* Command.run(docgenCommand, { version: `v${version}` }).pipe(Effect.provide(context));
+      })
     )
   )
 );
 
-// The runner's onExit only hard-exits on a signal or nonzero code; a clean
-// success is left to event-loop drain, so a leaked handle wedges the process
-// after docgen completes (the "✓ succeeded"-then-hang CI class). Keep
-// defaultTeardown as the sole exit-code authority and force the exit the
-// runner declines on success.
-const teardown: Runtime.Teardown = (exit, onExit) =>
-  Runtime.defaultTeardown(exit, (code) => {
-    onExit(code);
-    process.exit(code);
-  });
-
-BunRuntime.runMain(program, { teardown });
+// The platform runner only hard-exits on failure or signal; a successful run
+// relies on the event loop draining, so a leaked handle wedges the process
+// after docgen completes (the "✓ succeeded"-then-hang CI class). Exit
+// explicitly on success.
+BunRuntime.runMain(program, {
+  teardown: (exit, onExit) => {
+    Runtime.defaultTeardown(exit, onExit);
+    if (Exit.isSuccess(exit)) {
+      process.exit(0);
+    }
+  },
+});
