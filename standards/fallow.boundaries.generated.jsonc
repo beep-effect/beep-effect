@@ -3152,9 +3152,14 @@
           "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/langextract",
+          "@beep/nlp",
+          "@beep/nlp-processing",
+          "@beep/pglite",
           "@beep/provenance",
           "@beep/schema",
           "@beep/semantica",
+          "@beep/wink",
           "@beep/xai"
         ],
         "allowTypeOnly": [
@@ -3163,9 +3168,14 @@
           "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/langextract",
+          "@beep/nlp",
+          "@beep/nlp-processing",
+          "@beep/pglite",
           "@beep/provenance",
           "@beep/schema",
           "@beep/semantica",
+          "@beep/wink",
           "@beep/xai"
         ]
       },

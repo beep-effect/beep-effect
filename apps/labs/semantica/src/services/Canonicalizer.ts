@@ -14,7 +14,7 @@ const $I = $SemanticaId.create("services/Canonicalizer");
  * @category services
  * @since 0.0.0
  */
-interface CanonicalizerShape {
+export interface CanonicalizerShape {
   readonly identify: (
     document: SourceDocument,
     parsed: typeof ParseOutcome.cases.Parsed.Type

@@ -29,7 +29,10 @@ export const RuntimeMode = LiteralKit(["live", "replay"]).pipe(
 class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
   {
     corpusRoot: S.OptionFromNullOr(S.NonEmptyString),
+    extractorModel: S.NonEmptyString,
+    goldDirectory: S.NonEmptyString,
     goldModel: S.NonEmptyString,
+    ledgerRoot: S.NonEmptyString,
     mode: RuntimeMode,
     offline: S.Boolean,
     providerCacheDirectory: S.NonEmptyString,
@@ -66,7 +69,10 @@ export class LabConfig extends Context.Service<LabConfig, LabConfigValue>()($I`L
 
 const labConfig = Config.all({
   corpusRoot: Config.option(Config.nonEmptyString("SEMANTICA_CORPUS_ROOT")),
+  extractorModel: Config.nonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault("claude-sonnet-4-5-20250929")),
+  goldDirectory: Config.nonEmptyString("SEMANTICA_GOLD_DIR").pipe(Config.withDefault("fixtures/gold/v1")),
   goldModel: Config.nonEmptyString("SEMANTICA_XAI_MODEL").pipe(Config.withDefault("grok-4")),
+  ledgerRoot: Config.nonEmptyString("SEMANTICA_LEDGER_ROOT").pipe(Config.withDefault(".beep/semantica/ledger")),
   offline: Config.boolean("SEMANTICA_OFFLINE").pipe(Config.withDefault(false)),
   providerCacheDirectory: Config.nonEmptyString("SEMANTICA_PROVIDER_CACHE_DIR").pipe(
     Config.withDefault(".beep/semantica/provider-cache")

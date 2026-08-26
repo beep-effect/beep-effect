@@ -249,3 +249,26 @@ export class ReportInvalid extends S.TaggedError<ReportInvalid>($I`ReportInvalid
     description: "Expected failure raised when an evaluation report violates its schema invariants.",
   })
 ) {}
+
+/**
+ * Reports failure while acquiring a selected C0 implementation layer.
+ *
+ * **Example** (Create an acquisition failure)
+ *
+ * ```ts
+ * import { C0ExecutionFailed } from "@/schema/Errors"
+ *
+ * const error = C0ExecutionFailed.make({ message: "The replay ledger could not be opened." })
+ * console.log(error._tag) // "C0ExecutionFailed"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class C0ExecutionFailed extends S.TaggedError<C0ExecutionFailed>($I`C0ExecutionFailed`)(
+  "C0ExecutionFailed",
+  { message: S.NonEmptyString },
+  $I.annoteError<C0ExecutionFailed>("C0ExecutionFailed", {
+    description: "Expected failure while acquiring the selected live or replay C0 execution layers.",
+  })
+) {}

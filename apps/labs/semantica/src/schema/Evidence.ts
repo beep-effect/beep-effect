@@ -190,17 +190,47 @@ export const declaredLosses: HashMap.HashMap<ExtractionMethod, HashSet.HashSet<L
   DeclaredLossEntries
 );
 
+/**
+ * Provider-assigned coreference cluster label scoped to one document and lane.
+ *
+ * **Example** (Create a cluster label)
+ *
+ * ```ts
+ * import { CoreferenceCluster } from "@/schema/Evidence"
+ *
+ * console.log(CoreferenceCluster.make("person-ada")) // "person-ada"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CoreferenceCluster = S.NonEmptyString.pipe(
+  $I.annoteSchema("CoreferenceCluster", {
+    description: "Non-empty extractor or gold-proposer cluster label scoped to one document and lane.",
+  })
+);
+
+/**
+ * Decoded provider-assigned coreference cluster label.
+ *
+ * @see {@link CoreferenceCluster} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CoreferenceCluster = typeof CoreferenceCluster.Type;
+
 const EntityBodyFields = S.Struct({
   kind: S.tag("Entity"),
   label: S.NonEmptyString,
   entityType: S.NonEmptyString,
+  cluster: S.OptionFromNullOr(CoreferenceCluster),
   ...TextAnchorFields,
 });
 
 class EntityClaimBody extends S.Class<EntityClaimBody>($I`EntityClaimBody`)(
   EntityBodyFields.mapFields(identity).check(TextAnchorWidthCheck),
   $I.annote("EntityClaimBody", {
-    description: "Grounded entity label and type with an exact UTF-16 text anchor.",
+    description: "Grounded entity label, type, optional provider cluster, and exact UTF-16 text anchor.",
   })
 ) {}
 
@@ -243,11 +273,13 @@ const ClaimBodyKind = LiteralKit(["Entity", "Relation", "Structure"]);
  * ```ts
  * import { ClaimBody } from "@/schema/Evidence"
  * import { NonNegativeInt } from "@beep/schema"
+ * import * as O from "effect/Option"
  *
  * const body = ClaimBody.cases.Entity.make({
  *   kind: "Entity",
  *   label: "Effect",
  *   entityType: "software",
+ *   cluster: O.some("software-effect"),
  *   startChar: NonNegativeInt.make(0),
  *   endChar: NonNegativeInt.make(6),
  *   quote: "Effect"
