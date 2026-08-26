@@ -6,6 +6,8 @@
  */
 
 import { $AgentsDomainId } from "@beep/identity/packages";
+import * as P from "@beep/utils/Predicate";
+import * as Str from "@beep/utils/Str";
 import * as S from "effect/Schema";
 
 const $I = $AgentsDomainId.create("entities/Fixture.values");
@@ -157,6 +159,25 @@ export type AgentName = typeof AgentName.Type;
  * @since 0.0.0
  */
 export const SkillName = S.NonEmptyString.pipe(
+  S.check(
+    S.makeFilterGroup([
+      S.isNonEmpty({
+        message: "Skill description must be non-empty",
+      }),
+      S.isMaxLength(64, {
+        message: "Skill name must be at most 64 characters long",
+      }),
+      S.makeFilter(P.not(Str.startsWith("-")), {
+        message: "Skill name must not start or end with a hyphen: `-`",
+      }),
+      S.makeFilter(P.not(Str.endsWith("-")), {
+        message: "Skill name must not start or end with a hyphen: `-`",
+      }),
+      S.isLowercased({
+        message: "Skill name must be lowercased",
+      }),
+    ])
+  ),
   $I.annoteSchema("SkillName", {
     description: "Non-empty display name for a fixture-backed skill.",
   })
