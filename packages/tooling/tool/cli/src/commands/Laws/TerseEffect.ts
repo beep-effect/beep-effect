@@ -176,18 +176,6 @@ const getZeroArgHelperReference = (callExpression: CallExpression): O.Option<str
     return O.none();
   }
 
-  // `O.none` / `A.empty` are nullary GENERIC constructors: collapsing a bare
-  // call (`() => O.none()` -> `O.none`) leaves the type parameter unbound
-  // wherever contextual typing cannot reach it (Match.orElse, match handler
-  // objects under docgen's tsc), silently widening Option<A> to
-  // Option<unknown>. tsgo tolerates the widened form, so the damage only
-  // surfaces later in the docgen lane. Only rewrite calls that pin the type
-  // argument explicitly (`() => O.none<string>()` -> `O.none<string>`), which
-  // stays type-identical as an instantiation expression.
-  if (callExpression.getTypeArguments().length === 0) {
-    return O.none();
-  }
-
   const receiverText = expression.getExpression().getText();
   const propertyText = expression.getName();
 
@@ -231,6 +219,19 @@ const getSingleArgHelperReference = (callExpression: CallExpression, parameterNa
 const getArrowReplacement = (arrowFunction: ArrowFunction): O.Option<string> => {
   const body = arrowFunction.getBody();
   if (!Node.isCallExpression(body)) {
+    return O.none();
+  }
+
+  // The helpers this rule collapses (`O.none`, `A.empty`, `O.some`, `A.make`)
+  // are GENERIC: a bare reference relies on higher-order inference to bind the
+  // type parameter, which fails in positions like `Match.orElse(O.none)` or
+  // `Match.when(P.isString, O.some)` — silently under docgen's tsc (widening
+  // to unknown), loudly under tsgo at the use site. The lambda form binds the
+  // generic at its call site, so it is the safe default. Only collapse calls
+  // that pin the type argument explicitly (`() => O.none<string>()` ->
+  // `O.none<string>`), which stays type-identical as an instantiation
+  // expression.
+  if (body.getTypeArguments().length === 0) {
     return O.none();
   }
 

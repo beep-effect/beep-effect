@@ -49,7 +49,7 @@ const writeHelperWrapperFixture = writeDemoSource([
   "",
   "export const value = {",
   "  onNone: () => A.empty<string>(),",
-  "  onSome: (reference) => A.make(reference),",
+  "  onSome: (reference) => A.make<string>(reference),",
   "};",
   "",
 ]);
@@ -160,7 +160,7 @@ describe("terse effect laws", () => {
           expect(summary.strictFailure).toBe(true);
           expect(summary.changedFiles).toEqual([DemoSourcePath]);
           expect(source).toContain("onNone: () => A.empty<string>()");
-          expect(source).toContain("onSome: (reference) => A.make(reference)");
+          expect(source).toContain("onSome: (reference) => A.make<string>(reference)");
         })
       ).pipe(provideScopedLayer(NodeTestLayer))
     ));
@@ -182,7 +182,7 @@ describe("terse effect laws", () => {
           expect(summary.optionObjectCompactionCandidatesDetected).toBe(0);
           expect(summary.strictFailure).toBe(false);
           expect(source).toContain("onNone: A.empty<string>");
-          expect(source).toContain("onSome: A.of");
+          expect(source).toContain("onSome: A.of<string>");
         })
       ).pipe(provideScopedLayer(NodeTestLayer))
     ));
@@ -201,6 +201,7 @@ describe("terse effect laws", () => {
               "  onNone: () => A.empty<string>(),",
               "  onEmpty: () => O.none(),",
               "  onBare: () => A.empty(),",
+              "  onRef: (value) => O.some(value),",
               "};",
               "",
             ],
@@ -220,6 +221,7 @@ describe("terse effect laws", () => {
           expect(rewritten).toContain("onNone: A.empty<string>");
           expect(rewritten).toContain("onEmpty: () => O.none()");
           expect(rewritten).toContain("onBare: () => A.empty()");
+          expect(rewritten).toContain("onRef: (value) => O.some(value)");
         })
       ).pipe(provideScopedLayer(NodeTestLayer))
     ));

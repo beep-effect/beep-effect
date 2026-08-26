@@ -1,19 +1,11 @@
-import { Effect, FileSystem, flow, Layer, Match } from "effect";
+import { escapeHtml } from "@beep/utils/Html";
+import { Effect, FileSystem, Layer, Match } from "effect";
 import * as A from "effect/Array";
-import * as Str from "effect/String";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { HttpApiScalar, OpenApi } from "effect/unstable/httpapi";
 import { ApiAudience } from "./Catalog.models.ts";
 import { Catalog, resolveCatalogSpecPath } from "./Catalog.ts";
 import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Catalog.models.ts";
-
-const escapeHtml = flow(
-  Str.replaceAll("&", "&amp;"),
-  Str.replaceAll("<", "&lt;"),
-  Str.replaceAll(">", "&gt;"),
-  Str.replaceAll('"', "&quot;"),
-  Str.replaceAll("'", "&#39;")
-);
 
 const apiBasePath = (slug: CatalogSlug): `/${string}` => `/apis/${slug}`;
 const docsPath = (slug: CatalogSlug): `/${string}` => `${apiBasePath(slug)}/docs`;

@@ -1167,7 +1167,7 @@ const objectSchemaExpression = (schema: JsonSchema, hint: string): string =>
   );
 
 const schemaTypeOption = Match.type<string | readonly string[]>().pipe(
-  Match.when(P.isString, O.some),
+  Match.when(P.isString, (type): O.Option<string> => O.some(type)),
   Match.orElse((types): O.Option<string> => A.head(types))
 );
 

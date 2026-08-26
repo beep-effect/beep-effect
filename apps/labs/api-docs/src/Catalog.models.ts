@@ -5,8 +5,6 @@ import * as S from "effect/Schema";
 import type { SpecDialect } from "@beep/codegen-kit/CodegenKit.models";
 import type { HttpApi, HttpApiGroup } from "effect/unstable/httpapi";
 
-export { SpecDialect } from "@beep/codegen-kit/CodegenKit.models";
-
 const $I = $ApiDocsId.create("Catalog.models");
 
 /** Catalog grouping for APIs hosted by this repository and APIs it consumes. */
@@ -16,11 +14,8 @@ export const ApiAudience = LiteralKit(["served", "consumed"]).annotate(
   })
 );
 
-/** Runtime audience represented by {@link ApiAudience}. */
-export type ApiAudience = typeof ApiAudience.Type;
-
 /** On-disk serialization format for a committed specification. */
-export const SpecFormat = LiteralKit(["json", "yaml"]).annotate(
+const SpecFormat = LiteralKit(["json", "yaml"]).annotate(
   $I.annote("SpecFormat", {
     description: "Serialization format preserved when the lab serves a committed specification.",
   })

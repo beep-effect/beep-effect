@@ -74,6 +74,7 @@
         "@beep/pacer": "workspace:^",
         "@beep/qa-capture": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
       },
