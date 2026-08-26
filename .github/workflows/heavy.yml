@@ -44,6 +44,11 @@ jobs:
             uses_turbo: "false"
             install_typos: "false"
             docgen_concurrency: 6
+          - id: doctest
+            name: Doctest
+            timeout_minutes: 60
+            uses_turbo: "false"
+            install_typos: "false"
     env:
       # Pull requests stay local-only even when repository secrets are
       # available. Trusted main pushes receive read-write remote-cache access.
@@ -84,6 +89,7 @@ jobs:
           set -euo pipefail
           should_run=true
           docgen_mode=none
+          doctest_mode=full
 
           if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             docgen_mode=affected
@@ -103,8 +109,42 @@ jobs:
             fi
           fi
 
+          if [[ "${{ matrix.id }}" == "doctest" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            doctest_mode=affected
+            base_ref="origin/${GITHUB_BASE_REF:-main}"
+            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+              git fetch --quiet --no-tags --depth=100 origin \
+                "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+            fi
+
+            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+            if grep -Eq '(^vitest\.docs\.ts$|^vitest\.shared\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/heavy\.yml$|^packages/tooling/tool/cli/src/commands/Docgen/|^packages/tooling/tool/cli/src/internal/jsdoc/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
+              doctest_mode=full
+            else
+              mapfile -t changed_sources < <(
+                git diff --name-only "${base_ref}...HEAD" -- \
+                  ':(glob)packages/**/src/**/*.ts' \
+                  ':(glob)packages/**/src/**/*.tsx' \
+                  ':(glob)apps/**/src/**/*.ts' \
+                  ':(glob)apps/**/src/**/*.tsx'
+              )
+
+              marked_sources=()
+              for file in "${changed_sources[@]}"; do
+                if [[ -f "$file" ]] && grep -l -F 'import.meta.vitest' -- "$file" >/dev/null; then
+                  marked_sources+=("$file")
+                fi
+              done
+
+              if (( ${#marked_sources[@]} == 0 )); then
+                should_run=false
+              fi
+            fi
+          fi
+
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
           echo "docgen_mode=$docgen_mode" >> "$GITHUB_OUTPUT"
+          echo "doctest_mode=$doctest_mode" >> "$GITHUB_OUTPUT"
 
       - name: Free runner disk for verification lanes
         # Destructive image cleanup runs on ephemeral hosted images (GitHub-
@@ -202,6 +242,16 @@ jobs:
                 run_lane ci lane docgen --mode "${{ steps.lane-gate.outputs.docgen_mode }}" --base "origin/${GITHUB_BASE_REF:-main}" --head HEAD
               else
                 run_lane ci lane docgen --mode full
+              fi
+              ;;
+            doctest)
+              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+                run_lane ci lane doctest \
+                  --mode "${{ steps.lane-gate.outputs.doctest_mode }}" \
+                  --base "origin/${GITHUB_BASE_REF:-main}" \
+                  --head HEAD
+              else
+                run_lane ci lane doctest --mode full
               fi
               ;;
           esac

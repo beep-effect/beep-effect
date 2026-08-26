@@ -8,13 +8,14 @@
  * @since 0.0.0
  */
 
-import { DomainError, findRepoRoot } from "@beep/repo-utils";
+import { DomainError, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import { Runpod, RunpodConfigInput } from "@beep/runpod";
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Console, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { jsonFlag } from "../../internal/cli/Flags.ts";
@@ -30,6 +31,9 @@ import {
   printDocgenIndex,
   renderDocgenJson,
 } from "./Docgen.render.ts";
+import { DoctestCliConfig, DoctestReport } from "./Doctest.schemas.ts";
+import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "./Doctest.service.ts";
+import { DoctestFenceAnalyzerLive, DoctestFenceRewriterLive } from "./internal/Doctest.ts";
 import { runDocgenLocal } from "./internal/Local.ts";
 import {
   aggregateGeneratedDocs,
@@ -71,6 +75,7 @@ import {
   targetHasCurrentDocgenProofManifest,
   verifyDocgenCheckProofManifests,
 } from "./internal/Targets.ts";
+import type { MarkPlan } from "./Doctest.schemas.ts";
 
 const packageFlag = Flag.string("package").pipe(
   Flag.withAlias("p"),
@@ -105,6 +110,10 @@ const inputFlag = Flag.string("input").pipe(
 const includeFlag = Flag.string("include").pipe(
   Flag.withDescription("Comma-separated package-relative or srcDir-relative file globs to include"),
   Flag.optional
+);
+const doctestWriteFlag = Flag.boolean("write").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Apply the verified marker and assertion rewrite plan")
 );
 const planFlag = Flag.boolean("plan").pipe(
   Flag.withDefault(false),
@@ -1033,6 +1042,104 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
   )
 ).pipe(Command.withDescription("Run read-only JSDoc worker evaluation on an ephemeral Runpod Ollama GPU pod"));
 
+const doctestRuntimeLayer = Layer.merge(DoctestFenceAnalyzerLive, DoctestFenceRewriterLive);
+const encodeDoctestReport = S.encodeUnknownEffect(DoctestReport);
+
+const doctestPlans = (report: DoctestReport): ReadonlyArray<MarkPlan> =>
+  pipe(
+    report.findings,
+    A.flatMap((finding) => O.match(O.fromUndefinedOr(finding.plan), { onNone: A.empty<MarkPlan>, onSome: A.of })),
+    A.dedupeWith(
+      (left, right) =>
+        left.location.file === right.location.file && left.location.startLine === right.location.startLine
+    )
+  );
+
+const renderDoctestReport = Effect.fn("Docgen.renderDoctestReport")(function* (report: DoctestReport, json: boolean) {
+  if (json) {
+    const encoded = yield* encodeDoctestReport(report);
+    yield* Console.log(yield* jsonStringifyPretty(encoded));
+    return;
+  }
+  yield* Console.log(
+    `doctest: ${report.counts.files} file(s), ${report.counts.fences} fence(s), ` +
+      `${report.counts.pure} pure, ${report.counts.impure} impure, ${report.counts.typeOnly} type-only`
+  );
+  yield* Console.log(
+    `doctest: ${report.counts.plannedMarkers} marker(s) and ` +
+      `${report.counts.plannedConsoleRewrites} console rewrite(s) planned`
+  );
+  for (const finding of report.findings) {
+    yield* Console.log(`${finding.location.file}:${finding.location.startLine} ${finding.kind}: ${finding.message}`);
+  }
+});
+
+const reportDoctestError = (error: { readonly message: string }) =>
+  Console.error(`docgen doctest: ${error.message}`).pipe(
+    Effect.andThen(failWithReportedExit(`docgen doctest: ${error.message}`))
+  );
+
+const doctestConfig = (
+  write: boolean,
+  filter: O.Option<string>,
+  include: O.Option<string>,
+  json: boolean
+): DoctestCliConfig =>
+  DoctestCliConfig.make({
+    write,
+    include: includePatternsFromFlag(include),
+    json,
+    ...O.getSomesStruct({ filter }),
+  });
+
+const docgenDoctestMarkCommand = Command.make(
+  "mark",
+  {
+    write: doctestWriteFlag,
+    filter: filterFlag,
+    include: includeFlag,
+    json: jsonFlag,
+  },
+  Effect.fn(
+    function* ({ write, filter, include, json }) {
+      const analyzer = yield* DoctestFenceAnalyzer;
+      const rewriter = yield* DoctestFenceRewriter;
+      const config = doctestConfig(write, filter, include, json);
+      const report = yield* analyzer.analyze(config);
+      const changedFiles = yield* write ? rewriter.write(doctestPlans(report)) : rewriter.preview(doctestPlans(report));
+      yield* renderDoctestReport(DoctestReport.make({ ...report, changedFiles }), json);
+    },
+    Effect.catchTags({
+      DoctestAnalysisError: reportDoctestError,
+      DoctestRewriteError: reportDoctestError,
+    })
+  )
+).pipe(Command.withDescription("Plan or apply canonical runtime markers and safe console assertion rewrites"));
+
+const docgenDoctestVerifyCommand = Command.make(
+  "verify",
+  {
+    filter: filterFlag,
+    include: includeFlag,
+    json: jsonFlag,
+  },
+  Effect.fn(
+    function* ({ filter, include, json }) {
+      const analyzer = yield* DoctestFenceAnalyzer;
+      const report = yield* analyzer.analyze(doctestConfig(false, filter, include, json));
+      yield* renderDoctestReport(report, json);
+      yield* analyzer.validateMarkedAssertions(report);
+    },
+    Effect.catchTag("DoctestAnalysisError", reportDoctestError)
+  )
+).pipe(Command.withDescription("Verify runtime marker metadata, purity, and upstream assertion transforms"));
+
+const docgenDoctestCommand = Command.make("doctest", {}).pipe(
+  Command.withDescription("Analyze and maintain runnable JSDoc TypeScript fences"),
+  Command.withSubcommands([docgenDoctestMarkCommand, docgenDoctestVerifyCommand]),
+  Command.provide(doctestRuntimeLayer)
+);
+
 /**
  * Human-first docgen command suite.
  *
@@ -1070,5 +1177,6 @@ export const docgenCommand = Command.make("docgen", {}, () => printDocgenIndex).
     docgenQualityCommand,
     docgenQualityWorkerEvalCommand,
     docgenQualityWorkerRunpodEvalCommand,
+    docgenDoctestCommand,
   ])
 );

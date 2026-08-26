@@ -131,4 +131,38 @@ describe("CI runner security", () => {
       );
     }, provideScopedLayer(NodeServices.layer))
   );
+
+  it.effect(
+    "forces full Doctest runs for lane tooling changes and scans TypeScript React hosts",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
+
+      assert.include(workflowText, "doctest_mode=full");
+      assert.include(workflowText, "^vitest\\.docs\\.ts$");
+      assert.include(workflowText, "^vitest\\.shared\\.ts$");
+      assert.include(workflowText, "^package\\.json$");
+      assert.include(workflowText, "^bun\\.lock$");
+      assert.include(workflowText, "^\\.github/workflows/heavy\\.yml$");
+      assert.include(workflowText, "^packages/tooling/tool/cli/src/commands/Docgen/");
+      assert.include(workflowText, "^packages/tooling/tool/cli/src/internal/jsdoc/");
+      assert.include(workflowText, "^packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$");
+      assert.include(workflowText, "packages/**/src/**/*.tsx");
+      assert.include(workflowText, "apps/**/src/**/*.tsx");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "keeps the root Doctest script in one-shot mode",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const packageJson = yield* fs.readFileString(path.join(repoRoot, "package.json"));
+
+      assert.include(packageJson, '"doctest": "vitest run --config vitest.docs.ts"');
+    }, provideScopedLayer(NodeServices.layer))
+  );
 });
