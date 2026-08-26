@@ -121,22 +121,31 @@ jobs:
             if grep -Eq '(^vitest\.docs\.ts$|^vitest\.shared\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/heavy\.yml$|^packages/tooling/tool/cli/src/commands/Docgen/|^packages/tooling/tool/cli/src/internal/jsdoc/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
               doctest_mode=full
             else
-              mapfile -t changed_sources < <(
+              # Any existing package/app source or package-level config can
+              # affect marked examples in that workspace or its dependents.
+              # The CLI owns package-graph expansion and marker discovery.
+              mapfile -t affected_inputs < <(
                 git diff --name-only "${base_ref}...HEAD" -- \
                   ':(glob)packages/**/src/**/*.ts' \
                   ':(glob)packages/**/src/**/*.tsx' \
                   ':(glob)apps/**/src/**/*.ts' \
-                  ':(glob)apps/**/src/**/*.tsx'
+                  ':(glob)apps/**/src/**/*.tsx' \
+                  ':(glob)packages/**/package.json' \
+                  ':(glob)packages/**/docgen.json' \
+                  ':(glob)packages/**/tsconfig*.json' \
+                  ':(glob)apps/**/package.json' \
+                  ':(glob)apps/**/docgen.json' \
+                  ':(glob)apps/**/tsconfig*.json'
               )
 
-              marked_sources=()
-              for file in "${changed_sources[@]}"; do
-                if [[ -f "$file" ]] && grep -l -F 'import.meta.vitest' -- "$file" >/dev/null; then
-                  marked_sources+=("$file")
+              existing_inputs=()
+              for file in "${affected_inputs[@]}"; do
+                if [[ -f "$file" ]]; then
+                  existing_inputs+=("$file")
                 fi
               done
 
-              if (( ${#marked_sources[@]} == 0 )); then
+              if (( ${#existing_inputs[@]} == 0 )); then
                 should_run=false
               fi
             fi

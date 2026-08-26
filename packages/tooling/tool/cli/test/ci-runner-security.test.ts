@@ -133,7 +133,7 @@ describe("CI runner security", () => {
   );
 
   it.effect(
-    "forces full Doctest runs for lane tooling changes and scans TypeScript React hosts",
+    "forces full Doctest runs for lane tooling changes and gates affected package inputs",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -151,6 +151,12 @@ describe("CI runner security", () => {
       assert.include(workflowText, "^packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$");
       assert.include(workflowText, "packages/**/src/**/*.tsx");
       assert.include(workflowText, "apps/**/src/**/*.tsx");
+      assert.include(workflowText, "packages/**/package.json");
+      assert.include(workflowText, "packages/**/docgen.json");
+      assert.include(workflowText, "packages/**/tsconfig*.json");
+      assert.include(workflowText, "apps/**/package.json");
+      assert.notInclude(workflowText, "grep -l -F 'import.meta.vitest'");
+      assert.include(workflowText, "The CLI owns package-graph expansion and marker discovery.");
     }, provideScopedLayer(NodeServices.layer))
   );
 

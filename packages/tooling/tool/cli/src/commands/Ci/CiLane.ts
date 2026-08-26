@@ -12,12 +12,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Duration, Effect, FileSystem, Match, Order, Path, pipe } from "effect";
+import { Console, Duration, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
@@ -1172,6 +1173,54 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
 });
 
+const DOCTEST_WORKSPACE_PATHS = [
+  ":(glob)packages/**/package.json",
+  ":(glob)apps/**/package.json",
+  ":(glob)packages/**/src/**/*.ts",
+  ":(glob)packages/**/src/**/*.tsx",
+  ":(glob)apps/**/src/**/*.ts",
+  ":(glob)apps/**/src/**/*.tsx",
+] as const;
+
+const isDoctestPackageInput = (packageDir: string, file: string): boolean => {
+  const prefix = `${packageDir}/`;
+  if (!Str.startsWith(prefix)(file)) return false;
+  const relativePath = Str.slice(Str.length(prefix))(file);
+  return (
+    Str.startsWith("src/")(relativePath) ||
+    relativePath === "package.json" ||
+    relativePath === "docgen.json" ||
+    O.isSome(Str.match(/^tsconfig(?:\..*)?\.json$/u)(relativePath))
+  );
+};
+
+const packageDependencies = (manifest: {
+  readonly dependencies: O.Option<Readonly<Record<string, string>>>;
+  readonly devDependencies: O.Option<Readonly<Record<string, string>>>;
+  readonly peerDependencies: O.Option<Readonly<Record<string, string>>>;
+}): ReadonlyArray<string> =>
+  pipe(
+    [manifest.dependencies, manifest.devDependencies, manifest.peerDependencies],
+    A.flatMap(O.match({ onNone: A.empty<string>, onSome: R.keys })),
+    A.filter(Str.startsWith("@beep/")),
+    A.dedupe
+  );
+
+const expandDoctestDependents = (
+  changedPackageNames: HashSet.HashSet<string>,
+  workspaces: ReadonlyArray<readonly [name: string, dir: string, dependencies: ReadonlyArray<string>]>
+): HashSet.HashSet<string> => {
+  let affected = changedPackageNames;
+  let priorSize = -1;
+  while (HashSet.size(affected) !== priorSize) {
+    priorSize = HashSet.size(affected);
+    affected = A.reduce(workspaces, affected, (selected, [name, , dependencies]) =>
+      A.some(dependencies, (dependency) => HashSet.has(selected, dependency)) ? HashSet.add(selected, name) : selected
+    );
+  }
+  return affected;
+};
+
 const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFiles")(function* (
   repoRoot: string,
   base: string,
@@ -1188,13 +1237,70 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
   }
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const candidates = pipe(
+  const changedPaths = pipe(
     Str.split(/\r?\n/)(result.output),
     A.map(normalizeSlashes),
-    A.filter(isDoctestSourcePath),
+    A.filter(Str.isNonEmpty),
     A.dedupe,
     A.sort(Order.String)
   );
+  const existingChangedPaths = yield* Effect.filter(changedPaths, (file) =>
+    fs
+      .exists(path.join(repoRoot, file))
+      .pipe(CiCommandError.mapError(`Failed to inspect changed Doctest path ${file}.`))
+  );
+  if (A.isReadonlyArrayEmpty(existingChangedPaths)) return A.empty<string>();
+
+  const trackedResult = yield* runCaptured({
+    command: "git",
+    args: ["ls-files", "--", ...DOCTEST_WORKSPACE_PATHS],
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(CiCommandError.mapError("Failed to resolve Doctest workspace files."));
+  if (trackedResult.exitCode !== 0) {
+    return yield* CiCommandError.make({
+      message: `git ls-files for Doctest failed with exit code ${trackedResult.exitCode}.`,
+    });
+  }
+  const trackedPaths = pipe(
+    Str.split(/\r?\n/)(trackedResult.output),
+    A.map(normalizeSlashes),
+    A.filter(Str.isNonEmpty),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  const manifestPaths = A.filter(trackedPaths, Str.endsWith("/package.json"));
+  const workspaces = yield* Effect.forEach(manifestPaths, (manifestPath) =>
+    readPackageJsonFile(path.join(repoRoot, manifestPath)).pipe(
+      Effect.map(
+        (manifest) =>
+          [manifest.name, normalizeSlashes(path.dirname(manifestPath)), packageDependencies(manifest)] as const
+      ),
+      CiCommandError.mapError(`Failed to read Doctest workspace manifest ${manifestPath}.`)
+    )
+  );
+  const changedPackageNames = HashSet.fromIterable(
+    A.flatMap(existingChangedPaths, (file) =>
+      pipe(
+        workspaces,
+        A.filter(([, packageDir]) => isDoctestPackageInput(packageDir, file)),
+        A.map(([name]) => name)
+      )
+    )
+  );
+  const affectedPackageNames = expandDoctestDependents(changedPackageNames, workspaces);
+  const affectedPackageDirs = pipe(
+    workspaces,
+    A.filter(([name]) => HashSet.has(affectedPackageNames, name)),
+    A.map(([, packageDir]) => packageDir)
+  );
+  const directlyChangedSources = A.filter(existingChangedPaths, isDoctestSourcePath);
+  const packageSources = pipe(
+    trackedPaths,
+    A.filter(isDoctestSourcePath),
+    A.filter((file) => A.some(affectedPackageDirs, (packageDir) => Str.startsWith(`${packageDir}/src/`)(file)))
+  );
+  const candidates = pipe(A.appendAll(directlyChangedSources, packageSources), A.dedupe, A.sort(Order.String));
   return yield* Effect.filter(candidates, (file) =>
     fs
       .readFileString(path.join(repoRoot, file))

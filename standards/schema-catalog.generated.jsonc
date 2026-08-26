@@ -35,6 +35,144 @@
       "identity": "StageNotImplemented"
     },
     {
+      "file": "apps/labs/semantica/src/corpus/ByteWitness.ts",
+      "symbol": "ByteExpectation",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ByteExpectation",
+      "description": "Expected relative path, SHA-256 digest, and byte length for one witnessed file."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusManifest",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "CorpusManifest",
+      "description": "Schema-refined, content-addressed manifest that defines the W1 corpus."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusManifestRow",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "CorpusManifestRow",
+      "description": "Content hash, byte length, and deterministic relative path for one W1 paper."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusManifestSelection",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "CorpusManifestSelection",
+      "description": "Deterministic first-25 selection rule and source PDF count used to define W1."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusPaperId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "CorpusPaperId",
+      "description": "Twelve-character lowercase hexadecimal academia corpus identifier."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusRootUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "CorpusRootUnavailable"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "ManifestDecodeFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ManifestDecodeFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "ManifestDiff",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "ManifestDiff",
+      "description": "Exhaustive row-level W1 manifest drift details."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "ManifestDrift",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ManifestDrift"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "ManifestWriteFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ManifestWriteFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1Drift",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "F1Drift"
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1Fixture",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "F1Fixture",
+      "description": "Content-addressed F1 document metadata with a declared parser outcome."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1FixtureId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "F1FixtureId",
+      "description": "Branded lowercase kebab-case identifier for one F1 fixture."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1Index",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "F1Index",
+      "description": "Validated F1 fixture index with deterministic coverage and uniqueness constraints."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1IndexDecodeFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "F1IndexDecodeFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "FixtureDegradedKind",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "FixtureDegradedKind",
+      "description": "Invalid UTF-8, truncation, or malformed structure declared by a degraded F1 fixture."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "FixtureExpectation",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "FixtureExpectation",
+      "description": "Expected successful parse or declared typed degradation for an F1 fixture."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "FixtureMediaType",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "FixtureMediaType",
+      "description": "Markdown, HTML, and born-digital PDF media types exercised by F1."
+    },
+    {
       "file": "apps/oip-web/src/app/api/contact/ContactRouteResponse.ts",
       "symbol": "ContactRoutePayloadError",
       "kind": "tagged-error",
@@ -11736,6 +11874,43 @@
       "description": "Browser-only observability configuration."
     },
     {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "symbol": "IdentityDatasetDecodeError",
+      "kind": "tagged-error",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityDatasetDecodeError"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "symbol": "IdentityEntryIriError",
+      "kind": "tagged-error",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityEntryIriError"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "symbol": "IdentityFiberPathError",
+      "kind": "tagged-error",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityFiberPathError"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "symbol": "IdentityRdfBinding",
+      "kind": "schema-class",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityRdfBinding",
+      "description": "Explicit RDF predicates for identity registry fields and named string fibers."
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityShaclProjection.ts",
+      "symbol": "IdentityShapePolicy",
+      "kind": "schema-class",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityShapePolicy",
+      "description": "Named identity fibers that every projected node shape requires."
+    },
+    {
       "file": "packages/foundation/capability/semantic-web/src/services/canonicalization.ts",
       "symbol": "CanonicalDatasetResult",
       "kind": "schema-class",
@@ -13520,6 +13695,34 @@
     {
       "file": "packages/foundation/modeling/identity/src/Id.ts",
       "symbol": "IdentitySegmentCountError",
+      "kind": "tagged-error",
+      "owner": "@beep/identity"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "symbol": "IdentityEntry",
+      "kind": "schema-class",
+      "owner": "@beep/identity",
+      "identity": "IdentityEntry",
+      "description": "One registered identity with its literal IRI and CURIE projections and named string fiber parts."
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "symbol": "IdentityNotFoundError",
+      "kind": "tagged-error",
+      "owner": "@beep/identity"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "symbol": "IdentityRef",
+      "kind": "tagged-union",
+      "owner": "@beep/identity",
+      "identity": "IdentityRef",
+      "description": "Exact identity reference in one of three encodings: identity, IRI, or CURIE."
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "symbol": "IdentityRegistryConflictError",
       "kind": "tagged-error",
       "owner": "@beep/identity"
     },
