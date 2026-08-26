@@ -5,6 +5,7 @@ import {
   fontStack,
   GENERATED_CSS_BANNER,
   MarkPaint,
+  PrintableText,
   renderThemeCss,
   renderWordmarkSvg,
   ScaleStep,
@@ -14,7 +15,7 @@ import {
 } from "@beep/brand";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 
 describe("beep identity", () => {
@@ -79,13 +80,22 @@ describe("renderThemeCss", () => {
     expect(css).toContain("--font-sans: var(--font-brand-sans);");
   });
 
-  it("escapes quotes, backslashes, delimiters, and newlines in named families", () => {
+  it("escapes quotes, backslashes, and delimiters in named families", () => {
     const hostile = FontStack.make({
       family: 'A";}body{color:red}/*',
-      fallbacks: ["Back\\slash", "Line\nbreak", "sans-serif"],
+      fallbacks: ["Back\\slash", "sans-serif"],
     });
 
-    expect(fontStack(hostile)).toBe('"A\\";}body{color:red}/*", "Back\\\\slash", "Line\\A break", sans-serif');
+    expect(fontStack(hostile)).toBe('"A\\";}body{color:red}/*", "Back\\\\slash", sans-serif');
+  });
+
+  it("rejects control characters at the schema boundary", () => {
+    const family = S.decodeResult(PrintableText)("Line\nbreak");
+    const name = S.decodeResult(PrintableText)("bell\u0007");
+
+    expect(Result.isFailure(family)).toBe(true);
+    expect(Result.isFailure(name)).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(PrintableText)("Inter Variable"))).toBe(true);
   });
 });
 

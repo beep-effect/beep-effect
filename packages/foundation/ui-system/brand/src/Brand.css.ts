@@ -51,16 +51,10 @@ const GenericFontFamily = LiteralKit([
 
 const isGenericFontFamily = S.is(GenericFontFamily);
 
+// Control characters are schema-invalid (PrintableText), so escaping covers the two
+// printable metacharacters CSS strings care about.
 const escapeCssString = (value: string): string =>
-  pipe(
-    value,
-    Str.replaceAll("\\", "\\\\"),
-    Str.replaceAll('"', '\\"'),
-    Str.replaceAll("\0", "\\FFFD "),
-    Str.replaceAll("\r", "\\D "),
-    Str.replaceAll("\n", "\\A "),
-    Str.replaceAll("\f", "\\C ")
-  );
+  pipe(value, Str.replaceAll("\\", "\\\\"), Str.replaceAll('"', '\\"'));
 
 const quoteFamily = (family: string): string => (isGenericFontFamily(family) ? family : `"${escapeCssString(family)}"`);
 

@@ -12,6 +12,47 @@ import * as S from "effect/Schema";
 const $I = $BrandId.create("Brand.schema");
 
 const svgPathDataPattern = /^[Mm]/;
+const controlCharacterPattern = /^[^\u0000-\u001f\u007f-\u009f]+$/;
+
+/**
+ * Non-empty text with no C0/C1 control characters, safe to embed in CSS strings and XML.
+ *
+ * **Example** (Construct printable text)
+ *
+ * ```ts
+ * import { PrintableText } from "@beep/brand"
+ *
+ * console.log(PrintableText.make("Inter Variable"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PrintableText = S.NonEmptyString.check(
+  S.isPattern(controlCharacterPattern, {
+    identifier: $I`PrintableTextPatternCheck`,
+    title: "Printable Text",
+    description: "Non-empty text with no C0/C1 control characters.",
+    message: "Text must not contain control characters",
+  })
+).pipe($I.annoteSchema("PrintableText", { description: "Non-empty text with no C0/C1 control characters." }));
+
+/**
+ * Decoded {@link PrintableText} value.
+ *
+ * **Example** (Annotate printable text)
+ *
+ * ```ts
+ * import { PrintableText } from "@beep/brand"
+ *
+ * const family: PrintableText = PrintableText.make("Inter")
+ * console.log(family)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PrintableText = typeof PrintableText.Type;
 
 /**
  * Tint step of a ten-stop brand color scale, lightest first.
@@ -387,8 +428,8 @@ export type SchemeName = typeof SchemeName.Type;
  */
 export class FontStack extends S.Class<FontStack>($I`FontStack`)(
   {
-    family: S.NonEmptyString.annotateKey({ description: "Preferred font family name." }),
-    fallbacks: S.Array(S.NonEmptyString).annotateKey({
+    family: PrintableText.annotateKey({ description: "Preferred font family name." }),
+    fallbacks: S.Array(PrintableText).annotateKey({
       description: "Ordered fallback families and generic keywords.",
     }),
   },
@@ -437,6 +478,12 @@ export const SvgPathData = S.String.check(
     title: "SVG Path Data",
     description: "SVG path data beginning with a move-to command.",
     message: "SVG path data must begin with M or m",
+  }),
+  S.isPattern(controlCharacterPattern, {
+    identifier: $I`SvgPathDataPrintableCheck`,
+    title: "Printable SVG Path Data",
+    description: "SVG path data with no C0/C1 control characters.",
+    message: "SVG path data must not contain control characters",
   })
 ).pipe(
   S.brand("SvgPathData"),
@@ -545,7 +592,7 @@ export class PixelGlasses extends S.Class<PixelGlasses>($I`PixelGlasses`)(
  */
 export class BrandMark extends S.Class<BrandMark>($I`BrandMark`)(
   {
-    name: S.NonEmptyString.annotateKey({ description: "Accessible name of the mark." }),
+    name: PrintableText.annotateKey({ description: "Accessible name of the mark." }),
     viewBox: S.Finite.check(S.isGreaterThan(0)).annotateKey({
       description: "Side length of the square view box in user units.",
     }),
@@ -574,7 +621,7 @@ export class BrandMark extends S.Class<BrandMark>($I`BrandMark`)(
  */
 export class BrandIdentity extends S.Class<BrandIdentity>($I`BrandIdentity`)(
   {
-    name: S.NonEmptyString.annotateKey({ description: "Brand name as rendered in wordmarks." }),
+    name: PrintableText.annotateKey({ description: "Brand name as rendered in wordmarks." }),
     light: ColorScheme.annotateKey({ description: "Light appearance scheme." }),
     dark: ColorScheme.annotateKey({ description: "Dark appearance scheme." }),
     typography: Typography.annotateKey({ description: "Font stacks." }),

@@ -127,6 +127,11 @@ export {
    * @category models
    * @since 0.0.0
    */
+  PrintableText,
+  /**
+   * @category models
+   * @since 0.0.0
+   */
   ScaleStep,
   /**
    * @category models
