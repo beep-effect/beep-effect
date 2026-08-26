@@ -28,6 +28,9 @@
   },
   "references": [
     {
+      "path": "../../../packages/foundation/ui-system/brand/tsconfig.json"
+    },
+    {
       "path": "../../../packages/foundation/ui-system/ui/tsconfig.json"
     }
   ]

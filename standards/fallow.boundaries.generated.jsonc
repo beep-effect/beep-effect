@@ -120,6 +120,12 @@
         ]
       },
       {
+        "name": "@beep/brand",
+        "patterns": [
+          "packages/foundation/ui-system/brand/src/**"
+        ]
+      },
+      {
         "name": "@beep/chalk",
         "patterns": [
           "packages/foundation/capability/chalk/src/**"
@@ -1192,6 +1198,23 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/brand",
+        "allow": [
+          "@beep/brand",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/brand",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -3300,10 +3323,12 @@
       {
         "from": "@beep/trustgraph-workbench",
         "allow": [
+          "@beep/brand",
           "@beep/trustgraph-workbench",
           "@beep/ui"
         ],
         "allowTypeOnly": [
+          "@beep/brand",
           "@beep/trustgraph-workbench",
           "@beep/ui"
         ]

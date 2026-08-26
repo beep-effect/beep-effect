@@ -54,6 +54,17 @@ one application. It is not a monorepo package family and must not own product
 policy, handlers, repositories, schedules, workflows, or cross-slice
 orchestration.
 
+## Brand Package
+
+A `foundation/ui-system` package that owns repo brand identity as schema-decoded
+data: color scales per appearance, typography stacks, and mark geometry, with the
+theme stylesheet and SVG assets generated from that data. Brand identity is a
+design-system role, not product-domain language, so it is neither a slice concern
+nor shared-kernel vocabulary. `@beep/brand` is the canonical instance; `@beep/ui`
+may depend on it, never the reverse, so a brand-neutral component library stays
+consumable by apps carrying another identity. Doctrine:
+[07-non-slice-families.md](./07-non-slice-families.md).
+
 ## Client Package
 
 The slice package that owns browser/client adapters, remote command/query

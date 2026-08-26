@@ -301,6 +301,9 @@
       "path": "packages/foundation/primitive/types"
     },
     {
+      "path": "packages/foundation/ui-system/brand"
+    },
+    {
       "path": "packages/foundation/ui-system/dock"
     },
     {

@@ -39,15 +39,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
-- [`lejeune-bolt-agentic-demo`](./lejeune-bolt-agentic-demo/README.md) — shape
-  (2026-08-26): lunch pitch next week to LeJeune Bolt (Burnsville MN structural
-  fastener distributor; stadium/bridge/TNA work) whose veterans are retiring.
-  Six research lanes synthesized; operator-ratified thesis: Option C — a
-  disposable version of the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`), working
-  title "LeJeune Knowledge Desk," composing beep bricks, deployed to the tailnet only, and
-  running a fixed 30-minute scenario over the public site corpus plus synthetic Office records.
-  Align completed with Benjamin (17 decisions ratified). Next: shape review of the brief;
-  graduation follows decompose.
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
   (digest-named global protocol type + projections + journal-audited
@@ -247,6 +238,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`lejeune-bolt-agentic-demo`](./lejeune-bolt-agentic-demo/README.md) — graduated
+  2026-08-26 into
+  [`lejeune-demo-corpus-and-ontology`](../goals/lejeune-demo-corpus-and-ontology/README.md)
+  (deterministic public-and-synthetic bundle, 12-class ontology, exact spans, three cited
+  checks, and local projections) and
+  [`lejeune-knowledge-desk-lab`](../goals/lejeune-knowledge-desk-lab/README.md)
+  (the fixed 30-minute "LeJeune Knowledge Desk" story, tailnet delivery, and recorded
+  rehearsal). Both deliver into the proposed `lejeune-bolt-workbench` lab (under
+  `apps/labs/`). The M365 pilot and TrustGraph donor remain gated re-entries; a fired gate
+  reopens the exploration at `decompose`. Build starts on Benjamin's signal.
 - [`semantica-lab`](./semantica-lab/README.md) — graduated 2026-08-24 into
   [`goals/semantica-canary`](../goals/semantica-canary/README.md) (the staged
   Semantica-port canary C0→C1→C2 in the future apps/labs/semantica Tauri lab,
