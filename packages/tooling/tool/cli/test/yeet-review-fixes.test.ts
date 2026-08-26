@@ -137,6 +137,24 @@ describe("yeet review fixes", () => {
       )
     ));
 
+  it("runs every proof step when each step succeeds", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
+          const cheapGates = proofStep(tmpDir, "full:cheap-gates", "process.exitCode = 0");
+          const prePush = proofStep(tmpDir, "full:pre-push", "process.exitCode = 0");
+
+          const results = yield* runProofPhaseForTesting(contextAt(tmpDir), [cheapGates, prePush], recorder);
+          const executed = yield* Ref.get(recorder);
+
+          expect(A.map(results, (result) => result.stepId)).toEqual(["full:cheap-gates", "full:pre-push"]);
+          expect(A.map(executed, (entry) => entry.step.id)).toEqual(["full:cheap-gates", "full:pre-push"]);
+          expect(A.every(results, (result) => result.exitCode === 0)).toBe(true);
+        })
+      )
+    ));
+
   it("holds the coordinator across preflight and proof checkpoints and releases it on failure", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ context, lockPath }) =>
@@ -187,6 +205,42 @@ describe("yeet review fixes", () => {
         const repository = yield* proofCoordinatorLockPath("https://github.com/acme/repo.git");
         const other = yield* proofCoordinatorLockPath("https://github.com/acme/other.git");
         expect(repository).not.toBe(other);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("preserves a non-default HTTPS port in the canonical repository authority", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const nonDefault = yield* proofCoordinatorLockPath("https://Example.test:8443/acme/repo.git");
+        const equivalent = yield* proofCoordinatorLockPath("https://example.test:8443/acme/repo/");
+        const defaultPort = yield* proofCoordinatorLockPath("https://example.test/acme/repo.git");
+
+        expect(nonDefault).toBe(equivalent);
+        expect(nonDefault).not.toBe(defaultPort);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("falls back to trimmed raw text for unsupported repository URL protocols", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const raw = yield* proofCoordinatorLockPath("http://Example.test/acme/repo.git");
+        const padded = yield* proofCoordinatorLockPath("  http://Example.test/acme/repo.git  ");
+        const canonicalLooking = yield* proofCoordinatorLockPath("http://example.test/acme/repo");
+
+        expect(raw).toBe(padded);
+        expect(raw).not.toBe(canonicalLooking);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("falls back to trimmed raw text when a supported repository URL has no hostname", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const raw = yield* proofCoordinatorLockPath("git:///acme/repo.git");
+        const padded = yield* proofCoordinatorLockPath("  git:///acme/repo.git  ");
+        const other = yield* proofCoordinatorLockPath("git:///acme/other.git");
+
+        expect(raw).toBe(padded);
+        expect(raw).not.toBe(other);
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
