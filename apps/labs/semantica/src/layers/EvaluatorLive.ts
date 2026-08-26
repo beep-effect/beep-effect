@@ -16,7 +16,12 @@ import { GoldSource } from "@/services/GoldSource";
 import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { DegradedKind } from "@/schema/Degraded";
 import type { DocumentOutcome as DocumentOutcomeValue, EvalRun, MetricName, MetricSubset } from "@/schema/Eval";
-import type { EvidenceClaim, ExtractionLane, ExtractOutcome as ExtractOutcomeValue } from "@/schema/Evidence";
+import type {
+  CoreferenceCluster,
+  EvidenceClaim,
+  ExtractionLane,
+  ExtractOutcome as ExtractOutcomeValue,
+} from "@/schema/Evidence";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
 import type { LedgerDocumentSnapshot, LedgerSnapshot } from "@/schema/Ledger";
 
@@ -401,7 +406,7 @@ const entityAssignments = (
       Entity: (body) =>
         body.cluster.pipe(
           O.map(
-            (cluster): EntityClusterAssignment => [
+            (cluster: CoreferenceCluster): EntityClusterAssignment => [
               spanKey(document.document.id, body),
               `${document.document.id}:${cluster}`,
             ]

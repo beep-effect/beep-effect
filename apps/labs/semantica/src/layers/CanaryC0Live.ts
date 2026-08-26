@@ -58,6 +58,11 @@ const fallbackExtractor = SourceTextExtractor.make({ name: "semantica-parser-deg
 
 const executionFailed = (message: string): C0ExecutionFailed => C0ExecutionFailed.make({ message });
 
+const selectionIncludesW1: (selection: EvalSelectionMode) => boolean = EvalSelectionMode.$match({
+  f1: () => false,
+  "f1+w1": () => true,
+});
+
 const makeEvent = Effect.fn("CanaryC0.makeEvent")(function* (
   body: EventBodyValue,
   prev: O.Option<ProvenanceEventValue["id"]>
@@ -180,10 +185,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
       const startedAt = yield* DateTime.now;
       const startedMillis = yield* Clock.currentTimeMillis;
       const paper = yield* selectedPaper(options.paper);
-      const includeW1 = EvalSelectionMode.$match(options.selection, {
-        f1: () => false,
-        "f1+w1": () => true,
-      });
+      const includeW1 = selectionIncludesW1(options.selection);
       if (!includeW1 && O.isSome(paper)) {
         return yield* executionFailed("The --paper flag requires --selection f1+w1.");
       }
