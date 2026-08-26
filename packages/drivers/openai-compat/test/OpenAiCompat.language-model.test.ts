@@ -36,6 +36,7 @@ import * as Toolkit from "effect/unstable/ai/Toolkit";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { TUnsafe } from "@beep/types";
+import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 
@@ -296,6 +297,9 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
         parameters: S.Struct({ city: S.String }),
         success: S.String,
       });
+      const namedChoice: LanguageModel.ToolChoice<"weather"> = { tool: "weather" };
+      const requiredChoice: LanguageModel.ToolChoice<"weather"> = { mode: "required", oneOf: ["weather"] };
+      const autoChoice: LanguageModel.ToolChoice<"weather"> = { mode: "auto", oneOf: ["weather"] };
       yield* languageModel.generateText({
         disableToolCallResolution: true,
         prompt: "weather",
@@ -305,19 +309,19 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       yield* languageModel.generateText({
         disableToolCallResolution: true,
         prompt: "weather",
-        toolChoice: { tool: "weather" },
+        toolChoice: namedChoice,
         toolkit: Toolkit.make(WeatherTool),
       });
       yield* languageModel.generateText({
         disableToolCallResolution: true,
         prompt: "weather",
-        toolChoice: { mode: "required", oneOf: ["weather"] },
+        toolChoice: requiredChoice,
         toolkit: Toolkit.make(WeatherTool),
       });
       yield* languageModel.generateText({
         disableToolCallResolution: true,
         prompt: "weather",
-        toolChoice: { mode: "auto", oneOf: ["weather"] },
+        toolChoice: autoChoice,
         toolkit: Toolkit.make(WeatherTool),
       });
       const captured = yield* Ref.get(requests);
