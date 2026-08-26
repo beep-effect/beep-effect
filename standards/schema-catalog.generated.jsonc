@@ -21626,6 +21626,302 @@
       "description": "Per-tab and fixed tab-strip pixel allowances."
     },
     {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "CapabilityConflictError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "CapabilityConflictError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "DependencyCycleError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "DependencyCycleError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "DevelopmentOnlyCapabilityError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "DevelopmentOnlyCapabilityError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "IncompatibleRegistrationError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "IncompatibleRegistrationError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "KeybindingConflictError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "KeybindingConflictError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "MissingDependencyError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "MissingDependencyError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "ProfileResolutionError",
+      "kind": "tagged-union",
+      "owner": "@beep/editor",
+      "identity": "ProfileResolutionError",
+      "description": "Tagged union of every expected deterministic profile resolution failure."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "UnknownCapabilityError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "UnknownCapabilityError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "UnknownCommandError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "UnknownCommandError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/projection.ts",
+      "symbol": "ShortcutHelpEntry",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "ShortcutHelpEntry",
+      "description": "Generated command help row with an optional platform-specific chord."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ActivationSurface",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "ActivationSurface",
+      "description": "User-visible affordance surface generated from a resolved command."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CanonicalCompatibility",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "CanonicalCompatibility",
+      "description": "Loss behavior when an editor semantic crosses the canonical document codec."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityCatalog",
+      "kind": "schema-const",
+      "owner": "@beep/editor",
+      "identity": "CapabilityCatalog",
+      "description": "Validated registration source with globally unique capability, command, and registration keys."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityCategory",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "CapabilityCategory",
+      "description": "P1 subset of the editor capability atlas taxonomy."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityClassification",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "CapabilityClassification",
+      "description": "Atlas category and ratified P1 disposition for a descriptor."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityDescriptor",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "CapabilityDescriptor",
+      "description": "Catalog row that owns registrations, commands, dependencies, and canonical loss policy."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityDisposition",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "CapabilityDisposition",
+      "description": "P1 implementation disposition used by profile resolution policy."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityId",
+      "kind": "brand",
+      "owner": "@beep/editor",
+      "identity": "CapabilityId",
+      "description": "Stable lowercase dot-separated identifier for an editor capability."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityMode",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "CapabilityMode",
+      "description": "Whether a catalog capability is authoring-enabled or readable only."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityRegistrations",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "CapabilityRegistrations",
+      "description": "Unique runtime registration keys owned by one capability descriptor."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CommandDefinition",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "CommandDefinition",
+      "description": "Command metadata and default bindings owned by a capability descriptor."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CommandId",
+      "kind": "brand",
+      "owner": "@beep/editor",
+      "identity": "CommandId",
+      "description": "Stable lowercase dot-separated identifier for an editor command."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "EditorProfile",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "EditorProfile",
+      "description": "App-owned explicit capability selection and keybinding override set."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ExtensionKey",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "ExtensionKey",
+      "description": "Closed registry of runtime editor extensions owned by P1 descriptors."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "KeyChord",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "KeyChord",
+      "description": "Canonical parsed keyboard chord used for equality and conflict detection."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "KeyChordFromString",
+      "kind": "codec",
+      "owner": "@beep/editor",
+      "identity": "KeyChordFromString",
+      "description": "Bidirectional codec between authored chord strings and canonical parsed key chords."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "Keybinding",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "Keybinding",
+      "description": "A platform-specific keyboard chord attached to a command."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "KeybindingOverride",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "KeybindingOverride",
+      "description": "Complete replacement for one resolved command's default bindings."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "Modifier",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "Modifier",
+      "description": "Canonical modifier vocabulary in deterministic chord order."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "NodeRegistrationKey",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "NodeRegistrationKey",
+      "description": "Closed registry of Lexical node constructors owned by P1 descriptors."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "Platform",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "Platform",
+      "description": "Platform family used to resolve authored keyboard bindings."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ProfileId",
+      "kind": "brand",
+      "owner": "@beep/editor",
+      "identity": "ProfileId",
+      "description": "Stable branded identifier for an app-owned editor profile."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ProfileKind",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "ProfileKind",
+      "description": "Profile ownership class used to gate development-only capabilities."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ReadOnlyFallback",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "ReadOnlyFallback",
+      "description": "Fallback presentation used for a capability whose authoring controls are disabled."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ResolvedCapability",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "ResolvedCapability",
+      "description": "One catalog capability in catalog order with its resolved authoring mode."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ResolvedCommand",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "ResolvedCommand",
+      "description": "Enabled command with its owning capability and final keybindings."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ResolvedEditorProfile",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "ResolvedEditorProfile",
+      "description": "Deterministic registration, command, and disabled-chord plan for an editor mount."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "TransformerKey",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "TransformerKey",
+      "description": "Closed registry of Markdown transformers owned by P1 descriptors."
+    },
+    {
       "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
       "symbol": "AttachmentFailure",
       "kind": "tagged-union",

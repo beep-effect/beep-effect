@@ -789,3 +789,25 @@ layer(doctestCiLayer(["packages/a/src/unmarked.ts"], dependentDoctestSources, fa
     );
   }
 );
+
+const deletedNestedPackageDoctestCommands = A.empty<string>();
+
+layer(
+  doctestCiLayer(
+    ["packages/a/nested/package.json", "packages/a/nested/src/helper.ts"],
+    dependentDoctestSources,
+    deletedNestedPackageDoctestCommands
+  )
+)("deleted nested package Doctest CI lane", (it) => {
+  it.effect("attributes files under a deleted nested package to the enclosing tracked workspace", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+      expect(lastOf(deletedNestedPackageDoctestCommands)).toContain(
+        "bunx vitest run --config vitest.docs.ts packages/a/src/marked.ts packages/b/src/marked.tsx"
+      );
+      expect(lastOf(deletedNestedPackageDoctestCommands)).not.toContain("packages/c/src/marked.ts");
+      expect(lastOf(deletedNestedPackageDoctestCommands)).not.toContain("packages/a/nested/");
+    })
+  );
+});
