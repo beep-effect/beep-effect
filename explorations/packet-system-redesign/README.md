@@ -2,15 +2,17 @@
 
 ## Status
 
-Stage: `graduate`
-Status: `graduated`
+Stage: `decompose`
+Status: `active`
 
-Graduated 2026-08-17: MAP ratified with amendments;
+Graduated 2026-08-17; **reopened at `decompose` 2026-08-26** by the packet's
+own ratified convention: the candidate-2/3 gate condition (fold contract
+stabilizing) was satisfied on main evidence, and
 [`goals/packet-control-plane-core`](../../goals/packet-control-plane-core/README.md)
-scaffolded as the only promised-now candidate. Candidates 2–4 are gated
-re-entry candidates (gates in the MAP ratification amendments); the React
-viewer stays gated on KSA static-v1 daily-use evidence. A fired gate reopens
-this packet at `decompose`.
+closed `completed-retained` through its own guarded writer. Candidates 2–4
+remain gated re-entry candidates; the React viewer stays gated on KSA
+static-v1 daily-use evidence. The Session B rulings on the queued amendments
+and the fleet-campaign charter land as their own docs PR.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -46,6 +48,14 @@ packet or fold into candidate 3?
 
 ## Trail
 
+- 2026-08-26 (close + reopen): `packet-control-plane-core` closed
+  `completed-retained` — rung-4 pre-close hardening merged as #848, the flip
+  executed through the guarded writer as stream event 4, closeout reflection
+  and friction receipts landed in the goal packet. The satisfied candidate-2/3
+  gate reopened this packet at `decompose` in the same PR, per the ratified
+  convention and the same-PR flip law. The Session B grill already ran; its
+  rulings (queued amendments H/I/J, fleet-campaign charter) are recorded in a
+  separate docs PR so decisions stay reviewable apart from the closeout.
 - 2026-08-25 (review follow-up, #830): MAP queued-amendments intro corrected
   to name all three amendments (H, I, J) and cite both evidence notes — the
   AgentO mapping for H/I and the ontology-tooling recon for J. Next Open

@@ -49,14 +49,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   with PacketCore + ExecutionRecord proof migrations; wave 2 (protocol kit)
   gated; `$I` stays static; decoupled from identity-iri-fibered. Next:
   Benjamin's BRIEF review, then decompose.
-- [`packet-system-redesign`](./packet-system-redesign/README.md) —
-  graduated 2026-08-17: MAP ratified with amendments (live index-guard
-  capability cited; apps/labs as the React candidate's presumptive home).
+- [`packet-system-redesign`](./packet-system-redesign/README.md) — reopened
+  at `decompose` 2026-08-26:
   [`goals/packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-  scaffolded as the sole promised-now candidate; design gate + projection
-  migration gate on the core fold contract stabilizing, evidence closure on
-  observed self-hosting friction, React v2 on KSA static-v1 daily-use
-  evidence. Fired gates reopen the packet at decompose.
+  closed `completed-retained` through its own guarded writer (rung-4
+  hardening #848), which satisfied the candidate-2/3 gate and fired the
+  ratified reopen convention. Candidates 2–4 remain gated; React v2 stays on
+  KSA static-v1 daily-use evidence. The Session B rulings (queued amendments,
+  fleet-campaign charter) land as their own docs PR.
 - [`full-document-editor`](./full-document-editor/README.md) — graduated
   2026-08-24 with its two promised-now packets:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md)
