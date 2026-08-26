@@ -89,13 +89,18 @@ describe("renderThemeCss", () => {
     expect(fontStack(hostile)).toBe('"A\\";}body{color:red}/*", "Back\\\\slash", sans-serif');
   });
 
-  it("rejects control characters at the schema boundary", () => {
+  it("rejects control characters, lone surrogates, and noncharacters at the schema boundary", () => {
     const family = S.decodeResult(PrintableText)("Line\nbreak");
     const name = S.decodeResult(PrintableText)("bell\u0007");
+    const noncharacter = S.decodeResult(PrintableText)("bad\ufffe");
+    const loneSurrogate = S.decodeResult(PrintableText)("bad\ud83d");
 
     expect(Result.isFailure(family)).toBe(true);
     expect(Result.isFailure(name)).toBe(true);
+    expect(Result.isFailure(noncharacter)).toBe(true);
+    expect(Result.isFailure(loneSurrogate)).toBe(true);
     expect(Result.isSuccess(S.decodeResult(PrintableText)("Inter Variable"))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(PrintableText)("beep \u{1f680}"))).toBe(true);
   });
 });
 

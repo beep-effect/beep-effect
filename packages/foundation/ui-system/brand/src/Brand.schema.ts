@@ -12,10 +12,10 @@ import * as S from "effect/Schema";
 const $I = $BrandId.create("Brand.schema");
 
 const svgPathDataPattern = /^[Mm]/;
-const controlCharacterPattern = /^[^\u0000-\u001f\u007f-\u009f]+$/;
+const printableTextPattern = /^[^\u0000-\u001f\u007f-\u009f\p{Cs}\p{Noncharacter_Code_Point}]+$/u;
 
 /**
- * Non-empty text with no C0/C1 control characters, safe to embed in CSS strings and XML.
+ * Non-empty text with no control characters, lone surrogates, or Unicode noncharacters, safe to embed in CSS strings and XML 1.0.
  *
  * **Example** (Construct printable text)
  *
@@ -29,13 +29,17 @@ const controlCharacterPattern = /^[^\u0000-\u001f\u007f-\u009f]+$/;
  * @since 0.0.0
  */
 export const PrintableText = S.NonEmptyString.check(
-  S.isPattern(controlCharacterPattern, {
+  S.isPattern(printableTextPattern, {
     identifier: $I`PrintableTextPatternCheck`,
     title: "Printable Text",
-    description: "Non-empty text with no C0/C1 control characters.",
-    message: "Text must not contain control characters",
+    description: "Non-empty text with no control characters, lone surrogates, or noncharacters.",
+    message: "Text must not contain control characters, lone surrogates, or noncharacters",
   })
-).pipe($I.annoteSchema("PrintableText", { description: "Non-empty text with no C0/C1 control characters." }));
+).pipe(
+  $I.annoteSchema("PrintableText", {
+    description: "Non-empty text with no control characters, lone surrogates, or noncharacters.",
+  })
+);
 
 /**
  * Decoded {@link PrintableText} value.
@@ -479,10 +483,10 @@ export const SvgPathData = S.String.check(
     description: "SVG path data beginning with a move-to command.",
     message: "SVG path data must begin with M or m",
   }),
-  S.isPattern(controlCharacterPattern, {
+  S.isPattern(printableTextPattern, {
     identifier: $I`SvgPathDataPrintableCheck`,
     title: "Printable SVG Path Data",
-    description: "SVG path data with no C0/C1 control characters.",
+    description: "SVG path data with no control characters, lone surrogates, or noncharacters.",
     message: "SVG path data must not contain control characters",
   })
 ).pipe(
