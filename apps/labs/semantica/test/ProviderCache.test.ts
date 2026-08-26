@@ -6,6 +6,7 @@ import { ConfigProvider, Duration, Effect, Fiber, FileSystem, Layer, Path, Ref, 
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
@@ -18,6 +19,8 @@ import {
   replayGenerateText,
   XAiGoldModelIdentityLive,
 } from "@/layers/LanguageModelLive";
+import { ProviderCacheLive } from "@/layers/ProviderCacheLive";
+import { LabConfigLive } from "@/runtime/Config";
 import { RuntimeLayer } from "@/runtime/Layer";
 import { contentDigest, sha256TextSync } from "@/schema/Digest";
 import { ModelRevisionUnpinned, ProviderCacheCorrupt, ProviderUnavailable } from "@/schema/Errors";
@@ -48,6 +51,9 @@ const makeKey = (prompt: string): ProviderCacheKey =>
   });
 
 const ProviderCacheEntryPrettyJson = S.fromJsonString(ProviderCacheEntry, { space: 2 });
+const encodeProviderCacheEntry = Effect.fn("ProviderCacheTest.encodeProviderCacheEntry")((entry: ProviderCacheEntry) =>
+  S.encodeEffect(ProviderCacheEntryPrettyJson)(entry)
+);
 const CacheTestServices = Layer.mergeAll(BunServices.layer, TestClock.layer());
 
 const advanceCacheClock = Effect.fn("ProviderCacheTest.advanceClock")(function* (steps: number) {
@@ -66,6 +72,22 @@ const providerCacheRuntime = (cacheDirectory: string) =>
         ConfigProvider.fromEnv({
           env: { SEMANTICA_PROVIDER_CACHE_DIR: cacheDirectory },
         })
+      )
+    )
+  );
+
+const providerCacheTestRuntime = (cacheDirectory: string, fileSystem: FileSystem.FileSystem) =>
+  ProviderCacheLive.pipe(
+    Layer.provide(Layer.succeed(FileSystem.FileSystem, fileSystem)),
+    Layer.provide(
+      LabConfigLive.pipe(
+        Layer.provide(
+          ConfigProvider.layer(
+            ConfigProvider.fromEnv({
+              env: { SEMANTICA_PROVIDER_CACHE_DIR: cacheDirectory },
+            })
+          )
+        )
       )
     )
   );
@@ -247,7 +269,7 @@ describe("C0 provider cache and language-model boundary", () => {
                 const lock = `${target}.lock`;
                 yield* fs.makeDirectory(lock);
                 yield* fs.writeFileString(path.join(lock, "owner.pid"), `${process.pid}\n`);
-                const json = yield* S.encodeEffect(ProviderCacheEntryPrettyJson)(entry);
+                const json = yield* encodeProviderCacheEntry(entry);
                 const winner = yield* Effect.sleep(Duration.seconds(2)).pipe(
                   Effect.andThen(fs.writeFileString(target, `${json}\n`)),
                   Effect.andThen(fs.remove(lock, { force: true, recursive: true })),
@@ -262,6 +284,134 @@ describe("C0 provider cache and language-model boundary", () => {
                 expect(yield* cache.lookup(key)).toEqual(O.some(entry));
               })
             );
+          })
+        )
+      )
+    ));
+
+  it("abandons stale-lock recovery when the sampled owner is replaced before deletion", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const cacheDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-cache-owner-swap-" });
+            const key = makeKey("stale owner replaced before deletion");
+            const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
+            const entry = ProviderCacheEntry.make({
+              cacheKey,
+              key,
+              response: "replacement-winner",
+              responseDigest: sha256TextSync("replacement-winner"),
+            });
+            const target = path.join(cacheDirectory, `${cacheKey}.json`);
+            const lock = `${target}.lock`;
+            const ownerPath = path.join(lock, "owner.pid");
+            const replacementOwner = `${process.pid}\n`;
+            const json = yield* encodeProviderCacheEntry(entry);
+            yield* fs.makeDirectory(lock);
+            yield* fs.writeFileString(ownerPath, "0\n");
+            yield* fs.utimes(lock, 0, 0);
+
+            let ownerReads = 0;
+            let lockRemovalAttempts = 0;
+            const racingFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("ProviderCacheTest.swapOwnerBeforeDelete")(function* (candidate, encoding) {
+                if (Str.Equivalence(candidate, ownerPath)) {
+                  ownerReads += 1;
+                  if (ownerReads === 2) {
+                    yield* fs.writeFileString(ownerPath, replacementOwner);
+                    yield* fs.writeFileString(target, `${json}\n`);
+                  }
+                }
+                return yield* fs.readFileString(candidate, encoding);
+              }),
+              remove: Effect.fn("ProviderCacheTest.observeStaleLockRemove")((candidate, options) => {
+                if (Str.Equivalence(candidate, lock)) {
+                  lockRemovalAttempts += 1;
+                }
+                return fs.remove(candidate, options);
+              }),
+            });
+
+            yield* provideScopedLayer(providerCacheTestRuntime(cacheDirectory, racingFileSystem))(
+              ProviderCache.pipe(Effect.flatMap((cache) => cache.store(entry)))
+            );
+
+            expect(ownerReads).toBe(2);
+            expect(lockRemovalAttempts).toBe(0);
+            expect(yield* fs.readFileString(ownerPath)).toBe(replacementOwner);
+            expect(yield* fs.exists(lock)).toBe(true);
+          })
+        )
+      )
+    ));
+
+  it("does not publish after its acquired lock is stolen and reconciles with the winner", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const cacheDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-cache-stolen-lock-" });
+            const key = makeKey("lock stolen before promotion");
+            const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
+            const entry = ProviderCacheEntry.make({
+              cacheKey,
+              key,
+              response: "stolen-lock-winner",
+              responseDigest: sha256TextSync("stolen-lock-winner"),
+            });
+            const target = path.join(cacheDirectory, `${cacheKey}.json`);
+            const lock = `${target}.lock`;
+            const ownerPath = path.join(lock, "owner.pid");
+            const replacementOwner = `${process.pid + 1}\n`;
+            const json = yield* encodeProviderCacheEntry(entry);
+
+            let ownerReads = 0;
+            let lockRemovalAttempts = 0;
+            let promotionAttempts = 0;
+            const racingFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("ProviderCacheTest.stealLockBeforePromotion")(function* (candidate, encoding) {
+                if (Str.Equivalence(candidate, ownerPath)) {
+                  ownerReads += 1;
+                  if (ownerReads === 1) {
+                    yield* fs.remove(lock, { force: true, recursive: true });
+                    yield* fs.makeDirectory(lock);
+                    yield* fs.writeFileString(ownerPath, replacementOwner);
+                    yield* fs.writeFileString(target, `${json}\n`);
+                  }
+                }
+                return yield* fs.readFileString(candidate, encoding);
+              }),
+              remove: Effect.fn("ProviderCacheTest.observeStolenLockRemove")((candidate, options) => {
+                if (Str.Equivalence(candidate, lock)) {
+                  lockRemovalAttempts += 1;
+                }
+                return fs.remove(candidate, options);
+              }),
+              rename: Effect.fn("ProviderCacheTest.observeStolenLockPromotion")((from, to) => {
+                if (Str.Equivalence(to, target)) {
+                  promotionAttempts += 1;
+                }
+                return fs.rename(from, to);
+              }),
+            });
+
+            yield* provideScopedLayer(providerCacheTestRuntime(cacheDirectory, racingFileSystem))(
+              ProviderCache.pipe(Effect.flatMap((cache) => cache.store(entry)))
+            );
+
+            expect(ownerReads).toBe(2);
+            expect(lockRemovalAttempts).toBe(0);
+            expect(promotionAttempts).toBe(0);
+            expect(yield* fs.readFileString(ownerPath)).toBe(replacementOwner);
+            expect(yield* fs.exists(lock)).toBe(true);
+            expect(yield* fs.readFileString(target)).toBe(`${json}\n`);
           })
         )
       )

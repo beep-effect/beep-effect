@@ -26,6 +26,7 @@ const ProviderCacheEntryJson = S.fromJsonString(ProviderCacheEntry);
 const ProviderCacheEntryPrettyJson = S.fromJsonString(ProviderCacheEntry, { space: 2 });
 const providerKeyEquivalence = S.toEquivalence(ProviderCacheKey);
 const providerEntryEquivalence = S.toEquivalence(ProviderCacheEntry);
+const lockOwnerEquivalence = O.makeEquivalence(Str.Equivalence);
 const staleLockAge = Duration.seconds(60);
 const competingWriterSchedule = Schedule.exponential(Duration.millis(200)).pipe(Schedule.upTo({ times: 7 }));
 const pendingWriterMessage = "The live provider cache writer has not promoted its entry yet.";
@@ -38,6 +39,7 @@ const makeProviderCache = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const lockOwner = `${process.pid}\n`;
 
   const cacheKey = Effect.fn("ProviderCache.cacheKey")((key: ProviderCacheKey) =>
     contentDigest(ProviderCacheKey)(key).pipe(
@@ -95,18 +97,22 @@ const makeProviderCache = Effect.gen(function* () {
     const info = yield* fs.stat(lock).pipe(Effect.option);
     const modified = O.flatMap(info, (value) => value.mtime);
     if (O.isNone(modified)) {
-      return false;
+      return O.none<O.Option<string>>();
     }
     const now = yield* Clock.currentTimeMillis;
     const age = now - DateTime.toEpochMillis(DateTime.fromDateUnsafe(modified.value));
     if (!N.isGreaterThan(age, Duration.toMillis(staleLockAge))) {
-      return false;
+      return O.none<O.Option<string>>();
     }
     const owner = yield* fs.readFileString(ownerPath).pipe(Effect.option);
     const pid = O.flatMap(owner, parseOwnerPid);
-    return yield* O.match(pid, {
+    const stale = yield* O.match(pid, {
       onNone: () => Effect.succeed(true),
       onSome: (value) => processIsAlive(value).pipe(Effect.map(Bool.not)),
+    });
+    return Bool.match(stale, {
+      onFalse: () => O.none<O.Option<string>>(),
+      onTrue: () => O.some(owner),
     });
   });
 
@@ -148,15 +154,34 @@ const makeProviderCache = Effect.gen(function* () {
     return yield* corrupt(lockWaitTimeoutMessage);
   });
 
-  const tryAcquireLock = (lock: string): Effect.Effect<boolean> =>
-    fs.makeDirectory(lock).pipe(Effect.result, Effect.map(Result.isSuccess));
+  const tryAcquireLock = Effect.fn("ProviderCache.tryAcquireLock")(function* (lock: string, ownerPath: string) {
+    const acquired = yield* fs.makeDirectory(lock).pipe(Effect.result);
+    if (Result.isFailure(acquired)) {
+      return false;
+    }
+    yield* fs.writeFileString(ownerPath, lockOwner).pipe(
+      Effect.mapError(() => corrupt("The provider cache lock owner could not be recorded.")),
+      Effect.tapError(() => fs.remove(lock, { force: true, recursive: true }).pipe(Effect.ignore))
+    );
+    return true;
+  });
+
+  const ownsLock = Effect.fn("ProviderCache.ownsLock")((ownerPath: string) =>
+    fs.readFileString(ownerPath).pipe(Effect.option, Effect.map(O.exists((owner) => Str.Equivalence(owner, lockOwner))))
+  );
+
+  const releaseOwnedLock = Effect.fn("ProviderCache.releaseOwnedLock")(function* (lock: string, ownerPath: string) {
+    if (yield* ownsLock(ownerPath)) {
+      yield* fs.remove(lock, { force: true, recursive: true });
+    }
+  });
 
   const acquireLock = Effect.fn("ProviderCache.acquireLock")(function* (
     entry: ProviderCacheEntry,
     lock: string,
     ownerPath: string
   ) {
-    if (yield* tryAcquireLock(lock)) {
+    if (yield* tryAcquireLock(lock, ownerPath)) {
       return true;
     }
 
@@ -168,7 +193,14 @@ const makeProviderCache = Effect.gen(function* () {
       return yield* corrupt("A conflicting response already exists for this provider cache key.");
     }
 
-    if (!(yield* lockIsStale(lock, ownerPath))) {
+    const sampledOwner = yield* lockIsStale(lock, ownerPath);
+    if (O.isNone(sampledOwner)) {
+      yield* awaitCompetingWrite(entry);
+      return false;
+    }
+
+    const currentOwner = yield* fs.readFileString(ownerPath).pipe(Effect.option);
+    if (!lockOwnerEquivalence(sampledOwner.value, currentOwner)) {
       yield* awaitCompetingWrite(entry);
       return false;
     }
@@ -176,7 +208,7 @@ const makeProviderCache = Effect.gen(function* () {
     yield* fs
       .remove(lock, { force: true, recursive: true })
       .pipe(Effect.mapError(() => corrupt("A stale provider cache write lock could not be removed.")));
-    if (yield* tryAcquireLock(lock)) {
+    if (yield* tryAcquireLock(lock, ownerPath)) {
       return true;
     }
     yield* awaitCompetingWrite(entry);
@@ -219,9 +251,6 @@ const makeProviderCache = Effect.gen(function* () {
           return;
         }
         yield* Effect.gen(function* () {
-          yield* fs
-            .writeFileString(ownerPath, `${process.pid}\n`)
-            .pipe(Effect.mapError(() => corrupt("The provider cache lock owner could not be recorded.")));
           const current = yield* lookup(entry.key);
           if (O.exists(current, (stored) => providerEntryEquivalence(stored, entry))) {
             return;
@@ -229,10 +258,14 @@ const makeProviderCache = Effect.gen(function* () {
           if (O.isSome(current)) {
             return yield* corrupt("A conflicting provider cache write won the atomic promotion race.");
           }
+          if (!(yield* ownsLock(ownerPath))) {
+            yield* awaitCompetingWrite(entry);
+            return;
+          }
           yield* fs
             .rename(temporary, target)
             .pipe(Effect.mapError(() => corrupt("The provider cache entry could not be promoted atomically.")));
-        }).pipe(Effect.ensuring(fs.remove(lock, { force: true, recursive: true }).pipe(Effect.ignore)));
+        }).pipe(Effect.ensuring(releaseOwnedLock(lock, ownerPath).pipe(Effect.ignore)));
       })
     );
   });
