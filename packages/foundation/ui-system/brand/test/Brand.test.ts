@@ -1,6 +1,8 @@
 import {
   BrandIdentity,
   beep,
+  FontStack,
+  fontStack,
   GENERATED_CSS_BANNER,
   MarkPaint,
   renderThemeCss,
@@ -71,10 +73,19 @@ describe("renderThemeCss", () => {
     expect(css).not.toContain("rgba(");
   });
 
-  it("quotes multi-word families and leaves generic keywords bare", () => {
-    expect(css).toContain('--font-brand-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;');
+  it("quotes named families and leaves generic keywords bare", () => {
+    expect(css).toContain('--font-brand-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;');
     expect(css).toContain('--font-brand-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;');
     expect(css).toContain("--font-sans: var(--font-brand-sans);");
+  });
+
+  it("escapes quotes, backslashes, delimiters, and newlines in named families", () => {
+    const hostile = FontStack.make({
+      family: 'A";}body{color:red}/*',
+      fallbacks: ["Back\\slash", "Line\nbreak", "sans-serif"],
+    });
+
+    expect(fontStack(hostile)).toBe('"A\\";}body{color:red}/*", "Back\\\\slash", "Line\\A break", sans-serif');
   });
 });
 
@@ -95,7 +106,7 @@ describe("renderWordmarkSvg escaping", () => {
 
     expect(svg).toContain('>a&amp;b&lt;c&gt;"d</text>');
     expect(svg).toContain('aria-label="a&amp;b&lt;c&gt;&quot;d"');
-    expect(svg).toContain("&quot;Inter Variable&quot;, Inter,");
+    expect(svg).toContain("&quot;Inter Variable&quot;, &quot;Inter&quot;,");
     expect(svg).not.toContain("<c>");
   });
 });

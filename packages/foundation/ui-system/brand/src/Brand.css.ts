@@ -4,8 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
+import * as S from "effect/Schema";
 import { ScaleStep, SurfaceStep } from "./Brand.schema.ts";
 import type { BrandIdentity, ColorScheme, FontStack, Glow, GlowLayer, GlowStop, Typography } from "./Brand.schema.ts";
 
@@ -31,10 +33,39 @@ const declaration = (name: string, value: string): string => `  --${name}: ${val
 const block = (selector: string, lines: ReadonlyArray<string>): string =>
   pipe([`${selector} {`, ...lines, "}"], A.join("\n"));
 
-const quoteFamily = (family: string): string => (Str.includes(" ")(family) ? `"${family}"` : family);
+const GenericFontFamily = LiteralKit([
+  "serif",
+  "sans-serif",
+  "monospace",
+  "cursive",
+  "fantasy",
+  "system-ui",
+  "ui-serif",
+  "ui-sans-serif",
+  "ui-monospace",
+  "ui-rounded",
+  "math",
+  "emoji",
+  "fangsong",
+]);
+
+const isGenericFontFamily = S.is(GenericFontFamily);
+
+const escapeCssString = (value: string): string =>
+  pipe(
+    value,
+    Str.replaceAll("\\", "\\\\"),
+    Str.replaceAll('"', '\\"'),
+    Str.replaceAll("\0", "\\FFFD "),
+    Str.replaceAll("\r", "\\D "),
+    Str.replaceAll("\n", "\\A "),
+    Str.replaceAll("\f", "\\C ")
+  );
+
+const quoteFamily = (family: string): string => (isGenericFontFamily(family) ? family : `"${escapeCssString(family)}"`);
 
 /**
- * Render a {@link FontStack} as a CSS font-family list, quoting multi-word families and leaving generic keywords bare.
+ * Render a {@link FontStack} as a CSS font-family list, escaping named families and leaving generic keywords bare.
  *
  * **Example** (Render the brand sans stack)
  *

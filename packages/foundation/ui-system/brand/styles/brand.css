@@ -25,7 +25,7 @@
   --color-success: #16a34a;
   --color-warning: #854d0e;
   --color-error: #b91c1c;
-  --font-brand-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-brand-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-brand-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
   --font-sans: var(--font-brand-sans);
   --font-mono: var(--font-brand-mono);
