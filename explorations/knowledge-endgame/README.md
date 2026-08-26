@@ -22,8 +22,9 @@ the critical path.
 
 None — parked at capture by design (see `DECISIONS.md` 2026-08-25). Reopen
 triggers: packet-system-redesign Amendments H/I/J get ruled on; the
-substrate/instance workspace-geometry partition becomes a live question; or
-the cold-agent eval (Part III) is wanted as a real harness.
+substrate/instance workspace-geometry partition becomes a live question; the
+cold-agent eval (Part III) is wanted as a real harness; or the
+training-data-flywheel coda is picked up as a real docs-surface goal.
 
 ## Read This First
 

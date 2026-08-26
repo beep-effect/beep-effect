@@ -95,10 +95,14 @@ machinery and bounds stream opt-in.
 
 Proposed, not ratified. Queued for the Session B grill that charters the
 fleet convention-migration campaign; they enter the amendment record above
-only if the operator ratifies them there. Source and mapping evidence:
+only if the operator ratifies them there. Three amendments are queued: H and
+I draw their mapping evidence from
 [`research/2026-08-25-agento-ontology-mapping.md`](./research/2026-08-25-agento-ontology-mapping.md)
-(AgentO, ESWC 2026, CC BY 4.0, reference-only). Both land inside existing
-candidates; neither opens a packet.
+(AgentO, ESWC 2026, CC BY 4.0, reference-only), and J draws its certificate
+shape from
+[`research/2026-08-25-ontology-tooling-recon.md`](./research/2026-08-25-ontology-tooling-recon.md)
+(open-ontologies `Certificate` disposition). All three land inside existing
+candidates; none opens a packet.
 
 - **Amendment H (candidate 3) — typed `PacketWorkPlan`, rendered
   launchers.** The manifest gains a schema-first work plan: each phase step
