@@ -160,7 +160,7 @@ describe("quarantine rerun steps", () => {
     expect(rerun.useLocalEnv).toBe(true);
   });
 
-  it("passes the package filter to a nested beep CI lane instead of its child passthrough", () => {
+  it("passes only the supported package filter to a nested beep CI lane", () => {
     const nestedCiLane = QualityTaskStep.make({
       label: "quality:check",
       command: "bun",
@@ -180,10 +180,24 @@ describe("quarantine rerun steps", () => {
       "--base",
       "origin/main",
       "--summarize",
-      "--concurrency=1",
       "--filter=@beep/box",
     ]);
+    expect(rerun.args).not.toContain("--concurrency=1");
     expect(rerun.args).not.toContain("--");
+  });
+
+  it("retains a nested CI lane's owned concurrency policy for its full rerun", () => {
+    const nestedCiLane = QualityTaskStep.make({
+      label: "quality:check",
+      command: "bun",
+      args: ["run", "beep", "ci", "lane", "check", "--affected", "--base", "origin/main", "--summarize"],
+      cwd: "/repo",
+      flakeQuarantine: "ts2589-no-location",
+    });
+    const rerun = laneQuarantineRerunStep(nestedCiLane);
+
+    expect(rerun.args).toEqual(nestedCiLane.args);
+    expect(rerun.args).not.toContain("--concurrency=1");
   });
 
   it("keeps an inherited TURBO_FORCE on the standalone rerun so cache replay cannot green it", () => {

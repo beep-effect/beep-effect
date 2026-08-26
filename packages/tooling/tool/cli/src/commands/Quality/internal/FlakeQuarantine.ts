@@ -377,15 +377,17 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
 const TURBO_CONCURRENCY_FLAG = "--concurrency";
 const SERIAL_TURBO_CONCURRENCY_ARG = "--concurrency=1";
 
-const acceptsDirectTurboOptions = (step: QualityTaskStep): boolean =>
-  (step.command === "bunx" &&
-    A.get(step.args, 0).pipe(O.contains("turbo")) &&
-    A.get(step.args, 1).pipe(O.contains("run"))) ||
-  (step.command === "bun" &&
-    A.get(step.args, 0).pipe(O.contains("run")) &&
-    A.get(step.args, 1).pipe(O.contains("beep")) &&
-    A.get(step.args, 2).pipe(O.contains("ci")) &&
-    A.get(step.args, 3).pipe(O.contains("lane")));
+const isDirectTurboRun = (step: QualityTaskStep): boolean =>
+  step.command === "bunx" &&
+  A.get(step.args, 0).pipe(O.contains("turbo")) &&
+  A.get(step.args, 1).pipe(O.contains("run"));
+
+const isNestedCiLane = (step: QualityTaskStep): boolean =>
+  step.command === "bun" &&
+  A.get(step.args, 0).pipe(O.contains("run")) &&
+  A.get(step.args, 1).pipe(O.contains("beep")) &&
+  A.get(step.args, 2).pipe(O.contains("ci")) &&
+  A.get(step.args, 3).pipe(O.contains("lane"));
 
 const withoutTurboConcurrencyArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.filter(
@@ -398,10 +400,11 @@ const withoutTurboConcurrencyArgs = (args: ReadonlyArray<string>): ReadonlyArray
 
 const serialTurboRerunArgs = (step: QualityTaskStep, trailingOptions: ReadonlyArray<string>): ReadonlyArray<string> => {
   const args = withoutTurboConcurrencyArgs(step.args);
+  if (isNestedCiLane(step)) {
+    return [...args, ...trailingOptions];
+  }
   const options = [SERIAL_TURBO_CONCURRENCY_ARG, ...trailingOptions];
-  return acceptsDirectTurboOptions(step) || A.contains(args, "--")
-    ? [...args, ...options]
-    : [...args, "--", ...options];
+  return isDirectTurboRun(step) || A.contains(args, "--") ? [...args, ...options] : [...args, "--", ...options];
 };
 
 /**
@@ -409,12 +412,15 @@ const serialTurboRerunArgs = (step: QualityTaskStep, trailingOptions: ReadonlyAr
  *
  * **Details**
  *
- * Pins Turbo concurrency to one, appends an explicit package filter, and
- * preserves the lane's environment verbatim. Direct `bunx turbo run` commands
- * and nested `bun run beep ci lane` commands receive the options directly;
- * other Bun scripts receive them after `--`. Serial execution removes the
- * checker scheduling pressure that produced the no-location TS2589 before the
- * rerun is used as environmental attribution. Preserving an inherited
+ * Pins direct Turbo and root-script commands to concurrency one, appends an
+ * explicit package filter, and preserves the lane's environment verbatim.
+ * Direct `bunx turbo run` commands receive the options directly, while other
+ * Bun scripts receive them after `--`. Nested `bun run beep ci lane` commands
+ * accept the package filter but retain the selected lane's owned concurrency
+ * policy; passing a Turbo-only concurrency flag to the outer CLI would be
+ * rejected before its inner step starts. Serial execution removes the checker
+ * scheduling pressure that produced the no-location TS2589 before the rerun is
+ * used as environmental attribution. Preserving an inherited
  * `TURBO_FORCE=true` is deliberate: under a forced sweep an older successful
  * cache entry can exist at the failed task's unchanged hash, and a cache-reading
  * rerun would replay it without invoking the compiler — a vacuous green.
@@ -459,12 +465,13 @@ export const standaloneQuarantineRerunStep: {
  *
  * **Details**
  *
- * Reruns the lane with Turbo concurrency pinned to one, the quarantine policy
- * stripped (no recursive quarantine), and `TURBO_FORCE` removed. Tasks proven
- * green in the failed run replay from that run's cache, while tasks Turbo
- * skipped after the flake execute serially. This keeps the recovery proof
- * bounded without exposing the remaining packages to the concurrent compiler
- * scheduling that caused the flake.
+ * Reruns direct Turbo and root-script lanes with Turbo concurrency pinned to
+ * one, the quarantine policy stripped (no recursive quarantine), and
+ * `TURBO_FORCE` removed. A nested CI lane retains its internally owned
+ * concurrency policy. Tasks proven green in the failed run replay from that
+ * run's cache, while tasks Turbo skipped after the flake execute under the
+ * lane's bounded policy. This keeps the recovery proof bounded without
+ * reintroducing the concurrent compiler pressure that caused the flake.
  *
  * **Example** (Build lane rerun step)
  *
