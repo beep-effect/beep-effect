@@ -1,5 +1,5 @@
 /**
- * The documentation runtime test lane: discovers, classifies, and executes doctest fences.
+ * Effect service contracts for Docgen doctest analysis and source rewriting.
  *
  * @packageDocumentation
  * @since 0.0.0

@@ -1,5 +1,5 @@
 /**
- * Schema contracts for doctest fences, classifications, and lane reports.
+ * Schema models for Docgen doctest discovery, assertion marking, and reports.
  *
  * @packageDocumentation
  * @since 0.0.0

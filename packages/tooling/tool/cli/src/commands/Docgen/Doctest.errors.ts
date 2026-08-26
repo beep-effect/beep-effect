@@ -1,5 +1,5 @@
 /**
- * Typed failures for doctest fence discovery, parsing, classification, and validation.
+ * Error models for Docgen doctest analysis and source rewriting.
  *
  * @packageDocumentation
  * @since 0.0.0
