@@ -277,6 +277,23 @@ const relationEndpointsExist = (label: ProposedLabel, entityQuotes: ReadonlyArra
   A.some(entityQuotes, (quote) => Str.Equivalence(quote, nfc(label.subject))) &&
   A.some(entityQuotes, (quote) => Str.Equivalence(quote, nfc(label.object)));
 
+// Models copy quotes verbatim but miscount offsets, so the anchor start is
+// re-derived from the exact quote occurrence nearest the claimed offset.
+const nearestQuoteStart = (text: string, quote: string, claimedStart: number): O.Option<number> => {
+  let cursor = text.indexOf(quote);
+  let best = O.none<number>();
+  let bestDistance = Number.POSITIVE_INFINITY;
+  while (cursor !== -1) {
+    const distance = Math.abs(cursor - claimedStart);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = O.some(cursor);
+    }
+    cursor = text.indexOf(quote, cursor + 1);
+  }
+  return best;
+};
+
 const proposeJob = Effect.fn("Gold.proposeJob")(function* (
   selection: DocumentSelection,
   job: GoldJob,
@@ -332,19 +349,25 @@ const proposeJob = Effect.fn("Gold.proposeJob")(function* (
   const verified = yield* Effect.forEach(
     proposed,
     Effect.fnUntraced(function* (label) {
-      const anchor = yield* S.decodeEffect(TextAnchor)({
-        endChar: label.endChar,
-        quote: label.quote,
-        startChar: label.startChar,
-      }).pipe(Effect.result);
+      const anchorStart = nearestQuoteStart(canonical.text, label.quote, label.startChar);
       if (
-        Result.isFailure(anchor) ||
+        O.isNone(anchorStart) ||
         (Str.Equivalence(job.subset, "relation") && !relationEndpointsExist(label, entityQuotes))
       ) {
         return O.none();
       }
+      const anchor = yield* S.decodeEffect(TextAnchor)({
+        endChar: anchorStart.value + Str.length(label.quote),
+        quote: label.quote,
+        startChar: anchorStart.value,
+      }).pipe(Effect.result);
+      if (Result.isFailure(anchor)) {
+        return O.none();
+      }
       const verification = yield* canonicalizer.verify(canonical, anchor.success).pipe(Effect.result);
-      return Result.isSuccess(verification) ? O.some({ ...label, verified: false }) : O.none();
+      return Result.isSuccess(verification)
+        ? O.some({ ...label, endChar: anchor.success.endChar, startChar: anchor.success.startChar, verified: false })
+        : O.none();
     })
   );
   const labels = A.getSomes(verified);

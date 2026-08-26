@@ -66,7 +66,7 @@ const proposalForPrompt = (prompt: string): string => {
   if (Str.includes("\nSUBSET=relation\nSOURCE_TEXT_BEGIN")(prompt)) {
     return '{"labels":[{"endChar":20,"object":"Beta","predicate":"relates-to","quote":"Café relates to Beta","startChar":0,"subject":"Café"},{"endChar":20,"object":"Beta","predicate":"fabricated","quote":"Café relates to Beta","startChar":0,"subject":"Ghost"}]}';
   }
-  return '{"labels":[{"depth":0,"endChar":4,"quote":"Café","role":"title","startChar":0}]}';
+  return '{"labels":[{"depth":0,"endChar":4,"quote":"Café","role":"title","startChar":0},{"depth":1,"endChar":9,"quote":"Beta","role":"section","startChar":2}]}';
 };
 
 const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
@@ -199,9 +199,9 @@ describe("C0 gold proposer", () => {
               })
             );
 
-            expect(result.total).toBe(6);
-            expect(result.accepted).toBe(4);
-            expect(result.fraction).toBe(4 / 6);
+            expect(result.total).toBe(7);
+            expect(result.accepted).toBe(5);
+            expect(result.fraction).toBe(5 / 7);
             expect(A.length(result.files)).toBe(3);
             expect(result.reference.status).toBe("not-written");
             if (result.reference.status === "not-written") {
@@ -223,6 +223,12 @@ describe("C0 gold proposer", () => {
                 .readFileString(path.join(outputDirectory, `${paperId}.${subset}.json`))
                 .pipe(Effect.flatMap(S.decodeEffect(GoldFileJson)))
             );
+            const structureFile = A.findFirst(decodedFiles, (file) => file.subset === "structure");
+            expect(O.map(structureFile, (file) => A.length(file.labels))).toEqual(O.some(2));
+            const reanchored = structureFile.pipe(
+              O.flatMap((file) => A.findFirst(file.labels, (label) => label.quote === "Beta"))
+            );
+            expect(O.map(reanchored, (label) => [label.startChar, label.endChar])).toEqual(O.some([16, 20]));
             const entityFile = A.findFirst(decodedFiles, (file) => file.subset === "entity");
             expect(O.map(entityFile, (file) => A.length(file.labels))).toEqual(O.some(2));
             const relationFile = A.findFirst(decodedFiles, (file) => file.subset === "relation");
@@ -257,8 +263,8 @@ describe("C0 gold proposer", () => {
             );
 
             expect(result.files).toHaveLength(18);
-            expect(result.total).toBe(31);
-            expect(result.accepted).toBe(23);
+            expect(result.total).toBe(41);
+            expect(result.accepted).toBe(33);
             expect(result.reference.status).toBe("written");
             const reference = yield* fs
               .readFileString(path.join(outputDirectory, "gold.json"))
