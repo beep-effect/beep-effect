@@ -70,7 +70,7 @@ class QueryCorpusSuccess extends S.Class<QueryCorpusSuccess>($I`QueryCorpusSucce
  *
  * **Example** (Decode QueryCorpus parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode QueryCorpus parameters"
  * import * as S from "effect/Schema"
  * import { QueryCorpus } from "@beep/nlp-processing/Tools/QueryCorpus"
  *

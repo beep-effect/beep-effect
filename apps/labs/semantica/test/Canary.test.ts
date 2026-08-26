@@ -8,6 +8,8 @@ import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand, CanaryOptions, CanaryStage, StageNotImplemented } from "@/canary/Command";
 import { LabConfig, RuntimeLayer } from "@/runtime/Layer";
+import { ReportInvalid } from "@/schema/Errors";
+import { CanaryC0 } from "@/services/CanaryC0";
 
 const runtimeFromEnv = (env: Record<string, string>) =>
   RuntimeLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
@@ -30,7 +32,10 @@ describe("Semantica runtime layer", () => {
         )(LabConfig);
 
         expect(config.corpusRoot).toEqual(O.some("/fixtures/w1"));
+        expect(config.extractorModel).toBe("claude-sonnet-4-5-20250929");
+        expect(config.goldDirectory).toBe("fixtures/gold/v1");
         expect(config.goldModel).toBe("grok-4");
+        expect(config.ledgerRoot).toBe(".beep/semantica/ledger");
         expect(config.mode).toBe("replay");
         expect(config.offline).toBe(true);
         expect(config.providerCacheDirectory).toBe("/fixtures/provider-cache");
@@ -54,7 +59,7 @@ describe("Semantica runtime layer", () => {
 describe("Semantica canary command", () => {
   const runCanary = Command.runWith(CanaryCommand, { renderErrors: false, version: "0.0.0" });
 
-  it.each(CanaryStage.Options)("fails stage %s with StageNotImplemented", (stage) =>
+  it.each([CanaryStage.Enum.c1, CanaryStage.Enum.c2])("fails stage %s with StageNotImplemented", (stage) =>
     Effect.runPromise(
       Effect.gen(function* () {
         const error = yield* provideScopedLayer(runtimeFromEnv({}))(runCanary([stage, "--offline"]).pipe(Effect.flip));
@@ -66,13 +71,31 @@ describe("Semantica canary command", () => {
           options: {
             manifest: "fixtures/w1.manifest.json",
             offline: true,
+            out: O.none(),
             paper: O.none(),
+            selection: "f1+w1",
           },
           stage,
         });
       })
     )
   );
+
+  it("routes c0 through the injected workflow service", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const expected = ReportInvalid.make({ message: "stub-c0-ran" });
+        const stub = CanaryC0.of({ run: Effect.fn("CanaryC0.stub")(() => Effect.fail(expected)) });
+        const error = yield* provideScopedLayer(runtimeFromEnv({}))(
+          runCanary(["c0", "--offline", "--out", ".beep/test-run", "--selection", "f1"]).pipe(
+            Effect.provideService(CanaryC0, stub),
+            Effect.flip
+          )
+        );
+
+        expect(error).toEqual(expected);
+      })
+    ));
 });
 
 describe("Semantica canary schemas", () => {
@@ -103,7 +126,9 @@ describe("Semantica canary schemas", () => {
         const options = CanaryOptions.make({
           manifest: "fixture.manifest.json",
           offline: true,
+          out: O.some("fixture-output"),
           paper: O.some("paper-001"),
+          selection: "f1+w1",
         });
         const encoded = yield* S.encodeEffect(CanaryOptions)(options);
         const decoded = yield* S.decodeEffect(CanaryOptions)(encoded);
@@ -113,7 +138,9 @@ describe("Semantica canary schemas", () => {
           encoded: {
             manifest: "fixture.manifest.json",
             offline: true,
+            out: "fixture-output",
             paper: "paper-001",
+            selection: "f1+w1",
           },
         });
       })

@@ -46,7 +46,7 @@ class PhoneticMatchParameters extends S.Class<PhoneticMatchParameters>($I`Phonet
  *
  * **Example** (Decode soundex match parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode soundex match parameters"
  * import * as S from "effect/Schema"
  * import { PhoneticMatch } from "@beep/nlp-processing/Tools/PhoneticMatch"
  *

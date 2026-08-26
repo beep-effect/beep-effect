@@ -44,7 +44,7 @@ class DeleteCorpusSuccess extends S.Class<DeleteCorpusSuccess>($I`DeleteCorpusSu
  *
  * **Example** (Decode DeleteCorpus parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode DeleteCorpus parameters"
  * import * as S from "effect/Schema"
  * import { DeleteCorpus } from "@beep/nlp-processing/Tools/DeleteCorpus"
  *

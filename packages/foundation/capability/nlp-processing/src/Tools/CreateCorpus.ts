@@ -60,7 +60,7 @@ class CreateCorpusParameters extends S.Class<CreateCorpusParameters>($I`CreateCo
  *
  * **Example** (Decode CreateCorpus parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode CreateCorpus parameters"
  * import * as S from "effect/Schema"
  * import { CreateCorpus } from "@beep/nlp-processing/Tools/CreateCorpus"
  *

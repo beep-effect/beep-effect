@@ -85,11 +85,10 @@ export const video = _video;
  *
  * **Example** (Access CSS MIME definition)
  *
- * ```typescript
- * import { mimes } from "@beep/data"
+ * ```ts import.meta.vitest name="Access CSS MIME definition"
+ * import { mimes } from "@beep/data/MimeTypes"
  *
- * mimes["text/css"]
- * // { source: "iana", charset: "UTF-8", extensions: ["css"] }
+ * mimes["text/css"].charset // => "UTF-8"
  * ```
  *
  * @category configuration
@@ -113,7 +112,7 @@ export const mimes = {
  *
  * **Example** (Assign JSON content type)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign JSON content type"
  * import type { MimeType } from "@beep/data"
  *
  * const contentType: MimeType = "application/json"
@@ -134,7 +133,7 @@ export type MimeType = keyof typeof mimes;
  *
  * **Example** (Assign JSON file extension)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign JSON file extension"
  * import type { FileExtension } from "@beep/data"
  *
  * const ext: FileExtension = "json"
@@ -152,11 +151,11 @@ export type FileExtension = (typeof mimes)[MimeType]["extensions"][number];
  *
  * **Example** (Read JSON MIME definition)
  *
- * ```typescript
- * import { mimeTypes } from "@beep/data"
+ * ```ts import.meta.vitest name="Read JSON MIME definition"
+ * import { mimeTypes } from "@beep/data/MimeTypes"
  *
  * const json = mimeTypes["application/json"]
- * // { source: "iana", extensions: ["json", "map"] }
+ * json.extensions.includes("json") // => true
  * ```
  *
  * @category configuration
@@ -232,12 +231,12 @@ function lookupNormalizedExtension(extension: string): false | MimeType {
  *
  * **Example** (Map extensions to MIME types)
  *
- * ```typescript
- * import { getTypes } from "@beep/data"
+ * ```ts import.meta.vitest name="Map extensions to MIME types"
+ * import { getTypes } from "@beep/data/MimeTypes"
  *
  * const types = getTypes()
- * types["json"] // "application/json"
- * types["html"] // "text/html"
+ * types["json"] // => "application/json"
+ * types["html"] // => "text/html"
  * ```
  *
  * @category utilities
@@ -259,12 +258,12 @@ export function getTypes(): Record<FileExtension, MimeType> {
  *
  * **Example** (Map MIME types to extensions)
  *
- * ```typescript
- * import { getExtensions } from "@beep/data"
+ * ```ts import.meta.vitest name="Map MIME types to extensions"
+ * import { getExtensions } from "@beep/data/MimeTypes"
  *
  * const extensions = getExtensions()
- * extensions["application/json"] // ["json", "map"]
- * extensions["text/html"]        // ["html", "htm", "shtml"]
+ * extensions["application/json"].includes("json") // => true
+ * extensions["text/html"].includes("html") // => true
  * ```
  *
  * @category utilities
@@ -286,13 +285,13 @@ export function getExtensions(): Record<MimeType, FileExtension[]> {
  *
  * **Example** (Look up MIME from path)
  *
- * ```typescript
- * import { lookup } from "@beep/data"
+ * ```ts import.meta.vitest name="Look up MIME from path"
+ * import { lookup } from "@beep/data/MimeTypes"
  *
- * lookup("json")            // "application/json"
- * lookup(".html")           // "text/html"
- * lookup("photo.png")       // "image/png"
- * lookup("unknown.zzzzz")   // false
+ * lookup("json") // => "application/json"
+ * lookup(".html") // => "text/html"
+ * lookup("photo.png") // => "image/png"
+ * lookup("unknown.zzzzz") // => false
  * ```
  *
  * @category utilities

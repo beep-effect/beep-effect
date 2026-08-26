@@ -65,7 +65,7 @@ class LearnCorpusSuccess extends S.Class<LearnCorpusSuccess>($I`LearnCorpusSucce
  *
  * **Example** (Decode LearnCorpus parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode LearnCorpus parameters"
  * import * as S from "effect/Schema"
  * import { LearnCorpus } from "@beep/nlp-processing/Tools/LearnCorpus"
  *

@@ -14,11 +14,10 @@
  *
  * **Example** (Accessing video/mp4 MIME type)
  *
- * ```typescript
- * import { video } from "@beep/data/mime-types/video"
+ * ```ts import.meta.vitest name="Accessing video/mp4 MIME type"
+ * import { video } from "@beep/data/MimeTypes"
  *
- * video["video/mp4"]
- * // { source: "iana", extensions: ["mp4", "mp4v", "mpg4"] }
+ * video["video/mp4"].extensions.includes("mp4") // => true
  * ```
  *
  * @category models

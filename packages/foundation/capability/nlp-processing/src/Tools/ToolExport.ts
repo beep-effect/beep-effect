@@ -88,7 +88,7 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
  *
  * **Example** (Recover from ExportedToolError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Recover from ExportedToolError"
  * import { Effect } from "effect"
  * import { ExportedToolError } from "@beep/nlp-processing/Tools/ToolExport"
  *
@@ -403,7 +403,7 @@ const exportToolsEffect: Effect.Effect<
  *
  * **Example** (List exported tool names)
  *
- * ```ts
+ * ```ts import.meta.vitest name="List exported tool names"
  * import { Effect } from "effect"
  * import { exportTools } from "@beep/nlp-processing/Tools/ToolExport"
  * import { WinkNlpToolkitLive } from "@beep/wink"

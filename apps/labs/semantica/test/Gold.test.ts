@@ -29,6 +29,7 @@ import { GoldFile, GoldRef } from "@/schema/Gold";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 import { ParseOutcome } from "@/schema/Text";
+import { CanaryC0 } from "@/services/CanaryC0";
 import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
 import { ProviderCache } from "@/services/ProviderCache";
@@ -43,20 +44,24 @@ const provideScopedLayer =
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
+const unusedCanaryC0 = CanaryC0.of({
+  run: Effect.fn("CanaryC0.unused")(() => Effect.die(new Error("C0 is not used by gold command tests."))),
+});
+
 const sourceText = "Café relates to Beta.";
 const sourceBytes = new TextEncoder().encode(sourceText);
 const sourceDigest = sha256TextSync(sourceText);
 const proposer = ModelIdentity.make({
   artifactHash: GOLD_PROMPT_ARTIFACT_HASH,
-  name: "stub-gold-2026-08-26",
+  name: "stub-gold-20260826",
   provider: "xai",
-  revision: "stub-gold-2026-08-26",
+  revision: "stub-gold-20260826",
   taskType: "gold-proposal",
 });
 
 const proposalForPrompt = (prompt: string): string => {
   if (Str.includes("\nSUBSET=entity\nSOURCE_TEXT_BEGIN")(prompt)) {
-    return '{"labels":[{"endChar":4,"entityType":"concept","label":"Coffee concept","quote":"Café","startChar":0},{"endChar":20,"entityType":"concept","label":"Beta","quote":"Beta","startChar":16},{"endChar":4,"entityType":"fabricated","label":"Ghost","quote":"Ghost","startChar":0}]}';
+    return '{"labels":[{"cluster":"concept-cafe","endChar":4,"entityType":"concept","label":"Coffee concept","quote":"Café","startChar":0},{"cluster":"concept-beta","endChar":20,"entityType":"concept","label":"Beta","quote":"Beta","startChar":16},{"cluster":"fabricated-ghost","endChar":4,"entityType":"fabricated","label":"Ghost","quote":"Ghost","startChar":0}]}';
   }
   if (Str.includes("\nSUBSET=relation\nSOURCE_TEXT_BEGIN")(prompt)) {
     return '{"labels":[{"endChar":20,"object":"Beta","predicate":"relates-to","quote":"Café relates to Beta","startChar":0,"subject":"Café"},{"endChar":20,"object":"Beta","predicate":"fabricated","quote":"Café relates to Beta","startChar":0,"subject":"Ghost"}]}';
@@ -84,6 +89,7 @@ const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
     CorpusManifestBuilder.of({
       build: Effect.succeed(manifest),
       check: Effect.fn("CorpusManifestBuilder.check")(() => Effect.succeed(manifest)),
+      load: Effect.fn("CorpusManifestBuilder.load")(() => Effect.succeed(manifest)),
     })
   );
   const fixtureCatalog = Layer.succeed(F1Catalog, F1Catalog.of({ load: Effect.succeed(fixtures) }));
@@ -134,7 +140,10 @@ const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
     LabConfig,
     LabConfig.of({
       corpusRoot: O.none(),
-      goldModel: "stub-gold-2026-08-26",
+      extractorModel: "stub-extractor-20260826",
+      goldDirectory: "fixtures/gold/v1",
+      goldModel: "stub-gold-20260826",
+      ledgerRoot: ".beep/semantica/ledger",
       mode: "replay",
       offline: true,
       providerCacheDirectory: ".beep/semantica/provider-cache",
@@ -373,7 +382,10 @@ describe("C0 gold proposer", () => {
             version: "0.0.0",
           });
           const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
-            runCanary(["gold", "propose", "--offline", "--paper", paperId, "--subset", "entity"]).pipe(Effect.flip)
+            runCanary(["gold", "propose", "--offline", "--paper", paperId, "--subset", "entity"]).pipe(
+              Effect.provideService(CanaryC0, unusedCanaryC0),
+              Effect.flip
+            )
           );
 
           expect(error).toBeInstanceOf(GoldUnavailable);

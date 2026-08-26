@@ -1,4 +1,10 @@
-import { ANTHROPIC_DEFAULT_MODEL, ANTHROPIC_MODEL_ENV, AnthropicLanguageModelLive } from "@beep/anthropic";
+import {
+  ANTHROPIC_DEFAULT_MODEL,
+  ANTHROPIC_MODEL_ENV,
+  AnthropicLanguageModelLive,
+  AnthropicLanguageModelOptions,
+  makeAnthropicLanguageModelLayer,
+} from "@beep/anthropic";
 import { $SemanticaId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { XAi, XAiLanguageModel } from "@beep/xai";
@@ -9,6 +15,7 @@ import * as S from "effect/Schema";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
+import { LabConfig, RuntimeMode } from "@/runtime/Config";
 import { contentDigest, sha256TextSync } from "@/schema/Digest";
 import { ModelRevisionUnpinned, ProviderUnavailable } from "@/schema/Errors";
 import { ModelIdentity } from "@/schema/Model";
@@ -274,6 +281,42 @@ export const ReplayLanguageModelLive: Layer.Layer<
 > = Layer.effect(LanguageModel.LanguageModel, makeReplayAdapter);
 
 /**
+ * Selects the cache-writing or cache-only model adapter from runtime mode.
+ *
+ * **Gotchas**
+ *
+ * Provider acquisition stays lazy, so replay never reads live credentials.
+ *
+ * **Example** (Select a runtime model layer)
+ *
+ * ```ts
+ * import { LanguageModelRuntimeLive } from "@/layers/LanguageModelLive"
+ * import { Effect, Layer, Stream } from "effect"
+ * import * as LanguageModel from "effect/unstable/ai/LanguageModel"
+ *
+ * const live = Layer.effect(LanguageModel.LanguageModel, LanguageModel.make({
+ *   generateText: () => Effect.never,
+ *   streamText: () => Stream.empty
+ * }))
+ * console.log(Layer.isLayer(LanguageModelRuntimeLive(live))) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const LanguageModelRuntimeLive = <E, R>(live: Layer.Layer<LanguageModel.LanguageModel, E, R>) =>
+  Layer.unwrap(
+    LabConfig.pipe(
+      Effect.map((config) =>
+        RuntimeMode.$match(config.mode, {
+          live: () => CachingLanguageModelLive(live),
+          replay: () => ReplayLanguageModelLive,
+        })
+      )
+    )
+  );
+
+/**
  * Supplies the cache identity paired with a provider model Layer.
  *
  * **Example** (Provide a dated test identity)
@@ -346,6 +389,32 @@ const makeModelIdentity = (
   );
 
 /**
+ * Builds the pinned Anthropic extraction identity used by C0.
+ *
+ * **Example** (Build an extraction identity)
+ *
+ * ```ts
+ * import { AnthropicExtractionModelIdentity } from "@/layers/LanguageModelLive"
+ * import { Sha256Hex } from "@beep/schema"
+ * import { Effect } from "effect"
+ * import * as Str from "effect/String"
+ *
+ * const identity = Effect.runSync(AnthropicExtractionModelIdentity({
+ *   artifactHash: Sha256Hex.make(Str.repeat(64)("a")),
+ *   model: "stub-extractor-20260826"
+ * }))
+ * console.log(identity.taskType) // "extraction"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AnthropicExtractionModelIdentity = (options: {
+  readonly artifactHash: ModelIdentity["artifactHash"];
+  readonly model: string;
+}) => makeModelIdentity("anthropic", options.model, options.artifactHash, "extraction", ANTHROPIC_MODEL_ENV);
+
+/**
  * Raw xAI provider Layer for the gold proposer.
  *
  * **Example** (Create a pinned xAI provider layer)
@@ -390,6 +459,34 @@ export const XAiGoldModelIdentityLive = (options: {
     ActiveModelIdentity,
     makeModelIdentity("xai", options.model, options.artifactHash, "gold-proposal", XAI_MODEL_SETTING)
   );
+
+/**
+ * Raw Anthropic language-model Layer pinned to the exact configured extractor id.
+ *
+ * **Details**
+ *
+ * The driver receives `LabConfig.extractorModel` directly, so provider requests
+ * and the active cache identity cannot select different model defaults.
+ *
+ * **Example** (Inspect the provider layer)
+ *
+ * ```ts
+ * import { AnthropicExtractionProviderLive } from "@/layers/LanguageModelLive"
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(AnthropicExtractionProviderLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const AnthropicExtractionProviderLive = Layer.unwrap(
+  LabConfig.pipe(
+    Effect.map((config) =>
+      makeAnthropicLanguageModelLayer(AnthropicLanguageModelOptions.make({ model: config.extractorModel }))
+    )
+  )
+);
 
 /**
  * Live xAI gold-proposal model over the immutable cache boundary.
@@ -443,10 +540,7 @@ export const AnthropicExtractionLanguageModelLive = (artifactHash: ModelIdentity
   Layer.unwrap(
     Effect.gen(function* () {
       const model = yield* Config.nonEmptyString(ANTHROPIC_MODEL_ENV).pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL));
-      const identity = Layer.effect(
-        ActiveModelIdentity,
-        makeModelIdentity("anthropic", model, artifactHash, "extraction", ANTHROPIC_MODEL_ENV)
-      );
+      const identity = Layer.effect(ActiveModelIdentity, AnthropicExtractionModelIdentity({ artifactHash, model }));
       const languageModel = CachingLanguageModelLive(AnthropicLanguageModelLive).pipe(Layer.provide(identity));
       return Layer.merge(languageModel, identity);
     })

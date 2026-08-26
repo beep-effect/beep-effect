@@ -60,7 +60,7 @@ class RankByRelevanceSuccess extends S.Class<RankByRelevanceSuccess>($I`RankByRe
  *
  * **Example** (Decode ranking parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode ranking parameters"
  * import * as S from "effect/Schema"
  * import { RankByRelevance } from "@beep/nlp-processing/Tools/RankByRelevance"
  *

@@ -65,14 +65,14 @@ const ArtifactName = S.Union([
  *
  * **Example** (Decode ArtifactId from string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode ArtifactId from string"
  * import { ArtifactId } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
  *
  * const id = S.decodeUnknownSync(ArtifactId)(
  *   "artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(id.startsWith("artifact:")) // true
+ * id.startsWith("artifact:") // => true
  * ```
  *
  * @category schemas
@@ -95,14 +95,14 @@ export const ArtifactId = S.TemplateLiteral(["artifact:", Sha256Hex]).pipe(
  *
  * **Example** (Annotate decoded ArtifactId type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate decoded ArtifactId type"
  * import { ArtifactId } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
  *
  * const id: ArtifactId = S.decodeUnknownSync(ArtifactId)(
  *   "artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(id.startsWith("artifact:")) // true
+ * id.startsWith("artifact:") // => true
  * ```
  *
  * @category models
@@ -115,14 +115,14 @@ export type ArtifactId = typeof ArtifactId.Type;
  *
  * **Example** (Decode OperationId from string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode OperationId from string"
  * import { OperationId } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
  *
  * const id = S.decodeUnknownSync(OperationId)(
  *   "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(id.startsWith("operation:")) // true
+ * id.startsWith("operation:") // => true
  * ```
  *
  * @category schemas
@@ -145,14 +145,14 @@ export const OperationId = S.TemplateLiteral(["operation:", Sha256Hex]).pipe(
  *
  * **Example** (Annotate decoded OperationId type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate decoded OperationId type"
  * import { OperationId } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
  *
  * const id: OperationId = S.decodeUnknownSync(OperationId)(
  *   "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(id.startsWith("operation:")) // true
+ * id.startsWith("operation:") // => true
  * ```
  *
  * @category models
@@ -165,14 +165,14 @@ export type OperationId = typeof OperationId.Type;
  *
  * **Example** (Decode ContentDigest from string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode ContentDigest from string"
  * import { ContentDigest } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
  *
  * const digest = S.decodeUnknownSync(ContentDigest)(
  *   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(digest.slice(0, 7)) // "sha256:"
+ * digest.slice(0, 7) // => "sha256:"
  * ```
  *
  * @category schemas
@@ -195,14 +195,14 @@ export const ContentDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
  *
  * **Example** (Annotate decoded ContentDigest type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate decoded ContentDigest type"
  * import { ContentDigest } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
  *
  * const digest: ContentDigest = S.decodeUnknownSync(ContentDigest)(
  *   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(digest.slice(0, 7)) // "sha256:"
+ * digest.slice(0, 7) // => "sha256:"
  * ```
  *
  * @category models
@@ -215,10 +215,10 @@ export type ContentDigest = typeof ContentDigest.Type;
  *
  * **Example** (Check locator kind options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check locator kind options"
  * import { ArtifactLocatorKind } from "@beep/file-processing/Artifact"
  *
- * console.log(ArtifactLocatorKind.Options.includes("memory")) // true
+ * ArtifactLocatorKind.Options.includes("memory") // => true
  * ```
  *
  * @category schemas
@@ -235,11 +235,11 @@ export const ArtifactLocatorKind = LiteralKit(["file", "synthetic", "memory"]).p
  *
  * **Example** (Narrow memory locator kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow memory locator kind"
  * import { ArtifactLocatorKind } from "@beep/file-processing/Artifact"
  *
  * const kind: ArtifactLocatorKind = "memory"
- * console.log(ArtifactLocatorKind.is.memory(kind)) // true
+ * ArtifactLocatorKind.is.memory(kind) // => true
  * ```
  *
  * @category models
@@ -252,7 +252,7 @@ export type ArtifactLocatorKind = typeof ArtifactLocatorKind.Type;
  *
  * **Example** (Create synthetic artifact locator)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create synthetic artifact locator"
  * import { ArtifactLocator } from "@beep/file-processing/Artifact"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
@@ -263,7 +263,7 @@ export type ArtifactLocatorKind = typeof ArtifactLocatorKind.Type;
  *   return ArtifactLocator.make({ kind: "synthetic", value }).kind
  * })
  *
- * Effect.runPromise(program).then(console.log) // "synthetic"
+ * await Effect.runPromise(program) // => "synthetic"
  * ```
  *
  * @category models
@@ -284,7 +284,7 @@ export class ArtifactLocator extends S.Class<ArtifactLocator>($I`ArtifactLocator
  *
  * **Example** (Construct SourceArtifact instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct SourceArtifact instance"
  * import { ArtifactId, ArtifactLocator, ContentDigest, SourceArtifact } from "@beep/file-processing/Artifact"
  * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
@@ -308,7 +308,7 @@ export class ArtifactLocator extends S.Class<ArtifactLocator>($I`ArtifactLocator
  *   }).extension
  * })
  *
- * Effect.runPromise(program).then(console.log) // "md"
+ * await Effect.runPromise(program) // => "md"
  * ```
  *
  * @category models
@@ -337,7 +337,7 @@ export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)(
  *
  * **Example** (Construct ArtifactReference instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct ArtifactReference instance"
  * import { ArtifactId, ArtifactReference } from "@beep/file-processing/Artifact"
  * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
@@ -355,7 +355,7 @@ export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)(
  *   }).relativePath
  * })
  *
- * Effect.runPromise(program).then(console.log) // "text/README.txt"
+ * await Effect.runPromise(program) // => "text/README.txt"
  * ```
  *
  * @category models

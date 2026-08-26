@@ -22,11 +22,11 @@ const textDecoder = new TextDecoder();
  *
  * **Example** (Enum traces kind value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Enum traces kind value"
  * import { OtlpPacketKind } from "@beep/observability/experimental/server"
  *
  * const kind: OtlpPacketKind = OtlpPacketKind.Enum.traces
- * console.log(kind) // "traces"
+ * kind // => "traces"
  * ```
  *
  * @category models
@@ -60,11 +60,11 @@ export type OtlpPacketKind = typeof OtlpPacketKind.Type;
  *
  * **Example** (Enum json encoding value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Enum json encoding value"
  * import { OtlpPacketEncoding } from "@beep/observability/experimental/server"
  *
  * const encoding: OtlpPacketEncoding = OtlpPacketEncoding.Enum.json
- * console.log(encoding) // "json"
+ * encoding // => "json"
  * ```
  *
  * @category models
@@ -98,7 +98,7 @@ export type OtlpPacketEncoding = typeof OtlpPacketEncoding.Type;
  *
  * **Example** (Make packet with fields)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make packet with fields"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { OtlpPacket } from "@beep/observability/experimental/server"
@@ -112,7 +112,7 @@ export type OtlpPacketEncoding = typeof OtlpPacketEncoding.Type;
  *   preview: "{}",
  *   size: zero
  * })
- * console.log(packet.kind) // "traces"
+ * packet.kind // => "traces"
  * ```
  *
  * @category models

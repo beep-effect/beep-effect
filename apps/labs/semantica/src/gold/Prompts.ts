@@ -26,7 +26,8 @@ For SUBSET=structure, each label is:
 {"role":"title"|"abstract"|"section"|"reference","depth":non-negative integer,"startChar":integer,"endChar":integer,"quote":"exact source slice"}
 
 For SUBSET=entity, each label is:
-{"label":"exact entity surface","entityType":"concise type","startChar":integer,"endChar":integer,"quote":"exact source slice"}
+{"label":"exact entity surface","entityType":"concise type","cluster":"document-local coreference cluster","startChar":integer,"endChar":integer,"quote":"exact source slice"}
+Reuse cluster exactly for mentions of the same entity. Use a distinct cluster when no other mention corefers.
 
 For SUBSET=relation, each label is:
 {"predicate":"concise relation","subject":"exact subject surface","object":"exact object surface","startChar":integer,"endChar":integer,"quote":"exact evidence slice"}`;

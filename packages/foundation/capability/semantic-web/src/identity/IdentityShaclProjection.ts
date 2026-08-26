@@ -77,11 +77,11 @@ const addressPropertyShapes = (path: NamedNode, value: string): ReadonlyArray<Sh
  *
  * **Example** (Require a label fiber)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Require a label fiber"
  * import { IdentityShapePolicy } from "@beep/semantic-web"
  *
  * const policy = IdentityShapePolicy.make({ requiredFibers: ["label"] })
- * console.log(policy.requiredFibers) // ["label"]
+ * policy.requiredFibers // => ["label"]
  * ```
  *
  * @category policies
@@ -105,7 +105,7 @@ export class IdentityShapePolicy extends S.Class<IdentityShapePolicy>($I`Identit
  *
  * **Example** (Project no identity entries)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Project no identity entries"
  * import {
  *   DefaultIdentityRdfBinding,
  *   IdentityShapePolicy,
@@ -119,7 +119,7 @@ export class IdentityShapePolicy extends S.Class<IdentityShapePolicy>($I`Identit
  *     IdentityShapePolicy.make({ requiredFibers: [] })
  *   )([])
  * )
- * console.log(shapes.length) // 0
+ * shapes.length // => 0
  * ```
  *
  * @category projections

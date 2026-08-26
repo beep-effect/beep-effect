@@ -33,10 +33,10 @@ import type * as Crypto from "effect/Crypto";
  *
  * **Example** (Verify PST format support)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Verify PST format support"
  * import { TestFileProcessingEngineDescriptor } from "@beep/file-processing/test"
  *
- * console.log(TestFileProcessingEngineDescriptor.supportedFormats.includes("pst")) // true
+ * TestFileProcessingEngineDescriptor.supportedFormats.includes("pst") // => true
  * ```
  *
  * @category fixtures
@@ -58,7 +58,7 @@ const testIdentifierHex = "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d
  *
  * **Example** (Decode synthetic identifiers)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode synthetic identifiers"
  * import { decodeTestOperationIdentifiers } from "@beep/file-processing/test"
  * import { Effect } from "effect"
  *
@@ -67,7 +67,7 @@ const testIdentifierHex = "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d
  *   return identifiers.digest.startsWith("sha256:")
  * })
  *
- * Effect.runPromise(program).then(console.log) // true
+ * await Effect.runPromise(program) // => true
  * ```
  *
  * @effects Decodes the fixed synthetic identifiers through the exported schemas and can fail with `SchemaError` if the fixture constants drift.
@@ -122,10 +122,10 @@ const deriveTestChildArtifactId = (
  *
  * **Example** (Log engine descriptor name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log engine descriptor name"
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
  *
- * console.log(TestFileProcessingEngine.descriptor.engine) // "test"
+ * TestFileProcessingEngine.descriptor.engine // => "test"
  * ```
  *
  * @category fixtures

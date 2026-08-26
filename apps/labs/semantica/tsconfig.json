@@ -36,6 +36,12 @@
       "path": "../../../packages/drivers/doc-text/tsconfig.json"
     },
     {
+      "path": "../../../packages/drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/wink/tsconfig.json"
+    },
+    {
       "path": "../../../packages/drivers/xai/tsconfig.json"
     },
     {
@@ -45,7 +51,16 @@
       "path": "../../../packages/foundation/capability/file-processing/tsconfig.json"
     },
     {
+      "path": "../../../packages/foundation/capability/langextract/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/capability/nlp-processing/tsconfig.json"
+    },
+    {
       "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/nlp/tsconfig.json"
     },
     {
       "path": "../../../packages/foundation/modeling/provenance/tsconfig.json"

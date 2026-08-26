@@ -410,7 +410,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   | Parser
   | Path.Path
 > {
-  const selection = yield* loadDocumentSelection(options.manifestPath, O.none()).pipe(
+  const selection = yield* loadDocumentSelection(options.manifestPath, O.none(), true).pipe(
     Effect.mapError(() => unavailable("manifest-invalid", "The selected manifest or F1 catalog failed validation."))
   );
   const subsets = frozenSubsets(selection.manifest);

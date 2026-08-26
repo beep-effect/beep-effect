@@ -16,10 +16,10 @@
  *
  * **Example** (Log the request text bound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the request text bound"
  * import { MAX_REQUEST_TEXT_LENGTH } from "@beep/langextract/Extraction"
  *
- * console.log(MAX_REQUEST_TEXT_LENGTH) // 1000000
+ * MAX_REQUEST_TEXT_LENGTH // => 1000000
  * ```
  *
  * @category constants
@@ -32,10 +32,10 @@ export const MAX_REQUEST_TEXT_LENGTH = 1_000_000;
  *
  * **Example** (Log the candidate text bound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the candidate text bound"
  * import { MAX_CANDIDATE_TEXT_LENGTH } from "@beep/langextract/Extraction"
  *
- * console.log(MAX_CANDIDATE_TEXT_LENGTH) // 4096
+ * MAX_CANDIDATE_TEXT_LENGTH // => 4096
  * ```
  *
  * @category constants
@@ -48,10 +48,10 @@ export const MAX_CANDIDATE_TEXT_LENGTH = 4_096;
  *
  * **Example** (Log the candidate attribute bound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the candidate attribute bound"
  * import { MAX_CANDIDATE_ATTRIBUTES } from "@beep/langextract/Extraction"
  *
- * console.log(MAX_CANDIDATE_ATTRIBUTES) // 64
+ * MAX_CANDIDATE_ATTRIBUTES // => 64
  * ```
  *
  * @category constants
@@ -64,10 +64,10 @@ export const MAX_CANDIDATE_ATTRIBUTES = 64;
  *
  * **Example** (Log the request example bound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the request example bound"
  * import { MAX_REQUEST_EXAMPLES } from "@beep/langextract/Extraction"
  *
- * console.log(MAX_REQUEST_EXAMPLES) // 64
+ * MAX_REQUEST_EXAMPLES // => 64
  * ```
  *
  * @category constants
@@ -80,10 +80,10 @@ export const MAX_REQUEST_EXAMPLES = 64;
  *
  * **Example** (Log candidate limit constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log candidate limit constant"
  * import { MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction"
  *
- * console.log(MAX_EXTRACTION_CANDIDATES) // 1024
+ * MAX_EXTRACTION_CANDIDATES // => 1024
  * ```
  *
  * @category constants

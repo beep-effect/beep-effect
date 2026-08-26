@@ -34,10 +34,10 @@ const $I = $LangExtractId.create("Alignment");
  *
  * **Example** (Check aligned status membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check aligned status membership"
  * import { AlignedStatus } from "@beep/langextract/Alignment"
  *
- * console.log(AlignedStatus.is.match_exact("match_exact")) // true
+ * AlignedStatus.is.match_exact("match_exact") // => true
  * ```
  *
  * @category schemas
@@ -214,11 +214,11 @@ export declare namespace AlignedMatch {
  *
  * **Example** (Construct an alignment source)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct an alignment source"
  * import { AlignmentSource } from "@beep/langextract/Alignment"
  *
  * const source = AlignmentSource.make({ sourceText: "Ada Lovelace wrote notes." })
- * console.log(source.fuzzyThreshold) // 0.82
+ * source.fuzzyThreshold // => 0.82
  * ```
  *
  * @category models
