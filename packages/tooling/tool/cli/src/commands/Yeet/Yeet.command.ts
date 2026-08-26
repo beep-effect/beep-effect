@@ -97,6 +97,7 @@ const remoteFlag = Flag.boolean("remote").pipe(
 
 const tierFlag = Flag.choiceWithValue("tier", [
   ["full", "full"],
+  ["cheap-gates", "cheap-gates"],
   ["review-fix", "review-fix"],
 ]).pipe(
   Flag.withDescription("Local proof tier for verify; publish always uses full"),

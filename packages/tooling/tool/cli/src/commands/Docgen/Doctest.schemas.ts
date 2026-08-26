@@ -1,3 +1,10 @@
+/**
+ * Schema contracts for doctest fences, classifications, and lane reports.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";

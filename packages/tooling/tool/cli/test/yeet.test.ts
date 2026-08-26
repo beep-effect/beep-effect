@@ -44,6 +44,7 @@ import {
   partiallyStagedPathsForTesting,
   prePushLocalShasFromStdinForTesting,
   prePushShaMismatchesForTesting,
+  proofCoordinatorLockPath,
   proofLockDispositionForTesting,
   publishPathsOutsideIntentForTesting,
   publishRestagePathsForTesting,
@@ -377,6 +378,7 @@ describe("yeet planner", () => {
     ).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "full:cheap-gates",
       "full:pre-push",
       "publish:head-install-preflight",
       "publish:git:push",
@@ -414,7 +416,7 @@ describe("yeet planner", () => {
         plan.steps,
         A.map((step) => step.label)
       )
-    ).toEqual(["publish:head-install-preflight", "fallow-advisory-feedback", "full:pre-push"]);
+    ).toEqual(["publish:head-install-preflight", "fallow-advisory-feedback", "full:cheap-gates", "full:pre-push"]);
     expect(
       pipe(
         plan.steps,
@@ -437,6 +439,12 @@ describe("yeet planner", () => {
       }),
       expect.objectContaining({ id: "test", laneIds: ["quality:test-unit", "quality:test-integration"] }),
       expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
+    ]);
+    expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
+      expect.objectContaining({
+        id: "preflight",
+        laneIds: expect.arrayContaining(["cheap-gates:config-sync", "cheap-gates:effect-imports"]),
+      }),
     ]);
   });
 
@@ -473,6 +481,21 @@ describe("yeet planner", () => {
       "--head",
       "feature/head",
     ]);
+  });
+
+  it("builds cheap-gates verify without any heavyweight proof lane", () => {
+    const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "verify", tier: "cheap-gates" });
+
+    expect(A.map(plan.steps, (step) => step.label)).toEqual(["fallow-advisory-feedback", "full:cheap-gates"]);
+    expect(findStep(plan.steps, "full:cheap-gates").args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "github-checks",
+      "cheap-gates",
+      "--collect-all",
+    ]);
+    expect(A.some(plan.steps, (step) => step.label === "full:pre-push")).toBe(false);
   });
 
   it("builds closeout as PR context plus review gates", () => {
@@ -625,6 +648,7 @@ describe("yeet planner", () => {
       "commit:git:commit",
       "publish:head-install-preflight",
       "early-publish:git:push",
+      "full:cheap-gates",
       "full:pre-push",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
@@ -773,6 +797,7 @@ describe("yeet planner", () => {
     ).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "full:cheap-gates",
       "full:pre-push",
       "publish:head-install-preflight",
       "publish:git:push",
@@ -789,6 +814,14 @@ describe("yeet planner", () => {
     });
   });
 
+  it("exposes the collected cheap-gates repo proof surface", () => {
+    expect(repoProofStepDefinition("cheap-gates")).toMatchObject({
+      args: ["quality", "github-checks", "cheap-gates", "--collect-all"],
+      label: "full:cheap-gates",
+      surface: "cheap-gates",
+    });
+  });
+
   it("builds repair as deterministic generators plus affected feedback", () => {
     const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "repair" });
 
@@ -801,8 +834,9 @@ describe("yeet planner", () => {
       "prepare:laws:effect-imports",
       "prepare:laws:terse-effect",
       "prepare:config-sync",
-      "prepare:lint:fix",
-      "prepare:docgen",
+      "feedback:cheap-gates",
+      "feedback:lint:fix",
+      "feedback:docgen",
       "feedback:build",
       "feedback:check",
       "feedback:lint",
@@ -815,7 +849,15 @@ describe("yeet planner", () => {
       "effect-imports",
       "--write",
     ]);
-    expect(findStep(plan.steps, "prepare:docgen").args).toEqual(["run", "docgen"]);
+    expect(findStep(plan.steps, "feedback:cheap-gates").args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "github-checks",
+      "cheap-gates",
+      "--collect-all",
+    ]);
+    expect(findStep(plan.steps, "feedback:docgen").args).toEqual(["run", "docgen"]);
   });
 
   it("uses the shared pre-push proof definition for Yeet parity", () => {
@@ -867,7 +909,7 @@ describe("yeet planner", () => {
 
   it("uses changed-file lint fix for write-mode repair", () => {
     const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "repair" });
-    const step = findStep(plan.steps, "prepare:lint:fix");
+    const step = findStep(plan.steps, "feedback:lint:fix");
 
     expect(step.args).toEqual(["run", "lint:fix"]);
     expect(step.env).toBeUndefined();
@@ -886,7 +928,7 @@ describe("yeet planner", () => {
         A.filter((step) => step.phase === "feedback"),
         A.map((step) => step.label)
       )
-    ).toEqual(["feedback:build", "feedback:lint"]);
+    ).toEqual(["feedback:cheap-gates", "feedback:lint:fix", "feedback:docgen", "feedback:build", "feedback:lint"]);
   });
 
   it("keeps repair feedback as a no-op instead of falling back to all packages", () => {
@@ -901,7 +943,11 @@ describe("yeet planner", () => {
         plan.steps,
         A.filter((step) => step.phase === "feedback")
       )
-    ).toEqual([]);
+    ).toEqual([
+      expect.objectContaining({ label: "feedback:cheap-gates" }),
+      expect.objectContaining({ label: "feedback:lint:fix" }),
+      expect.objectContaining({ label: "feedback:docgen" }),
+    ]);
     expect(
       pipe(
         plan.steps,
@@ -911,8 +957,9 @@ describe("yeet planner", () => {
       "prepare:laws:effect-imports",
       "prepare:laws:terse-effect",
       "prepare:config-sync",
-      "prepare:lint:fix",
-      "prepare:docgen",
+      "feedback:cheap-gates",
+      "feedback:lint:fix",
+      "feedback:docgen",
     ]);
   });
 
@@ -1520,6 +1567,13 @@ describe("yeet quality issue index", () => {
     });
   });
 
+  it("routes cheap-gate failures to the focused repair command", () => {
+    const remediation = knownSubLaneRemediationFromOutput("[beep-cli] cheap-gates:effect-imports: failed in 1200ms");
+
+    expect(O.getOrThrow(remediation)).toContain("bun run beep laws effect-imports --write");
+    expect(O.getOrThrow(remediation)).toContain("cheap-gates tier");
+  });
+
   it("prefers the failing tail when broad proof output mentions earlier successful lanes", () => {
     const step = RepoPlanStep.make({
       id: "full:review-fix",
@@ -2071,6 +2125,7 @@ describe("yeet publish scope helpers", () => {
     expect(labels).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "full:cheap-gates",
       "full:pre-push",
       "publish:head-install-preflight",
       "publish:git:push",
@@ -2097,6 +2152,7 @@ describe("yeet publish scope helpers", () => {
       "publish:head-install-preflight",
       "early-publish:git:push",
       "publish:pr-create",
+      "full:cheap-gates",
       "full:pre-push",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
@@ -2474,8 +2530,9 @@ describe("yeet publish scope helpers", () => {
   it("classifies proof lock disposition by readability and owner liveness", () => {
     const state = O.some(
       YeetProofLockStateForTesting.make({
-        schemaVersion: "yeet-proof-lock/v1",
+        schemaVersion: "yeet-proof-lock/v2",
         branch: "feature",
+        checkoutRoot: "/repo/checkout-a",
         command: "bun run beep quality github-checks pre-push",
         pid: 12345,
         proofTier: "full",
@@ -2487,6 +2544,20 @@ describe("yeet publish scope helpers", () => {
     expect(proofLockDispositionForTesting(state, true)).toBe("refuse-active");
     expect(proofLockDispositionForTesting(state, false)).toBe("replace-stale");
   });
+
+  it("derives one opaque machine-local proof coordinator per repository identity", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const first = yield* proofCoordinatorLockPath("git@github.com:acme/repo.git");
+        const sibling = yield* proofCoordinatorLockPath("git@github.com:acme/repo.git");
+        const other = yield* proofCoordinatorLockPath("git@github.com:acme/other.git");
+
+        expect(first).toBe(sibling);
+        expect(other).not.toBe(first);
+        expect(first).not.toContain("github.com");
+        expect(first).toMatch(/beep-yeet-proof-locks\/[a-f0-9]{12}\.lock$/u);
+      }).pipe(Effect.provide(NodePath.layer))
+    ));
 
   it("plans closeout write actions only for known thread ids with a paired body", () => {
     const known = ["PRRT_a", "PRRT_b"];

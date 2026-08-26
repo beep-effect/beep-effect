@@ -1,3 +1,10 @@
+/**
+ * Typed failures for doctest fence discovery, parsing, classification, and validation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 

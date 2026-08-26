@@ -6,6 +6,7 @@
  */
 
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
 import { Effect, flow, Path } from "effect";
 import * as Str from "effect/String";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -33,6 +34,38 @@ export const safeArtifactName: (value: string) => string = flow(
 );
 
 const artifactNameHash = (value: string): string => createHash("sha256").update(value).digest("hex").slice(0, 12);
+
+/**
+ * Resolve the machine-local coordinator path for one repository identity.
+ *
+ * **Details**
+ *
+ * The origin identity is hashed before it reaches the path, so sibling clones
+ * of the same repository coordinate without exposing a credential-bearing
+ * remote URL in a filename.
+ *
+ * **Example** (Share a coordinator across checkouts)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { proofCoordinatorLockPath } from "@beep/repo-cli/test/Yeet"
+ *
+ * const lock = proofCoordinatorLockPath("git@github.com:acme/repo.git").pipe(
+ *   Effect.map((path) => path.endsWith(".lock"))
+ * )
+ * ```
+ *
+ * @param repositoryIdentity - Stable remote identity shared by sibling clones.
+ * @returns Machine-local proof coordinator lock path.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath")(function* (
+  repositoryIdentity: string
+): Effect.fn.Return<string, never, Path.Path> {
+  const path = yield* Path.Path;
+  return path.join(tmpdir(), "beep-yeet-proof-locks", `${artifactNameHash(repositoryIdentity)}.lock`);
+});
 
 /**
  * Return the stable Yeet run id for a repo run context.

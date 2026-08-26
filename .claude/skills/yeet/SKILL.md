@@ -70,6 +70,13 @@ bun run beep yeet repair
 bun run beep yeet verify
 ```
 
+- Run the collected cheap gates without starting build, lint, check, tests, or
+  docgen:
+
+```bash
+bun run beep yeet verify --tier cheap-gates
+```
+
 - Run the targeted review-fix proof while iterating on PR comments:
 
 ```bash
@@ -214,6 +221,7 @@ Use plan mode before long or risky runs when you need to inspect the shape:
 ```bash
 bun run beep yeet repair --plan --json
 bun run beep yeet verify --plan --json
+bun run beep yeet verify --tier cheap-gates --plan --json
 bun run beep yeet verify --tier review-fix --plan --json
 bun run beep yeet publish --message "type(scope): summary" --plan --json
 bun run beep yeet status --remote --plan --json
@@ -229,7 +237,15 @@ one.
 ## Authoritative Gates (green local must mean green CI)
 
 `bun run beep yeet verify` (full tier) is the authoritative local gate. Its
-pre-push proof dispatches the *hosted lane bodies themselves* — `beep ci lane`
+first step runs the cheap-gates tier. This tier runs 12 deterministic gates in
+one collected wave, including config sync, tsgo rule parity, Effect imports,
+schema-first, goals checks, Knip, Fallow, changeset status, and the JSDoc
+ratchet against the committed inventory. It reports every failure before any
+build, lint, check, test, or docgen lane starts. `yeet repair` applies its
+deterministic fixers, runs the same collected tier, and stops before heavy
+feedback if a cheap gate still fails.
+
+The full proof then dispatches the *hosted lane bodies themselves* — `beep ci lane`
 `check`, `lint`, `lint-policy`, `test-unit`, and `test-integration`, each with
 the affected shape `check.yml` passes its matrix jobs — alongside the full root
 build, bounded docgen (which compiles the fenced code in every titled
@@ -256,6 +272,8 @@ authoritative** — do not conclude "it's green" from them:
   `**Example**` blocks when a source hash is unchanged, so it can miss a broken
   example or an unresolved import subpath that full `bun run docgen` (and CI)
   catches.
+- `bun run beep yeet verify --tier cheap-gates` proves only the first tier. It
+  never replaces the full proof.
 
 When in doubt, prove with `yeet verify` before trusting "green", and always
 prove with it before `publish`.
@@ -416,22 +434,23 @@ turbo work, so they are cheap to run mid-loop.
   afterward, and still runs full local proof after pushing.
 - If Yeet refuses untracked, unstaged, or newly generated paths, inspect the
   paths and decide whether they belong in the reviewed publish intent.
-- Yeet serializes full local proof runs with `.beep/yeet/quality-lock`.
+- Yeet serializes full local proof runs across sibling checkouts with an opaque
+  lock under the machine temporary directory. The lock key is a hash of the
+  origin remote, so the path never contains the remote URL.
   `verify --tier review-fix` remains the cheaper loop lane while a full proof is
   already active. Locks whose recorded pid is no longer running are removed
   automatically on the next acquire; manual removal is only needed for
   unreadable lock files.
-- Full pre-push proof streams a conservative collector for independent GitHub
-  check lanes. A failed proof may report multiple sibling failures at once
-  (for example check, lint, repo-export, tests, SAST, or Nix). Fix all reported
-  actionable lanes before retrying instead of assuming the first item is the
-  only blocker.
+- The cheap tier always collects every lane failure. The later full proof
+  collects all sibling failures in its active wave, then stops before the next
+  wave under the default fail-fast policy. `--collect-all` tells the full proof
+  to continue across later waves too. Fix every reported lane before retrying.
 - Failure packets are written for proof/commit/publish/monitor step failures,
   publish-intent refusals (untracked/unstaged/partially staged paths), and
   stale-base refusals. Intent refusals print a summarized path list on stderr;
   the full list lives in the packet. Known sub-lane hints cover typos,
-  terse-effect, docgen, changeset status,
-  secrets, SAST, security, and Nix. Hint selection prefers output near the
+  terse-effect, every cheap gate, docgen, changeset status, secrets, SAST,
+  security, and Nix. Hint selection prefers output near the
   actual failure marker before falling back to broad log scanning. Prefer the
   suggested repair command in `yeet status`, the packet, or `verdict.json` over
   rerunning the whole loop blindly.

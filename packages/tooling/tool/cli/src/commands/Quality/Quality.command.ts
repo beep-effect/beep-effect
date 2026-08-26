@@ -31,6 +31,7 @@ import { changesetStatusCommand } from "./ChangesetStatus.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
   githubCheckChangesetStatusLane,
+  githubCheckCheapGateLanes,
   githubCheckFallowLanes,
   githubCheckLanePlan,
   githubCheckLanesForModeForTesting as githubCheckLanesForModeForTestingImpl,
@@ -708,6 +709,21 @@ const runPrePushChecks = Effect.fn("QualityScriptCommands.runPrePushChecks")(fun
   );
 });
 
+const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment
+> {
+  const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
+  yield* runGithubCheckLaneGroup(
+    "github-checks:cheap-gates",
+    [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)],
+    "collect-all"
+  );
+});
+
 const qualityRangeEnv = (base: string, head: string): Record<string, string | undefined> => ({
   TURBO_SCM_BASE: base,
   TURBO_SCM_HEAD: head,
@@ -1044,6 +1060,7 @@ export const runGithubChecks = Effect.fn("QualityScriptCommands.runGithubChecks"
   const failurePolicy = options.failurePolicy ?? GithubCheckFailurePolicy.Enum["fail-fast"];
 
   yield* GithubCheckMode.$match(mode, {
+    "cheap-gates": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runCheapGates(repoRoot))),
     quality: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runQuality(repoRoot, failurePolicy))),
     "review-fix": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runReviewFix(repoRoot, options))),
     "repo-sanity": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runRepoSanity(repoRoot, failurePolicy))),

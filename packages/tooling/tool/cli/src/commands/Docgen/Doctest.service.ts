@@ -1,3 +1,10 @@
+/**
+ * The documentation runtime test lane: discovers, classifies, and executes doctest fences.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import { Context } from "effect";
 import type { Effect } from "effect";
