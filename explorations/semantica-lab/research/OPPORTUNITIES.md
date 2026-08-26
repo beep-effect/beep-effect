@@ -69,6 +69,14 @@ ratifies.
 
 ## Friction receipts
 
+- **2026-08-25 — C0 schema verification reproduced two managed-sandbox Bun failures.** `bun install`
+  failed immediately with `EROFS accessing temporary directory`; setting `BUN_TMPDIR=/tmp` did
+  not change the result, so the lockfile could not be refreshed. The exact app proof then reached
+  `bunx --bun vitest run` but produced no worker results until interrupted; the authorized fallback
+  `node ../../../node_modules/vitest/vitest.mjs run` completed all 40 tests. Prevention: provide Bun
+  a writable effective temp/cache root in managed sessions and route lab Vitest scripts through the
+  direct Node entrypoint when Bun worker startup is known to hang.
+
 - **2026-08-25 — Git `text=auto` silently rewrote a byte-exact fixture at commit time.** The
   root `.gitattributes` normalizes every auto-detected text file, so the committed blob of the
   CRLF span-fidelity specimen `md-unicode.md` lost its `\r` bytes (sha `886330…` in the index

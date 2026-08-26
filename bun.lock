@@ -66,7 +66,10 @@
       "name": "@beep/semantica",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/epistemic-domain": "workspace:^",
+        "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/provenance": "workspace:^",
         "@beep/schema": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@noble/hashes": "catalog:",
