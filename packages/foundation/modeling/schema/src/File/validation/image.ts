@@ -1,3 +1,10 @@
+/**
+ * File type detection and validation declarations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { FileTypes } from "../core/index.ts";
 import { getFileChunk, isAvifStringIncluded, isHeicSignatureIncluded } from "../utils/index.ts";
 
@@ -7,6 +14,8 @@ import { getFileChunk, isAvifStringIncluded, isHeicSignatureIncluded } from "../
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'avif' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isAVIF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -23,6 +32,8 @@ export function isAVIF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): 
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'bmp' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isBMP(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -35,6 +46,8 @@ export function isBMP(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'bpg' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isBPG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -47,6 +60,8 @@ export function isBPG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'cr2' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isCR2(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -59,6 +74,8 @@ export function isCR2(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'exr' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isEXR(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -71,6 +88,8 @@ export function isEXR(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'gif' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isGIF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -83,6 +102,8 @@ export function isGIF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'heic' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isHEIC(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -99,6 +120,8 @@ export function isHEIC(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): 
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'ico' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isICO(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -111,6 +134,8 @@ export function isICO(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'jpeg' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isJPEG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -123,6 +148,8 @@ export function isJPEG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): 
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'pbm' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isPBM(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -135,6 +162,8 @@ export function isPBM(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'pgm' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isPGM(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -147,6 +176,8 @@ export function isPGM(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'png' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isPNG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -159,6 +190,8 @@ export function isPNG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'ppm' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isPPM(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -171,6 +204,8 @@ export function isPPM(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'psd' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isPSD(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -183,6 +218,8 @@ export function isPSD(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'tiff' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isTIFF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -195,6 +232,8 @@ export function isTIFF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): 
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'webp' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isWEBP(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);

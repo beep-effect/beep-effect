@@ -1,8 +1,10 @@
 /**
+ * File type detection and validation declarations.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $SchemaId } from "@beep/identity/packages";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
@@ -13,6 +15,8 @@ const $I = $SchemaId.create("File/core/types/file-info");
 
 /**
  * Information about a file
+ * @category models
+ * @since 0.0.0
  */
 export class FileInfo extends S.Class<FileInfo>($I`FileInfo`)(
   S.Struct({
@@ -26,7 +30,19 @@ export class FileInfo extends S.Class<FileInfo>($I`FileInfo`)(
   })
 ) {}
 
+/**
+ * Encoded representation of {@link FileInfo}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export declare namespace FileInfo {
+  /**
+   * Serializable file information produced by schema encoding.
+   *
+   * @category models
+   * @since 0.0.0
+   */
   export interface Encoded {
     readonly description: string;
     readonly extension: string;

@@ -1,3 +1,10 @@
+/**
+ * File type detection and validation declarations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { FileTypes } from "../core/index.ts";
@@ -11,6 +18,8 @@ import type { FileValidatorOptions } from "../core/index.ts";
  * @param options parameters for additional actions
  *
  * @returns {boolean} True if found a signature of type 'aac' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export const isAAC: {
   (file: ReadonlyArray<number> | ArrayBuffer | Uint8Array, options: O.Option<FileValidatorOptions>): boolean;
@@ -45,6 +54,8 @@ export const isAAC: {
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'amr' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isAMR(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -57,6 +68,8 @@ export function isAMR(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'flac' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isFLAC(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -69,6 +82,8 @@ export function isFLAC(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): 
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'm4a' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isM4A(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -81,6 +96,8 @@ export function isM4A(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'mp3' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isMP3(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -93,6 +110,8 @@ export function isMP3(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'wav' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isWAV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);

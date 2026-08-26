@@ -1,3 +1,10 @@
+/**
+ * File type detection and validation declarations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { dual } from "effect/Function";
 import { FileTypes } from "../core/index.ts";
 import { getFileChunk } from "../utils/index.ts";
@@ -8,6 +15,8 @@ import type { ZipValidatorOptions } from "../core/index.ts";
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type '7z' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function is7Z(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -20,6 +29,8 @@ export function is7Z(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): bo
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'lzh' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isLZH(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -32,6 +43,8 @@ export function isLZH(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'rar' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isRAR(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -45,6 +58,8 @@ export function isRAR(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param options parameters for additional actions
  *
  * @returns {boolean} True if found a signature of type 'zip' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export const isZIP: {
   (file: ReadonlyArray<number> | ArrayBuffer | Uint8Array, options?: ZipValidatorOptions): boolean;

@@ -1,7 +1,22 @@
+/**
+ * File type detection and validation declarations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { fetchFromObject, findMatroskaDocTypeElements, isAvifStringIncluded } from "../../utils/index.ts";
-import { isFLV, isHEIC, isM4V, isMKV, isWEBM } from "../../validation/index.ts";
+import * as Str from "effect/String";
+import {
+  fetchFromObject,
+  findMatroskaDocTypeElements,
+  isAvifStringIncluded,
+  isFlvStringIncluded,
+  isftypStringIncluded,
+  isHeicSignatureIncluded,
+} from "../../utils/index.ts";
 import { FileInfo, FileSignature } from "../types/index.ts";
 import { AudioTypes } from "./audio.ts";
 import { CompressedTypes } from "./compressed.ts";
@@ -10,6 +25,50 @@ import { OtherTypes } from "./other.ts";
 import { VideoTypes } from "./video.ts";
 import type { DetectedFileInfo } from "../interfaces/dto/index.ts";
 
+const hasAnyExtension = (extensions: ReadonlyArray<string>, candidates: ReadonlyArray<string>): boolean =>
+  candidates.some((candidate) => extensions.includes(candidate));
+
+const matchesSignature = (fileChunk: ReadonlyArray<number>, signature: FileSignature): boolean => {
+  const skippedBytes = signature.skippedBytes ?? [];
+  const spanLength = signature.sequence.length + skippedBytes.length;
+  let sequenceIndex = 0;
+  for (let fileIndex = 0; fileIndex < spanLength; fileIndex++) {
+    if (skippedBytes.includes(fileIndex)) continue;
+    if (fileChunk[(signature.offset ?? 0) + fileIndex] !== signature.sequence[sequenceIndex]) return false;
+    sequenceIndex++;
+  }
+  return sequenceIndex === signature.sequence.length;
+};
+
+const detectIsoBaseMediaType = (
+  fileChunk: ReadonlyArray<number>,
+  detectedExtensions: ReadonlyArray<string>
+): string | undefined => {
+  if (!hasAnyExtension(detectedExtensions, ["m4v", "flv", "mp4", "heic"])) return undefined;
+  const isHeic = isHeicSignatureIncluded(fileChunk);
+  const candidates: ReadonlyArray<readonly [string, () => boolean]> = [
+    ["heic", () => detectedExtensions.includes("heic") && isHeic],
+    ["flv", () => isFlvStringIncluded(fileChunk)],
+    ["m4v", () => isftypStringIncluded(fileChunk) && !isHeic],
+    ["mp4", () => true],
+  ];
+  return candidates.find(([, matches]) => matches())?.[0];
+};
+
+const detectMatroskaType = (
+  fileChunk: ReadonlyArray<number>,
+  detectedExtensions: ReadonlyArray<string>
+): string | undefined =>
+  O.getOrUndefined(
+    O.filter(findMatroskaDocTypeElements(fileChunk), (documentType) => detectedExtensions.includes(documentType))
+  );
+
+/**
+ * File extensions that require format-specific validation after signature matching.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const FILE_TYPES_REQUIRED_ADDITIONAL_CHECK: ReadonlyArray<string> = [
   "m4v",
   "flv",
@@ -22,6 +81,8 @@ export const FILE_TYPES_REQUIRED_ADDITIONAL_CHECK: ReadonlyArray<string> = [
 
 /**
  * Holds all supported file types and their unique signatures.
+ * @category models
+ * @since 0.0.0
  */
 export class FileTypes {
   // audio
@@ -92,7 +153,7 @@ export class FileTypes {
    * @returns {FileInfo} File type information
    */
   public static getInfoByName(propertyName: string): FileInfo {
-    const file = fetchFromObject(FileTypes, propertyName.toUpperCase());
+    const file = fetchFromObject(FileTypes, Str.toUpperCase(propertyName));
     S.asserts(FileInfo, file);
     return file;
   }
@@ -122,25 +183,7 @@ export class FileTypes {
     fileChunk: ReadonlyArray<number>,
     acceptedSignatures: ReadonlyArray<FileSignature>
   ): FileSignature | undefined {
-    for (const signature of acceptedSignatures) {
-      let found = true;
-      const offset = signature.offset || 0;
-      let skippedBytes = 0;
-      for (let i = 0; i < signature.sequence.length; i++) {
-        if (P.isNotUndefined(signature.skippedBytes) && signature.skippedBytes.includes(i)) {
-          skippedBytes++;
-          continue;
-        }
-        if (fileChunk[offset + i] !== signature.sequence[i - skippedBytes]) {
-          found = false;
-          break;
-        }
-      }
-      if (found) {
-        return signature;
-      }
-    }
-    return undefined;
+    return acceptedSignatures.find((signature) => matchesSignature(fileChunk, signature));
   }
 
   /**
@@ -155,26 +198,13 @@ export class FileTypes {
     detectedFiles: ReadonlyArray<DetectedFileInfo | FileInfo>
   ): string | undefined {
     const detectedExtensions = detectedFiles.map((df) => df.extension);
-
-    if (detectedExtensions.some((de) => ["m4v", "flv", "mp4", "heic"].includes(de))) {
-      if (detectedExtensions.includes("heic") && isHEIC(fileChunk)) return "heic";
-      const isFlv = isFLV(fileChunk);
-      if (isFlv) return "flv";
-      const isM4v = isM4V(fileChunk) && !isHEIC(fileChunk);
-      if (isM4v) return "m4v";
-      return "mp4";
-    }
-    if (detectedExtensions.some((de) => ["mkv", "webm"].includes(de))) {
-      const matroskaDocTypeElement = findMatroskaDocTypeElements(fileChunk);
-      if (matroskaDocTypeElement === "mkv" && isMKV(fileChunk)) return "mkv";
-      if (matroskaDocTypeElement === "webm" && isWEBM(fileChunk)) return "webm";
-      return undefined;
-    }
-    if (detectedExtensions.some((de) => ["avif"].includes(de))) {
-      const isAvif = isAvifStringIncluded(fileChunk);
-      if (isAvif) return "avif";
-    }
-    return undefined;
+    return (
+      detectIsoBaseMediaType(fileChunk, detectedExtensions) ??
+      (hasAnyExtension(detectedExtensions, ["mkv", "webm"])
+        ? detectMatroskaType(fileChunk, detectedExtensions)
+        : undefined) ??
+      (detectedExtensions.includes("avif") && isAvifStringIncluded(fileChunk) ? "avif" : undefined)
+    );
   }
 
   /**
@@ -189,28 +219,7 @@ export class FileTypes {
     fileChunk: ReadonlyArray<number>,
     acceptedSignatures: ReadonlyArray<FileSignature>
   ): FileSignature | undefined {
-    for (const signature of acceptedSignatures) {
-      let skippedBytes = 0;
-      let found = true;
-      const offset = signature.offset;
-      const signatureLength = P.isNotUndefined(signature?.skippedBytes)
-        ? signature.skippedBytes.length
-        : signature.sequence.length;
-      for (let i = 0; i < signatureLength; i++) {
-        if (P.isNotUndefined(signature.skippedBytes) && signature.skippedBytes.includes(i)) {
-          skippedBytes++;
-          continue;
-        }
-        if (fileChunk[offset + i] !== signature.sequence[i - skippedBytes]) {
-          found = false;
-          break;
-        }
-      }
-      if (found) {
-        return signature;
-      }
-    }
-    return undefined;
+    return FileTypes.detectSignature(fileChunk, acceptedSignatures);
   }
 
   /**
@@ -222,8 +231,9 @@ export class FileTypes {
    * @returns {boolean} True if found a signature of the type in file content, otherwise false
    */
   public static checkByFileType(fileChunk: ReadonlyArray<number>, type: string): boolean {
-    if (Object.prototype.hasOwnProperty.call(FileTypes, type.toUpperCase())) {
-      const acceptedSignatures: ReadonlyArray<FileSignature> = FileTypes.getSignaturesByName(type.toUpperCase());
+    const normalizedType = Str.toUpperCase(type);
+    if (Object.prototype.hasOwnProperty.call(FileTypes, normalizedType)) {
+      const acceptedSignatures: ReadonlyArray<FileSignature> = FileTypes.getSignaturesByName(normalizedType);
 
       const detectedSignature = FileTypes.detectSignature(fileChunk, acceptedSignatures);
       if (P.isNotUndefined(detectedSignature)) return true;

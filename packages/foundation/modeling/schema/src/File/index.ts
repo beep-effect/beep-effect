@@ -11,18 +11,25 @@
  * @category validation
  * @since 0.0.0
  */
-export * from "./file-types/index.ts";
+export * from "./core/index.ts";
 /**
  * Re-exports declarations from the File module.
  *
  * @category validation
  * @since 0.0.0
  */
-export * from "./interfaces/index.ts";
+export * from "./detection/index.ts";
 /**
  * Re-exports declarations from the File module.
  *
  * @category validation
  * @since 0.0.0
  */
-export * from "./types/index.ts";
+export * from "./utils/index.ts";
+/**
+ * Re-exports declarations from the File module.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./validation/index.ts";

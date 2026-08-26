@@ -1,7 +1,16 @@
+/**
+ * File type detection and validation declarations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import type { FileInfo } from "../types/index.ts";
 
 /**
  * Video files information with their unique signatures
+ * @category models
+ * @since 0.0.0
  */
 export class VideoTypes {
   static AVI: FileInfo = {

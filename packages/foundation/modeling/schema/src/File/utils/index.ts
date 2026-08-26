@@ -1,5 +1,27 @@
+/**
+ * File type detection and validation declarations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+
+type FileContent = ReadonlyArray<number> | ArrayBuffer | Uint8Array;
+
+const toFileBytes = (file: FileContent): ReadonlyArray<number> | Uint8Array => {
+  if (file instanceof ArrayBuffer) return new Uint8Array(file);
+  if (file instanceof Uint8Array) return file;
+  if (Array.isArray(file) && isArrayOfNumbers(file)) return file;
+  throw new TypeError(
+    `Expected the \`file\` argument to be of type \`ReadonlyArray<number>\`, \`Uint8Array\`, or \`ArrayBuffer\`, got \`${typeof file}\``
+  );
+};
+
+const includesByteSequence = (fileChunk: ReadonlyArray<number>, sequence: ReadonlyArray<number>): boolean =>
+  fileChunk.some((_, start) => sequence.every((byte, offset) => fileChunk[start + offset] === byte));
 /**
  * Takes a file content in different types, convert it into array of numbers and returns a chunk of the required size
  *
@@ -7,36 +29,17 @@ import * as P from "effect/Predicate";
  * @param fileChunkLength - Required file chunk length
  *
  * @returns {ReadonlyArray<number>} File chunk of the required size represents in ReadonlyArray<number>
+ * @category utilities
+ * @since 0.0.0
  */
 export const getFileChunk: {
-  (
-    file: ReadonlyArray<number> | ArrayBuffer | Uint8Array,
-    fileChunkLength?: number // default length - 32 bytes
-  ): ReadonlyArray<number>;
-  (
-    fileChunkLength?: number // default length - 32 bytes
-  ): (file: ReadonlyArray<number> | ArrayBuffer | Uint8Array) => ReadonlyArray<number>;
-} = dual(
-  2,
-  (
-    file: ReadonlyArray<number> | ArrayBuffer | Uint8Array,
-    fileChunkLength = 32 // default length - 32 bytes
-  ): ReadonlyArray<number> => {
-    const fileToCheck: ReadonlyArray<number> | Uint8Array = file instanceof ArrayBuffer ? new Uint8Array(file) : file;
-    let chunk: ReadonlyArray<number> = [];
-    if ((Array.isArray(file) && isArrayOfNumbers(file)) || file instanceof ArrayBuffer || file instanceof Uint8Array) {
-      chunk = Array.from(fileToCheck.slice(0, fileChunkLength));
-    } else {
-      throw new TypeError(
-        `Expected the \`file\` argument to be of type \`ReadonlyArray<number>\`, \`Uint8Array\`, or \`ArrayBuffer\`, got \`${typeof file}\``
-      );
-    }
-
-    if (!isLegalChunk(chunk)) throw new TypeError(`File content contains illegal values`);
-
-    return chunk;
-  }
-);
+  (file: FileContent, fileChunkLength?: number): ReadonlyArray<number>;
+  (fileChunkLength?: number): (file: FileContent) => ReadonlyArray<number>;
+} = dual(2, (file: FileContent, fileChunkLength = 32): ReadonlyArray<number> => {
+  const chunk = Array.from(toFileBytes(file).slice(0, fileChunkLength));
+  if (!isLegalChunk(chunk)) throw new TypeError(`File content contains illegal values`);
+  return chunk;
+});
 
 /**
  * Determine if array of numbers is a legal file chunk
@@ -57,6 +60,8 @@ function isLegalChunk(fileChunk: ReadonlyArray<number>): boolean {
  * @param prop The property name
  *
  * @returns The property value, or `undefined` when the path does not exist
+ * @category utilities
+ * @since 0.0.0
  */
 export const fetchFromObject: {
   (obj: unknown, prop: string): unknown;
@@ -77,23 +82,15 @@ export const fetchFromObject: {
  *
  * @param fileChunk - A chunk from the beginning of a file content, represents in array of numbers
  *
- * @returns {string | undefined} 'webm' if found webm string A property of the required object
+ * @returns The detected Matroska document type, or `O.none()` when the header is inconclusive.
+ * @category utilities
+ * @since 0.0.0
  */
-export function findMatroskaDocTypeElements(fileChunk: ReadonlyArray<number>): string | undefined {
-  const webmString = "webm";
-  const mkvString = "matroska";
-
+export function findMatroskaDocTypeElements(fileChunk: ReadonlyArray<number>): O.Option<"mkv" | "webm"> {
   const byteString = fileChunk.map((num) => String.fromCharCode(num)).join("");
-
-  if (byteString.includes(webmString)) {
-    return "webm";
-  }
-
-  if (byteString.includes(mkvString)) {
-    return "mkv";
-  }
-
-  return undefined; // File type not identified
+  if (byteString.includes("webm")) return O.some("webm");
+  if (byteString.includes("matroska")) return O.some("mkv");
+  return O.none();
 }
 
 /**
@@ -103,24 +100,11 @@ export function findMatroskaDocTypeElements(fileChunk: ReadonlyArray<number>): s
  * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
  *
  * @returns {boolean} True if found the "ftyp" string in the fileChunk, otherwise false
+ * @category predicates
+ * @since 0.0.0
  */
 export function isftypStringIncluded(fileChunk: ReadonlyArray<number>): boolean {
-  const ftypSignature = [0x66, 0x74, 0x79, 0x70]; // "ftyp" signature
-
-  // Check the first few bytes for the "ftyp" signature
-  for (let i = 0; i < fileChunk.length - ftypSignature.length; i++) {
-    let found = true;
-    for (let j = 0; j < ftypSignature.length; j++) {
-      if (fileChunk[i + j] !== ftypSignature[j]) {
-        found = false;
-        break;
-      }
-    }
-    if (found) {
-      return true;
-    }
-  }
-  return false;
+  return includesByteSequence(fileChunk, [0x66, 0x74, 0x79, 0x70]);
 }
 
 /**
@@ -130,6 +114,8 @@ export function isftypStringIncluded(fileChunk: ReadonlyArray<number>): boolean 
  * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
  *
  * @returns {boolean} True if found the "FLV" string in the fileChunk, otherwise false
+ * @category predicates
+ * @since 0.0.0
  */
 export function isFlvStringIncluded(fileChunk: ReadonlyArray<number>): boolean {
   const signature = fileChunk.slice(0, 3);
@@ -137,6 +123,12 @@ export function isFlvStringIncluded(fileChunk: ReadonlyArray<number>): boolean {
   return signatureString.includes("FLV");
 }
 
+/**
+ * Checks whether a byte sequence contains a JFIF or EXIF marker.
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export function containsJfifOrExifHeader(file: number[]): boolean {
   // Check if the fourth byte is one of the known JFIF or EXIF header markers
   const headerMarker = file[3];
@@ -156,6 +148,8 @@ export function containsJfifOrExifHeader(file: number[]): boolean {
  * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
  *
  * @returns {boolean} True if found the "AVIF" string in the fileChunk, otherwise false
+ * @category predicates
+ * @since 0.0.0
  */
 export function isAvifStringIncluded(fileChunk: ReadonlyArray<number>): boolean {
   // Convert the relevant slice of the file chunk from hexadecimal to characters
@@ -178,6 +172,8 @@ function isArrayOfNumbers(arr: ReadonlyArray<unknown>): arr is ReadonlyArray<num
  *
  * @param fileChunk A chunk from the beginning of a file content, represented as an array of numbers.
  * @returns {boolean} True if found a HEIC signature in the fileChunk, otherwise false.
+ * @category predicates
+ * @since 0.0.0
  */
 export function isHeicSignatureIncluded(fileChunk: ReadonlyArray<number>): boolean {
   // Convert the first part of the file chunk to a string to check for signatures

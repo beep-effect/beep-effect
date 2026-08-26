@@ -14,7 +14,7 @@
     "strict": true,
     "target": "es2022",
     "types": ["node", "bun"],
-    "module": "es2024",
+    "module": "es2022",
     "rewriteRelativeImportExtensions": true,
     "moduleDetection": "force",
     "verbatimModuleSyntax": true,

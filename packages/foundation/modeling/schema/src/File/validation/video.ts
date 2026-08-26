@@ -1,5 +1,12 @@
+/**
+ * File type detection and validation declarations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
+import * as O from "effect/Option";
 import { FileTypes } from "../core/index.ts";
 import {
   findMatroskaDocTypeElements,
@@ -15,6 +22,8 @@ import type { FileValidatorOptions } from "../core/index.ts";
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'avi' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isAVI(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -28,6 +37,8 @@ export function isAVI(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'flv' & "flv" string in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isFLV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -45,6 +56,8 @@ export function isFLV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'm4v' & "ftyp" string in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isM4V(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -62,6 +75,8 @@ export function isM4V(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'mkv' & "ftyp" string in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isMKV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file, 64); // Check the first 64 bytes of the file
@@ -69,7 +84,7 @@ export function isMKV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
   if (!isMkvSignature) return false;
 
   // Search for the presence of the "Segment" element in the mkv header
-  return findMatroskaDocTypeElements(fileChunk) === "mkv";
+  return O.contains(findMatroskaDocTypeElements(fileChunk), "mkv");
 }
 
 /**
@@ -78,6 +93,8 @@ export function isMKV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'mov' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isMOV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -91,21 +108,15 @@ export function isMOV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param options parameters for additional actions
  *
  * @returns {boolean} True if found a signature of type 'mp4' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export const isMP4: {
   (file: ReadonlyArray<number> | ArrayBuffer | Uint8Array, options?: FileValidatorOptions): boolean;
   (options?: FileValidatorOptions): (file: ReadonlyArray<number> | ArrayBuffer | Uint8Array) => boolean;
 } = dual(2, (file: ReadonlyArray<number> | ArrayBuffer | Uint8Array, options?: FileValidatorOptions): boolean => {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
-  const isMp4 = FileTypes.checkByFileType(fileChunk, "mp4");
-
-  if (!isMp4) {
-    if (P.isNotUndefined(options) && P.isNotUndefined(options.excludeSimilarTypes) && options.excludeSimilarTypes)
-      return false;
-    return isM4V(fileChunk); // since 'm4v' is very similar to 'mp4'
-  }
-
-  return true;
+  return FileTypes.checkByFileType(fileChunk, "mp4") || (!(options?.excludeSimilarTypes ?? false) && isM4V(fileChunk));
 });
 
 /**
@@ -114,6 +125,8 @@ export const isMP4: {
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'ogg' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isOGG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -126,6 +139,8 @@ export function isOGG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'swf' in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isSWF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file);
@@ -139,6 +154,8 @@ export function isSWF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
  * @returns {boolean} True if found a signature of type 'webm' & "ftyp" string in file content, otherwise false
+ * @category validation
+ * @since 0.0.0
  */
 export function isWEBM(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): boolean {
   const fileChunk: ReadonlyArray<number> = getFileChunk(file, 64); // Check the first 64 bytes of the file
@@ -146,5 +163,5 @@ export function isWEBM(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): 
   if (!isWebmSignature) return false;
 
   // Search for the presence of the "DocType" element in the webm header
-  return findMatroskaDocTypeElements(fileChunk) === "webm";
+  return O.contains(findMatroskaDocTypeElements(fileChunk), "webm");
 }

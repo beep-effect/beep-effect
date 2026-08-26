@@ -140,6 +140,11 @@ export * from "./Email.ts";
  * @since 0.0.0
  * @category validation
  */
+export * as File from "./File/index.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * as FileDiff from "./FileDiff.schema.ts";
 /**
  * @since 0.0.0

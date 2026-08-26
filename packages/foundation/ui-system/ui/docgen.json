@@ -8,7 +8,7 @@
     "strict": true,
     "skipLibCheck": true,
     "moduleResolution": "bundler",
-    "module": "es2024",
+    "module": "es2022",
     "target": "es2022",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "rewriteRelativeImportExtensions": true,

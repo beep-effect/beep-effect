@@ -137,6 +137,8 @@
     "./EvmAddress/*": null,
     "./ExpectCt": "./src/ExpectCt/index.ts",
     "./ExpectCt/*": null,
+    "./File": "./src/File/index.ts",
+    "./File/*": null,
     "./FileExtension": "./src/FileExtension.ts",
     "./FileExtension/*": null,
     "./FileInfo": "./src/FileInfo.ts",

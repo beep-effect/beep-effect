@@ -1,7 +1,16 @@
+/**
+ * File type detection and validation declarations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import type { FileInfo } from "../types/index.ts";
 
 /**
  * Image files information with their unique signatures
+ * @category models
+ * @since 0.0.0
  */
 export class ImageTypes {
   static AVIF: FileInfo = {

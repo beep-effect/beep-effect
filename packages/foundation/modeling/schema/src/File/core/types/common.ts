@@ -1,30 +1,58 @@
 /**
+ * File type detection and validation declarations.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity/packages";
+
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../../../SchemaUtils/index.ts";
 
-export const $I = $SchemaId.create("File/core/types/file-info");
-
+/**
+ * Schema for numeric and textual file-signature components.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export const NumOrStr = S.Union([S.Finite, S.String]);
 
+/**
+ * Numeric or textual component of a file signature.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type NumOrStr = typeof NumOrStr.Type;
 
-export declare namespace NumOrStr {
-  export type Encoded = string | number;
-}
+const opt = <T extends S.Top>(schema: T) => schema.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 
-export const boolDefaultFalse = S.Boolean.pipe(SchemaUtils.withKeyDefaults(false));
-
-export const opt = <T extends S.Top>(schema: T) => schema.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
-
-export const optNum = opt(S.Finite);
+/**
+ * Optional string field decoded to an Effect `Option`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export const optStr = opt(S.String);
 
+/**
+ * Builds an array schema with an empty-array constructor default.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export const arr = <T extends S.Top>(schema: T) => schema.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults);
 
+/**
+ * String array schema with an empty-array constructor default.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export const strArr = arr(S.String);
+/**
+ * Finite-number array schema with an empty-array constructor default.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export const numArr = arr(S.Finite);
