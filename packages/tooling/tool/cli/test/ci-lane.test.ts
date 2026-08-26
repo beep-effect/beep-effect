@@ -10,7 +10,7 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
@@ -21,10 +21,10 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 const REPO_ROOT = "/repo";
 const encoder = new TextEncoder();
 
-const commandHandle = (output = "") =>
+const commandHandle = (output = "", exitCode = 0) =>
   ChildProcessSpawner.makeHandle({
     all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
     getInputFd: () => Sink.drain,
     getOutputFd: () => Stream.empty,
     isRunning: Effect.succeed(false),
@@ -39,7 +39,8 @@ const commandHandle = (output = "") =>
 const doctestCiLayer = (
   changedFiles: ReadonlyArray<string>,
   sources: ReadonlyArray<readonly [string, string]>,
-  spawned: Array<string>
+  spawned: Array<string>,
+  lsFilesExitCode = 0
 ) => {
   const fileSystemLayer = FileSystem.layerNoop({
     exists: (file) =>
@@ -79,7 +80,8 @@ const doctestCiLayer = (
                 "\n"
               )
           : "";
-      return Effect.succeed(commandHandle(output));
+      const exitCode = command.command === "git" && command.args[0] === "ls-files" ? lsFilesExitCode : 0;
+      return Effect.succeed(commandHandle(output, exitCode));
     })
   );
   return Layer.mergeAll(fileSystemLayer, Path.layer, processLayer, TestConsole.layer);
@@ -687,3 +689,54 @@ layer(doctestCiLayer([], fallowReports, fallowCommands))("Fallow CI lane executi
     })
   );
 });
+
+const configInputDoctestCommands = A.empty<string>();
+const configInputDoctestSources: ReadonlyArray<readonly [string, string]> = [
+  ...dependentDoctestSources,
+  ["packages/a/docgen.json", "{}"],
+  ["packages/c/tsconfig.build.json", "{}"],
+];
+
+layer(
+  doctestCiLayer(
+    ["packages/a/docgen.json", "packages/c/tsconfig.build.json"],
+    configInputDoctestSources,
+    configInputDoctestCommands
+  )
+)("config-input affected Doctest CI lane", (it) => {
+  it.effect("treats docgen.json and tsconfig changes as package inputs and expands dependents", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+      expect(lastOf(configInputDoctestCommands)).toContain(
+        "bunx vitest run --config vitest.docs.ts packages/a/src/marked.ts packages/b/src/marked.tsx packages/c/src/marked.ts"
+      );
+      expect(lastOf(configInputDoctestCommands)).not.toContain("apps/demo/src/marked.ts");
+    })
+  );
+});
+
+const failingLsFilesDoctestCommands = A.empty<string>();
+
+layer(doctestCiLayer(["packages/a/src/unmarked.ts"], dependentDoctestSources, failingLsFilesDoctestCommands, 128))(
+  "Doctest CI lane with a failing workspace listing",
+  (it) => {
+    it.effect("fails with a CiCommandError when git ls-files exits non-zero", () =>
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(
+          runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }))
+        );
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        const message = Exit.match(exit, {
+          onFailure: (cause) => Cause.squash(cause),
+          onSuccess: () => "unexpected success",
+        });
+        expect(String(P.hasProperty(message, "message") ? message.message : message)).toContain(
+          "git ls-files for Doctest failed with exit code 128"
+        );
+        expect(failingLsFilesDoctestCommands).toHaveLength(2);
+      })
+    );
+  }
+);

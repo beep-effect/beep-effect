@@ -20131,15 +20131,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 74.49,
-      "statements": 74.26,
-      "branches": 61.14,
-      "functions": 67.85,
+      "lines": 74.55,
+      "statements": 74.32,
+      "branches": 61.27,
+      "functions": 67.96,
       "uncovered": {
-        "lines": 8258,
-        "statements": 8684,
-        "branches": 4690,
-        "functions": 3105
+        "lines": 8255,
+        "statements": 8683,
+        "branches": 4692,
+        "functions": 3104
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -20575,10 +20575,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
-          "lines": 81.27,
-          "statements": 81.38,
-          "branches": 77.27,
-          "functions": 76.92,
+          "lines": 84.1,
+          "statements": 84.3,
+          "branches": 80.76,
+          "functions": 79.83,
           "uncovered": {
             "lines": 41,
             "statements": 43,
@@ -21403,14 +21403,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts": {
-          "lines": 90.78,
-          "statements": 89.34,
-          "branches": 79.11,
-          "functions": 84.96,
+          "lines": 91.84,
+          "statements": 90.05,
+          "branches": 81.15,
+          "functions": 86.3,
           "uncovered": {
-            "lines": 28,
-            "statements": 36,
-            "branches": 33,
+            "lines": 27,
+            "statements": 37,
+            "branches": 36,
             "functions": 23
           }
         },
@@ -25651,15 +25651,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts": {
-          "lines": 60.68,
-          "statements": 60.54,
-          "branches": 34.32,
-          "functions": 67.44,
+          "lines": 62.06,
+          "statements": 61.9,
+          "branches": 35.82,
+          "functions": 69.76,
           "uncovered": {
-            "lines": 57,
-            "statements": 58,
-            "branches": 44,
-            "functions": 14
+            "lines": 55,
+            "statements": 56,
+            "branches": 43,
+            "functions": 13
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {
