@@ -11,6 +11,18 @@ import { DetectedFileInfo, FILE_TYPES_REQUIRED_ADDITIONAL_CHECK, FileSignature, 
 import { getFileChunk } from "../utils/index.ts";
 import type { DetectFileOptions, FileInfo } from "../core/index.ts";
 
+// import { $SchemaId } from "@beep/identity";
+// import * as S from "effect/Schema";
+// import * as SchemaGetter from "effect/SchemaGetter";
+// import * as SchemaUtils from "@beep/schema/SchemaUtils";
+// const $I = $SchemaId.create("File/detection/Detection.service");
+//
+// const FileContent = S.Union(
+//   [
+//     S.Finite.pipe(S.Array),
+//
+//   ]
+// )
 type FileContent = ReadonlyArray<number> | ArrayBuffer | Uint8Array;
 
 const assertValidChunkSize = (options: DetectFileOptions | undefined): void => {
@@ -51,10 +63,10 @@ const selectDetectedFile = (
 /**
  * Detect a file by searching for a valid file signature inside the file content
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
- * @param options Optional parameters for additional actions
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param options - Optional parameters for additional actions
  *
- * @returns {DetectedFileInfo | undefined} DetectedFileInfo if detected a valid signature inside the file contentof, otherwise undefined
+ * @returns DetectedFileInfo if detected a valid signature inside the file contentof, otherwise undefined
  * @category parsing
  * @since 0.0.0
  */

@@ -11,9 +11,9 @@ import { getFileChunk } from "../utils/index.ts";
 /**
  * Determine if file content contains a valid 'blend' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'blend' in file content, otherwise false
+ * @returns True if found a signature of type 'blend' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -25,9 +25,9 @@ export function isBLEND(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array):
 /**
  * Determine if file content contains a valid 'elf' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'elf' in file content, otherwise false
+ * @returns True if found a signature of type 'elf' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -39,9 +39,9 @@ export function isELF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'exe' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'exe' in file content, otherwise false
+ * @returns True if found a signature of type 'exe' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -53,9 +53,9 @@ export function isEXE(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'mach-o' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'mach-o' in file content, otherwise false
+ * @returns True if found a signature of type 'mach-o' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -67,9 +67,9 @@ export function isMACHO(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array):
 /**
  * Determine if file content contains a valid 'indd' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'indd' in file content, otherwise false
+ * @returns True if found a signature of type 'indd' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -81,9 +81,9 @@ export function isINDD(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): 
 /**
  * Determine if file content contains a valid 'orc' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'orc' in file content, otherwise false
+ * @returns True if found a signature of type 'orc' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -95,9 +95,9 @@ export function isORC(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'parquet' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'parquet' in file content, otherwise false
+ * @returns True if found a signature of type 'parquet' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -109,9 +109,9 @@ export function isPARQUET(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array
 /**
  * Determine if file content contains a valid 'pdf' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'pdf' in file content, otherwise false
+ * @returns True if found a signature of type 'pdf' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -123,9 +123,9 @@ export function isPDF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'ps' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'ps' in file content, otherwise false
+ * @returns True if found a signature of type 'ps' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -137,9 +137,9 @@ export function isPS(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): bo
 /**
  * Determine if file content contains a valid 'rtf' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'rtf' in file content, otherwise false
+ * @returns True if found a signature of type 'rtf' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -151,9 +151,9 @@ export function isRTF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'sqlite' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'sqlite' in file content, otherwise false
+ * @returns True if found a signature of type 'sqlite' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -165,9 +165,9 @@ export function isSQLITE(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array)
 /**
  * Determine if file content contains a valid 'stl' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'stl' in file content, otherwise false
+ * @returns True if found a signature of type 'stl' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -179,9 +179,9 @@ export function isSTL(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'ttf' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'ttf' in file content, otherwise false
+ * @returns True if found a signature of type 'ttf' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -193,9 +193,9 @@ export function isTTF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'doc' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'doc' in file content, otherwise false
+ * @returns True if found a signature of type 'doc' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -207,9 +207,9 @@ export function isDOC(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'pcap' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'pcap' in file content, otherwise false
+ * @returns True if found a signature of type 'pcap' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */

@@ -14,10 +14,10 @@ import type { FileValidatorOptions } from "../core/index.ts";
 /**
  * Determine if file content contains a valid 'aac' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
- * @param options parameters for additional actions
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param options - parameters for additional actions
  *
- * @returns {boolean} True if found a signature of type 'aac' in file content, otherwise false
+ * @returns True if found a signature of type 'aac' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -51,9 +51,9 @@ export const isAAC: {
 /**
  * Determine if file content contains a valid 'amr' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'amr' in file content, otherwise false
+ * @returns True if found a signature of type 'amr' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -65,9 +65,9 @@ export function isAMR(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'flac' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'flac' in file content, otherwise false
+ * @returns True if found a signature of type 'flac' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -79,9 +79,9 @@ export function isFLAC(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): 
 /**
  * Determine if file content contains a valid 'm4a' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'm4a' in file content, otherwise false
+ * @returns True if found a signature of type 'm4a' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -93,9 +93,9 @@ export function isM4A(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'mp3' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'mp3' in file content, otherwise false
+ * @returns True if found a signature of type 'mp3' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -107,9 +107,9 @@ export function isMP3(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'wav' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'wav' in file content, otherwise false
+ * @returns True if found a signature of type 'wav' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */

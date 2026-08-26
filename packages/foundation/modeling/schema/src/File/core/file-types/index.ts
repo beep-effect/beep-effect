@@ -148,9 +148,9 @@ export class FileTypes {
   /**
    * Receive information on a file type by its property name from FileTypes class
    *
-   * @param propertyName Property name from FileTypes class
+   * @param propertyName - Property name from FileTypes class
    *
-   * @returns {FileInfo} File type information
+   * @returns File type information
    */
   public static getInfoByName(propertyName: string): FileInfo {
     const file = fetchFromObject(FileTypes, Str.toUpperCase(propertyName));
@@ -161,9 +161,9 @@ export class FileTypes {
   /**
    * Receive an array of file type signatures by its property name from FileTypes class
    *
-   * @param propertyName Property name from FileTypes class
+   * @param propertyName - Property name from FileTypes class
    *
-   * @returns {Array<FileSignature>} All unique signatures with their information
+   * @returns All unique signatures with their information
    */
   public static getSignaturesByName(propertyName: string): ReadonlyArray<FileSignature> {
     const signatures = FileTypes.getInfoByName(propertyName).signatures;
@@ -174,10 +174,10 @@ export class FileTypes {
   /**
    * Determine if a valid signature exist in a file chunk
    *
-   * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
-   * @param acceptedSignatures Valid signatures to search for in fileChunk
+   * @param fileChunk - A chunk from the beginning of a file content, represents in array of numbers
+   * @param acceptedSignatures - Valid signatures to search for in fileChunk
    *
-   * @returns {boolean} True if found a valid signature inside the chunk, otherwise false
+   * @returns True if found a valid signature inside the chunk, otherwise false
    */
   public static detectSignature(
     fileChunk: ReadonlyArray<number>,
@@ -189,9 +189,9 @@ export class FileTypes {
   /**
    * Performs an additional check for detected file types by their unique structure
    *
-   * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
-   * @param detectedFiles A list of detected files
-   * @returns {string | undefined} File type extension if found, otherwise undefined
+   * @param fileChunk - A chunk from the beginning of a file content, represents in array of numbers
+   * @param detectedFiles - A list of detected files
+   * @returns File type extension if found, otherwise undefined
    */
   public static detectTypeByAdditionalCheck(
     fileChunk: ReadonlyArray<number>,
@@ -210,10 +210,10 @@ export class FileTypes {
   /**
    * Determine if a file chunk contains a valid signature and return the file signature if exist
    *
-   * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
-   * @param acceptedSignatures Valid signatures to search for in fileChunk
+   * @param fileChunk - A chunk from the beginning of a file content, represents in array of numbers
+   * @param acceptedSignatures - Valid signatures to search for in fileChunk
    *
-   * @returns {FileSignature | undefined } FileSignature if found a valid signature, otherwise undefined
+   * @returns FileSignature if found a valid signature, otherwise undefined
    */
   public static detectbBySignatures(
     fileChunk: ReadonlyArray<number>,
@@ -225,10 +225,10 @@ export class FileTypes {
   /**
    * Determine if file content contains a valid signature of a required type
    *
-   * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
-   * @param type The file type to match against
+   * @param fileChunk - A chunk from the beginning of a file content, represents in array of numbers
+   * @param type - The file type to match against
    *
-   * @returns {boolean} True if found a signature of the type in file content, otherwise false
+   * @returns True if found a signature of the type in file content, otherwise false
    */
   public static checkByFileType(fileChunk: ReadonlyArray<number>, type: string): boolean {
     const normalizedType = Str.toUpperCase(type);

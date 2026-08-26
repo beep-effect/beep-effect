@@ -96,11 +96,11 @@ const passesAdditionalCheck = (
 /**
  * Validates the requested file signature against a list of accepted file types
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
- * @param types A list of accepted file types
- * @param options parameters for additional actions
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param types - A list of accepted file types
+ * @param options - parameters for additional actions
  *
- * @returns {boolean} True if found a type signature from the accepted file types, otherwise false
+ * @returns True if found a type signature from the accepted file types, otherwise false
  * @category validation
  * @since 0.0.0
  */

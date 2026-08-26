@@ -28,7 +28,7 @@ const includesByteSequence = (fileChunk: ReadonlyArray<number>, sequence: Readon
  * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  * @param fileChunkLength - Required file chunk length
  *
- * @returns {ReadonlyArray<number>} File chunk of the required size represents in ReadonlyArray<number>
+ * @returns File chunk of the required size represents in ReadonlyArray<number>
  * @category utilities
  * @since 0.0.0
  */
@@ -44,9 +44,9 @@ export const getFileChunk: {
 /**
  * Determine if array of numbers is a legal file chunk
  *
- * @param fileChunk File content represents in ReadonlyArray<number>
+ * @param fileChunk - File content represents in ReadonlyArray<number>
  *
- * @returns {boolean} True if the file content is verified, otherwise false
+ * @returns True if the file content is verified, otherwise false
  */
 
 function isLegalChunk(fileChunk: ReadonlyArray<number>): boolean {
@@ -56,8 +56,8 @@ function isLegalChunk(fileChunk: ReadonlyArray<number>): boolean {
 /**
  * Fetch a property of a object by its name
  *
- * @param obj The required object
- * @param prop The property name
+ * @param obj - The required object
+ * @param prop - The property name
  *
  * @returns The property value, or `undefined` when the path does not exist
  * @category utilities
@@ -97,9 +97,9 @@ export function findMatroskaDocTypeElements(fileChunk: ReadonlyArray<number>): O
  * Determine if array of numbers contains the "fytp" string.
  * M4V files typically have a "ftyp" box in the first few bytes, which can be checked by searching for the string "ftyp" in the buffer.
  *
- * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
+ * @param fileChunk - A chunk from the beginning of a file content, represents in array of numbers
  *
- * @returns {boolean} True if found the "ftyp" string in the fileChunk, otherwise false
+ * @returns True if found the "ftyp" string in the fileChunk, otherwise false
  * @category predicates
  * @since 0.0.0
  */
@@ -111,9 +111,9 @@ export function isftypStringIncluded(fileChunk: ReadonlyArray<number>): boolean 
  * Determine if array of numbers contains the "FLV" string.
  * FLV files typically have a "FLV" string in the first few bytes of the file, which can be checked using TextDecoder or similar.
  *
- * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
+ * @param fileChunk - A chunk from the beginning of a file content, represents in array of numbers
  *
- * @returns {boolean} True if found the "FLV" string in the fileChunk, otherwise false
+ * @returns True if found the "FLV" string in the fileChunk, otherwise false
  * @category predicates
  * @since 0.0.0
  */
@@ -145,9 +145,9 @@ export function containsJfifOrExifHeader(file: number[]): boolean {
  * Determine if array of numbers contains the "ftypavif" string.
  * AVIF files typically have a "ftypavif" string at bytes 5-12 of the file, which can be checked using TextDecoder or similar.
  *
- * @param fileChunk A chunk from the beginning of a file content, represents in array of numbers
+ * @param fileChunk - A chunk from the beginning of a file content, represents in array of numbers
  *
- * @returns {boolean} True if found the "AVIF" string in the fileChunk, otherwise false
+ * @returns True if found the "AVIF" string in the fileChunk, otherwise false
  * @category predicates
  * @since 0.0.0
  */
@@ -170,8 +170,8 @@ function isArrayOfNumbers(arr: ReadonlyArray<unknown>): arr is ReadonlyArray<num
  * such as 'heic', 'hevc', 'mif1', and 'msf1' which can be checked by searching
  * for these strings in the file chunk.
  *
- * @param fileChunk A chunk from the beginning of a file content, represented as an array of numbers.
- * @returns {boolean} True if found a HEIC signature in the fileChunk, otherwise false.
+ * @param fileChunk - A chunk from the beginning of a file content, represented as an array of numbers.
+ * @returns True if found a HEIC signature in the fileChunk, otherwise false.
  * @category predicates
  * @since 0.0.0
  */

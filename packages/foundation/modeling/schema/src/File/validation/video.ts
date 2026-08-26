@@ -19,9 +19,9 @@ import type { FileValidatorOptions } from "../core/index.ts";
 /**
  * Determine if file content contains a valid 'avi' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'avi' in file content, otherwise false
+ * @returns True if found a signature of type 'avi' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -34,9 +34,9 @@ export function isAVI(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * Determine if file content contains a valid 'flv' file signature.
  * Since 'flv' and 'm4v' share the same signature - additional check required - check if file content contains a "flv" string in the first few bytes of the file
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'flv' & "flv" string in file content, otherwise false
+ * @returns True if found a signature of type 'flv' & "flv" string in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -53,9 +53,9 @@ export function isFLV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * Determine if file content contains a valid 'm4v' file signature.
  * Since 'flv' and 'm4v' share the same signature - additional check required - check if file content contains a "ftyp" string in the first few bytes of the file
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'm4v' & "ftyp" string in file content, otherwise false
+ * @returns True if found a signature of type 'm4v' & "ftyp" string in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -72,9 +72,9 @@ export function isM4V(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * Determine if file content contains a valid 'mkv' file signature.
  * Since 'mkv' and 'webm' share the same signature - additional check required - search for the presence of the "Segment" element in the mkv header
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'mkv' & "ftyp" string in file content, otherwise false
+ * @returns True if found a signature of type 'mkv' & "ftyp" string in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -90,9 +90,9 @@ export function isMKV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'mov' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'mov' in file content, otherwise false
+ * @returns True if found a signature of type 'mov' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -104,10 +104,10 @@ export function isMOV(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'mp4' file signature.
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
- * @param options parameters for additional actions
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param options - parameters for additional actions
  *
- * @returns {boolean} True if found a signature of type 'mp4' in file content, otherwise false
+ * @returns True if found a signature of type 'mp4' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -122,9 +122,9 @@ export const isMP4: {
 /**
  * Determine if file content contains a valid 'ogg' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'ogg' in file content, otherwise false
+ * @returns True if found a signature of type 'ogg' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -136,9 +136,9 @@ export function isOGG(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
 /**
  * Determine if file content contains a valid 'swf' file signature
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'swf' in file content, otherwise false
+ * @returns True if found a signature of type 'swf' in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
@@ -151,9 +151,9 @@ export function isSWF(file: ReadonlyArray<number> | ArrayBuffer | Uint8Array): b
  * Determine if file content contains a valid 'webm' file signature.
  * Since 'mkv' and 'webm' share the same signature - additional check required - search for the presence of the "DocType" element in the webm header
  *
- * @param file File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
+ * @param file - File content represents in ReadonlyArray<number> / ArrayBuffer / Uint8Array
  *
- * @returns {boolean} True if found a signature of type 'webm' & "ftyp" string in file content, otherwise false
+ * @returns True if found a signature of type 'webm' & "ftyp" string in file content, otherwise false
  * @category validation
  * @since 0.0.0
  */
