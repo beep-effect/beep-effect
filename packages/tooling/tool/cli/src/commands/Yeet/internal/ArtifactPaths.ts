@@ -6,7 +6,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { tmpdir } from "node:os";
+import { hostname, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Effect, flow, Path, pipe } from "effect";
@@ -14,6 +14,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ArtifactPaths");
@@ -130,6 +131,26 @@ export const safeArtifactName: (value: string) => string = flow(
 
 const artifactNameHash = (value: string): string => createHash("sha256").update(value).digest("hex").slice(0, 12);
 
+const effectiveUserId = (): number =>
+  pipe(
+    O.fromUndefinedOr(process.geteuid),
+    O.map((getEffectiveUserId) => getEffectiveUserId()),
+    O.getOrElse(() => userInfo().uid)
+  );
+
+const proofCoordinatorRuntimeRoot = Effect.fn("Yeet.proofCoordinatorRuntimeRoot")(function* () {
+  const path = yield* Path.Path;
+  const configuredRuntimeRoot = yield* configStringOption("XDG_RUNTIME_DIR");
+  return pipe(
+    configuredRuntimeRoot,
+    O.filter(Str.isNonEmpty),
+    O.getOrElse(() => path.join(userInfo().homedir, ".cache"))
+  );
+});
+
+const proofCoordinatorDirectoryName = (): string =>
+  `beep-yeet-proof-locks-${artifactNameHash(hostname())}-uid-${effectiveUserId()}`;
+
 /**
  * Resolve the machine-local coordinator path for one repository identity.
  *
@@ -138,7 +159,9 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
  * Recognized Git remotes first normalize to a lowercase host plus repository
  * path. Equivalent SCP, SSH, HTTPS, and Git URLs therefore share a lock. The
  * normalized identity is hashed before it reaches the path, so a
- * credential-bearing remote URL never appears in a filename.
+ * credential-bearing remote URL never appears in a filename. Lock files live
+ * under the effective user's XDG runtime directory, with a user-cache fallback,
+ * and the namespace includes opaque machine identity plus the effective UID.
  *
  * **Example** (Share a coordinator across checkouts)
  *
@@ -160,9 +183,10 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
   repositoryIdentity: string
 ): Effect.fn.Return<string, never, Path.Path> {
   const path = yield* Path.Path;
+  const runtimeRoot = yield* proofCoordinatorRuntimeRoot();
   return path.join(
-    tmpdir(),
-    "beep-yeet-proof-locks",
+    runtimeRoot,
+    proofCoordinatorDirectoryName(),
     `${artifactNameHash(canonicalRepositoryIdentity(repositoryIdentity))}.lock`
   );
 });
