@@ -1456,26 +1456,34 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
    * idempotent, so a push that already landed remotely converges rather than
    * duplicating.
    */
+  /**
+   * Heal one tracked item: a `pending` item with a stalled operation type and
+   * no queued or leased twin gets a fresh convergent push enqueued.
+   */
+  const healPendingItem = Effect.fn($I`healPendingItem`)(function* (item: DomainSyncItem.SyncItem) {
+    if (!SyncItemState.is.pending(item.syncState)) {
+      return;
+    }
+    const healType = stalledOperationType(item);
+    if (O.isNone(healType)) {
+      return;
+    }
+    const queued = yield* queuedOperationsFor(item);
+    if (A.isReadonlyArrayNonEmpty(queued)) {
+      return;
+    }
+    yield* enqueueOrSquash(
+      item,
+      healType.value,
+      SyncOperationType.is.createFolder(healType.value) ? O.none() : item.contentDigest
+    );
+  });
+
   const healOrphanedPendingItems = Effect.fn($I`healOrphanedPendingItems`)(function* (
     trackedItems: ReadonlyArray<DomainSyncItem.SyncItem>
   ) {
     for (const item of trackedItems) {
-      if (!SyncItemState.is.pending(item.syncState)) {
-        continue;
-      }
-      const healType = stalledOperationType(item);
-      if (O.isNone(healType)) {
-        continue;
-      }
-      const queued = yield* queuedOperationsFor(item);
-      if (A.isReadonlyArrayNonEmpty(queued)) {
-        continue;
-      }
-      yield* enqueueOrSquash(
-        item,
-        healType.value,
-        SyncOperationType.is.createFolder(healType.value) ? O.none() : item.contentDigest
-      );
+      yield* healPendingItem(item);
     }
   });
 
@@ -1549,6 +1557,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       failedOperations: NonNegativeInt.make(A.length(failed)),
       openConflicts: NonNegativeInt.make(A.length(conflicts)),
       pendingItems: countItemsIn(SyncItemState.is.pending),
+      probedAt: probe.probedAt,
       provider: probe.provider,
       queuedOperations: NonNegativeInt.make(A.length(queued)),
     });

@@ -18,7 +18,7 @@ import {
 import { documentSafetyIssues } from "@beep/md/Md.safe";
 import { toast } from "@beep/ui/components/sonner";
 import { A, O } from "@beep/utils";
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 import { Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import {
@@ -34,6 +34,7 @@ import type { SerializedEditorState } from "@beep/lexical-schema";
 import type * as Md from "@beep/md/Md.model";
 import type { SafeDocument } from "@beep/md/Md.safe";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import type { AtomRegistry } from "effect/unstable/reactivity";
 
 /**
  * Classifies a persisted general document before it is projected into Lexical.
@@ -170,6 +171,50 @@ const submitComposerAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =
   )
 );
 
+// How long a dispatched send may stay invisible before it counts as dropped.
+// An accepted write flips the turn node within milliseconds, so the timeout
+// fires only when the dispatch chain never ran at all.
+const TURN_DISPATCH_CONFIRM_TIMEOUT = Duration.seconds(2);
+
+// Confirms that an accepted send actually started a turn, and restores the
+// draft when it provably never did. QA 2026-08-26 P0: the Lexical send binding
+// holds the handler closure as a plain function, so it keeps running after the
+// registry's idle sweep disposes the handler's own atom node — every ctx-bound
+// write inside it is then silently dropped while the editor still clears
+// itself. This helper therefore leans only on primitives that outlive nodes:
+// the registry handle and a raw timer. The subscriptions double as keep-alive
+// for the dispatch window so the freshly ensured fn nodes cannot be swept
+// mid-flight.
+const confirmTurnDispatch = <A>(
+  registry: AtomRegistry.AtomRegistry,
+  threadId: WorkspaceIdentity.ThreadId,
+  content: SafeDocument,
+  submit: Atom.Atom<A>
+): void => {
+  let sawTurnTransition = false;
+  const unsubscribeTurn = registry.subscribe(
+    runTurnAtom,
+    () => {
+      sawTurnTransition = true;
+    },
+    { immediate: false }
+  );
+  const unsubscribeSubmit = registry.subscribe(submit, () => void 0, { immediate: false });
+  Effect.runFork(
+    Effect.andThen(
+      Effect.sleep(TURN_DISPATCH_CONFIRM_TIMEOUT),
+      Effect.sync(() => {
+        unsubscribeTurn();
+        unsubscribeSubmit();
+        if (sawTurnTransition || registry.get(turnActiveAtom)) return;
+        registry.set(draftAtoms(threadId), O.some(content));
+        registry.set(draftRevisionAtoms(threadId), registry.get(draftRevisionAtoms(threadId)) + 1);
+        toast.error("The message could not be sent. Your draft was restored — try again.");
+      })
+    )
+  );
+};
+
 const stopComposerAtom = professionalBrowserRuntime.fn<void>()(
   Effect.fnUntraced(function* (_, ctx) {
     ctx.set(runTurnAtom, Atom.Interrupt);
@@ -201,8 +246,12 @@ export const composerSerializedChangeHandlerAtoms = Atom.family((threadId: Works
   Atom.family((seed: Md.Document) =>
     Atom.make((get) => {
       const updateDraft = updateComposerDraftAtoms(threadId)(seed);
+      // The editor stores this closure and keeps calling it after the idle
+      // sweep may have disposed this atom's node, so dispatch through the
+      // registry handle, which outlives the node.
+      const registry = get.registry;
       get.mount(updateDraft);
-      return (state: SerializedEditorState): void => get.set(updateDraft, state);
+      return (state: SerializedEditorState): void => registry.set(updateDraft, state);
     })
   )
 );
@@ -215,28 +264,34 @@ const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
     Atom.make((get) => {
       const submit = submitComposerAtoms(threadId);
       const gateAtom = composerDocumentSafetyGateAtoms(threadId)(seed);
+      // The Lexical send binding keeps running this closure after the idle
+      // sweep may have disposed this atom's node; node-bound reads and writes
+      // are silently dropped then, so everything inside goes through the
+      // registry handle instead (QA 2026-08-26 P0).
+      const registry = get.registry;
       get.mount(composerNoticeAtom);
       get.mount(submit);
       return (state: SerializedEditorState): boolean => {
         const decision = composerPolicy.decideSend({
-          gateOpen: O.isSome(get.once(gateAtom)),
+          gateOpen: O.isSome(registry.get(gateAtom)),
           seed,
           state,
-          turnActive: get.once(turnActiveAtom),
+          turnActive: registry.get(turnActiveAtom),
         });
         return ComposerSendDecision.match(decision, {
           gated: () => false,
           refuse: ({ notice }) => {
-            get.set(composerNoticeAtom, notice);
+            registry.set(composerNoticeAtom, notice);
             return false;
           },
           unsafe: ({ refusal }) => {
-            get.set(composerSafetyRefusalAtoms(threadId), O.some(refusal));
+            registry.set(composerSafetyRefusalAtoms(threadId), O.some(refusal));
             return false;
           },
           send: ({ content }) => {
-            get.set(composerSafetyRefusalAtoms(threadId), O.none());
-            get.set(submit, content);
+            registry.set(composerSafetyRefusalAtoms(threadId), O.none());
+            registry.set(submit, content);
+            confirmTurnDispatch(registry, threadId, content, submit);
             return true;
           },
         });
@@ -245,16 +300,19 @@ const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
   )
 );
 
-// Stable stop handler backed by a runtime action.
+// Stable stop handler backed by a runtime action. Registry-dispatched for the
+// same zombie-closure reason as the send handler above.
 const composerStopHandlerAtom = Atom.make((get) => {
+  const registry = get.registry;
   get.mount(stopComposerAtom);
-  return (): void => get.set(stopComposerAtom, void 0);
+  return (): void => registry.set(stopComposerAtom, void 0);
 });
 
 // Stable edit-cancellation handler backed by a runtime action.
 const composerCancelEditHandlerAtom = Atom.make((get) => {
+  const registry = get.registry;
   get.mount(cancelComposerEditAtom);
-  return (): void => get.set(cancelComposerEditAtom, void 0);
+  return (): void => registry.set(cancelComposerEditAtom, void 0);
 });
 
 // Derives the content to seed the editor with. Editing wins over the draft;

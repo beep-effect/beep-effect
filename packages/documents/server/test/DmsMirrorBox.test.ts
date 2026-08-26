@@ -861,6 +861,7 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       expect(probe.connected).toBe(true);
       expect(probe.provider).toBe("box");
       expect(O.isSome(probe.rootRemoteId)).toBe(true);
+      expect(O.isSome(probe.probedAt)).toBe(true);
     })
   );
 
@@ -877,6 +878,48 @@ describe("@beep/documents-server DmsMirrorBox", () => {
 
       expect(probe.connected).toBe(false);
       expect(O.isNone(probe.rootRemoteId)).toBe(true);
+      // A status-less SDK throw carries no classification signal, so the
+      // probe stays on the unclassified fallback.
+      expect(probe.disconnectReason).toEqual(O.some("probe-failed"));
+      expect(O.isSome(probe.probedAt)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "classifies availability probe failures from the Box status",
+    Effect.fnUntraced(function* () {
+      const probeWithStatus = (statusCode: number) =>
+        Effect.gen(function* () {
+          const availability = yield* DmsMirrorAvailability;
+          return yield* availability.probe;
+        }).pipe(
+          provideScopedLayer(
+            availabilityLayer(
+              makeFakeBox({
+                folders: { getFolderItems: () => Promise.reject({ responseInfo: { statusCode } }) },
+              })
+            )
+          )
+        );
+
+      const unauthorized = yield* probeWithStatus(401);
+      expect(unauthorized.connected).toBe(false);
+      expect(unauthorized.disconnectReason).toEqual(O.some("auth-failed"));
+
+      const forbidden = yield* probeWithStatus(403);
+      expect(forbidden.disconnectReason).toEqual(O.some("auth-failed"));
+
+      const missingRoot = yield* probeWithStatus(404);
+      expect(missingRoot.disconnectReason).toEqual(O.some("root-unreachable"));
+
+      const rateLimited = yield* probeWithStatus(429);
+      expect(rateLimited.disconnectReason).toEqual(O.some("transient"));
+
+      const serverDown = yield* probeWithStatus(503);
+      expect(serverDown.disconnectReason).toEqual(O.some("transient"));
+
+      const badRequest = yield* probeWithStatus(400);
+      expect(badRequest.disconnectReason).toEqual(O.some("probe-failed"));
     })
   );
 });

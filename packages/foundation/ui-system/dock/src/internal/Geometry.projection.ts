@@ -88,6 +88,17 @@ const panelMinimum = (tabs: TabsNode, axis: SashGeometry["axis"]): number =>
     )
   );
 
+// Per-group minima measure title-strip WIDTHS, so they bound only the
+// horizontal axis; applied vertically they would poison the clamp (a wide tab
+// strip would make every short split "infeasible" and abandon clamping).
+// Vertical requirements come from panel minHeights and minGroupExtent alone.
+const groupMinimum = (groupId: GroupId, axis: SashGeometry["axis"], minima: GroupMinimumLookup): number =>
+  Match.value(axis).pipe(
+    Match.when("horizontal", () => minima(groupId)),
+    Match.when("vertical", () => 0),
+    Match.exhaustive
+  );
+
 // The tightest bound among whichever options are present; none when neither
 // side carries one. Shared by the per-group panel fold and the cross-axis
 // split fold below.
@@ -127,7 +138,8 @@ const requiredExtent = (
     Tabs: (tabs) =>
       Bool.match(tabs.metadata.visible, {
         onFalse: () => 0,
-        onTrue: () => N.max(options.minGroupExtent, N.max(minima(tabs.groupId), panelMinimum(tabs, axis))),
+        onTrue: () =>
+          N.max(options.minGroupExtent, N.max(groupMinimum(tabs.groupId, axis, minima), panelMinimum(tabs, axis))),
       }),
     Split: ({ layout }) => {
       const [first, second] = SplitLayout.children(layout);

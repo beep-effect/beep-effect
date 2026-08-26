@@ -1,8 +1,9 @@
 import { VaultSyncPanel } from "@/sync/VaultSyncPanel";
 import "@testing-library/jest-dom/vitest";
-import { VaultSyncStatus } from "@beep/documents-use-cases/public";
+import { DmsMirrorDisconnectReason, VaultSyncStatus } from "@beep/documents-use-cases/public";
 import { RegistryProvider } from "@effect/atom-react";
 import { cleanup, render, within } from "@testing-library/react";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
@@ -10,9 +11,12 @@ import { afterEach, describe, expect, it } from "vitest";
 import { vaultSyncConflictsAtom, vaultSyncStatusAtom } from "@/sync/Sync.atoms";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
-import type { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
 
-const statusWith = (connected: boolean, disconnectReason: O.Option<DmsMirrorDisconnectReason>): VaultSyncStatus =>
+const statusWith = (
+  connected: boolean,
+  disconnectReason: O.Option<DmsMirrorDisconnectReason>,
+  probedAt: O.Option<string> = O.none()
+): VaultSyncStatus =>
   S.decodeSync(VaultSyncStatus)({
     conflictItems: 0,
     connected,
@@ -23,6 +27,7 @@ const statusWith = (connected: boolean, disconnectReason: O.Option<DmsMirrorDisc
     failedOperations: 0,
     openConflicts: 0,
     pendingItems: 0,
+    probedAt: O.getOrNull(probedAt),
     provider: "box",
     queuedOperations: 0,
   });
@@ -68,6 +73,53 @@ describe("vault sync panel", () => {
     expect(screen.getByTestId("vault-sync-trigger")).toBeDisabled();
   });
 
+  it("blames the token when Box rejected the credentials", () => {
+    const { container } = renderWithStatus(statusWith(false, O.some("auth-failed")));
+    const screen = within(container);
+
+    const note = screen.getByTestId("vault-sync-setup-note");
+    expect(note).toHaveTextContent("Box rejected the stored credentials");
+    expect(note).not.toHaveTextContent("Set CLOUD_BOX_TOKEN");
+    expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
+  });
+
+  it("points at the mirror root folder when it cannot be listed or created", () => {
+    const { container } = renderWithStatus(statusWith(false, O.some("root-unreachable")));
+    const screen = within(container);
+
+    const note = screen.getByTestId("vault-sync-setup-note");
+    expect(note).toHaveTextContent("mirror root folder could not be listed or created");
+    expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
+  });
+
+  it("asks for a short retry when Box is rate limiting or unreachable", () => {
+    const { container } = renderWithStatus(statusWith(false, O.some("transient")));
+    const screen = within(container);
+
+    const note = screen.getByTestId("vault-sync-setup-note");
+    expect(note).toHaveTextContent("Retry shortly");
+    expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
+  });
+
+  it("renders a setup note for every disconnect reason", () => {
+    // Totality over the reason union: a new member without panel copy must
+    // fail here, not silently fall through to a blank panel.
+    A.forEach(DmsMirrorDisconnectReason.Options, (reason) => {
+      const { container, unmount } = renderWithStatus(statusWith(false, O.some(reason)));
+      expect(within(container).getByTestId("vault-sync-setup-note")).toBeInTheDocument();
+      unmount();
+    });
+  });
+
+  it("shows when the probe last asked Box so a retry visibly moves the panel", () => {
+    const { container } = renderWithStatus(
+      statusWith(false, O.some("probe-failed"), O.some("2026-08-26T12:00:00.000Z"))
+    );
+    const screen = within(container);
+
+    expect(screen.getByTestId("vault-sync-probed-at")).toHaveTextContent("Last checked");
+  });
+
   it("treats a reasonless disconnect as a probe problem, not missing configuration", () => {
     // An older sidecar can report connected: false without a reason; claiming
     // the token is unset would be the exact lie this panel was fixed for.
@@ -77,6 +129,8 @@ describe("vault sync panel", () => {
     const note = screen.getByTestId("vault-sync-setup-note");
     expect(note).not.toHaveTextContent("Set CLOUD_BOX_TOKEN");
     expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
+    // No probe timestamp arrived, so no stale "Last checked" claim renders.
+    expect(screen.queryByTestId("vault-sync-probed-at")).not.toBeInTheDocument();
   });
 
   it("shows no setup note while connected and enables the sync trigger", () => {

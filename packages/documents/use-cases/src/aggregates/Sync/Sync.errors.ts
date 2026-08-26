@@ -7,8 +7,10 @@
 
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
+import { DmsMirrorDisconnectReason } from "./DmsMirror.ts";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Sync/Sync.errors");
 
@@ -34,6 +36,11 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/Sync.errors");
 export class DmsMirrorUnavailable extends S.TaggedError<DmsMirrorUnavailable>($I`DmsMirrorUnavailable`)(
   "DmsMirrorUnavailable",
   {
+    // Optional-key so encodings from peers that predate the field still decode
+    // (missing key -> none) and older peers never see an unknown key for none.
+    disconnectReason: S.OptionFromOptionalKey(DmsMirrorDisconnectReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Probe-facing classification of the failure; none when the adapter cannot classify it.",
+    }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider whose mirror adapter failed.",
     }),

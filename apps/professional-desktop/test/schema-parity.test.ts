@@ -170,6 +170,7 @@ describe("@beep/professional-desktop schema parity", () => {
         failedOperations: 0,
         openConflicts: 0,
         pendingItems: 0,
+        probedAt: null,
         provider: "box",
         queuedOperations: 0,
       };
@@ -187,17 +188,20 @@ describe("@beep/professional-desktop schema parity", () => {
         failedOperations: 2,
         openConflicts: 1,
         pendingItems: 4,
+        probedAt: "2026-08-26T12:00:00.000Z",
         provider: "box",
         queuedOperations: 5,
       };
       const activeStatus = yield* decodeVaultSyncStatus(activeStatusWire);
       expect(yield* encodeVaultSyncStatus(activeStatus)).toStrictEqual(activeStatusWire);
 
-      // An older sidecar omits disconnectReason entirely; the status must
-      // still decode (missing key -> none) instead of going unavailable.
-      const { disconnectReason: _dropped, ...legacyStatusWire } = bootstrapStatusWire;
+      // An older sidecar omits disconnectReason and probedAt entirely; the
+      // status must still decode (missing key -> none) instead of going
+      // unavailable.
+      const { disconnectReason: _dropped, probedAt: _droppedProbedAt, ...legacyStatusWire } = bootstrapStatusWire;
       const legacyStatus = yield* decodeVaultSyncStatus(legacyStatusWire);
       expect(O.isNone(legacyStatus.disconnectReason)).toBe(true);
+      expect(O.isNone(legacyStatus.probedAt)).toBe(true);
     })
   );
 

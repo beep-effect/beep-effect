@@ -241,6 +241,12 @@ export class GeometryOptions extends S.Class<GeometryOptions>($I`GeometryOptions
 /**
  * Function resolving a pixel minimum for a group.
  *
+ * **Details**
+ *
+ * The lookup carries measured title-strip widths, so the projection applies it
+ * on the horizontal axis only; vertical clamping is driven by panel
+ * `minHeight` constraints and `minGroupExtent`.
+ *
  * **Example** (Lookup minimum by group)
  *
  * ```ts

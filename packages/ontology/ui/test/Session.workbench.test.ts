@@ -41,7 +41,13 @@ const collectTreeItemIds = (items: ReadonlyArray<TreeItem>): ReadonlyArray<strin
 
 describe("documentToolbarState", () => {
   it("keeps every action idle and gates session-bound actions while no session is open", () => {
-    const state = documentToolbarState({ opening: false, saving: false, previewing: false, sessionOpen: false });
+    const state = documentToolbarState({
+      opening: false,
+      saving: false,
+      previewing: false,
+      sessionOpen: false,
+      dirty: false,
+    });
 
     expect(state.openLabel).toBe("Open");
     expect(state.openBusy).toBe(false);
@@ -53,16 +59,56 @@ describe("documentToolbarState", () => {
     expect(state.sessionHint).toBe("Open a document first");
   });
 
+  it("shows a neutral badge instead of claiming Saved while no session is open", () => {
+    const state = documentToolbarState({
+      opening: false,
+      saving: false,
+      previewing: false,
+      sessionOpen: false,
+      dirty: false,
+    });
+
+    expect(state.badge.label).toBe("No document");
+    expect(state.badge.variant).toBe("outline");
+  });
+
   it("enables session-bound actions once a session is open", () => {
-    const state = documentToolbarState({ opening: false, saving: false, previewing: false, sessionOpen: true });
+    const state = documentToolbarState({
+      opening: false,
+      saving: false,
+      previewing: false,
+      sessionOpen: true,
+      dirty: false,
+    });
 
     expect(state.saveDisabled).toBe(false);
     expect(state.previewDisabled).toBe(false);
     expect(state.sessionHint).toBeUndefined();
+    expect(state.badge.label).toBe("Saved");
+    expect(state.badge.variant).toBe("secondary");
+  });
+
+  it("flips the badge to Dirty for an open session with unsaved changes", () => {
+    const state = documentToolbarState({
+      opening: false,
+      saving: false,
+      previewing: false,
+      sessionOpen: true,
+      dirty: true,
+    });
+
+    expect(state.badge.label).toBe("Dirty");
+    expect(state.badge.variant).toBe("destructive");
   });
 
   it("marks an in-flight open busy, relabels it, and refuses re-entry", () => {
-    const state = documentToolbarState({ opening: true, saving: false, previewing: false, sessionOpen: false });
+    const state = documentToolbarState({
+      opening: true,
+      saving: false,
+      previewing: false,
+      sessionOpen: false,
+      dirty: false,
+    });
 
     expect(state.openLabel).toBe("Opening…");
     expect(state.openBusy).toBe(true);
@@ -70,7 +116,13 @@ describe("documentToolbarState", () => {
   });
 
   it("marks an in-flight save busy without disturbing its siblings", () => {
-    const state = documentToolbarState({ opening: false, saving: true, previewing: false, sessionOpen: true });
+    const state = documentToolbarState({
+      opening: false,
+      saving: true,
+      previewing: false,
+      sessionOpen: true,
+      dirty: true,
+    });
 
     expect(state.saveLabel).toBe("Saving…");
     expect(state.saveBusy).toBe(true);
@@ -80,7 +132,13 @@ describe("documentToolbarState", () => {
   });
 
   it("marks an in-flight preview busy and disabled even with a session open", () => {
-    const state = documentToolbarState({ opening: false, saving: false, previewing: true, sessionOpen: true });
+    const state = documentToolbarState({
+      opening: false,
+      saving: false,
+      previewing: true,
+      sessionOpen: true,
+      dirty: false,
+    });
 
     expect(state.previewLabel).toBe("Previewing…");
     expect(state.previewBusy).toBe(true);

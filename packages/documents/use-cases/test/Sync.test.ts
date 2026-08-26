@@ -72,6 +72,7 @@ const idleStatus = S.decodeSync(VaultSyncStatus)({
   failedOperations: 0,
   openConflicts: 0,
   pendingItems: 0,
+  probedAt: null,
   provider: "box",
   queuedOperations: 0,
 });
@@ -162,6 +163,7 @@ describe("VaultSyncEngine port", () => {
       failedOperations: 0,
       openConflicts: 0,
       pendingItems: 0,
+      probedAt: null,
       provider: "box",
       queuedOperations: 0,
     });
@@ -172,9 +174,15 @@ describe("VaultSyncEngine port", () => {
     const scanFailed = S.decodeSync(VaultSyncError)(VaultScanFailed.make({ reason: "vault root missing" }));
     expect(scanFailed._tag).toBe("VaultScanFailed");
 
-    const mirrorDown = S.decodeSync(VaultSyncError)(
-      DmsMirrorUnavailable.make({ provider: "box", reason: "remote rate limit exceeded", retryable: true })
-    );
+    // Wire shape, not an instance: the optional-key disconnectReason encodes
+    // as a bare literal (or an absent key), never as an Option object.
+    const mirrorDown = S.decodeSync(VaultSyncError)({
+      _tag: "DmsMirrorUnavailable",
+      disconnectReason: "transient",
+      provider: "box",
+      reason: "remote rate limit exceeded",
+      retryable: true,
+    });
     expect(mirrorDown._tag).toBe("DmsMirrorUnavailable");
 
     const repositoryDown = S.decodeSync(VaultSyncError)(

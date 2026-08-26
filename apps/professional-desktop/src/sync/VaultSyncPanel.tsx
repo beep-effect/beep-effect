@@ -11,6 +11,7 @@ import { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
 import { Button } from "@beep/ui/components/button";
 import { A, O, thunkNull } from "@beep/utils";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { DateTime, pipe } from "effect";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import {
@@ -97,28 +98,44 @@ const VaultSyncStatusView = ({
 
 // Disconnected copy keyed on the sidecar's honest disconnect reason. Telling
 // the operator to set CLOUD_BOX_TOKEN when the token IS set (but the probe
-// failed) sent QA chasing configuration that was never the problem.
+// failed) sent QA chasing configuration that was never the problem — and one
+// generic note for every probe failure hid whether the fix was a fresh token,
+// the mirror root folder, or simply waiting Box out.
+const probeFailedCopy =
+  "Box credentials are configured, but the provider probe failed — the token may be expired or the mirror root " +
+  "folder is unreachable. Sync stays paused until Box answers.";
+
 const DisconnectedNote = ({
   onRetry,
+  probedAt,
   reason,
   waiting,
 }: {
   readonly onRetry: () => void;
+  readonly probedAt: O.Option<DateTime.Utc>;
   readonly reason: O.Option<DmsMirrorDisconnectReason>;
   readonly waiting: boolean;
 }): JSX.Element => {
   // Dark mode needs the brighter amber text tier and an explicit high-contrast
   // button treatment: amber-600 on the tinted alert surface fell below
   // readable contrast on the near-black theme (QA round 104, R104-02).
-  const probeFailedNote = (
+  const probeNote = (message: string) => (
     <div
       className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600 dark:border-amber-400/50 dark:text-amber-200"
       data-testid="vault-sync-setup-note"
     >
-      <p>
-        Box credentials are configured, but the provider probe failed — the token may be expired or the mirror root
-        folder is unreachable. Sync stays paused until Box answers.
-      </p>
+      <p>{message}</p>
+      {pipe(
+        probedAt,
+        // The probe timestamp makes "Retry connection" visibly do something
+        // even when the outcome is unchanged: the last honest ask of Box moves.
+        O.map((value) => (
+          <p className="mt-1 opacity-80" data-testid="vault-sync-probed-at">
+            Last checked {DateTime.formatLocal(value, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          </p>
+        )),
+        O.getOrNull
+      )}
       <Button
         type="button"
         size="sm"
@@ -135,7 +152,7 @@ const DisconnectedNote = ({
   return O.match(reason, {
     // A disconnected status without a reason is an older sidecar; the probe
     // path is the only honest guess that does not claim the token is unset.
-    onNone: () => probeFailedNote,
+    onNone: () => probeNote(probeFailedCopy),
     onSome: (value) =>
       DmsMirrorDisconnectReason.$match(value, {
         "credentials-missing": () => (
@@ -147,7 +164,19 @@ const DisconnectedNote = ({
             provisioned.
           </p>
         ),
-        "probe-failed": () => probeFailedNote,
+        "auth-failed": () =>
+          probeNote(
+            "Box rejected the stored credentials — the token has likely expired (Box developer and CCG tokens last " +
+              "about an hour). Restart the app with a fresh token."
+          ),
+        "root-unreachable": () =>
+          probeNote(
+            "The Box mirror root folder could not be listed or created. Check the mirror root folder name and the " +
+              "token's permissions."
+          ),
+        transient: () =>
+          probeNote("Box is unreachable or rate limiting. Retry shortly — sync resumes once Box answers."),
+        "probe-failed": () => probeNote(probeFailedCopy),
       }),
   });
 };
@@ -256,6 +285,7 @@ const VaultSyncConflictsList = ({
  * @category components
  * @since 0.0.0
  */
+// fallow-ignore-next-line complexity -- cognitive 14 = pre-existing hook/JSX tax (six atom-hook bindings plus the status/panel-state conditionals); this branch's change here was passing the new probedAt prop through to DisconnectedNote and added no branching
 export function VaultSyncPanel({ floating = true }: { readonly floating?: boolean }): JSX.Element {
   const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   const refreshStatus = useAtomRefresh(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
@@ -288,7 +318,12 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       </div>
       <VaultSyncStatusView status={status} onRetry={refreshStatus} />
       {AsyncResult.isSuccess(status) && !status.value.connected ? (
-        <DisconnectedNote reason={status.value.disconnectReason} waiting={status.waiting} onRetry={refreshStatus} />
+        <DisconnectedNote
+          probedAt={status.value.probedAt}
+          reason={status.value.disconnectReason}
+          waiting={status.waiting}
+          onRetry={refreshStatus}
+        />
       ) : null}
       <div className="mt-3 flex items-center gap-2">
         <Button

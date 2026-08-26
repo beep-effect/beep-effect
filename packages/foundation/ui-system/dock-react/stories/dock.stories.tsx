@@ -43,6 +43,16 @@ const NotesPanel = (props: DockPanelProps) => (
 
 const components: Readonly<Record<string, DockRenderer>> = { notes: NotesPanel };
 
+// Pin the story host to fixed dimensions so play geometry never depends on
+// the test viewport; throws when the story markup is missing its host.
+const pinHost = (canvasElement: HTMLElement, width: string, height?: string): HTMLElement => {
+  const host = canvasElement.querySelector<HTMLElement>(".dock-story");
+  if (host === null) throw new Error("Missing dock story host");
+  host.style.width = width;
+  if (height !== undefined) host.style.height = height;
+  return host;
+};
+
 const workspace = PopulatedWorkspace.make({
   root: SplitNode.make({
     splitId: SplitId.make("story-root"),
@@ -228,7 +238,12 @@ export const Workspace: Story = {
     void expect(canvas.getByText("Notes")).toBeVisible();
     void expect(canvas.getByText("Outline")).toBeVisible();
     void expect(canvas.getByText("Terminal")).toBeVisible();
-    void expect(canvas.getByText("Scratch")).toBeVisible();
+    // "Scratch" appears twice by design — floating header chrome plus the tab —
+    // so text queries are ambiguous. Assert each surface through its own
+    // handle; the tab's accessible name also concatenates its close button's
+    // label, hence the regex.
+    void expect(canvas.getByRole("tab", { name: /Scratch/ })).toBeVisible();
+    void expect(canvasElement.querySelector("[data-floating-title]")).toHaveTextContent("Scratch");
   },
 };
 
@@ -261,9 +276,7 @@ export const CustomTabs: Story = {
         // This story is about custom tab renderers, not overflow: pin a host
         // wide enough for all three chips at any test viewport, then await
         // the (measurement-driven) strip settling with everything visible.
-        const host = canvasElement.querySelector<HTMLElement>(".dock-story");
-        if (host === null) throw new Error("Missing dock story host");
-        host.style.width = "960px";
+        pinHost(canvasElement, "960px");
         yield* Effect.promise(() =>
           waitFor(() => {
             expect(canvas.getByTestId("chip-story-tab-alpha")).toBeVisible();
@@ -284,16 +297,20 @@ export const ConstrainedSash: Story = {
         const canvas = within(canvasElement);
         const sash = canvasElement.querySelector<HTMLElement>("[data-sash-id='story-constrained-split']");
         const panel = canvasElement.querySelector<HTMLElement>("[data-group-id='story-constrained']");
-        if (sash === null || panel === null) throw new Error("Missing constrained sash story geometry");
-        // Same measurement race as DropQuadrants: wait for settled geometry
-        // before caching the sash position.
+        if (sash === null || panel === null) {
+          throw new Error("Missing constrained sash story geometry");
+        }
+        // Pin the host and wait out the same measurement race as
+        // DropQuadrants, then read the sash position at gesture time — a
+        // cached box can drift from a mid-play re-measure.
+        pinHost(canvasElement, "960px", "640px");
         yield* Effect.promise(() => waitFor(() => expect(panel.getBoundingClientRect().width).toBeGreaterThan(100)));
-        const sashBox = sash.getBoundingClientRect();
+        const sashBox = (): DOMRect => sash.getBoundingClientRect();
         yield* Effect.promise(() =>
           userEvent.pointer([
-            { keys: "[MouseLeft>]", target: sash, coords: { clientX: sashBox.left, clientY: sashBox.top } },
-            { target: sash, coords: { clientX: 0, clientY: sashBox.top } },
-            { keys: "[/MouseLeft]", target: sash, coords: { clientX: 0, clientY: sashBox.top } },
+            { keys: "[MouseLeft>]", target: sash, coords: { clientX: sashBox().left, clientY: sashBox().top } },
+            { target: sash, coords: { clientX: 0, clientY: sashBox().top } },
+            { keys: "[/MouseLeft]", target: sash, coords: { clientX: 0, clientY: sashBox().top } },
           ])
         );
         yield* Effect.promise(() =>
@@ -311,9 +328,7 @@ export const TabOverflow: Story = {
     Effect.runPromise(
       Effect.gen(function* () {
         const canvas = within(canvasElement);
-        const host = canvasElement.querySelector<HTMLElement>(".dock-story");
-        if (host === null) throw new Error("Missing dock story host");
-        host.style.width = "320px";
+        pinHost(canvasElement, "320px");
         const trigger = yield* Effect.promise(() => canvas.findByRole("button", { name: /overflowed tabs/ }));
         yield* Effect.promise(() => userEvent.click(trigger));
         yield* Effect.promise(() => userEvent.click(canvas.getByRole("menuitem", { name: "Overflow Delta" })));
@@ -337,10 +352,14 @@ export const DropQuadrants: Story = {
         const source = canvasElement.querySelector<HTMLElement>("[data-panel-id='story-quadrant-source-panel']");
         const target = canvasElement.querySelector<HTMLElement>("[data-group-id='story-quadrant-target']");
         if (source === null || target === null) throw new Error("Missing quadrant story geometry");
-        // The container is measured by a ResizeObserver after mount; play()
-        // can win that race, so wait for real geometry before caching boxes.
+        // Pin the host so the quadrant math never depends on the test
+        // viewport, then wait out the ResizeObserver measurement race.
+        pinHost(canvasElement, "960px", "640px");
         yield* Effect.promise(() => waitFor(() => expect(target.getBoundingClientRect().width).toBeGreaterThan(100)));
-        const targetBox = target.getBoundingClientRect();
+        // Never cache boxes: a mid-play re-measure (viewport settle, strip
+        // measurement) moves the live geometry away from any snapshot, so
+        // expected and actual must derive from the same read.
+        const targetBox = (): DOMRect => target.getBoundingClientRect();
         const preview = (): DOMRect => {
           const indicator = canvasElement.querySelector<HTMLElement>("[data-drop-indicator]");
           if (indicator === null) throw new Error("Missing compiled drop preview");
@@ -356,38 +375,48 @@ export const DropQuadrants: Story = {
         yield* Effect.promise(() =>
           userEvent.pointer({
             target: source,
-            coords: { clientX: targetBox.left + 2, clientY: targetBox.top + targetBox.height / 2 },
+            coords: { clientX: targetBox().left + 2, clientY: targetBox().top + targetBox().height / 2 },
           })
         );
-        yield* Effect.promise(() => waitFor(() => expect(preview().width).toBeCloseTo(targetBox.width / 2, 0)));
-        expect(preview().left).toBeCloseTo(targetBox.left, 0);
+        yield* Effect.promise(() =>
+          waitFor(() => {
+            const box = targetBox();
+            expect(preview().width).toBeCloseTo(box.width / 2, 0);
+            expect(preview().left).toBeCloseTo(box.left, 0);
+          })
+        );
         yield* Effect.promise(() =>
           userEvent.pointer({
             target: source,
-            coords: { clientX: targetBox.right - 34, clientY: targetBox.top + targetBox.height / 2 },
+            coords: { clientX: targetBox().right - 34, clientY: targetBox().top + targetBox().height / 2 },
           })
         );
-        yield* Effect.promise(() => waitFor(() => expect(preview().right).toBeCloseTo(targetBox.right, 0)));
+        yield* Effect.promise(() => waitFor(() => expect(preview().right).toBeCloseTo(targetBox().right, 0)));
         yield* Effect.promise(() =>
           userEvent.pointer({
             target: source,
-            coords: { clientX: targetBox.left + targetBox.width / 2, clientY: targetBox.top + 34 },
+            coords: { clientX: targetBox().left + targetBox().width / 2, clientY: targetBox().top + 34 },
           })
         );
-        yield* Effect.promise(() => waitFor(() => expect(preview().height).toBeCloseTo(targetBox.height / 2, 0)));
-        expect(preview().top).toBeCloseTo(targetBox.top, 0);
+        yield* Effect.promise(() =>
+          waitFor(() => {
+            const box = targetBox();
+            expect(preview().height).toBeCloseTo(box.height / 2, 0);
+            expect(preview().top).toBeCloseTo(box.top, 0);
+          })
+        );
         yield* Effect.promise(() =>
           userEvent.pointer({
             target: source,
-            coords: { clientX: targetBox.left + targetBox.width / 2, clientY: targetBox.bottom - 34 },
+            coords: { clientX: targetBox().left + targetBox().width / 2, clientY: targetBox().bottom - 34 },
           })
         );
-        yield* Effect.promise(() => waitFor(() => expect(preview().bottom).toBeCloseTo(targetBox.bottom, 0)));
+        yield* Effect.promise(() => waitFor(() => expect(preview().bottom).toBeCloseTo(targetBox().bottom, 0)));
         yield* Effect.promise(() =>
           userEvent.pointer({
             keys: "[/MouseLeft]",
             target: source,
-            coords: { clientX: targetBox.left + targetBox.width / 2, clientY: targetBox.bottom - 34 },
+            coords: { clientX: targetBox().left + targetBox().width / 2, clientY: targetBox().bottom - 34 },
           })
         );
       })

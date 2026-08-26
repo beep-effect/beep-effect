@@ -33,6 +33,7 @@ import {
   OntologyGraphRegion,
   OntologyInspectorRegion,
   OntologySourceRegion,
+  OntologySparqlRegion,
 } from "@beep/ontology-ui";
 import { LiteralKit } from "@beep/schema";
 import { Button } from "@beep/ui/components/button";
@@ -51,7 +52,7 @@ import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
 import { EditorProofPanel } from "./editor-proof/EditorProofPanel.tsx";
-import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
+import { DocumentIntakeTarget, VaultOnboardingGate } from "./intake/DocumentIntakeTarget.tsx";
 import { BrowserFailureSource, reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
 import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runtime/ProfessionalAtomRuntime.ts";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
@@ -81,11 +82,6 @@ const $I = $ProfessionalDesktopId.create("App");
 const OntologyMetricsRegion = lazy(() =>
   import("@beep/ontology-ui/aggregates/Session/metrics").then(({ OntologyMetricsRegion }) => ({
     default: OntologyMetricsRegion,
-  }))
-);
-const OntologySparqlRegion = lazy(() =>
-  import("@beep/ontology-ui/aggregates/Session/sparql").then(({ OntologySparqlRegion }) => ({
-    default: OntologySparqlRegion,
   }))
 );
 const OntologyValidationRegion = lazy(() =>
@@ -576,14 +572,20 @@ const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPa
     home: () => wrap("Home", <HomeSurface />),
     chat: () => wrap("Chat", <ChatApp />),
     "editor-proof": () => wrap("Editor proof", <EditorProofPanel />),
-    sync: () => wrapDesktop("Vault sync", <VaultSyncPanel floating={false} />),
+    sync: () =>
+      wrapDesktop(
+        "Vault sync",
+        <VaultOnboardingGate>
+          <VaultSyncPanel floating={false} />
+        </VaultOnboardingGate>
+      ),
     "contradiction-triage": () => wrapDesktop("Contradiction Triage", <ContradictionTriagePanel />),
     "ontology-explorer": () => wrapDesktop("Explorer", <OntologyExplorerRegion />),
     "ontology-document": () => wrapDesktop("Document", <OntologyDocumentRegion />),
     "ontology-graph": () => wrapDesktop("Graph", <OntologyGraphRegion />),
     "ontology-source": () => wrapDesktop("Source", <OntologySourceRegion />),
     "ontology-inspector": () => wrapDesktop("Inspector", <OntologyInspectorRegion />),
-    "ontology-sparql": () => wrapDesktopLazy("SPARQL", <OntologySparqlRegion />),
+    "ontology-sparql": () => wrapDesktop("SPARQL", <OntologySparqlRegion />),
     "ontology-validation": () => wrapDesktopLazy("Validation", <OntologyValidationRegion />),
     "ontology-changelog": () => wrapDesktop("Change Log", <OntologyChangeLogRegion />),
     "ontology-metrics": () => wrapDesktopLazy("Worker Metrics", <OntologyMetricsRegion />),
@@ -708,10 +710,11 @@ const OntologyMenuList = ({
 
 // The nav rail's Ontology entry: expands to the nine-panel menu. An entry
 // click focuses an open panel or opens a closed one beside its cluster
-// siblings; the menu dismisses on outside press and Escape (ARIA menu
-// practices). The menu element and dismissal listeners are owned by runtime
-// atoms, so opening and closing the menu scopes the listener lifecycle.
-// fallow-ignore-next-line complexity -- cognitive 9 = six atom-hook bindings (each +1 in fallow's React model) plus two ternaries and one &&; item row and disclosure list are already extracted, and dropping a hook binding would fuse runtime atoms for the metric's sake
+// siblings while the disclosure stays open for successive panel picks; the
+// menu dismisses on outside press and Escape (ARIA disclosure practices).
+// The menu element and dismissal listeners are owned by runtime atoms, so
+// opening and closing the menu scopes the listener lifecycle.
+// fallow-ignore-next-line complexity -- cognitive 8 = five atom-hook bindings (each +1 in fallow's React model) plus two ternaries and one &&; item row and disclosure list are already extracted, and dropping a hook binding would fuse runtime atoms for the metric's sake
 const OntologyMenu = ({
   isCurrent,
   workspace,
@@ -720,7 +723,6 @@ const OntologyMenu = ({
   readonly workspace: DockWorkspace;
 }): JSX.Element => {
   const open = useAtomValue(ontologyMenuOpenAtom);
-  const close = useAtomSet(closeOntologyMenuAtom);
   const navigate = useAtomSet(navigateDesktopPanelAtom);
   const setElement = useAtomSet(setOntologyMenuElementAtom);
   const toggle = useAtomSet(toggleOntologyMenuAtom);
@@ -747,10 +749,7 @@ const OntologyMenu = ({
       {open && (
         <OntologyMenuList
           isCurrent={isCurrent}
-          onNavigate={(key) => {
-            navigate(key);
-            close(void 0);
-          }}
+          onNavigate={(key) => navigate(key)}
           setElement={setElement}
           workspace={workspace}
         />

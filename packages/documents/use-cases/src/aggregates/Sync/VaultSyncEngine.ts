@@ -52,6 +52,7 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/VaultSyncEngine");
  *   failedOperations: 0,
  *   openConflicts: 0,
  *   pendingItems: 1,
+ *   probedAt: null,
  *   provider: "box",
  *   queuedOperations: 1
  * })
@@ -95,6 +96,13 @@ export class VaultSyncStatus extends S.Class<VaultSyncStatus>($I`VaultSyncStatus
     pendingItems: NonNegativeInt.annotateKey({
       description: "Number of tracked items in the pending reconciliation state.",
     }),
+    // Same older-sidecar tolerance as disconnectReason: a status that predates
+    // the field must decode (missing key -> none), not go unavailable.
+    probedAt: S.OptionFromNullOr(S.DateTimeUtcFromString)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "When the mirror probe last actually asked the provider; none when no probe has contacted it.",
+      }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider the status describes.",
     }),

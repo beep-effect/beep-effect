@@ -31,7 +31,7 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { AnthropicLanguageModelOptions, AnthropicLive, makeAnthropicLanguageModelLayer } from "@beep/anthropic";
-import { Box, BoxDeveloperTokenConfig } from "@beep/box";
+import { Box, BoxCcgConfig, BoxDeveloperTokenConfig } from "@beep/box";
 import { DocTextFileProcessingEngine } from "@beep/doc-text";
 import {
   BoxMirrorConfigLayer,
@@ -245,13 +245,61 @@ const ContradictionRequestContextLive = Layer.merge(
 );
 
 /**
+ * Resolve the Box driver auth layer for the live vault-sync engine. Prefers
+ * Client Credentials Grant (`DMS_BOX_CLIENT_ID` + `DMS_BOX_CLIENT_SECRET`
+ * plus a `DMS_BOX_ENTERPRISE_ID` or `DMS_BOX_USER_ID` subject): the SDK
+ * refreshes CCG tokens itself, so a long-lived sidecar does not decay into
+ * 401s the way the static ~60-minute `CLOUD_BOX_TOKEN` developer token does.
+ * Falls back to the developer token, and `none` selects the app-local
+ * disconnected mirror layers. Only the selected auth mode is logged — never
+ * secret values.
+ */
+const boxAuthLayer = Effect.gen(function* () {
+  const ccg = yield* Config.option(
+    Config.all({
+      clientId: Config.nonEmptyString("DMS_BOX_CLIENT_ID"),
+      clientSecret: Config.redacted("DMS_BOX_CLIENT_SECRET"),
+      enterpriseId: Config.option(Config.nonEmptyString("DMS_BOX_ENTERPRISE_ID")),
+      userId: Config.option(Config.nonEmptyString("DMS_BOX_USER_ID")),
+    })
+  );
+  if (O.isSome(ccg)) {
+    const candidate = ccg.value;
+    if (O.isSome(candidate.enterpriseId) || O.isSome(candidate.userId)) {
+      yield* Effect.logInfo("Box auth: client credentials grant (self-refreshing)").pipe(
+        Effect.annotateLogs({
+          "box.auth.mode": "ccg",
+          "box.auth.subject": O.isSome(candidate.enterpriseId) ? "enterprise" : "user",
+        })
+      );
+      // makeCcgLayer is Layer.succeed under the hood; its declared BoxError
+      // channel never fires, so orDie only aligns the layer types.
+      return O.some(Box.makeCcgLayer(BoxCcgConfig.make(candidate)).pipe(Layer.orDie));
+    }
+    yield* Effect.logWarning(
+      "DMS_BOX_CLIENT_ID/DMS_BOX_CLIENT_SECRET are set without DMS_BOX_ENTERPRISE_ID or DMS_BOX_USER_ID; ignoring the CCG config"
+    );
+  }
+  const token = yield* Config.option(Config.redacted("CLOUD_BOX_TOKEN"));
+  if (O.isSome(token)) {
+    yield* Effect.logInfo("Box auth: developer token (CLOUD_BOX_TOKEN)").pipe(
+      Effect.annotateLogs({ "box.auth.mode": "developer-token" })
+    );
+    return O.some(Box.makeLayer(BoxDeveloperTokenConfig.make({ token: token.value })));
+  }
+  return O.none<Layer.Layer<Box>>();
+});
+
+/**
  * Select the documents vault-sync engine layer. `CHAT_AGENT=fixture` keeps the
  * fully deterministic keyless engine (in-memory repos + fixture mirror);
- * otherwise the Drizzle-backed engine runs against the Box mirror when
- * `CLOUD_BOX_TOKEN` is configured, or against the app-local disconnected
- * mirror layers (typed `DmsMirrorUnavailable` + probe `connected: false`)
- * when it is not — the honest not-connected state while the Box test tenant
- * is not provisioned.
+ * otherwise the Drizzle-backed engine runs against the Box mirror when Box
+ * credentials are configured — {@link boxAuthLayer} prefers the
+ * self-refreshing Client Credentials Grant over the static `CLOUD_BOX_TOKEN`
+ * developer token — or against the app-local disconnected mirror layers
+ * (typed `DmsMirrorUnavailable` + probe `connected: false`) when neither is
+ * set — the honest not-connected state while the Box test tenant is not
+ * provisioned.
  *
  * @category layers
  * @since 0.0.0
@@ -259,18 +307,18 @@ const ContradictionRequestContextLive = Layer.merge(
 const DocumentsSyncLive = selectByChatAgent(
   DocumentsSyncFixtureLive,
   Effect.gen(function* () {
-    const token = yield* Config.option(Config.redacted("CLOUD_BOX_TOKEN"));
-    return O.match(token, {
+    const box = yield* boxAuthLayer;
+    return O.match(box, {
       onNone: () =>
         DocumentsSyncDrizzleLive.pipe(
           Layer.provide([DmsMirrorDisconnectedLayer, DmsMirrorAvailabilityDisconnectedLayer])
         ),
-      onSome: (boxToken) =>
+      onSome: (boxDriver) =>
         DocumentsSyncDrizzleLive.pipe(
           // The availability probe resolves the mirror root itself, so it needs
           // the Box driver and mirror config just like the mirror layer.
           Layer.provide([DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer))]),
-          Layer.provide(Box.makeLayer(BoxDeveloperTokenConfig.make({ token: boxToken })))
+          Layer.provide(boxDriver)
         ),
     });
   })

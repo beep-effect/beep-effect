@@ -184,8 +184,9 @@ describe("Desktop dock shell", { concurrent: false }, () => {
 
         return screen.findByRole("tab", { name: /SPARQL/ }).then((tab) => {
           expect(tab).toBeInTheDocument();
-          // Selecting an entry dismisses the disclosure.
-          expect(screen.queryByRole("button", { name: "SPARQL" })).toBeNull();
+          // Selecting an entry keeps the disclosure open for successive panel
+          // picks; outside press and Escape still dismiss it.
+          expect(screen.getByRole("button", { name: "SPARQL" })).toBeInTheDocument();
         });
       })
       .finally(unmount);
