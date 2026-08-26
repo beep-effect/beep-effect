@@ -199,7 +199,14 @@ const findNextRawTextTag = (
   return Result.succeed(O.none());
 };
 
+const NESTABLE_HIDDEN_ELEMENTS: Readonly<Record<string, true>> = { head: true };
+
 const consumeRawTextElement = (html: string, start: number, name: string): Result.Result<number, "truncated"> => {
+  // HTML5 raw-text elements (script, style) never nest: the element ends at the FIRST
+  // case-insensitive closing tag, so a same-name opening token inside raw content (for
+  // example the string "<script>" inside JavaScript) must not inflate any depth. Only
+  // markup-bearing hidden containers (head) track same-name nesting.
+  const nestable = R.has(NESTABLE_HIDDEN_ELEMENTS, name);
   let depth = 1;
   let index = start;
   while (N.isGreaterThan(depth, 0)) {
@@ -210,7 +217,11 @@ const consumeRawTextElement = (html: string, start: number, name: string): Resul
     if (O.isNone(next.success)) {
       return truncated();
     }
-    depth += next.success.value.closing ? -1 : 1;
+    if (next.success.value.closing) {
+      depth -= 1;
+    } else if (nestable) {
+      depth += 1;
+    }
     index = next.success.value.end + 1;
   }
   return Result.succeed(index);

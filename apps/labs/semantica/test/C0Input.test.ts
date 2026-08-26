@@ -48,6 +48,13 @@ const fixtureDocument = (fixture: F1Fixture): SourceDocument => {
 };
 
 describe("C0 HTML extractor", () => {
+  it("ends a raw-text element at its first closing tag even when the content mentions an opener", () => {
+    const html = '<p>A</p><script>const s = "<script>";</script><p>B</p>';
+    expect(extractHtmlText(html)).toMatchObject({ _tag: "Success", success: "\nA\n\nB\n" });
+    const style = "<div>C</div><style>.x::before { content: '<style>' }</style><span>D</span>";
+    expect(extractHtmlText(style)).toMatchObject({ _tag: "Success", success: "\nC\nD" });
+  });
+
   it("is deterministic, documents its entity behavior, and drops hidden text", () => {
     const html = "<head>hidden</head><p>A&amp;B&#33;</p><script>leak</script><div>C&mdash;D&nbsp;E</div>";
     const first = extractHtmlText(html);
@@ -67,14 +74,20 @@ describe("C0 HTML extractor", () => {
     });
   });
 
-  it("keeps nested hidden elements hidden until their matching outer close", () => {
-    const html =
-      "<head>outer<head>inner</head>still hidden</head>" +
-      "<script>outer<script>inner</script>still hidden</script>" +
-      "<style>outer<style>inner</style>still hidden</style><p>visible</p>";
-    expect(extractHtmlText(html)).toMatchObject({
+  it("keeps nested head content hidden and ends raw-text elements at their first close", () => {
+    expect(extractHtmlText("<head>outer<head>inner</head>still hidden</head><p>visible</p>")).toMatchObject({
       _tag: "Success",
       success: "\nvisible\n",
+    });
+    // script and style are HTML5 raw-text elements: they never nest, so the FIRST
+    // closing tag ends the element and the trailing text is visible content.
+    expect(extractHtmlText("<script>outer<script>inner</script>still hidden</script><p>visible</p>")).toMatchObject({
+      _tag: "Success",
+      success: "still hidden\nvisible\n",
+    });
+    expect(extractHtmlText("<style>outer<style>inner</style>still hidden</style><p>visible</p>")).toMatchObject({
+      _tag: "Success",
+      success: "still hidden\nvisible\n",
     });
   });
 
