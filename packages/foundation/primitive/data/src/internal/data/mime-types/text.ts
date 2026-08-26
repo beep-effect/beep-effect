@@ -14,11 +14,10 @@
  *
  * **Example** (Accessing text/html MIME type)
  *
- * ```typescript
- * import { text } from "@beep/data/mime-types/text"
+ * ```ts import.meta.vitest name="Accessing text/html MIME type"
+ * import { text } from "@beep/data/MimeTypes"
  *
- * text["text/html"]
- * // { source: "iana", extensions: ["html", "htm", "shtml"] }
+ * text["text/html"].extensions.includes("html") // => true
  * ```
  *
  * @category models

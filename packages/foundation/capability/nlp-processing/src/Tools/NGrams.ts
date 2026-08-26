@@ -70,7 +70,7 @@ class NGramsSuccess extends S.Class<NGramsSuccess>($I`NGramsSuccess`)(
  *
  * **Example** (Decode bag n-gram parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode bag n-gram parameters"
  * import * as S from "effect/Schema"
  * import { NGrams } from "@beep/nlp-processing/Tools/NGrams"
  *

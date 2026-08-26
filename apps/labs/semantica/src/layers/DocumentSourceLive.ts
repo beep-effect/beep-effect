@@ -1,6 +1,7 @@
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { Crypto, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -32,7 +33,7 @@ const unavailable = (message: string): DocumentUnavailable => DocumentUnavailabl
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * const selection = loadDocumentSelection("fixtures/w1.manifest.json", O.none())
+ * const selection = loadDocumentSelection("fixtures/w1.manifest.json", O.none(), false)
  * console.log(Effect.isEffect(selection)) // true
  * ```
  *
@@ -41,17 +42,25 @@ const unavailable = (message: string): DocumentUnavailable => DocumentUnavailabl
  */
 export const loadDocumentSelection = Effect.fn("DocumentSource.loadSelection")(function* (
   manifestPath: string,
-  paper: O.Option<CorpusPaperId>
+  paper: O.Option<CorpusPaperId>,
+  includeW1: boolean
 ): Effect.fn.Return<DocumentSelection, DocumentUnavailable, CorpusManifestBuilder | F1Catalog> {
   const manifestBuilder = yield* CorpusManifestBuilder;
   const fixtures = yield* F1Catalog;
-  const manifest = yield* manifestBuilder
-    .check(manifestPath)
-    .pipe(Effect.mapError(() => unavailable("The selected W1 manifest did not pass its integrity check.")));
+  const manifest = yield* Bool.match(includeW1, {
+    onFalse: () =>
+      manifestBuilder
+        .load(manifestPath)
+        .pipe(Effect.mapError(() => unavailable("The selected W1 manifest could not be decoded."))),
+    onTrue: () =>
+      manifestBuilder
+        .check(manifestPath)
+        .pipe(Effect.mapError(() => unavailable("The selected W1 manifest did not pass its integrity check."))),
+  });
   const fixtureIndex = yield* fixtures.load.pipe(
     Effect.mapError(() => unavailable("The committed F1 catalog did not pass its integrity check."))
   );
-  return DocumentSelection.make({ fixtures: fixtureIndex, manifest, paper });
+  return DocumentSelection.make({ fixtures: fixtureIndex, includeW1, manifest, paper });
 });
 
 const makeDocumentSource = Effect.gen(function* () {
@@ -111,43 +120,37 @@ const makeDocumentSource = Effect.gen(function* () {
     corpusRoot: string
   ) {
     const absolutePath = path.join(corpusRoot, row.relativePath);
-    return {
+    return yield* makeVerifiedDocument(
       absolutePath,
-      document: yield* makeVerifiedDocument(
-        absolutePath,
-        row.sha256,
-        row.bytes,
-        "application/pdf",
-        Origin.cases.W1Paper.make({
-          corpusId,
-          kind: "W1Paper",
-          paperId: row.id,
-          relativePath: row.relativePath,
-        })
-      ),
-    };
+      row.sha256,
+      row.bytes,
+      "application/pdf",
+      Origin.cases.W1Paper.make({
+        corpusId,
+        kind: "W1Paper",
+        paperId: row.id,
+        relativePath: row.relativePath,
+      })
+    );
   });
 
   const makeFixtureDocument = Effect.fn("DocumentSource.makeFixtureDocument")(function* (fixture: F1Fixture) {
     const absolutePath = path.join(F1_ROOT, fixture.relativePath);
-    return {
+    return yield* makeVerifiedDocument(
       absolutePath,
-      document: yield* makeVerifiedDocument(
-        absolutePath,
-        fixture.sha256,
-        fixture.bytes,
-        fixture.mediaType,
-        Origin.cases.Fixture.make({
-          declared: FixtureDeclaration.make({
-            degradedKind: fixture.degradedKind,
-            expectation: fixture.expectation,
-          }),
-          fixtureId: fixture.id,
-          kind: "Fixture",
-          relativePath: fixture.relativePath,
-        })
-      ),
-    };
+      fixture.sha256,
+      fixture.bytes,
+      fixture.mediaType,
+      Origin.cases.Fixture.make({
+        declared: FixtureDeclaration.make({
+          degradedKind: fixture.degradedKind,
+          expectation: fixture.expectation,
+        }),
+        fixtureId: fixture.id,
+        kind: "Fixture",
+        relativePath: fixture.relativePath,
+      })
+    );
   });
 
   const selectRows = Effect.fn("DocumentSource.selectRows")(function* (selection: DocumentSelection) {
@@ -162,18 +165,24 @@ const makeDocumentSource = Effect.gen(function* () {
     });
   });
 
-  const list = Effect.fn("DocumentSource.list")(function* (selection: DocumentSelection) {
+  const listW1 = Effect.fn("DocumentSource.listW1")(function* (selection: DocumentSelection) {
     const rows = yield* selectRows(selection);
     const corpusRoot = yield* O.match(config.corpusRoot, {
       onNone: () => Effect.fail(unavailable("SEMANTICA_CORPUS_ROOT is required to list W1 documents.")),
       onSome: Effect.succeed,
     });
-    const w1 = yield* Effect.forEach(rows, (row) => makeW1Document(row, selection.manifest.corpusId, corpusRoot), {
+    return yield* Effect.forEach(rows, (row) => makeW1Document(row, selection.manifest.corpusId, corpusRoot), {
       concurrency: 4,
     });
+  });
+
+  const list = Effect.fn("DocumentSource.list")(function* (selection: DocumentSelection) {
+    const w1 = yield* Bool.match(selection.includeW1, {
+      onFalse: () => Effect.succeed(A.empty<SourceDocument>()),
+      onTrue: () => listW1(selection),
+    });
     const f1 = yield* Effect.forEach(selection.fixtures.fixtures, makeFixtureDocument, { concurrency: 4 });
-    const selected = A.appendAll(w1, f1);
-    return A.map(selected, ({ document }) => document);
+    return A.appendAll(w1, f1);
   });
 
   const read = Effect.fn("DocumentSource.read")(function* (document: SourceDocument) {

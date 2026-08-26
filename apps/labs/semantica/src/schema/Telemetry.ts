@@ -13,7 +13,8 @@ const EvaluationMode = LiteralKit(["live", "replay"]);
  * **Details**
  *
  * This is the only C0 schema that admits wall-clock time. It is never included
- * in a content-addressed id or evaluation report digest.
+ * in a content-addressed id or evaluation report digest. Dependency and model
+ * footprints are `O.none()` when the runtime cannot measure them honestly.
  *
  * **Example** (Inspect the fixed telemetry version)
  *
@@ -38,10 +39,11 @@ export class EvalRunTelemetry extends S.Class<EvalRunTelemetry>($I`EvalRunTeleme
     p95Ms: NonNegativeInt,
     rssBytes: NonNegativeInt,
     diskGrowthBytes: NonNegativeInt,
-    dependencyBytes: NonNegativeInt,
-    modelBytes: NonNegativeInt,
+    dependencyBytes: S.OptionFromNullOr(NonNegativeInt),
+    modelBytes: S.OptionFromNullOr(NonNegativeInt),
   },
   $I.annote("EvalRunTelemetry", {
-    description: "Live-or-replay timing and byte measurements kept outside every replay-stable digest preimage.",
+    description:
+      "Live-or-replay timing and available byte measurements kept outside every replay-stable digest preimage.",
   })
 ) {}

@@ -18,10 +18,10 @@ const $I = $FileProcessingId.create("Operation");
  *
  * **Example** (Check reason options membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check reason options membership"
  * import { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation"
  *
- * console.log(FileProcessingOperationErrorReason.Options.includes("engine-unavailable")) // true
+ * FileProcessingOperationErrorReason.Options.includes("engine-unavailable") // => true
  * ```
  *
  * @category errors
@@ -47,11 +47,11 @@ export const FileProcessingOperationErrorReason = LiteralKit([
  *
  * **Example** (Type and refine reason)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type and refine reason"
  * import { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation"
  *
  * const reason: FileProcessingOperationErrorReason = "engine-unavailable"
- * console.log(FileProcessingOperationErrorReason.is["engine-unavailable"](reason)) // true
+ * FileProcessingOperationErrorReason.is["engine-unavailable"](reason) // => true
  * ```
  *
  * @category errors

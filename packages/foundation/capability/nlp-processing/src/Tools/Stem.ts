@@ -46,7 +46,7 @@ class StemSuccess extends S.Class<StemSuccess>($I`StemSuccess`)(
  *
  * **Example** (Decode Stem parametersSchema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Stem parametersSchema"
  * import * as S from "effect/Schema"
  * import { Stem } from "@beep/nlp-processing/Tools/Stem"
  *

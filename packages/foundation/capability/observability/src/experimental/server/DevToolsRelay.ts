@@ -23,7 +23,7 @@ const maxSpanEvents = 200;
  *
  * **Example** (Make zero-count snapshot)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make zero-count snapshot"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { DevToolsSnapshot } from "@beep/observability/experimental/server"
@@ -35,7 +35,7 @@ const maxSpanEvents = 200;
  *   spanCount: count,
  *   spanEventCount: count
  * })
- * console.log(snapshot.spanCount) // 0
+ * snapshot.spanCount // => 0
  * ```
  *
  * @category models

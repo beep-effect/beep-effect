@@ -10,10 +10,10 @@
  *
  * **Example** (Log normalization version constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log normalization version constant"
  * import { VERIFIED_SPAN_NORMALIZATION_VERSION } from "@beep/langextract/VerifiedSpan"
  *
- * console.log(VERIFIED_SPAN_NORMALIZATION_VERSION) // "1"
+ * VERIFIED_SPAN_NORMALIZATION_VERSION // => "1"
  * ```
  *
  * @category constants
@@ -31,10 +31,10 @@ export const VERIFIED_SPAN_NORMALIZATION_VERSION = "1";
  *
  * **Example** (Log the source text bound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the source text bound"
  * import { MAX_SOURCE_TEXT_LENGTH } from "@beep/langextract/VerifiedSpan"
  *
- * console.log(MAX_SOURCE_TEXT_LENGTH) // 1000000
+ * MAX_SOURCE_TEXT_LENGTH // => 1000000
  * ```
  *
  * @category constants
@@ -52,10 +52,10 @@ export const MAX_SOURCE_TEXT_LENGTH = 1_000_000;
  *
  * **Example** (Log the locator bound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the locator bound"
  * import { MAX_LOCATOR_LENGTH } from "@beep/langextract/VerifiedSpan"
  *
- * console.log(MAX_LOCATOR_LENGTH) // 4096
+ * MAX_LOCATOR_LENGTH // => 4096
  * ```
  *
  * @category constants

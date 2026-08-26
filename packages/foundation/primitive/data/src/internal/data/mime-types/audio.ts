@@ -14,11 +14,10 @@
  *
  * **Example** (Lookup audio/mpeg entry)
  *
- * ```typescript
- * import { audio } from "@beep/data/mime-types/audio"
+ * ```ts import.meta.vitest name="Lookup audio/mpeg entry"
+ * import { audio } from "@beep/data/MimeTypes"
  *
- * audio["audio/mpeg"]
- * // { source: "iana", extensions: ["mpga", "mp2", "mp2a", "mp3", "m2a", "m3a"] }
+ * audio["audio/mpeg"].extensions.includes("mp3") // => true
  * ```
  *
  * @category models

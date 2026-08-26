@@ -10,7 +10,7 @@
  *
  * **Example** (Check browser color support)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check browser color support"
  * import chalk, { Chalk, supportsColor } from "@beep/chalk/Chalk.browser"
  *
  * if (supportsColor !== false) {

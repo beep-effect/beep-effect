@@ -21,7 +21,7 @@ import * as internal from "./internal/data/calendar/index.ts";
  *
  * **Example** (Assign lowercase month name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign lowercase month name"
  * import type { MonthName } from "@beep/data/Calendar"
  *
  * const month: MonthName = "january"
@@ -38,7 +38,7 @@ export type MonthName = (typeof internal.MonthNameValues)[number];
  *
  * **Example** (Assign capitalized month name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign capitalized month name"
  * import type { FormalMonthName } from "@beep/data/Calendar"
  *
  * const month: FormalMonthName = "January"
@@ -55,7 +55,7 @@ export type FormalMonthName = (typeof internal.FormalMonthNameValues)[number];
  *
  * **Example** (Assign month number literals)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign month number literals"
  * import type { MonthNumber } from "@beep/data/Calendar"
  *
  * const jan: MonthNumber = 1
@@ -73,7 +73,7 @@ export type MonthNumber = (typeof internal.MonthNumberValues)[number];
  *
  * **Example** (Assign ISO month code)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign ISO month code"
  * import type { MonthISO } from "@beep/data/Calendar"
  *
  * const jan: MonthISO = "01"
@@ -90,7 +90,7 @@ export type MonthISO = (typeof internal.MonthISOValues)[number];
  *
  * **Example** (Assign lowercase weekday name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign lowercase weekday name"
  * import type { WeekName } from "@beep/data/Calendar"
  *
  * const day: WeekName = "monday"
@@ -107,7 +107,7 @@ export type WeekName = (typeof internal.Weekday.WeekNameValues)[number];
  *
  * **Example** (Assign capitalized weekday name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign capitalized weekday name"
  * import type { FormalWeekName } from "@beep/data/Calendar"
  *
  * const day: FormalWeekName = "Monday"
@@ -128,7 +128,7 @@ export type FormalWeekName = (typeof internal.Weekday.FormalWeekNameValues)[numb
  *
  * **Example** (Read ordered month names)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Read ordered month names"
  * import { MonthNameValues } from "@beep/data/Calendar"
  *
  * console.assert(MonthNameValues[0] === "january" && MonthNameValues[11] === "december")
@@ -144,7 +144,7 @@ export const MonthNameValues: typeof internal.MonthNameValues = internal.MonthNa
  *
  * **Example** (Read formal month names)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Read formal month names"
  * import { FormalMonthNameValues } from "@beep/data/Calendar"
  *
  * console.assert(FormalMonthNameValues[0] === "January")
@@ -160,7 +160,7 @@ export const FormalMonthNameValues: typeof internal.FormalMonthNameValues = inte
  *
  * **Example** (Read ordered month numbers)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Read ordered month numbers"
  * import { MonthNumberValues } from "@beep/data/Calendar"
  *
  * console.assert(MonthNumberValues[0] === 1 && MonthNumberValues[11] === 12)
@@ -176,7 +176,7 @@ export const MonthNumberValues: typeof internal.MonthNumberValues = internal.Mon
  *
  * **Example** (Read ISO month codes)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Read ISO month codes"
  * import { MonthISOValues } from "@beep/data/Calendar"
  *
  * console.assert(MonthISOValues[0] === "01" && MonthISOValues[11] === "12")
@@ -192,7 +192,7 @@ export const MonthISOValues: typeof internal.MonthISOValues = internal.MonthISOV
  *
  * **Example** (Read ordered weekday names)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Read ordered weekday names"
  * import { WeekNameValues } from "@beep/data/Calendar"
  *
  * console.assert(WeekNameValues[0] === "sunday" && WeekNameValues[1] === "monday")
@@ -208,7 +208,7 @@ export const WeekNameValues: typeof internal.Weekday.WeekNameValues = internal.W
  *
  * **Example** (Read formal weekday names)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Read formal weekday names"
  * import { FormalWeekNameValues } from "@beep/data/Calendar"
  *
  * console.assert(FormalWeekNameValues[0] === "Sunday" && FormalWeekNameValues[1] === "Monday")
