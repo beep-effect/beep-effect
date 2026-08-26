@@ -166,7 +166,7 @@ export class ApiReferenceSnapshotManifest extends S.Class<ApiReferenceSnapshotMa
   $I`ApiReferenceSnapshotManifest`
 )(
   {
-    schemaVersion: S.Literal(1),
+    schemaVersion: S.tag(1),
     snapshotId: SnapshotDigest,
     generatedAt: S.DateTimeUtcFromString,
     websiteRevision: GitRevision,

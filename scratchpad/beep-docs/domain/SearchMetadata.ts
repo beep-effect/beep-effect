@@ -9,6 +9,8 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 
 const $I = $ScratchpadId.create("beep-docs/domain/SearchMetadata");
 
@@ -36,8 +38,8 @@ const $I = $ScratchpadId.create("beep-docs/domain/SearchMetadata");
  */
 export class SearchSection extends S.Class<SearchSection>($I`SearchSection`)(
   {
-    line: S.Int,
-    level: S.Int,
+    line: NonNegativeInt,
+    level: PosInt,
     title: S.String,
     anchor: S.String,
     parent_anchor: S.String,
@@ -107,7 +109,7 @@ export class DocumentationStagedSearchMetadata extends S.Class<DocumentationStag
   $I`DocumentationStagedSearchMetadata`
 )(
   {
-    schema_version: S.Literal(1),
+    schema_version: S.tag(1),
     content_source: S.tag(SearchContentSource.Enum.documentation),
     docs_version: S.String,
     breadcrumbs: S.Array(S.String),
@@ -147,14 +149,14 @@ export class DocumentationStagedSearchMetadata extends S.Class<DocumentationStag
  */
 export class BlogStagedSearchMetadata extends S.Class<BlogStagedSearchMetadata>($I`BlogStagedSearchMetadata`)(
   {
-    schema_version: S.Literal(1),
+    schema_version: S.tag(1),
     content_source: S.tag(SearchContentSource.Enum.blog),
     page_href: S.String,
     page_title: S.String,
     description: S.String,
     published_at: S.String,
-    authors: S.Array(S.String),
-    tags: S.Array(S.String),
+    authors: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults),
+    tags: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults),
     sections: SearchSections,
   },
   $I.annote("BlogStagedSearchMetadata", {

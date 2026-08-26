@@ -7,7 +7,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { Effect, Path } from "effect";
-import { pipe } from "effect/Function";
+import { pipe, dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -65,7 +65,10 @@ export class PathEscapesDataset extends S.TaggedError<PathEscapesDataset>($I`Pat
  * @category utilities
  * @since 0.0.0
  */
-export const resolveWithinDataset = Effect.fn("DatasetPath.resolveWithinDataset")(function* (
+export const resolveWithinDataset: {
+  (baseDirectory: string, relativePath: string): Effect.Effect<string, PathEscapesDataset, Path.Path>,
+  (relativePath: string): (baseDirectory: string) => Effect.Effect<string, PathEscapesDataset, Path.Path>,
+} = dual(2, Effect.fn("DatasetPath.resolveWithinDataset")(function* (
   baseDirectory: string,
   relativePath: string
 ) {
@@ -78,4 +81,4 @@ export const resolveWithinDataset = Effect.fn("DatasetPath.resolveWithinDataset"
     return yield* PathEscapesDataset.make({ baseDirectory: resolvedBase, path: relativePath });
   }
   return resolved;
-});
+}));

@@ -13,7 +13,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 const $I = $ScratchpadId.create("beep-docs/api-reference/CodeSnippet");
 
 /**
@@ -156,6 +156,7 @@ export const CodeSnippetLanguageFromInfoString = S.String.pipe(
     decode: SchemaGetter.transformOrFail(decodeInfoString),
     encode: SchemaGetter.passthrough({ strict: false }),
   }),
+  SchemaUtils.withOptionCodecStatics,
   $I.annoteSchema("CodeSnippetLanguageFromInfoString", {
     description: "Normalizes a fenced-code info string into a canonical snippet language name.",
   })
@@ -200,7 +201,7 @@ const TsIdentifier = S.String.check(
 );
 
 const TsComputedPropertyKey = S.String.check(
-  S.isPattern(/^\[[^\]\r\n]+\]$/, {
+  S.isPattern(/^\[[^\]\r\n]+]$/, {
     identifier: $I`TsComputedPropertyKeyCheck`,
     title: "TypeScript Computed Property Key",
     description: "A bracketed computed property key such as `[Symbol.iterator]`.",

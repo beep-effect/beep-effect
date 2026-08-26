@@ -250,7 +250,7 @@ export const loadReflection = Effect.fn("Reflection.loadReflection")(function* (
         })
     )
   );
-  return yield* S.decodeEffect(TypeDocProjectReflectionFromBytes)(bytes).pipe(
+  return yield* TypeDocProjectReflectionFromBytes.decodeEffect(bytes).pipe(
     Effect.mapError((cause) => ReflectionDecodeFailed.make({ path: reflectionPath, cause }))
   );
 });

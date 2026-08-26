@@ -12,6 +12,7 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Semver, SemverFromString } from "@beep/schema/Semver";
 import { Slug } from "@beep/schema/Slug";
 import { HashMap, HashSet, Match, Order } from "effect";
+import { thunkEmptyStr } from "@beep/utils/thunk";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
@@ -32,10 +33,11 @@ import { unified } from "unified";
 import { TypeDocProjectReflection } from "../domain/ApiReference.ts";
 import * as CodeSnippet from "./CodeSnippet.ts";
 import { CodeSnippetLanguage } from "./CodeSnippet.ts";
+import {OptionFromOptionalStrWithNoneDefault} from "@beep/schema";
 
 const $I = $ScratchpadId.create("beep-docs/api-reference/ApiReference");
 
-const OptionalString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+
 const OptionalSemver = SemverFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 const OptionalUrl = S.URLFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 
@@ -295,13 +297,13 @@ export class ApiDeclaration extends S.Class<ApiDeclaration>($I`ApiDeclaration`)(
   {
     anchor: DeclarationAnchor,
     category: S.NonEmptyString,
-    commentHtml: OptionalString,
-    commentMarkdown: OptionalString,
+    commentHtml: OptionFromOptionalStrWithNoneDefault,
+    commentMarkdown: OptionFromOptionalStrWithNoneDefault,
     examples: S.Array(ApiCodeExample),
     id: S.Int,
     kind: DeclarationKindName,
     name: S.String,
-    signature: OptionalString,
+    signature: OptionFromOptionalStrWithNoneDefault,
     since: OptionalSemver,
     sourceUrl: OptionalUrl,
     typeKind: TypeKind.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -353,8 +355,8 @@ export class ApiDeclarationGroup extends S.Class<ApiDeclarationGroup>($I`ApiDecl
  */
 export class ApiModule extends S.Class<ApiModule>($I`ApiModule`)(
   {
-    commentHtml: OptionalString,
-    commentMarkdown: OptionalString,
+    commentHtml: OptionFromOptionalStrWithNoneDefault,
+    commentMarkdown: OptionFromOptionalStrWithNoneDefault,
     declarationCount: S.Int,
     groups: S.Array(ApiDeclarationGroup),
     since: OptionalSemver,
@@ -384,7 +386,7 @@ export class ApiModule extends S.Class<ApiModule>($I`ApiModule`)(
 export class ModuleReference extends S.Class<ModuleReference>($I`ModuleReference`)(
   {
     modulePath: S.String,
-    declaration: OptionalString,
+    declaration: OptionFromOptionalStrWithNoneDefault,
   },
   $I.annote("ModuleReference", {
     description: "A `module:` cross-reference split into its module path and optional declaration name.",
@@ -437,7 +439,7 @@ const optionalText = <T>(value: T | undefined, render: (value: T) => string): st
   pipe(
     O.fromNullishOr(value),
     O.map(render),
-    O.getOrElse(() => "")
+    O.getOrElse(thunkEmptyStr)
   );
 
 const decodeSemver = S.decodeOption(SemverFromString);
@@ -452,7 +454,7 @@ const declarationOrder: Order.Order<ApiDeclaration> = pipe(
     Order.mapInput(localeOrder, (declaration: ApiDeclaration) =>
       pipe(
         declaration.typeKind,
-        O.getOrElse(() => "")
+        O.getOrElse(thunkEmptyStr)
       )
     )
   ),
@@ -862,8 +864,8 @@ const formatParameter = (parameter: JSONOutput.ParameterReflection): string => {
 
 const formatTypeParameters = (parameters: ReadonlyArray<JSONOutput.TypeParameterReflection> | undefined): string =>
   A.match(orEmpty(parameters), {
-    onEmpty: () => "",
-    onNonEmpty: (present) => `<${A.join(A.map(present, formatTypeParameter), ", ")}>`,
+    onEmpty: thunkEmptyStr,
+    onNonEmpty: flow(A.map(formatTypeParameter), A.join(", "), (el) => `<${el}>`),
   });
 
 const formatTypeParameter = (parameter: JSONOutput.TypeParameterReflection): string =>
@@ -880,7 +882,7 @@ const formatHeritageClause = (
   types: ReadonlyArray<JSONOutput.SomeType> | undefined
 ): string =>
   A.match(orEmpty(types), {
-    onEmpty: () => "",
+    onEmpty: thunkEmptyStr,
     onNonEmpty: (present) => ` ${keyword} ${A.join(A.map(present, (type) => formatType(type)), ", ")}`,
   });
 
@@ -893,7 +895,7 @@ const formatObjectBody = (declaration: JSONOutput.DeclarationReflection, depth =
     A.appendAll(
       pipe(
         orEmpty(declaration.children),
-        A.filter((child) => child.flags.isInherited !== true),
+        A.filter(({flags}) => flags.isInherited !== true),
         A.flatMap(formatMember)
       )
     )

@@ -215,10 +215,10 @@ describe("ApiReference.moduleView", () => {
 
 describe("CodeSnippet", () => {
   it("normalizes info strings", () => {
-    assert.deepEqual(O.getOrUndefined(CodeSnippet.languageFromInfoString("")), "typescript");
-    assert.deepEqual(O.getOrUndefined(CodeSnippet.languageFromInfoString(" mjs ")), "javascript-esm");
-    assert.deepEqual(O.getOrUndefined(CodeSnippet.languageFromInfoString("bash")), "bash");
-    assert.isTrue(O.isNone(CodeSnippet.languageFromInfoString("cobol")));
+    assert.deepEqual(O.getOrUndefined(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption("")), "typescript");
+    assert.deepEqual(O.getOrUndefined(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption(" mjs ")), "javascript-esm");
+    assert.deepEqual(O.getOrUndefined(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption("bash")), "bash");
+    assert.isTrue(O.isNone(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption("cobol")));
   });
 
   it("quotes property names only when needed", () => {
