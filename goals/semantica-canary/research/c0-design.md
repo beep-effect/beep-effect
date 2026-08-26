@@ -18,7 +18,7 @@ and M1-M6 win where this document and they disagree.
 | D-C0-6 | Hosted lane reads relations from `LangExtractResult.extractions` **before** the handoff; the handoff's `relations: []` defect is bypassed, not fixed here (cleanup-on-touch stays with `@beep/langextract`). | Relation count 0 on the G-relation papers is a failure, not a score (S7). |
 | D-C0-7 | Pattern lane = Wink `NLPService` entity extraction, every returned `{start,end}` re-derived as a `TextAnchor` and verified; a slice that does not verify becomes a typed `FabricatedSpan` degraded claim, never a claim. | Wink substitutes `0` on `indexOf` miss. |
 | D-C0-8 | Nothing wall-clock enters any content-addressed id or the report: `ProvenanceEvent` ids hash the event body without timestamps; `recordedAt` is a sibling column; run `mode` (live/replay) and all timings live only in `EvalRunTelemetry`. | G7/R1: the replay digest must equal the live digest. |
-| D-C0-9 | Gold subsets are chosen deterministically from the manifest: G-structure = first 10 W1 ids whose PDF parses (non-degraded), G-entity = first 5 of those, G-relation = first 3 of those. The first-slice paper = the first G-relation id. | Removes a human choice from the pass criteria; the spot-check may only annotate, not reorder. |
+| D-C0-9 | Gold subsets are chosen deterministically from the manifest **once `ParserLive` exists (P2, before the slice PR)**: G-structure = first 10 W1 ids in manifest order whose PDF parses under `ParserLive` (non-degraded), G-entity = first 5 of those, G-relation = first 3 of those. The first-slice paper = the first G-relation id. `gold/v1` is proposed only after this selection, which is why it rides the slice PR and not P1. | Removes a human choice from the pass criteria; the spot-check may only annotate, not reorder; a paper that degrades later still fails R2 on its own. |
 | D-C0-10 | Ledger = PGlite file database under `<providerCacheDirectory>/../ledger/<runId>` (one directory per run; runId content-addressed from `EvalRun`), DDL owned by the lab (labs law), one transaction per `EvidenceBatch` + its `ProvenanceEvent`s. | First-probe storage bundle (B1/A1); no `tables` package from a lab. |
 
 ## 2. Schemas (lab-local, `src/schema/*.ts`; all `S.Class`, branded ids, `LiteralKit` domains)
@@ -36,13 +36,14 @@ Reused live: `Sha256Hex`, `NonNegativeInt`, `UnitInterval` (`@beep/schema`); `Te
 | `DegradedKind` | `LiteralKit(["invalid-utf8","truncated","empty-text-layer","extraction-failed","input-limit","provider-unavailable","fabricated-span","relation-drop"])` | the only degraded vocabulary in C0; F1's `FixtureDegradedKind` is a subset |
 | `ParseOutcome` | `Parsed{ document: DocumentId, canonical: CanonicalText } \| Degraded{ document, kind: DegradedKind, detail: NonEmptyString }` | F1 expectation check = `expectation === "degraded" ⇔ outcome is Degraded` and kinds equal |
 | `CanonicalText` | `= ResolvedSourceText` (type alias + `S.is` guard only) | identity: `scopeRef="semantica-canary"`, `sourceRef=DocumentId`, `locator=relativePath`, `sourceDigest=bytes sha`, `textDigest=sha(text)`, `extractor={name,version}` from the Parser Layer, `normalizationVersion="raw/1"` |
-| `ChunkId` | `Sha256Hex` branded; `sha256(canonicalJson({ textDigest, startChar, endChar }))` | content-addressed, replay-stable |
+| `ChunkId` | `Sha256Hex` branded; `sha256(canonicalJson({ document, textDigest, startChar, endChar }))` | document-scoped (identical text in two documents never shares a chunk id), content-addressed, replay-stable |
 | `Chunk` | `{ id: ChunkId, document: DocumentId, kind: LiteralKit(["heading","paragraph","sentence"]), ordinal: NonNegativeInt, anchor: TextAnchor, receipt: TextAnchorVerificationReceipt }` | a chunk without a verified anchor is unrepresentable |
 | `ProviderFamily` | `LiteralKit(["anthropic","xai","wink"])` | `openai` joins at C1 |
 | `ModelIdentity` | `{ provider: ProviderFamily, name: NonEmptyString, revision: NonEmptyString, artifactHash: Sha256Hex, taskType: LiteralKit(["extraction","gold-proposal"]) }` | `artifactHash` = sha256 of the pinned prompt template + options (canonical JSON); the "prompt/config hash" of the cache key |
 | `ProviderCacheKey` | `{ schemaVersion: "provider-cache/v1", model: ModelIdentity, requestKind: LiteralKit(["generate-text"]), inputDigest: Sha256Hex }` | `cacheKey = sha256(canonicalJson(encode(key)))`; `inputDigest` = sha256 of the exact request text |
 | `ProviderCacheEntry` | `{ key: ProviderCacheKey, cacheKey: Sha256Hex, response: NonEmptyString, responseDigest: Sha256Hex }` | immutable, no TTL; the on-disk file name is `cacheKey` |
-| `ClaimId` | `Sha256Hex` branded; `sha256(canonicalJson({ chunk, kind-body, method, model.artifactHash }))` | same claim ⇒ same id live and replay |
+| `BatchId` | `Sha256Hex` branded; `sha256(canonicalJson({ document, method, model, inputs }))` | one batch per (document, lane); `inputs` are the chunk ids in order |
+| `ClaimId` | `Sha256Hex` branded; `sha256(canonicalJson({ document, chunk, kind-body, method, model.artifactHash }))` | same claim ⇒ same id live and replay; document-scoped like `ChunkId` |
 | `EvidenceClaim` | `{ id: ClaimId, document, chunk: ChunkId, body: ClaimBody, confidence: Confidence, method: LiteralKit(["hosted-langextract","pattern-wink"]), model: ModelIdentity, cacheKey: Option<Sha256Hex>, receipt: TextAnchorVerificationReceipt }` | `ClaimBody = Entity{ label, entityType, ...TextAnchorFields } \| Relation{ predicate, subject: ClaimId, object: ClaimId, ...TextAnchorFields } \| Structure{ role: LiteralKit(["title","abstract","section","reference"]), depth: NonNegativeInt, ...TextAnchorFields }`; spread `TextAnchorFields` + `Confidence` as epistemic `EvidenceSpan` does |
 | `EvidenceBatch` | `{ id: BatchId, document, method, model, inputs: NonEmptyArray<ChunkId>, claims: ReadonlyArray<EvidenceClaim>, degraded: ReadonlyArray<DegradedClaim>, lossy: Option<LossDeclaration> }` | `DegradedClaim = { kind: DegradedKind, detail, chunk }`; `LossDeclaration = LiteralKit(["relations-not-supported"])` (the Wink lane declares it; the hosted lane never does — D-C0-6) |
 | `ConflictWitness` | `{ id: Sha256Hex, left: ClaimId, right: ClaimId, basis: LiteralKit(["same-anchor-different-label","same-pair-different-predicate"]) }` | `ContradictionCandidate` precedent; claims stay separate nodes |
@@ -127,8 +128,12 @@ resolution in lab code).
 - `Chunker`: every chunk verifies against the canonical text; NFD/CRLF/emoji/ZWJ specimen (`md-unicode`)
   keeps UTF-16 boundaries; a chunk that would split a surrogate pair is rejected.
 - Parser degradation: `md-invalid-utf8` → `invalid-utf8`, `html-truncated` → `truncated`,
-  `pdf-truncated` → `extraction-failed`/`empty-text-layer` (whichever doc-text reports; the F1 index's
-  declared kind is corrected to the observed typed kind before the slice PR merges).
+  `pdf-truncated` → `extraction-failed` (declared from the specimen's construction — the file is cut
+  before its xref, so PDF.js cannot open it; doc-text's `extraction` reason maps to it). The
+  `DocTextError.reason` → `DegradedKind` mapping is fixed in the Parser Layer
+  (`empty-text-layer` → `empty-text-layer`, `extraction` → `extraction-failed`, `input-limit` →
+  `input-limit`); an observed kind that differs from the declared one is a failed assertion, never a
+  reason to edit the index.
 - Hosted lane: recorded `ProviderCache` entries for F1 + the slice paper are committed under
   `fixtures/provider-cache/` so the slice test runs offline in CI (no keys in CI); the live run is a
   local proof recorded under the packet's `history/`.
