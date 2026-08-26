@@ -11,7 +11,7 @@ import * as S from "effect/Schema";
 import * as Shared from "../../identity/Shared/index.ts";
 
 const $I = $SharedDomainId.create("entities/User/User.model");
-const UserEntity = ProductEntity.make(Shared.UserId);
+const pg = ProductEntity.pg;
 
 /**
  * Shared-kernel human account entity schema.
@@ -27,13 +27,11 @@ const UserEntity = ProductEntity.make(Shared.UserId);
  * @category models
  * @since 0.0.0
  */
-export class Model extends UserEntity.Entity<Model>(UserEntity.tableName)(
+export class Model extends ProductEntity.Entity<Model>()(Shared.UserId)(
   {
-    displayName: S.NonEmptyString.pipe(UserEntity.pg.text(), UserEntity.pg.columnName("display_name")),
-    ...UserEntity.identityFields,
+    displayName: S.NonEmptyString.pipe(pg.text(), pg.columnName("display_name")),
   },
   $I.annote("Model", {
     description: "Shared-kernel human account entity.",
-  }),
-  UserEntity.entityExtras
+  })
 ) {}
