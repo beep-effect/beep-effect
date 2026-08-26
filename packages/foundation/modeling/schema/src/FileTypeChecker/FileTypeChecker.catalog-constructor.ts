@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 
+import { Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { FileSignature, FileTypeInfo } from "./FileTypeChecker.schema.ts";
@@ -19,7 +20,7 @@ type CatalogFileSignature = {
 
 type CatalogFileTypeInfo<Extension extends FileType = FileType> = {
   readonly extension: Extension;
-  readonly mimeType: string;
+  readonly mimeType: typeof FileTypeInfo.fields.mimeType.Type;
   readonly description: string;
   readonly signatures: A.NonEmptyReadonlyArray<CatalogFileSignature>;
 };
@@ -40,7 +41,14 @@ export function makeCatalogFileTypeInfo(input: CatalogFileTypeInfo): FileTypeInf
     signatures: A.map(input.signatures, (signature) =>
       FileSignature.make({
         ...signature,
+        skippedBytes: pipe(signature.skippedBytes, O.fromUndefinedOr, O.getOrElse(A.empty), A.sort(Order.Number)),
         description: O.fromUndefinedOr(signature.description),
+        compatibleExtensions: pipe(
+          signature.compatibleExtensions,
+          O.fromUndefinedOr,
+          O.getOrElse(A.empty),
+          A.sort(Order.String)
+        ),
       })
     ),
   });

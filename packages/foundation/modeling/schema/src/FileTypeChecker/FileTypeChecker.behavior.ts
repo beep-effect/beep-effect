@@ -4,14 +4,14 @@
  * @since 0.0.0
  */
 
-import { Match, Order, pipe } from "effect";
+import { Match, Number as Num, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { isArrayBuf } from "../ArrayBuffer.ts";
+import { LiteralKit } from "../LiteralKit/index.ts";
 import { FileTypeCatalog } from "./FileTypeChecker.catalog.ts";
 import {
   Byte,
@@ -39,8 +39,11 @@ const defaultDetectOptions = DetectFileOptions.make({});
 const defaultValidateOptions = ValidateFileTypeOptions.make({});
 const decodeBoundedBytes = S.decodeUnknownOption(S.Array(Byte));
 const isArrayBufferRepresentation = S.is(S.instanceOf(globalThis.ArrayBuffer));
+const byteEquivalence = S.toEquivalence(Byte);
 const fileTypeEquivalence = S.toEquivalence(FileType);
 const containsFileType = A.containsWith(fileTypeEquivalence);
+const CollisionFileType = LiteralKit(FileType.pickOptions(["avif", "heic", "flv", "m4v", "mp4", "mkv", "webm"]));
+const isCollisionType = S.is(CollisionFileType);
 
 const copyBoundedUint8Array = O.liftThrowable(
   (file: Uint8Array<ArrayBufferLike>, chunkSize: number): ReadonlyArray<number> =>
@@ -78,24 +81,22 @@ const compiledCatalog: ReadonlyArray<CompiledFileType> = A.map(FileType.Options,
 
 const matchesAt = (fileChunk: ReadonlyArray<number>, sequence: ReadonlyArray<number>, offset: number): boolean =>
   fileChunk.length >= offset + sequence.length &&
-  A.every(sequence, (byte, sequenceIndex) => fileChunk[offset + sequenceIndex] === byte);
+  A.every(sequence, (byte, sequenceIndex) => byteEquivalence(fileChunk[offset + sequenceIndex], byte));
 
 const includesByteSequenceAfter = (
   fileChunk: ReadonlyArray<number>,
   sequence: ReadonlyArray<number>,
   minimumOffset: number
-): boolean => {
-  if (fileChunk.length < minimumOffset + sequence.length) return false;
-  return A.some(A.range(minimumOffset, fileChunk.length - sequence.length), (offset) =>
+): boolean =>
+  fileChunk.length >= minimumOffset + sequence.length &&
+  A.some(A.range(minimumOffset, fileChunk.length - sequence.length), (offset) =>
     matchesAt(fileChunk, sequence, offset)
   );
-};
 
 const matchesSignature = (fileChunk: ReadonlyArray<number>, compiled: CompiledSignature): boolean =>
-  compiled.absolutePositions.length === compiled.signature.sequence.length &&
-  A.every(
-    compiled.signature.sequence,
-    (byte, sequenceIndex) => fileChunk[compiled.absolutePositions[sequenceIndex]] === byte
+  Num.Equivalence(compiled.absolutePositions.length, compiled.signature.sequence.length) &&
+  A.every(compiled.signature.sequence, (byte, sequenceIndex) =>
+    byteEquivalence(fileChunk[compiled.absolutePositions[sequenceIndex]], byte)
   );
 
 const detectCandidate = (fileChunk: ReadonlyArray<number>, compiled: CompiledFileType): O.Option<DetectedFileInfo> =>
@@ -106,17 +107,6 @@ const detectCandidate = (fileChunk: ReadonlyArray<number>, compiled: CompiledFil
 
 const hasExtension = (candidates: ReadonlyArray<DetectedFileInfo>, extension: FileType): boolean =>
   A.some(candidates, (candidate) => fileTypeEquivalence(candidate.extension, extension));
-
-const isCollisionType = Match.type<FileType>().pipe(
-  Match.when("avif", () => true),
-  Match.when("heic", () => true),
-  Match.when("flv", () => true),
-  Match.when("m4v", () => true),
-  Match.when("mp4", () => true),
-  Match.when("mkv", () => true),
-  Match.when("webm", () => true),
-  Match.orElse(() => false)
-);
 
 const isoBrandOffset = 4;
 const isoBrandEvidence: ReadonlyArray<readonly [FileType, ReadonlyArray<number>]> = [
@@ -171,11 +161,10 @@ const selectMostSpecific = (candidates: ReadonlyArray<DetectedFileInfo>): O.Opti
       const selected = A.reduce(candidates, initial, (current, candidate) =>
         candidate.signature.sequence.length > current.signature.sequence.length ? candidate : current
       );
-      const equallySpecific = A.filter(
-        candidates,
-        (candidate) => candidate.signature.sequence.length === selected.signature.sequence.length
+      const equallySpecific = A.filter(candidates, (candidate) =>
+        Num.Equivalence(candidate.signature.sequence.length, selected.signature.sequence.length)
       );
-      return equallySpecific.length === 1 ? O.some(selected) : O.none();
+      return Num.Equivalence(equallySpecific.length, 1) ? O.some(selected) : O.none();
     })
   );
 
@@ -193,7 +182,7 @@ const selectDetectedFile = (
     A.dedupeWith(fileTypeEquivalence)
   );
   if (evidence.length > 1) return O.none();
-  if (evidence.length === 1) {
+  if (Num.Equivalence(evidence.length, 1)) {
     return pipe(
       A.head(evidence),
       O.flatMap((extension) =>
@@ -227,7 +216,7 @@ const selectFileChunker = Match.type<FileContent>().pipe(
       (chunkSize) =>
         isArrayBuf(buffer) ? pipe(copyBoundedArrayBuffer(buffer, chunkSize), O.flatMap(decodeBoundedBytes)) : O.none()
   ),
-  Match.orElse((): FileChunker => () => O.none())
+  Match.orElse((): FileChunker => O.none)
 );
 
 const toFileChunk = (file: FileContent, chunkSize: number): O.Option<ReadonlyArray<number>> =>

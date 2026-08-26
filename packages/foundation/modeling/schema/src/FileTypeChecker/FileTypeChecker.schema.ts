@@ -5,15 +5,17 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
+import { Number as Num, Order } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ArrayBuf } from "../ArrayBuffer.ts";
 import { FileExtension } from "../FileExtension.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
+import { MimeType } from "../MimeType.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("FileTypeChecker/FileTypeChecker.schema");
-const FILE_MEDIA_TYPE_PATTERN = /^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/;
 
 /**
  * Supported file extensions for signature detection and validation.
@@ -197,17 +199,44 @@ export const FileContent = S.Union([S.Array(Byte), S.Uint8Array, ArrayBuf]).pipe
  */
 export type FileContent = typeof FileContent.Type;
 
-const FileMediaType = S.String.check(
-  S.isPattern(FILE_MEDIA_TYPE_PATTERN, {
-    expected: "a lowercase MIME media type",
-    identifier: $I`FileMediaTypePatternCheck`,
-    title: "File media type",
-    description: "A lowercase MIME type-and-subtype pair separated by a slash.",
-    message: "Expected a lowercase MIME media type such as image/png",
+const CatalogOnlyFileMediaType = LiteralKit([
+  "application/sla",
+  "application/x-7z-compressed",
+  "application/x-blender",
+  "application/x-executable",
+  "application/x-font-ttf",
+  "application/x-indesign",
+  "application/x-lzh-compressed",
+  "application/x-mach-binary",
+  "application/x-msdownload",
+  "application/x-orc",
+  "application/x-rar-compressed",
+  "application/x-shockwave-flash",
+  "application/x-sqlite3",
+  "audio/wav",
+  "audio/x-flac",
+  "audio/x-m4a",
+  "image/bpg",
+  "image/x-canon-cr2",
+  "image/x-exr",
+  "image/x-icon",
+  "image/x-portable-bitmap",
+  "image/x-portable-graymap",
+  "image/x-portable-pixmap",
+  "video/webm",
+  "video/x-flv",
+  "video/x-m4v",
+  "video/x-matroska",
+  "video/x-msvideo",
+]).annotate(
+  $I.annote("CatalogOnlyFileMediaType", {
+    description: "A legacy or experimental media type used by the file signature catalog.",
   })
-).pipe(
+);
+
+const FileMediaType = S.Union([MimeType, CatalogOnlyFileMediaType]).pipe(
   $I.annoteSchema("FileMediaType", {
-    description: "A lowercase registered, vendor, or experimental MIME media type used by the file catalog.",
+    description: "An official or explicitly catalog-owned legacy media type used by the file type checker.",
   })
 );
 
@@ -266,22 +295,26 @@ const FileSignatureStruct = S.Struct({
   ),
 });
 
+const skippedBytesArrayEquivalence = S.toEquivalence(FileSignatureStruct.fields.skippedBytes);
+const compatibleExtensionsArrayEquivalence = S.toEquivalence(FileSignatureStruct.fields.compatibleExtensions);
+
 const FileSignatureInvariantsCheck = S.makeFilter<typeof FileSignatureStruct.Type>(
   ({ sequence, skippedBytes, compatibleExtensions }) => {
     const spanLength = sequence.length + skippedBytes.length;
     return (
-      A.dedupe(skippedBytes).length === skippedBytes.length &&
+      Num.Equivalence(A.dedupe(skippedBytes).length, skippedBytes.length) &&
       A.every(skippedBytes, (position) => position < spanLength) &&
-      A.dedupe(compatibleExtensions).length === compatibleExtensions.length
+      skippedBytesArrayEquivalence(skippedBytes, A.sort(skippedBytes, Order.Number)) &&
+      Num.Equivalence(A.dedupe(compatibleExtensions).length, compatibleExtensions.length) &&
+      compatibleExtensionsArrayEquivalence(compatibleExtensions, A.sort(compatibleExtensions, Order.String))
     );
   },
   {
-    expected: "valid skipped positions and unique compatible extensions",
+    expected: "valid canonically ordered signature metadata",
     identifier: $I`FileSignatureInvariantsCheck`,
     title: "File signature invariants",
-    description:
-      "Skipped positions are unique indices inside the compared span, and compatible extensions contain no duplicates.",
-    message: "Expected valid skipped positions and unique compatible extensions",
+    description: "Skipped positions and compatible extensions are unique and sorted in ascending order.",
+    message: "Expected valid canonically ordered signature metadata",
   }
 );
 
@@ -301,7 +334,9 @@ const FileSignatureModel = FileSignatureStruct.check(FileSignatureInvariantsChec
  *
  * Skipped positions must be unique and fall inside the compared span. The span
  * contains the signature sequence plus one position for every skipped byte.
- * Compatible extensions must also be unique.
+ * Compatible extensions must also be unique. Skipped positions and compatible
+ * extensions use ascending encoded order so schema equivalence has one
+ * canonical representation.
  *
  * **Example** (Describe a PNG signature)
  *
@@ -341,8 +376,40 @@ export declare namespace FileSignature {
   export type Encoded = typeof FileSignature.Encoded;
 }
 
+const FileTypeInfoStruct = S.Struct({
+  extension: FileType,
+  mimeType: FileMediaType,
+  description: S.NonEmptyString,
+  signatures: S.NonEmptyArray(FileSignature),
+});
+
+const fileSignatureEquivalence = S.toEquivalence(FileSignature);
+
+const FileTypeInfoInvariantsCheck = S.makeFilter<typeof FileTypeInfoStruct.Type>(
+  ({ extension, signatures }) =>
+    Num.Equivalence(A.dedupeWith(fileSignatureEquivalence)(signatures).length, signatures.length) &&
+    A.every(
+      signatures,
+      (signature) => !A.some(signature.compatibleExtensions, (compatible) => Str.Equivalence(compatible, extension))
+    ),
+  {
+    expected: "unique signatures without self-compatible extensions",
+    identifier: $I`FileTypeInfoInvariantsCheck`,
+    title: "File type metadata invariants",
+    description: "Signatures are unique and never list their owning extension as a compatible alternative.",
+    message: "Expected unique signatures without the owning extension in compatibility metadata",
+  }
+);
+
+const FileTypeInfoModel = FileTypeInfoStruct.check(FileTypeInfoInvariantsCheck);
+
 /**
  * Canonical metadata and signatures for a supported file type.
+ *
+ * **Gotchas**
+ *
+ * Signatures must be unique and must not list their owning extension as a
+ * compatible alternative.
  *
  * **Example** (Describe a PNG file type)
  *
@@ -362,12 +429,7 @@ export declare namespace FileSignature {
  * @since 0.0.0
  */
 export class FileTypeInfo extends S.Class<FileTypeInfo>($I`FileTypeInfo`)(
-  {
-    extension: FileType,
-    mimeType: FileMediaType,
-    description: S.NonEmptyString,
-    signatures: S.NonEmptyArray(FileSignature),
-  },
+  FileTypeInfoModel,
   $I.annote("FileTypeInfo", {
     description: "A supported file extension, MIME type, description, and one or more identifying signatures.",
   })
@@ -390,8 +452,6 @@ export declare namespace FileTypeInfo {
   export type Encoded = typeof FileTypeInfo.Encoded;
 }
 
-const fileSignatureEquivalence = S.toEquivalence(FileSignature);
-
 const DetectedFileInfoStruct = S.Struct({
   info: FileTypeInfo,
   signature: FileSignature,
@@ -408,7 +468,12 @@ const DetectedFileInfoSignatureCheck = S.makeFilter<typeof DetectedFileInfoStruc
   }
 );
 
-const DetectedFileInfoModel = DetectedFileInfoStruct.check(DetectedFileInfoSignatureCheck);
+const DetectedFileInfoModel = DetectedFileInfoStruct.check(DetectedFileInfoSignatureCheck).annotate({
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(FileTypeInfo)(fc).chain((info) =>
+      fc.constantFrom(...info.signatures).map((signature) => ({ info, signature }))
+    ),
+});
 
 /**
  * Canonical file-type metadata paired with the signature that matched it.

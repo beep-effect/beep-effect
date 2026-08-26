@@ -18,6 +18,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Match, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -31,6 +32,7 @@ const sharedIsoMediaSignature = [0x66, 0x74, 0x79, 0x70, 0x4d, 0x34, 0x56, 0x20]
 const webmDocType = [0x42, 0x82, 0x84, 0x77, 0x65, 0x62, 0x6d];
 const matroskaDocType = [0x42, 0x82, 0x88, 0x6d, 0x61, 0x74, 0x72, 0x6f, 0x73, 0x6b, 0x61];
 const signatureEquivalence = S.toEquivalence(FileSignature);
+const fileTypeEquivalence = S.toEquivalence(FileType);
 
 const catalogCases = pipe(
   FileType.Options,
@@ -53,52 +55,67 @@ const baseSampleFromSignature = (signature: FileSignature): ReadonlyArray<number
   });
 };
 
-const sampleFromSignature = (type: FileTypeValue, signature: FileSignature): ReadonlyArray<number> => {
-  const base = baseSampleFromSignature(signature);
-  return Match.value(type).pipe(
-    Match.when("avif", () => [0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66]),
-    Match.when("heic", () => (signature.sequence.length === 5 ? A.appendAll(base, [0x69, 0x66, 0x31]) : base)),
-    Match.when("mkv", () => A.appendAll(base, matroskaDocType)),
-    Match.when("webm", () => A.appendAll(base, webmDocType)),
-    Match.orElse(() => base)
-  );
-};
+const enrichSample = Match.type<{
+  readonly base: ReadonlyArray<number>;
+  readonly signature: FileSignature;
+  readonly type: FileTypeValue;
+}>().pipe(
+  Match.when({ type: "avif" }, () => [0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66]),
+  Match.when({ type: "heic" }, ({ base, signature }) =>
+    Num.Equivalence(signature.sequence.length, 5) ? A.appendAll(base, [0x69, 0x66, 0x31]) : base
+  ),
+  Match.when({ type: "mkv" }, ({ base }) => A.appendAll(base, matroskaDocType)),
+  Match.when({ type: "webm" }, ({ base }) => A.appendAll(base, webmDocType)),
+  Match.orElse(({ base }) => base)
+);
+
+const sampleFromSignature = (type: FileTypeValue, signature: FileSignature): ReadonlyArray<number> =>
+  enrichSample({ base: baseSampleFromSignature(signature), signature, type });
 
 const canonicalDetectedType = (type: FileTypeValue, signature: FileSignature): FileTypeValue =>
   Eq.equals(signature.sequence, sharedIsoMediaSignature) ? "m4v" : type;
 
-const decodeSuccess = <A, E>(result: Result.Result<A, E>): A => {
-  expect(Result.isSuccess(result)).toBe(true);
-  if (Result.isFailure(result)) throw new Error("Expected schema operation to succeed");
-  return result.success;
+const expectSchemaRoundTrip = <A, I>(schema: S.Codec<A, I>, value: A): void => {
+  const encoded = Result.getOrThrow(S.encodeUnknownResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeResult(schema)(encoded));
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 };
 
 describe("FileTypeChecker schemas", () => {
   it("owns constructor, decoding, and encoding defaults", () => {
-    const decodedSignature = decodeSuccess(S.decodeResult(FileSignature)({ sequence: [0x50, 0x4b] }));
+    const madeSignature = FileSignature.make({ sequence: [0x50, 0x4b] });
+    expect(madeSignature).toMatchObject({ offset: 0, skippedBytes: [], compatibleExtensions: [] });
+    expect(O.isNone(madeSignature.description)).toBe(true);
+
+    const decodedSignature = Result.getOrThrow(S.decodeResult(FileSignature)({ sequence: [0x50, 0x4b] }));
     expect(decodedSignature.offset).toBe(0);
     expect(decodedSignature.skippedBytes).toEqual([]);
     expect(decodedSignature.compatibleExtensions).toEqual([]);
     expect(O.isNone(decodedSignature.description)).toBe(true);
-    expect(decodeSuccess(S.encodeUnknownResult(FileSignature)(decodedSignature))).toEqual({
+    expect(Result.getOrThrow(S.encodeUnknownResult(FileSignature)(decodedSignature))).toEqual({
       sequence: [0x50, 0x4b],
       offset: 0,
       skippedBytes: [],
       compatibleExtensions: [],
     });
 
-    const describedSignature = decodeSuccess(
+    const describedSignature = Result.getOrThrow(
       S.decodeResult(FileSignature)({ sequence: [0x50, 0x4b], description: "ZIP marker" })
     );
     expect(O.getOrNull(describedSignature.description)).toBe("ZIP marker");
-    expect(decodeSuccess(S.encodeUnknownResult(FileSignature)(describedSignature)).description).toBe("ZIP marker");
+    expect(Result.getOrThrow(S.encodeUnknownResult(FileSignature)(describedSignature)).description).toBe("ZIP marker");
 
-    const detectOptions = decodeSuccess(S.decodeResult(DetectFileOptions)({}));
-    const validateOptions = decodeSuccess(S.decodeResult(ValidateFileTypeOptions)({}));
+    const madeDetectOptions = DetectFileOptions.make({});
+    const madeValidateOptions = ValidateFileTypeOptions.make({});
+    expect(madeDetectOptions.chunkSize).toBe(64);
+    expect(madeValidateOptions).toMatchObject({ chunkSize: 64, excludeSimilarTypes: false });
+
+    const detectOptions = Result.getOrThrow(S.decodeResult(DetectFileOptions)({}));
+    const validateOptions = Result.getOrThrow(S.decodeResult(ValidateFileTypeOptions)({}));
     expect(detectOptions.chunkSize).toBe(64);
     expect(validateOptions).toMatchObject({ chunkSize: 64, excludeSimilarTypes: false });
-    expect(decodeSuccess(S.encodeUnknownResult(DetectFileOptions)(detectOptions))).toEqual({ chunkSize: 64 });
-    expect(decodeSuccess(S.encodeUnknownResult(ValidateFileTypeOptions)(validateOptions))).toEqual({
+    expect(Result.getOrThrow(S.encodeUnknownResult(DetectFileOptions)(detectOptions))).toEqual({ chunkSize: 64 });
+    expect(Result.getOrThrow(S.encodeUnknownResult(ValidateFileTypeOptions)(validateOptions))).toEqual({
       chunkSize: 64,
       excludeSimilarTypes: false,
     });
@@ -119,10 +136,59 @@ describe("FileTypeChecker schemas", () => {
     ]) {
       expect(Result.isFailure(S.decodeUnknownResult(FileSignature)(invalidSignature))).toBe(true);
     }
+    const rawSignature = { sequence: [0x89, 0x50, 0x4e, 0x47] };
+    for (const invalidInfo of [
+      {
+        extension: "png",
+        mimeType: "image/png",
+        description: "Duplicate signatures",
+        signatures: [rawSignature, rawSignature],
+      },
+      {
+        extension: "png",
+        mimeType: "image/png",
+        description: "Self-compatible signature",
+        signatures: [{ ...rawSignature, compatibleExtensions: ["png"] }],
+      },
+      {
+        extension: "png",
+        mimeType: "foo/bar",
+        description: "Unowned media type",
+        signatures: [rawSignature],
+      },
+    ]) {
+      expect(Result.isFailure(S.decodeUnknownResult(FileTypeInfo)(invalidInfo))).toBe(true);
+    }
+    expect(
+      Result.isSuccess(
+        S.decodeUnknownResult(FileTypeInfo)({
+          extension: "blend",
+          mimeType: "application/x-blender",
+          description: "Blender asset",
+          signatures: [{ sequence: [0x42, 0x4c, 0x45, 0x4e, 0x44, 0x45, 0x52] }],
+        })
+      )
+    ).toBe(true);
     expect(isFileContent([0, 255])).toBe(true);
     expect(isFileContent([256])).toBe(false);
     expect(isFileType("png")).toBe(true);
     expect(isFileType("PNG")).toBe(false);
+  });
+
+  it("requires canonical ordering for set-like signature metadata", () => {
+    const canonical = FileSignature.make({
+      sequence: [1],
+      skippedBytes: [1, 2],
+      compatibleExtensions: ["flv", "mp4"],
+    });
+    expect(Result.getOrThrow(S.encodeUnknownResult(FileSignature)(canonical))).toMatchObject({
+      skippedBytes: [1, 2],
+      compatibleExtensions: ["flv", "mp4"],
+    });
+    expect(Result.isFailure(S.decodeUnknownResult(FileSignature)({ sequence: [1], skippedBytes: [2, 1] }))).toBe(true);
+    expect(
+      Result.isFailure(S.decodeUnknownResult(FileSignature)({ sequence: [1], compatibleExtensions: ["mp4", "flv"] }))
+    ).toBe(true);
   });
 
   it("round-trips every public schema representation", () => {
@@ -135,19 +201,14 @@ describe("FileTypeChecker schemas", () => {
     });
     const detected = DetectedFileInfo.make({ info, signature });
 
-    for (const [schema, value] of [
-      [FileTypeInfo, info],
-      [DetectedFileInfo, detected],
-      [DetectFileOptions, DetectFileOptions.make({})],
-      [ValidateFileTypeOptions, ValidateFileTypeOptions.make({})],
-    ] as const) {
-      const encoded = decodeSuccess(S.encodeUnknownResult(schema)(value));
-      expect(Result.isSuccess(S.decodeResult(schema)(encoded))).toBe(true);
-    }
+    expectSchemaRoundTrip(FileTypeInfo, info);
+    expectSchemaRoundTrip(DetectedFileInfo, detected);
+    expectSchemaRoundTrip(DetectFileOptions, DetectFileOptions.make({}));
+    expectSchemaRoundTrip(ValidateFileTypeOptions, ValidateFileTypeOptions.make({}));
 
     for (const content of [[1, 2], new Uint8Array([1, 2]), new Uint8Array([1, 2]).buffer]) {
-      const decoded = decodeSuccess(S.decodeResult(FileContent)(content));
-      const encoded = decodeSuccess(S.encodeUnknownResult(FileContent)(decoded));
+      const decoded = Result.getOrThrow(S.decodeResult(FileContent)(content));
+      const encoded = Result.getOrThrow(S.encodeUnknownResult(FileContent)(decoded));
       expect(Result.isSuccess(S.decodeResult(FileContent)(encoded))).toBe(true);
     }
   });
@@ -165,20 +226,26 @@ describe("FileTypeChecker schemas", () => {
     }
   });
 
-  it("derives valid arbitrary values from the public schemas", () => {
+  it("derives codec-equivalent arbitrary values from every public schema", () => {
     fc.assert(
       fc.property(
         S.toArbitrary(FileType)(fc),
         S.toArbitrary(Byte)(fc),
+        S.toArbitrary(FileContent)(fc),
         S.toArbitrary(FileSignature)(fc),
+        S.toArbitrary(FileTypeInfo)(fc),
+        S.toArbitrary(DetectedFileInfo)(fc),
         S.toArbitrary(DetectFileOptions)(fc),
         S.toArbitrary(ValidateFileTypeOptions)(fc),
-        (type, byte, signature, detectOptions, validateOptions) => {
-          expect(isFileType(type)).toBe(true);
-          expect(S.is(Byte)(byte)).toBe(true);
-          expect(S.is(FileSignature)(signature)).toBe(true);
-          expect(S.is(DetectFileOptions)(detectOptions)).toBe(true);
-          expect(S.is(ValidateFileTypeOptions)(validateOptions)).toBe(true);
+        (type, byte, content, signature, info, detected, detectOptions, validateOptions) => {
+          expectSchemaRoundTrip(FileType, type);
+          expectSchemaRoundTrip(Byte, byte);
+          expectSchemaRoundTrip(FileContent, content);
+          expectSchemaRoundTrip(FileSignature, signature);
+          expectSchemaRoundTrip(FileTypeInfo, info);
+          expectSchemaRoundTrip(DetectedFileInfo, detected);
+          expectSchemaRoundTrip(DetectFileOptions, detectOptions);
+          expectSchemaRoundTrip(ValidateFileTypeOptions, validateOptions);
         }
       ),
       fcRuns(25)
@@ -194,7 +261,7 @@ describe("detectFile", () => {
       const expectedType = canonicalDetectedType(type, signature);
       expect(detected.extension, `${type} signature ${signatureIndex}`).toBe(expectedType);
       expect(S.is(DetectedFileInfo)(detected)).toBe(true);
-      if (expectedType === type) {
+      if (fileTypeEquivalence(expectedType, type)) {
         expect(signatureEquivalence(detected.signature, signature), `${type} signature ${signatureIndex}`).toBe(true);
       } else {
         expect(Eq.equals(detected.signature.sequence, signature.sequence)).toBe(true);
@@ -239,7 +306,7 @@ describe("detectFile", () => {
 
   it("respects exact chunk boundaries and explicitly enlarged high-offset windows", () => {
     for (const signature of FileTypeCatalog.zip.signatures) {
-      if (signature.offset === 0) continue;
+      if (Num.Equivalence(signature.offset, 0)) continue;
       const sample = baseSampleFromSignature(signature);
       const boundary = signature.offset + signature.sequence.length + signature.skippedBytes.length;
       expect(O.isNone(detectFile(sample, DetectFileOptions.make({ chunkSize: boundary - 1 })))).toBe(true);

@@ -39,7 +39,7 @@ type CorrelatedFileTypeCatalog = {
  * @category constants
  * @since 0.0.0
  */
-export const FileTypeCatalog = {
+export const FileTypeCatalog: CorrelatedFileTypeCatalog = {
   ...audioCatalog,
   ...compressedCatalog,
   ...imageCatalog,
@@ -48,4 +48,4 @@ export const FileTypeCatalog = {
   ...executableCatalog,
   ...structuredDataCatalog,
   ...videoCatalog,
-} satisfies CorrelatedFileTypeCatalog;
+};
