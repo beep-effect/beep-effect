@@ -51,7 +51,11 @@ export * from "../commands/Quality/internal/CoverageRegression.ts";
 export * from "../commands/Quality/internal/CoverageScope.ts";
 export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";
 export * from "../commands/Quality/internal/FlakeQuarantine.ts";
-export { githubCheckChangesetStatusLane, githubCheckLanePlan } from "../commands/Quality/internal/GithubChecks.ts";
+export {
+  githubCheckChangesetStatusLane,
+  githubCheckCheapGateLanes,
+  githubCheckLanePlan,
+} from "../commands/Quality/internal/GithubChecks.ts";
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
 export * from "../commands/Quality/internal/JSDocMigrate.schemas.ts";
 export * from "../commands/Quality/internal/JSDocMigrateApply.ts";
