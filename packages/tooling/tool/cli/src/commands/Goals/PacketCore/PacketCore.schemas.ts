@@ -771,23 +771,79 @@ export const PacketEventBody = S.Union([
  */
 export type PacketEventBody = typeof PacketEventBody.Type;
 
-const PacketEventTimestamp = S.String.check(
+/**
+ * ISO-8601 timestamp recorded on packet events and writer requests.
+ *
+ * **Example** (Reject a timestamp that is not ISO-8601)
+ *
+ * ```ts
+ * import { PacketEventTimestamp } from "@beep/repo-cli/test/Goals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PacketEventTimestamp)("2026-08-17T10:00:00.000Z")) // true
+ * console.log(S.is(PacketEventTimestamp)("2026-08-17")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PacketEventTimestamp = S.String.check(
   S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/, {
     identifier: $I`PacketEventAtPatternCheck`,
     title: "Packet Event Timestamp Pattern",
     description: "Event timestamps are ISO-8601 date-time strings.",
     message: "Expected an ISO-8601 date-time string",
   })
+).pipe(
+  $I.annoteSchema("PacketEventTimestamp", {
+    description: "ISO-8601 date-time string recorded on packet events and writer requests.",
+  })
 );
 
-const PacketEventActor = S.String.check(
+/**
+ * Non-empty actor recorded on packet events and writer requests.
+ *
+ * **Example** (Reject an empty actor)
+ *
+ * ```ts
+ * import { PacketEventActor } from "@beep/repo-cli/test/Goals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PacketEventActor)("operator")) // true
+ * console.log(S.is(PacketEventActor)("")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PacketEventActor = S.String.check(
   S.isMinLength(1, {
     identifier: $I`PacketEventActorLengthCheck`,
     title: "Packet Event Actor Length",
     description: "The recording actor is a non-empty string.",
     message: "Expected a non-empty actor",
   })
+).pipe(
+  $I.annoteSchema("PacketEventActor", {
+    description: "Non-empty actor recorded on packet events and writer requests.",
+  })
 );
+
+/**
+ * Decoded packet-event timestamp.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PacketEventTimestamp = typeof PacketEventTimestamp.Type;
+
+/**
+ * Decoded packet-event actor.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PacketEventActor = typeof PacketEventActor.Type;
 
 const PacketEventGenesisParentCheck = S.makeFilter(
   (event: { readonly seq: number; readonly parent?: PacketEventId }) =>
@@ -1066,6 +1122,7 @@ export const PacketChainIssueKind = LiteralKit([
   "event-invalid",
   "digest-mismatch",
   "file-name-mismatch",
+  "packet-mismatch",
   "missing-parent",
   "parent-seq-mismatch",
 ]).pipe(

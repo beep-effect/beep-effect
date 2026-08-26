@@ -45,10 +45,10 @@ const heading = (editor: LexicalEditor, tag: HeadingTagType): void => setBlock(e
  *
  * **Example** (Log default slash items)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log default slash items"
  * import { defaultChatSlashItems } from "@beep/editor/chat/slash-items"
  *
- * console.log(defaultChatSlashItems.length > 0) // true
+ * defaultChatSlashItems.length > 0 // => true
  * ```
  *
  * @category configuration

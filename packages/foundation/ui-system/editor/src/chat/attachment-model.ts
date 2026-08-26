@@ -39,10 +39,10 @@ const decodeMimeType = S.decodeUnknownResult(MimeType);
  *
  * **Example** (Checking PNG MIME eligibility)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Checking PNG MIME eligibility"
  * import { IMAGE_MIME_TYPES } from "@beep/editor/chat/attachment-model"
  *
- * console.log(IMAGE_MIME_TYPES.includes("image/png")) // true
+ * IMAGE_MIME_TYPES.includes("image/png") // => true
  * ```
  *
  * @category configuration
@@ -56,10 +56,10 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pickOptions(["image/png", "image/j
  *
  * **Example** (Validating image MIME type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validating image MIME type"
  * import { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
  *
- * console.log(ImageAttachmentMimeType.is("image/png")) // true
+ * ImageAttachmentMimeType.is("image/png") // => true
  * ```
  *
  * @category schemas
@@ -77,11 +77,11 @@ export const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
  *
  * **Example** (Assigning image MIME type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assigning image MIME type"
  * import type { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
  *
  * const mimeType: ImageAttachmentMimeType = "image/png"
- * console.log(mimeType) // "image/png"
+ * mimeType // => "image/png"
  * ```
  *
  * @category models
@@ -94,11 +94,11 @@ export type ImageAttachmentMimeType = typeof ImageAttachmentMimeType.Type;
  *
  * **Example** (Converting default max to MB)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Converting default max to MB"
  * import { DEFAULT_MAX_ATTACHMENT_BYTES } from "@beep/editor/chat/attachment-model"
  *
  * const defaultMegabytes = DEFAULT_MAX_ATTACHMENT_BYTES / 1024 / 1024
- * console.log(defaultMegabytes) // 10
+ * defaultMegabytes // => 10
  * ```
  *
  * @category configuration
@@ -157,7 +157,7 @@ const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
  *
  * **Example** (Creating oversized file rejection)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Creating oversized file rejection"
  * import { AttachmentTooLarge } from "@beep/editor/chat/attachment-model"
  *
  * const rejection = new AttachmentTooLarge({
@@ -166,7 +166,7 @@ const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
  *   maxBytes: 10_485_760,
  * })
  *
- * console.log(rejection._tag) // "AttachmentTooLarge"
+ * rejection._tag // => "AttachmentTooLarge"
  * ```
  *
  * @category errors
@@ -190,7 +190,7 @@ export class AttachmentTooLarge extends S.TaggedError<AttachmentTooLarge>($I`Att
  *
  * **Example** (Creating invalid MIME rejection)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Creating invalid MIME rejection"
  * import { AttachmentInvalidMimeType } from "@beep/editor/chat/attachment-model"
  *
  * const rejection = new AttachmentInvalidMimeType({
@@ -198,7 +198,7 @@ export class AttachmentTooLarge extends S.TaggedError<AttachmentTooLarge>($I`Att
  *   mimeType: "",
  * })
  *
- * console.log(rejection._tag) // "AttachmentInvalidMimeType"
+ * rejection._tag // => "AttachmentInvalidMimeType"
  * ```
  *
  * @category errors
@@ -223,12 +223,12 @@ export class AttachmentInvalidMimeType extends S.TaggedError<AttachmentInvalidMi
  *
  * **Example** (Creating port failure error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Creating port failure error"
  * import { AttachmentPortFailed } from "@beep/editor/chat/attachment-model"
  *
  * const failure = new AttachmentPortFailed({ message: "Files could not be attached." })
  *
- * console.log(failure._tag) // "AttachmentPortFailed"
+ * failure._tag // => "AttachmentPortFailed"
  * ```
  *
  * @category errors
@@ -255,7 +255,7 @@ export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I
  *
  * **Example** (Typing a capture rejection)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typing a capture rejection"
  * import { AttachmentInvalidMimeType, type AttachmentRejection } from "@beep/editor/chat/attachment-model"
  *
  * const rejection: AttachmentRejection = new AttachmentInvalidMimeType({
@@ -263,7 +263,7 @@ export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I
  *   mimeType: "",
  * })
  *
- * console.log(rejection._tag) // "AttachmentInvalidMimeType"
+ * rejection._tag // => "AttachmentInvalidMimeType"
  * ```
  *
  * @category errors
@@ -283,7 +283,7 @@ export const AttachmentRejection = S.Union([AttachmentTooLarge, AttachmentInvali
  *
  * **Example** (Assigning rejection union type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assigning rejection union type"
  * import { AttachmentInvalidMimeType, type AttachmentRejection } from "@beep/editor/chat/attachment-model"
  *
  * const rejection: AttachmentRejection = new AttachmentInvalidMimeType({
@@ -291,7 +291,7 @@ export const AttachmentRejection = S.Union([AttachmentTooLarge, AttachmentInvali
  *   mimeType: "",
  * })
  *
- * console.log(rejection._tag) // "AttachmentInvalidMimeType"
+ * rejection._tag // => "AttachmentInvalidMimeType"
  * ```
  *
  * @category errors
@@ -305,13 +305,13 @@ export type AttachmentRejection = typeof AttachmentRejection.Type;
  *
  * **Example** (Typing an attachment failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typing an attachment failure"
  * import { AttachmentPortFailed, type AttachmentFailure } from "@beep/editor/chat/attachment-model"
  *
  * const failure: AttachmentFailure = new AttachmentPortFailed({
  *   message: "Files could not be attached.",
  * })
- * console.log(failure._tag) // "AttachmentPortFailed"
+ * failure._tag // => "AttachmentPortFailed"
  * ```
  *
  * @category errors
@@ -330,13 +330,13 @@ export const AttachmentFailure = S.Union([AttachmentTooLarge, AttachmentInvalidM
  *
  * **Example** (Making attachment failure value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Making attachment failure value"
  * import { AttachmentPortFailed, type AttachmentFailure } from "@beep/editor/chat/attachment-model"
  *
  * const failure: AttachmentFailure = AttachmentPortFailed.make({
  *   message: "Files could not be attached.",
  * })
- * console.log(failure._tag) // "AttachmentPortFailed"
+ * failure._tag // => "AttachmentPortFailed"
  * ```
  *
  * @category errors

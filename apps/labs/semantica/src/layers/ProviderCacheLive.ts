@@ -115,7 +115,7 @@ const makeProviderCache = Effect.gen(function* () {
       onSome: (value) => processIsAlive(value).pipe(Effect.map(Bool.not)),
     });
     return Bool.match(stale, {
-      onFalse: () => O.none<O.Option<string>>(),
+      onFalse: O.none<O.Option<string>>,
       onTrue: () => O.some(owner),
     });
   });

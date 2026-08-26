@@ -169,7 +169,7 @@ const sourcePath = SpecSource.match({
 });
 
 const sourceUrl = SpecSource.match({
-  file: () => O.none<string>(),
+  file: O.none<string>,
   url: ({ url }) => O.some(url),
 });
 

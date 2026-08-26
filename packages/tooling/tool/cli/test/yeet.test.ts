@@ -76,6 +76,7 @@ import {
   tryReclaimStaleProofLockForTesting,
   tryRecoverObservedProofLockReapClaimForTesting,
   validateMonitorGuards,
+  validateProofCoordinatorDirectoryForTesting,
   validatePublishBranchForTesting,
   validatePublishCommitMessageForTesting,
   YeetAttemptStarted,
@@ -106,7 +107,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Fiber, FileSystem, Layer, Path } from "effect";
+import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -2614,8 +2615,68 @@ describe("yeet publish scope helpers", () => {
         expect(first).toBe(sibling);
         expect(other).not.toBe(first);
         expect(first).not.toContain("github.com");
-        expect(first).toMatch(/beep-yeet-proof-locks\/[a-f0-9]{12}\.lock$/u);
+        expect(first).toMatch(/beep-yeet-proof-locks-[a-f0-9]{12}-uid-[0-9]+\/[a-f0-9]{12}\.lock$/u);
       }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("resolves the coordinator root from XDG_RUNTIME_DIR and falls back to the system temp directory", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const configuredRoot = "/beep-yeet-xdg-runtime-root";
+        const withRuntimeConfig = (env: Record<string, string>) =>
+          pipe(
+            proofCoordinatorLockPath("git@github.com:acme/repo.git"),
+            provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
+          );
+
+        const configured = yield* withRuntimeConfig({ XDG_RUNTIME_DIR: configuredRoot });
+        const relative = yield* withRuntimeConfig({ XDG_RUNTIME_DIR: "relative/runtime-root" });
+        const empty = yield* withRuntimeConfig({ XDG_RUNTIME_DIR: "" });
+        const absent = yield* withRuntimeConfig({});
+
+        expect(path.dirname(path.dirname(configured))).toBe(configuredRoot);
+        expect(configured).toMatch(/beep-yeet-proof-locks-[a-f0-9]{12}-uid-[0-9]+\/[a-f0-9]{12}\.lock$/u);
+        expect(relative).toBe(absent);
+        expect(empty).toBe(absent);
+        expect(absent).not.toBe(configured);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("accepts symlinked ancestors and rejects unsafe proof coordinator directories", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const target = path.join(tmpDir, "target");
+          const symlink = path.join(tmpDir, "symlink");
+          const nestedCoordinator = path.join(symlink, "coordinator");
+          const overPermissive = path.join(tmpDir, "over-permissive");
+
+          yield* fs.makeDirectory(target, { mode: 0o700 });
+          yield* fs.symlink(target, symlink);
+          const symlinkRefusal = yield* validateProofCoordinatorDirectoryForTesting(symlink).pipe(Effect.flip);
+          expect(symlinkRefusal.message).toContain("is a symbolic link");
+
+          yield* fs.makeDirectory(nestedCoordinator, { mode: 0o700 });
+          yield* validateProofCoordinatorDirectoryForTesting(nestedCoordinator);
+
+          const targetInfo = yield* fs.stat(target);
+          const ownerRefusal = yield* validateProofCoordinatorDirectoryForTesting(
+            target,
+            O.some(O.getOrThrow(targetInfo.uid) + 1)
+          ).pipe(Effect.flip);
+          expect(ownerRefusal.message).toContain("expected effective uid");
+
+          yield* fs.makeDirectory(overPermissive, { mode: 0o700 });
+          yield* fs.chmod(overPermissive, 0o755);
+          const modeRefusal = yield* validateProofCoordinatorDirectoryForTesting(overPermissive, O.none()).pipe(
+            Effect.flip
+          );
+          expect(modeRefusal.message).toContain("has mode 755; expected 0700");
+        })
+      )
     ));
 
   it("acquires an absent proof coordinator and releases present and missing locks", () =>
@@ -2623,12 +2684,14 @@ describe("yeet publish scope helpers", () => {
       withProofCoordinatorRepo(({ lockPath, tempContext }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
 
           expect(yield* fs.exists(lockPath)).toBe(false);
           const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
           expect(lease.lockPath).toBe(lockPath);
           expect(yield* fs.exists(lockPath)).toBe(true);
           expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
+          expect((yield* fs.stat(path.dirname(lockPath))).mode & 0o777).toBe(0o700);
 
           yield* releaseProofLock(lease);
           expect(yield* fs.exists(lockPath)).toBe(false);

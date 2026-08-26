@@ -336,6 +336,105 @@ const hashText = Effect.fn("Yeet.hashText")(function* (
   return Encoding.encodeHex(digest);
 });
 
+const requireSafeProofCoordinator = (satisfied: boolean, message: string) =>
+  satisfied ? Effect.void : YeetCommandError.make({ message });
+
+const currentEffectiveUserId = (): O.Option<number> =>
+  pipe(
+    O.fromUndefinedOr(process.geteuid),
+    O.map((getEffectiveUserId) => getEffectiveUserId())
+  );
+
+const validateProofCoordinatorOwnership = Effect.fn("Yeet.validateProofCoordinatorOwnership")(function* (
+  directory: string,
+  info: FileSystem.File.Info,
+  effectiveUserId: number
+) {
+  const reportedOwner = O.match(info.uid, {
+    onNone: () => "no owner",
+    onSome: (owner) => `uid ${owner}`,
+  });
+  yield* requireSafeProofCoordinator(
+    O.exists(info.uid, (owner) => owner === effectiveUserId),
+    `Yeet proof lock directory ${directory} reported ${reportedOwner}; expected effective uid ${effectiveUserId}. Refusing to use it.`
+  );
+});
+
+const validateProofCoordinatorMode = Effect.fn("Yeet.validateProofCoordinatorMode")(function* (
+  directory: string,
+  info: FileSystem.File.Info
+) {
+  const mode = info.mode & 0o777;
+  yield* requireSafeProofCoordinator(
+    mode === 0o700,
+    `Yeet proof lock directory ${directory} has mode ${mode.toString(8)}; expected 0700. Refusing to use it.`
+  );
+});
+
+const validateProofCoordinatorDirectory = Effect.fn("Yeet.validateProofCoordinatorDirectory")(function* (
+  directory: string,
+  effectiveUserId: O.Option<number>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const symbolicLinkTarget = yield* fs.readLink(directory).pipe(Effect.option);
+  const info = yield* fs
+    .stat(directory)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect Yeet proof lock directory ${directory}.`)));
+
+  yield* requireSafeProofCoordinator(
+    O.isNone(symbolicLinkTarget),
+    `Yeet proof lock directory ${directory} is a symbolic link. Refusing to use it.`
+  );
+  yield* requireSafeProofCoordinator(
+    info.type === "Directory",
+    `Yeet proof lock directory ${directory} is not a directory. Refusing to use it.`
+  );
+  yield* validateProofCoordinatorMode(directory, info);
+
+  yield* O.match(effectiveUserId, {
+    onNone: () => Effect.void,
+    onSome: (userId) => validateProofCoordinatorOwnership(directory, info, userId),
+  });
+});
+
+/**
+ * Validate a proof coordinator directory through the production filesystem boundary.
+ *
+ * **Example** (Build a directory validation Effect)
+ *
+ * ```ts
+ * import { validateProofCoordinatorDirectoryForTesting } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(validateProofCoordinatorDirectoryForTesting("/tmp/example"))) // true
+ * ```
+ *
+ * @internal
+ * @param directory - Existing directory to validate without creating a lock file.
+ * @param effectiveUserIdOverride - Optional effective UID state used by security-focused tests.
+ * @returns An Effect that fails when the directory is unsafe for coordination.
+ * @category testing
+ * @since 0.0.0
+ */
+export const validateProofCoordinatorDirectoryForTesting = Effect.fn(
+  "Yeet.validateProofCoordinatorDirectoryForTesting"
+)(function* (directory: string, effectiveUserIdOverride?: O.Option<number>) {
+  yield* validateProofCoordinatorDirectory(
+    directory,
+    pipe(O.fromUndefinedOr(effectiveUserIdOverride), O.getOrElse(currentEffectiveUserId))
+  );
+});
+
+const ensureProofCoordinatorDirectory = Effect.fn("Yeet.ensureProofCoordinatorDirectory")(function* (
+  directory: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs
+    .makeDirectory(directory, { recursive: true, mode: 0o700 })
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to create Yeet proof lock directory ${directory}.`)));
+  yield* validateProofCoordinatorDirectory(directory, currentEffectiveUserId());
+});
+
 const laneProofStateForStep = Effect.fn("Yeet.laneProofStateForStep")(function* (
   step: RepoPlanStep,
   diffFingerprint: string,
@@ -834,12 +933,9 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lockPath = yield* proofLockPathForContext(context);
-  yield* fs
-    .makeDirectory(path.dirname(lockPath), { recursive: true })
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to create Yeet proof lock directory for ${lockPath}.`)));
+  yield* ensureProofCoordinatorDirectory(path.dirname(lockPath));
   const lockState = YeetProofLockState.make({
     schemaVersion: "yeet-proof-lock/v3",
     branch: context.branch,

@@ -26,10 +26,10 @@ const dottedIdCheck = S.isPattern(dottedIdPattern, {
  *
  * **Example** (Create a capability identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a capability identifier"
  * import { CapabilityId } from "@beep/editor/capability/schemas"
  *
- * console.log(CapabilityId.make("format.bold")) // "format.bold"
+ * CapabilityId.make("format.bold") // => "format.bold"
  * ```
  *
  * @category identifiers
@@ -56,10 +56,10 @@ export type CapabilityId = typeof CapabilityId.Type;
  *
  * **Example** (Create a command identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a command identifier"
  * import { CommandId } from "@beep/editor/capability/schemas"
  *
- * console.log(CommandId.make("format.bold")) // "format.bold"
+ * CommandId.make("format.bold") // => "format.bold"
  * ```
  *
  * @category identifiers
@@ -86,10 +86,10 @@ export type CommandId = typeof CommandId.Type;
  *
  * **Example** (Create a profile identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a profile identifier"
  * import { ProfileId } from "@beep/editor/capability/schemas"
  *
- * console.log(ProfileId.make("editor.reference")) // "editor.reference"
+ * ProfileId.make("editor.reference") // => "editor.reference"
  * ```
  *
  * @category identifiers
@@ -116,10 +116,10 @@ export type ProfileId = typeof ProfileId.Type;
  *
  * **Example** (Check a node category)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a node category"
  * import { CapabilityCategory } from "@beep/editor/capability/schemas"
  *
- * console.log(CapabilityCategory.is.node("node")) // true
+ * CapabilityCategory.is.node("node") // => true
  * ```
  *
  * @category schemas
@@ -152,10 +152,10 @@ export type CapabilityCategory = typeof CapabilityCategory.Type;
  *
  * **Example** (Check an implementation disposition)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an implementation disposition"
  * import { CapabilityDisposition } from "@beep/editor/capability/schemas"
  *
- * console.log(CapabilityDisposition.is.implement("implement")) // true
+ * CapabilityDisposition.is.implement("implement") // => true
  * ```
  *
  * @category schemas
@@ -181,10 +181,10 @@ export type CapabilityDisposition = typeof CapabilityDisposition.Type;
  *
  * **Example** (Check lossless compatibility)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check lossless compatibility"
  * import { CanonicalCompatibility } from "@beep/editor/capability/schemas"
  *
- * console.log(CanonicalCompatibility.is.lossless("lossless")) // true
+ * CanonicalCompatibility.is.lossless("lossless") // => true
  * ```
  *
  * @category schemas
@@ -210,10 +210,10 @@ export type CanonicalCompatibility = typeof CanonicalCompatibility.Type;
  *
  * **Example** (Check canonical rendering fallback)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check canonical rendering fallback"
  * import { ReadOnlyFallback } from "@beep/editor/capability/schemas"
  *
- * console.log(ReadOnlyFallback.is["render-canonical"]("render-canonical")) // true
+ * ReadOnlyFallback.is["render-canonical"]("render-canonical") // => true
  * ```
  *
  * @category schemas
@@ -239,10 +239,10 @@ export type ReadOnlyFallback = typeof ReadOnlyFallback.Type;
  *
  * **Example** (Check toolbar activation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check toolbar activation"
  * import { ActivationSurface } from "@beep/editor/capability/schemas"
  *
- * console.log(ActivationSurface.is.toolbar("toolbar")) // true
+ * ActivationSurface.is.toolbar("toolbar") // => true
  * ```
  *
  * @category schemas
@@ -268,10 +268,10 @@ export type ActivationSurface = typeof ActivationSurface.Type;
  *
  * **Example** (Check Apple platform)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check Apple platform"
  * import { Platform } from "@beep/editor/capability/schemas"
  *
- * console.log(Platform.is.apple("apple")) // true
+ * Platform.is.apple("apple") // => true
  * ```
  *
  * @category schemas
@@ -297,10 +297,10 @@ export type Platform = typeof Platform.Type;
  *
  * **Example** (Inspect modifier order)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect modifier order"
  * import { Modifier } from "@beep/editor/capability/schemas"
  *
- * console.log(Modifier.Options) // ["control", "meta", "alt", "shift"]
+ * Modifier.Options // => ["control", "meta", "alt", "shift"]
  * ```
  *
  * @category schemas
@@ -385,11 +385,11 @@ const sortedModifiers = S.makeFilter<ReadonlyArray<Modifier>>(
  *
  * **Example** (Create a canonical key chord)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a canonical key chord"
  * import { KeyChord } from "@beep/editor/capability/schemas"
  *
  * const chord = KeyChord.make({ modifiers: ["control", "shift"], key: "x" })
- * console.log(chord.key) // "x"
+ * chord.key // => "x"
  * ```
  *
  * @category models
@@ -430,13 +430,13 @@ const encodeChord = (chord: KeyChord): string =>
  *
  * **Example** (Decode an authored chord)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode an authored chord"
  * import { KeyChordFromString } from "@beep/editor/capability/schemas"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(KeyChordFromString)("Ctrl+Alt+1")
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category codecs
@@ -469,14 +469,14 @@ export type KeyChordFromString = typeof KeyChordFromString.Type;
  *
  * **Example** (Create an Apple binding)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create an Apple binding"
  * import { Keybinding, KeyChord } from "@beep/editor/capability/schemas"
  *
  * const binding = Keybinding.make({
  *   platform: "apple",
  *   chord: KeyChord.make({ modifiers: ["meta"], key: "b" })
  * })
- * console.log(binding.platform) // "apple"
+ * binding.platform // => "apple"
  * ```
  *
  * @category models
@@ -498,10 +498,10 @@ export class Keybinding extends S.Class<Keybinding>($I`Keybinding`)(
  *
  * **Example** (Check paragraph registration)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check paragraph registration"
  * import { NodeRegistrationKey } from "@beep/editor/capability/schemas"
  *
- * console.log(NodeRegistrationKey.is.ParagraphNode("ParagraphNode")) // true
+ * NodeRegistrationKey.is.ParagraphNode("ParagraphNode") // => true
  * ```
  *
  * @category schemas
@@ -543,10 +543,10 @@ export type NodeRegistrationKey = typeof NodeRegistrationKey.Type;
  *
  * **Example** (Check history extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check history extension"
  * import { ExtensionKey } from "@beep/editor/capability/schemas"
  *
- * console.log(ExtensionKey.is.HistoryPlugin("HistoryPlugin")) // true
+ * ExtensionKey.is.HistoryPlugin("HistoryPlugin") // => true
  * ```
  *
  * @category schemas
@@ -581,10 +581,10 @@ export type ExtensionKey = typeof ExtensionKey.Type;
  *
  * **Example** (Check heading transformer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check heading transformer"
  * import { TransformerKey } from "@beep/editor/capability/schemas"
  *
- * console.log(TransformerKey.is.HEADING("HEADING")) // true
+ * TransformerKey.is.HEADING("HEADING") // => true
  * ```
  *
  * @category schemas
@@ -651,11 +651,11 @@ const uniqueCapabilityIds = uniqueValues<CapabilityId>("capability id");
  *
  * **Example** (Create empty registrations)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create empty registrations"
  * import { CapabilityRegistrations } from "@beep/editor/capability/schemas"
  *
  * const registrations = CapabilityRegistrations.make({ nodes: [], extensions: [], transformers: [] })
- * console.log(registrations.nodes) // []
+ * registrations.nodes // => []
  * ```
  *
  * @category models
@@ -702,14 +702,14 @@ const uniqueBindingPlatforms = S.makeFilter<ReadonlyArray<Keybinding>>(
  *
  * **Example** (Create a toolbar command)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a toolbar command"
  * import { CommandDefinition, CommandId } from "@beep/editor/capability/schemas"
  *
  * const command = CommandDefinition.make({
  *   id: CommandId.make("format.bold"), label: "Bold", helpText: "Toggle bold.",
  *   surfaces: ["toolbar"], keybindings: []
  * })
- * console.log(command.label) // "Bold"
+ * command.label // => "Bold"
  * ```
  *
  * @category commands
@@ -738,11 +738,11 @@ export class CommandDefinition extends S.Class<CommandDefinition>($I`CommandDefi
  *
  * **Example** (Create a classification)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a classification"
  * import { CapabilityClassification } from "@beep/editor/capability/schemas"
  *
  * const value = CapabilityClassification.make({ category: "authoring", disposition: "implement" })
- * console.log(value.category) // "authoring"
+ * value.category // => "authoring"
  * ```
  *
  * @category models
@@ -764,7 +764,7 @@ export class CapabilityClassification extends S.Class<CapabilityClassification>(
  *
  * **Example** (Create a descriptor)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a descriptor"
  * import { CapabilityDescriptor, CapabilityId, CapabilityRegistrations } from "@beep/editor/capability/schemas"
  *
  * const value = CapabilityDescriptor.make({
@@ -775,7 +775,7 @@ export class CapabilityClassification extends S.Class<CapabilityClassification>(
  *   commands: [], readOnlyFallback: "render-canonical", canonicalCompatibility: "lossless",
  *   evidence: "editor-capability-atlas/v1#format.bold"
  * })
- * console.log(value.id) // "format.bold"
+ * value.id // => "format.bold"
  * ```
  *
  * @category models
@@ -914,12 +914,12 @@ const uniqueCatalogRegistrationKeys = S.makeFilter<ReadonlyArray<CapabilityDescr
  *
  * **Example** (Decode an empty catalog)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode an empty catalog"
  * import { CapabilityCatalog } from "@beep/editor/capability/schemas"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
- * console.log(Result.isSuccess(S.decodeUnknownResult(CapabilityCatalog)([]))) // true
+ * Result.isSuccess(S.decodeUnknownResult(CapabilityCatalog)([])) // => true
  * ```
  *
  * @category schemas
@@ -947,10 +947,10 @@ export type CapabilityCatalog = typeof CapabilityCatalog.Type;
  *
  * **Example** (Check production profile kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check production profile kind"
  * import { ProfileKind } from "@beep/editor/capability/schemas"
  *
- * console.log(ProfileKind.is.production("production")) // true
+ * ProfileKind.is.production("production") // => true
  * ```
  *
  * @category schemas
@@ -976,11 +976,11 @@ export type ProfileKind = typeof ProfileKind.Type;
  *
  * **Example** (Unbind a command)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Unbind a command"
  * import { CommandId, KeybindingOverride } from "@beep/editor/capability/schemas"
  *
  * const value = KeybindingOverride.make({ commandId: CommandId.make("format.bold"), keybindings: [] })
- * console.log(value.keybindings) // []
+ * value.keybindings // => []
  * ```
  *
  * @category configuration
@@ -1022,11 +1022,11 @@ const uniqueOverrideCommandIds = S.makeFilter<ReadonlyArray<KeybindingOverride>>
  *
  * **Example** (Create a default production profile)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a default production profile"
  * import { EditorProfile, ProfileId } from "@beep/editor/capability/schemas"
  *
  * const profile = EditorProfile.make({ id: ProfileId.make("editor.empty"), capabilities: [] })
- * console.log(profile.kind) // "production"
+ * profile.kind // => "production"
  * ```
  *
  * @category configuration
@@ -1057,10 +1057,10 @@ export class EditorProfile extends S.Class<EditorProfile>($I`EditorProfile`)(
  *
  * **Example** (Check authoring mode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check authoring mode"
  * import { CapabilityMode } from "@beep/editor/capability/schemas"
  *
- * console.log(CapabilityMode.is.authoring("authoring")) // true
+ * CapabilityMode.is.authoring("authoring") // => true
  * ```
  *
  * @category schemas
@@ -1086,13 +1086,13 @@ export type CapabilityMode = typeof CapabilityMode.Type;
  *
  * **Example** (Create a read-only capability)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a read-only capability"
  * import { CapabilityId, ResolvedCapability } from "@beep/editor/capability/schemas"
  *
  * const value = ResolvedCapability.make({
  *   id: CapabilityId.make("node.paragraph"), mode: "read-only", readOnlyFallback: "render-canonical"
  * })
- * console.log(value.mode) // "read-only"
+ * value.mode // => "read-only"
  * ```
  *
  * @category models
@@ -1115,14 +1115,14 @@ export class ResolvedCapability extends S.Class<ResolvedCapability>($I`ResolvedC
  *
  * **Example** (Create a resolved command)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a resolved command"
  * import { CapabilityId, CommandId, ResolvedCommand } from "@beep/editor/capability/schemas"
  *
  * const command = ResolvedCommand.make({
  *   id: CommandId.make("format.bold"), capabilityId: CapabilityId.make("format.bold"),
  *   label: "Bold", helpText: "Toggle bold.", surfaces: ["toolbar"], keybindings: []
  * })
- * console.log(command.label) // "Bold"
+ * command.label // => "Bold"
  * ```
  *
  * @category commands
@@ -1148,7 +1148,7 @@ export class ResolvedCommand extends S.Class<ResolvedCommand>($I`ResolvedCommand
  *
  * **Example** (Create an empty resolved profile)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create an empty resolved profile"
  * import { CapabilityRegistrations, ProfileId, ResolvedEditorProfile } from "@beep/editor/capability/schemas"
  *
  * const value = ResolvedEditorProfile.make({
@@ -1156,7 +1156,7 @@ export class ResolvedCommand extends S.Class<ResolvedCommand>($I`ResolvedCommand
  *   registrations: CapabilityRegistrations.make({ nodes: [], extensions: [], transformers: [] }),
  *   commands: [], guardedChords: []
  * })
- * console.log(value.commands) // []
+ * value.commands // => []
  * ```
  *
  * @category models

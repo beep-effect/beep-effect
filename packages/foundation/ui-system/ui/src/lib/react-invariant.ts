@@ -83,11 +83,11 @@ type RequiredReactContext<Value> = Value extends unknown ? Value : never;
  *
  * **Example** (Require context under provider)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Require context under provider"
  * import { requireReactContext } from "@beep/ui/lib/react-invariant"
  *
  * const value = requireReactContext("ok", { message: "missing provider" })
- * console.log(value) // "ok"
+ * value // => "ok"
  * ```
  *
  * @category utilities

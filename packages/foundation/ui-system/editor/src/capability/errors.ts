@@ -17,14 +17,14 @@ const $I = $EditorId.create("capability/errors");
  *
  * **Example** (Create an unknown capability failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create an unknown capability failure"
  * import { UnknownCapabilityError } from "@beep/editor/capability/errors"
  * import { CapabilityId, ProfileId } from "@beep/editor/capability/schemas"
  *
  * const error = UnknownCapabilityError.make({
  *   profileId: ProfileId.make("editor.test"), capabilityId: CapabilityId.make("node.missing")
  * })
- * console.log(error._tag) // "UnknownCapabilityError"
+ * error._tag // => "UnknownCapabilityError"
  * ```
  *
  * @category errors
@@ -51,7 +51,7 @@ export class UnknownCapabilityError extends S.TaggedError<UnknownCapabilityError
  *
  * **Example** (Create a missing dependency failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a missing dependency failure"
  * import { MissingDependencyError } from "@beep/editor/capability/errors"
  * import { CapabilityId, ProfileId } from "@beep/editor/capability/schemas"
  *
@@ -59,7 +59,7 @@ export class UnknownCapabilityError extends S.TaggedError<UnknownCapabilityError
  *   profileId: ProfileId.make("editor.test"), capabilityId: CapabilityId.make("authoring.undo"),
  *   dependencyId: CapabilityId.make("extension.history")
  * })
- * console.log(error.dependencyId) // "extension.history"
+ * error.dependencyId // => "extension.history"
  * ```
  *
  * @category errors
@@ -122,7 +122,7 @@ export class DependencyCycleError extends S.TaggedError<DependencyCycleError>($I
  *
  * **Example** (Create a capability conflict failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a capability conflict failure"
  * import { CapabilityConflictError } from "@beep/editor/capability/errors"
  * import { CapabilityId, ProfileId } from "@beep/editor/capability/schemas"
  *
@@ -130,7 +130,7 @@ export class DependencyCycleError extends S.TaggedError<DependencyCycleError>($I
  *   profileId: ProfileId.make("editor.test"), capabilityId: CapabilityId.make("node.a"),
  *   conflictsWith: CapabilityId.make("node.b")
  * })
- * console.log(error.conflictsWith) // "node.b"
+ * error.conflictsWith // => "node.b"
  * ```
  *
  * @category errors
@@ -158,14 +158,14 @@ export class CapabilityConflictError extends S.TaggedError<CapabilityConflictErr
  *
  * **Example** (Create a development-only failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create a development-only failure"
  * import { DevelopmentOnlyCapabilityError } from "@beep/editor/capability/errors"
  * import { CapabilityId, ProfileId } from "@beep/editor/capability/schemas"
  *
  * const error = DevelopmentOnlyCapabilityError.make({
  *   profileId: ProfileId.make("editor.production"), capabilityId: CapabilityId.make("debug.raw-state")
  * })
- * console.log(error._tag) // "DevelopmentOnlyCapabilityError"
+ * error._tag // => "DevelopmentOnlyCapabilityError"
  * ```
  *
  * @category errors
@@ -194,7 +194,7 @@ export class DevelopmentOnlyCapabilityError extends S.TaggedError<DevelopmentOnl
  *
  * **Example** (Create an incompatible transformer failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create an incompatible transformer failure"
  * import { IncompatibleRegistrationError } from "@beep/editor/capability/errors"
  * import { CapabilityId, ProfileId } from "@beep/editor/capability/schemas"
  *
@@ -202,7 +202,7 @@ export class DevelopmentOnlyCapabilityError extends S.TaggedError<DevelopmentOnl
  *   profileId: ProfileId.make("editor.test"), capabilityId: CapabilityId.make("transformer.heading"),
  *   registration: "HEADING", reason: "transformer requires interchange.markdown"
  * })
- * console.log(error.registration) // "HEADING"
+ * error.registration // => "HEADING"
  * ```
  *
  * @category errors
@@ -233,14 +233,14 @@ export class IncompatibleRegistrationError extends S.TaggedError<IncompatibleReg
  *
  * **Example** (Create an unknown command failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create an unknown command failure"
  * import { UnknownCommandError } from "@beep/editor/capability/errors"
  * import { CommandId, ProfileId } from "@beep/editor/capability/schemas"
  *
  * const error = UnknownCommandError.make({
  *   profileId: ProfileId.make("editor.test"), commandId: CommandId.make("format.missing")
  * })
- * console.log(error.commandId) // "format.missing"
+ * error.commandId // => "format.missing"
  * ```
  *
  * @category errors
@@ -307,7 +307,7 @@ export class KeybindingConflictError extends S.TaggedError<KeybindingConflictErr
  *
  * **Example** (Decode a resolution failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode a resolution failure"
  * import { ProfileResolutionError, UnknownCapabilityError } from "@beep/editor/capability/errors"
  * import { CapabilityId, ProfileId } from "@beep/editor/capability/schemas"
  * import * as S from "effect/Schema"
@@ -315,7 +315,7 @@ export class KeybindingConflictError extends S.TaggedError<KeybindingConflictErr
  * const value = UnknownCapabilityError.make({
  *   profileId: ProfileId.make("editor.test"), capabilityId: CapabilityId.make("node.missing")
  * })
- * console.log(S.is(ProfileResolutionError)(value)) // true
+ * S.is(ProfileResolutionError)(value) // => true
  * ```
  *
  * @category errors

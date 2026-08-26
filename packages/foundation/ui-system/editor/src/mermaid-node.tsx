@@ -41,7 +41,7 @@ const decodeSerializedMermaidNode = (input: unknown) => S.decodeUnknownResult(Se
  *
  * **Example** (Make serialized mermaid payload)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make serialized mermaid payload"
  * import { SerializedMermaidNode } from "@beep/editor/mermaid-node"
  *
  * const payload = SerializedMermaidNode.make({
@@ -50,7 +50,7 @@ const decodeSerializedMermaidNode = (input: unknown) => S.decodeUnknownResult(Se
  *   source: "graph TD\n  A --> B",
  * })
  *
- * console.log(payload.source) // "graph TD\n  A --> B"
+ * payload.source // => "graph TD\n  A --> B"
  * ```
  *
  * @category models

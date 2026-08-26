@@ -14,7 +14,7 @@
  */
 
 import * as S from "effect/Schema";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi";
 import { CaseReportList, CourtCaseSearchDto, PartyReportList, PartySearchDto, ReportInfoType } from "./Pcl.models.ts";
 
 /**
@@ -38,24 +38,24 @@ export const PclHttpApiGroup = HttpApiGroup.make("pcl").add(
     payload: CourtCaseSearchDto,
     query: { page: S.optionalKey(S.FiniteFromString) },
     success: CaseReportList,
-  }),
+  }).annotate(OpenApi.Summary, "Search PACER Case Locator cases."),
   HttpApiEndpoint.post("findParties", "/pcl-public-api/rest/parties/find", {
     payload: PartySearchDto,
     query: { page: S.optionalKey(S.FiniteFromString) },
     success: PartyReportList,
-  }),
+  }).annotate(OpenApi.Summary, "Search PACER Case Locator parties."),
   HttpApiEndpoint.post("startCaseDownload", "/pcl-public-api/rest/cases/download", {
     payload: CourtCaseSearchDto,
     success: ReportInfoType,
-  }),
+  }).annotate(OpenApi.Summary, "Start an asynchronous case download report."),
   HttpApiEndpoint.get("caseDownloadStatus", "/pcl-public-api/rest/cases/download/status/:reportId", {
     params: { reportId: S.FiniteFromString },
     success: ReportInfoType,
-  }),
+  }).annotate(OpenApi.Summary, "Return the status of a case download report."),
   HttpApiEndpoint.get("caseDownloadResults", "/pcl-public-api/rest/cases/download/:reportId", {
     params: { reportId: S.FiniteFromString },
     success: CaseReportList,
-  })
+  }).annotate(OpenApi.Summary, "Return the results of a completed case download report.")
 );
 
 /**
@@ -73,4 +73,10 @@ export const PclHttpApiGroup = HttpApiGroup.make("pcl").add(
  * @category models
  * @since 0.0.0
  */
-export const PclHttpApi = HttpApi.make("PacerPcl").add(PclHttpApiGroup);
+export const PclHttpApi = HttpApi.make("PacerPcl")
+  .annotate(OpenApi.Title, "PACER Case Locator API")
+  .annotate(
+    OpenApi.Description,
+    "Declarative contract for the PACER Case Locator synchronous case and party search endpoints and asynchronous case download workflow. PACER error responses use HTTP status codes and are mapped by the derived client because their response bodies are not a stable schema."
+  )
+  .add(PclHttpApiGroup);

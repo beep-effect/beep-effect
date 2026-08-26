@@ -63,10 +63,10 @@ const $I = $EditorId.create("chat/toolbar");
  *
  * **Example** (Check code block type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check code block type"
  * import { BlockType } from "@beep/editor/chat/toolbar"
  *
- * console.log(BlockType.is.code("code")) // true
+ * BlockType.is.code("code") // => true
  * ```
  *
  * @category schemas
@@ -96,11 +96,11 @@ export const BlockType = LiteralKit([
  *
  * **Example** (Assign selected block type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign selected block type"
  * import type { BlockType } from "@beep/editor/chat/toolbar"
  *
  * const selectedBlock: BlockType = "code"
- * console.log(selectedBlock) // "code"
+ * selectedBlock // => "code"
  * ```
  *
  * @category models

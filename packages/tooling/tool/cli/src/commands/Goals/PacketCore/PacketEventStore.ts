@@ -8,9 +8,9 @@
  * Reads are advisory — unreadable, invalid, or tampered files surface as
  * chain issues, never failures — while appends are guarded: a compare-and-set
  * against the folded revision, refused outright on integrity issues or an
- * unresolved fork. Digests are computed over the canonical compact encoding
- * of the event, not the raw file bytes, so reformatting a file does not
- * change its identity while any content edit does.
+ * unresolved fork. Digests are computed over the compact canonical encoding
+ * of the raw parsed JSON, not the raw file bytes. Reformatting a file does not
+ * change its identity, but every content key remains identity-bound.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -24,13 +24,16 @@ import * as S from "effect/Schema";
 import { PacketCasConflictError, PacketStreamError } from "./PacketCore.errors.ts";
 import { PacketChainIssue, PacketEvent, PacketRoot, PacketSlug, StoredPacketEvent } from "./PacketCore.schemas.ts";
 import {
+  canonicalJsonText,
   packetEventDigest,
   packetEventFileName,
   parsePacketEventFileName,
   renderPacketEventFile,
+  sha256Hex,
 } from "./PacketDigest.ts";
 import { foldPacketEvents, upcastPacketEventJson } from "./PacketFold.ts";
-import type { PacketDerivedState, PacketEventId } from "./PacketCore.schemas.ts";
+import type { PacketDerivedState } from "./PacketCore.schemas.ts";
+import type { PacketEventFileNameParts } from "./PacketDigest.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketEventStore");
 
@@ -175,6 +178,31 @@ const readOutcome = (stored: StoredPacketEvent): ReadEventOutcome => ({
 });
 const issueOutcome = (item: PacketChainIssue): ReadEventOutcome => ({ stored: O.none(), issues: A.of(item) });
 
+const storedEventIdentityIssue = (
+  locator: PacketStreamLocator,
+  fileName: string,
+  parts: PacketEventFileNameParts,
+  digest: string,
+  event: PacketEvent
+): O.Option<PacketChainIssue> => {
+  if (digest !== parts.id) {
+    return O.some(issue("digest-mismatch", fileName, `recomputed digest ${digest} disagrees with the file name.`));
+  }
+  if (parts.seq !== event.seq || parts.type !== event.body.type) {
+    return O.some(issue("file-name-mismatch", fileName, "file-name seq/type disagree with the event content."));
+  }
+  if (event.packet !== locator.packet || event.root !== locator.root) {
+    return O.some(
+      issue(
+        "packet-mismatch",
+        fileName,
+        `event identifies ${event.root}/${event.packet}, not locator ${locator.root}/${locator.packet}.`
+      )
+    );
+  }
+  return O.none();
+};
+
 /**
  * Fold a listing and refuse ambiguity: integrity issues or a forked chain.
  *
@@ -237,9 +265,15 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
 
   const eventsDir = (packetPath: string): string => path.join(packetPath, ...PACKET_EVENTS_SEGMENTS);
 
-  const readEventFile: (directory: string, fileName: string) => Effect.Effect<ReadEventOutcome> = Effect.fn(
-    "PacketEventStore.readEventFile"
-  )(function* (directory: string, fileName: string) {
+  const readEventFile: (
+    locator: PacketStreamLocator,
+    directory: string,
+    fileName: string
+  ) => Effect.Effect<ReadEventOutcome> = Effect.fn("PacketEventStore.readEventFile")(function* (
+    locator: PacketStreamLocator,
+    directory: string,
+    fileName: string
+  ) {
     const parts = parsePacketEventFileName(fileName);
     if (O.isNone(parts)) {
       return issueOutcome(
@@ -252,36 +286,23 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     if (O.isNone(text)) {
       return issueOutcome(issue("event-unreadable", fileName, "event file could not be read."));
     }
-    const decoded = yield* decodeJsonUnknown(text.value).pipe(
-      Effect.map((raw) => O.some(upcastPacketEventJson(raw))),
-      Effect.orElseSucceed(O.none<unknown>)
-    );
-    if (O.isNone(decoded)) {
+    const raw = yield* decodeJsonUnknown(text.value).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<unknown>));
+    if (O.isNone(raw)) {
       return issueOutcome(issue("event-invalid", fileName, "event file is not valid JSON."));
     }
-    const event = yield* decodePacketEventEffect(decoded.value).pipe(
+    const event = yield* decodePacketEventEffect(upcastPacketEventJson(raw.value)).pipe(
       Effect.map(O.some),
       Effect.orElseSucceed(O.none<PacketEvent>)
     );
     if (O.isNone(event)) {
       return issueOutcome(issue("event-invalid", fileName, "event file does not decode as PacketEvent."));
     }
-    const digest = yield* packetEventDigest(event.value).pipe(
-      Effect.map(O.some),
-      Effect.orElseSucceed(O.none<PacketEventId>)
-    );
-    if (O.isNone(digest)) {
-      return issueOutcome(issue("event-invalid", fileName, "event could not be re-encoded for digest verification."));
+    const digest = sha256Hex(canonicalJsonText(raw.value));
+    const identity = storedEventIdentityIssue(locator, fileName, parts.value, digest, event.value);
+    if (O.isSome(identity)) {
+      return issueOutcome(identity.value);
     }
-    if (digest.value !== parts.value.id) {
-      return issueOutcome(
-        issue("digest-mismatch", fileName, `recomputed digest ${digest.value} disagrees with the file name.`)
-      );
-    }
-    if (parts.value.seq !== event.value.seq || parts.value.type !== event.value.body.type) {
-      return issueOutcome(issue("file-name-mismatch", fileName, "file-name seq/type disagree with the event content."));
-    }
-    return readOutcome(StoredPacketEvent.make({ id: digest.value, fileName, event: event.value }));
+    return readOutcome(StoredPacketEvent.make({ id: digest, fileName, event: event.value }));
   });
 
   const hasStream = Effect.fn("PacketEventStore.hasStream")(function* (packetPath: string) {
@@ -295,7 +316,7 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     let events = A.empty<StoredPacketEvent>();
     let issues = A.empty<PacketChainIssue>();
     for (const fileName of fileNames) {
-      const outcome = yield* readEventFile(directory, fileName);
+      const outcome = yield* readEventFile(locator, directory, fileName);
       events = pipe(outcome.stored, O.match({ onNone: () => events, onSome: (stored) => A.append(events, stored) }));
       issues = A.appendAll(issues, outcome.issues);
     }

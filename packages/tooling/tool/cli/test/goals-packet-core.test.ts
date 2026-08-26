@@ -36,6 +36,8 @@ const FIXTURES_ROOT = new URL("./fixtures/packet-core", import.meta.url).pathnam
 const GOLDEN_PATH = `${FIXTURES_ROOT}/golden-linear`;
 const FORKED_PATH = `${FIXTURES_ROOT}/forked`;
 const RISK_OVERRIDE_PATH = `${FIXTURES_ROOT}/risk-override`;
+const RAW_UNKNOWN_KEY_PATH = `${FIXTURES_ROOT}/raw-unknown-key`;
+const PACKET_MISMATCH_PATH = `${FIXTURES_ROOT}/packet-mismatch`;
 
 type EventBody = PacketEvent["body"];
 
@@ -304,6 +306,62 @@ describe("foldPacketEvents", () => {
   );
 
   it(
+    "orders a genesis fork by digest when two roots claim sequence one",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const events = yield* chainEvents("demo", [
+            { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
+          ]);
+          // A second parentless root: the fork's parent key falls back to the genesis sentinel.
+          const rival = PacketEvent.make({
+            schemaVersion: "packet-event/v1",
+            packet: "demo",
+            root: "goals",
+            seq: 1,
+            expectedRevision: 0,
+            at: "2026-08-17T00:00:30.000Z",
+            actor: "test",
+            body: { type: "packet-created", status: "paused" },
+          });
+          const rivalId = yield* packetEventDigest(rival);
+          // A second, parented fork one level down, so the verdict sort has to order a
+          // parentless verdict against a parented one.
+          const parentId = storedIdAt(events, 0);
+          const childA = PacketEvent.make({
+            schemaVersion: "packet-event/v1",
+            packet: "demo",
+            root: "goals",
+            seq: 2,
+            ...(parentId === undefined ? {} : { parent: parentId }),
+            expectedRevision: 1,
+            at: "2026-08-17T00:01:00.000Z",
+            actor: "test",
+            body: { type: "stage-entered", stage: "align", ordinal: 2 },
+          });
+          const childB = PacketEvent.make({ ...childA, at: "2026-08-17T00:01:30.000Z" });
+          const childAId = yield* packetEventDigest(childA);
+          const childBId = yield* packetEventDigest(childB);
+          const forked = A.appendAll(events, [
+            StoredPacketEvent.make({ id: rivalId, fileName: packetEventFileName(rival, rivalId), event: rival }),
+            StoredPacketEvent.make({ id: childAId, fileName: packetEventFileName(childA, childAId), event: childA }),
+            StoredPacketEvent.make({ id: childBId, fileName: packetEventFileName(childB, childBId), event: childB }),
+          ]);
+          const derived = foldPacketEvents({ packet: "demo", root: "goals", events: forked });
+          expect(A.length(derived.forks)).toBe(2);
+          // The genesis fork sorts ahead of the parented one, and its parent stays absent.
+          const genesisFork = derived.forks[0];
+          expect(genesisFork?.parent).toBeUndefined();
+          expect(genesisFork?.children.length).toBe(2);
+          expect(derived.forks[1]?.parent).toBe(parentId);
+          // Nothing derives past an unresolved genesis fork.
+          expect(derived.revision).toBe(0);
+        })
+      ),
+    20_000
+  );
+
+  it(
     "reports a missing parent digest as a chain issue",
     () =>
       Effect.runPromise(
@@ -330,6 +388,39 @@ describe("foldPacketEvents", () => {
           expect(A.length(derived.issues)).toBe(1);
           expect(derived.issues[0]?.kind).toBe("missing-parent");
           expect(derived.revision).toBe(0);
+        })
+      ),
+    20_000
+  );
+
+  it(
+    "orders same-sequence fork verdicts by parent digest",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          let events = A.empty<StoredPacketEvent>();
+          for (const parentByte of ["b", "a"]) {
+            for (const at of ["2026-08-17T00:00:00.000Z", "2026-08-17T00:00:01.000Z"]) {
+              const event = PacketEvent.make({
+                schemaVersion: "packet-event/v1",
+                packet: "demo",
+                root: "goals",
+                seq: 2,
+                parent: parentByte.repeat(64),
+                expectedRevision: 1,
+                at,
+                actor: "test",
+                body: { type: "status-set", status: "paused", previous: "active" },
+              });
+              const id = yield* packetEventDigest(event);
+              events = A.append(
+                events,
+                StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event })
+              );
+            }
+          }
+          const derived = foldPacketEvents({ packet: "demo", root: "goals", events });
+          expect(A.map(derived.forks, (fork) => fork.parent)).toStrictEqual(["a".repeat(64), "b".repeat(64)]);
         })
       ),
     20_000
@@ -695,6 +786,44 @@ describe("store read robustness", () => {
       actor: "test",
       body: { type: "packet-created", status: "active" },
     });
+
+  it(
+    "rejects an otherwise decodable event whose raw JSON carries an unknown key",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const store = yield* PacketEventStore;
+          const listing = yield* store.list(
+            PacketStreamLocator.make({ packet: "golden-linear", root: "goals", packetPath: RAW_UNKNOWN_KEY_PATH })
+          );
+          expect(listing.events).toStrictEqual([]);
+          expect(A.map(listing.issues, (item) => item.kind)).toStrictEqual(["digest-mismatch"]);
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "rejects copied history whose packet and root disagree with the locator",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const store = yield* PacketEventStore;
+          const listing = yield* store.list(
+            PacketStreamLocator.make({
+              packet: "copied-history",
+              root: "explorations",
+              packetPath: PACKET_MISMATCH_PATH,
+            })
+          );
+          expect(listing.events).toStrictEqual([]);
+          expect(A.map(listing.issues, (item) => item.kind)).toStrictEqual(["packet-mismatch"]);
+          expect(listing.issues[0]?.detail).toContain("goals/golden-linear");
+          expect(listing.issues[0]?.detail).toContain("explorations/copied-history");
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
 
   it(
     "reports unreadable names, invalid JSON, undecodable events, and digest or name mismatches as issues",

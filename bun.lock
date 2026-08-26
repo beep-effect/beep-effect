@@ -63,6 +63,28 @@
         "@types/node": "catalog:",
       },
     },
+    "apps/labs/api-docs": {
+      "name": "@beep/api-docs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/codegen-kit": "workspace:^",
+        "@beep/ecfr": "workspace:^",
+        "@beep/govinfo": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/pacer": "workspace:^",
+        "@beep/qa-capture": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "apps/labs/semantica": {
       "name": "@beep/semantica",
       "version": "0.0.0",
@@ -3253,6 +3275,8 @@
     "@beep/ai-sync": ["@beep/ai-sync@workspace:packages/tooling/library/ai-sync"],
 
     "@beep/anthropic": ["@beep/anthropic@workspace:packages/drivers/anthropic"],
+
+    "@beep/api-docs": ["@beep/api-docs@workspace:apps/labs/api-docs"],
 
     "@beep/api-transport": ["@beep/api-transport@workspace:packages/foundation/capability/api-transport"],
 
