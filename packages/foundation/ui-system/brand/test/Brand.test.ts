@@ -13,10 +13,12 @@ import {
   SvgPaint,
   WordmarkSvgRequest,
 } from "@beep/brand";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 describe("beep identity", () => {
   it.effect("round-trips through its schema", () =>
@@ -123,5 +125,21 @@ describe("renderWordmarkSvg escaping", () => {
     expect(svg).toContain('aria-label="a&amp;b&lt;c&gt;&quot;d"');
     expect(svg).toContain("&quot;Inter Variable&quot;, &quot;Inter&quot;,");
     expect(svg).not.toContain("<c>");
+  });
+});
+
+describe("BrandIdentity properties", () => {
+  // Schema-derived property coverage: every arbitrary identity the schemas admit
+  // round-trips losslessly, so the codec assertions above generalize past the
+  // handpicked fixtures.
+  it("round-trips arbitrary identities through encode and decode", () => {
+    const decode = S.decodeUnknownSync(BrandIdentity);
+    const encode = S.encodeSync(BrandIdentity);
+    const equivalent = S.toEquivalence(BrandIdentity);
+
+    fc.assert(
+      fc.property(S.toArbitrary(BrandIdentity)(fc), (identity) => equivalent(decode(encode(identity)), identity)),
+      fcRuns(5)
+    );
   });
 });

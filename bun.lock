@@ -1993,6 +1993,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
         "@testing-library/react": "catalog:",

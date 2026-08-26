@@ -1206,12 +1206,14 @@
           "@beep/brand",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/brand",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
