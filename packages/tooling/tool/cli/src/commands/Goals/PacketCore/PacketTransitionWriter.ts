@@ -22,14 +22,17 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { A, O, pipe } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import { Context, Effect, Equal, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
 import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { PacketStreamError } from "./PacketCore.errors.ts";
 import {
   PacketDerivedState,
   PacketEvent,
+  PacketEventActor,
+  PacketEventTimestamp,
   PacketRevision,
   PacketRiskTier,
   PacketStage,
@@ -68,6 +71,12 @@ const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketTransitionWriter")
  * @since 0.0.0
  */
 export const PACKET_TRACE_SEGMENTS = ["ops", "trace.json"] as const;
+
+const PacketTransitionDisposition = LiteralKit(["append", "skipped", "streamless"]).pipe(
+  $I.annoteSchema("PacketTransitionDisposition", {
+    description: "Guarded transition disposition: append events, skip an idempotent transition, or no stream.",
+  })
+);
 
 const PacketTransitionGenesisPairCheck = S.makeFilter(
   (request: { readonly genesisStage?: PacketStage; readonly genesisOrdinal?: PacketStageOrdinal }) =>
@@ -116,8 +125,8 @@ export class PacketTransitionRequest extends S.Class<PacketTransitionRequest>($I
     previousStatus: PacketStatusToken,
     genesisStage: S.optionalKey(PacketStage),
     genesisOrdinal: S.optionalKey(PacketStageOrdinal),
-    actor: S.String,
-    at: S.String,
+    actor: PacketEventActor,
+    at: PacketEventTimestamp,
   }).check(PacketTransitionGenesisPairCheck),
   $I.annote("PacketTransitionRequest", {
     description: "One requested status transition with caller-validated vocabulary and genesis stage info.",
@@ -166,8 +175,8 @@ export class PacketRiskTierOverrideRequest extends S.Class<PacketRiskTierOverrid
     genesisStatus: PacketStatusToken,
     genesisStage: S.optionalKey(PacketStage),
     genesisOrdinal: S.optionalKey(PacketStageOrdinal),
-    actor: S.String,
-    at: S.String,
+    actor: PacketEventActor,
+    at: PacketEventTimestamp,
   }).check(PacketTransitionGenesisPairCheck),
   $I.annote("PacketRiskTierOverrideRequest", {
     description: "One requested operator risk-tier override with its recorded reason and genesis fallback.",
@@ -242,6 +251,7 @@ export type PacketPlanRequest = typeof PacketPlanRequest.Type;
  *     actor: "operator",
  *     at: "2026-08-17T00:00:00.000Z",
  *   }),
+ *   disposition: "streamless",
  *   streamPresent: false,
  *   currentRevision: 0,
  *   events: [],
@@ -256,6 +266,7 @@ export type PacketPlanRequest = typeof PacketPlanRequest.Type;
 export class PacketTransitionPlan extends S.Class<PacketTransitionPlan>($I`PacketTransitionPlan`)(
   {
     request: PacketPlanRequest,
+    disposition: PacketTransitionDisposition,
     streamPresent: S.Boolean,
     currentRevision: PacketRevision,
     currentTip: S.optionalKey(PacketTip),
@@ -277,6 +288,7 @@ export class PacketTransitionPlan extends S.Class<PacketTransitionPlan>($I`Packe
  * import { PacketTransitionOutcome } from "@beep/repo-cli/test/Goals"
  *
  * const outcome = PacketTransitionOutcome.make({
+ *   disposition: "streamless",
  *   appended: 0,
  *   tracePath: "goals/demo/ops/trace.json",
  *   traceWritten: false,
@@ -289,13 +301,14 @@ export class PacketTransitionPlan extends S.Class<PacketTransitionPlan>($I`Packe
  */
 export class PacketTransitionOutcome extends S.Class<PacketTransitionOutcome>($I`PacketTransitionOutcome`)(
   {
+    disposition: PacketTransitionDisposition,
     appended: PacketRevision,
     tip: S.optionalKey(PacketTip),
     tracePath: S.String,
     traceWritten: S.Boolean,
   },
   $I.annote("PacketTransitionOutcome", {
-    description: "Committed-transition result: appended event count, new tip, trace projection path.",
+    description: "Committed-transition result with an explicit append, skipped, or streamless disposition.",
   })
 ) {}
 
@@ -380,6 +393,16 @@ const draftAppendedEvent = (request: PacketPlanRequest, base: DraftBase, body: P
     ...optionalProp("parent", base.parent),
     body,
   });
+
+const tipDigest = (tip: PacketTip | undefined): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(tip),
+    O.map((value) => value.id)
+  );
+
+const packetStreamMoved = (transitionPlan: PacketTransitionPlan, derived: PacketDerivedState): boolean =>
+  derived.revision !== transitionPlan.currentRevision ||
+  !Equal.equals(tipDigest(derived.tip), tipDigest(transitionPlan.currentTip));
 
 const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(function* () {
   const store = yield* PacketEventStore;
@@ -501,12 +524,14 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     request: PacketPlanRequest,
     stream: GuardedStream,
     events: ReadonlyArray<PacketEvent>,
-    tracePath: string
+    tracePath: string,
+    disposition: typeof PacketTransitionDisposition.Type
   ) => Effect.Effect<PacketTransitionPlan, PacketStreamError> = Effect.fnUntraced(function* (
     request: PacketPlanRequest,
     stream: GuardedStream,
     events: ReadonlyArray<PacketEvent>,
-    tracePath: string
+    tracePath: string,
+    disposition: typeof PacketTransitionDisposition.Type
   ) {
     const drafts = yield* storedDrafts(request.locator.packet, events);
     const derivedAfter = foldPacketEvents({
@@ -516,6 +541,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     });
     return PacketTransitionPlan.make({
       request,
+      disposition,
       streamPresent: true,
       currentRevision: stream.derived.revision,
       ...optionalProp("currentTip", O.fromUndefinedOr(stream.derived.tip)),
@@ -531,6 +557,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     if (!streamPresent) {
       return PacketTransitionPlan.make({
         request,
+        disposition: "streamless",
         streamPresent: false,
         currentRevision: 0,
         events: A.empty<PacketEvent>(),
@@ -538,8 +565,11 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
       });
     }
     const stream = yield* foldGuardedStream(request.locator);
+    if (stream.derived.status === request.status) {
+      return yield* sealedPlan(request, stream, A.empty<PacketEvent>(), tracePath, "skipped");
+    }
     const events = yield* draftEvents(request, stream.derived);
-    return yield* sealedPlan(request, stream, events, tracePath);
+    return yield* sealedPlan(request, stream, events, tracePath, "append");
   });
 
   const planRiskTierOverride = Effect.fn("PacketTransitionWriter.planRiskTierOverride")(function* (
@@ -555,34 +585,98 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     }
     const stream = yield* foldGuardedStream(request.locator);
     const events = yield* draftOverrideEvents(request, stream.derived);
-    return yield* sealedPlan(request, stream, events, tracePath);
+    return yield* sealedPlan(request, stream, events, tracePath, "append");
+  });
+
+  const traceTextFor: (
+    packet: string,
+    derived: PacketDerivedState,
+    events: ReadonlyArray<StoredPacketEvent>
+  ) => Effect.Effect<string, PacketStreamError> = Effect.fnUntraced(function* (
+    packet: string,
+    derived: PacketDerivedState,
+    events: ReadonlyArray<StoredPacketEvent>
+  ) {
+    return yield* renderPacketTraceFile(projectPacketTrace(derived, events)).pipe(
+      Effect.mapError(streamErrorFromSchema(packet, "trace projection could not be rendered"))
+    );
+  });
+
+  const writeTraceFile: (packet: string, tracePath: string, text: string) => Effect.Effect<void, PacketStreamError> =
+    Effect.fnUntraced(function* (packet: string, tracePath: string, text: string) {
+      yield* fs
+        .writeFileString(tracePath, text)
+        .pipe(
+          Effect.mapError((error) => PacketStreamError.new(packet, `trace projection write failed: ${String(error)}`))
+        );
+    });
+
+  const writeTraceWhenStale: (
+    packet: string,
+    tracePath: string,
+    text: string
+  ) => Effect.Effect<boolean, PacketStreamError> = Effect.fnUntraced(function* (
+    packet: string,
+    tracePath: string,
+    text: string
+  ) {
+    const committed = yield* fs
+      .readFileString(tracePath)
+      .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    if (Equal.equals(committed, O.some(text))) {
+      return false;
+    }
+    yield* writeTraceFile(packet, tracePath, text);
+    return true;
+  });
+
+  const commitSkipped: (
+    transitionPlan: PacketTransitionPlan
+  ) => Effect.Effect<PacketTransitionOutcome, PacketStreamError> = Effect.fnUntraced(function* (
+    transitionPlan: PacketTransitionPlan
+  ) {
+    const locator = transitionPlan.request.locator;
+    const stream = yield* foldGuardedStream(locator);
+    if (packetStreamMoved(transitionPlan, stream.derived)) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        `stream moved between plan and commit (planned revision ${transitionPlan.currentRevision}, found ${stream.derived.revision}); re-plan the transition.`
+      );
+    }
+    const traceText = yield* traceTextFor(locator.packet, stream.derived, stream.listing.events);
+    const traceWritten = yield* writeTraceWhenStale(locator.packet, transitionPlan.tracePath, traceText);
+    return PacketTransitionOutcome.make({
+      disposition: "skipped",
+      appended: 0,
+      ...optionalProp("tip", O.fromUndefinedOr(stream.derived.tip)),
+      tracePath: transitionPlan.tracePath,
+      traceWritten,
+    });
   });
 
   const commit = Effect.fn("PacketTransitionWriter.commit")(function* (transitionPlan: PacketTransitionPlan) {
     const locator = transitionPlan.request.locator;
-    if (!transitionPlan.streamPresent) {
+    if (transitionPlan.disposition === "streamless") {
       return PacketTransitionOutcome.make({
+        disposition: "streamless",
         appended: 0,
+        ...optionalProp("tip", O.fromUndefinedOr(transitionPlan.currentTip)),
         tracePath: transitionPlan.tracePath,
         traceWritten: false,
       });
+    }
+    if (transitionPlan.disposition === "skipped") {
+      return yield* commitSkipped(transitionPlan);
     }
     for (const event of transitionPlan.events) {
       yield* store.append(locator, event);
     }
     const listing = yield* store.list(locator);
     const derived = foldPacketEvents({ packet: locator.packet, root: locator.root, events: listing.events });
-    const traceText = yield* renderPacketTraceFile(projectPacketTrace(derived, listing.events)).pipe(
-      Effect.mapError(streamErrorFromSchema(locator.packet, "trace projection could not be rendered"))
-    );
-    yield* fs
-      .writeFileString(transitionPlan.tracePath, traceText)
-      .pipe(
-        Effect.mapError((error) =>
-          PacketStreamError.new(locator.packet, `trace projection write failed: ${String(error)}`)
-        )
-      );
+    const traceText = yield* traceTextFor(locator.packet, derived, listing.events);
+    yield* writeTraceFile(locator.packet, transitionPlan.tracePath, traceText);
     return PacketTransitionOutcome.make({
+      disposition: "append",
       appended: A.length(transitionPlan.events),
       ...optionalProp("tip", O.fromUndefinedOr(derived.tip)),
       tracePath: transitionPlan.tracePath,

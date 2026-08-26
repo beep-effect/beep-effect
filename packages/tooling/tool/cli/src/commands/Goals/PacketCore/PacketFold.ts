@@ -120,6 +120,21 @@ const storedBySeqThenId = Order.combine(
   Order.mapInput(Order.String, (stored: StoredPacketEvent) => stored.id)
 );
 
+/**
+ * Fork verdicts carry their parent key alongside the verdict so the total order can
+ * sort on the key the child index was built from. The genesis group's key is the
+ * sentinel rather than an absent digest, so ordering never has to reconstruct it.
+ */
+type ForkEntry = {
+  readonly key: string;
+  readonly verdict: PacketForkVerdict;
+};
+
+const forkBySeqThenDigest = Order.combine(
+  Order.mapInput(Order.Number, (entry: ForkEntry) => entry.verdict.parentSeq),
+  Order.mapInput(Order.String, (entry: ForkEntry) => entry.key)
+);
+
 const parentKey = (stored: StoredPacketEvent): string => stored.event.parent ?? GENESIS_PARENT_KEY;
 
 const buildChildIndex = (
@@ -137,7 +152,7 @@ const buildChildIndex = (
 const collectForkVerdicts = (
   index: MutableHashMap.MutableHashMap<string, ReadonlyArray<StoredPacketEvent>>
 ): ReadonlyArray<PacketForkVerdict> => {
-  let verdicts = A.empty<PacketForkVerdict>();
+  let entries = A.empty<ForkEntry>();
   for (const key of MutableHashMap.keys(index)) {
     const children = pipe(MutableHashMap.get(index, key), O.getOrElse(A.empty<StoredPacketEvent>));
     if (A.length(children) < 2) {
@@ -149,19 +164,16 @@ const collectForkVerdicts = (
       O.map((stored) => stored.event.seq),
       O.getOrElse(() => 1)
     );
-    verdicts = A.append(
-      verdicts,
-      PacketForkVerdict.make({
+    entries = A.append(entries, {
+      key,
+      verdict: PacketForkVerdict.make({
         ...(key === GENESIS_PARENT_KEY ? {} : { parent: key }),
         parentSeq: childSeq - 1,
         children: A.map(sorted, (stored) => stored.id),
-      })
-    );
+      }),
+    });
   }
-  return A.sort(
-    verdicts,
-    Order.mapInput(Order.Number, (verdict: PacketForkVerdict) => verdict.parentSeq)
-  );
+  return A.map(A.sort(entries, forkBySeqThenDigest), (entry) => entry.verdict);
 };
 
 const missingParentIssues = (events: ReadonlyArray<StoredPacketEvent>): ReadonlyArray<PacketChainIssue> => {

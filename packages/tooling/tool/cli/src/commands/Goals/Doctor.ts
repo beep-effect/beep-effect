@@ -110,6 +110,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "exploration-backlink-missing",
   "packet-stream-fork",
   "packet-stream-integrity",
+  "packet-status-drift",
   "packet-trace-stale",
   "packet-trace-missing",
 ]).pipe(
