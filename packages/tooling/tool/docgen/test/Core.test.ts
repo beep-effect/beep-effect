@@ -41,6 +41,33 @@ describe("Core", () =>
       expect(warnings).toEqual([]);
     });
 
+    it("should expose raw info strings and exact source offsets", () => {
+      const source = "before\n```typescript import.meta.vitest name='sample'\nconst value = 1\n```\nafter";
+      const [details, warnings] = Core.extractFencedCodeBlockDetails(source);
+      const detail = details[0];
+
+      expect(warnings).toEqual([]);
+      expect(detail).toBeDefined();
+      if (detail === undefined) return;
+      expect(detail.infoString).toBe("typescript import.meta.vitest name='sample'");
+      expect(source.slice(detail.infoStart, detail.infoEnd)).toBe(detail.infoString);
+      expect(source.slice(detail.codeStart, detail.codeEnd)).toBe("const value = 1\n");
+      expect(source.slice(detail.fenceStart, detail.fenceEnd)).toBe(
+        "```typescript import.meta.vitest name='sample'\nconst value = 1\n```"
+      );
+      expect(detail.extension).toBe(".ts");
+    });
+
+    it("should preserve compatibility output beside detailed extraction", () => {
+      const source = "~~~tsx custom=value\nconst view = <div />\n~~~";
+      const [blocks] = Core.extractFencedCodeBlocks(source);
+      const [details] = Core.extractFencedCodeBlockDetails(source);
+
+      expect(blocks).toEqual([{ code: "const view = <div />", extension: ".tsx" }]);
+      expect(details.map(({ code, extension }) => ({ code, extension }))).toEqual(blocks);
+      expect(details[0]?.infoString).toBe("tsx custom=value");
+    });
+
     it("should skip-type-checking for tsx fenced code blocks", () =>
       expectFencedCode("a\n\n```tsx skip-type-checking\nconst view = <div />\n```\n\nb", [], []));
 

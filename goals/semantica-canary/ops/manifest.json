@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/semantica-canary",
   "lifecycle": "active",
-  "statusNote": "P1 Scaffold in progress: the lab mint (apps/labs/semantica, --app-kind tauri --lab) landed on its own PR with the one local cargo check recorded under history/p1-cargo-check.md; F1 fixtures + the W1 manifest + gold/v1 follow in P1 step 2.",
+  "statusNote": "P1 Scaffold nearly complete: lab mint (PR #819) + F1 fixtures and the W1 manifest (history/p1-w1-manifest.md); gold/v1 rides its own gold-proposer PR before the first C0 slice (ids frozen from the manifest order, D-C0-9).",
   "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
   "executionCapable": true,
   "reflectionRequired": true,

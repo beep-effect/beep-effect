@@ -46,6 +46,7 @@
       "!standards/fallow.dead-code.regression-baseline.jsonc",
       "!standards/jsdoc-documentation.inventory.jsonc",
       "!standards/repo-exports.catalog.jsonc",
+      "!**/fixtures/f1/documents",
       "!scratchpad",
       "!**/modeling/html/data"
     ]

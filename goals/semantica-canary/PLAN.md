@@ -7,7 +7,9 @@ Status: `active`
 P1 Scaffold is in progress: step 1 (the lab mint, PR C) landed on its own PR
 with the one local `cargo check` recorded under
 [`history/p1-cargo-check.md`](./history/p1-cargo-check.md); step 2 (F1, the
-W1 manifest, `gold/v1`) follows. P2-P5 pending.
+W1 manifest) landed on `feat/semantica-p1-fixtures`
+([`history/p1-w1-manifest.md`](./history/p1-w1-manifest.md)); `gold/v1` rides its
+own gold-proposer PR before the first C0 slice (D-C0-9). P2-P5 pending.
 
 ## Phases
 
@@ -64,7 +66,9 @@ First vertical slice first
 C0 on F1 + one G-relation W1 paper, then the same over all three G-relation
 papers.
 
-1. Define the lab-local schemas before any service: `SourceDocument`,
+1. Design first: [`research/c0-design.md`](./research/c0-design.md) (D-C0-1..10,
+   schema table, contracts, Layers, proof plan, open items O-1..O-4).
+   Define the lab-local schemas before any service: `SourceDocument`,
    `Chunk`, `EvidenceBatch`/`EvidenceClaim`/`ConflictWitness`,
    `ProvenanceEvent`, `ModelIdentity`, the `ProviderCache` key, `EvalRun`
    (with the S2 refinement), `EvalReport` with its `reportDigest` (sha256 over

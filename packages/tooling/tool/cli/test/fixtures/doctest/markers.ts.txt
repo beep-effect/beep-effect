@@ -1,0 +1,11 @@
+```ts
+1 + 1
+```
+
+```typescript name="drift" import.meta.vitest
+1 + 1
+```
+
+```ts import.meta.vitest name='Decode "none"'
+1 + 1
+```

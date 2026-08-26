@@ -10,8 +10,11 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
+import { fencedLineState } from "../../../internal/jsdoc/JSDocSections.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+
+export { fencedLineState, jsdocCommentsFromSource } from "../../../internal/jsdoc/JSDocSections.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/QualityArtifactSupport");
 
@@ -640,116 +643,6 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
     return O.some(trimmed);
   }
   return O.none();
-};
-
-const fenceState = (line: string, openFence: string | undefined): readonly [string | undefined, boolean] => {
-  const match = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
-  const fence = match === null ? undefined : match[1];
-  if (openFence === undefined) {
-    return [fence, fence !== undefined];
-  }
-  if (fence === undefined) {
-    return [openFence, true];
-  }
-  if (fence[0] === openFence[0] && fence.length >= openFence.length && Str.isEmpty(Str.trim(match?.[2] ?? ""))) {
-    return [undefined, true];
-  }
-  return [openFence, true];
-};
-
-/**
- * Advance the fenced-code-block scanner state by one stripped comment line.
- *
- * **Details**
- *
- * The state is the currently open fence delimiter (or `undefined` outside a
- * fence). The returned flag is `true` for delimiter lines and interior lines,
- * so callers can skip fenced example code when scanning for tags or section
- * headings.
- *
- * **Example** (Track fence state across lines)
- *
- * ```ts
- * import { fencedLineState } from "@beep/repo-cli/test/Quality"
- *
- * const [open, fenced] = fencedLineState("```ts", undefined)
- * console.log(fenced) // true
- * console.log(fencedLineState("```", open)[0]) // undefined
- * ```
- *
- * @param line - Stripped comment line to scan.
- * @param openFence - Currently open fence delimiter, or `undefined` outside a fence.
- * @returns Next open-fence state and whether the line is fenced.
- * @category jsdoc
- * @since 0.0.0
- */
-export const fencedLineState: {
-  (openFence: string | undefined): (line: string) => readonly [string | undefined, boolean];
-  (line: string, openFence: string | undefined): readonly [string | undefined, boolean];
-} = dual(2, fenceState);
-
-const jsdocCommentEnd = (sourceText: string, start: number): number => {
-  let cursor = start + 3;
-  let openFence: string | undefined;
-  while (cursor < sourceText.length) {
-    const nextLineBreak = sourceText.indexOf("\n", cursor);
-    const lineEnd = nextLineBreak === -1 ? sourceText.length : nextLineBreak;
-    const rawLine = sourceText.slice(cursor, lineEnd);
-    const line = Str.trimEnd(Str.replace(/^\s*\*\s?/, "")(rawLine));
-    const [nextOpenFence, isFenced] = fencedLineState(line, openFence);
-    openFence = nextOpenFence;
-    if (!isFenced) {
-      const closingOffset = rawLine.indexOf("*/");
-      if (closingOffset !== -1) {
-        return cursor + closingOffset + 2;
-      }
-    }
-    cursor = lineEnd + 1;
-  }
-  return sourceText.length;
-};
-
-/**
- * Extract complete JSDoc blocks while ignoring comment delimiters in fenced
- * example source.
- *
- * @param sourceText - TypeScript source text to scan.
- * @returns Complete JSDoc comment blocks in source order.
- * @category jsdoc
- * @since 0.0.0
- */
-export const jsdocCommentsFromSource = (sourceText: string): ReadonlyArray<string> => {
-  const comments: Array<string> = [];
-  let cursor = 0;
-  while (cursor < sourceText.length) {
-    const relativeStart = sourceText.slice(cursor).indexOf("/**");
-    if (relativeStart === -1) {
-      break;
-    }
-    const start = cursor + relativeStart;
-    // Reject `/**` that is not a line-leading comment opener (string literals
-    // like Str.endsWith("/**") and template globs "src/**" otherwise swallow
-    // large code spans as fake JSDoc and the migrate apply rewrites them).
-    const lineStart = sourceText.lastIndexOf("\n", start - 1) + 1;
-    const linePrefix = sourceText.slice(lineStart, start);
-    const afterOpener = sourceText[start + 3];
-    const lineLeading = /^[ \t]*$/.test(linePrefix);
-    const plausibleBody =
-      afterOpener === undefined ||
-      afterOpener === "\n" ||
-      afterOpener === "\r" ||
-      afterOpener === " " ||
-      afterOpener === "\t" ||
-      afterOpener === "*";
-    if (!lineLeading || !plausibleBody) {
-      cursor = start + 3;
-      continue;
-    }
-    const end = jsdocCommentEnd(sourceText, start);
-    A.appendInPlace(comments, sourceText.slice(start, end));
-    cursor = end;
-  }
-  return comments;
 };
 
 /**

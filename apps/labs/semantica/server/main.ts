@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { BunRuntime } from "@effect/platform-bun";
+import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import { Effect, Layer } from "effect";
 import { Command } from "effect/unstable/cli";
 import { CanaryCommand } from "@/canary/Command";

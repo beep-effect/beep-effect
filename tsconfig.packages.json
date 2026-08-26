@@ -358,6 +358,9 @@
       "path": "packages/tooling/library/ai-sync"
     },
     {
+      "path": "packages/tooling/library/codegen-kit"
+    },
+    {
       "path": "packages/tooling/library/qa-capture"
     },
     {
