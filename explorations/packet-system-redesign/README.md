@@ -9,10 +9,12 @@ Graduated 2026-08-17; **reopened at `decompose` 2026-08-26** by the packet's
 own ratified convention: the candidate-2/3 gate condition (fold contract
 stabilizing) was satisfied on main evidence, and
 [`goals/packet-control-plane-core`](../../goals/packet-control-plane-core/README.md)
-closed `completed-retained` through its own guarded writer. Candidates 2–4
-remain gated re-entry candidates; the React viewer stays gated on KSA
-static-v1 daily-use evidence. The Session B rulings on the queued amendments
-and the fleet-campaign charter land as their own docs PR.
+closed `completed-retained` through its own guarded writer. That firing
+releases candidates 2 and 3 for this decompose pass — the Next Open Question
+weighs them against the fleet convention-migration campaign. Candidate 4
+still gates on observed self-hosting friction, and the React viewer stays
+gated on KSA static-v1 daily-use evidence. The Session B rulings on the
+queued amendments and the fleet-campaign charter land as their own docs PR.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

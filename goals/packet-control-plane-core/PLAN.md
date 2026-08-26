@@ -98,7 +98,8 @@ projection-migration candidate's scope). Proof: the committed fork fixture
 plans deterministically, and applying the plan in memory folds linear at
 revision 4 with zero forks/issues and a 4-entry timeline — nothing lost.
 
-**Rung 4 — pre-close hardening (PLANNED, grilled 2026-08-24).** Six proven
+**Rung 4 — pre-close hardening (COMPLETE 2026-08-26, #848; grilled
+2026-08-24).** Six proven
 gaps from the pre-close adversarial review, one small PR, none weakening the
 P1 fixtures: (1) digest verification recomputed over the raw parsed JSON's
 canonical encoding (parent MAP Amendment D) so identity binds file content
@@ -140,12 +141,12 @@ merely to pass this packet.
 
 ## Current blockers
 
-None. P1, P2, and P3 rungs 1–3 shipped 2026-08-17. The 2026-08-24 pre-close
-review locked the close train: (1) docs PR recording parent MAP Amendments
-D–G (landed with this PLAN update), (2) P3 rung 4 — pre-close hardening,
-which absorbs the queued idempotent-skip refinement, (3) P5 close: `/reflect`
-closeout plus the `completed-retained` flip executed through the guarded
-writer in one PR. The fleet convention-migration campaign charter (this
-PLAN's post-close campaign, P5 above) is grilled separately before any
-scaffolding; per MAP Amendment G, no packet beyond this pilot opts into
-`ops/events/` until the campaign's repair applier ships.
+None — the goal is closed. The close train ran to completion: the D–G docs PR
+merged as #785, rung 4 merged as #848 (with the review-driven skip-path
+hardening: stale-trace self-heal and CAS revalidation on skipped plans), and
+the P5 close executed the `completed-retained` flip through the guarded
+writer as stream event 4, alongside the closeout reflection. The fleet
+convention-migration campaign charter (this PLAN's post-close campaign, P5
+above) is grilled separately in the reopened parent exploration; per MAP
+Amendment G, no packet beyond this pilot opts into `ops/events/` until the
+campaign's repair applier ships.

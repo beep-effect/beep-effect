@@ -54,9 +54,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`goals/packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
   closed `completed-retained` through its own guarded writer (rung-4
   hardening #848), which satisfied the candidate-2/3 gate and fired the
-  ratified reopen convention. Candidates 2–4 remain gated; React v2 stays on
-  KSA static-v1 daily-use evidence. The Session B rulings (queued amendments,
-  fleet-campaign charter) land as their own docs PR.
+  ratified reopen convention. Candidates 2 and 3 are therefore eligible for
+  this decompose pass — the Next Open Question weighs them against the fleet
+  convention-migration campaign; candidate 4 still gates on observed
+  self-hosting friction, and React v2 stays on KSA static-v1 daily-use
+  evidence. The Session B rulings (queued amendments, fleet-campaign charter)
+  land as their own docs PR.
 - [`full-document-editor`](./full-document-editor/README.md) — graduated
   2026-08-24 with its two promised-now packets:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md)
