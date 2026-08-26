@@ -1257,7 +1257,6 @@ describe("quality task adapter", () => {
     expect(A.map(steps, (step) => step.label)).toEqual([
       "lint",
       "lint:deprecated-apis",
-      "lint:docgen",
       "knowledge:semantic-delta",
       "knowledge:refs-check",
       "lint:schema-first",
@@ -1293,7 +1292,6 @@ describe("quality task adapter", () => {
 
     expect(A.map(steps, (step) => step.label)).toEqual([
       "lint:deprecated-apis",
-      "lint:docgen",
       "knowledge:semantic-delta",
       "knowledge:refs-check",
       "lint:schema-first",
@@ -3950,9 +3948,6 @@ describe("quality task adapter", () => {
           expect(commandLog).toContain("bunx turbo run lint");
           expect(commandLog).toContain("bun run packages/tooling/tool/cli/src/bin.ts -- laws effect-imports --check");
           expect(commandLog).toContain("bun run packages/tooling/tool/cli/src/bin.ts -- lint roadmap-refs");
-          expect(commandLog).toContain(
-            "bun run packages/tooling/tool/cli/src/bin.ts -- docgen check --reuse-proof-manifest"
-          );
           expect(commandLog).toContain("bunx typos");
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");

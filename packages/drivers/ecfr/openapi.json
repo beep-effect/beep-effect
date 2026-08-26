@@ -8,6 +8,164 @@
   "host": "www.ecfr.gov",
   "basePath": "",
   "schemes": ["https"],
+  "produces": ["application/json"],
+  "parameters": {
+    "SearchQuery": {
+      "name": "query",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Search term applied to headings and full text."
+    },
+    "SearchAgencySlugs": {
+      "name": "agency_slugs[]",
+      "in": "query",
+      "type": "array",
+      "items": { "type": "string" },
+      "collectionFormat": "multi",
+      "required": false,
+      "description": "Agency slugs used to restrict matching content."
+    },
+    "SearchDate": {
+      "name": "date",
+      "in": "query",
+      "type": "string",
+      "format": "date",
+      "required": false,
+      "description": "Restricts content to the specified ISO date."
+    },
+    "SearchOrder": {
+      "name": "order",
+      "in": "query",
+      "type": "string",
+      "enum": [
+        "citations",
+        "hierarchy",
+        "newest_first",
+        "oldest_first",
+        "relevance",
+        "suggestions"
+      ],
+      "required": false,
+      "description": "Sort order applied to matching content."
+    },
+    "SearchPaginateBy": {
+      "name": "paginate_by",
+      "in": "query",
+      "type": "string",
+      "enum": ["date", "results"],
+      "required": false,
+      "description": "Groups pagination by result pages or content dates."
+    },
+    "SearchPage": {
+      "name": "page",
+      "in": "query",
+      "type": "integer",
+      "default": 1,
+      "required": false,
+      "description": "One-based results page; pagination cannot exceed 10,000 matches."
+    },
+    "SearchPerPage": {
+      "name": "per_page",
+      "in": "query",
+      "type": "integer",
+      "default": 20,
+      "required": false,
+      "description": "Results per page, up to 1,000."
+    },
+    "SearchLastModifiedAfter": {
+      "name": "last_modified_after",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to records last modified after the supplied value."
+    },
+    "SearchLastModifiedBefore": {
+      "name": "last_modified_before",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to records last modified before the supplied value."
+    },
+    "SearchLastModifiedOnOrAfter": {
+      "name": "last_modified_on_or_after",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to records last modified on or after the supplied value."
+    },
+    "SearchLastModifiedOnOrBefore": {
+      "name": "last_modified_on_or_before",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to records last modified on or before the supplied value."
+    },
+    "VersionDate": {
+      "name": "date",
+      "in": "path",
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "description": "Content date in ISO YYYY-MM-DD form."
+    },
+    "VersionTitle": {
+      "name": "title",
+      "in": "path",
+      "type": "string",
+      "required": true,
+      "description": "CFR title number."
+    },
+    "HierarchySubtitle": {
+      "name": "subtitle",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to one CFR subtitle."
+    },
+    "HierarchyChapter": {
+      "name": "chapter",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to one CFR chapter."
+    },
+    "HierarchySubchapter": {
+      "name": "subchapter",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to one CFR subchapter."
+    },
+    "HierarchyPart": {
+      "name": "part",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to one CFR part."
+    },
+    "HierarchySubpart": {
+      "name": "subpart",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to one CFR subpart."
+    },
+    "HierarchySection": {
+      "name": "section",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to one CFR section."
+    },
+    "HierarchyAppendix": {
+      "name": "appendix",
+      "in": "query",
+      "type": "string",
+      "required": false,
+      "description": "Restricts content to one CFR appendix."
+    }
+  },
   "paths": {
     "/api/admin/v1/agencies.json": {
       "get": {
@@ -80,51 +238,22 @@
       }
     },
     "/api/search/v1/results": {
+      "parameters": [
+        { "$ref": "#/parameters/SearchQuery" },
+        { "$ref": "#/parameters/SearchAgencySlugs" },
+        { "$ref": "#/parameters/SearchDate" },
+        { "$ref": "#/parameters/SearchOrder" },
+        { "$ref": "#/parameters/SearchPaginateBy" },
+        { "$ref": "#/parameters/SearchPage" },
+        { "$ref": "#/parameters/SearchPerPage" },
+        { "$ref": "#/parameters/SearchLastModifiedAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedBefore" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrBefore" }
+      ],
       "get": {
         "operationId": "searchResults",
         "summary": "Search eCFR headings and full text.",
-        "parameters": [
-          {
-            "name": "query",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "Search term applied to headings and full text."
-          },
-          {
-            "name": "agency_slugs[]",
-            "in": "query",
-            "type": "array",
-            "items": { "type": "string" },
-            "collectionFormat": "multi",
-            "required": false,
-            "description": "Agency slugs used to restrict matching content."
-          },
-          {
-            "name": "date",
-            "in": "query",
-            "type": "string",
-            "format": "date",
-            "required": false,
-            "description": "Restricts content to the specified ISO date."
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "type": "integer",
-            "default": 1,
-            "required": false,
-            "description": "One-based results page; pagination cannot exceed 10,000 matches."
-          },
-          {
-            "name": "per_page",
-            "in": "query",
-            "type": "integer",
-            "default": 20,
-            "required": false,
-            "description": "Results per page, up to 1,000."
-          }
-        ],
         "responses": {
           "200": {
             "description": "Paginated search-result envelope.",
@@ -134,6 +263,19 @@
       }
     },
     "/api/search/v1/count": {
+      "parameters": [
+        { "$ref": "#/parameters/SearchQuery" },
+        { "$ref": "#/parameters/SearchAgencySlugs" },
+        { "$ref": "#/parameters/SearchDate" },
+        { "$ref": "#/parameters/SearchOrder" },
+        { "$ref": "#/parameters/SearchPaginateBy" },
+        { "$ref": "#/parameters/SearchPage" },
+        { "$ref": "#/parameters/SearchPerPage" },
+        { "$ref": "#/parameters/SearchLastModifiedAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedBefore" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrBefore" }
+      ],
       "get": {
         "operationId": "searchCount",
         "summary": "Count eCFR search matches.",
@@ -146,6 +288,19 @@
       }
     },
     "/api/search/v1/summary": {
+      "parameters": [
+        { "$ref": "#/parameters/SearchQuery" },
+        { "$ref": "#/parameters/SearchAgencySlugs" },
+        { "$ref": "#/parameters/SearchDate" },
+        { "$ref": "#/parameters/SearchOrder" },
+        { "$ref": "#/parameters/SearchPaginateBy" },
+        { "$ref": "#/parameters/SearchPage" },
+        { "$ref": "#/parameters/SearchPerPage" },
+        { "$ref": "#/parameters/SearchLastModifiedAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedBefore" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrBefore" }
+      ],
       "get": {
         "operationId": "searchSummary",
         "summary": "Return summary details for an eCFR search.",
@@ -158,6 +313,19 @@
       }
     },
     "/api/search/v1/counts/daily": {
+      "parameters": [
+        { "$ref": "#/parameters/SearchQuery" },
+        { "$ref": "#/parameters/SearchAgencySlugs" },
+        { "$ref": "#/parameters/SearchDate" },
+        { "$ref": "#/parameters/SearchOrder" },
+        { "$ref": "#/parameters/SearchPaginateBy" },
+        { "$ref": "#/parameters/SearchPage" },
+        { "$ref": "#/parameters/SearchPerPage" },
+        { "$ref": "#/parameters/SearchLastModifiedAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedBefore" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrBefore" }
+      ],
       "get": {
         "operationId": "searchDailyCounts",
         "summary": "Return eCFR search-result counts by date.",
@@ -170,6 +338,19 @@
       }
     },
     "/api/search/v1/counts/titles": {
+      "parameters": [
+        { "$ref": "#/parameters/SearchQuery" },
+        { "$ref": "#/parameters/SearchAgencySlugs" },
+        { "$ref": "#/parameters/SearchDate" },
+        { "$ref": "#/parameters/SearchOrder" },
+        { "$ref": "#/parameters/SearchPaginateBy" },
+        { "$ref": "#/parameters/SearchPage" },
+        { "$ref": "#/parameters/SearchPerPage" },
+        { "$ref": "#/parameters/SearchLastModifiedAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedBefore" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrBefore" }
+      ],
       "get": {
         "operationId": "searchTitleCounts",
         "summary": "Return eCFR search-result counts by CFR title.",
@@ -182,6 +363,19 @@
       }
     },
     "/api/search/v1/counts/hierarchy": {
+      "parameters": [
+        { "$ref": "#/parameters/SearchQuery" },
+        { "$ref": "#/parameters/SearchAgencySlugs" },
+        { "$ref": "#/parameters/SearchDate" },
+        { "$ref": "#/parameters/SearchOrder" },
+        { "$ref": "#/parameters/SearchPaginateBy" },
+        { "$ref": "#/parameters/SearchPage" },
+        { "$ref": "#/parameters/SearchPerPage" },
+        { "$ref": "#/parameters/SearchLastModifiedAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedBefore" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrBefore" }
+      ],
       "get": {
         "operationId": "searchHierarchyCounts",
         "summary": "Return eCFR search-result counts by hierarchy node.",
@@ -194,6 +388,19 @@
       }
     },
     "/api/search/v1/suggestions": {
+      "parameters": [
+        { "$ref": "#/parameters/SearchQuery" },
+        { "$ref": "#/parameters/SearchAgencySlugs" },
+        { "$ref": "#/parameters/SearchDate" },
+        { "$ref": "#/parameters/SearchOrder" },
+        { "$ref": "#/parameters/SearchPaginateBy" },
+        { "$ref": "#/parameters/SearchPage" },
+        { "$ref": "#/parameters/SearchPerPage" },
+        { "$ref": "#/parameters/SearchLastModifiedAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedBefore" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrAfter" },
+        { "$ref": "#/parameters/SearchLastModifiedOnOrBefore" }
+      ],
       "get": {
         "operationId": "searchSuggestions",
         "summary": "Return eCFR search suggestions.",
@@ -206,26 +413,20 @@
       }
     },
     "/api/versioner/v1/ancestry/{date}/title-{title}.json": {
+      "parameters": [
+        { "$ref": "#/parameters/VersionDate" },
+        { "$ref": "#/parameters/VersionTitle" },
+        { "$ref": "#/parameters/HierarchySubtitle" },
+        { "$ref": "#/parameters/HierarchyChapter" },
+        { "$ref": "#/parameters/HierarchySubchapter" },
+        { "$ref": "#/parameters/HierarchyPart" },
+        { "$ref": "#/parameters/HierarchySubpart" },
+        { "$ref": "#/parameters/HierarchySection" },
+        { "$ref": "#/parameters/HierarchyAppendix" }
+      ],
       "get": {
         "operationId": "getAncestry",
         "summary": "Return the ancestry of a CFR hierarchy node on a date.",
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "type": "string",
-            "format": "date",
-            "required": true,
-            "description": "Content date in ISO YYYY-MM-DD form."
-          },
-          {
-            "name": "title",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "CFR title number."
-          }
-        ],
         "responses": {
           "200": {
             "description": "Ordered ancestry nodes from title to the requested leaf.",
@@ -235,26 +436,20 @@
       }
     },
     "/api/versioner/v1/full/{date}/title-{title}.xml": {
+      "parameters": [
+        { "$ref": "#/parameters/VersionDate" },
+        { "$ref": "#/parameters/VersionTitle" },
+        { "$ref": "#/parameters/HierarchySubtitle" },
+        { "$ref": "#/parameters/HierarchyChapter" },
+        { "$ref": "#/parameters/HierarchySubchapter" },
+        { "$ref": "#/parameters/HierarchyPart" },
+        { "$ref": "#/parameters/HierarchySubpart" },
+        { "$ref": "#/parameters/HierarchySection" },
+        { "$ref": "#/parameters/HierarchyAppendix" }
+      ],
       "get": {
         "operationId": "getFullTitleXml",
         "summary": "Return source XML for a complete CFR title or hierarchy subset.",
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "type": "string",
-            "format": "date",
-            "required": true,
-            "description": "Content date in ISO YYYY-MM-DD form."
-          },
-          {
-            "name": "title",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "CFR title number."
-          }
-        ],
         "produces": ["application/xml", "text/xml"],
         "responses": {
           "200": {
@@ -265,26 +460,20 @@
       }
     },
     "/api/versioner/v1/structure/{date}/title-{title}.json": {
+      "parameters": [
+        { "$ref": "#/parameters/VersionDate" },
+        { "$ref": "#/parameters/VersionTitle" },
+        { "$ref": "#/parameters/HierarchySubtitle" },
+        { "$ref": "#/parameters/HierarchyChapter" },
+        { "$ref": "#/parameters/HierarchySubchapter" },
+        { "$ref": "#/parameters/HierarchyPart" },
+        { "$ref": "#/parameters/HierarchySubpart" },
+        { "$ref": "#/parameters/HierarchySection" },
+        { "$ref": "#/parameters/HierarchyAppendix" }
+      ],
       "get": {
         "operationId": "getStructure",
         "summary": "Return the complete structure tree for a CFR title on a date.",
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "type": "string",
-            "format": "date",
-            "required": true,
-            "description": "Content date in ISO YYYY-MM-DD form."
-          },
-          {
-            "name": "title",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "CFR title number."
-          }
-        ],
         "responses": {
           "200": {
             "description": "CFR hierarchy tree without regulation text.",
@@ -306,17 +495,20 @@
       }
     },
     "/api/versioner/v1/versions/title-{title}.json": {
+      "parameters": [
+        { "$ref": "#/parameters/VersionTitle" },
+        { "$ref": "#/parameters/HierarchySubtitle" },
+        { "$ref": "#/parameters/HierarchyChapter" },
+        { "$ref": "#/parameters/HierarchySubchapter" },
+        { "$ref": "#/parameters/HierarchyPart" },
+        { "$ref": "#/parameters/HierarchySubpart" },
+        { "$ref": "#/parameters/HierarchySection" },
+        { "$ref": "#/parameters/HierarchyAppendix" }
+      ],
       "get": {
         "operationId": "listVersions",
         "summary": "List content versions within a CFR title.",
         "parameters": [
-          {
-            "name": "title",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "CFR title number."
-          },
           {
             "name": "issue_date[on]",
             "in": "query",

@@ -16,19 +16,17 @@ import { ApiAuth, makeApiTransport } from "@beep/api-transport";
 import { $EcfrId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Config, Context, Effect, Layer, pipe, Stream } from "effect";
-import * as A from "effect/Array";
+import { Config, Context, Effect, Layer, Match, Stream } from "effect";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+import * as HttpApiClient from "effect/unstable/httpapi/HttpApiClient";
 import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
-import * as G from "./_generated/Ecfr.generated.ts";
+import * as G from "./_generated/Ecfr.gen.ts";
 import { ECFR_API_URL, ECFR_RATE_LIMIT, ECFR_RATE_LIMIT_WINDOW, EcfrConfigInput } from "./Ecfr.config.ts";
 import { EcfrError, EcfrErrorOptions } from "./Ecfr.errors.ts";
 import type { RateLimitSnapshot } from "@beep/api-transport";
-import type { EcfrOperationDescriptor } from "./_generated/Ecfr.generated.ts";
+import type * as HttpClient from "effect/unstable/http/HttpClient";
+import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 
 const $I = $EcfrId.create("Ecfr.service");
 const SearchOrderBase = LiteralKit([
@@ -47,6 +45,30 @@ const SearchPaginationBase = LiteralKit(["date", "results"]);
 const SearchPagination = SearchPaginationBase.pipe(
   $I.annoteSchema("SearchPagination", { description: "Pagination grouping accepted by eCFR search results." }),
   SchemaUtils.withLiteralKitStatics(SearchPaginationBase)
+);
+const DatePathSegment = S.String.check(
+  S.isPattern(/^\d{4}-\d{2}-\d{2}$/u, {
+    identifier: $I`DatePathSegmentCheck`,
+    title: "eCFR date path segment",
+    description: "An ISO calendar-date spelling that is safe to substitute into an eCFR URL path.",
+    message: "Expected an eCFR path date in YYYY-MM-DD form",
+  })
+).pipe(
+  $I.annoteSchema("DatePathSegment", {
+    description: "An ISO date string accepted in dated eCFR versioner paths.",
+  })
+);
+const TitlePathSegment = S.String.check(
+  S.isPattern(/^[A-Za-z0-9._~-]+$/u, {
+    identifier: $I`TitlePathSegmentCheck`,
+    title: "eCFR title path segment",
+    description: "A non-empty title identifier made only from unreserved URL path-segment characters.",
+    message: "Expected an eCFR title containing only unreserved URL path-segment characters",
+  })
+).pipe(
+  $I.annoteSchema("TitlePathSegment", {
+    description: "A title identifier accepted in eCFR URL paths.",
+  })
 );
 const optional = <A, I, R>(schema: S.Codec<A, I, R>) =>
   S.OptionFromOptionalKey(schema).pipe(SchemaUtils.withNoneDefault);
@@ -94,7 +116,7 @@ export class EcfrCorrectionsParams extends S.Class<EcfrCorrectionsParams>($I`Ecf
  * @since 0.0.0
  */
 export class EcfrTitleParams extends S.Class<EcfrTitleParams>($I`EcfrTitleParams`)(
-  { title: S.String },
+  { title: TitlePathSegment },
   $I.annote("EcfrTitleParams", { description: "Path parameters identifying one CFR title." })
 ) {}
 
@@ -158,13 +180,13 @@ export class EcfrVersionerParams extends S.Class<EcfrVersionerParams>($I`EcfrVer
   {
     appendix: optional(S.String),
     chapter: optional(S.String),
-    date: S.String,
+    date: DatePathSegment,
     part: optional(S.String),
     section: optional(S.String),
     subchapter: optional(S.String),
     subpart: optional(S.String),
     subtitle: optional(S.String),
-    title: S.String,
+    title: TitlePathSegment,
   },
   $I.annote("EcfrVersionerParams", {
     description: "Dated CFR title path and optional hierarchy selectors for eCFR versioner requests.",
@@ -190,8 +212,8 @@ export class EcfrVersionerParams extends S.Class<EcfrVersionerParams>($I`EcfrVer
  */
 export class EcfrDatedTitleParams extends S.Class<EcfrDatedTitleParams>($I`EcfrDatedTitleParams`)(
   {
-    date: S.String,
-    title: S.String,
+    date: DatePathSegment,
+    title: TitlePathSegment,
   },
   $I.annote("EcfrDatedTitleParams", {
     description: "Dated CFR title path parameters for eCFR versioner requests without hierarchy selectors.",
@@ -227,12 +249,21 @@ export class EcfrVersionsParams extends S.Class<EcfrVersionsParams>($I`EcfrVersi
     subchapter: optional(S.String),
     subpart: optional(S.String),
     subtitle: optional(S.String),
-    title: S.String,
+    title: TitlePathSegment,
   },
   $I.annote("EcfrVersionsParams", {
     description: "Issue-date, page, and hierarchy filters for one CFR title's content versions.",
   })
 ) {}
+
+/**
+ * One decoded search-result item from the generated eCFR response envelope.
+ *
+ * @see {@link G.SearchResultsResponse} for the generated runtime response schema.
+ * @category models
+ * @since 0.0.0
+ */
+export type SearchResult = G.SearchResultsResponse["results"][number];
 
 /**
  * Public service shape for the keyless eCFR driver.
@@ -268,7 +299,7 @@ export interface EcfrShape {
     params?: EcfrSearchParams
   ) => Effect.Effect<G.SearchHierarchyCountsResponse, EcfrError>;
   readonly searchResults: (params?: EcfrSearchParams) => Effect.Effect<G.SearchResultsResponse, EcfrError>;
-  readonly searchResultsAll: (params?: EcfrSearchParams) => Stream.Stream<G.SearchResult, EcfrError>;
+  readonly searchResultsAll: (params?: EcfrSearchParams) => Stream.Stream<SearchResult, EcfrError>;
   readonly searchSuggestions: (params?: EcfrSearchParams) => Effect.Effect<G.SearchSuggestionsResponse, EcfrError>;
   readonly searchSummary: (params?: EcfrSearchParams) => Effect.Effect<G.SearchSummaryResponse, EcfrError>;
   readonly searchTitleCounts: (params?: EcfrSearchParams) => Effect.Effect<G.SearchTitleCountsResponse, EcfrError>;
@@ -287,88 +318,67 @@ const resolveConfig = (input: EcfrConfigInput): ResolvedConfig => ({
   apiUrl: URLStr.make(input.apiUrl),
 });
 
-const decodeStatusOption = S.decodeUnknownOption(NonNegativeInt);
-
 const requestError = (cause: unknown): EcfrError =>
   EcfrError.of("request encoding", EcfrErrorOptions.make({ cause: O.some(cause) }));
 
 const responseDecodingError = (cause: unknown): EcfrError =>
   EcfrError.of("response decoding", EcfrErrorOptions.make({ cause: O.some(cause) }));
 
-const setOptionalUrlParam = <A>(
-  request: HttpClientRequest.HttpClientRequest,
-  key: string,
-  value: O.Option<A>,
-  render: (value: A) => string
-): HttpClientRequest.HttpClientRequest =>
-  pipe(
-    value,
-    O.map((item) => HttpClientRequest.setUrlParam(request, key, render(item))),
-    O.getOrElse(() => request)
-  );
+const validateRequest = Effect.fnUntraced(function* <C extends S.Constraint>(schema: C, input: C["Type"]) {
+  yield* S.encodeEffect(schema)(input).pipe(Effect.mapError(requestError));
+  return input;
+});
 
-const setOptionalString = (
-  request: HttpClientRequest.HttpClientRequest,
-  key: string,
-  value: O.Option<string>
-): HttpClientRequest.HttpClientRequest => setOptionalUrlParam(request, key, value, (item) => item);
+const toSearchQuery = (params: EcfrSearchParams, page: O.Option<number> = params.page): G.SearchResultsQuery =>
+  O.getSomesStruct({
+    "agency_slugs[]": params.agencySlugs,
+    date: params.date,
+    last_modified_after: params.lastModifiedAfter,
+    last_modified_before: params.lastModifiedBefore,
+    last_modified_on_or_after: params.lastModifiedOnOrAfter,
+    last_modified_on_or_before: params.lastModifiedOnOrBefore,
+    order: params.order,
+    page,
+    paginate_by: params.paginateBy,
+    per_page: params.perPage,
+    query: params.query,
+  });
 
-const setOptionalInt = (
-  request: HttpClientRequest.HttpClientRequest,
-  key: string,
-  value: O.Option<NonNegativeInt>
-): HttpClientRequest.HttpClientRequest => setOptionalUrlParam(request, key, value, (item) => `${item}`);
+const toHierarchyQuery = (params: EcfrVersionerParams | EcfrVersionsParams): G.GetAncestryQuery =>
+  O.getSomesStruct({
+    appendix: params.appendix,
+    chapter: params.chapter,
+    part: params.part,
+    section: params.section,
+    subchapter: params.subchapter,
+    subpart: params.subpart,
+    subtitle: params.subtitle,
+  });
 
-const addSearchQuery = (
-  request: HttpClientRequest.HttpClientRequest,
-  params: EcfrSearchParams,
-  pageOverride: O.Option<number> = O.none()
-): HttpClientRequest.HttpClientRequest => {
-  const withAgencies = pipe(
-    params.agencySlugs,
-    O.map((slugs) =>
-      A.reduce(slugs, request, (current, slug) => HttpClientRequest.appendUrlParam(current, "agency_slugs[]", slug))
-    ),
-    O.getOrElse(() => request)
-  );
-  const withPage = pipe(
-    pageOverride,
-    O.map((page) => HttpClientRequest.setUrlParam(withAgencies, "page", `${page}`)),
-    O.getOrElse(() => setOptionalInt(withAgencies, "page", params.page))
-  );
-  return pipe(
-    setOptionalString(withPage, "query", params.query),
-    (current) => setOptionalString(current, "date", params.date),
-    (current) => setOptionalString(current, "last_modified_after", params.lastModifiedAfter),
-    (current) => setOptionalString(current, "last_modified_before", params.lastModifiedBefore),
-    (current) => setOptionalString(current, "last_modified_on_or_after", params.lastModifiedOnOrAfter),
-    (current) => setOptionalString(current, "last_modified_on_or_before", params.lastModifiedOnOrBefore),
-    (current) => setOptionalString(current, "order", params.order),
-    (current) => setOptionalString(current, "paginate_by", params.paginateBy),
-    (current) => setOptionalInt(current, "per_page", params.perPage)
-  );
-};
+class StatusCause extends S.Class<StatusCause>($I`StatusCause`)(
+  {
+    response: S.Struct({ status: NonNegativeInt }),
+  },
+  $I.annote("StatusCause", {
+    description: "External HTTP client failure carrying a numeric response status.",
+  })
+) {}
 
-const hierarchyPath = (path: string, params: { readonly date: string; readonly title: string }): string =>
-  pipe(
-    path,
-    Str.replace("{date}", encodeURIComponent(params.date)),
-    Str.replace("{title}", encodeURIComponent(params.title))
-  );
+const decodeStatusCause = S.decodeUnknownOption(StatusCause);
+const readStatus = (cause: HttpClientError.HttpClientError): O.Option<NonNegativeInt> =>
+  O.map(decodeStatusCause(cause), ({ response }) => response.status);
 
-const addHierarchyQuery = (
-  request: HttpClientRequest.HttpClientRequest,
-  params: EcfrVersionerParams | EcfrVersionsParams
-): HttpClientRequest.HttpClientRequest =>
-  pipe(
-    setOptionalString(request, "subtitle", params.subtitle),
-    (current) => setOptionalString(current, "chapter", params.chapter),
-    (current) => setOptionalString(current, "subchapter", params.subchapter),
-    (current) => setOptionalString(current, "part", params.part),
-    (current) => setOptionalString(current, "subpart", params.subpart),
-    (current) => setOptionalString(current, "section", params.section),
-    (current) => setOptionalString(current, "appendix", params.appendix)
-  );
+const mapHttpClientError = (cause: HttpClientError.HttpClientError): EcfrError =>
+  O.match(readStatus(cause), {
+    onNone: () => EcfrError.of("transport", EcfrErrorOptions.make({ cause: O.some(cause) })),
+    onSome: (status) =>
+      EcfrError.of("response status", EcfrErrorOptions.make({ cause: O.some(cause), status: O.some(status) })),
+  });
+
+const mapClientError = Match.type<HttpClientError.HttpClientError | S.SchemaError>().pipe(
+  Match.when(S.isSchemaError, responseDecodingError),
+  Match.orElse(mapHttpClientError)
+);
 
 const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
   const transport = yield* makeApiTransport({
@@ -377,161 +387,95 @@ const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
     rateLimit: { limit: ECFR_RATE_LIMIT, window: ECFR_RATE_LIMIT_WINDOW },
   });
 
-  const httpClient = yield* HttpClient.HttpClient;
-  const client = httpClient.pipe(
-    transport.transformClient,
-    HttpClient.mapRequest(HttpClientRequest.prependUrl(config.apiUrl))
-  );
-
-  const execute = Effect.fnUntraced(function* (request: HttpClientRequest.HttpClientRequest) {
-    const response = yield* client
-      .execute(request)
-      .pipe(Effect.mapError((cause) => EcfrError.of("transport", EcfrErrorOptions.make({ cause: O.some(cause) }))));
-
-    if (response.status < 200 || response.status >= 300) {
-      return yield* EcfrError.of(
-        "response status",
-        EcfrErrorOptions.make({ status: decodeStatusOption(response.status) })
-      );
-    }
-    return response;
+  const client = yield* HttpApiClient.make(G.EcfrApi, {
+    baseUrl: config.apiUrl,
+    transformClient: transport.transformClient,
   });
-
-  const runJson = Effect.fnUntraced(function* <A>(
-    descriptor: EcfrOperationDescriptor,
-    decode: (input: unknown) => Effect.Effect<A, S.SchemaError>,
-    request = HttpClientRequest.get(descriptor.path)
-  ): Effect.fn.Return<A, EcfrError> {
-    const response = yield* execute(request);
-    const body = yield* response.json.pipe(Effect.mapError(responseDecodingError));
-    return yield* decode(body).pipe(
-      Effect.mapError(responseDecodingError),
-      Effect.withSpan(`Ecfr.${descriptor.operationId}`)
-    );
-  });
-
-  const runText = Effect.fnUntraced(function* (
-    descriptor: EcfrOperationDescriptor,
-    request: HttpClientRequest.HttpClientRequest
-  ) {
-    const response = yield* execute(request);
-    return yield* response.text.pipe(
-      Effect.mapError(responseDecodingError),
-      Effect.withSpan(`Ecfr.${descriptor.operationId}`)
-    );
-  });
-
-  const decodeSearchParams = (params: EcfrSearchParams): Effect.Effect<EcfrSearchParams, EcfrError> =>
-    S.encodeUnknownEffect(EcfrSearchParams)(params).pipe(Effect.as(params), Effect.mapError(requestError));
-
-  const runSearch = Effect.fnUntraced(function* <A>(
-    descriptor: G.EcfrOperationDescriptor,
-    response: S.Codec<A>,
-    params: EcfrSearchParams,
-    pageOverride = O.none<number>()
-  ) {
-    const decoded = yield* decodeSearchParams(params);
-    const request = addSearchQuery(HttpClientRequest.get(descriptor.path), decoded, pageOverride);
-    return yield* runJson(descriptor, S.decodeUnknownEffect(response), request);
-  });
+  const call = Effect.mapError(mapClientError);
 
   const searchResults = Effect.fn("Ecfr.searchResults")(function* (
     params = EcfrSearchParams.make({})
   ): Effect.fn.Return<G.SearchResultsResponse, EcfrError> {
-    return yield* runSearch(G.ECFR_OPERATIONS.searchResults.descriptor, G.SearchResultsResponse, params);
+    const decoded = yield* validateRequest(EcfrSearchParams, params);
+    return yield* call(client.searchResults({ query: toSearchQuery(decoded) }));
   });
 
   return Ecfr.of({
     getAncestry: Effect.fn("Ecfr.getAncestry")(function* (params) {
-      const decoded = yield* S.encodeUnknownEffect(EcfrVersionerParams)(params).pipe(
-        Effect.as(params),
-        Effect.mapError(requestError)
+      const decoded = yield* validateRequest(EcfrVersionerParams, params);
+      return yield* call(
+        client.getAncestry({
+          params: { date: decoded.date, title: decoded.title },
+          query: toHierarchyQuery(decoded),
+        })
       );
-      const descriptor = G.ECFR_OPERATIONS.getAncestry.descriptor;
-      const request = addHierarchyQuery(HttpClientRequest.get(hierarchyPath(descriptor.path, decoded)), decoded);
-      return yield* runJson(descriptor, S.decodeUnknownEffect(G.AncestryResponse), request);
     }),
     getFullTitleXml: Effect.fn("Ecfr.getFullTitleXml")(function* (params) {
-      const decoded = yield* S.encodeUnknownEffect(EcfrVersionerParams)(params).pipe(
-        Effect.as(params),
-        Effect.mapError(requestError)
+      const decoded = yield* validateRequest(EcfrVersionerParams, params);
+      return yield* call(
+        client.getFullTitleXml({
+          params: { date: decoded.date, title: decoded.title },
+          query: toHierarchyQuery(decoded),
+        })
       );
-      const descriptor = G.ECFR_OPERATIONS.getFullTitleXml.descriptor;
-      const request = addHierarchyQuery(HttpClientRequest.get(hierarchyPath(descriptor.path, decoded)), decoded);
-      return yield* runText(descriptor, request);
     }),
     getStructure: Effect.fn("Ecfr.getStructure")(function* (params) {
-      const decoded = yield* S.encodeUnknownEffect(EcfrDatedTitleParams)(params).pipe(
-        Effect.as(params),
-        Effect.mapError(requestError)
-      );
-      const descriptor = G.ECFR_OPERATIONS.getStructure.descriptor;
-      return yield* runJson(
-        descriptor,
-        S.decodeUnknownEffect(G.StructureNode),
-        HttpClientRequest.get(hierarchyPath(descriptor.path, decoded))
-      );
+      const decoded = yield* validateRequest(EcfrDatedTitleParams, params);
+      return yield* call(client.getStructure({ params: { date: decoded.date, title: decoded.title }, query: {} }));
     }),
-    listAgencies: runJson(G.ECFR_OPERATIONS.listAgencies.descriptor, S.decodeUnknownEffect(G.AgenciesResponse)),
+    listAgencies: call(client.listAgencies({})),
     listCorrections: Effect.fn("Ecfr.listCorrections")(function* (params = EcfrCorrectionsParams.make({})) {
-      const decoded = yield* S.encodeUnknownEffect(EcfrCorrectionsParams)(params).pipe(
-        Effect.as(params),
-        Effect.mapError(requestError)
+      const decoded = yield* validateRequest(EcfrCorrectionsParams, params);
+      return yield* call(
+        client.listCorrections({
+          query: O.getSomesStruct({
+            date: decoded.date,
+            error_corrected_date: decoded.errorCorrectedDate,
+            title: decoded.title,
+          }),
+        })
       );
-      const descriptor = G.ECFR_OPERATIONS.listCorrections.descriptor;
-      const request = pipe(
-        setOptionalString(HttpClientRequest.get(descriptor.path), "date", decoded.date),
-        (current) => setOptionalString(current, "title", decoded.title),
-        (current) => setOptionalString(current, "error_corrected_date", decoded.errorCorrectedDate)
-      );
-      return yield* runJson(descriptor, S.decodeUnknownEffect(G.CorrectionsResponse), request);
     }),
     listTitleCorrections: Effect.fn("Ecfr.listTitleCorrections")(function* (params) {
-      const decoded = yield* S.encodeUnknownEffect(EcfrTitleParams)(params).pipe(
-        Effect.as(params),
-        Effect.mapError(requestError)
-      );
-      const descriptor = G.ECFR_OPERATIONS.listTitleCorrections.descriptor;
-      const path = pipe(descriptor.path, Str.replace("{title}", encodeURIComponent(decoded.title)));
-      return yield* runJson(descriptor, S.decodeUnknownEffect(G.CorrectionsResponse), HttpClientRequest.get(path));
+      const decoded = yield* validateRequest(EcfrTitleParams, params);
+      return yield* call(client.listTitleCorrections({ params: { title: decoded.title } }));
     }),
-    listTitles: runJson(G.ECFR_OPERATIONS.listTitles.descriptor, S.decodeUnknownEffect(G.TitlesResponse)),
+    listTitles: call(client.listTitles({})),
     listVersions: Effect.fn("Ecfr.listVersions")(function* (params) {
-      const decoded = yield* S.encodeUnknownEffect(EcfrVersionsParams)(params).pipe(
-        Effect.as(params),
-        Effect.mapError(requestError)
+      const decoded = yield* validateRequest(EcfrVersionsParams, params);
+      return yield* call(
+        client.listVersions({
+          params: { title: decoded.title },
+          query: {
+            ...toHierarchyQuery(decoded),
+            ...O.getSomesStruct({
+              "issue_date[gte]": decoded.issueDateGte,
+              "issue_date[lte]": decoded.issueDateLte,
+              "issue_date[on]": decoded.issueDateOn,
+              page: decoded.page,
+            }),
+          },
+        })
       );
-      const descriptor = G.ECFR_OPERATIONS.listVersions.descriptor;
-      const withHierarchy = addHierarchyQuery(
-        HttpClientRequest.get(pipe(descriptor.path, Str.replace("{title}", encodeURIComponent(decoded.title)))),
-        decoded
-      );
-      const request = pipe(
-        setOptionalString(withHierarchy, "issue_date[on]", decoded.issueDateOn),
-        (current) => setOptionalString(current, "issue_date[lte]", decoded.issueDateLte),
-        (current) => setOptionalString(current, "issue_date[gte]", decoded.issueDateGte),
-        (current) => setOptionalInt(current, "page", decoded.page)
-      );
-      return yield* runJson(descriptor, S.decodeUnknownEffect(G.VersionsResponse), request);
     }),
     rateLimit: transport.rateLimit,
     searchCount: Effect.fn("Ecfr.searchCount")(function* (params = EcfrSearchParams.make({})) {
-      return yield* runSearch(G.ECFR_OPERATIONS.searchCount.descriptor, G.SearchCountResponse, params);
+      const decoded = yield* validateRequest(EcfrSearchParams, params);
+      return yield* call(client.searchCount({ query: toSearchQuery(decoded) }));
     }),
     searchDailyCounts: Effect.fn("Ecfr.searchDailyCounts")(function* (params = EcfrSearchParams.make({})) {
-      return yield* runSearch(G.ECFR_OPERATIONS.searchDailyCounts.descriptor, G.SearchDailyCountsResponse, params);
+      const decoded = yield* validateRequest(EcfrSearchParams, params);
+      return yield* call(client.searchDailyCounts({ query: toSearchQuery(decoded) }));
     }),
     searchHierarchyCounts: Effect.fn("Ecfr.searchHierarchyCounts")(function* (params = EcfrSearchParams.make({})) {
-      return yield* runSearch(
-        G.ECFR_OPERATIONS.searchHierarchyCounts.descriptor,
-        G.SearchHierarchyCountsResponse,
-        params
-      );
+      const decoded = yield* validateRequest(EcfrSearchParams, params);
+      return yield* call(client.searchHierarchyCounts({ query: toSearchQuery(decoded) }));
     }),
     searchResults,
     searchResultsAll: (params = EcfrSearchParams.make({})) =>
       Stream.paginate(1, (page) =>
-        runSearch(G.ECFR_OPERATIONS.searchResults.descriptor, G.SearchResultsResponse, params, O.some(page)).pipe(
+        validateRequest(EcfrSearchParams, params).pipe(
+          Effect.flatMap((decoded) => call(client.searchResults({ query: toSearchQuery(decoded, O.some(page)) }))),
           Effect.map(
             (response) =>
               [
@@ -542,13 +486,16 @@ const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
         )
       ),
     searchSummary: Effect.fn("Ecfr.searchSummary")(function* (params = EcfrSearchParams.make({})) {
-      return yield* runSearch(G.ECFR_OPERATIONS.searchSummary.descriptor, G.SearchSummaryResponse, params);
+      const decoded = yield* validateRequest(EcfrSearchParams, params);
+      return yield* call(client.searchSummary({ query: toSearchQuery(decoded) }));
     }),
     searchSuggestions: Effect.fn("Ecfr.searchSuggestions")(function* (params = EcfrSearchParams.make({})) {
-      return yield* runSearch(G.ECFR_OPERATIONS.searchSuggestions.descriptor, G.SearchSuggestionsResponse, params);
+      const decoded = yield* validateRequest(EcfrSearchParams, params);
+      return yield* call(client.searchSuggestions({ query: toSearchQuery(decoded) }));
     }),
     searchTitleCounts: Effect.fn("Ecfr.searchTitleCounts")(function* (params = EcfrSearchParams.make({})) {
-      return yield* runSearch(G.ECFR_OPERATIONS.searchTitleCounts.descriptor, G.SearchTitleCountsResponse, params);
+      const decoded = yield* validateRequest(EcfrSearchParams, params);
+      return yield* call(client.searchTitleCounts({ query: toSearchQuery(decoded) }));
     }),
   });
 });
