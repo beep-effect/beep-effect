@@ -42,6 +42,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
       expect(isPanelOpen(validated, "ontology-changelog")).toBe(true);
       expect(isPanelOpen(validated, "home")).toBe(true);
       expect(isPanelOpen(validated, "sync")).toBe(true);
+      expect(isPanelOpen(validated, "editor-proof")).toBe(false);
       expect(isPanelOpen(validated, "contradiction-triage")).toBe(false);
       // Heavy tools start closed; the rail menu opens them.
       expect(isPanelOpen(validated, "ontology-sparql")).toBe(false);
@@ -53,7 +54,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
   it("registers contradiction triage as the thirteenth direct shell panel", () => {
     const panel = DESKTOP_PANELS.find(({ key }) => key === "contradiction-triage");
 
-    expect(DESKTOP_PANELS).toHaveLength(13);
+    expect(DESKTOP_PANELS).toHaveLength(14);
     expect(panel).toEqual({
       cluster: "shell",
       description: "Review contradictory beliefs against their verified source text.",

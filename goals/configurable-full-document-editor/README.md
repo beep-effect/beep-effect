@@ -64,3 +64,32 @@ and Goal A owns their normalization into the executable atlas/profile contract.
   word-processing subset.
 - The seven remaining MAP candidates are gated successor goals and are not
   scaffolded by this packet.
+
+## Handoff from Goal A (2026-08-25)
+
+`goals/lexical-playground-capability-atlas` completed and delivered the
+contract this goal consumes:
+
+- The ratified atlas `research/capability-atlas.json`
+  (`editor-capability-atlas/v1`, 178 entries, 12 user-approved waivers in its
+  `SPEC.md` Exception Ledger — the inherited waivers listed above are
+  unchanged; the `interchange.canonical-json` waiver retired on live
+  evidence).
+- `@beep/editor/capability`: LiteralKit domains, `CapabilityDescriptor` /
+  `CapabilityCatalog` / `EditorProfile` / `ResolvedEditorProfile`, typed
+  `ProfileResolutionError`s, `resolveEditorProfile`, projections
+  (`projectCommands`, `projectShortcutHelp`, `projectSlashItems`), runtime
+  bindings with a guarded `KeybindingPlugin`, `CapabilityComposer`, and the
+  `minimal` / `document-proof` reference profiles. Design record:
+  `goals/lexical-playground-capability-atlas/research/P1-CAPABILITY-CONTRACT.md`.
+- Extension path: add one descriptor per atlas id (dependencies, commands,
+  chords, and the `beep-md` compatibility row copied from the atlas), register
+  its Lexical node/plugin/transformer in `capability/runtime.tsx`, and keep
+  `packages/foundation/ui-system/editor/test/capability-catalog.test.ts` — the
+  strict atlas reconciliation — green. Product profiles stay app-owned.
+- Proof surfaces to extend: `stories/capability-profiles.stories.tsx` and the
+  Professional Desktop `editor-proof` shell panel (`src/editor-proof/`), with
+  the recorded QA harness at
+  `goals/lexical-playground-capability-atlas/history/p2-qa/2026-08-25/qa-capture.mjs`.
+
+Resume remains a user decision once the Goal A closeout PR merges.

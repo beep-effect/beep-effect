@@ -1,0 +1,242 @@
+{
+  "dropped": [
+    {
+      "bytes": 143194,
+      "path": "frames/marker-w0_00052.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 143441,
+      "path": "frames/marker-w0_00053.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 107873,
+      "path": "frames/marker-w0_00054.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 107873,
+      "path": "frames/marker-w0_00055.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 97711,
+      "path": "frames/marker-w0_00056.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 99511,
+      "path": "frames/marker-w0_00057.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 153583,
+      "path": "frames/marker-w0_00058.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 153497,
+      "path": "frames/marker-w0_00059.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 141201,
+      "path": "frames/transition-w1_00000.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 141327,
+      "path": "frames/transition-w1_00001.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 144791,
+      "path": "frames/transition-w1_00002.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145784,
+      "path": "frames/transition-w2_00000.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145842,
+      "path": "frames/transition-w2_00001.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145842,
+      "path": "frames/transition-w2_00002.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145797,
+      "path": "frames/transition-w2_00003.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145797,
+      "path": "frames/transition-w2_00004.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145832,
+      "path": "frames/transition-w2_00005.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145797,
+      "path": "frames/transition-w2_00006.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145832,
+      "path": "frames/transition-w2_00007.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 145832,
+      "path": "frames/transition-w2_00008.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 105053,
+      "path": "canonical-json-import-lifecycle--after-invalid-import.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 155825,
+      "path": "canonical-json-import-lifecycle--after-valid-import.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 110107,
+      "path": "every-command-mouse-and-keyboard--after-sweep.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 112447,
+      "path": "every-command-mouse-and-keyboard--after-toggles.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 114010,
+      "path": "keyboard-focus-order-and-accessible-names--focus-sweep.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 101686,
+      "path": "minimal-disabled-authoring-paths--after-disabled-paths.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 103094,
+      "path": "minimal-toolbar-help-and-readable-content--minimal.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 64127,
+      "path": "narrow-viewport-and-touch--after-touch.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 55170,
+      "path": "narrow-viewport-and-touch--narrow-drawer-open.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 59726,
+      "path": "narrow-viewport-and-touch--narrow.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 114242,
+      "path": "narrow-viewport-and-touch--restored.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 97304,
+      "path": "open-panel-through-dock--before-open.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 103094,
+      "path": "open-panel-through-dock--opened.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 119805,
+      "path": "slash-menu-and-markdown-shortcut--after-slash-and-markdown.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 112178,
+      "path": "slash-menu-and-markdown-shortcut--slash-open.png",
+      "reason": "total-budget"
+    },
+    {
+      "bytes": 114815,
+      "path": "switch-to-document-proof-keeps-content--document-proof.png",
+      "reason": "total-budget"
+    }
+  ],
+  "files": [
+    { "bytes": 141376, "kind": "frame", "path": "frames/marker-w0_00000.png" },
+    { "bytes": 141220, "kind": "frame", "path": "frames/marker-w0_00001.png" },
+    { "bytes": 143427, "kind": "frame", "path": "frames/marker-w0_00002.png" },
+    { "bytes": 143373, "kind": "frame", "path": "frames/marker-w0_00003.png" },
+    { "bytes": 143456, "kind": "frame", "path": "frames/marker-w0_00004.png" },
+    { "bytes": 137762, "kind": "frame", "path": "frames/marker-w0_00005.png" },
+    { "bytes": 138614, "kind": "frame", "path": "frames/marker-w0_00006.png" },
+    { "bytes": 139476, "kind": "frame", "path": "frames/marker-w0_00007.png" },
+    { "bytes": 159901, "kind": "frame", "path": "frames/marker-w0_00008.png" },
+    { "bytes": 159901, "kind": "frame", "path": "frames/marker-w0_00009.png" },
+    { "bytes": 156621, "kind": "frame", "path": "frames/marker-w0_00010.png" },
+    { "bytes": 156698, "kind": "frame", "path": "frames/marker-w0_00011.png" },
+    { "bytes": 156602, "kind": "frame", "path": "frames/marker-w0_00012.png" },
+    { "bytes": 167625, "kind": "frame", "path": "frames/marker-w0_00013.png" },
+    { "bytes": 166381, "kind": "frame", "path": "frames/marker-w0_00014.png" },
+    { "bytes": 159288, "kind": "frame", "path": "frames/marker-w0_00015.png" },
+    { "bytes": 159161, "kind": "frame", "path": "frames/marker-w0_00016.png" },
+    { "bytes": 160468, "kind": "frame", "path": "frames/marker-w0_00017.png" },
+    { "bytes": 160008, "kind": "frame", "path": "frames/marker-w0_00018.png" },
+    { "bytes": 154675, "kind": "frame", "path": "frames/marker-w0_00019.png" },
+    { "bytes": 154943, "kind": "frame", "path": "frames/marker-w0_00020.png" },
+    { "bytes": 160076, "kind": "frame", "path": "frames/marker-w0_00021.png" },
+    { "bytes": 159871, "kind": "frame", "path": "frames/marker-w0_00022.png" },
+    { "bytes": 159997, "kind": "frame", "path": "frames/marker-w0_00023.png" },
+    { "bytes": 160248, "kind": "frame", "path": "frames/marker-w0_00024.png" },
+    { "bytes": 160094, "kind": "frame", "path": "frames/marker-w0_00025.png" },
+    { "bytes": 168558, "kind": "frame", "path": "frames/marker-w0_00026.png" },
+    { "bytes": 171069, "kind": "frame", "path": "frames/marker-w0_00027.png" },
+    { "bytes": 170893, "kind": "frame", "path": "frames/marker-w0_00028.png" },
+    { "bytes": 166261, "kind": "frame", "path": "frames/marker-w0_00029.png" },
+    { "bytes": 166533, "kind": "frame", "path": "frames/marker-w0_00030.png" },
+    { "bytes": 166697, "kind": "frame", "path": "frames/marker-w0_00031.png" },
+    { "bytes": 166882, "kind": "frame", "path": "frames/marker-w0_00032.png" },
+    { "bytes": 166811, "kind": "frame", "path": "frames/marker-w0_00033.png" },
+    { "bytes": 167079, "kind": "frame", "path": "frames/marker-w0_00034.png" },
+    { "bytes": 167163, "kind": "frame", "path": "frames/marker-w0_00035.png" },
+    { "bytes": 167302, "kind": "frame", "path": "frames/marker-w0_00036.png" },
+    { "bytes": 167922, "kind": "frame", "path": "frames/marker-w0_00037.png" },
+    { "bytes": 156456, "kind": "frame", "path": "frames/marker-w0_00038.png" },
+    { "bytes": 155761, "kind": "frame", "path": "frames/marker-w0_00039.png" },
+    { "bytes": 156043, "kind": "frame", "path": "frames/marker-w0_00040.png" },
+    { "bytes": 155927, "kind": "frame", "path": "frames/marker-w0_00041.png" },
+    { "bytes": 156030, "kind": "frame", "path": "frames/marker-w0_00042.png" },
+    { "bytes": 156318, "kind": "frame", "path": "frames/marker-w0_00043.png" },
+    { "bytes": 156374, "kind": "frame", "path": "frames/marker-w0_00044.png" },
+    { "bytes": 155741, "kind": "frame", "path": "frames/marker-w0_00045.png" },
+    { "bytes": 156228, "kind": "frame", "path": "frames/marker-w0_00046.png" },
+    { "bytes": 156223, "kind": "frame", "path": "frames/marker-w0_00047.png" },
+    { "bytes": 160648, "kind": "frame", "path": "frames/marker-w0_00048.png" },
+    { "bytes": 165912, "kind": "frame", "path": "frames/marker-w0_00049.png" },
+    { "bytes": 145796, "kind": "frame", "path": "frames/marker-w0_00050.png" },
+    { "bytes": 239690, "kind": "frame", "path": "frames/marker-w0_00051.png" },
+    { "bytes": 74600, "kind": "sheet", "path": "sheets/contact-sheet.jpg" }
+  ],
+  "round": 4,
+  "roundDir": "/home/elpresidank/YeeBois/projects/beep-effect15/.beep/qa/round-4",
+  "totalBytes": 8362179
+}

@@ -103,3 +103,123 @@ contrary to D25.
 **What would have prevented it:** a verifier or goals-doctor check that requires
 each Exception Ledger owner to resolve to either `goals/<slug>` or a named
 `explorations/full-document-editor/MAP.md` row.
+
+## 2026-08-25 — The touch table has no scaffold path for a `ui-system` concept module
+
+**What was happening:** starting P1 by adding the `src/capability/` module
+(schemas, errors, resolver, projections) to `packages/foundation/ui-system/editor`.
+`AGENTS.md` routes "New slice / concept / role file" to `bun run beep architecture`.
+
+**Evidence:** `bun run beep architecture add concept --help` and
+`... add role --help` take `<slice> <concept> [role]` with
+`--domain-kind aggregates|entities|values` and `--stage core|persistence|...`;
+they scaffold bounded-context slices, not concept modules inside a
+`foundation/ui-system` package. This package's existing convention is flat
+lowercase role files (`src/chat/config.ts`, `src/chat/atoms.ts`), which the
+slice scaffold would contradict. The module was hand-authored to the package
+convention and the design was recorded in `research/P1-CAPABILITY-CONTRACT.md`.
+
+**What would have prevented it:** either scope the touch-table row to slices
+(`packages/<family>/<slice>`), or give `beep architecture add concept` a
+`ui-system`/`modeling` target that emits the package's own role-file layout.
+
+## 2026-08-25 — `jq` edits reflow the biome-formatted atlas artifact
+
+**What was happening:** correcting seven compatibility rows in
+`research/capability-atlas.json` (evidence from the live Lexical codec).
+
+**Evidence:** `jq '...' file > tmp && mv tmp file` produced a 3,759-line diff
+(`3089 insertions(+), 670 deletions(-)`) for a seven-row change because the
+artifact is biome-formatted (the `biome.jsonc` override only raises `maxSize`
+for it). `bunx biome format --write <atlas>` restored the layout and the diff
+collapsed to `18 insertions(+), 18 deletions(-)`.
+
+**What would have prevented it:** an `ops/` recipe (or a `beep goals atlas
+set` subcommand) that applies a row edit and re-formats in one step, so an
+agent never has to know the formatter is part of the artifact's identity.
+
+## 2026-08-25 — Witness collector logs CORS rejections from an https app origin while still recording
+
+**What was happening:** P2 round 1 of the recorded browser QA loop against
+`https://professional-desktop.beep.localhost:1355/` (`bun run beep qa record
+--lane playwright --url ... --scenario apps/professional-desktop/.beep/qa-capture.mjs`).
+
+**Evidence:** every scenario's console ledger carried `Access to fetch at
+'http://127.0.0.1:43117/events' from origin 'https://professional-desktop.beep.localhost:1355'
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present`,
+yet `.beep/qa/round-1/events.ndjson` held 777 events including all 58
+scenario/gesture markers and 8 beacon flips. The CLI passes
+`originsOf(url)` (`Qa.session.ts:243`) into `CollectorServeOptions.allowedOrigins`
+(`packages/tooling/library/qa-capture/src/Collector.service.ts:152`), so the
+origin is whitelisted; the header is missing on some request path (preflight or
+keepalive flush) rather than on the accepted posts. The harness now ledgers
+collector-origin console errors as recorder noise so the vision judge only
+sees app errors.
+
+**What would have prevented it:** the collector answering `OPTIONS` and every
+`/events` response with the allow-origin header for whitelisted origins, plus a
+`qa doctor` probe that posts from an https origin and asserts a clean console.
+
+## 2026-08-25 — Root tsconfig alias drift surfaced only on the third full proof
+
+**What was happening:** driving the closeout PR through `bun run beep yeet
+verify`. Proofs one and two failed on knip/fallow findings; after those were
+fixed and `origin/main` was merged, proof three failed on a single new step.
+
+**Evidence:** `repo-sanity:tsconfig-sync` reported `tsconfig.json
+[root-aliases] aliases: add 6` — the generated path aliases for the new
+`@beep/editor/capability*` package exports (`bun run beep tsconfig-sync`
+applied them in one command, commit `d5b04d2acb`). The same exports existed
+during proofs one and two, which did not report the drift, so a ~20-minute
+full proof was spent discovering a check that `docgen:local`, package
+`check`, and the fallow/knip lanes do not run.
+
+**What would have prevented it:** running the cheap generated-config checks
+(`bun run config-sync:check`, `goals index --check`) as a first-tier gate
+before the full proof — or having `yeet repair` apply `tsconfig-sync` when
+a package's `exports` map changed — so alias drift never reaches the
+20-minute lane.
+
+## 2026-08-25 — Full proofs surface one gate at a time
+
+**What was happening:** driving the closeout PR to a green
+`bun run beep yeet verify`. Six full proofs (~20-45 minutes each on a busy
+machine) each failed on exactly one gate the previous proof had not reached:
+knip + fallow (unused exports, a clone, five complexity findings) →
+`repo-sanity:tsconfig-sync` (six generated aliases) → `check:tsgo:rules`
+(`vitest.aliases.generated.json` must equal the tsconfig paths, with no
+generator script) → `lint:effect-imports` (four stable-module imports) →
+`lint:schema-first` (a codec-heavy test without arbitrary coverage) →
+`quality:jsdoc-ratchet` (one newly exported value without an Example).
+
+**Evidence:** `.beep/yeet/runs/feat_lexical-atlas-p1-resolver-*/verdict.json`
+across the runs; commits `07dc2305c1`, `2e7f2b9691`, `d5b04d2acb`,
+`79084bdcfd`, `89c6f4950c`, `79c00baea5`, `592024b8f1`. Running
+`bun run beep lint policy --full` standalone before proof six caught the
+schema-first advisory in ~3 minutes instead of ~30.
+
+**What would have prevented it:** a first-tier "cheap gates" target
+(`config-sync:check`, `quality tsgo-rules`, `laws effect-imports --check`,
+`lint policy --full`, `ci lane jsdoc-ratchet`, `quality knip`, `fallow
+audit`) that `yeet repair` runs and reports together before the full proof,
+and a documented generator for `vitest.aliases.generated.json` so alias
+drift is a one-command fix.
+
+## 2026-08-25 — A yeet run in another checkout interrupts this checkout's proof
+
+**What was happening:** the eighth full `bun run beep yeet verify` for the
+closeout PR, launched detached in this checkout at 16:52.
+
+**Evidence:** the proof died inside `pre-push:security`
+(`bun run beep quality github-checks security`) with `All fibers interrupted
+without error` and exit 130 at 16:54:09 — the same second a `bun run beep
+yeet verify` started in the sibling checkout `~/YeeBois/projects/beep-effect10`
+(`ps -o lstart` on that process), while a third checkout
+(`beep-effect2-worktrees/docgen-shrink`) was mid `yeet publish --amend`.
+Nothing in this checkout sent a signal; the verdict recorded no failing
+gate.
+
+**What would have prevented it:** a per-checkout (or per-run) lock scope for
+the `github-checks` steps instead of whatever machine-global resource they
+contend on, and a `yeet verify` preflight that names other live yeet runs on
+the machine and waits (or refuses) instead of dying mid-proof.
