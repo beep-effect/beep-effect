@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused` (authored-but-not-started; day 1 starts on Benjamin's signal)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
