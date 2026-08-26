@@ -1,0 +1,38 @@
+{
+  "version": "gold/v1",
+  "paperId": "0a8de1437753",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 0,
+      "endChar": 72,
+      "quote": "Uncertainty Management in the Construction\nof Knowledge Graphs: a Survey",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 372,
+      "endChar": 1879,
+      "quote": "Abstract. Knowledge Graphs (KGs) are a major asset for companies thanks to their great flexibility in data representation and\ntheir numerous applications, e.g., vocabulary sharing, Q/A or recommendation systems. To build a KG it is a common practice\nto rely on automatic methods for extracting knowledge from various heterogeneous sources. But in a noisy and uncertain world,\nknowledge may not be reliable and conflicts between data sources may occur. Integrating unreliable data would directly impact\nthe use of the KG, therefore such conflicts must be resolved. This could be done manually by selecting the best data to integrate.\nThis first approach is highly accurate, but costly and time-consuming. That is why recent efforts focus on automatic approaches,\nwhich represents a challenging task since it requires handling the uncertainty of extracted knowledge throughout its integration\ninto the KG. We survey state-of-the-art approaches in this direction and present constructions of both open and enterprise KGs\nand how their quality is maintained. We then describe different knowledge extraction methods, introducing additional uncertainty.\nWe also discuss downstream tasks after knowledge acquisition, including KG completion using embedding models, knowledge\nalignment, and knowledge fusion in order to address the problem of knowledge uncertainty in KG construction. We conclude\nwith a discussion on the remaining challenges and perspectives when constructing a KG taking into account uncertainty.",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1981,
+      "endChar": 1996,
+      "quote": "1. Introduction",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

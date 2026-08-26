@@ -1,0 +1,185 @@
+{
+  "version": "gold/v1",
+  "paperId": "06c93f91ef3d",
+  "subset": "entity",
+  "labels": [
+    {
+      "label": "PromptAid",
+      "entityType": "system",
+      "cluster": "PromptAid",
+      "startChar": 0,
+      "endChar": 9,
+      "quote": "PromptAid",
+      "verified": false
+    },
+    {
+      "label": "Large Language Models",
+      "entityType": "model family",
+      "cluster": "LLMs",
+      "startChar": 94,
+      "endChar": 115,
+      "quote": "Large Language Models",
+      "verified": false
+    },
+    {
+      "label": "Aditi Mishra",
+      "entityType": "person",
+      "cluster": "Aditi Mishra",
+      "startChar": 116,
+      "endChar": 128,
+      "quote": "Aditi Mishra",
+      "verified": false
+    },
+    {
+      "label": "Arizona State University",
+      "entityType": "organization",
+      "cluster": "Arizona State University",
+      "startChar": 130,
+      "endChar": 154,
+      "quote": "Arizona State University",
+      "verified": false
+    },
+    {
+      "label": "Utkarsh Soni",
+      "entityType": "person",
+      "cluster": "Utkarsh Soni",
+      "startChar": 155,
+      "endChar": 167,
+      "quote": "Utkarsh Soni",
+      "verified": false
+    },
+    {
+      "label": "Arizona State University",
+      "entityType": "organization",
+      "cluster": "Arizona State University",
+      "startChar": 169,
+      "endChar": 193,
+      "quote": "Arizona State University",
+      "verified": false
+    },
+    {
+      "label": "Anjana Arunkumar",
+      "entityType": "person",
+      "cluster": "Anjana Arunkumar",
+      "startChar": 194,
+      "endChar": 210,
+      "quote": "Anjana Arunkumar",
+      "verified": false
+    },
+    {
+      "label": "Arizona State University",
+      "entityType": "organization",
+      "cluster": "Arizona State University",
+      "startChar": 212,
+      "endChar": 236,
+      "quote": "Arizona State University",
+      "verified": false
+    },
+    {
+      "label": "Jinbin Huang",
+      "entityType": "person",
+      "cluster": "Jinbin Huang",
+      "startChar": 237,
+      "endChar": 249,
+      "quote": "Jinbin Huang",
+      "verified": false
+    },
+    {
+      "label": "Arizona State University",
+      "entityType": "organization",
+      "cluster": "Arizona State University",
+      "startChar": 251,
+      "endChar": 275,
+      "quote": "Arizona State University",
+      "verified": false
+    },
+    {
+      "label": "Bum Chul Kwon",
+      "entityType": "person",
+      "cluster": "Bum Chul Kwon",
+      "startChar": 276,
+      "endChar": 289,
+      "quote": "Bum Chul Kwon",
+      "verified": false
+    },
+    {
+      "label": "IBM Research",
+      "entityType": "organization",
+      "cluster": "IBM Research",
+      "startChar": 291,
+      "endChar": 303,
+      "quote": "IBM Research",
+      "verified": false
+    },
+    {
+      "label": "Chris Bryan",
+      "entityType": "person",
+      "cluster": "Chris Bryan",
+      "startChar": 304,
+      "endChar": 315,
+      "quote": "Chris Bryan",
+      "verified": false
+    },
+    {
+      "label": "Arizona State University",
+      "entityType": "organization",
+      "cluster": "Arizona State University",
+      "startChar": 318,
+      "endChar": 342,
+      "quote": "Arizona State University",
+      "verified": false
+    },
+    {
+      "label": "PROMPTAID",
+      "entityType": "system",
+      "cluster": "PromptAid",
+      "startChar": 456,
+      "endChar": 465,
+      "quote": "PROMPTAID",
+      "verified": false
+    },
+    {
+      "label": "ag news",
+      "entityType": "dataset",
+      "cluster": "ag news",
+      "startChar": 497,
+      "endChar": 504,
+      "quote": "ag news",
+      "verified": false
+    },
+    {
+      "label": "LLMs",
+      "entityType": "model family",
+      "cluster": "LLMs",
+      "startChar": 969,
+      "endChar": 973,
+      "quote": "LLMs",
+      "verified": false
+    },
+    {
+      "label": "NLP",
+      "entityType": "field",
+      "cluster": "NLP",
+      "startChar": 1079,
+      "endChar": 1082,
+      "quote": "NLP",
+      "verified": false
+    },
+    {
+      "label": "PROMPTAID",
+      "entityType": "system",
+      "cluster": "PromptAid",
+      "startChar": 1726,
+      "endChar": 1735,
+      "quote": "PROMPTAID",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

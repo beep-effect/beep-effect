@@ -1,0 +1,23 @@
+{
+  "version": "gold/v1",
+  "paperId": "057e356e94f8",
+  "subset": "relation",
+  "labels": [
+    {
+      "predicate": "published in proceedings of",
+      "subject": "Workshop on Cognitive Modeling and Computational Linguistics",
+      "object": "November 19, 2020",
+      "startChar": 0,
+      "endChar": 174,
+      "quote": "Proceedings of the Workshop on Cognitive Modeling and Computational Linguistics, pages 75–86\nOnline Event, November 19, 2020. c©2020 Association for Computational Linguistics",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

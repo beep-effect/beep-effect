@@ -1,0 +1,38 @@
+{
+  "version": "gold/v1",
+  "paperId": "05afbbf3e1e9",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 0,
+      "endChar": 86,
+      "quote": "Should We Fine-Tune or RAG?\nEvaluating Different Techniques to Adapt LLMs for Dialogue",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 307,
+      "endChar": 315,
+      "quote": "Abstract",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1721,
+      "endChar": 1735,
+      "quote": "1 Introduction",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

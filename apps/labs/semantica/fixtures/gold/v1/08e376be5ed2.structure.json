@@ -1,0 +1,174 @@
+{
+  "version": "gold/v1",
+  "paperId": "08e376be5ed2",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 217,
+      "endChar": 268,
+      "quote": "Mind-Tool: Domain Memory Architecture for AI Agents",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 724,
+      "endChar": 736,
+      "quote": "Introduction",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 2108,
+      "endChar": 2141,
+      "quote": "Background: The persistent memory",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 2442,
+      "endChar": 3781,
+      "quote": "We present Mind-Tool, an AI-augmented system implementing domain memory architecture for operational infrastructure\nmanagement. Unlike conventional AI assistants that operate statelessly, Mind-Tool maintains an organized memory layer\n(persistent knowledge files), a desired-state model (conversational goal tracking) and a continuous reasoning engine that updates\ndigital assets over time. Deployed for managing complex IT infrastructure (Proxmox clusters, Kubernetes, networking, security\nsystems) over a 90-day production period, Mind-Tool achieved 94% task success rate with 68% workflow automation and 62%-\ntime reduction compared to manual approaches. Our architecture independently validates recent parallel research by anthropic\ndemonstrating that effective AI agents require persistent domain memory rather than relying solely on large context windows. We\nprovide quantitative results from production deployment, identify key architectural differences between autonomous coding\nagents and operational infrastructure agents and demonstrate that competitive advantage in AI agent systems lies in domain\nmemory design rather than model intelligence confirming through independent development and extended operational use that\ndomain memory represents a fundamental pat- tern for practical agent systems in human-collaborative domains.",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 3782,
+      "endChar": 3790,
+      "quote": "Keywords",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 22981,
+      "endChar": 23014,
+      "quote": "Domain memory as competitive moat",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 23518,
+      "endChar": 23550,
+      "quote": "Grounded context across sessions",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 24002,
+      "endChar": 24032,
+      "quote": "Conversational memory creation",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34254,
+      "endChar": 34319,
+      "quote": "1. (2025) Effective harnesses for long-running agents. Anthropic.",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34320,
+      "endChar": 34419,
+      "quote": "2. Nate B. Jones (2025) AI agents that actually work: The pattern\nanthropic just revealed. YouTube.",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34420,
+      "endChar": 34552,
+      "quote": "3. Newell A, Simon HA (2007) Computer science as empirical\ninquiry: Symbols and search. ACM 19: 113-126. [Crossref]\n[Google Scholar]",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34553,
+      "endChar": 34658,
+      "quote": "4. Norman DA (1993) Things that make us smart: Defending\nhuman attributes in the age of the machine. 290.",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34659,
+      "endChar": 34730,
+      "quote": "5. Hutchins E (1995) Cognition in the wild. MIT Press. [Google\nScholar]",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34731,
+      "endChar": 34891,
+      "quote": "6. Chen Y, Qian S, Tang H, Lai X, Liu Z, et al. (2023) Longlora:\nEfficient fine-tuning of long-context large language models. arXiv.\n[Crossref] [Google Scholar]",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34892,
+      "endChar": 34978,
+      "quote": "7. Wang W (2023) Recursive summarization with application to\nmulti-document QA. arXiv.",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34979,
+      "endChar": 35113,
+      "quote": "8. Sumers T, Yao S, Narasimhan KR, Griffiths TL (2024) Cognitive\narchitectures for language agents. arXiv. [Crossref] [Google\nScholar]",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35114,
+      "endChar": 35245,
+      "quote": "9. Yao S, Zhao J, Yu D, Du N, Shafran I, et al. (2023) React:\nSynergizing reasoning and acting in language models. [Google\nScholar]",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35246,
+      "endChar": 35397,
+      "quote": "10. Shinn N, Cassano F, Gopinath A, Narasimhan K, Yao S (2023)\nReflexion: Language agents with verbal reinforcement learning.\nNeurIPS. [Google Scholar]",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35398,
+      "endChar": 35446,
+      "quote": "11. Weng L (2023) Llm powered autonomous agents.",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35447,
+      "endChar": 35528,
+      "quote": "12. (2024) Model context protocol: A standard for ai integration.\nAnthropic 0020.",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

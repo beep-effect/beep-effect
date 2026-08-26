@@ -1,0 +1,59 @@
+{
+  "version": "gold/v1",
+  "paperId": "06c93f91ef3d",
+  "subset": "relation",
+  "labels": [
+    {
+      "predicate": "affiliated with",
+      "subject": "Aditi Mishra",
+      "object": "Arizona State University",
+      "startChar": 116,
+      "endChar": 154,
+      "quote": "Aditi Mishra*\nArizona State University",
+      "verified": false
+    },
+    {
+      "predicate": "affiliated with",
+      "subject": "Utkarsh Soni",
+      "object": "Arizona State University",
+      "startChar": 155,
+      "endChar": 193,
+      "quote": "Utkarsh Soni†\nArizona State University",
+      "verified": false
+    },
+    {
+      "predicate": "affiliated with",
+      "subject": "Anjana Arunkumar",
+      "object": "Arizona State University",
+      "startChar": 194,
+      "endChar": 236,
+      "quote": "Anjana Arunkumar‡\nArizona State University",
+      "verified": false
+    },
+    {
+      "predicate": "affiliated with",
+      "subject": "Jinbin Huang",
+      "object": "Arizona State University",
+      "startChar": 237,
+      "endChar": 275,
+      "quote": "Jinbin Huang§\nArizona State University",
+      "verified": false
+    },
+    {
+      "predicate": "affiliated with",
+      "subject": "Bum Chul Kwon",
+      "object": "IBM Research",
+      "startChar": 276,
+      "endChar": 303,
+      "quote": "Bum Chul Kwon¶\nIBM Research",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

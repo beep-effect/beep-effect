@@ -1,0 +1,206 @@
+{
+  "version": "gold/v1",
+  "paperId": "10828be135bf",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 0,
+      "endChar": 55,
+      "quote": "Finding Fault: Detecting Issues in a Versioned Ontology",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 209,
+      "endChar": 1377,
+      "quote": "Abstract. Understanding ontology evolution is becoming an active topic of in-\nterest for ontology engineers, e.g., there exist large collaboratively-developed on-\ntologies but, unlike in software engineering, comparatively little is understood\nabout the dynamics of historical changes, especially at a fine level of granularity.\nOnly recently has there been a systematic analysis of changes across ontology\nversions, but still at a coarse-grained level. The National Cancer Institute (NCI)\nThesaurus (NCIt) is a large, collaboratively-developed ontology, used for various\nWeb and research-related purposes, e.g., as a medical research controlled vocab-\nulary. The NCI has published ten years worth of monthly versions of the NCIt\nas Web Ontology Language (OWL) documents, and has also published reports\non the content of, development methodology for, and applications of the NCIt.\nIn this paper, we carry out a fine-grained analysis of asserted axiom dynamics\nthroughout the evolution of the NCIt from 2003 to 2012. From this, we are able\nto identify axiomatic editing patterns that suggest significant regression editing\nevents in the development history of the NCIt.",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1378,
+      "endChar": 1392,
+      "quote": "1 Introduction",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 2217,
+      "endChar": 2232,
+      "quote": "2 Preliminaries",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 3480,
+      "endChar": 3504,
+      "quote": "3 Conceptual Foundations",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 12518,
+      "endChar": 12541,
+      "quote": "4 Methods and Materials",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 15966,
+      "endChar": 15975,
+      "quote": "5 Results",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 15976,
+      "endChar": 15999,
+      "quote": "5.1 Test Area Selection",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 21762,
+      "endChar": 21790,
+      "quote": "5.2 Fault Detection Analysis",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 26053,
+      "endChar": 26065,
+      "quote": "6 Discussion",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 31132,
+      "endChar": 31145,
+      "quote": "7 Limitations",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 32796,
+      "endChar": 32808,
+      "quote": "8 Conclusion",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 34089,
+      "endChar": 34099,
+      "quote": "References",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34100,
+      "endChar": 34221,
+      "quote": "1. Gonc¸alves, R.S., Parsia, B., Sattler, U.: Analysing the evolution of the NCI thesaurus. In:\nProc. of CBMS 2011 (2011)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34222,
+      "endChar": 34369,
+      "quote": "2. Gonc¸alves, R.S., Parsia, B., Sattler, U.: Analysing multiple versions of an ontology: A study\nof the NCI Thesaurus. In: Proc. of DL 2011 (2011)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34370,
+      "endChar": 34519,
+      "quote": "3. Cuenca Grau, B., Horrocks, I., Motik, B., Parsia, B., Patel-Schneider, P.F., Sattler, U.: OWL\n2: The next step for OWL. J. of Web Semantics (2008)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34520,
+      "endChar": 34652,
+      "quote": "4. Gonc¸alves, R.S., Parsia, B., Sattler, U.: Categorising logical differences between OWL\nontologies. In: Proc. of CIKM 2011 (2011)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34653,
+      "endChar": 34874,
+      "quote": "5. de Coronado, S., Haber, M.W., Sioutos, N., Tuttle, M.S., Wright, L.W.: NCI Thesaurus: Us-\ning science-based terminology to integrate cancer research results. Studies in Health Tech-\nnology and Informatics 107(1) (2004)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34875,
+      "endChar": 35058,
+      "quote": "6. Hartel, F.W., de Coronado, S., Dionne, R., Fragoso, G., Golbeck, J.: Modeling a description\nlogic vocabulary for cancer research. J. of Biomedical Informatics 38(2), 114–129 (2005)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35059,
+      "endChar": 35169,
+      "quote": "7. Thomas, N.: NCI Thesaurus - Apelon TDE Editing Procedures and Style Guide. National\nCancer Institute (2007)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35170,
+      "endChar": 35374,
+      "quote": "8. Noy, N.F., de Coronado, S., Solbrig, H., Fragoso, G., Hartel, F.W., Musen, M.A.: Represent-\ning the NCI Thesaurus in OWL: Modeling tools help modeling languages. Applied Ontol-\nogy 3(3), 173–190 (2008)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35375,
+      "endChar": 35496,
+      "quote": "9. Horridge, M., Bechhofer, S.: The OWL API: A Java API for working with OWL 2 ontologies.\nIn: Proc. of OWLED 2009 (2009)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35497,
+      "endChar": 35641,
+      "quote": "10. Sirin, E., Parsia, B., Cuenca Grau, B., Kalyanpur, A., Katz, Y.: Pellet: A practical OWL-DL\nreasoner. J. of Web Semantics 5(2), 51–53 (2007)",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35642,
+      "endChar": 35881,
+      "quote": "11. de Coronado, S., Wright, L.W., Fragoso, G., Haber, M.W., Hahn-Dantona, E.A., Hartel, F.W.,\nQuan, S.L., Safran, T., Thomas, N., Whiteman, L.: The NCI Thesaurus quality assurance life\ncycle. Journal of Biomedical Informatics 42(3) (2009)",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

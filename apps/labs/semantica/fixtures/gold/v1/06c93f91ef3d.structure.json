@@ -1,0 +1,38 @@
+{
+  "version": "gold/v1",
+  "paperId": "06c93f91ef3d",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 0,
+      "endChar": 115,
+      "quote": "PromptAid: Prompt Exploration, Perturbation, Testing and Iteration using\nVisual Analytics for Large Language Models",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 937,
+      "endChar": 945,
+      "quote": "ABSTRACT",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 2918,
+      "endChar": 2932,
+      "quote": "1 INTRODUCTION",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

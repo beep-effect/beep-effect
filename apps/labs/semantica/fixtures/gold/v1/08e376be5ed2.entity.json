@@ -1,0 +1,374 @@
+{
+  "version": "gold/v1",
+  "paperId": "08e376be5ed2",
+  "subset": "entity",
+  "labels": [
+    {
+      "label": "Journal of Engineering and Artificial Intelligence",
+      "entityType": "journal",
+      "cluster": "journal-JEAI",
+      "startChar": 0,
+      "endChar": 50,
+      "quote": "Journal of Engineering and Artificial Intelligence",
+      "verified": false
+    },
+    {
+      "label": "Volume 2, Issue 1",
+      "entityType": "publication-issue",
+      "cluster": "issue-2-1",
+      "startChar": 69,
+      "endChar": 86,
+      "quote": "Volume 2, Issue 1",
+      "verified": false
+    },
+    {
+      "label": "https://doi.org/10.64142/jeai.2.1.43",
+      "entityType": "DOI",
+      "cluster": "doi-jeai-2-1-43",
+      "startChar": 87,
+      "endChar": 123,
+      "quote": "https://doi.org/10.64142/jeai.2.1.43",
+      "verified": false
+    },
+    {
+      "label": "3117-3357",
+      "entityType": "ISSN",
+      "cluster": "issn-3117-3357",
+      "startChar": 130,
+      "endChar": 139,
+      "quote": "3117-3357",
+      "verified": false
+    },
+    {
+      "label": "https://engineering-ai.academicsquare-pub.com/",
+      "entityType": "URL",
+      "cluster": "journal-url",
+      "startChar": 159,
+      "endChar": 205,
+      "quote": "https://engineering-ai.academicsquare-pub.com/",
+      "verified": false
+    },
+    {
+      "label": "JEAI-26-43",
+      "entityType": "article-id",
+      "cluster": "article-id-JEAI-26-43",
+      "startChar": 206,
+      "endChar": 216,
+      "quote": "JEAI-26-43",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool",
+      "entityType": "system",
+      "cluster": "Mind-Tool",
+      "startChar": 217,
+      "endChar": 226,
+      "quote": "Mind-Tool",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool: Domain Memory Architecture for AI Agents",
+      "entityType": "work",
+      "cluster": "paper-title",
+      "startChar": 217,
+      "endChar": 268,
+      "quote": "Mind-Tool: Domain Memory Architecture for AI Agents",
+      "verified": false
+    },
+    {
+      "label": "Ioannis Chrysochos",
+      "entityType": "person",
+      "cluster": "Ioannis-Chrysochos",
+      "startChar": 269,
+      "endChar": 287,
+      "quote": "Ioannis Chrysochos",
+      "verified": false
+    },
+    {
+      "label": "Independent Researcher",
+      "entityType": "role",
+      "cluster": "author-role",
+      "startChar": 289,
+      "endChar": 311,
+      "quote": "Independent Researcher",
+      "verified": false
+    },
+    {
+      "label": "CYTA Telecommunications",
+      "entityType": "organization",
+      "cluster": "CYTA",
+      "startChar": 313,
+      "endChar": 336,
+      "quote": "CYTA Telecommunications",
+      "verified": false
+    },
+    {
+      "label": "Nicosia",
+      "entityType": "city",
+      "cluster": "Nicosia",
+      "startChar": 338,
+      "endChar": 345,
+      "quote": "Nicosia",
+      "verified": false
+    },
+    {
+      "label": "Cyprus",
+      "entityType": "country",
+      "cluster": "Cyprus",
+      "startChar": 347,
+      "endChar": 353,
+      "quote": "Cyprus",
+      "verified": false
+    },
+    {
+      "label": "Ioannis Chrysochos",
+      "entityType": "person",
+      "cluster": "Ioannis-Chrysochos",
+      "startChar": 377,
+      "endChar": 395,
+      "quote": "Ioannis Chrysochos",
+      "verified": false
+    },
+    {
+      "label": "Independent Researcher",
+      "entityType": "role",
+      "cluster": "author-role",
+      "startChar": 397,
+      "endChar": 419,
+      "quote": "Independent Researcher",
+      "verified": false
+    },
+    {
+      "label": "CYTA Telecommunications",
+      "entityType": "organization",
+      "cluster": "CYTA",
+      "startChar": 421,
+      "endChar": 444,
+      "quote": "CYTA Telecommunications",
+      "verified": false
+    },
+    {
+      "label": "Nicosia",
+      "entityType": "city",
+      "cluster": "Nicosia",
+      "startChar": 446,
+      "endChar": 453,
+      "quote": "Nicosia",
+      "verified": false
+    },
+    {
+      "label": "Cyprus",
+      "entityType": "country",
+      "cluster": "Cyprus",
+      "startChar": 455,
+      "endChar": 461,
+      "quote": "Cyprus",
+      "verified": false
+    },
+    {
+      "label": "ioannis.chrysochos@cytanet.com.cy",
+      "entityType": "email",
+      "cluster": "author-email",
+      "startChar": 471,
+      "endChar": 504,
+      "quote": "ioannis.chrysochos@cytanet.com.cy",
+      "verified": false
+    },
+    {
+      "label": "January 30, 2026",
+      "entityType": "date",
+      "cluster": "date-received",
+      "startChar": 520,
+      "endChar": 536,
+      "quote": "January 30, 2026",
+      "verified": false
+    },
+    {
+      "label": "February 09, 2026",
+      "entityType": "date",
+      "cluster": "date-accepted",
+      "startChar": 553,
+      "endChar": 570,
+      "quote": "February 09, 2026",
+      "verified": false
+    },
+    {
+      "label": "February 28, 2026",
+      "entityType": "date",
+      "cluster": "date-published",
+      "startChar": 588,
+      "endChar": 605,
+      "quote": "February 28, 2026",
+      "verified": false
+    },
+    {
+      "label": "Chrysochos I",
+      "entityType": "person",
+      "cluster": "Ioannis-Chrysochos",
+      "startChar": 616,
+      "endChar": 628,
+      "quote": "Chrysochos I",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool",
+      "entityType": "system",
+      "cluster": "Mind-Tool",
+      "startChar": 636,
+      "endChar": 645,
+      "quote": "Mind-Tool",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool: Domain Memory Architecture for AI Agents",
+      "entityType": "work",
+      "cluster": "paper-title",
+      "startChar": 636,
+      "endChar": 687,
+      "quote": "Mind-Tool: Domain Memory Architecture for AI Agents",
+      "verified": false
+    },
+    {
+      "label": "J Eng Artif Intell",
+      "entityType": "journal",
+      "cluster": "journal-JEAI",
+      "startChar": 689,
+      "endChar": 707,
+      "quote": "J Eng Artif Intell",
+      "verified": false
+    },
+    {
+      "label": "November 2025",
+      "entityType": "date",
+      "cluster": "date-anthropic-research",
+      "startChar": 740,
+      "endChar": 753,
+      "quote": "November 2025",
+      "verified": false
+    },
+    {
+      "label": "Anthropic",
+      "entityType": "organization",
+      "cluster": "Anthropic",
+      "startChar": 755,
+      "endChar": 764,
+      "quote": "Anthropic",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool",
+      "entityType": "system",
+      "cluster": "Mind-Tool",
+      "startChar": 1280,
+      "endChar": 1289,
+      "quote": "Mind-Tool",
+      "verified": false
+    },
+    {
+      "label": "Anthropic",
+      "entityType": "organization",
+      "cluster": "Anthropic",
+      "startChar": 1366,
+      "endChar": 1375,
+      "quote": "Anthropic",
+      "verified": false
+    },
+    {
+      "label": "Anthropic",
+      "entityType": "organization",
+      "cluster": "Anthropic",
+      "startChar": 1444,
+      "endChar": 1453,
+      "quote": "Anthropic",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool",
+      "entityType": "system",
+      "cluster": "Mind-Tool",
+      "startChar": 1517,
+      "endChar": 1526,
+      "quote": "Mind-Tool",
+      "verified": false
+    },
+    {
+      "label": "Anthropic",
+      "entityType": "organization",
+      "cluster": "Anthropic",
+      "startChar": 1836,
+      "endChar": 1845,
+      "quote": "Anthropic",
+      "verified": false
+    },
+    {
+      "label": "Hutchins",
+      "entityType": "person",
+      "cluster": "Edwin-Hutchins",
+      "startChar": 2401,
+      "endChar": 2409,
+      "quote": "Hutchins",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool",
+      "entityType": "system",
+      "cluster": "Mind-Tool",
+      "startChar": 2453,
+      "endChar": 2462,
+      "quote": "Mind-Tool",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool",
+      "entityType": "system",
+      "cluster": "Mind-Tool",
+      "startChar": 2630,
+      "endChar": 2639,
+      "quote": "Mind-Tool",
+      "verified": false
+    },
+    {
+      "label": "Proxmox",
+      "entityType": "software",
+      "cluster": "Proxmox",
+      "startChar": 2881,
+      "endChar": 2888,
+      "quote": "Proxmox",
+      "verified": false
+    },
+    {
+      "label": "Kubernetes",
+      "entityType": "software",
+      "cluster": "Kubernetes",
+      "startChar": 2899,
+      "endChar": 2909,
+      "quote": "Kubernetes",
+      "verified": false
+    },
+    {
+      "label": "Mind-Tool",
+      "entityType": "system",
+      "cluster": "Mind-Tool",
+      "startChar": 2974,
+      "endChar": 2983,
+      "quote": "Mind-Tool",
+      "verified": false
+    },
+    {
+      "label": "anthropic",
+      "entityType": "organization",
+      "cluster": "Anthropic",
+      "startChar": 3168,
+      "endChar": 3177,
+      "quote": "anthropic",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

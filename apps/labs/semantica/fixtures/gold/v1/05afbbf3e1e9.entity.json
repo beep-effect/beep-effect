@@ -1,0 +1,131 @@
+{
+  "version": "gold/v1",
+  "paperId": "05afbbf3e1e9",
+  "subset": "entity",
+  "labels": [
+    {
+      "label": "Simone Alghisi",
+      "entityType": "person",
+      "cluster": "Simone Alghisi",
+      "startChar": 87,
+      "endChar": 101,
+      "quote": "Simone Alghisi",
+      "verified": false
+    },
+    {
+      "label": "Massimo Rizzoli",
+      "entityType": "person",
+      "cluster": "Massimo Rizzoli",
+      "startChar": 106,
+      "endChar": 121,
+      "quote": "Massimo Rizzoli",
+      "verified": false
+    },
+    {
+      "label": "Gabriel Roccabruna",
+      "entityType": "person",
+      "cluster": "Gabriel Roccabruna",
+      "startChar": 126,
+      "endChar": 144,
+      "quote": "Gabriel Roccabruna",
+      "verified": false
+    },
+    {
+      "label": "Seyed Mahed Mousavi",
+      "entityType": "person",
+      "cluster": "Seyed Mahed Mousavi",
+      "startChar": 146,
+      "endChar": 165,
+      "quote": "Seyed Mahed Mousavi",
+      "verified": false
+    },
+    {
+      "label": "Giuseppe Riccardi",
+      "entityType": "person",
+      "cluster": "Giuseppe Riccardi",
+      "startChar": 167,
+      "endChar": 184,
+      "quote": "Giuseppe Riccardi",
+      "verified": false
+    },
+    {
+      "label": "Signals and Interactive Systems Lab",
+      "entityType": "research laboratory",
+      "cluster": "Signals and Interactive Systems Lab",
+      "startChar": 185,
+      "endChar": 220,
+      "quote": "Signals and Interactive Systems Lab",
+      "verified": false
+    },
+    {
+      "label": "University of Trento",
+      "entityType": "university",
+      "cluster": "University of Trento",
+      "startChar": 222,
+      "endChar": 242,
+      "quote": "University of Trento",
+      "verified": false
+    },
+    {
+      "label": "LLMs",
+      "entityType": "model family",
+      "cluster": "LLM",
+      "startChar": 367,
+      "endChar": 371,
+      "quote": "LLMs",
+      "verified": false
+    },
+    {
+      "label": "Llama2C",
+      "entityType": "language model",
+      "cluster": "Llama2C",
+      "startChar": 821,
+      "endChar": 828,
+      "quote": "Llama2C",
+      "verified": false
+    },
+    {
+      "label": "MistralI",
+      "entityType": "language model",
+      "cluster": "MistralI",
+      "startChar": 833,
+      "endChar": 841,
+      "quote": "MistralI",
+      "verified": false
+    },
+    {
+      "label": "fine-tuning",
+      "entityType": "technique",
+      "cluster": "fine-tuning",
+      "startChar": 999,
+      "endChar": 1010,
+      "quote": "fine-tuning",
+      "verified": false
+    },
+    {
+      "label": "Retrieval-Augmented Generation",
+      "entityType": "technique",
+      "cluster": "RAG",
+      "startChar": 1174,
+      "endChar": 1204,
+      "quote": "Retrieval-Augmented Generation",
+      "verified": false
+    },
+    {
+      "label": "RAG",
+      "entityType": "technique",
+      "cluster": "RAG",
+      "startChar": 1206,
+      "endChar": 1209,
+      "quote": "RAG",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

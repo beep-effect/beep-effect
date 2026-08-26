@@ -1,0 +1,1490 @@
+{
+  "version": "gold/v1",
+  "paperId": "06df406f321e",
+  "subset": "entity",
+  "labels": [
+    {
+      "label": "RECIIS",
+      "entityType": "journal",
+      "cluster": "RECIIS",
+      "startChar": 2,
+      "endChar": 8,
+      "quote": "RECIIS",
+      "verified": false
+    },
+    {
+      "label": "Rio de Janeiro",
+      "entityType": "city",
+      "cluster": "Rio de Janeiro",
+      "startChar": 47,
+      "endChar": 61,
+      "quote": "Rio de Janeiro",
+      "verified": false
+    },
+    {
+      "label": "2009",
+      "entityType": "year",
+      "cluster": "2009",
+      "startChar": 86,
+      "endChar": 90,
+      "quote": "2009",
+      "verified": false
+    },
+    {
+      "label": "www.reciis.cict.fiocruz.br",
+      "entityType": "url",
+      "cluster": "RECIIS website",
+      "startChar": 102,
+      "endChar": 128,
+      "quote": "www.reciis.cict.fiocruz.br",
+      "verified": false
+    },
+    {
+      "label": "ISSN 1981-6278",
+      "entityType": "identifier",
+      "cluster": "RECIIS ISSN",
+      "startChar": 130,
+      "endChar": 144,
+      "quote": "ISSN 1981-6278",
+      "verified": false
+    },
+    {
+      "label": "Ontologias, Web semântica e saúde",
+      "entityType": "title",
+      "cluster": "editorial title",
+      "startChar": 145,
+      "endChar": 178,
+      "quote": "Ontologias, Web semântica e saúde",
+      "verified": false
+    },
+    {
+      "label": "Web semântica",
+      "entityType": "technology",
+      "cluster": "Semantic Web",
+      "startChar": 157,
+      "endChar": 170,
+      "quote": "Web semântica",
+      "verified": false
+    },
+    {
+      "label": "10.3395/reciis.v3i1.238pt",
+      "entityType": "doi",
+      "cluster": "editorial DOI",
+      "startChar": 184,
+      "endChar": 209,
+      "quote": "10.3395/reciis.v3i1.238pt",
+      "verified": false
+    },
+    {
+      "label": "Frederico Freitas",
+      "entityType": "person",
+      "cluster": "Frederico Freitas",
+      "startChar": 210,
+      "endChar": 227,
+      "quote": "Frederico Freitas",
+      "verified": false
+    },
+    {
+      "label": "Centro de Informática",
+      "entityType": "organization",
+      "cluster": "CIn UFPE",
+      "startChar": 228,
+      "endChar": 249,
+      "quote": "Centro de Informática",
+      "verified": false
+    },
+    {
+      "label": "Universidade Federal de\nPernambuco",
+      "entityType": "university",
+      "cluster": "UFPE",
+      "startChar": 251,
+      "endChar": 285,
+      "quote": "Universidade Federal de\nPernambuco",
+      "verified": false
+    },
+    {
+      "label": "Recife",
+      "entityType": "city",
+      "cluster": "Recife",
+      "startChar": 287,
+      "endChar": 293,
+      "quote": "Recife",
+      "verified": false
+    },
+    {
+      "label": "Brasil",
+      "entityType": "country",
+      "cluster": "Brasil",
+      "startChar": 295,
+      "endChar": 301,
+      "quote": "Brasil",
+      "verified": false
+    },
+    {
+      "label": "fred@cin.ufpe.br",
+      "entityType": "email",
+      "cluster": "Frederico Freitas",
+      "startChar": 302,
+      "endChar": 318,
+      "quote": "fred@cin.ufpe.br",
+      "verified": false
+    },
+    {
+      "label": "Ontologia",
+      "entityType": "concept",
+      "cluster": "Ontology term",
+      "startChar": 431,
+      "endChar": 440,
+      "quote": "Ontologia",
+      "verified": false
+    },
+    {
+      "label": "Ontologia",
+      "entityType": "concept",
+      "cluster": "Ontology term",
+      "startChar": 644,
+      "endChar": 653,
+      "quote": "Ontologia",
+      "verified": false
+    },
+    {
+      "label": "Tim Bernes-\nLee",
+      "entityType": "person",
+      "cluster": "Tim Berners-Lee",
+      "startChar": 909,
+      "endChar": 924,
+      "quote": "Tim Bernes-\nLee",
+      "verified": false
+    },
+    {
+      "label": "internet",
+      "entityType": "technology",
+      "cluster": "Internet",
+      "startChar": 986,
+      "endChar": 994,
+      "quote": "internet",
+      "verified": false
+    },
+    {
+      "label": "Web semântica",
+      "entityType": "technology",
+      "cluster": "Semantic Web",
+      "startChar": 1064,
+      "endChar": 1077,
+      "quote": "Web semântica",
+      "verified": false
+    },
+    {
+      "label": "Academia",
+      "entityType": "domain",
+      "cluster": "Academia domain",
+      "startChar": 1960,
+      "endChar": 1968,
+      "quote": "Academia",
+      "verified": false
+    },
+    {
+      "label": "Web semântica",
+      "entityType": "technology",
+      "cluster": "Semantic Web",
+      "startChar": 2964,
+      "endChar": 2977,
+      "quote": "Web semântica",
+      "verified": false
+    },
+    {
+      "label": "Stefan Schulz",
+      "entityType": "person",
+      "cluster": "Stefan Schulz",
+      "startChar": 3372,
+      "endChar": 3385,
+      "quote": "Stefan Schulz",
+      "verified": false
+    },
+    {
+      "label": "Instituto de Biometria\nMédica e Informática da\nMedicina",
+      "entityType": "organization",
+      "cluster": "IMBI Freiburg",
+      "startChar": 3386,
+      "endChar": 3441,
+      "quote": "Instituto de Biometria\nMédica e Informática da\nMedicina",
+      "verified": false
+    },
+    {
+      "label": "Centro Médico\nUniversitário de Freiburg",
+      "entityType": "organization",
+      "cluster": "University Medical Center Freiburg",
+      "startChar": 3443,
+      "endChar": 3482,
+      "quote": "Centro Médico\nUniversitário de Freiburg",
+      "verified": false
+    },
+    {
+      "label": "Freiburg",
+      "entityType": "city",
+      "cluster": "Freiburg",
+      "startChar": 3484,
+      "endChar": 3492,
+      "quote": "Freiburg",
+      "verified": false
+    },
+    {
+      "label": "Alemanha",
+      "entityType": "country",
+      "cluster": "Alemanha",
+      "startChar": 3494,
+      "endChar": 3502,
+      "quote": "Alemanha",
+      "verified": false
+    },
+    {
+      "label": "stschulz@uni-freiburg.de",
+      "entityType": "email",
+      "cluster": "Stefan Schulz",
+      "startChar": 3503,
+      "endChar": 3527,
+      "quote": "stschulz@uni-freiburg.de",
+      "verified": false
+    },
+    {
+      "label": "RECIIS",
+      "entityType": "journal",
+      "cluster": "RECIIS",
+      "startChar": 3529,
+      "endChar": 3535,
+      "quote": "RECIIS",
+      "verified": false
+    },
+    {
+      "label": "Rio de Janeiro",
+      "entityType": "city",
+      "cluster": "Rio de Janeiro",
+      "startChar": 3574,
+      "endChar": 3588,
+      "quote": "Rio de Janeiro",
+      "verified": false
+    },
+    {
+      "label": "2009",
+      "entityType": "year",
+      "cluster": "2009",
+      "startChar": 3613,
+      "endChar": 3617,
+      "quote": "2009",
+      "verified": false
+    },
+    {
+      "label": "Estados Unidos",
+      "entityType": "country",
+      "cluster": "United States",
+      "startChar": 3804,
+      "endChar": 3818,
+      "quote": "Estados Unidos",
+      "verified": false
+    },
+    {
+      "label": "Departamento\nde Informática Médica da Universidade de Stanford",
+      "entityType": "organization",
+      "cluster": "Stanford Medical Informatics",
+      "startChar": 3822,
+      "endChar": 3884,
+      "quote": "Departamento\nde Informática Médica da Universidade de Stanford",
+      "verified": false
+    },
+    {
+      "label": "Universidade de Stanford",
+      "entityType": "university",
+      "cluster": "Stanford University",
+      "startChar": 3860,
+      "endChar": 3884,
+      "quote": "Universidade de Stanford",
+      "verified": false
+    },
+    {
+      "label": "Stanford",
+      "entityType": "university",
+      "cluster": "Stanford University",
+      "startChar": 3876,
+      "endChar": 3884,
+      "quote": "Stanford",
+      "verified": false
+    },
+    {
+      "label": "Protégé",
+      "entityType": "software",
+      "cluster": "Protégé",
+      "startChar": 3933,
+      "endChar": 3940,
+      "quote": "Protégé",
+      "verified": false
+    },
+    {
+      "label": "Centro Na-\ncional de Pesquisas em Ontologias Biomédicas",
+      "entityType": "organization",
+      "cluster": "NCBO",
+      "startChar": 3983,
+      "endChar": 4038,
+      "quote": "Centro Na-\ncional de Pesquisas em Ontologias Biomédicas",
+      "verified": false
+    },
+    {
+      "label": "National\nCenter for Biomedical Ontologies",
+      "entityType": "organization",
+      "cluster": "NCBO",
+      "startChar": 4040,
+      "endChar": 4081,
+      "quote": "National\nCenter for Biomedical Ontologies",
+      "verified": false
+    },
+    {
+      "label": "Stanford",
+      "entityType": "university",
+      "cluster": "Stanford University",
+      "startChar": 4139,
+      "endChar": 4147,
+      "quote": "Stanford",
+      "verified": false
+    },
+    {
+      "label": "Victoria",
+      "entityType": "university",
+      "cluster": "University of Victoria",
+      "startChar": 4149,
+      "endChar": 4157,
+      "quote": "Victoria",
+      "verified": false
+    },
+    {
+      "label": "Buffalo",
+      "entityType": "university",
+      "cluster": "University at Buffalo",
+      "startChar": 4160,
+      "endChar": 4167,
+      "quote": "Buffalo",
+      "verified": false
+    },
+    {
+      "label": "Mayo Clinic",
+      "entityType": "organization",
+      "cluster": "Mayo Clinic",
+      "startChar": 4177,
+      "endChar": 4188,
+      "quote": "Mayo Clinic",
+      "verified": false
+    },
+    {
+      "label": "Rochester",
+      "entityType": "city",
+      "cluster": "Rochester",
+      "startChar": 4193,
+      "endChar": 4202,
+      "quote": "Rochester",
+      "verified": false
+    },
+    {
+      "label": "Europa",
+      "entityType": "region",
+      "cluster": "Europe",
+      "startChar": 4207,
+      "endChar": 4213,
+      "quote": "Europa",
+      "verified": false
+    },
+    {
+      "label": "Grupo de Pesquisa em Ontologias em Medicina\ne Ciências Biológicas",
+      "entityType": "organization",
+      "cluster": "Leipzig ontology group",
+      "startChar": 4225,
+      "endChar": 4290,
+      "quote": "Grupo de Pesquisa em Ontologias em Medicina\ne Ciências Biológicas",
+      "verified": false
+    },
+    {
+      "label": "Instituto de Informática Médi-\nca, Estatística e Epidemiologia",
+      "entityType": "organization",
+      "cluster": "IMISE Leipzig",
+      "startChar": 4294,
+      "endChar": 4356,
+      "quote": "Instituto de Informática Médi-\nca, Estatística e Epidemiologia",
+      "verified": false
+    },
+    {
+      "label": "Leipzig",
+      "entityType": "city",
+      "cluster": "Leipzig",
+      "startChar": 4361,
+      "endChar": 4368,
+      "quote": "Leipzig",
+      "verified": false
+    },
+    {
+      "label": "Grupo\nde Pesquisa em Informática Médica",
+      "entityType": "organization",
+      "cluster": "Freiburg Medical Informatics Group",
+      "startChar": 4374,
+      "endChar": 4413,
+      "quote": "Grupo\nde Pesquisa em Informática Médica",
+      "verified": false
+    },
+    {
+      "label": "Centro Médico\nUniversitário de Freiburg",
+      "entityType": "organization",
+      "cluster": "University Medical Center Freiburg",
+      "startChar": 4417,
+      "endChar": 4456,
+      "quote": "Centro Médico\nUniversitário de Freiburg",
+      "verified": false
+    },
+    {
+      "label": "Alemanha",
+      "entityType": "country",
+      "cluster": "Alemanha",
+      "startChar": 4467,
+      "endChar": 4475,
+      "quote": "Alemanha",
+      "verified": false
+    },
+    {
+      "label": "Grupo\nem Informática Biológica e Saúde",
+      "entityType": "organization",
+      "cluster": "Manchester bio-health informatics",
+      "startChar": 4481,
+      "endChar": 4519,
+      "quote": "Grupo\nem Informática Biológica e Saúde",
+      "verified": false
+    },
+    {
+      "label": "Universidade de\nManchester",
+      "entityType": "university",
+      "cluster": "University of Manchester",
+      "startChar": 4524,
+      "endChar": 4550,
+      "quote": "Universidade de\nManchester",
+      "verified": false
+    },
+    {
+      "label": "Inglaterra",
+      "entityType": "country",
+      "cluster": "England",
+      "startChar": 4555,
+      "endChar": 4565,
+      "quote": "Inglaterra",
+      "verified": false
+    },
+    {
+      "label": "Web Semântica",
+      "entityType": "technology",
+      "cluster": "Semantic Web",
+      "startChar": 4630,
+      "endChar": 4643,
+      "quote": "Web Semântica",
+      "verified": false
+    },
+    {
+      "label": "RECIIS",
+      "entityType": "journal",
+      "cluster": "RECIIS",
+      "startChar": 5230,
+      "endChar": 5236,
+      "quote": "RECIIS",
+      "verified": false
+    },
+    {
+      "label": "Brasil",
+      "entityType": "country",
+      "cluster": "Brasil",
+      "startChar": 6027,
+      "endChar": 6033,
+      "quote": "Brasil",
+      "verified": false
+    },
+    {
+      "label": "CID",
+      "entityType": "terminology",
+      "cluster": "ICD",
+      "startChar": 6568,
+      "endChar": 6571,
+      "quote": "CID",
+      "verified": false
+    },
+    {
+      "label": "Classificação\nInternacional de Doenças",
+      "entityType": "terminology",
+      "cluster": "ICD",
+      "startChar": 6573,
+      "endChar": 6611,
+      "quote": "Classificação\nInternacional de Doenças",
+      "verified": false
+    },
+    {
+      "label": "SNOMED CT",
+      "entityType": "terminology",
+      "cluster": "SNOMED CT",
+      "startChar": 6614,
+      "endChar": 6623,
+      "quote": "SNOMED CT",
+      "verified": false
+    },
+    {
+      "label": "MeSH",
+      "entityType": "terminology",
+      "cluster": "MeSH",
+      "startChar": 6682,
+      "endChar": 6686,
+      "quote": "MeSH",
+      "verified": false
+    },
+    {
+      "label": "Descritores de Saúde",
+      "entityType": "terminology",
+      "cluster": "MeSH",
+      "startChar": 6688,
+      "endChar": 6708,
+      "quote": "Descritores de Saúde",
+      "verified": false
+    },
+    {
+      "label": "openGalen",
+      "entityType": "ontology",
+      "cluster": "OpenGALEN",
+      "startChar": 6711,
+      "endChar": 6720,
+      "quote": "openGalen",
+      "verified": false
+    },
+    {
+      "label": "FMA",
+      "entityType": "ontology",
+      "cluster": "FMA",
+      "startChar": 6800,
+      "endChar": 6803,
+      "quote": "FMA",
+      "verified": false
+    },
+    {
+      "label": "Modelo Fundacional de Anatomia",
+      "entityType": "ontology",
+      "cluster": "FMA",
+      "startChar": 6805,
+      "endChar": 6835,
+      "quote": "Modelo Fundacional de Anatomia",
+      "verified": false
+    },
+    {
+      "label": "UMLS",
+      "entityType": "terminology",
+      "cluster": "UMLS",
+      "startChar": 6862,
+      "endChar": 6866,
+      "quote": "UMLS",
+      "verified": false
+    },
+    {
+      "label": "Sistema Unificado de\nLinguagem Médica",
+      "entityType": "terminology",
+      "cluster": "UMLS",
+      "startChar": 6868,
+      "endChar": 6905,
+      "quote": "Sistema Unificado de\nLinguagem Médica",
+      "verified": false
+    },
+    {
+      "label": "OBO Foundry",
+      "entityType": "organization",
+      "cluster": "OBO Foundry",
+      "startChar": 6910,
+      "endChar": 6921,
+      "quote": "OBO Foundry",
+      "verified": false
+    },
+    {
+      "label": "Fundação de\nOntologias Biomédicas Aberta",
+      "entityType": "organization",
+      "cluster": "OBO Foundry",
+      "startChar": 6923,
+      "endChar": 6963,
+      "quote": "Fundação de\nOntologias Biomédicas Aberta",
+      "verified": false
+    },
+    {
+      "label": "Ontologia\nGênica",
+      "entityType": "ontology",
+      "cluster": "Gene Ontology",
+      "startChar": 6979,
+      "endChar": 6995,
+      "quote": "Ontologia\nGênica",
+      "verified": false
+    },
+    {
+      "label": "GO",
+      "entityType": "ontology",
+      "cluster": "Gene Ontology",
+      "startChar": 6997,
+      "endChar": 6999,
+      "quote": "GO",
+      "verified": false
+    },
+    {
+      "label": "Bases ontológicas e conceituais para um\nmodelo do conhecimento científico em artigos biomédi-\ncos",
+      "entityType": "title",
+      "cluster": "article 2 title",
+      "startChar": 7026,
+      "endChar": 7123,
+      "quote": "Bases ontológicas e conceituais para um\nmodelo do conhecimento científico em artigos biomédi-\ncos",
+      "verified": false
+    },
+    {
+      "label": "Carlos Marcondes",
+      "entityType": "person",
+      "cluster": "Carlos Marcondes",
+      "startChar": 7138,
+      "endChar": 7154,
+      "quote": "Carlos Marcondes",
+      "verified": false
+    },
+    {
+      "label": "Medicina",
+      "entityType": "field",
+      "cluster": "Medicine",
+      "startChar": 7228,
+      "endChar": 7236,
+      "quote": "Medicina",
+      "verified": false
+    },
+    {
+      "label": "Metodologia Científica",
+      "entityType": "field",
+      "cluster": "Scientific Methodology",
+      "startChar": 7577,
+      "endChar": 7599,
+      "quote": "Metodologia Científica",
+      "verified": false
+    },
+    {
+      "label": "Filosofia da Ciência",
+      "entityType": "field",
+      "cluster": "Philosophy of Science",
+      "startChar": 7602,
+      "endChar": 7622,
+      "quote": "Filosofia da Ciência",
+      "verified": false
+    },
+    {
+      "label": "Vantagens e limitações de ontologias\nformais no domínio biomédico",
+      "entityType": "title",
+      "cluster": "article 3 title",
+      "startChar": 7882,
+      "endChar": 7947,
+      "quote": "Vantagens e limitações de ontologias\nformais no domínio biomédico",
+      "verified": false
+    },
+    {
+      "label": "Stefan\nSchulz",
+      "entityType": "person",
+      "cluster": "Stefan Schulz",
+      "startChar": 7964,
+      "endChar": 7977,
+      "quote": "Stefan\nSchulz",
+      "verified": false
+    },
+    {
+      "label": "Barry Smith",
+      "entityType": "person",
+      "cluster": "Barry Smith",
+      "startChar": 8008,
+      "endChar": 8019,
+      "quote": "Barry Smith",
+      "verified": false
+    },
+    {
+      "label": "Fundação OBO",
+      "entityType": "organization",
+      "cluster": "OBO Foundry",
+      "startChar": 8179,
+      "endChar": 8191,
+      "quote": "Fundação OBO",
+      "verified": false
+    },
+    {
+      "label": "Consórcio\nda Web",
+      "entityType": "organization",
+      "cluster": "W3C",
+      "startChar": 8731,
+      "endChar": 8747,
+      "quote": "Consórcio\nda Web",
+      "verified": false
+    },
+    {
+      "label": "W3C",
+      "entityType": "organization",
+      "cluster": "W3C",
+      "startChar": 8749,
+      "endChar": 8752,
+      "quote": "W3C",
+      "verified": false
+    },
+    {
+      "label": "Uma análise ontológica do\neletrocardiograma",
+      "entityType": "title",
+      "cluster": "article 4 title",
+      "startChar": 9292,
+      "endChar": 9335,
+      "quote": "Uma análise ontológica do\neletrocardiograma",
+      "verified": false
+    },
+    {
+      "label": "Bernardo Gonçalves",
+      "entityType": "person",
+      "cluster": "Bernardo Gonçalves",
+      "startChar": 9341,
+      "endChar": 9359,
+      "quote": "Bernardo Gonçalves",
+      "verified": false
+    },
+    {
+      "label": "OBO",
+      "entityType": "ontology",
+      "cluster": "OBO Foundry",
+      "startChar": 9681,
+      "endChar": 9684,
+      "quote": "OBO",
+      "verified": false
+    },
+    {
+      "label": "FMA",
+      "entityType": "ontology",
+      "cluster": "FMA",
+      "startChar": 9689,
+      "endChar": 9692,
+      "quote": "FMA",
+      "verified": false
+    },
+    {
+      "label": "UFO",
+      "entityType": "ontology",
+      "cluster": "UFO",
+      "startChar": 9751,
+      "endChar": 9754,
+      "quote": "UFO",
+      "verified": false
+    },
+    {
+      "label": "Ontologia Fundacional Unificada",
+      "entityType": "ontology",
+      "cluster": "UFO",
+      "startChar": 9756,
+      "endChar": 9787,
+      "quote": "Ontologia Fundacional Unificada",
+      "verified": false
+    },
+    {
+      "label": "RECIIS",
+      "entityType": "journal",
+      "cluster": "RECIIS",
+      "startChar": 9916,
+      "endChar": 9922,
+      "quote": "RECIIS",
+      "verified": false
+    },
+    {
+      "label": "Rio de Janeiro",
+      "entityType": "city",
+      "cluster": "Rio de Janeiro",
+      "startChar": 9961,
+      "endChar": 9975,
+      "quote": "Rio de Janeiro",
+      "verified": false
+    },
+    {
+      "label": "2009",
+      "entityType": "year",
+      "cluster": "2009",
+      "startChar": 10000,
+      "endChar": 10004,
+      "quote": "2009",
+      "verified": false
+    },
+    {
+      "label": "ECG",
+      "entityType": "ontology",
+      "cluster": "ECG ontology",
+      "startChar": 10326,
+      "endChar": 10329,
+      "quote": "ECG",
+      "verified": false
+    },
+    {
+      "label": "Aspectos metodológicos no reuso de ontologias:\num estudo a partir das anotações genômicas no domínio\ndos tripanosomatídeos",
+      "entityType": "title",
+      "cluster": "article 5 title",
+      "startChar": 10791,
+      "endChar": 10913,
+      "quote": "Aspectos metodológicos no reuso de ontologias:\num estudo a partir das anotações genômicas no domínio\ndos tripanosomatídeos",
+      "verified": false
+    },
+    {
+      "label": "Maria Luiza Campos",
+      "entityType": "person",
+      "cluster": "Maria Luiza Campos",
+      "startChar": 10919,
+      "endChar": 10937,
+      "quote": "Maria Luiza Campos",
+      "verified": false
+    },
+    {
+      "label": "Extração automática de\ntermos compostos para construção de ontologias: um\nexperimento na área da saúde",
+      "entityType": "title",
+      "cluster": "article 6 title",
+      "startChar": 11471,
+      "endChar": 11573,
+      "quote": "Extração automática de\ntermos compostos para construção de ontologias: um\nexperimento na área da saúde",
+      "verified": false
+    },
+    {
+      "label": "Lucelene Lopes",
+      "entityType": "person",
+      "cluster": "Lucelene Lopes",
+      "startChar": 11594,
+      "endChar": 11608,
+      "quote": "Lucelene Lopes",
+      "verified": false
+    },
+    {
+      "label": "Renata Vieira",
+      "entityType": "person",
+      "cluster": "Renata Vieira",
+      "startChar": 11611,
+      "endChar": 11624,
+      "quote": "Renata Vieira",
+      "verified": false
+    },
+    {
+      "label": "Inteligência\nArtificial",
+      "entityType": "field",
+      "cluster": "Artificial Intelligence",
+      "startChar": 11842,
+      "endChar": 11865,
+      "quote": "Inteligência\nArtificial",
+      "verified": false
+    },
+    {
+      "label": "Processamento de Lingua-\ngem Natural",
+      "entityType": "field",
+      "cluster": "NLP",
+      "startChar": 11882,
+      "endChar": 11918,
+      "quote": "Processamento de Lingua-\ngem Natural",
+      "verified": false
+    },
+    {
+      "label": "pediatria",
+      "entityType": "field",
+      "cluster": "Pediatrics",
+      "startChar": 12391,
+      "endChar": 12400,
+      "quote": "pediatria",
+      "verified": false
+    },
+    {
+      "label": "Guilherme Ataíde",
+      "entityType": "person",
+      "cluster": "Guilherme Ataíde",
+      "startChar": 12713,
+      "endChar": 12729,
+      "quote": "Guilherme Ataíde",
+      "verified": false
+    },
+    {
+      "label": "Werner Ceusters",
+      "entityType": "person",
+      "cluster": "Werner Ceusters",
+      "startChar": 12731,
+      "endChar": 12746,
+      "quote": "Werner Ceusters",
+      "verified": false
+    },
+    {
+      "label": "Ro-\nnald Cornet",
+      "entityType": "person",
+      "cluster": "Ronald Cornet",
+      "startChar": 12748,
+      "endChar": 12763,
+      "quote": "Ro-\nnald Cornet",
+      "verified": false
+    },
+    {
+      "label": "Marcos Galindo",
+      "entityType": "person",
+      "cluster": "Marcos Galindo",
+      "startChar": 12765,
+      "endChar": 12779,
+      "quote": "Marcos Galindo",
+      "verified": false
+    },
+    {
+      "label": "Rosario Girardi",
+      "entityType": "person",
+      "cluster": "Rosario Girardi",
+      "startChar": 12781,
+      "endChar": 12796,
+      "quote": "Rosario Girardi",
+      "verified": false
+    },
+    {
+      "label": "Giancarlo\nGuizzardi",
+      "entityType": "person",
+      "cluster": "Giancarlo Guizzardi",
+      "startChar": 12798,
+      "endChar": 12817,
+      "quote": "Giancarlo\nGuizzardi",
+      "verified": false
+    },
+    {
+      "label": "Robert Hoehndorf",
+      "entityType": "person",
+      "cluster": "Robert Hoehndorf",
+      "startChar": 12819,
+      "endChar": 12835,
+      "quote": "Robert Hoehndorf",
+      "verified": false
+    },
+    {
+      "label": "César Tacla",
+      "entityType": "person",
+      "cluster": "César Tacla",
+      "startChar": 12838,
+      "endChar": 12849,
+      "quote": "César Tacla",
+      "verified": false
+    },
+    {
+      "label": "RECIIS",
+      "entityType": "journal",
+      "cluster": "RECIIS",
+      "startChar": 13066,
+      "endChar": 13072,
+      "quote": "RECIIS",
+      "verified": false
+    },
+    {
+      "label": "Carlos\nSaldanha Machado",
+      "entityType": "person",
+      "cluster": "Carlos Saldanha Machado",
+      "startChar": 13074,
+      "endChar": 13097,
+      "quote": "Carlos\nSaldanha Machado",
+      "verified": false
+    },
+    {
+      "label": "Josué Laguardia",
+      "entityType": "person",
+      "cluster": "Josué Laguardia",
+      "startChar": 13100,
+      "endChar": 13115,
+      "quote": "Josué Laguardia",
+      "verified": false
+    },
+    {
+      "label": "Fred Freitas",
+      "entityType": "person",
+      "cluster": "Frederico Freitas",
+      "startChar": 13400,
+      "endChar": 13412,
+      "quote": "Fred Freitas",
+      "verified": false
+    },
+    {
+      "label": "Universidade de Santa Catarina",
+      "entityType": "university",
+      "cluster": "UFSC",
+      "startChar": 13424,
+      "endChar": 13454,
+      "quote": "Universidade de Santa Catarina",
+      "verified": false
+    },
+    {
+      "label": "Brasil",
+      "entityType": "country",
+      "cluster": "Brasil",
+      "startChar": 13456,
+      "endChar": 13462,
+      "quote": "Brasil",
+      "verified": false
+    },
+    {
+      "label": "Centro de Informática",
+      "entityType": "organization",
+      "cluster": "CIn UFPE",
+      "startChar": 13491,
+      "endChar": 13512,
+      "quote": "Centro de Informática",
+      "verified": false
+    },
+    {
+      "label": "Universidade Federal de Pernambuco",
+      "entityType": "university",
+      "cluster": "UFPE",
+      "startChar": 13516,
+      "endChar": 13552,
+      "quote": "Univer-\nsidade Federal de Pernambuco",
+      "verified": false
+    },
+    {
+      "label": "Brasil",
+      "entityType": "country",
+      "cluster": "Brasil",
+      "startChar": 13554,
+      "endChar": 13560,
+      "quote": "Brasil",
+      "verified": false
+    },
+    {
+      "label": "CIn/UFPE",
+      "entityType": "organization",
+      "cluster": "CIn UFPE",
+      "startChar": 13562,
+      "endChar": 13570,
+      "quote": "CIn/UFPE",
+      "verified": false
+    },
+    {
+      "label": "Departamento de\nInformática da Universidade de Karlsruhe",
+      "entityType": "organization",
+      "cluster": "Karlsruhe Informatics",
+      "startChar": 13612,
+      "endChar": 13668,
+      "quote": "Departamento de\nInformática da Universidade de Karlsruhe",
+      "verified": false
+    },
+    {
+      "label": "Universidade de Karlsruhe",
+      "entityType": "university",
+      "cluster": "University of Karlsruhe",
+      "startChar": 13643,
+      "endChar": 13668,
+      "quote": "Universidade de Karlsruhe",
+      "verified": false
+    },
+    {
+      "label": "Brasil-Alemanha",
+      "entityType": "project",
+      "cluster": "Brazil-Germany project",
+      "startChar": 13697,
+      "endChar": 13712,
+      "quote": "Brasil-Alemanha",
+      "verified": false
+    },
+    {
+      "label": "A semantic approach\nto data retrieval",
+      "entityType": "title",
+      "cluster": "semantic data retrieval project",
+      "startChar": 13714,
+      "endChar": 13751,
+      "quote": "A semantic approach\nto data retrieval",
+      "verified": false
+    },
+    {
+      "label": "IJCAI",
+      "entityType": "conference",
+      "cluster": "IJCAI",
+      "startChar": 13870,
+      "endChar": 13875,
+      "quote": "IJCAI",
+      "verified": false
+    },
+    {
+      "label": "ACM",
+      "entityType": "organization",
+      "cluster": "ACM",
+      "startChar": 13903,
+      "endChar": 13906,
+      "quote": "ACM",
+      "verified": false
+    },
+    {
+      "label": "Association on Computer Machinery",
+      "entityType": "organization",
+      "cluster": "ACM",
+      "startChar": 13908,
+      "endChar": 13941,
+      "quote": "Association on Computer Machinery",
+      "verified": false
+    },
+    {
+      "label": "IEEE",
+      "entityType": "organization",
+      "cluster": "IEEE",
+      "startChar": 13950,
+      "endChar": 13954,
+      "quote": "IEEE",
+      "verified": false
+    },
+    {
+      "label": "Institute of Electrical and Electronical Engineering",
+      "entityType": "organization",
+      "cluster": "IEEE",
+      "startChar": 13956,
+      "endChar": 14008,
+      "quote": "Institute of Electrical and Electronical Engineering",
+      "verified": false
+    },
+    {
+      "label": "WONTO",
+      "entityType": "workshop",
+      "cluster": "WONTO",
+      "startChar": 14052,
+      "endChar": 14057,
+      "quote": "WONTO",
+      "verified": false
+    },
+    {
+      "label": "Workshop on Ontologies and their Applications",
+      "entityType": "workshop",
+      "cluster": "WONTO",
+      "startChar": 14059,
+      "endChar": 14104,
+      "quote": "Workshop on Ontologies and their Applications",
+      "verified": false
+    },
+    {
+      "label": "Seminário de Ontologias e Suas Aplicações",
+      "entityType": "workshop",
+      "cluster": "WONTO",
+      "startChar": 14105,
+      "endChar": 14146,
+      "quote": "Seminário de Ontologias e Suas Aplicações",
+      "verified": false
+    },
+    {
+      "label": "Brasil",
+      "entityType": "country",
+      "cluster": "Brasil",
+      "startChar": 14152,
+      "endChar": 14158,
+      "quote": "Brasil",
+      "verified": false
+    },
+    {
+      "label": "BA-\nOSW",
+      "entityType": "workshop",
+      "cluster": "BAOSW",
+      "startChar": 14164,
+      "endChar": 14171,
+      "quote": "BA-\nOSW",
+      "verified": false
+    },
+    {
+      "label": "Building Applications with Ontologies for the Semantic Web",
+      "entityType": "workshop",
+      "cluster": "BAOSW",
+      "startChar": 14173,
+      "endChar": 14231,
+      "quote": "Building Applications with Ontologies for the Semantic Web",
+      "verified": false
+    },
+    {
+      "label": "Semantic Web",
+      "entityType": "technology",
+      "cluster": "Semantic Web",
+      "startChar": 14219,
+      "endChar": 14231,
+      "quote": "Semantic Web",
+      "verified": false
+    },
+    {
+      "label": "Portugal",
+      "entityType": "country",
+      "cluster": "Portugal",
+      "startChar": 14297,
+      "endChar": 14305,
+      "quote": "Portugal",
+      "verified": false
+    },
+    {
+      "label": "JBCS",
+      "entityType": "journal",
+      "cluster": "JBCS",
+      "startChar": 14363,
+      "endChar": 14367,
+      "quote": "JBCS",
+      "verified": false
+    },
+    {
+      "label": "Journal of\nBrazilian Computer Society",
+      "entityType": "journal",
+      "cluster": "JBCS",
+      "startChar": 14369,
+      "endChar": 14406,
+      "quote": "Journal of\nBrazilian Computer Society",
+      "verified": false
+    },
+    {
+      "label": "JUCS",
+      "entityType": "journal",
+      "cluster": "JUCS",
+      "startChar": 14413,
+      "endChar": 14417,
+      "quote": "JUCS",
+      "verified": false
+    },
+    {
+      "label": "Journal of Universal Computer Science",
+      "entityType": "journal",
+      "cluster": "JUCS",
+      "startChar": 14419,
+      "endChar": 14456,
+      "quote": "Journal of Universal Computer Science",
+      "verified": false
+    },
+    {
+      "label": "Universidade de Paul Cesanne",
+      "entityType": "university",
+      "cluster": "Université Paul Cézanne",
+      "startChar": 14487,
+      "endChar": 14515,
+      "quote": "Universidade de Paul Cesanne",
+      "verified": false
+    },
+    {
+      "label": "Paul Cesanne",
+      "entityType": "person",
+      "cluster": "Paul Cézanne",
+      "startChar": 14503,
+      "endChar": 14515,
+      "quote": "Paul Cesanne",
+      "verified": false
+    },
+    {
+      "label": "Marselha",
+      "entityType": "city",
+      "cluster": "Marseille",
+      "startChar": 14519,
+      "endChar": 14527,
+      "quote": "Marselha",
+      "verified": false
+    },
+    {
+      "label": "INRIA",
+      "entityType": "organization",
+      "cluster": "INRIA",
+      "startChar": 14531,
+      "endChar": 14536,
+      "quote": "INRIA",
+      "verified": false
+    },
+    {
+      "label": "Montbonnot",
+      "entityType": "city",
+      "cluster": "Montbonnot",
+      "startChar": 14538,
+      "endChar": 14548,
+      "quote": "Montbonnot",
+      "verified": false
+    },
+    {
+      "label": "França",
+      "entityType": "country",
+      "cluster": "France",
+      "startChar": 14553,
+      "endChar": 14559,
+      "quote": "França",
+      "verified": false
+    },
+    {
+      "label": "Karlsruhe",
+      "entityType": "university",
+      "cluster": "University of Karlsruhe",
+      "startChar": 14583,
+      "endChar": 14592,
+      "quote": "Karlsruhe",
+      "verified": false
+    },
+    {
+      "label": "Freiburg",
+      "entityType": "university",
+      "cluster": "University of Freiburg",
+      "startChar": 14594,
+      "endChar": 14602,
+      "quote": "Freiburg",
+      "verified": false
+    },
+    {
+      "label": "Mannheim",
+      "entityType": "university",
+      "cluster": "University of Mannheim",
+      "startChar": 14605,
+      "endChar": 14613,
+      "quote": "Mannheim",
+      "verified": false
+    },
+    {
+      "label": "Alemanha",
+      "entityType": "country",
+      "cluster": "Alemanha",
+      "startChar": 14618,
+      "endChar": 14626,
+      "quote": "Alemanha",
+      "verified": false
+    },
+    {
+      "label": "RECIIS",
+      "entityType": "journal",
+      "cluster": "RECIIS",
+      "startChar": 14761,
+      "endChar": 14767,
+      "quote": "RECIIS",
+      "verified": false
+    },
+    {
+      "label": "Rio de Janeiro",
+      "entityType": "city",
+      "cluster": "Rio de Janeiro",
+      "startChar": 14806,
+      "endChar": 14820,
+      "quote": "Rio de Janeiro",
+      "verified": false
+    },
+    {
+      "label": "2009",
+      "entityType": "year",
+      "cluster": "2009",
+      "startChar": 14845,
+      "endChar": 14849,
+      "quote": "2009",
+      "verified": false
+    },
+    {
+      "label": "Stefan Schulz",
+      "entityType": "person",
+      "cluster": "Stefan Schulz",
+      "startChar": 14850,
+      "endChar": 14863,
+      "quote": "Stefan Schulz",
+      "verified": false
+    },
+    {
+      "label": "Heidelberg University",
+      "entityType": "university",
+      "cluster": "Heidelberg University",
+      "startChar": 14891,
+      "endChar": 14912,
+      "quote": "Heidelberg University",
+      "verified": false
+    },
+    {
+      "label": "Alemanha",
+      "entityType": "country",
+      "cluster": "Alemanha",
+      "startChar": 14914,
+      "endChar": 14922,
+      "quote": "Alemanha",
+      "verified": false
+    },
+    {
+      "label": "Instituto\nde Biometria Médica e Informática da Medicina do Centro Médico Universitário Freiburg",
+      "entityType": "organization",
+      "cluster": "IMBI Freiburg",
+      "startChar": 14962,
+      "endChar": 15057,
+      "quote": "Instituto\nde Biometria Médica e Informática da Medicina do Centro Médico Universitário Freiburg",
+      "verified": false
+    },
+    {
+      "label": "Freiburg",
+      "entityType": "city",
+      "cluster": "Freiburg",
+      "startChar": 15049,
+      "endChar": 15057,
+      "quote": "Freiburg",
+      "verified": false
+    },
+    {
+      "label": "Grupo\nde Pesquisas em Informática na Medicina",
+      "entityType": "organization",
+      "cluster": "Freiburg Medical Informatics Group",
+      "startChar": 15073,
+      "endChar": 15118,
+      "quote": "Grupo\nde Pesquisas em Informática na Medicina",
+      "verified": false
+    },
+    {
+      "label": "São Luís",
+      "entityType": "city",
+      "cluster": "São Luís",
+      "startChar": 15609,
+      "endChar": 15617,
+      "quote": "São Luís",
+      "verified": false
+    },
+    {
+      "label": "Brasil",
+      "entityType": "country",
+      "cluster": "Brasil",
+      "startChar": 15619,
+      "endChar": 15625,
+      "quote": "Brasil",
+      "verified": false
+    },
+    {
+      "label": "Universidade de Freiburg",
+      "entityType": "university",
+      "cluster": "University of Freiburg",
+      "startChar": 15699,
+      "endChar": 15723,
+      "quote": "Universidade de Freiburg",
+      "verified": false
+    },
+    {
+      "label": "União Européia",
+      "entityType": "organization",
+      "cluster": "European Union",
+      "startChar": 16037,
+      "endChar": 16051,
+      "quote": "União Européia",
+      "verified": false
+    },
+    {
+      "label": "Stefan Schulz",
+      "entityType": "person",
+      "cluster": "Stefan Schulz",
+      "startChar": 16053,
+      "endChar": 16066,
+      "quote": "Stefan Schulz",
+      "verified": false
+    },
+    {
+      "label": "2001",
+      "entityType": "year",
+      "cluster": "2001",
+      "startChar": 16269,
+      "endChar": 16273,
+      "quote": "2001",
+      "verified": false
+    },
+    {
+      "label": "Pontifícia Universidade Católica do Paraná",
+      "entityType": "university",
+      "cluster": "PUC-PR",
+      "startChar": 16305,
+      "endChar": 16347,
+      "quote": "Pontifícia Universidade Católica do Paraná",
+      "verified": false
+    },
+    {
+      "label": "PUC-PR",
+      "entityType": "university",
+      "cluster": "PUC-PR",
+      "startChar": 16349,
+      "endChar": 16355,
+      "quote": "PUC-PR",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

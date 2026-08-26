@@ -1,0 +1,203 @@
+{
+  "version": "gold/v1",
+  "paperId": "057e356e94f8",
+  "subset": "entity",
+  "labels": [
+    {
+      "label": "Workshop on Cognitive Modeling and Computational Linguistics",
+      "entityType": "workshop",
+      "cluster": "cmcl2020",
+      "startChar": 19,
+      "endChar": 79,
+      "quote": "Workshop on Cognitive Modeling and Computational Linguistics",
+      "verified": false
+    },
+    {
+      "label": "Online Event",
+      "entityType": "venue",
+      "cluster": "online_event",
+      "startChar": 93,
+      "endChar": 105,
+      "quote": "Online Event",
+      "verified": false
+    },
+    {
+      "label": "November 19, 2020",
+      "entityType": "date",
+      "cluster": "event_date",
+      "startChar": 107,
+      "endChar": 124,
+      "quote": "November 19, 2020",
+      "verified": false
+    },
+    {
+      "label": "Association for Computational Linguistics",
+      "entityType": "organization",
+      "cluster": "acl",
+      "startChar": 133,
+      "endChar": 174,
+      "quote": "Association for Computational Linguistics",
+      "verified": false
+    },
+    {
+      "label": "Yiding Hao",
+      "entityType": "person",
+      "cluster": "yiding_hao",
+      "startChar": 334,
+      "endChar": 344,
+      "quote": "Yiding Hao",
+      "verified": false
+    },
+    {
+      "label": "Simon Mendelsohn",
+      "entityType": "person",
+      "cluster": "simon_mendelsohn",
+      "startChar": 346,
+      "endChar": 362,
+      "quote": "Simon Mendelsohn",
+      "verified": false
+    },
+    {
+      "label": "Rachel Sterneck",
+      "entityType": "person",
+      "cluster": "rachel_sterneck",
+      "startChar": 364,
+      "endChar": 379,
+      "quote": "Rachel Sterneck",
+      "verified": false
+    },
+    {
+      "label": "Randi Martinez",
+      "entityType": "person",
+      "cluster": "randi_martinez",
+      "startChar": 381,
+      "endChar": 395,
+      "quote": "Randi Martinez",
+      "verified": false
+    },
+    {
+      "label": "Robert Frank",
+      "entityType": "person",
+      "cluster": "robert_frank",
+      "startChar": 401,
+      "endChar": 413,
+      "quote": "Robert Frank",
+      "verified": false
+    },
+    {
+      "label": "Yale University",
+      "entityType": "organization",
+      "cluster": "yale_university",
+      "startChar": 414,
+      "endChar": 429,
+      "quote": "Yale University",
+      "verified": false
+    },
+    {
+      "label": "New Haven",
+      "entityType": "location",
+      "cluster": "new_haven",
+      "startChar": 431,
+      "endChar": 440,
+      "quote": "New Haven",
+      "verified": false
+    },
+    {
+      "label": "CT",
+      "entityType": "location",
+      "cluster": "connecticut",
+      "startChar": 442,
+      "endChar": 444,
+      "quote": "CT",
+      "verified": false
+    },
+    {
+      "label": "USA",
+      "entityType": "location",
+      "cluster": "usa",
+      "startChar": 446,
+      "endChar": 449,
+      "quote": "USA",
+      "verified": false
+    },
+    {
+      "label": "surprisal theory",
+      "entityType": "theory",
+      "cluster": "surprisal_theory",
+      "startChar": 588,
+      "endChar": 604,
+      "quote": "surprisal theory",
+      "verified": false
+    },
+    {
+      "label": "Hale",
+      "entityType": "person",
+      "cluster": "john_hale",
+      "startChar": 606,
+      "endChar": 610,
+      "quote": "Hale",
+      "verified": false
+    },
+    {
+      "label": "Levy",
+      "entityType": "person",
+      "cluster": "roger_levy",
+      "startChar": 618,
+      "endChar": 622,
+      "quote": "Levy",
+      "verified": false
+    },
+    {
+      "label": "Goodkind and Bicknell",
+      "entityType": "person",
+      "cluster": "goodkind_bicknell",
+      "startChar": 753,
+      "endChar": 774,
+      "quote": "Goodkind and Bicknell",
+      "verified": false
+    },
+    {
+      "label": "Goodkind and Bicknell’s",
+      "entityType": "person",
+      "cluster": "goodkind_bicknell",
+      "startChar": 892,
+      "endChar": 915,
+      "quote": "Goodkind and Bicknell’s",
+      "verified": false
+    },
+    {
+      "label": "Transformers",
+      "entityType": "model_architecture",
+      "cluster": "transformer",
+      "startChar": 1054,
+      "endChar": 1066,
+      "quote": "Transformers",
+      "verified": false
+    },
+    {
+      "label": "predictability norm correlation",
+      "entityType": "metric",
+      "cluster": "pnc",
+      "startChar": 1170,
+      "endChar": 1201,
+      "quote": "predictability norm correlation",
+      "verified": false
+    },
+    {
+      "label": "Cloze",
+      "entityType": "method",
+      "cluster": "cloze_procedure",
+      "startChar": 1211,
+      "endChar": 1216,
+      "quote": "Cloze",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

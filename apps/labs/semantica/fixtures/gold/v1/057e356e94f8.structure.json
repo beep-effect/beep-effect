@@ -1,0 +1,222 @@
+{
+  "version": "gold/v1",
+  "paperId": "057e356e94f8",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 209,
+      "endChar": 333,
+      "quote": "Probabilistic Predictions of People Perusing: Evaluating Metrics of\nLanguage Model Performance for Psycholinguistic Modeling",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 478,
+      "endChar": 486,
+      "quote": "Abstract",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1467,
+      "endChar": 1481,
+      "quote": "1 Introduction",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 6102,
+      "endChar": 6129,
+      "quote": "2 Psycholinguistic Modeling",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 6897,
+      "endChar": 6917,
+      "quote": "2.1 Eyetracking Data",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 7602,
+      "endChar": 7611,
+      "quote": "2.2 GAMMs",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 9588,
+      "endChar": 9607,
+      "quote": "3 Language Modeling",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 10425,
+      "endChar": 10456,
+      "quote": "3.1 Traditional Language Models",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 13231,
+      "endChar": 13253,
+      "quote": "3.2 Pre-Trained Models",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 13817,
+      "endChar": 13828,
+      "quote": "3.2.1 GPT-2",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 14545,
+      "endChar": 14554,
+      "quote": "3.2.2 XLM",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 15078,
+      "endChar": 15098,
+      "quote": "3.2.3 Transformer-XL",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 15542,
+      "endChar": 15553,
+      "quote": "3.2.4 XLNet",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 15972,
+      "endChar": 16001,
+      "quote": "3.3 Language Model Evaluation",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 16250,
+      "endChar": 16266,
+      "quote": "3.3.1 Perplexity",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 17656,
+      "endChar": 17693,
+      "quote": "3.3.2 Predictability Norm Correlation",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 18721,
+      "endChar": 18730,
+      "quote": "4 Results",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 21443,
+      "endChar": 21469,
+      "quote": "4.1 Perplexity vs. ∆LogLik",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 23453,
+      "endChar": 23472,
+      "quote": "4.2 PNC vs. ∆LogLik",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 25034,
+      "endChar": 25046,
+      "quote": "5 Discussion",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 25488,
+      "endChar": 25517,
+      "quote": "5.1 Factors Affecting ∆LogLik",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 28751,
+      "endChar": 28776,
+      "quote": "5.2 Factors Affecting PNC",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 30080,
+      "endChar": 30114,
+      "quote": "5.3 Evaluating Surprisal Estimates",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 32418,
+      "endChar": 32430,
+      "quote": "6 Conclusion",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 34833,
+      "endChar": 34848,
+      "quote": "Acknowledgments",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35172,
+      "endChar": 35182,
+      "quote": "References",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

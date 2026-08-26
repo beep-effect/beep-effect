@@ -1,0 +1,54 @@
+{
+  "version": "gold/v1",
+  "paperId": "06df406f321e",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "section",
+      "depth": 0,
+      "startChar": 91,
+      "endChar": 100,
+      "quote": "Editorial",
+      "verified": false
+    },
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 145,
+      "endChar": 178,
+      "quote": "Ontologias, Web semântica e saúde",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 13382,
+      "endChar": 13399,
+      "quote": "Sobre os editores",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 13400,
+      "endChar": 13412,
+      "quote": "Fred Freitas",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 14850,
+      "endChar": 14863,
+      "quote": "Stefan Schulz",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}
