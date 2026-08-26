@@ -63,11 +63,20 @@ const SKIP_EXT = new Set([
 const TRACKING = /^(utm_.+|fbclid|gclid|dclid|_ga|mc_cid|mc_eid)$/i;
 const CHALLENGE = /sgcaptcha|\/\.well-known\/[a-z_-]*captcha|cf-chl|challenge-platform|just a moment/i;
 const MAX_REDIRECTS = 3;
+const fileByteCeiling = (): number => {
+  const raw = process.env.LEJEUNE_MAX_FILE_BYTES;
+  if (raw === undefined) return 64 * 1024 * 1024;
+  const limit = Number(raw);
+  if (!Number.isSafeInteger(limit) || limit < 1) {
+    throw new Stop(`LEJEUNE_MAX_FILE_BYTES must be a positive integer, got: ${raw}`, 2);
+  }
+  return limit;
+};
 const MAX_BODY_BYTES: Record<Kind, number> = {
   robots: 512 * 1024,
   sitemap: 16 * 1024 * 1024,
   page: 8 * 1024 * 1024,
-  file: Number(process.env.LEJEUNE_MAX_FILE_BYTES ?? String(64 * 1024 * 1024)),
+  file: fileByteCeiling(),
 };
 
 type Kind = "robots" | "sitemap" | "page" | "file";
