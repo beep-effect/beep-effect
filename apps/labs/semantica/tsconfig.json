@@ -4,6 +4,7 @@
   "include": [
     "src",
     "server",
+    "scripts",
     "test",
     "vite.config.ts",
     "vitest.config.ts",

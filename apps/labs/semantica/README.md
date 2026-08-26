@@ -11,13 +11,15 @@ corpus is excluded from committed inputs and documentation.
 The P1 command shape is:
 
 ```bash
+bun run canary manifest build --out fixtures/w1.manifest.json
+bun run canary manifest check [--manifest fixtures/w1.manifest.json]
 bun run canary c0 [--manifest <path>] [--paper <id>] [--offline]
 bun run canary c1 [--manifest <path>] [--paper <id>] [--offline]
 bun run canary c2 [--manifest <path>] [--paper <id>] [--offline]
 ```
 
-P1 exposes these commands but fails each stage with `StageNotImplemented` until
-the corresponding canary implementation lands.
+P1 implements manifest build/check while each canary stage still fails with
+`StageNotImplemented` until the corresponding stage implementation lands.
 
 ## Development
 

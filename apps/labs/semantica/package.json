@@ -25,6 +25,9 @@
     "codegen": "echo 'no codegen needed'",
     "dev": "portless semantica.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
     "dev:tauri": "tauri dev",
+    "fixtures:f1:index": "bun run scripts/generate-f1-index.ts",
+    "fixtures:f1:pdfs": "bun run scripts/generate-f1-pdfs.ts",
+    "fixtures:f1:text": "bun run scripts/generate-f1-text.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test"
@@ -33,6 +36,7 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@effect/platform-bun": "catalog:",
+    "@noble/hashes": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -46,6 +50,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "jsdom": "catalog:",
+    "pdf-lib": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }
