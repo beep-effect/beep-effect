@@ -49,7 +49,8 @@ packet or fold into candidate 3?
 - 2026-08-25 (review follow-up, #830): MAP queued-amendments intro corrected
   to name all three amendments (H, I, J) and cite both evidence notes — the
   AgentO mapping for H/I and the ontology-tooling recon for J. Next Open
-  Question unchanged: the Session B grill ratifies or rejects H/I/J.
+  Question unchanged (which decompose reopener executes first); the Session B
+  grill separately ratifies or rejects H/I/J.
 - 2026-08-25 (research, post-graduation): AgentO (ESWC 2026) read against
   the packet system; mapping note landed at
   `research/2026-08-25-agento-ontology-mapping.md`. Two amendment candidates
