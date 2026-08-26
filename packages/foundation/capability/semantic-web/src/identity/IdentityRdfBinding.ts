@@ -202,6 +202,12 @@ export class IdentityDatasetDecodeError extends S.TaggedError<IdentityDatasetDec
 /**
  * Decodes an identity entry's IRI as its RDF subject, failing typed instead of defecting.
  *
+ * **Details**
+ *
+ * A schema-valid `IdentityEntry` only guarantees `iri` is a string; this is the single
+ * boundary where that string becomes a `NamedNode`, shared by the dataset codec and the
+ * SHACL projection so both surface `IdentityEntryIriError` for malformed IRIs.
+ *
  * **Example** (Decode a registered entry's subject)
  *
  * ```ts
@@ -218,12 +224,6 @@ export class IdentityDatasetDecodeError extends S.TaggedError<IdentityDatasetDec
  * const subject = Effect.runSync(decodeEntrySubject(entry))
  * console.log(subject.value)
  * ```
- *
- * **Details**
- *
- * A schema-valid `IdentityEntry` only guarantees `iri` is a string; this is the single
- * boundary where that string becomes a `NamedNode`, shared by the dataset codec and the
- * SHACL projection so both surface `IdentityEntryIriError` for malformed IRIs.
  *
  * @param entry - Registered identity entry whose `iri` becomes the subject.
  * @returns The entry's subject as an RDF named node.
