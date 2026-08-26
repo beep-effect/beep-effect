@@ -10,7 +10,7 @@
  *
  * **Example** (Conform enforce serialize pipeline)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Conform enforce serialize pipeline"
  * import {
  *   conform,
  *   enforceSafeHtml,
@@ -52,7 +52,7 @@ const decodeSafe: (value: ConformantHtml) => Effect.Effect<SafeHtmlAst, HtmlPoli
  *
  * **Example** (Conformant then Safe decode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Conformant then Safe decode"
  * import { Fragment, Html } from "@beep/html"
  * import { Effect } from "effect"
  *
@@ -81,11 +81,11 @@ export const Html = readonlyStruct({
  *
  * **Example** (Read package version constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read package version constant"
  * import { VERSION } from "@beep/html"
  *
  * const packageVersion: "0.0.0" = VERSION
- * console.log(packageVersion) // "0.0.0"
+ * packageVersion // => "0.0.0"
  * ```
  *
  * @category configuration

@@ -22,7 +22,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log InternalServerError literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log InternalServerError literal"
  * import { InternalServerError } from "@beep/schema/HttpStatus"
  *
  * console.log(InternalServerError.literal)
@@ -52,7 +52,7 @@ export type InternalServerError = typeof InternalServerError.Type;
  *
  * **Example** (Log NotImplemented literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log NotImplemented literal"
  * import { NotImplemented } from "@beep/schema/HttpStatus"
  *
  * console.log(NotImplemented.literal)
@@ -84,7 +84,7 @@ export type NotImplemented = typeof NotImplemented.Type;
  *
  * **Example** (Log BadGateway literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log BadGateway literal"
  * import { BadGateway } from "@beep/schema/HttpStatus"
  *
  * console.log(BadGateway.literal)
@@ -116,7 +116,7 @@ export type BadGateway = typeof BadGateway.Type;
  *
  * **Example** (Log ServiceUnavailable literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log ServiceUnavailable literal"
  * import { ServiceUnavailable } from "@beep/schema/HttpStatus"
  *
  * console.log(ServiceUnavailable.literal)
@@ -150,7 +150,7 @@ export type ServiceUnavailable = typeof ServiceUnavailable.Type;
  *
  * **Example** (Log GatewayTimeout literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log GatewayTimeout literal"
  * import { GatewayTimeout } from "@beep/schema/HttpStatus"
  *
  * console.log(GatewayTimeout.literal)
@@ -180,7 +180,7 @@ export type GatewayTimeout = typeof GatewayTimeout.Type;
  *
  * **Example** (Log HttpVersionNotSupported literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log HttpVersionNotSupported literal"
  * import { HttpVersionNotSupported } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpVersionNotSupported.literal)
@@ -213,7 +213,7 @@ export type HttpVersionNotSupported = typeof HttpVersionNotSupported.Type;
  *
  * **Example** (Log VariantAlsoNegotiates literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log VariantAlsoNegotiates literal"
  * import { VariantAlsoNegotiates } from "@beep/schema/HttpStatus"
  *
  * console.log(VariantAlsoNegotiates.literal)
@@ -243,7 +243,7 @@ export type VariantAlsoNegotiates = typeof VariantAlsoNegotiates.Type;
  *
  * **Example** (Log InsufficientStorage literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log InsufficientStorage literal"
  * import { InsufficientStorage } from "@beep/schema/HttpStatus"
  *
  * console.log(InsufficientStorage.literal)
@@ -273,7 +273,7 @@ export type InsufficientStorage = typeof InsufficientStorage.Type;
  *
  * **Example** (Log LoopDetected literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log LoopDetected literal"
  * import { LoopDetected } from "@beep/schema/HttpStatus"
  *
  * console.log(LoopDetected.literal)
@@ -302,7 +302,7 @@ export type LoopDetected = typeof LoopDetected.Type;
  *
  * **Example** (Log NotExtended literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log NotExtended literal"
  * import { NotExtended } from "@beep/schema/HttpStatus"
  *
  * console.log(NotExtended.literal)
@@ -334,7 +334,7 @@ export type NotExtended = typeof NotExtended.Type;
  *
  * **Example** (Log NetworkAuthenticationRequired literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log NetworkAuthenticationRequired literal"
  * import { NetworkAuthenticationRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(NetworkAuthenticationRequired.literal)

@@ -46,7 +46,7 @@ const CryptoTxnHashChecks = S.makeFilterGroup(
  *
  * **Example** (Decode zero transaction hash)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode zero transaction hash"
  * import { CryptoTxnHash } from "@beep/schema/CryptoTxnHash"
  * import * as S from "effect/Schema"
  *
@@ -71,7 +71,7 @@ export const CryptoTxnHash = S.NonEmptyString.check(CryptoTxnHashChecks).pipe(
  *
  * **Example** (Type annotated hash decode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated hash decode"
  * import { CryptoTxnHash } from "@beep/schema/CryptoTxnHash"
  * import * as S from "effect/Schema"
  *
@@ -91,7 +91,7 @@ export type CryptoTxnHash = typeof CryptoTxnHash.Type;
  *
  * **Example** (Make redacted transaction hash)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make redacted transaction hash"
  * import { CryptoTxnHashRedacted } from "@beep/schema/CryptoTxnHash"
  *
  * const hash = CryptoTxnHashRedacted.makeRedacted(
@@ -118,7 +118,7 @@ export const CryptoTxnHashRedacted = CryptoTxnHash.pipe(
  *
  * **Example** (Type redacted transaction hash)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type redacted transaction hash"
  * import { CryptoTxnHashRedacted } from "@beep/schema/CryptoTxnHash"
  *
  * const hash: CryptoTxnHashRedacted = CryptoTxnHashRedacted.makeRedacted(

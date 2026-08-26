@@ -68,7 +68,7 @@ const decodeTomlUnknown = (content: string) => {
  *
  * **Example** (Decode TOML to unknown)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode TOML to unknown"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { TomlTextToUnknown } from "@beep/schema/Toml"
@@ -104,7 +104,7 @@ export type TomlTextToUnknown = typeof TomlTextToUnknown.Type;
  *
  * **Example** (Decode TOML with schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode TOML with schema"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { decodeTomlTextAs } from "@beep/schema/Toml"
@@ -114,7 +114,7 @@ export type TomlTextToUnknown = typeof TomlTextToUnknown.Type;
  *
  * const program = decodeConfig("[server]\nport = 8080\nhost = \"localhost\"")
  * const config = await Effect.runPromise(program)
- * console.log(config.server.port) // 8080
+ * config.server.port // => 8080
  * ```
  *
  * @param schema - Target schema to decode parsed TOML document into.

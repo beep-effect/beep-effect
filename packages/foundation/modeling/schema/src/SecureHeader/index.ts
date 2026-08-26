@@ -3,7 +3,7 @@
  *
  * **Example** (Decode with SecureHeader Schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode with SecureHeader Schema"
  * import * as SecureHeader from "@beep/schema/SecureHeader"
  * import * as S from "effect/Schema"
  *

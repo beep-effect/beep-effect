@@ -29,11 +29,11 @@ const FrameGuardModeBase = LiteralKit(["deny", "sameorigin"]);
  *
  * **Example** (Validate deny mode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate deny mode"
  * import * as S from "effect/Schema"
  * import { FrameGuardMode } from "@beep/schema/FrameGuard"
  *
- * console.log(S.is(FrameGuardMode)("deny")) // true
+ * S.is(FrameGuardMode)("deny") // => true
  * ```
  *
  * @category schemas
@@ -51,7 +51,7 @@ export const FrameGuardMode = FrameGuardModeBase.pipe(
  *
  * **Example** (Assign deny mode type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign deny mode type"
  * import type { FrameGuardMode } from "@beep/schema/FrameGuard"
  *
  * const mode: FrameGuardMode = "deny"
@@ -68,7 +68,7 @@ export type FrameGuardMode = typeof FrameGuardMode.Type;
  *
  * **Example** (Make allow-from config)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make allow-from config"
  * import { FrameGuardAllowFromConfig } from "@beep/schema/FrameGuard"
  *
  * const config = FrameGuardAllowFromConfig.make({ uri: "https://example.com" })
@@ -92,7 +92,7 @@ export class FrameGuardAllowFromConfig extends S.Class<FrameGuardAllowFromConfig
  *
  * **Example** (Decode allow-from tuple)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode allow-from tuple"
  * import * as S from "effect/Schema"
  * import { FrameGuardAllowFrom, FrameGuardAllowFromConfig } from "@beep/schema/FrameGuard"
  *
@@ -117,7 +117,7 @@ export const FrameGuardAllowFrom = S.Tuple([S.Literal("allow-from"), FrameGuardA
  *
  * **Example** (Type allow-from tuple)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type allow-from tuple"
  * import { FrameGuardAllowFromConfig, type FrameGuardAllowFrom } from "@beep/schema/FrameGuard"
  *
  * const value: FrameGuardAllowFrom = ["allow-from", FrameGuardAllowFromConfig.make({ uri: "https://example.com" })]
@@ -134,7 +134,7 @@ export type FrameGuardAllowFrom = typeof FrameGuardAllowFrom.Type;
  *
  * **Example** (Decode sameorigin option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode sameorigin option"
  * import * as S from "effect/Schema"
  * import { FrameGuardOption } from "@beep/schema/FrameGuard"
  *
@@ -155,7 +155,7 @@ export const FrameGuardOption = S.Union([S.Literal(false), FrameGuardMode, Frame
  *
  * **Example** (Assign sameorigin option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign sameorigin option"
  * import type { FrameGuardOption } from "@beep/schema/FrameGuard"
  *
  * const option: FrameGuardOption = "sameorigin"
@@ -172,7 +172,7 @@ export type FrameGuardOption = typeof FrameGuardOption.Type;
  *
  * **Example** (Make response header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make response header"
  * import * as O from "effect/Option"
  * import { FrameGuardResponseHeader } from "@beep/schema/FrameGuard"
  *
@@ -229,7 +229,7 @@ const formatFrameGuardValue = Effect.fn("FrameGuard.formatFrameGuardValue")(func
  *
  * **Example** (Decode deny header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode deny header"
  * import * as S from "effect/Schema"
  * import { FrameGuardHeader } from "@beep/schema/FrameGuard"
  *
@@ -315,7 +315,7 @@ export const FrameGuardHeader = S.Union([FrameGuardOption, S.Undefined]).pipe(
  *
  * **Example** (Type response header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type response header"
  * import * as O from "effect/Option"
  * import { FrameGuardResponseHeader, type FrameGuardHeader } from "@beep/schema/FrameGuard"
  *
@@ -341,7 +341,7 @@ export { FrameGuardMode as Mode, FrameGuardResponseHeader as ResponseHeader };
  *
  * **Example** (Decode via Option alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode via Option alias"
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/FrameGuard"
  *
@@ -358,7 +358,7 @@ export const Option = FrameGuardOption;
  *
  * **Example** (Assign Option alias type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign Option alias type"
  * import type { Option } from "@beep/schema/FrameGuard"
  *
  * const option: Option = "sameorigin"
@@ -375,7 +375,7 @@ export type Option = typeof Option.Type;
  *
  * **Example** (Decode via Header alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode via Header alias"
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/FrameGuard"
  *
@@ -393,7 +393,7 @@ export const Header = FrameGuardHeader;
  *
  * **Example** (Type Header alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type Header alias"
  * import * as O from "effect/Option"
  * import { FrameGuardResponseHeader, type Header } from "@beep/schema/FrameGuard"
  *

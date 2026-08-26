@@ -52,7 +52,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log pairs length)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log pairs length"
  * import { HttpStatus4XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus4XX.Pairs.length)
@@ -107,13 +107,13 @@ export const HttpStatus4XX = MappedLiteralKit([
  *
  * **Example** (Decode Encoded BadRequest)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Encoded BadRequest"
  * import * as S from "effect/Schema"
  * import { HttpStatus4XX } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatus4XX.Encoded = "BadRequest"
  * const status = S.decodeUnknownSync(HttpStatus4XX)(encoded)
- * console.log(status) // 400
+ * status // => 400
  * ```
  *
  * @category validation

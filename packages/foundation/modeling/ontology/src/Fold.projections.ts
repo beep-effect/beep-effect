@@ -32,7 +32,7 @@ import type {
  *
  * **Example** (Typed term binding)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed term binding"
  * import type { JsonLdTerm } from "@beep/ontology"
  *
  * const term: JsonLdTerm = { "@id": "http://www.w3.org/2004/02/skos/core#related", "@type": "@id" }
@@ -56,7 +56,7 @@ export type JsonLdTerm =
  *
  * **Example** (Vocab context record)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Vocab context record"
  * import type { JsonLdContext } from "@beep/ontology"
  *
  * const context: JsonLdContext = { "@vocab": "https://ns.beep.sh/patent" }
@@ -73,7 +73,7 @@ export type JsonLdContext = R.ReadonlyRecord<string, JsonLdTerm>;
  *
  * **Example** (Id reference value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Id reference value"
  * import type { JsonLdNodeValue } from "@beep/ontology"
  *
  * const value: JsonLdNodeValue = { "@id": "https://schema.org/CreativeWork" }
@@ -96,7 +96,7 @@ export type JsonLdNodeValue =
  *
  * **Example** (Graph node shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Graph node shape"
  * import type { JsonLdNode } from "@beep/ontology"
  *
  * const node: JsonLdNode = { "@id": "https://ns.beep.sh/patent/Claim" }
@@ -117,7 +117,7 @@ export type JsonLdNode = {
  *
  * **Example** (Empty document shell)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Empty document shell"
  * import type { JsonLdDocument } from "@beep/ontology"
  *
  * const document: JsonLdDocument = { "@context": {}, "@graph": [] }

@@ -42,12 +42,12 @@ const jsonLdBlankNodeIdentifierChecks = S.makeFilterGroup(
  *
  * **Example** (Validate JSON-LD keywords)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate JSON-LD keywords"
  * import * as S from "effect/Schema"
  * import { JsonLdKeyword } from "@beep/rdf/JsonLd"
  *
- * console.log(S.is(JsonLdKeyword)("@context")) // true
- * console.log(S.is(JsonLdKeyword)("@invalid")) // false
+ * S.is(JsonLdKeyword)("@context") // => true
+ * S.is(JsonLdKeyword)("@invalid") // => false
  * ```
  *
  * @category models
@@ -73,7 +73,7 @@ export const JsonLdKeyword = LiteralKit([
  *
  * **Example** (Accept keyword type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept keyword type"
  * import type { JsonLdKeyword } from "@beep/rdf/JsonLd"
  *
  * const acceptJsonLdKeyword = (value: JsonLdKeyword) => value
@@ -90,7 +90,7 @@ export type JsonLdKeyword = typeof JsonLdKeyword.Type;
  *
  * **Example** (Decode term definition)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode term definition"
  * import * as S from "effect/Schema"
  * import { JsonLdTermDefinition } from "@beep/rdf/JsonLd"
  *
@@ -98,7 +98,7 @@ export type JsonLdKeyword = typeof JsonLdKeyword.Type;
  *   "@id": "https://schema.org/name",
  *   "@type": "http://www.w3.org/2001/XMLSchema#string"
  * })
- * console.log(term["@id"]) // "https://schema.org/name"
+ * term["@id"] // => "https://schema.org/name"
  * ```
  *
  * @category models
@@ -128,7 +128,7 @@ export class JsonLdTermDefinition extends S.Class<JsonLdTermDefinition>($I`JsonL
  *
  * **Example** (Decode context model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode context model"
  * import * as S from "effect/Schema"
  * import { JsonLdContext } from "@beep/rdf/JsonLd"
  *
@@ -139,7 +139,7 @@ export class JsonLdTermDefinition extends S.Class<JsonLdTermDefinition>($I`JsonL
  *     name: "https://schema.org/name"
  *   }
  * })
- * console.log(context.terms.name) // "https://schema.org/name"
+ * context.terms.name // => "https://schema.org/name"
  * ```
  *
  * @category models
@@ -171,12 +171,12 @@ export class JsonLdContext extends S.Class<JsonLdContext>($I`JsonLdContext`)(
  *
  * **Example** (Decode blank-node id)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode blank-node id"
  * import * as S from "effect/Schema"
  * import { JsonLdBlankNodeIdentifier } from "@beep/rdf/JsonLd"
  *
  * const identifier = S.decodeUnknownSync(JsonLdBlankNodeIdentifier)("_:b0")
- * console.log(identifier) // "_:b0"
+ * identifier // => "_:b0"
  * ```
  *
  * @category models
@@ -205,7 +205,7 @@ export const JsonLdBlankNodeIdentifier = S.String.check(jsonLdBlankNodeIdentifie
  *
  * **Example** (Accept blank-node type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept blank-node type"
  * import type { JsonLdBlankNodeIdentifier } from "@beep/rdf/JsonLd"
  *
  * const acceptJsonLdBlankNodeIdentifier = (value: JsonLdBlankNodeIdentifier) => value
@@ -222,12 +222,12 @@ export type JsonLdBlankNodeIdentifier = typeof JsonLdBlankNodeIdentifier.Type;
  *
  * **Example** (Decode node identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode node identifier"
  * import * as S from "effect/Schema"
  * import { JsonLdNodeIdentifier } from "@beep/rdf/JsonLd"
  *
  * const identifier = S.decodeUnknownSync(JsonLdNodeIdentifier)("https://example.org/person/alice")
- * console.log(identifier) // "https://example.org/person/alice"
+ * identifier // => "https://example.org/person/alice"
  * ```
  *
  * @category models
@@ -255,7 +255,7 @@ export const JsonLdNodeIdentifier = S.Union([IRIReference, JsonLdBlankNodeIdenti
  *
  * **Example** (Accept node id type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept node id type"
  * import type { JsonLdNodeIdentifier } from "@beep/rdf/JsonLd"
  *
  * const acceptJsonLdNodeIdentifier = (value: JsonLdNodeIdentifier) => value
@@ -272,14 +272,14 @@ export type JsonLdNodeIdentifier = typeof JsonLdNodeIdentifier.Type;
  *
  * **Example** (Decode reference value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode reference value"
  * import * as S from "effect/Schema"
  * import { JsonLdReferenceValue } from "@beep/rdf/JsonLd"
  *
  * const reference = S.decodeUnknownSync(JsonLdReferenceValue)({
  *   "@id": "https://example.org/person/alice"
  * })
- * console.log(reference["@id"]) // "https://example.org/person/alice"
+ * reference["@id"] // => "https://example.org/person/alice"
  * ```
  *
  * @category models
@@ -309,7 +309,7 @@ export class JsonLdReferenceValue extends S.Class<JsonLdReferenceValue>($I`JsonL
  *
  * **Example** (Decode literal value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode literal value"
  * import * as S from "effect/Schema"
  * import { JsonLdLiteralValue } from "@beep/rdf/JsonLd"
  *
@@ -317,7 +317,7 @@ export class JsonLdReferenceValue extends S.Class<JsonLdReferenceValue>($I`JsonL
  *   "@value": "Alice",
  *   "@language": "en"
  * })
- * console.log(value["@value"]) // "Alice"
+ * value["@value"] // => "Alice"
  * ```
  *
  * @category models
@@ -348,7 +348,7 @@ export class JsonLdLiteralValue extends S.Class<JsonLdLiteralValue>($I`JsonLdLit
  *
  * **Example** (Decode property value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode property value"
  * import * as S from "effect/Schema"
  * import { JsonLdLiteralValue, JsonLdPropertyValue } from "@beep/rdf/JsonLd"
  *
@@ -356,7 +356,7 @@ export class JsonLdLiteralValue extends S.Class<JsonLdLiteralValue>($I`JsonLdLit
  *   "@value": "Alice"
  * })
  * if (S.is(JsonLdLiteralValue)(propertyValue)) {
- *   console.log(propertyValue["@value"]) // "Alice"
+ *   propertyValue["@value"] // => "Alice"
  * }
  * ```
  *
@@ -375,7 +375,7 @@ export const JsonLdPropertyValue = S.Union([JsonLdReferenceValue, JsonLdLiteralV
  *
  * **Example** (Accept property value type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept property value type"
  * import type { JsonLdPropertyValue } from "@beep/rdf/JsonLd"
  *
  * const acceptJsonLdPropertyValue = (value: JsonLdPropertyValue) => value
@@ -392,7 +392,7 @@ export type JsonLdPropertyValue = typeof JsonLdPropertyValue.Type;
  *
  * **Example** (Decode node object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode node object"
  * import * as S from "effect/Schema"
  * import { JsonLdNodeObject } from "@beep/rdf/JsonLd"
  *
@@ -403,7 +403,7 @@ export type JsonLdPropertyValue = typeof JsonLdPropertyValue.Type;
  *     "https://schema.org/name": [{ "@value": "Alice" }]
  *   }
  * })
- * console.log(Object.keys(node.properties).length) // 1
+ * Object.keys(node.properties).length // => 1
  * ```
  *
  * @category models
@@ -435,12 +435,12 @@ export class JsonLdNodeObject extends S.Class<JsonLdNodeObject>($I`JsonLdNodeObj
  *
  * **Example** (Decode empty document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode empty document"
  * import * as S from "effect/Schema"
  * import { JsonLdDocument } from "@beep/rdf/JsonLd"
  *
  * const doc = S.decodeUnknownSync(JsonLdDocument)({ "@graph": [] })
- * console.log(doc["@graph"].length) // 0
+ * doc["@graph"].length // => 0
  * ```
  *
  * @category models
@@ -472,7 +472,7 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
  *
  * **Example** (Decode frame model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode frame model"
  * import * as S from "effect/Schema"
  * import { JsonLdFrame } from "@beep/rdf/JsonLd"
  *
@@ -480,7 +480,7 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
  *   "@type": "https://schema.org/Person",
  *   includeProperties: ["https://schema.org/name"]
  * })
- * console.log(frame.includeProperties._tag) // "Some"
+ * frame.includeProperties._tag // => "Some"
  * ```
  *
  * @category models

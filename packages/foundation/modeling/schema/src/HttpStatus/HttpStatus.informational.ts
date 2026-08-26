@@ -19,7 +19,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log Continue literal value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log Continue literal value"
  * import { Continue } from "@beep/schema/HttpStatus"
  *
  * console.log(Continue.literal)
@@ -49,7 +49,7 @@ export type Continue = typeof Continue.Type;
  *
  * **Example** (Log SwitchingProtocols literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log SwitchingProtocols literal"
  * import { SwitchingProtocols } from "@beep/schema/HttpStatus"
  *
  * console.log(SwitchingProtocols.literal)
@@ -80,7 +80,7 @@ export type SwitchingProtocols = typeof SwitchingProtocols.Type;
  *
  * **Example** (Log Processing literal value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log Processing literal value"
  * import { Processing } from "@beep/schema/HttpStatus"
  *
  * console.log(Processing.literal)
@@ -110,7 +110,7 @@ export type Processing = typeof Processing.Type;
  *
  * **Example** (Log EarlyHints literal value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log EarlyHints literal value"
  * import { EarlyHints } from "@beep/schema/HttpStatus"
  *
  * console.log(EarlyHints.literal)
@@ -141,7 +141,7 @@ export type EarlyHints = typeof EarlyHints.Type;
  *
  * **Example** (Count informational status pairs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count informational status pairs"
  * import { HttpStatus1XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus1XX.Pairs.length)
@@ -167,13 +167,13 @@ export const HttpStatus1XX = MappedLiteralKit([
  *
  * **Example** (Decode Encoded Continue name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Encoded Continue name"
  * import * as S from "effect/Schema"
  * import { HttpStatus1XX } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatus1XX.Encoded = "Continue"
  * const status = S.decodeUnknownSync(HttpStatus1XX)(encoded)
- * console.log(status) // 100
+ * status // => 100
  * ```
  *
  * @category validation

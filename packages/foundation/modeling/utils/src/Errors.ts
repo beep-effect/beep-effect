@@ -65,7 +65,7 @@ const isErrorBuilderFromInput = <Input, Error>(
  *
  * **Example** (Preserve original failure as cause)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Preserve original failure as cause"
  * import { Err } from "@beep/utils";
  * import { Effect, pipe } from "effect";
  *
@@ -121,7 +121,7 @@ export const mapCauseError = <Error, Args extends Array<unknown>>(
  *
  * **Example** (Replace failure with target error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Replace failure with target error"
  * import { Err } from "@beep/utils";
  * import { Effect, pipe } from "effect";
  * import { dual } from "effect/Function";

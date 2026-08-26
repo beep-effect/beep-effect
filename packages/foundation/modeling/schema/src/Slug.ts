@@ -4,7 +4,7 @@
  *
  * **Example** (Decode a URL slug)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode a URL slug"
  * import * as S from "effect/Schema";
  * import { Slug } from "@beep/schema/Slug";
  *
@@ -71,14 +71,14 @@ const SlugChecks = S.makeFilterGroup(
  *
  * **Example** (Decode kebab-case slug)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode kebab-case slug"
  * import * as S from "effect/Schema"
  * import { Slug } from "@beep/schema/Slug"
  *
  * const decode = S.decodeUnknownSync(Slug)
  *
  * const slug = decode("my-post-2")
- * console.log(slug) // "my-post-2"
+ * slug // => "my-post-2"
  * ```
  *
  * @category constructors
@@ -96,7 +96,7 @@ export const Slug = S.NonEmptyString.check(SlugChecks).pipe(
  *
  * **Example** (Type a decoded slug)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a decoded slug"
  * import * as S from "effect/Schema"
  * import { Slug } from "@beep/schema/Slug"
  *
@@ -114,7 +114,7 @@ export type Slug = typeof Slug.Type;
  *
  * **Example** (Decode non-empty input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-empty input"
  * import { SlugFromStr } from "@beep/schema/Slug"
  * import * as S from "effect/Schema"
  *

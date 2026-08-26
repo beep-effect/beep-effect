@@ -60,12 +60,12 @@ export const StatusCauseFields = {
  *
  * **Example** (Normalize status cause payload)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize status cause payload"
  * import { statusCauseInput } from "@beep/schema/StatusCauseError"
  *
  * const payload = statusCauseInput("not found", { status: 404, cause: undefined })
- * console.log(payload.message) // "not found"
- * console.log(payload.status)  // 404
+ * payload.message // => "not found"
+ * payload.status // => 404
  * ```
  *
  * @category utilities
@@ -86,7 +86,7 @@ export class StatusCauseInputOptions extends S.Class<StatusCauseInputOptions>($I
  *
  * **Example** (Type status cause payload)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type status cause payload"
  * import { statusCauseInput, type StatusCauseInput } from "@beep/schema/StatusCauseError"
  *
  * const payload: StatusCauseInput = statusCauseInput("not found", { status: 404, cause: undefined })
@@ -113,7 +113,7 @@ export class StatusCauseInput extends S.Class<StatusCauseInput>($I`StatusCauseIn
  *
  * **Example** (Create status cause payload)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create status cause payload"
  * import { statusCauseInput } from "@beep/schema/StatusCauseError"
  *
  * const payload = statusCauseInput("not found", { status: 404, cause: undefined })

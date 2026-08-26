@@ -3,7 +3,7 @@
  *
  * **Example** (Decode and format version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode and format version"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Semver, SemverFromString } from "@beep/schema/Semver"
@@ -357,7 +357,7 @@ const encodeSemverToString = (value: Semver): Effect.Effect<string> => Effect.su
  *
  * **Example** (Make and format version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make and format version"
  * import { Semver } from "@beep/schema/Semver"
  *
  * const version = Semver.make({
@@ -368,7 +368,7 @@ const encodeSemverToString = (value: Semver): Effect.Effect<string> => Effect.su
  *   build: ["20260629"],
  * })
  *
- * console.log(Semver.format(version)) // "1.2.3-rc.1+20260629"
+ * Semver.format(version) // => "1.2.3-rc.1+20260629"
  * ```
  *
  * @category models
@@ -402,10 +402,10 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
    *
    * **Example** (Normalize loose version string)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Normalize loose version string"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.normalizeStr(" v1.2-rc.1 ")) // "1.2.0-rc.1"
+   * Semver.normalizeStr(" v1.2-rc.1 ") // => "1.2.0-rc.1"
    * ```
    *
    * @category normalization
@@ -425,7 +425,7 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
    *
    * **Example** (Parse version string)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Parse version string"
    * import * as O from "effect/Option"
    * import { Semver } from "@beep/schema/Semver"
    *
@@ -444,10 +444,11 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
    *
    * **Example** (Split prerelease identifiers)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Split prerelease identifiers"
+   * import * as O from "effect/Option"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.preReleaseSegmentsFromStr("alpha.1")) // ["alpha", "1"]
+   * O.getOrThrow(Semver.preReleaseSegmentsFromStr("alpha.1")) // => ["alpha", "1"]
    * ```
    *
    * @category parsing
@@ -461,11 +462,11 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
    *
    * **Example** (Format structured version)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Format structured version"
    * import { Semver } from "@beep/schema/Semver"
    *
    * const version = Semver.make({ major: 1, minor: 0, patch: 0, prerelease: [], build: ["7"] })
-   * console.log(Semver.format(version)) // "1.0.0+7"
+   * Semver.format(version) // => "1.0.0+7"
    * ```
    *
    * @category formatting
@@ -495,11 +496,11 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
    *
    * **Example** (Compare prerelease identifiers)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Compare prerelease identifiers"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.comparePreReleaseIdentifier("2", "11")) // -1
-   * console.log(Semver.comparePreReleaseIdentifier("alpha", "beta")) // -1
+   * Semver.comparePreReleaseIdentifier("2", "11") // => -1
+   * Semver.comparePreReleaseIdentifier("alpha", "beta") // => -1
    * ```
    *
    * @category ordering
@@ -542,11 +543,11 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
    *
    * **Example** (Compare version precedence)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Compare version precedence"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.compare("1.0.0-alpha", "1.0.0")) // -1
-   * console.log(Semver.compare("1.0.0+1", "1.0.0+2")) // 0
+   * Semver.compare("1.0.0-alpha", "1.0.0") // => -1
+   * Semver.compare("1.0.0+1", "1.0.0+2") // => 0
    * ```
    *
    * @category ordering
@@ -591,11 +592,11 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
    *
    * **Example** (Check version range satisfaction)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Check version range satisfaction"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.satisfiesRange("v20.1.0", "^18.0.0 || ^20.0.0")) // true
-   * console.log(Semver.satisfiesRange("2.0.0", "^1.2.3")) // false
+   * Semver.satisfiesRange("v20.1.0", "^18.0.0 || ^20.0.0") // => true
+   * Semver.satisfiesRange("2.0.0", "^1.2.3") // => false
    * ```
    *
    * @category predicates
@@ -630,7 +631,7 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
  *
  * **Example** (Decode SemVer string codec)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode SemVer string codec"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Semver, SemverFromString } from "@beep/schema/Semver"
@@ -662,7 +663,7 @@ export const SemverFromString = S.String.pipe(
  *
  * **Example** (Annotate SemverFromString type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate SemverFromString type"
  * import { Semver } from "@beep/schema/Semver"
  * import type { SemverFromString } from "@beep/schema/Semver"
  *

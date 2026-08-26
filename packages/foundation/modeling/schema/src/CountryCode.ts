@@ -75,12 +75,12 @@ const countryCodeToEmojiFlag: (code: string) => string = flow(
  *
  * **Example** (Decode country code value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode country code value"
  * import * as S from "effect/Schema"
  * import { CountryCode } from "@beep/schema/CountryCode"
  *
  * const code = S.decodeUnknownSync(CountryCode)("US")
- * console.log(code) // "US"
+ * code // => "US"
  * ```
  *
  * @category schemas
@@ -107,12 +107,12 @@ export type CountryCode = TerritoryCodeType;
  *
  * **Example** (Decode code from name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode code from name"
  * import * as S from "effect/Schema"
  * import { CountryCodeFromName } from "@beep/schema/CountryCode"
  *
  * const code = S.decodeUnknownSync(CountryCodeFromName)("United States")
- * console.log(code) // "US"
+ * code // => "US"
  * ```
  *
  * @category schemas
@@ -132,12 +132,12 @@ export const CountryCodeFromName: typeof TerritoryCodeFromNameSchema = Territory
  *
  * **Example** (Decode name from code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode name from code"
  * import * as S from "effect/Schema"
  * import { CountryNameFromCode } from "@beep/schema/CountryCode"
  *
  * const name = S.decodeUnknownSync(CountryNameFromCode)("US")
- * console.log(name) // "United States"
+ * name // => "United States"
  * ```
  *
  * @category schemas

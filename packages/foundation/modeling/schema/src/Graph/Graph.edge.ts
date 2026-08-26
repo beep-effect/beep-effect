@@ -18,7 +18,7 @@ import type { EdgeEncodedSchema, EdgeIso } from "./Graph.encoded.ts";
  *
  * **Example** (Build EdgeFromSelf schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build EdgeFromSelf schema"
  * import { EdgeFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -45,7 +45,7 @@ export interface EdgeFromSelf<Data extends S.Top>
  *
  * **Example** (Build EdgeTransform schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build EdgeTransform schema"
  * import { EdgeTransform } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -67,7 +67,7 @@ export interface EdgeTransform<Data extends S.Top>
  *
  * **Example** (Build Edge schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build Edge schema"
  * import { Edge } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -89,7 +89,7 @@ export interface Edge<Data extends S.Top> extends S.decodeTo<EdgeFromSelf<S.toTy
  *
  * **Example** (Validate Edge with payload)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate Edge with payload"
  * import { EdgeFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -160,7 +160,7 @@ export const EdgeFromSelf = <Data extends S.Top>(data: Data): EdgeFromSelf<Data>
  *
  * **Example** (Transform encoded edge objects)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Transform encoded edge objects"
  * import { EdgeTransform } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -210,7 +210,7 @@ export const EdgeTransform = <Data extends S.Top>(data: Data): EdgeTransform<Dat
  *
  * **Example** (Decode edge object shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode edge object shape"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Edge } from "@beep/schema/Graph"

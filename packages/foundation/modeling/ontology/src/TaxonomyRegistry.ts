@@ -22,7 +22,7 @@ const $I = $OntologyId.create("TaxonomyRegistry");
  *
  * **Example** (Make LibrarianInput with metadata)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make LibrarianInput with metadata"
  * import { LibrarianInput } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * const input = LibrarianInput.make({ client: "acme", conceptIri: IRIReference.make("https://ns.beep.sh/example"), documentClass: "received", fileName: "mail.eml", matter: "aurora" })
@@ -48,7 +48,7 @@ export class LibrarianInput extends S.Class<LibrarianInput>($I`LibrarianInput`)(
  *
  * **Example** (Create local vault FilingPath)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create local vault FilingPath"
  * import { FilingPath } from "@beep/ontology/TaxonomyRegistry"
  * console.log(FilingPath.make({ kind: "local-vault", path: "vault/acme/matter/mail" }).kind)
  * ```
@@ -66,7 +66,7 @@ export class FilingPath extends S.Class<FilingPath>($I`FilingPath`)(
  *
  * **Example** (Access filingPaths from output)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access filingPaths from output"
  * import type { LibrarianOutput } from "@beep/ontology/TaxonomyRegistry"
  * const show = (output: LibrarianOutput) => output.filingPaths
  * console.log(show)
@@ -91,7 +91,7 @@ export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput
  *
  * **Example** (Make concept-not-found error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make concept-not-found error"
  * import { TaxonomyConceptNotFound } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * console.log(TaxonomyConceptNotFound.make({ conceptIri: IRIReference.make("https://ns.beep.sh/missing") })._tag)
@@ -113,7 +113,7 @@ export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFou
  *
  * **Example** (Make unsupported-class error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make unsupported-class error"
  * import { UnsupportedDocumentClass } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * console.log(UnsupportedDocumentClass.make({ conceptIri: IRIReference.make("https://ns.beep.sh/example"), documentClass: "filed" }).documentClass)
@@ -141,13 +141,13 @@ const pathFor = (input: LibrarianInput, concept: TaxonomyConcept, rootSegment: s
  *
  * **Example** (Run loop returning Effect)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Run loop returning Effect"
  * import { Effect } from "effect"
  * import { IRIReference } from "@beep/rdf"
  * import { SemanticFoundationSeed } from "@beep/ontology/SemanticFoundation.seed"
  * import { LibrarianInput, runLibrarianLoop } from "@beep/ontology/TaxonomyRegistry"
  * const result = runLibrarianLoop(SemanticFoundationSeed, LibrarianInput.make({ client: "acme", conceptIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/concept/correspondence"), documentClass: "received", fileName: "mail.eml", matter: "aurora" }))
- * console.log(Effect.isEffect(result)) // true
+ * Effect.isEffect(result) // => true
  * ```
  *
  * @category workflows

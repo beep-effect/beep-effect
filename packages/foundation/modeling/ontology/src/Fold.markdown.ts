@@ -34,11 +34,11 @@ const $I = $OntologyId.create("Fold/markdown");
  *
  * **Example** (Guard a link mode literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard a link mode literal"
  * import { MarkdownLinkMode } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(MarkdownLinkMode)("portable")) // true
+ * S.is(MarkdownLinkMode)("portable") // => true
  * ```
  *
  * @category schemas
@@ -55,7 +55,7 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
  *
  * **Example** (Annotate a link mode value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a link mode value"
  * import type { MarkdownLinkMode } from "@beep/ontology"
  *
  * const mode: MarkdownLinkMode = "obsidian"
@@ -72,7 +72,7 @@ export type MarkdownLinkMode = typeof MarkdownLinkMode.Type;
  *
  * **Example** (Construct portable link options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct portable link options"
  * import { MarkdownOptions } from "@beep/ontology"
  *
  * const options = MarkdownOptions.make({ linkMode: "portable" })

@@ -145,7 +145,7 @@ export const oklchToRgbValue = ({ l: lightness, c: chroma, h: hue }: OklchEncode
  *
  * **Example** (Decode OKLCH coordinate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode OKLCH coordinate"
  * import { OklchCoordinate } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -168,7 +168,7 @@ export const OklchCoordinate = S.Finite.pipe(
  *
  * **Example** (Type annotated coordinate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated coordinate"
  * import * as S from "effect/Schema"
  * import { OklchCoordinate } from "@beep/schema/Color"
  *
@@ -186,7 +186,7 @@ export type OklchCoordinate = typeof OklchCoordinate.Type;
  *
  * **Example** (Decode OKLCH lightness)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode OKLCH lightness"
  * import { OklchLightness } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -210,7 +210,7 @@ export const OklchLightness = OklchCoordinate.pipe(
  *
  * **Example** (Type annotated lightness)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated lightness"
  * import * as S from "effect/Schema"
  * import { OklchLightness } from "@beep/schema/Color"
  *
@@ -228,7 +228,7 @@ export type OklchLightness = typeof OklchLightness.Type;
  *
  * **Example** (Decode OKLCH chroma)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode OKLCH chroma"
  * import { OklchChroma } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -252,7 +252,7 @@ export const OklchChroma = OklchCoordinate.pipe(
  *
  * **Example** (Type annotated chroma)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated chroma"
  * import * as S from "effect/Schema"
  * import { OklchChroma } from "@beep/schema/Color"
  *
@@ -270,7 +270,7 @@ export type OklchChroma = typeof OklchChroma.Type;
  *
  * **Example** (Decode OKLCH hue)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode OKLCH hue"
  * import { OklchHue } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -294,7 +294,7 @@ export const OklchHue = OklchCoordinate.pipe(
  *
  * **Example** (Type annotated hue)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated hue"
  * import * as S from "effect/Schema"
  * import { OklchHue } from "@beep/schema/Color"
  *
@@ -312,7 +312,7 @@ export type OklchHue = typeof OklchHue.Type;
  *
  * **Example** (Decode OKLCH input object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode OKLCH input object"
  * import { OklchInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -339,7 +339,7 @@ export class OklchInput extends S.Class<OklchInput>($I`OklchInput`)(
  *
  * **Example** (Decode OKLCH color object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode OKLCH color object"
  * import { OklchColor } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *

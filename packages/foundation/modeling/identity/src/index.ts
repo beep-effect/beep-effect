@@ -3,12 +3,12 @@
  *
  * **Example** (Make package identity ID)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make package identity ID"
  * import { make } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
  * const id = $MyPkgId.make("Service")
- * console.log(id)// "@beep/my-pkg/Service"
+ * id // => "@beep/my-pkg/Service"
  * ```
  *
  * @packageDocumentation
@@ -20,7 +20,7 @@
  *
  * **Example** (Expand CURIE to IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Expand CURIE to IRI"
  * import { expand } from "@beep/identity"
  *
  * console.log(expand("skos:prefLabel"))
@@ -35,7 +35,7 @@ export * from "./Curie.ts";
  *
  * **Example** (Build a single-point family)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a single-point family"
  * import { Fibered } from "@beep/identity"
  * import * as S from "effect/Schema"
  *
@@ -48,7 +48,7 @@ export * from "./Curie.ts";
  *   }
  * })
  *
- * console.log(family.points) // ["text"]
+ * family.points // => ["text"]
  * ```
  *
  * @category models
@@ -60,7 +60,7 @@ export * from "./Fibered.ts";
  *
  * **Example** (Compose branded package ID)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compose branded package ID"
  * import { make } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
@@ -76,7 +76,7 @@ export * from "./Id.ts";
  *
  * **Example** (Create an empty local registry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create an empty local registry"
  * import { IdentityRegistry } from "@beep/identity"
  *
  * console.log(IdentityRegistry.layerLocal([]))
@@ -91,7 +91,7 @@ export * from "./IdentityRegistry.ts";
  *
  * **Example** (Emit prefixed name or IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Emit prefixed name or IRI"
  * import { prefixedNameOrIri } from "@beep/identity"
  *
  * console.log(prefixedNameOrIri("prefLabel", {
@@ -109,7 +109,7 @@ export * from "./PnLocal.ts";
  *
  * **Example** (Use prebuilt package composer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use prebuilt package composer"
  * import { $DataId } from "@beep/identity"
  *
  * console.log($DataId.make("CurrencyCodes"))
@@ -124,7 +124,7 @@ export * from "./packages.ts";
  *
  * **Example** (Read core vocab IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read core vocab IRI"
  * import { CoreVocab } from "@beep/identity"
  *
  * console.log(CoreVocab.rdf.iri)

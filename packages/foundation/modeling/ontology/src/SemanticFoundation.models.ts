@@ -29,11 +29,11 @@ const isSafeFilingSegment = (segment: string): boolean =>
  *
  * **Example** (Reject path traversal decode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject path traversal decode"
  * import { FilingSegment } from "@beep/ontology/SemanticFoundation.models"
  * import * as S from "effect/Schema"
  *
- * console.log(S.decodeUnknownResult(FilingSegment)("../escape")._tag) // "Failure"
+ * S.decodeUnknownResult(FilingSegment)("../escape")._tag // => "Failure"
  * ```
  *
  * @category schemas
@@ -57,7 +57,7 @@ export const FilingSegment = S.NonEmptyString.check(
  *
  * **Example** (Type a filing segment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a filing segment"
  * import type { FilingSegment } from "@beep/ontology/SemanticFoundation.models"
  *
  * const segment: FilingSegment = "email-messages"
@@ -74,10 +74,10 @@ export type FilingSegment = typeof FilingSegment.Type;
  *
  * **Example** (Guard valid filing segment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard valid filing segment"
  * import { isFilingSegment } from "@beep/ontology/SemanticFoundation.models"
  *
- * console.log(isFilingSegment("received")) // true
+ * isFilingSegment("received") // => true
  * ```
  *
  * @category guards
@@ -90,10 +90,10 @@ export const isFilingSegment = S.is(FilingSegment);
  *
  * **Example** (Check received document class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check received document class"
  * import { DocumentClass } from "@beep/ontology/SemanticFoundation.models"
  *
- * console.log(DocumentClass.is.received("received")) // true
+ * DocumentClass.is.received("received") // => true
  * ```
  *
  * @category schemas
@@ -117,7 +117,7 @@ export const DocumentClass = LiteralKit([
  *
  * **Example** (Type a document class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a document class"
  * import type { DocumentClass } from "@beep/ontology/SemanticFoundation.models"
  *
  * const documentClass: DocumentClass = "received"
@@ -134,10 +134,10 @@ export type DocumentClass = typeof DocumentClass.Type;
  *
  * **Example** (Check closeMatch mapping)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check closeMatch mapping"
  * import { SkosMappingKind } from "@beep/ontology/SemanticFoundation.models"
  *
- * console.log(SkosMappingKind.is.closeMatch("closeMatch")) // true
+ * SkosMappingKind.is.closeMatch("closeMatch") // => true
  * ```
  *
  * @category schemas
@@ -154,7 +154,7 @@ export const SkosMappingKind = LiteralKit(["exactMatch", "closeMatch"]).pipe(
  *
  * **Example** (Type a mapping kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a mapping kind"
  * import type { SkosMappingKind } from "@beep/ontology/SemanticFoundation.models"
  *
  * const kind: SkosMappingKind = "closeMatch"
@@ -171,7 +171,7 @@ export type SkosMappingKind = typeof SkosMappingKind.Type;
  *
  * **Example** (Make concept alignment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make concept alignment"
  * import { ConceptAlignment } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
  *
@@ -202,7 +202,7 @@ export class ConceptAlignment extends S.Class<ConceptAlignment>($I`ConceptAlignm
  *
  * **Example** (Make taxonomy concept)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make taxonomy concept"
  * import { TaxonomyConcept } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
  *
@@ -237,10 +237,10 @@ export class TaxonomyConcept extends S.Class<TaxonomyConcept>($I`TaxonomyConcept
  *
  * **Example** (Check box-mirror root kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check box-mirror root kind"
  * import { FilingRootKind } from "@beep/ontology/SemanticFoundation.models"
  *
- * console.log(FilingRootKind.is["box-mirror"]("box-mirror")) // true
+ * FilingRootKind.is["box-mirror"]("box-mirror") // => true
  * ```
  *
  * @category schemas
@@ -257,7 +257,7 @@ export const FilingRootKind = LiteralKit(["local-vault", "box-mirror"]).pipe(
  *
  * **Example** (Type a filing root kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a filing root kind"
  * import type { FilingRootKind } from "@beep/ontology/SemanticFoundation.models"
  * const kind: FilingRootKind = "local-vault"
  * console.log(kind)
@@ -273,7 +273,7 @@ export type FilingRootKind = typeof FilingRootKind.Type;
  *
  * **Example** (Make filing root)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make filing root"
  * import { FilingRoot } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
  *
@@ -294,7 +294,7 @@ export class FilingRoot extends S.Class<FilingRoot>($I`FilingRoot`)(
  *
  * **Example** (Count seed concepts)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count seed concepts"
  * import { SemanticFoundationSeed } from "@beep/ontology/SemanticFoundation.seed"
  * console.log(SemanticFoundationSeed.concepts.length)
  * ```

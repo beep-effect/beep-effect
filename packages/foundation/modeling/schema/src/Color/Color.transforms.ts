@@ -52,7 +52,7 @@ export const hexToOklchValue = flow(hexToRgbValue, rgbToOklchValue);
  *
  * **Example** (Decode hex to RGB)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode hex to RGB"
  * import { HexToRgb } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -81,7 +81,7 @@ export const HexToRgb = NormalizeHexColor.pipe(
  *
  * **Example** (Typed hex to RGB)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed hex to RGB"
  * import * as S from "effect/Schema"
  * import { HexToRgb } from "@beep/schema/Color"
  *
@@ -99,7 +99,7 @@ export type HexToRgb = typeof HexToRgb.Type;
  *
  * **Example** (Encode RGB to hex)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode RGB to hex"
  * import { RgbToHex } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -125,7 +125,7 @@ export const RgbToHex = RgbInput.pipe(
  *
  * **Example** (Typed RGB to hex)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed RGB to hex"
  * import * as S from "effect/Schema"
  * import { RgbToHex } from "@beep/schema/Color"
  *
@@ -143,7 +143,7 @@ export type RgbToHex = typeof RgbToHex.Type;
  *
  * **Example** (Decode RGB to OKLCH)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode RGB to OKLCH"
  * import { RgbToOklch } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -169,7 +169,7 @@ export const RgbToOklch = Rgb.pipe(
  *
  * **Example** (Typed RGB to OKLCH)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed RGB to OKLCH"
  * import * as S from "effect/Schema"
  * import { RgbToOklch } from "@beep/schema/Color"
  *
@@ -187,7 +187,7 @@ export type RgbToOklch = typeof RgbToOklch.Type;
  *
  * **Example** (Encode OKLCH to RGB)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode OKLCH to RGB"
  * import { OklchToRgb } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -213,7 +213,7 @@ export const OklchToRgb = OklchInput.pipe(
  *
  * **Example** (Typed OKLCH to RGB)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed OKLCH to RGB"
  * import * as S from "effect/Schema"
  * import { OklchToRgb } from "@beep/schema/Color"
  *
@@ -231,7 +231,7 @@ export type OklchToRgb = typeof OklchToRgb.Type;
  *
  * **Example** (Decode hex to OKLCH)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode hex to OKLCH"
  * import { HexToOklch } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -260,7 +260,7 @@ export const HexToOklch = NormalizeHexColor.pipe(
  *
  * **Example** (Typed hex to OKLCH)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed hex to OKLCH"
  * import * as S from "effect/Schema"
  * import { HexToOklch } from "@beep/schema/Color"
  *
@@ -278,7 +278,7 @@ export type HexToOklch = typeof HexToOklch.Type;
  *
  * **Example** (Encode OKLCH to hex)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode OKLCH to hex"
  * import { OklchToHex } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -304,7 +304,7 @@ export const OklchToHex = OklchInput.pipe(
  *
  * **Example** (Typed OKLCH to hex)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed OKLCH to hex"
  * import * as S from "effect/Schema"
  * import { OklchToHex } from "@beep/schema/Color"
  *

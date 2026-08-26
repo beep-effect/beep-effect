@@ -3,7 +3,7 @@
  *
  * **Example** (Import EthAmount namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import EthAmount namespace"
  * import * as EthAmount from "@beep/schema/EthAmount"
  * import * as S from "effect/Schema"
  *

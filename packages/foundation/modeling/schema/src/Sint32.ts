@@ -52,13 +52,13 @@ const Sint32Checks = S.makeFilterGroup(
  *
  * **Example** (Decode negative sint32 value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode negative sint32 value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Sint32 } from "@beep/schema/Sint32"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Sint32)(-1))
- * console.log(value) // -1
+ * value // => -1
  * ```
  *
  * @invariant Values are integers from -2147483648 through 2147483647.
@@ -81,7 +81,7 @@ export const Sint32 = S.Finite.annotate({
  *
  * **Example** (Narrow unknown to Sint32)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow unknown to Sint32"
  * import * as S from "effect/Schema"
  * import { Sint32 } from "@beep/schema/Sint32"
  * import type { Sint32 as Sint32Value } from "@beep/schema/Sint32"
@@ -89,7 +89,7 @@ export const Sint32 = S.Finite.annotate({
  * const input: unknown = -8
  * if (S.is(Sint32)(input)) {
  *   const value: Sint32Value = input
- *   console.log(value) // -8
+ *   value // => -8
  * }
  * ```
  *

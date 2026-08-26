@@ -18,7 +18,7 @@ const $I = $NlpId.create("Core/Vectorization");
  *
  * **Example** (Import PositiveNumber schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import PositiveNumber schema"
  * import { PositiveNumber } from "@beep/nlp/Core/Vectorization"
  *
  * console.log(PositiveNumber)
@@ -40,7 +40,7 @@ const BM25NormKit = LiteralKit(["none", "l1", "l2"]).annotate(
  *
  * **Example** (Decode BM25Norm value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode BM25Norm value"
  * import * as S from "effect/Schema"
  * import { BM25Norm } from "@beep/nlp/Core/Vectorization"
  *
@@ -63,7 +63,7 @@ export const BM25Norm = BM25NormKit.pipe(
  *
  * **Example** (Type annotate BM25Norm)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotate BM25Norm"
  * import type { BM25Norm } from "@beep/nlp/Core/Vectorization"
  *
  * const norm: BM25Norm = "l2"
@@ -80,7 +80,7 @@ export type BM25Norm = typeof BM25Norm.Type;
  *
  * **Example** (Create BM25Config instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create BM25Config instance"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { BM25Config } from "@beep/nlp/Core/Vectorization"
  *
@@ -114,7 +114,7 @@ export class BM25Config extends S.Class<BM25Config>($I`BM25Config`)(
  *
  * **Example** (Inspect default BM25 config)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect default BM25 config"
  * import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization"
  *
  * console.log(DefaultBM25Config.norm)
@@ -135,7 +135,7 @@ export const DefaultBM25Config = BM25Config.make({
  *
  * **Example** (Create DocumentVector instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create DocumentVector instance"
  * import { DocumentId } from "@beep/nlp/Core/Document"
  * import { DocumentVector } from "@beep/nlp/Core/Vectorization"
  *
@@ -167,7 +167,7 @@ export class DocumentVector extends S.Class<DocumentVector>($I`DocumentVector`)(
  *
  * **Example** (Create BagOfWords instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create BagOfWords instance"
  * import { DocumentId } from "@beep/nlp/Core/Document"
  * import { BagOfWords } from "@beep/nlp/Core/Vectorization"
  *
@@ -197,7 +197,7 @@ export class BagOfWords extends S.Class<BagOfWords>($I`BagOfWords`)(
  *
  * **Example** (Create TermFrequency entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create TermFrequency entry"
  * import { TermFrequency } from "@beep/nlp/Core/Vectorization"
  *
  * const tf = TermFrequency.make({

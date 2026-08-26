@@ -11,10 +11,10 @@
  *
  * **Example** (Fold number sum monoid)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Fold number sum monoid"
  * import { Algebra } from "@beep/nlp"
  *
- * console.log(Algebra.Monoid.fold(Algebra.Monoid.NumberSum)([1, 2, 3])) // 6
+ * Algebra.Monoid.fold(Algebra.Monoid.NumberSum)([1, 2, 3]) // => 6
  * ```
  *
  * @category combinators
@@ -26,7 +26,7 @@ export * as Algebra from "./Algebra/index.ts";
  *
  * **Example** (Make document identifier)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make document identifier"
  * import { Core } from "@beep/nlp"
  *
  * console.log(Core.DocumentId.make("doc-a"))
@@ -41,7 +41,7 @@ export * as Core from "./Core/index.ts";
  *
  * **Example** (Log text node schema)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Log text node schema"
  * import { Graph } from "@beep/nlp"
  *
  * console.log(Graph.Schema.TextNode)
@@ -57,7 +57,7 @@ export * as Graph from "./Graph/index.ts";
  *
  * **Example** (Log annotated document contract)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Log annotated document contract"
  * import { Handoff } from "@beep/nlp"
  *
  * console.log(Handoff.Contract.AnnotatedDocument)
@@ -72,11 +72,11 @@ export * as Handoff from "./Handoff/index.ts";
  *
  * **Example** (Tokenize identifier text)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Tokenize identifier text"
  * import { IdentifierText } from "@beep/nlp"
  *
  * const result = IdentifierText.tokens("myVariable")
- * console.log(result) // ["my", "variable"]
+ * result // => ["my", "variable"]
  * ```
  *
  * @category parsing
@@ -88,10 +88,10 @@ export * as IdentifierText from "./IdentifierText.ts";
  *
  * **Example** (Check kind containment)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check kind containment"
  * import { Ontology } from "@beep/nlp"
  *
- * console.log(Ontology.Kind.canContain("Document", "Sentence")) // true
+ * Ontology.Kind.canContain("Document", "Sentence") // => true
  * ```
  *
  * @category models
@@ -103,11 +103,11 @@ export * as Ontology from "./Ontology/index.ts";
  *
  * **Example** (Normalize path phrase)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Normalize path phrase"
  * import { PathText } from "@beep/nlp"
  *
  * const normalized = PathText.normalizePathPhrase("src\\utils")
- * console.log(normalized) // "src/utils"
+ * normalized // => "src/utils"
  * ```
  *
  * @category normalization
@@ -119,11 +119,11 @@ export * as PathText from "./PathText.ts";
  *
  * **Example** (Normalize question text)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Normalize question text"
  * import { QueryText } from "@beep/nlp"
  *
  * const normalized = QueryText.normalizeQuestion("  hello   world  ")
- * console.log(normalized) // "hello world"
+ * normalized // => "hello world"
  * ```
  *
  * @category normalization
@@ -135,11 +135,11 @@ export * as QueryText from "./QueryText.ts";
  *
  * **Example** (Ordered dedupe variants)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Ordered dedupe variants"
  * import { VariantText } from "@beep/nlp"
  *
  * const deduped = VariantText.orderedDedupe(["foo", "bar", "foo"])
- * console.log(deduped) // ["foo", "bar"]
+ * deduped // => ["foo", "bar"]
  * ```
  *
  * @category normalization

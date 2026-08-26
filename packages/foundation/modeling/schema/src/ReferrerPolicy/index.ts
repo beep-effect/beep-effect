@@ -3,7 +3,7 @@
  *
  * **Example** (Import ReferrerPolicy namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import ReferrerPolicy namespace"
  * import * as ReferrerPolicy from "@beep/schema/ReferrerPolicy"
  *
  * console.log(Object.keys(ReferrerPolicy).includes("Header"))

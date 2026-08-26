@@ -14,7 +14,7 @@ import type { TString } from "@beep/types";
  *
  * **Example** (Import SSE re-exports)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import SSE re-exports"
  * import * as Sse from "@beep/utils/Event"
  *
  * console.log(Sse)
@@ -40,7 +40,7 @@ type EventShape<TTag extends TString.NonEmpty, TFields extends S.Struct.Fields> 
  *
  * **Example** (Decode Progress event)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Progress event"
  * import * as S from "effect/Schema"
  * import { makeEvent } from "@beep/utils/Event"
  *
@@ -83,11 +83,11 @@ type MakeEventSchema<TTag extends TString.NonEmpty, TFields extends S.Struct.Fie
  *
  * **Example** (Construct Progress event)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct Progress event"
  * import * as S from "effect/Schema"
  * import { makeEvent } from "@beep/utils/Event"
  *
- * const Progress = makeEvent({ percent: S.Finite })("Progress")
+ * const Progress = makeEvent({ percent: S.Finite }, "Progress")
  * const event = new Progress({ payload: { percent: 100 } })
  * console.log(event)
  * ```

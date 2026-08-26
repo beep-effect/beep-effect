@@ -22,7 +22,7 @@ const $I = $SchemaId.create("BigDecimal");
  *
  * **Example** (Decode number to BigDecimal)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode number to BigDecimal"
  * import * as S from "effect/Schema"
  * import { BigDecimalFromNumber } from "@beep/schema/BigDecimal"
  *

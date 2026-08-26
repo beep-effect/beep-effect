@@ -18,7 +18,7 @@ const HttpMethodBase = LiteralKit(["GET", "POST", "PUT", "DELETE", "PATCH", "HEA
  *
  * **Example** (Check GET in options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check GET in options"
  * import { Literal } from "@beep/schema/HttpMethod"
  *
  * console.log(Literal.Options.includes("GET"))
@@ -63,7 +63,7 @@ const hasBody: (method: HttpMethodValue) => method is WithBody = S.is(WithBody);
  *
  * **Example** (Check method has body)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check method has body"
  * import { HttpMethod } from "@beep/schema/HttpMethod"
  *
  * console.log(HttpMethod.hasBody("POST"))
@@ -103,7 +103,7 @@ export const HttpMethod = HttpMethod_.pipe(
  *
  * **Example** (Type method and check body)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type method and check body"
  * import { HttpMethod } from "@beep/schema/HttpMethod"
  *
  * const method: HttpMethod = "POST"

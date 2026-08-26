@@ -25,10 +25,10 @@ const utf8Encoder = new TextEncoder();
  *
  * **Example** (Check error reason membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check error reason membership"
  * import { VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor"
  *
- * console.log(VerifiedTextAnchorErrorReason.is["quote-mismatch"]("quote-mismatch")) // true
+ * VerifiedTextAnchorErrorReason.is["quote-mismatch"]("quote-mismatch") // => true
  * ```
  *
  * @category errors
@@ -50,7 +50,7 @@ export const VerifiedTextAnchorErrorReason = LiteralKit([
  *
  * **Example** (Assign typed error reason)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign typed error reason"
  * import type { VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor"
  *
  * const reason: VerifiedTextAnchorErrorReason = "stale-source"
@@ -67,11 +67,11 @@ export type VerifiedTextAnchorErrorReason = typeof VerifiedTextAnchorErrorReason
  *
  * **Example** (Create error from reason)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create error from reason"
  * import { VerifiedTextAnchorError } from "@beep/provenance/VerifiedTextAnchor"
  *
  * const error = VerifiedTextAnchorError.fromReason("quote-mismatch")
- * console.log(error.reason) // "quote-mismatch"
+ * error.reason // => "quote-mismatch"
  * ```
  *
  * @category errors
@@ -114,10 +114,10 @@ export class VerifiedTextAnchorError extends S.TaggedError<VerifiedTextAnchorErr
  *
  * **Example** (Check sourceText field presence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check sourceText field presence"
  * import { VerifyTextAnchorInput } from "@beep/provenance/VerifiedTextAnchor"
  *
- * console.log(VerifyTextAnchorInput.fields.sourceText !== undefined) // true
+ * VerifyTextAnchorInput.fields.sourceText !== undefined // => true
  * ```
  *
  * @category models
@@ -149,10 +149,10 @@ export class VerifyTextAnchorInput extends S.Class<VerifyTextAnchorInput>($I`Ver
  *
  * **Example** (Check receipt anchor field)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check receipt anchor field"
  * import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor"
  *
- * console.log(TextAnchorVerificationReceipt.fields.anchor !== undefined) // true
+ * TextAnchorVerificationReceipt.fields.anchor !== undefined // => true
  * ```
  *
  * @category models
@@ -196,7 +196,7 @@ class VerifiedTextAnchorValue {
  *
  * **Example** (Receipt is not runtime proof)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Receipt is not runtime proof"
  * import type {
  *   TextAnchorVerificationReceipt,
  *   VerifiedTextAnchor,
@@ -206,7 +206,7 @@ class VerifiedTextAnchorValue {
  *   TextAnchorVerificationReceipt extends VerifiedTextAnchor ? true : false
  *
  * const receiptIsRuntimeProof: ReceiptIsRuntimeProof = false
- * console.log(receiptIsRuntimeProof) // false
+ * receiptIsRuntimeProof // => false
  * ```
  *
  * @category models
@@ -225,11 +225,11 @@ export type VerifiedTextAnchor = VerifiedTextAnchorValue;
  *
  * **Example** (Schema rejects structural data)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Schema rejects structural data"
  * import * as S from "effect/Schema"
  * import { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor"
  *
- * console.log(S.is(VerifiedTextAnchor)({ anchor: {}, source: {} })) // false
+ * S.is(VerifiedTextAnchor)({ anchor: {}, source: {} }) // => false
  * ```
  *
  * @category schemas

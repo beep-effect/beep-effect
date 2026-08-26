@@ -24,7 +24,7 @@ import type { PathLookup as InternalPathLookup, PathInput } from "./internal/Str
  *
  * **Example** (PathInput from segments)
  *
- * ```ts
+ * ```ts import.meta.vitest name="PathInput from segments"
  * import { PathInput } from "@beep/utils/Struct"
  *
  * const path = PathInput.make(["profile", "name"])
@@ -61,7 +61,7 @@ const NonEmptyStringKeys = S.NonEmptyArray(S.String);
  *
  * **Example** (EmptyStructError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="EmptyStructError instance"
  * import { EmptyStructError } from "@beep/utils/Struct"
  *
  * const error = EmptyStructError
@@ -123,7 +123,7 @@ const isBlockedObjectKey = (key: PropertyKey): boolean =>
  *
  * **Example** (Check PathLookup found)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check PathLookup found"
  * import type { PathLookup } from "@beep/utils/Struct"
  *
  * const isFound = (lookup: PathLookup) => lookup.found
@@ -149,7 +149,7 @@ export type PathLookup = InternalPathLookup;
  *
  * **Example** (Data-first and data-last)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Data-first and data-last"
  * import { pipe } from "effect"
  * import { Struct } from "@beep/utils"
  *
@@ -190,7 +190,7 @@ export const dotGet: {
  *
  * **Example** (Found and missing paths)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Found and missing paths"
  * import { pipe } from "effect"
  * import { Struct } from "@beep/utils"
  *
@@ -258,7 +258,7 @@ export type MapPathResult<B> = B extends unknown ? B : never;
  *
  * **Example** (Uppercase path value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Uppercase path value"
  * import { pipe } from "effect"
  * import { Struct } from "@beep/utils"
  *
@@ -337,7 +337,7 @@ export const mapPath: {
  *
  * **Example** (Lazy uppercase path value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Lazy uppercase path value"
  * import { Struct } from "@beep/utils"
  *
  * const user = { profile: { name: "alice" } }
@@ -411,7 +411,7 @@ export const mapPathLazy: {
  *
  * **Example** (Lazy key access dual API)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Lazy key access dual API"
  * import { pipe } from "effect"
  * import { Struct } from "@beep/utils"
  *
@@ -455,7 +455,7 @@ export const getLazy: {
  *
  * **Example** (Collect nested struct paths)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Collect nested struct paths"
  * import { Struct } from "@beep/utils"
  *
  * const config = { db: { host: "localhost", port: 5432 }, debug: true }
@@ -493,7 +493,7 @@ export const pathsOf = <const S extends Record<string, unknown>>(
  *
  * **Example** (Correlated key-value entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Correlated key-value entry"
  * import type { StringKeyEntry } from "@beep/utils/Struct"
  *
  * type Entry = StringKeyEntry<{ readonly host: string; readonly port: number }>
@@ -517,7 +517,7 @@ export type StringKeyEntry<T> = { [K in keyof T & string]: [K, T[K]] }[keyof T &
  *
  * **Example** (Correlated string key entries)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Correlated string key entries"
  * import type { StringKeyEntries } from "@beep/utils/Struct"
  *
  * type Entries = StringKeyEntries<{ readonly host: string; readonly port: number }>
@@ -542,7 +542,7 @@ export type StringKeyEntries<T> = Array<StringKeyEntry<T>>;
  *
  * **Example** (Type-safe string key entries)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Type-safe string key entries"
  * import * as Struct from "@beep/utils/Struct"
  *
  * const c = Symbol("c")
@@ -575,7 +575,7 @@ export const entries = <const R extends object>(obj: R): StringKeyEntries<R> =>
  *
  * **Example** (Non-empty object entries)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Non-empty object entries"
  * import { Struct } from "@beep/utils"
  *
  * const config = { host: "localhost", port: 3000 }
@@ -606,7 +606,7 @@ export const entriesNonEmpty = <const R extends object>(
  *
  * **Example** (Type-safe string keys)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type-safe string keys"
  * import { Struct } from "@beep/utils"
  *
  * const config = { host: "localhost", port: 3000 }
@@ -632,7 +632,7 @@ export const keys = <const R extends object>(obj: R): Array<keyof R & string> =>
  *
  * **Example** (Non-empty object keys)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Non-empty object keys"
  * import { Struct } from "@beep/utils"
  *
  * const config = { host: "localhost", port: 3000 }
@@ -701,7 +701,7 @@ export const fromEntries = <const E extends readonly [PropertyKey, unknown]>(ent
  *
  * **Example** (Import effect Struct helpers)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import effect Struct helpers"
  * import * as Struct from "@beep/utils/Struct"
  *
  * console.log(Struct)
@@ -717,7 +717,7 @@ export * from "effect/Struct";
  *
  * **Example** (Reverseable mapping shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reverseable mapping shape"
  * import type { ReverseableStruct } from "@beep/utils/Struct"
  *
  * const mapping: ReverseableStruct = { active: "A", inactive: "I" }
@@ -742,7 +742,7 @@ export type ReverseableStruct = Readonly<{
  *
  * **Example** (Inverted direction mapping)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inverted direction mapping"
  * import type { ReverseStruct } from "@beep/utils/Struct"
  *
  * type Direction = ReverseStruct<{ readonly up: "north"; readonly down: "south" }>
@@ -773,7 +773,7 @@ export type ReverseStruct<T extends ReverseableStruct> = {
  *
  * **Example** (Reverse error code mapping)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reverse error code mapping"
  * import { Struct } from "@beep/utils"
  *
  * const errorCode = {
@@ -892,7 +892,7 @@ export type DeepMerged<T> = T extends unknown ? T : never;
  *
  * **Example** (Merge nested server config)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Merge nested server config"
  * import { Struct } from "@beep/utils"
  *
  * const defaults = {

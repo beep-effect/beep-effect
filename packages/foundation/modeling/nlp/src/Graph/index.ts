@@ -26,7 +26,7 @@ export * as GraphOps from "./GraphOps.ts";
  *
  * **Example** (Access TextNode schema)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Access TextNode schema"
  * import { Schema } from "@beep/nlp/Graph"
  *
  * console.log(Schema.TextNode)

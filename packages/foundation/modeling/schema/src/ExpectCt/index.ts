@@ -3,7 +3,7 @@
  *
  * **Example** (Import ExpectCt namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import ExpectCt namespace"
  * import * as ExpectCt from "@beep/schema/ExpectCt"
  *
  * console.log(Object.keys(ExpectCt).includes("Header"))

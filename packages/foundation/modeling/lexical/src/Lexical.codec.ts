@@ -58,10 +58,10 @@ const $I = $LexicalSchemaId.create("Lexical.codec");
  *
  * **Example** (Construct artifact URI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct artifact URI"
  * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema/Lexical.codec"
  *
- * console.log(`${ARTIFACT_URI_PREFIX}artifact-123`) // "artifact://artifact-123"
+ * `${ARTIFACT_URI_PREFIX}artifact-123` // => "artifact://artifact-123"
  * ```
  *
  * @category constants
@@ -75,13 +75,13 @@ export const ARTIFACT_URI_PREFIX = "artifact://";
  *
  * **Example** (Decode artifact URI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode artifact URI"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
  *
  * const result = S.decodeUnknownResult(ArtifactUri)("artifact://artifact-123")
- * console.log(Result.isSuccess(result) && result.success === "artifact://artifact-123") // true
+ * Result.isSuccess(result) && result.success === "artifact://artifact-123" // => true
  * ```
  *
  * @category combinators
@@ -99,7 +99,7 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
  *
  * **Example** (Accept ArtifactUri type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept ArtifactUri type"
  * import type { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
  *
  * const accept = (uri: ArtifactUri) => uri
@@ -355,13 +355,13 @@ const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
  *
  * **Example** (Convert paragraph to Lexical)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Convert paragraph to Lexical"
  * import { Effect } from "effect"
  * import { P, Text } from "@beep/md/Md.model"
  * import { blockToLexical } from "@beep/lexical-schema/Lexical.codec"
  *
  * const node = Effect.runSync(blockToLexical(P.make({ children: [Text.make({ value: "Hello" })] })))
- * console.log(node.type) // "paragraph"
+ * node.type // => "paragraph"
  * ```
  *
  * @category combinators
@@ -451,14 +451,14 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
  *
  * **Example** (Lift document to state)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Lift document to state"
  * import { Effect } from "effect"
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec"
  *
  * const document = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
  * const state = Effect.runSync(documentToEditorState(document))
- * console.log(state.root.children.length) // 1
+ * state.root.children.length // => 1
  * ```
  *
  * @category combinators
@@ -612,7 +612,7 @@ const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
  *
  * **Example** (Project artifact-ref node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Project artifact-ref node"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
@@ -621,7 +621,7 @@ const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
  * const result = S.decodeUnknownResult(LexicalNode)({
  *   type: "artifact-ref", version: 1, artifactId: "artifact-123"
  * })
- * console.log(Result.isSuccess(result) && nodeToBlocks(result.success)[0]?._tag === "p") // true
+ * Result.isSuccess(result) && nodeToBlocks(result.success)[0]?._tag === "p" // => true
  * ```
  *
  * @category combinators
@@ -654,14 +654,14 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
  *
  * **Example** (Round-trip editor state)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Round-trip editor state"
  * import { Effect } from "effect"
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema/Lexical.codec"
  *
  * const document = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
  * const state = Effect.runSync(documentToEditorState(document))
- * console.log(editorStateToDocument(state).children[0]?._tag) // "p"
+ * editorStateToDocument(state).children[0]?._tag // => "p"
  * ```
  *
  * @category combinators

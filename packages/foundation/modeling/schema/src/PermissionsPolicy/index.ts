@@ -3,7 +3,7 @@
  *
  * **Example** (Import namespace and check Header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import namespace and check Header"
  * import * as PermissionsPolicy from "@beep/schema/PermissionsPolicy"
  *
  * console.log(Object.keys(PermissionsPolicy).includes("Header"))

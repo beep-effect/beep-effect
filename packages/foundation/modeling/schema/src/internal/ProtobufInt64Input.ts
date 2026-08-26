@@ -21,7 +21,7 @@ import * as Str from "effect/String";
  *
  * **Example** (Long-like object shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Long-like object shape"
  * import type { ProtobufInt64Input } from "@beep/schema/internal/ProtobufInt64Input"
  *
  * const value: ProtobufInt64Input = {
@@ -49,7 +49,7 @@ interface ProtobufLongLike {
  *
  * **Example** (Decimal string input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decimal string input"
  * import type { ProtobufInt64Input } from "@beep/schema/internal/ProtobufInt64Input"
  *
  * const value: ProtobufInt64Input = "9223372036854775807"

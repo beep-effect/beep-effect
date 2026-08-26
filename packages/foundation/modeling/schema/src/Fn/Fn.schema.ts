@@ -462,7 +462,7 @@ const makeUnaryFnSchema = <Input extends S.Top, Output extends S.Top, Error exte
  *
  * **Example** (Decode unknown function)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode unknown function"
  * import { AnyFn } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -484,7 +484,7 @@ export const AnyFn = S.declare<Function>(isFunctionValue, anyFnAnnotations).pipe
  *
  * **Example** (Typed decoded function)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed decoded function"
  * import { AnyFn } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -504,7 +504,7 @@ export type AnyFn = typeof AnyFn.Type;
  *
  * **Example** (Implement string thunk)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Implement string thunk"
  * import { ThunkOf } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -527,7 +527,7 @@ export function ThunkOf<Output extends S.Top>(output: Output): FnSchema<typeof S
  *
  * **Example** (Thunk with error schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Thunk with error schema"
  * import { ThunkOf } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -547,7 +547,7 @@ export function ThunkOf<Output extends S.Top, Error extends S.Top>(options: {
  *
  * **Example** (Create and call thunk)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create and call thunk"
  * import { ThunkOf } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -575,7 +575,7 @@ export function ThunkOf<Output extends S.Top, Error extends S.Top>(
  *
  * **Example** (Zero-argument greeting schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Zero-argument greeting schema"
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -601,7 +601,7 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  *
  * **Example** (Undefined input thunk)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Undefined input thunk"
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -627,7 +627,7 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  *
  * **Example** (Void input noop)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Void input noop"
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -653,7 +653,7 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  *
  * **Example** (Unary format count)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Unary format count"
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
@@ -683,7 +683,7 @@ export function Fn<Input extends S.Top, Output extends S.Top, Error extends S.To
  *
  * **Example** (Canonical options schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Canonical options schema"
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
  *

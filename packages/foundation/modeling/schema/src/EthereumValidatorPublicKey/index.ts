@@ -3,7 +3,7 @@
  *
  * **Example** (Import public key namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import public key namespace"
  * import * as EthereumValidatorPublicKey from "@beep/schema/EthereumValidatorPublicKey"
  * import * as S from "effect/Schema"
  *

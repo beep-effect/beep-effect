@@ -21,7 +21,7 @@ const commonFields = {
  *
  * **Example** (Construct CspError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct CspError instance"
  * import * as O from "effect/Option"
  * import { CspError } from "@beep/schema/SecureHeaderError"
  *
@@ -43,7 +43,7 @@ export class CspError extends S.TaggedError<CspError>($I.make("CspError"))(
  *
  * **Example** (Construct ForceHttpsRedirectError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct ForceHttpsRedirectError"
  * import * as O from "effect/Option"
  * import { ForceHttpsRedirectError } from "@beep/schema/SecureHeaderError"
  *
@@ -67,7 +67,7 @@ export class ForceHttpsRedirectError extends S.TaggedError<ForceHttpsRedirectErr
  *
  * **Example** (Construct XssProtectionError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct XssProtectionError"
  * import * as O from "effect/Option"
  * import { XssProtectionError } from "@beep/schema/SecureHeaderError"
  *
@@ -89,7 +89,7 @@ export class XssProtectionError extends S.TaggedError<XssProtectionError>($I.mak
  *
  * **Example** (Construct ReferrerPolicyError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct ReferrerPolicyError"
  * import * as O from "effect/Option"
  * import { ReferrerPolicyError } from "@beep/schema/SecureHeaderError"
  *
@@ -111,7 +111,7 @@ export class ReferrerPolicyError extends S.TaggedError<ReferrerPolicyError>($I.m
  *
  * **Example** (Construct NoSniffError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct NoSniffError instance"
  * import * as O from "effect/Option"
  * import { NoSniffError } from "@beep/schema/SecureHeaderError"
  *
@@ -133,7 +133,7 @@ export class NoSniffError extends S.TaggedError<NoSniffError>($I.make("NoSniffEr
  *
  * **Example** (Construct NoOpenError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct NoOpenError instance"
  * import * as O from "effect/Option"
  * import { NoOpenError } from "@beep/schema/SecureHeaderError"
  *
@@ -155,7 +155,7 @@ export class NoOpenError extends S.TaggedError<NoOpenError>($I.make("NoOpenError
  *
  * **Example** (Construct FrameGuardError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct FrameGuardError instance"
  * import * as O from "effect/Option"
  * import { FrameGuardError } from "@beep/schema/SecureHeaderError"
  *
@@ -177,7 +177,7 @@ export class FrameGuardError extends S.TaggedError<FrameGuardError>($I.make("Fra
  *
  * **Example** (Construct ExpectCtError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct ExpectCtError instance"
  * import * as O from "effect/Option"
  * import { ExpectCtError } from "@beep/schema/SecureHeaderError"
  *
@@ -199,7 +199,7 @@ export class ExpectCtError extends S.TaggedError<ExpectCtError>($I.make("ExpectC
  *
  * **Example** (Construct PermissionsPolicyError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct PermissionsPolicyError"
  * import * as O from "effect/Option"
  * import { PermissionsPolicyError } from "@beep/schema/SecureHeaderError"
  *
@@ -223,7 +223,7 @@ export class PermissionsPolicyError extends S.TaggedError<PermissionsPolicyError
  *
  * **Example** (Construct CrossOriginOpenerPolicyError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct CrossOriginOpenerPolicyError"
  * import * as O from "effect/Option"
  * import { CrossOriginOpenerPolicyError } from "@beep/schema/SecureHeaderError"
  *
@@ -249,7 +249,7 @@ export class CrossOriginOpenerPolicyError extends S.TaggedError<CrossOriginOpene
  *
  * **Example** (Construct CrossOriginEmbedderPolicyError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct CrossOriginEmbedderPolicyError"
  * import * as O from "effect/Option"
  * import { CrossOriginEmbedderPolicyError } from "@beep/schema/SecureHeaderError"
  *
@@ -275,7 +275,7 @@ export class CrossOriginEmbedderPolicyError extends S.TaggedError<CrossOriginEmb
  *
  * **Example** (Construct CrossOriginResourcePolicyError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct CrossOriginResourcePolicyError"
  * import * as O from "effect/Option"
  * import { CrossOriginResourcePolicyError } from "@beep/schema/SecureHeaderError"
  *
@@ -301,7 +301,7 @@ export class CrossOriginResourcePolicyError extends S.TaggedError<CrossOriginRes
  *
  * **Example** (Construct PermittedCrossDomainPoliciesError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct PermittedCrossDomainPoliciesError"
  * import * as O from "effect/Option"
  * import { PermittedCrossDomainPoliciesError } from "@beep/schema/SecureHeaderError"
  *
@@ -327,7 +327,7 @@ export class PermittedCrossDomainPoliciesError extends S.TaggedError<PermittedCr
  *
  * **Example** (Construct CoreError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct CoreError instance"
  * import * as O from "effect/Option"
  * import { CoreError } from "@beep/schema/SecureHeaderError"
  *
@@ -349,13 +349,13 @@ export class CoreError extends S.TaggedError<CoreError>($I.make("CoreError"))(
  *
  * **Example** (Check SecureHeaderError membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check SecureHeaderError membership"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { CspError, SecureHeaderError } from "@beep/schema/SecureHeaderError"
  *
  * const error = CspError.make({ message: "Invalid CSP directive", cause: O.none() })
- * console.log(S.is(SecureHeaderError)(error)) // true
+ * S.is(SecureHeaderError)(error) // => true
  * ```
  *
  * @category errors
@@ -390,7 +390,7 @@ export const SecureHeaderError = SecureHeader.mapMembers(
  *
  * **Example** (Handle SecureHeaderError type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Handle SecureHeaderError type"
  * import { Effect } from "effect"
  * import type { SecureHeaderError } from "@beep/schema/SecureHeaderError"
  *

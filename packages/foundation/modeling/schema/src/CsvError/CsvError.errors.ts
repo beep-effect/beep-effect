@@ -17,7 +17,7 @@ const $I = $SchemaId.create("CsvError");
  *
  * **Example** (Create CsvError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create CsvError instance"
  * import { CsvError } from "@beep/schema/CsvError"
  *
  * const error = CsvError.make({ message: "Invalid CSV" })
@@ -43,7 +43,7 @@ export class CsvError extends S.TaggedError<CsvError>($I`CsvError`)(
  *
  * **Example** (Construct CsvError with offset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct CsvError with offset"
  * import { csvError } from "@beep/schema/CsvError"
  *
  * const error = csvError("Invalid CSV", 4)

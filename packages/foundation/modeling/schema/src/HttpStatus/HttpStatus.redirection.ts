@@ -21,7 +21,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log MultipleChoices literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log MultipleChoices literal"
  * import { MultipleChoices } from "@beep/schema/HttpStatus"
  *
  * console.log(MultipleChoices.literal)
@@ -55,7 +55,7 @@ export type MultipleChoices = typeof MultipleChoices.Type;
  *
  * **Example** (Log MovedPermanently literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log MovedPermanently literal"
  * import { MovedPermanently } from "@beep/schema/HttpStatus"
  *
  * console.log(MovedPermanently.literal)
@@ -88,7 +88,7 @@ export type MovedPermanently = typeof MovedPermanently.Type;
  *
  * **Example** (Log Found literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log Found literal"
  * import { Found } from "@beep/schema/HttpStatus"
  *
  * console.log(Found.literal)
@@ -118,7 +118,7 @@ export type Found = typeof Found.Type;
  *
  * **Example** (Log SeeOther literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log SeeOther literal"
  * import { SeeOther } from "@beep/schema/HttpStatus"
  *
  * console.log(SeeOther.literal)
@@ -150,7 +150,7 @@ export type SeeOther = typeof SeeOther.Type;
  *
  * **Example** (Log NotModified literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log NotModified literal"
  * import { NotModified } from "@beep/schema/HttpStatus"
  *
  * console.log(NotModified.literal)
@@ -180,7 +180,7 @@ export type NotModified = typeof NotModified.Type;
  *
  * **Example** (Log UseProxy literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log UseProxy literal"
  * import { UseProxy } from "@beep/schema/HttpStatus"
  *
  * console.log(UseProxy.literal)
@@ -210,7 +210,7 @@ export type UseProxy = typeof UseProxy.Type;
  *
  * **Example** (Log SwitchProxy literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log SwitchProxy literal"
  * import { SwitchProxy } from "@beep/schema/HttpStatus"
  *
  * console.log(SwitchProxy.literal)
@@ -243,7 +243,7 @@ export type SwitchProxy = typeof SwitchProxy.Type;
  *
  * **Example** (Log TemporaryRedirect literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log TemporaryRedirect literal"
  * import { TemporaryRedirect } from "@beep/schema/HttpStatus"
  *
  * console.log(TemporaryRedirect.literal)
@@ -275,7 +275,7 @@ export type TemporaryRedirect = typeof TemporaryRedirect.Type;
  *
  * **Example** (Log PermanentRedirect literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log PermanentRedirect literal"
  * import { PermanentRedirect } from "@beep/schema/HttpStatus"
  *
  * console.log(PermanentRedirect.literal)
@@ -307,7 +307,7 @@ export type PermanentRedirect = typeof PermanentRedirect.Type;
  *
  * **Example** (Count 3XX status pairs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count 3XX status pairs"
  * import { HttpStatus3XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus3XX.Pairs.length)
@@ -345,13 +345,13 @@ export type HttpStatus3XX = typeof HttpStatus3XX.Type;
  *
  * **Example** (Decode encoded 3XX name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode encoded 3XX name"
  * import * as S from "effect/Schema"
  * import { HttpStatus3XX } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatus3XX.Encoded = "MultipleChoices"
  * const status = S.decodeUnknownSync(HttpStatus3XX)(encoded)
- * console.log(status) // 300
+ * status // => 300
  * ```
  *
  * @category validation

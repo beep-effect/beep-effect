@@ -3,7 +3,7 @@
  *
  * **Example** (Decode with Sex.Schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode with Sex.Schema"
  * import * as Sex from "@beep/schema/Sex"
  * import * as S from "effect/Schema"
  *

@@ -37,7 +37,7 @@ const SingleCharacterText = S.String.check(
  *
  * **Example** (Decode codec options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode codec options"
  * import { CsvCodecOptions } from "@beep/schema/CsvCodecOptions"
  * import * as S from "effect/Schema"
  *
@@ -92,7 +92,7 @@ export class CsvCodecOptions extends S.Class<CsvCodecOptions>($I`CsvCodecOptions
  *
  * **Example** (Satisfy options args)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Satisfy options args"
  * import type { CsvCodecOptionsArgs } from "@beep/schema/CsvCodecOptions"
  *
  * const options = { delimiter: ";" } satisfies CsvCodecOptionsArgs
@@ -109,7 +109,7 @@ export type CsvCodecOptionsArgs = typeof CsvCodecOptions.Encoded;
  *
  * **Example** (Inspect parse options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect parse options"
  * import { CsvCodecOptionsParseOptions } from "@beep/schema/CsvCodecOptions"
  *
  * console.log(CsvCodecOptionsParseOptions.exact)

@@ -18,12 +18,12 @@ const $I = $SchemaId.create("ContinentCode");
  *
  * **Example** (Decode CLDR continent code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode CLDR continent code"
  * import * as S from "effect/Schema"
  * import { ContinentCode } from "@beep/schema/ContinentCode"
  *
  * const code = S.decodeUnknownSync(ContinentCode)("019")
- * console.log(code) // "019"
+ * code // => "019"
  * ```
  *
  * @category schemas
@@ -49,12 +49,12 @@ const continentNameByCodeEntries = Struct.entriesNonEmpty(TerritoriesData.Contin
  *
  * **Example** (Decode continent display name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode continent display name"
  * import * as S from "effect/Schema"
  * import { ContinentName } from "@beep/schema/ContinentCode"
  *
  * const name = S.decodeUnknownSync(ContinentName)("Americas")
- * console.log(name) // "Americas"
+ * name // => "Americas"
  * ```
  *
  * @category schemas
@@ -80,12 +80,12 @@ export type ContinentName = typeof ContinentName.Type;
  *
  * **Example** (Map code to continent name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map code to continent name"
  * import * as S from "effect/Schema"
  * import { ContinentNameFromCode } from "@beep/schema/ContinentCode"
  *
  * const name = S.decodeUnknownSync(ContinentNameFromCode)("019")
- * console.log(name) // "Americas"
+ * name // => "Americas"
  * ```
  *
  * @category schemas
@@ -102,12 +102,12 @@ export const ContinentNameFromCode = MappedLiteralKit(continentNameByCodeEntries
  *
  * **Example** (Map name to continent code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map name to continent code"
  * import * as S from "effect/Schema"
  * import { ContinentCodeFromName } from "@beep/schema/ContinentCode"
  *
  * const code = S.decodeUnknownSync(ContinentCodeFromName)("Europe")
- * console.log(code) // "150"
+ * code // => "150"
  * ```
  *
  * @category schemas

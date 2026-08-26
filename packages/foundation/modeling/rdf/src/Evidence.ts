@@ -19,12 +19,12 @@ const $I = $RdfId.create("evidence");
  *
  * **Example** (Validating selector kind values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validating selector kind values"
  * import * as S from "effect/Schema"
  * import { EvidenceSelectorKind } from "@beep/rdf/Evidence"
  *
- * console.log(S.is(EvidenceSelectorKind)("text-quote")) // true
- * console.log(S.is(EvidenceSelectorKind)("unknown")) // false
+ * S.is(EvidenceSelectorKind)("text-quote") // => true
+ * S.is(EvidenceSelectorKind)("unknown") // => false
  * ```
  *
  * @category models
@@ -41,7 +41,7 @@ export const EvidenceSelectorKind = LiteralKit(["text-quote", "text-position", "
  *
  * **Example** (Accepting typed selector kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accepting typed selector kind"
  * import type { EvidenceSelectorKind } from "@beep/rdf/Evidence"
  *
  * const acceptEvidenceSelectorKind = (value: EvidenceSelectorKind) => value
@@ -58,7 +58,7 @@ export type EvidenceSelectorKind = typeof EvidenceSelectorKind.Type;
  *
  * **Example** (Decoding text-quote selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding text-quote selector"
  * import * as S from "effect/Schema"
  * import { TextQuoteSelector } from "@beep/rdf/Evidence"
  *
@@ -68,7 +68,7 @@ export type EvidenceSelectorKind = typeof EvidenceSelectorKind.Type;
  *   prefix: "before ",
  *   suffix: " after"
  * })
- * console.log(selector.kind) // "text-quote"
+ * selector.kind // => "text-quote"
  * ```
  *
  * @category models
@@ -102,7 +102,7 @@ export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSe
  *
  * **Example** (Decoding text-position selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding text-position selector"
  * import * as S from "effect/Schema"
  * import { TextPositionSelector } from "@beep/rdf/Evidence"
  *
@@ -111,7 +111,7 @@ export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSe
  *   start: 0,
  *   end: 5
  * })
- * console.log(selector.start) // 0
+ * selector.start // => 0
  * ```
  *
  * @category models
@@ -144,7 +144,7 @@ export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextP
  *
  * **Example** (Decoding fragment selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding fragment selector"
  * import * as S from "effect/Schema"
  * import { FragmentSelector } from "@beep/rdf/Evidence"
  *
@@ -152,7 +152,7 @@ export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextP
  *   kind: "fragment",
  *   value: "section-1"
  * })
- * console.log(selector.value) // "section-1"
+ * selector.value // => "section-1"
  * ```
  *
  * @category models
@@ -183,7 +183,7 @@ export class FragmentSelector extends S.Class<FragmentSelector>($I`FragmentSelec
  *
  * **Example** (Decoding selector union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding selector union"
  * import * as S from "effect/Schema"
  * import { EvidenceSelector } from "@beep/rdf/Evidence"
  *
@@ -191,7 +191,7 @@ export class FragmentSelector extends S.Class<FragmentSelector>($I`FragmentSelec
  *   kind: "text-quote",
  *   exact: "quoted text"
  * })
- * console.log(decoded.kind) // "text-quote"
+ * decoded.kind // => "text-quote"
  * ```
  *
  * @category models
@@ -209,7 +209,7 @@ export const EvidenceSelector = S.Union([TextQuoteSelector, TextPositionSelector
  *
  * **Example** (Accepting typed evidence selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accepting typed evidence selector"
  * import type { EvidenceSelector } from "@beep/rdf/Evidence"
  *
  * const acceptEvidenceSelector = (value: EvidenceSelector) => value
@@ -226,7 +226,7 @@ export type EvidenceSelector = typeof EvidenceSelector.Type;
  *
  * **Example** (Decoding target with selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding target with selector"
  * import * as S from "effect/Schema"
  * import { EvidenceTarget } from "@beep/rdf/Evidence"
  *
@@ -234,7 +234,7 @@ export type EvidenceSelector = typeof EvidenceSelector.Type;
  *   source: "https://example.org/document",
  *   selector: { kind: "fragment", value: "section-1" }
  * })
- * console.log(target.selector.kind) // "fragment"
+ * target.selector.kind // => "fragment"
  * ```
  *
  * @category models
@@ -264,7 +264,7 @@ export class EvidenceTarget extends S.Class<EvidenceTarget>($I`EvidenceTarget`)(
  *
  * **Example** (Decoding evidence anchor)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding evidence anchor"
  * import * as S from "effect/Schema"
  * import { EvidenceAnchor } from "@beep/rdf/Evidence"
  *
@@ -276,7 +276,7 @@ export class EvidenceTarget extends S.Class<EvidenceTarget>($I`EvidenceTarget`)(
  *   },
  *   note: "supports the claim"
  * })
- * console.log(anchor.id) // "https://example.org/annotation/1"
+ * anchor.id // => "https://example.org/annotation/1"
  * ```
  *
  * @category models
@@ -308,7 +308,7 @@ export class EvidenceAnchor extends S.Class<EvidenceAnchor>($I`EvidenceAnchor`)(
  *
  * **Example** (Decoding bounded projection)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding bounded projection"
  * import * as S from "effect/Schema"
  * import { BoundedEvidenceProjection } from "@beep/rdf/Evidence"
  *
@@ -324,7 +324,7 @@ export class EvidenceAnchor extends S.Class<EvidenceAnchor>($I`EvidenceAnchor`)(
  *   ],
  *   truncated: false
  * })
- * console.log(projection.anchors.length) // 1
+ * projection.anchors.length // => 1
  * ```
  *
  * @category models

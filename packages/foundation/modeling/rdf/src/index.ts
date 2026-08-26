@@ -10,11 +10,11 @@
  *
  * **Example** (Check package version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check package version"
  * import { VERSION } from "@beep/rdf"
  *
  * const isInitialVersion = VERSION === "0.0.0"
- * console.log(isInitialVersion) // true
+ * isInitialVersion // => true
  * ```
  *
  * @category configuration

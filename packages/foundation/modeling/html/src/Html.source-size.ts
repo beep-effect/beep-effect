@@ -191,7 +191,7 @@ type SourceSizeIssueCode = typeof SourceSizeIssueCode.Type;
  *
  * **Example** (Inspect a rejected source size)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect a rejected source size"
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"
  *
@@ -224,7 +224,7 @@ export class SourceSizeIssue extends S.Class<SourceSizeIssue>($I`SourceSizeIssue
  *
  * **Example** (Read the auto flag from an analysis)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the auto flag from an analysis"
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"
  *
@@ -817,12 +817,12 @@ const inspectSourceSizeEntries = (
  *
  * **Example** (Accept a media-condition sizes list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept a media-condition sizes list"
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"
  *
  * const result = inspectSourceSizeList("(max-width: 30em) 100vw, 50vw")
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category validation

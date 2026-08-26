@@ -3,7 +3,7 @@
  *
  * **Example** (Import and verify Header export)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import and verify Header export"
  * import * as CrossOriginOpenerPolicy from "@beep/schema/CrossOriginOpenerPolicy"
  *
  * console.log(Object.keys(CrossOriginOpenerPolicy).includes("Header"))

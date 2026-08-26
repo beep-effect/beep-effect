@@ -15,12 +15,12 @@ const $I = $SchemaId.create("KebabStr");
  *
  * **Example** (Decode kebab-case string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode kebab-case string"
  * import * as S from "effect/Schema"
  * import { KebabCaseStr } from "@beep/schema"
  *
  * const value = S.decodeUnknownSync(KebabCaseStr)("my-role-2")
- * console.log(value) // "my-role-2"
+ * value // => "my-role-2"
  * ```
  *
  * @category validation
@@ -49,7 +49,7 @@ export const KebabCaseStr = NonEmptyTrimmedStr.pipe(
  *
  * **Example** (Type a kebab-case string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a kebab-case string"
  * import * as S from "effect/Schema"
  * import type { KebabCaseStr } from "@beep/schema"
  * import { KebabCaseStr as KebabCaseStrSchema } from "@beep/schema"

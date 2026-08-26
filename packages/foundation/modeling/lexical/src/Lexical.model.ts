@@ -83,13 +83,13 @@ const YouTubeVideoIdFromLegacyInput = S.String.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNodeVersion } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(LexicalNodeVersion)(1)
- * console.log(Result.isSuccess(result) && result.success === 1) // true
+ * Result.isSuccess(result) && result.success === 1 // => true
  * ```
  *
  * @category models
@@ -106,11 +106,11 @@ export const LexicalNodeVersion = S.Literal(1).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { LexicalNodeVersion } from "@beep/lexical-schema/Lexical.model"
  *
  * const version: LexicalNodeVersion = 1
- * console.log(version) // 1
+ * version // => 1
  * ```
  *
  * @category models
@@ -137,10 +137,10 @@ const TextFormatBitMapping = MappedLiteralKit([
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TextFormatBits } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TextFormatBits.bold) // 1
+ * TextFormatBits.bold // => 1
  * ```
  *
  * @category models
@@ -153,10 +153,10 @@ export const TextFormatBits = TextFormatBitMapping.From.Enum;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TextFormatBit } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TextFormatBit.Options[0]) // 1
+ * TextFormatBit.Options[0] // => 1
  * ```
  *
  * @category models
@@ -173,11 +173,11 @@ export const TextFormatBit = LiteralKit(TextFormatBitMapping.To.Options).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { TextFormatBit } from "@beep/lexical-schema/Lexical.model"
  *
  * const bit: TextFormatBit = 1
- * console.log(bit) // 1
+ * bit // => 1
  * ```
  *
  * @category models
@@ -190,10 +190,10 @@ export type TextFormatBit = typeof TextFormatBit.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TEXT_FORMAT_MASK_ALL } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log((TEXT_FORMAT_MASK_ALL & 1) === 1) // true
+ * (TEXT_FORMAT_MASK_ALL & 1) === 1 // => true
  * ```
  *
  * @category constants
@@ -220,13 +220,13 @@ const TextFormatMaskBase = NonNegativeInt.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(TextFormatMask)(3)
- * console.log(Result.isSuccess(result) && result.success === 3) // true
+ * Result.isSuccess(result) && result.success === 3 // => true
  * ```
  *
  * @category models
@@ -239,7 +239,7 @@ export const TextFormatMask = TextFormatMaskBase;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (mask: TextFormatMask) => mask
@@ -256,13 +256,13 @@ export type TextFormatMask = typeof TextFormatMask.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { hasTextFormat, TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(TextFormatMask)(3)
- * console.log(Result.isSuccess(result) && hasTextFormat(result.success, 1)) // true
+ * Result.isSuccess(result) && hasTextFormat(result.success, 1) // => true
  * ```
  *
  * @category predicates
@@ -278,13 +278,13 @@ export const hasTextFormat: {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { withTextFormat, TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(TextFormatMask)(1)
- * console.log(Result.isSuccess(result) && withTextFormat(result.success, 2) === 3) // true
+ * Result.isSuccess(result) && withTextFormat(result.success, 2) === 3 // => true
  * ```
  *
  * @category constructors
@@ -305,10 +305,10 @@ const TextDetailBitMapping = MappedLiteralKit([
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TextDetailBits } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TextDetailBits.directionless) // 1
+ * TextDetailBits.directionless // => 1
  * ```
  *
  * @category models
@@ -321,10 +321,10 @@ export const TextDetailBits = TextDetailBitMapping.From.Enum;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TextDetailBit } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TextDetailBit.Options[0]) // 1
+ * TextDetailBit.Options[0] // => 1
  * ```
  *
  * @category models
@@ -341,11 +341,11 @@ export const TextDetailBit = LiteralKit(TextDetailBitMapping.To.Options).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { TextDetailBit } from "@beep/lexical-schema/Lexical.model"
  *
  * const bit: TextDetailBit = 1
- * console.log(bit) // 1
+ * bit // => 1
  * ```
  *
  * @category models
@@ -358,10 +358,10 @@ export type TextDetailBit = typeof TextDetailBit.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TEXT_DETAIL_MASK_ALL } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log((TEXT_DETAIL_MASK_ALL & 1) === 1) // true
+ * (TEXT_DETAIL_MASK_ALL & 1) === 1 // => true
  * ```
  *
  * @category constants
@@ -388,13 +388,13 @@ const TextDetailMaskBase = NonNegativeInt.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TextDetailMask } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(TextDetailMask)(1)
- * console.log(Result.isSuccess(result) && result.success === 1) // true
+ * Result.isSuccess(result) && result.success === 1 // => true
  * ```
  *
  * @category models
@@ -407,7 +407,7 @@ export const TextDetailMask = TextDetailMaskBase;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { TextDetailMask } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (mask: TextDetailMask) => mask
@@ -424,13 +424,13 @@ export type TextDetailMask = typeof TextDetailMask.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalIndentDepth } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(LexicalIndentDepth)(2)
- * console.log(Result.isSuccess(result) && result.success === 2) // true
+ * Result.isSuccess(result) && result.success === 2 // => true
  * ```
  *
  * @category models
@@ -448,7 +448,7 @@ export const LexicalIndentDepth = NonNegativeInt.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { LexicalIndentDepth } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (depth: LexicalIndentDepth) => depth
@@ -465,10 +465,10 @@ export type LexicalIndentDepth = typeof LexicalIndentDepth.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TableCellHeaderState } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TableCellHeaderState.Options) // [0, 1, 2, 3]
+ * TableCellHeaderState.Options // => [0, 1, 2, 3]
  * ```
  *
  * @category models
@@ -485,11 +485,11 @@ export const TableCellHeaderState = LiteralKit([0, 1, 2, 3]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { TableCellHeaderState } from "@beep/lexical-schema/Lexical.model"
  *
  * const state: TableCellHeaderState = 3
- * console.log(state) // 3
+ * state // => 3
  * ```
  *
  * @category models
@@ -502,13 +502,13 @@ export type TableCellHeaderState = typeof TableCellHeaderState.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TableCellSpan } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(TableCellSpan)(2)
- * console.log(Result.isSuccess(result) && result.success === 2) // true
+ * Result.isSuccess(result) && result.success === 2 // => true
  * ```
  *
  * @category models
@@ -526,7 +526,7 @@ export const TableCellSpan = PosInt.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { TableCellSpan } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (span: TableCellSpan) => span
@@ -543,13 +543,13 @@ export type TableCellSpan = typeof TableCellSpan.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TableDimension } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(TableDimension)(120)
- * console.log(Result.isSuccess(result) && result.success === 120) // true
+ * Result.isSuccess(result) && result.success === 120 // => true
  * ```
  *
  * @category models
@@ -567,7 +567,7 @@ export const TableDimension = NonNegativeInt.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { TableDimension } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (dimension: TableDimension) => dimension
@@ -584,7 +584,7 @@ export type TableDimension = typeof TableDimension.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
  *
  * console.log(ArtifactRefId.fromUnknown("artifact-123"))
@@ -613,7 +613,7 @@ export const ArtifactRefId = S.NonEmptyString.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (id: ArtifactRefId) => id
@@ -630,10 +630,10 @@ export type ArtifactRefId = typeof ArtifactRefId.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { ElementFormat } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(ElementFormat.is.center("center")) // true
+ * ElementFormat.is.center("center") // => true
  * ```
  *
  * @category models
@@ -651,7 +651,7 @@ export const ElementFormat = LiteralKit(["left", "start", "center", "right", "en
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { ElementFormat } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (format: ElementFormat) => format
@@ -668,10 +668,10 @@ export type ElementFormat = typeof ElementFormat.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Direction } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(Direction.is.ltr("ltr")) // true
+ * Direction.is.ltr("ltr") // => true
  * ```
  *
  * @category models
@@ -688,7 +688,7 @@ export const Direction = LiteralKit(["ltr", "rtl"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { Direction } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (direction: Direction) => direction
@@ -705,10 +705,10 @@ export type Direction = typeof Direction.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TextMode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TextMode.is.normal("normal")) // true
+ * TextMode.is.normal("normal") // => true
  * ```
  *
  * @category models
@@ -725,7 +725,7 @@ export const TextMode = LiteralKit(["normal", "token", "segmented"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { TextMode } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (mode: TextMode) => mode
@@ -742,10 +742,10 @@ export type TextMode = typeof TextMode.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { HeadingTag } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(HeadingTag.is.h1("h1")) // true
+ * HeadingTag.is.h1("h1") // => true
  * ```
  *
  * @category models
@@ -762,7 +762,7 @@ export const HeadingTag = LiteralKit(["h1", "h2", "h3", "h4", "h5", "h6"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { HeadingTag } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (tag: HeadingTag) => tag
@@ -779,10 +779,10 @@ export type HeadingTag = typeof HeadingTag.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { ListType } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(ListType.is.bullet("bullet")) // true
+ * ListType.is.bullet("bullet") // => true
  * ```
  *
  * @category models
@@ -799,7 +799,7 @@ export const ListType = LiteralKit(["number", "bullet", "check"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { ListType } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (listType: ListType) => listType
@@ -816,10 +816,10 @@ export type ListType = typeof ListType.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { ListTag } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(ListTag.is.ul("ul")) // true
+ * ListTag.is.ul("ul") // => true
  * ```
  *
  * @category models
@@ -836,7 +836,7 @@ export const ListTag = LiteralKit(["ul", "ol"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { ListTag } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (tag: ListTag) => tag
@@ -864,13 +864,13 @@ const SafeInlineStyleType = S.String.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SafeInlineStyle } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(SafeInlineStyle)("position:fixed;color:red")
- * console.log(Result.isSuccess(result) && result.success === "color: red") // true
+ * Result.isSuccess(result) && result.success === "color: red" // => true
  * ```
  *
  * @category validation
@@ -897,7 +897,7 @@ export const SafeInlineStyle = S.String.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { SafeInlineStyle } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (style: SafeInlineStyle) => style
@@ -925,13 +925,13 @@ const SafeStyleValueType = S.String.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SafeStyleValue } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(SafeStyleValue)("red; position: fixed")
- * console.log(Result.isSuccess(result) && result.success === "") // true
+ * Result.isSuccess(result) && result.success === "" // => true
  * ```
  *
  * @category validation
@@ -956,7 +956,7 @@ export const SafeStyleValue = S.String.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { SafeStyleValue } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (value: SafeStyleValue) => value
@@ -983,13 +983,13 @@ const SafeUrlType = S.String.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SafeUrl } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(SafeUrl)("javascript:alert(1)")
- * console.log(Result.isSuccess(result) && result.success === "#") // true
+ * Result.isSuccess(result) && result.success === "#" // => true
  * ```
  *
  * @category validation
@@ -1012,7 +1012,7 @@ export const SafeUrl = S.String.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { SafeUrl } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (url: SafeUrl) => url
@@ -1030,10 +1030,10 @@ export type SafeUrl = typeof SafeUrl.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { BaseNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(BaseNode.name) // "BaseNode"
+ * BaseNode.name // => "BaseNode"
  * ```
  *
  * @category models
@@ -1124,10 +1124,10 @@ const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { ElementNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(ElementNode.name) // "ElementNode"
+ * ElementNode.name // => "ElementNode"
  * ```
  *
  * @category models
@@ -1231,10 +1231,10 @@ export declare namespace ElementNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TextBase } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TextBase.name) // "TextBase"
+ * TextBase.name // => "TextBase"
  * ```
  *
  * @category models
@@ -1309,7 +1309,7 @@ export declare namespace TextBase {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TextNode } from "@beep/lexical-schema/Lexical.model"
@@ -1317,7 +1317,7 @@ export declare namespace TextBase {
  * const result = S.decodeUnknownResult(TextNode)({
  *   type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "Hello"
  * })
- * console.log(Result.isSuccess(result) && result.success.text === "Hello") // true
+ * Result.isSuccess(result) && result.success.text === "Hello" // => true
  * ```
  *
  * @category models
@@ -1376,7 +1376,7 @@ export declare namespace TextNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { TabNode } from "@beep/lexical-schema/Lexical.model"
@@ -1384,7 +1384,7 @@ export declare namespace TextNode {
  * const result = S.decodeUnknownResult(TabNode)({
  *   type: "tab", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "\t"
  * })
- * console.log(Result.isSuccess(result) && result.success.type === "tab") // true
+ * Result.isSuccess(result) && result.success.type === "tab" // => true
  * ```
  *
  * @category models
@@ -1443,13 +1443,13 @@ export declare namespace TabNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LineBreakNode } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(LineBreakNode)({ type: "linebreak", version: 1 })
- * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
+ * Result.isSuccess(result) && result.success.type === "linebreak" // => true
  * ```
  *
  * @category models
@@ -1507,10 +1507,10 @@ export declare namespace LineBreakNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { RootNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(RootNode.name) // "RootNode"
+ * RootNode.name // => "RootNode"
  * ```
  *
  * @category models
@@ -1568,10 +1568,10 @@ export declare namespace RootNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { ParagraphNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(ParagraphNode.name) // "ParagraphNode"
+ * ParagraphNode.name // => "ParagraphNode"
  * ```
  *
  * @category models
@@ -1629,10 +1629,10 @@ export declare namespace ParagraphNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { HeadingNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(HeadingNode.name) // "HeadingNode"
+ * HeadingNode.name // => "HeadingNode"
  * ```
  *
  * @category models
@@ -1694,10 +1694,10 @@ export declare namespace HeadingNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { QuoteNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(QuoteNode.name) // "QuoteNode"
+ * QuoteNode.name // => "QuoteNode"
  * ```
  *
  * @category models
@@ -1783,10 +1783,10 @@ const ListNodeFields = S.Struct({
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { ListNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(ListNode.name) // "ListNode"
+ * ListNode.name // => "ListNode"
  * ```
  *
  * @category models
@@ -1858,10 +1858,10 @@ export declare namespace ListNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { ListItemNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(ListItemNode.name) // "ListItemNode"
+ * ListItemNode.name // => "ListItemNode"
  * ```
  *
  * @category models
@@ -1939,10 +1939,10 @@ export declare namespace ListItemNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { LinkNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(LinkNode.name) // "LinkNode"
+ * LinkNode.name // => "LinkNode"
  * ```
  *
  * @category models
@@ -2023,10 +2023,10 @@ export declare namespace LinkNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { CodeNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(CodeNode.name) // "CodeNode"
+ * CodeNode.name // => "CodeNode"
  * ```
  *
  * @category models
@@ -2100,7 +2100,7 @@ export declare namespace CodeNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ArtifactRefNode } from "@beep/lexical-schema/Lexical.model"
@@ -2108,7 +2108,7 @@ export declare namespace CodeNode {
  * const result = S.decodeUnknownResult(ArtifactRefNode)({
  *   type: "artifact-ref", version: 1, artifactId: "artifact-123"
  * })
- * console.log(Result.isSuccess(result) && result.success.artifactId === "artifact-123") // true
+ * Result.isSuccess(result) && result.success.artifactId === "artifact-123" // => true
  * ```
  *
  * @category models
@@ -2181,7 +2181,7 @@ export declare namespace ArtifactRefNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { YouTubeNode } from "@beep/lexical-schema/Lexical.model"
@@ -2189,7 +2189,7 @@ export declare namespace ArtifactRefNode {
  * const result = S.decodeUnknownResult(YouTubeNode)({
  *   type: "youtube", version: 1, videoID: "M7lc1UVf-VE", format: ""
  * })
- * console.log(Result.isSuccess(result) && result.success.videoID === "M7lc1UVf-VE") // true
+ * Result.isSuccess(result) && result.success.videoID === "M7lc1UVf-VE" // => true
  * ```
  *
  * @category models
@@ -2259,10 +2259,10 @@ export declare namespace YouTubeNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TableCellNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TableCellNode.name) // "TableCellNode"
+ * TableCellNode.name // => "TableCellNode"
  * ```
  *
  * @category models
@@ -2373,10 +2373,10 @@ export declare namespace TableCellNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TableRowNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TableRowNode.name) // "TableRowNode"
+ * TableRowNode.name // => "TableRowNode"
  * ```
  *
  * @category models
@@ -2449,10 +2449,10 @@ export declare namespace TableRowNode {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { TableNode } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TableNode.name) // "TableNode"
+ * TableNode.name // => "TableNode"
  * ```
  *
  * @category models
@@ -2568,13 +2568,13 @@ const RawLexicalNode = S.Union([
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
+ * Result.isSuccess(result) && result.success.type === "linebreak" // => true
  * ```
  *
  * @category models
@@ -2603,7 +2603,7 @@ export const LexicalNode = RawLexicalNode.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
  * const nodeType = (node: LexicalNode) => node.type
@@ -2755,7 +2755,7 @@ const StrictRootNode = RootNode.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
@@ -2769,7 +2769,7 @@ const StrictRootNode = RootNode.check(
  *     }]
  *   }
  * })
- * console.log(Result.isSuccess(result) && result.success.root.type === "root") // true
+ * Result.isSuccess(result) && result.success.root.type === "root" // => true
  * ```
  *
  * @category models
@@ -2789,7 +2789,7 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
    *
    * **Example** (Use the lexical model)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Use the lexical model"
    * import * as O from "effect/Option"
    * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
    *
@@ -2802,7 +2802,7 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
    *     }]
    *   }
    * })
-   * console.log(O.isSome(state)) // true
+   * O.isSome(state) // => true
    * ```
    *
    * @category validation
@@ -2876,7 +2876,7 @@ export declare namespace SerializedEditorState {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
@@ -2909,7 +2909,7 @@ export const LexicalNodeWire = S.StructWithRest(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
  *
  * const node: LexicalNodeWire = { type: "future-node", version: 2 }
@@ -2926,7 +2926,7 @@ export type LexicalNodeWire = typeof LexicalNodeWire.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
  *
  * const children: LexicalNodeWire.Type["children"] = { futureShape: true }
@@ -2966,7 +2966,7 @@ export declare namespace LexicalNodeWire {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { SerializedEditorStateWire } from "@beep/lexical-schema/Lexical.model"
@@ -3005,7 +3005,7 @@ export const SerializedEditorStateWire = S.StructWithRest(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import type { SerializedEditorStateWire } from "@beep/lexical-schema/Lexical.model"
  *
  * const state: SerializedEditorStateWire = { root: { type: "root", version: 1, children: [] } }
@@ -3022,7 +3022,7 @@ export type SerializedEditorStateWire = typeof SerializedEditorStateWire.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { EditorStateWireFromJson } from "@beep/lexical-schema/Lexical.model"
@@ -3047,7 +3047,7 @@ export const EditorStateWireFromJson = S.fromJsonString(SerializedEditorStateWir
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Effect } from "effect"
  * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3076,7 +3076,7 @@ export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`Lex
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { LexicalCompatibilityIssue } from "@beep/lexical-schema/Lexical.model"
  *
  * const issue = LexicalCompatibilityIssue.make({ message: "Unknown node type." })
@@ -3107,7 +3107,7 @@ export class LexicalCompatibilityIssue extends S.Class<LexicalCompatibilityIssue
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Effect } from "effect"
  * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3141,7 +3141,7 @@ export class LexicalCompatibilityResult extends S.Class<LexicalCompatibilityResu
    *
    * **Example** (Use the lexical model)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Use the lexical model"
    * import * as O from "effect/Option"
    * import { LexicalCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
    *
@@ -3150,7 +3150,7 @@ export class LexicalCompatibilityResult extends S.Class<LexicalCompatibilityResu
    *   state: O.none(),
    *   wire: { root: { type: "root", version: 1, children: [] } },
    * })
-   * console.log(result.isCompatible) // false
+   * result.isCompatible // => false
    * ```
    *
    * @category getters
@@ -3179,7 +3179,7 @@ const losslessEditorStateDecodeError = (cause: unknown): LexicalDecodeError =>
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import { decodeEditorStateStrictResult } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3192,7 +3192,7 @@ const losslessEditorStateDecodeError = (cause: unknown): LexicalDecodeError =>
  *     }]
  *   },
  * })
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category decoding
@@ -3214,7 +3214,7 @@ export const decodeEditorStateStrictResult = (
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Effect } from "effect"
  * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3241,7 +3241,7 @@ export const decodeEditorStateStrict = (input: unknown): Effect.Effect<Serialize
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Effect } from "effect"
  * import { decodeEditorStateLossless } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3268,14 +3268,14 @@ export const decodeEditorStateLossless = (
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = analyzeEditorStateCompatibilityResult({
  *   root: { type: "root", version: 1, children: [] },
  * })
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category decoding
@@ -3304,7 +3304,7 @@ export const analyzeEditorStateCompatibilityResult = (
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Effect } from "effect"
  * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3328,7 +3328,7 @@ export const analyzeEditorStateCompatibility = (
  *
  * **Example** (Use the lexical model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the lexical model"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { EditorStateFromJson } from "@beep/lexical-schema/Lexical.model"
@@ -3336,7 +3336,7 @@ export const analyzeEditorStateCompatibility = (
  * const result = S.decodeUnknownResult(EditorStateFromJson)(
  *   '{"root":{"type":"root","version":1,"children":[{"type":"paragraph","version":1,"children":[],"direction":null,"format":"","indent":0}],"direction":null,"format":"","indent":0}}'
  * )
- * console.log(Result.isSuccess(result) && result.success.root.type === "root") // true
+ * Result.isSuccess(result) && result.success.root.type === "root" // => true
  * ```
  *
  * @category models

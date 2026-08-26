@@ -24,7 +24,7 @@ export { SKOS_NAMESPACE, SKOS_TERMS } from "./generated/Skos.terms.ts";
  *
  * **Example** (Access concept IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access concept IRI"
  * import { SKOS_CONCEPT } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_CONCEPT.value
@@ -42,7 +42,7 @@ export const SKOS_CONCEPT = makeNamedNode(`${SKOS_NAMESPACE}Concept`);
  *
  * **Example** (Access concept scheme IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access concept scheme IRI"
  * import { SKOS_CONCEPT_SCHEME } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_CONCEPT_SCHEME.value
@@ -60,7 +60,7 @@ export const SKOS_CONCEPT_SCHEME = makeNamedNode(`${SKOS_NAMESPACE}ConceptScheme
  *
  * **Example** (Access prefLabel IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access prefLabel IRI"
  * import { SKOS_PREF_LABEL } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_PREF_LABEL.value
@@ -78,7 +78,7 @@ export const SKOS_PREF_LABEL = makeNamedNode(`${SKOS_NAMESPACE}prefLabel`);
  *
  * **Example** (Access altLabel IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access altLabel IRI"
  * import { SKOS_ALT_LABEL } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_ALT_LABEL.value
@@ -96,7 +96,7 @@ export const SKOS_ALT_LABEL = makeNamedNode(`${SKOS_NAMESPACE}altLabel`);
  *
  * **Example** (Access hiddenLabel IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access hiddenLabel IRI"
  * import { SKOS_HIDDEN_LABEL } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_HIDDEN_LABEL.value
@@ -114,7 +114,7 @@ export const SKOS_HIDDEN_LABEL = makeNamedNode(`${SKOS_NAMESPACE}hiddenLabel`);
  *
  * **Example** (Access definition IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access definition IRI"
  * import { SKOS_DEFINITION } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_DEFINITION.value
@@ -132,7 +132,7 @@ export const SKOS_DEFINITION = makeNamedNode(`${SKOS_NAMESPACE}definition`);
  *
  * **Example** (Access scopeNote IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access scopeNote IRI"
  * import { SKOS_SCOPE_NOTE } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_SCOPE_NOTE.value
@@ -150,7 +150,7 @@ export const SKOS_SCOPE_NOTE = makeNamedNode(`${SKOS_NAMESPACE}scopeNote`);
  *
  * **Example** (Access editorialNote IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access editorialNote IRI"
  * import { SKOS_EDITORIAL_NOTE } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_EDITORIAL_NOTE.value
@@ -168,7 +168,7 @@ export const SKOS_EDITORIAL_NOTE = makeNamedNode(`${SKOS_NAMESPACE}editorialNote
  *
  * **Example** (Access historyNote IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access historyNote IRI"
  * import { SKOS_HISTORY_NOTE } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_HISTORY_NOTE.value
@@ -186,7 +186,7 @@ export const SKOS_HISTORY_NOTE = makeNamedNode(`${SKOS_NAMESPACE}historyNote`);
  *
  * **Example** (Access broader IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access broader IRI"
  * import { SKOS_BROADER } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_BROADER.value
@@ -204,7 +204,7 @@ export const SKOS_BROADER = makeNamedNode(`${SKOS_NAMESPACE}broader`);
  *
  * **Example** (Access narrower IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access narrower IRI"
  * import { SKOS_NARROWER } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_NARROWER.value
@@ -222,7 +222,7 @@ export const SKOS_NARROWER = makeNamedNode(`${SKOS_NAMESPACE}narrower`);
  *
  * **Example** (Access related IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access related IRI"
  * import { SKOS_RELATED } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_RELATED.value
@@ -240,7 +240,7 @@ export const SKOS_RELATED = makeNamedNode(`${SKOS_NAMESPACE}related`);
  *
  * **Example** (Access exactMatch IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access exactMatch IRI"
  * import { SKOS_EXACT_MATCH } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_EXACT_MATCH.value
@@ -258,7 +258,7 @@ export const SKOS_EXACT_MATCH = makeNamedNode(`${SKOS_NAMESPACE}exactMatch`);
  *
  * **Example** (Access closeMatch IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access closeMatch IRI"
  * import { SKOS_CLOSE_MATCH } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_CLOSE_MATCH.value
@@ -276,7 +276,7 @@ export const SKOS_CLOSE_MATCH = makeNamedNode(`${SKOS_NAMESPACE}closeMatch`);
  *
  * **Example** (Access broadMatch IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access broadMatch IRI"
  * import { SKOS_BROAD_MATCH } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_BROAD_MATCH.value
@@ -294,7 +294,7 @@ export const SKOS_BROAD_MATCH = makeNamedNode(`${SKOS_NAMESPACE}broadMatch`);
  *
  * **Example** (Access narrowMatch IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access narrowMatch IRI"
  * import { SKOS_NARROW_MATCH } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_NARROW_MATCH.value
@@ -312,7 +312,7 @@ export const SKOS_NARROW_MATCH = makeNamedNode(`${SKOS_NAMESPACE}narrowMatch`);
  *
  * **Example** (Access relatedMatch IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access relatedMatch IRI"
  * import { SKOS_RELATED_MATCH } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_RELATED_MATCH.value
@@ -330,7 +330,7 @@ export const SKOS_RELATED_MATCH = makeNamedNode(`${SKOS_NAMESPACE}relatedMatch`)
  *
  * **Example** (Access inScheme IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access inScheme IRI"
  * import { SKOS_IN_SCHEME } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_IN_SCHEME.value
@@ -348,7 +348,7 @@ export const SKOS_IN_SCHEME = makeNamedNode(`${SKOS_NAMESPACE}inScheme`);
  *
  * **Example** (Access hasTopConcept IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access hasTopConcept IRI"
  * import { SKOS_HAS_TOP_CONCEPT } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_HAS_TOP_CONCEPT.value
@@ -366,7 +366,7 @@ export const SKOS_HAS_TOP_CONCEPT = makeNamedNode(`${SKOS_NAMESPACE}hasTopConcep
  *
  * **Example** (Access topConceptOf IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access topConceptOf IRI"
  * import { SKOS_TOP_CONCEPT_OF } from "@beep/rdf/Vocab/Skos"
  *
  * const iri = SKOS_TOP_CONCEPT_OF.value

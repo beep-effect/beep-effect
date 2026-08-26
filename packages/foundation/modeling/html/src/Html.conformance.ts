@@ -103,10 +103,10 @@ class HtmlRootView extends HtmlChildView.extend<HtmlRootView>($I`HtmlRootView`)(
  *
  * **Example** (Validate with `HtmlConformanceRule`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with HtmlConformanceRule"
  * import { HtmlConformanceRule } from "@beep/html/Html.conformance"
  *
- * console.log(HtmlConformanceRule.is.obsoleteElement("obsoleteElement")) // true
+ * HtmlConformanceRule.is.obsoleteElement("obsoleteElement") // => true
  * ```
  *
  * @category models
@@ -138,7 +138,7 @@ export const HtmlConformanceRule = LiteralKit([
  *
  * **Example** (Annotate a `HtmlConformanceRule` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlConformanceRule value"
  * import type { HtmlConformanceRule } from "@beep/html/Html.conformance"
  *
  * const rule: HtmlConformanceRule = "contentModel"
@@ -155,7 +155,7 @@ export type HtmlConformanceRule = typeof HtmlConformanceRule.Type;
  *
  * **Example** (Construct `HtmlConformanceIssue`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct HtmlConformanceIssue"
  * import { HtmlConformanceIssue } from "@beep/html/Html.conformance"
  *
  * const issue = HtmlConformanceIssue.make({
@@ -163,7 +163,7 @@ export type HtmlConformanceRule = typeof HtmlConformanceRule.Type;
  *   rule: "contentModel",
  *   message: "Invalid child"
  * })
- * console.log(issue.rule) // "contentModel"
+ * issue.rule // => "contentModel"
  * ```
  *
  * @category models
@@ -185,11 +185,11 @@ export class HtmlConformanceIssue extends S.Class<HtmlConformanceIssue>($I`HtmlC
  *
  * **Example** (Construct `HtmlConformanceError`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct HtmlConformanceError"
  * import { HtmlConformanceError } from "@beep/html/Html.conformance"
  *
  * const handle = (error: HtmlConformanceError) => error.issues.length
- * console.log(typeof handle) // "function"
+ * typeof handle // => "function"
  * ```
  *
  * @category errors
@@ -232,14 +232,14 @@ const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
  *
  * **Example** (Check a conformance proof)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a conformance proof"
  * import { conform, ConformantHtml, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
  * import { Effect } from "effect"
  *
  * const proof = Effect.runSync(conform(Fragment.make({ children: [] })))
- * console.log(ConformantHtml.is(proof)) // true
- * console.log(conformantRoot(proof)._tag) // "#fragment"
+ * ConformantHtml.is(proof) // => true
+ * conformantRoot(proof)._tag // => "#fragment"
  * ```
  *
  * @category schemas
@@ -257,12 +257,12 @@ export const ConformantHtml = S.declare(ConformantHtmlValue.is).pipe(
  *
  * **Example** (Annotate a `ConformantHtml` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a ConformantHtml value"
  * import { conformantRoot } from "@beep/html/Html.conformance"
  * import type { ConformantHtml } from "@beep/html/Html.conformance"
  *
  * const rootTag = (value: ConformantHtml) => conformantRoot(value)._tag
- * console.log(typeof rootTag) // "function"
+ * typeof rootTag // => "function"
  * ```
  *
  * @category models
@@ -275,12 +275,12 @@ export type ConformantHtml = typeof ConformantHtml.Type;
  *
  * **Example** (Check a conformance-proven node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a conformance-proven node"
  * import { conform, ConformantHtmlNode, Fragment } from "@beep/html"
  * import { Effect } from "effect"
  *
  * const proof = Effect.runSync(conform(Fragment.make({ children: [] })))
- * console.log(ConformantHtmlNode.is(proof)) // true
+ * ConformantHtmlNode.is(proof) // => true
  * ```
  *
  * @category schemas
@@ -293,12 +293,12 @@ export const ConformantHtmlNode = ConformantHtml;
  *
  * **Example** (Annotate a `ConformantHtmlNode` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a ConformantHtmlNode value"
  * import { conformantRoot } from "@beep/html/Html.conformance"
  * import type { ConformantHtmlNode } from "@beep/html/Html.conformance"
  *
  * const rootTag = (value: ConformantHtmlNode) => conformantRoot(value)._tag
- * console.log(typeof rootTag) // "function"
+ * typeof rootTag // => "function"
  * ```
  *
  * @category models
@@ -2275,11 +2275,11 @@ const inspectChild = (
  *
  * **Example** (Call `inspectConformance`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call inspectConformance"
  * import { inspectConformance } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
  *
- * console.log(inspectConformance(Fragment.make({ children: [] }))) // []
+ * inspectConformance(Fragment.make({ children: [] })) // => []
  * ```
  *
  * @category validation
@@ -2329,7 +2329,7 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
  *
  * **Example** (Call `conform`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call conform"
  * import { conform, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
  * import { Effect } from "effect"
@@ -2363,7 +2363,7 @@ export const conform = Effect.fn("Html.conform")(function* (root: HtmlRoot.Type)
  *
  * **Example** (Call `conformantRoot`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call conformantRoot"
  * import { conform, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
  * import { Effect } from "effect"

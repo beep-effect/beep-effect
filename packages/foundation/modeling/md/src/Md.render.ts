@@ -108,7 +108,7 @@ const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flo
  *
  * **Example** (Constructing a RenderError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Constructing a RenderError"
  * import { RenderError } from "@beep/md/Md.render"
  *
  * const error = RenderError.make({
@@ -116,7 +116,7 @@ const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flo
  *   message: "Render adapter markdown failed.",
  *   cause: "boom"
  * })
- * console.log(error._tag) // "RenderError"
+ * error._tag // => "RenderError"
  * ```
  *
  * @category error-handling
@@ -563,11 +563,11 @@ function renderMarkdownInlineForLinkLabel(inline: Inline): string {
  *
  * **Example** (Rendering strong as Markdown)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering strong as Markdown"
  * import { Md } from "@beep/md"
  * import { renderMarkdownInline } from "@beep/md/Md.render"
  *
- * console.log(renderMarkdownInline(Md.strong("beep"))) // "**beep**"
+ * renderMarkdownInline(Md.strong("beep")) // => "**beep**"
  * ```
  *
  * @category utilities
@@ -643,11 +643,11 @@ export function renderHtmlInline(inline: Inline): string {
  *
  * **Example** (Rendering heading as Markdown)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering heading as Markdown"
  * import { Md } from "@beep/md"
  * import { renderMarkdownBlock } from "@beep/md/Md.render"
  *
- * console.log(renderMarkdownBlock(Md.h1("Hello"))) // "# Hello"
+ * renderMarkdownBlock(Md.h1("Hello")) // => "# Hello"
  * ```
  *
  * @category utilities
@@ -735,7 +735,7 @@ export const renderHtmlBlock: (block: Block) => string = Match.type<Block>().pip
  *
  * **Example** (Rendering multiple Markdown blocks)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering multiple Markdown blocks"
  * import { Md } from "@beep/md"
  * import { renderMarkdownBlocks } from "@beep/md/Md.render"
  *
@@ -780,11 +780,11 @@ export const renderHtmlBlocks: (blocks: ReadonlyArray<Block>) => HtmlFragment = 
  *
  * **Example** (Rendering Markdown unsafely)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering Markdown unsafely"
  * import { Md } from "@beep/md"
  * import { renderUnsafe } from "@beep/md/Md.render"
  *
- * console.log(renderUnsafe(Md.make([Md.h1("Hello")]))) // "# Hello"
+ * renderUnsafe(Md.make([Md.h1("Hello")])) // => "# Hello"
  * ```
  *
  * @category utilities
@@ -822,11 +822,11 @@ export const renderHtmlUnsafe = (document: Document): HtmlFragment => renderWith
  *
  * **Example** (Rendering plain text unsafely)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering plain text unsafely"
  * import { Md } from "@beep/md"
  * import { renderPlainTextUnsafe } from "@beep/md/Md.render"
  *
- * console.log(renderPlainTextUnsafe(Md.make([Md.h1("Hello")]))) // "Hello"
+ * renderPlainTextUnsafe(Md.make([Md.h1("Hello")])) // => "Hello"
  * ```
  *
  * @category utilities
@@ -866,12 +866,12 @@ export type RenderOutputOf<Output> = Output extends unknown ? Output : never;
  *
  * **Example** (Rendering with custom adapter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering with custom adapter"
  * import { Md } from "@beep/md"
  * import { MarkdownAdapter, renderWithUnsafe } from "@beep/md/Md.render"
  *
  * const output = renderWithUnsafe(MarkdownAdapter, Md.make([Md.p("Hello")]))
- * console.log(output) // "Hello"
+ * output // => "Hello"
  * ```
  *
  * @category utilities
@@ -896,7 +896,7 @@ export const renderWithUnsafe: {
  *
  * **Example** (Starting effectful render unsafely)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Starting effectful render unsafely"
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  * import { renderEffectWithUnsafe } from "@beep/md/Md.render"
@@ -938,7 +938,7 @@ export const renderEffectWithUnsafe: {
  *
  * **Example** (Starting effectful render safely)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Starting effectful render safely"
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  * import { renderEffectWith } from "@beep/md/Md.render"
@@ -983,12 +983,12 @@ export const renderEffectWith: {
  *
  * **Example** (Creating URL render options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Creating URL render options"
  * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
  * import { UrlRenderOptions } from "@beep/md/Md.render"
  *
  * const options = UrlRenderOptions.make({ urlPolicy: BrowserSafeUrlPolicy })
- * console.log(options.urlPolicy !== undefined) // true
+ * options.urlPolicy !== undefined // => true
  * ```
  *
  * @category models
@@ -1311,13 +1311,13 @@ const renderHtmlDocumentWithPolicy = (policy: UrlPolicySpec, document: Document)
  *
  * **Example** (Markdown adapter with URL policy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Markdown adapter with URL policy"
  * import { Md } from "@beep/md"
  * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
  * import { makeMarkdownAdapter, renderWithUnsafe } from "@beep/md/Md.render"
  *
  * const adapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy })
- * console.log(renderWithUnsafe(adapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))]))) // "[File](#)"
+ * renderWithUnsafe(adapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))])) // => "[File](#)"
  * ```
  *
  * @category utilities
@@ -1337,7 +1337,7 @@ export const makeMarkdownAdapter = (options: UrlRenderOptions = {}): PureRenderA
  *
  * **Example** (HTML adapter with URL policy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="HTML adapter with URL policy"
  * import { Md } from "@beep/md"
  * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
  * import { makeHtmlFragmentAdapter, renderWithUnsafe } from "@beep/md/Md.render"
@@ -1363,11 +1363,11 @@ export const makeHtmlFragmentAdapter = (options: UrlRenderOptions = {}): PureRen
  *
  * **Example** (Using built-in Markdown adapter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Using built-in Markdown adapter"
  * import { Md } from "@beep/md"
  * import { MarkdownAdapter } from "@beep/md/Md.render"
  *
- * console.log(MarkdownAdapter.render(Md.make([Md.h1("Hello")]))) // "# Hello"
+ * MarkdownAdapter.render(Md.make([Md.h1("Hello")])) // => "# Hello"
  * ```
  *
  * @category utilities
@@ -1406,11 +1406,11 @@ export const HtmlFragmentAdapter: PureRenderAdapter<HtmlFragment> = {
  *
  * **Example** (Using built-in plain-text adapter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Using built-in plain-text adapter"
  * import { Md } from "@beep/md"
  * import { PlainTextAdapter } from "@beep/md/Md.render"
  *
- * console.log(PlainTextAdapter.render(Md.make([Md.h1("Hello")]))) // "Hello"
+ * PlainTextAdapter.render(Md.make([Md.h1("Hello")])) // => "Hello"
  * ```
  *
  * @category utilities
@@ -1431,13 +1431,13 @@ export const PlainTextAdapter: PureRenderAdapter<string> = {
  *
  * **Example** (Rendering with Result capture)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering with Result capture"
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
  * import { MarkdownAdapter, renderWith } from "@beep/md/Md.render"
  *
  * const output = renderWith(MarkdownAdapter, Md.make([Md.p("Hello")]))
- * console.log(Result.getOrThrow(output)) // "Hello"
+ * Result.getOrThrow(output) // => "Hello"
  * ```
  *
  * @category utilities
@@ -1465,13 +1465,13 @@ export const renderWith: {
  *
  * **Example** (Rendering Markdown with Result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering Markdown with Result"
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
  * import { render } from "@beep/md/Md.render"
  *
  * const output = render(Md.make([Md.h1("Hello")]))
- * console.log(Result.getOrThrow(output)) // "# Hello"
+ * Result.getOrThrow(output) // => "# Hello"
  * ```
  *
  * @category utilities
@@ -1515,13 +1515,13 @@ export const renderHtml = (document: Document): Result.Result<HtmlFragment, Rend
  *
  * **Example** (Rendering plain text with Result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering plain text with Result"
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
  * import { renderPlainText } from "@beep/md/Md.render"
  *
  * const output = renderPlainText(Md.make([Md.h1("Hello")]))
- * console.log(Result.getOrThrow(output)) // "Hello"
+ * Result.getOrThrow(output) // => "Hello"
  * ```
  *
  * @category utilities
@@ -1544,14 +1544,14 @@ const encodeUnsupported =
  *
  * **Example** (Decoding document to Markdown)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding document to Markdown"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Md } from "@beep/md"
  * import { DocumentToMarkdown } from "@beep/md/Md.render"
  *
  * const program = S.decodeUnknownEffect(DocumentToMarkdown)(Md.make([Md.h1("Hello")]))
- * console.log(Effect.runSync(program)) // "# Hello"
+ * Effect.runSync(program) // => "# Hello"
  * ```
  *
  * @deprecated Prefer {@link render} or {@link renderUnsafe}. The schema is
@@ -1574,7 +1574,7 @@ export const DocumentToMarkdown = DocumentSchema.pipe(
  *
  * **Example** (Accepting DocumentToMarkdown type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accepting DocumentToMarkdown type"
  * import type { DocumentToMarkdown } from "@beep/md/Md.render"
  *
  * const acceptMarkdown = (value: DocumentToMarkdown) => value
@@ -1621,14 +1621,14 @@ export const DocumentToHtmlFragment = DocumentSchema.pipe(
  *
  * **Example** (Decoding document to plain text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding document to plain text"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Md } from "@beep/md"
  * import { DocumentToPlainText } from "@beep/md/Md.render"
  *
  * const program = S.decodeUnknownEffect(DocumentToPlainText)(Md.make([Md.h1("Hello")]))
- * console.log(Effect.runSync(program)) // "Hello"
+ * Effect.runSync(program) // => "Hello"
  * ```
  *
  * @deprecated Prefer {@link renderPlainText} or {@link renderPlainTextUnsafe}.
@@ -1651,7 +1651,7 @@ export const DocumentToPlainText = DocumentSchema.pipe(
  *
  * **Example** (Accepting DocumentToPlainText type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accepting DocumentToPlainText type"
  * import type { DocumentToPlainText } from "@beep/md/Md.render"
  *
  * const acceptPlainText = (value: DocumentToPlainText) => value
@@ -1668,7 +1668,7 @@ export type DocumentToPlainText = string;
  *
  * **Example** (Accepting DocumentToHtmlFragment type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accepting DocumentToHtmlFragment type"
  * import type { DocumentToHtmlFragment } from "@beep/md/Md.render"
  *
  * const acceptHtml = (value: DocumentToHtmlFragment) => value

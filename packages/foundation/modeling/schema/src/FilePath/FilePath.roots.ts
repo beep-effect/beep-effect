@@ -16,7 +16,7 @@ import { $I, windowsDriveRootRegExp, windowsUncRootRegExp } from "./FilePath.sha
  *
  * **Example** (Decode Windows drive root)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Windows drive root"
  * import { WindowsDriveRoot } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -51,7 +51,7 @@ export const WindowsDriveRoot = S.String.check(
  *
  * **Example** (Type annotated drive root)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated drive root"
  * import * as S from "effect/Schema"
  * import { WindowsDriveRoot } from "@beep/schema/FilePath"
  *
@@ -69,7 +69,7 @@ export type WindowsDriveRoot = typeof WindowsDriveRoot.Type;
  *
  * **Example** (Decode UNC root path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode UNC root path"
  * import { WindowsUncRoot } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -100,7 +100,7 @@ export const WindowsUncRoot = S.String.check(
  *
  * **Example** (Type annotated UNC root)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated UNC root"
  * import * as S from "effect/Schema"
  * import { WindowsUncRoot } from "@beep/schema/FilePath"
  *
@@ -122,7 +122,7 @@ const isWindowsUncRoot = WindowsUncRoot.is;
  *
  * **Example** (Decode path with leaf)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode path with leaf"
  * import { HasLeafSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -180,7 +180,7 @@ export const HasLeafSegment = S.NonEmptyString.check(
  *
  * **Example** (Type annotated leaf path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated leaf path"
  * import * as S from "effect/Schema"
  * import { HasLeafSegment } from "@beep/schema/FilePath"
  *

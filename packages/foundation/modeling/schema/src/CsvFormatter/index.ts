@@ -3,7 +3,7 @@
  *
  * **Example** (Import CsvFormatter namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import CsvFormatter namespace"
  * import * as CsvFormatter from "@beep/schema/CsvFormatter"
  *
  * console.log(CsvFormatter.format)

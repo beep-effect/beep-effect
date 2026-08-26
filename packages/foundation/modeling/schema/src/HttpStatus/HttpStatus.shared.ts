@@ -12,7 +12,7 @@ import { $SchemaId } from "@beep/identity";
  *
  * **Example** (Creating identity composer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Creating identity composer"
  * import { $SchemaId } from "@beep/identity"
  *
  * const $I = $SchemaId.create("HttpStatus")

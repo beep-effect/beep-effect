@@ -90,7 +90,7 @@ import type {
  *
  * **Example** (Accept InlineInput type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept InlineInput type"
  * import type { InlineInput } from "@beep/md/Md"
  *
  * const accept = (input: InlineInput) => input
@@ -107,7 +107,7 @@ export type InlineInput = string | Inline;
  *
  * **Example** (Inline content array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inline content array"
  * import { Md } from "@beep/md"
  * import type { InlineContent } from "@beep/md/Md"
  *
@@ -146,7 +146,7 @@ export type InlineContentBuilder<Node> = {
  *
  * **Example** (Accept BlockInput type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept BlockInput type"
  * import type { BlockInput } from "@beep/md/Md"
  *
  * const accept = (input: BlockInput) => input
@@ -163,7 +163,7 @@ export type BlockInput = string | Block;
  *
  * **Example** (Block content array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Block content array"
  * import { Md } from "@beep/md"
  * import type { BlockContent } from "@beep/md/Md"
  *
@@ -186,7 +186,7 @@ export type BlockContent = BlockInput | ReadonlyArray<BlockInput>;
  *
  * **Example** (Template value as heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Template value as heading"
  * import { Md } from "@beep/md"
  * import type { BlockTemplateValue } from "@beep/md/Md"
  *
@@ -225,7 +225,7 @@ export type BlockContentBuilder<Node> = {
  *
  * **Example** (Strong list item child)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Strong list item child"
  * import { Md } from "@beep/md"
  * import type { ListItemChildInput } from "@beep/md/Md"
  *
@@ -243,7 +243,7 @@ export type ListItemChildInput = InlineInput | Block;
  *
  * **Example** (Nested list item content)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Nested list item content"
  * import { Md } from "@beep/md"
  * import type { ListItemContent } from "@beep/md/Md"
  *
@@ -282,7 +282,7 @@ export type ListItemContentBuilder<Node> = {
  *
  * **Example** (List item input array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="List item input array"
  * import { Md } from "@beep/md"
  * import type { ListItemInput } from "@beep/md/Md"
  *
@@ -312,7 +312,7 @@ type TaskListCompatibilityInput =
  *
  * **Example** (Checked task item object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Checked task item object"
  * import type { TaskListItemInput } from "@beep/md/Md"
  *
  * const item: TaskListItemInput = { text: "Done", checked: true }
@@ -331,7 +331,7 @@ export type TaskListItemInput = TaskListCompatibilityInput;
  *
  * **Example** (String table cell)
  *
- * ```ts
+ * ```ts import.meta.vitest name="String table cell"
  * import type { TableCellInput } from "@beep/md/Md"
  *
  * const cell: TableCellInput = "Name"
@@ -348,7 +348,7 @@ export type TableCellInput = InlineContent | TableCell;
  *
  * **Example** (Row with table cell)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Row with table cell"
  * import { Md } from "@beep/md"
  * import type { TableRowInput } from "@beep/md/Md"
  *
@@ -570,11 +570,11 @@ const asTableRow = (input: TableRowInput): TableRow =>
  *
  * **Example** (Create plain text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create plain text"
  * import { Md } from "@beep/md"
  *
  * const node = Md.text("Hello")
- * console.log(node._tag) // "text"
+ * node._tag // => "text"
  * ```
  *
  * @category constructors
@@ -587,11 +587,11 @@ export const text = (value: string): Text => Text.make({ value });
  *
  * **Example** (Create raw Markdown)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create raw Markdown"
  * import { Md } from "@beep/md"
  *
  * const node = Md.rawMarkdown("**trusted**")
- * console.log(node._tag) // "rawMarkdown"
+ * node._tag // => "rawMarkdown"
  * ```
  *
  * @category constructors
@@ -625,11 +625,11 @@ export const rawHtml = (value: string): RawHtml => RawHtml.make({ value });
  *
  * **Example** (Strong with nested code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Strong with nested code"
  * import { Md } from "@beep/md"
  *
  * const node = Md.strong`Hello ${Md.code("beep")}`
- * console.log(node._tag) // "strong"
+ * node._tag // => "strong"
  * ```
  *
  * @category constructors
@@ -642,11 +642,11 @@ export const strong = makeInlineContentBuilder((children): Strong => Strong.make
  *
  * **Example** (Create emphasized text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create emphasized text"
  * import { Md } from "@beep/md"
  *
  * const node = Md.em("quiet")
- * console.log(node._tag) // "em"
+ * node._tag // => "em"
  * ```
  *
  * @category constructors
@@ -659,11 +659,11 @@ export const em = makeInlineContentBuilder((children): Em => Em.make({ children 
  *
  * **Example** (Create deleted text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create deleted text"
  * import { Md } from "@beep/md"
  *
  * const node = Md.del("removed")
- * console.log(node._tag) // "del"
+ * node._tag // => "del"
  * ```
  *
  * @category constructors
@@ -676,11 +676,11 @@ export const del = makeInlineContentBuilder((children): Del => Del.make({ childr
  *
  * **Example** (Create inline code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create inline code"
  * import { Md } from "@beep/md"
  *
  * const node = Md.code("console.log()")
- * console.log(node._tag) // "code"
+ * node._tag // => "code"
  * ```
  *
  * @category constructors
@@ -693,11 +693,11 @@ export const code = (value: string): Code => Code.make({ value });
  *
  * **Example** (Create hyperlink)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create hyperlink"
  * import { Md } from "@beep/md"
  *
  * const node = Md.a("https://example.com", "Example")
- * console.log(node._tag) // "a"
+ * node._tag // => "a"
  * ```
  *
  * @category constructors
@@ -722,11 +722,11 @@ export const a: {
  *
  * **Example** (Create inline image)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create inline image"
  * import { Md } from "@beep/md"
  *
  * const node = Md.img("/logo.png", { alt: "Logo" })
- * console.log(node._tag) // "img"
+ * node._tag // => "img"
  * ```
  *
  * @category constructors
@@ -746,10 +746,10 @@ export const img: {
  *
  * **Example** (Create line break)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create line break"
  * import { Md } from "@beep/md"
  *
- * console.log(Md.br._tag) // "br"
+ * Md.br._tag // => "br"
  * ```
  *
  * @category constructors
@@ -762,11 +762,11 @@ export const br: Br = Br.make({});
  *
  * **Example** (Create inline math)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create inline math"
  * import { Md } from "@beep/md"
  *
  * const node = Md.inlineMath("a^2")
- * console.log(node._tag) // "inlineMath"
+ * node._tag // => "inlineMath"
  * ```
  *
  * @category constructors
@@ -779,11 +779,11 @@ export const inlineMath = (value: string): InlineMath => InlineMath.make({ value
  *
  * **Example** (Create footnote reference)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create footnote reference"
  * import { Md } from "@beep/md"
  *
  * const node = Md.footnoteRef("note-1")
- * console.log(node._tag) // "footnoteReference"
+ * node._tag // => "footnoteReference"
  * ```
  *
  * @category constructors
@@ -797,11 +797,11 @@ export const footnoteRef = (identifier: string): FootnoteReference =>
  *
  * **Example** (Create h1 heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create h1 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h1`Hello ${Md.em("world")}`
- * console.log(node._tag) // "h1"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -814,11 +814,11 @@ export const h1 = makeInlineContentBuilder((children): Heading => Heading.make({
  *
  * **Example** (Create h2 heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create h2 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h2`Install`
- * console.log(node._tag) // "h2"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -831,11 +831,11 @@ export const h2 = makeInlineContentBuilder((children): Heading => Heading.make({
  *
  * **Example** (Create h3 heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create h3 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h3`Config`
- * console.log(node._tag) // "h3"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -848,11 +848,11 @@ export const h3 = makeInlineContentBuilder((children): Heading => Heading.make({
  *
  * **Example** (Create h4 heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create h4 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h4`Details`
- * console.log(node._tag) // "h4"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -865,11 +865,11 @@ export const h4 = makeInlineContentBuilder((children): Heading => Heading.make({
  *
  * **Example** (Create h5 heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create h5 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h5`Notes`
- * console.log(node._tag) // "h5"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -882,11 +882,11 @@ export const h5 = makeInlineContentBuilder((children): Heading => Heading.make({
  *
  * **Example** (Create h6 heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create h6 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h6`Footnote`
- * console.log(node._tag) // "h6"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -899,11 +899,11 @@ export const h6 = makeInlineContentBuilder((children): Heading => Heading.make({
  *
  * **Example** (Create paragraph)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create paragraph"
  * import { Md } from "@beep/md"
  *
  * const node = Md.p`Hello ${Md.strong("world")}`
- * console.log(node._tag) // "p"
+ * node._tag // => "p"
  * ```
  *
  * @category constructors
@@ -916,11 +916,11 @@ export const p = makeInlineContentBuilder((children): PNode => PNode.make({ chil
  *
  * **Example** (Create list item)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create list item"
  * import { Md } from "@beep/md"
  *
  * const node = Md.li`Item`
- * console.log(node._tag) // "li"
+ * node._tag // => "li"
  * ```
  *
  * @category constructors
@@ -933,11 +933,11 @@ export const li = makeListItemContentBuilder((children): Li => Li.make({ childre
  *
  * **Example** (Create unordered list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create unordered list"
  * import { Md } from "@beep/md"
  *
  * const node = Md.ul(["One", Md.li("Two")])
- * console.log(node._tag) // "ul"
+ * node._tag // => "ul"
  * ```
  *
  * @category constructors
@@ -950,11 +950,11 @@ export const ul = (children: ReadonlyArray<ListItemInput>): Ul => Ul.make({ chil
  *
  * **Example** (Create ordered list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create ordered list"
  * import { Md } from "@beep/md"
  *
  * const node = Md.ol(["One", "Two"])
- * console.log(node._tag) // "ol"
+ * node._tag // => "ol"
  * ```
  *
  * @category constructors
@@ -977,11 +977,11 @@ export const ol: {
  *
  * **Example** (Create checked task item)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create checked task item"
  * import { Md } from "@beep/md"
  *
  * const node = Md.taskItem("Done", { checked: true })
- * console.log(node.checked) // true
+ * node.checked // => true
  * ```
  *
  * @category constructors
@@ -1007,11 +1007,11 @@ const taskListCompatibility = (children: ReadonlyArray<TaskListCompatibilityInpu
  *
  * **Example** (Create task list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create task list"
  * import { Md } from "@beep/md"
  *
  * const node = Md.taskList(["Todo", Md.taskItem("Done", { checked: true })])
- * console.log(node._tag) // "taskList"
+ * node._tag // => "taskList"
  * ```
  *
  * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
@@ -1026,14 +1026,14 @@ export const taskList = taskListCompatibility;
  *
  * **Example** (Task list from items)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Task list from items"
  * import { Md } from "@beep/md"
  *
  * const node = Md.taskListFromItems([
  *   Md.taskItem("Done", { checked: true }),
  *   Md.taskItem("Todo"),
  * ])
- * console.log(node.children.length) // 2
+ * node.children.length // => 2
  * ```
  *
  * @category constructors
@@ -1046,11 +1046,11 @@ export const taskListFromItems = (children: ReadonlyArray<TaskListItemSpec>): Ta
  *
  * **Example** (Create blockquote)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create blockquote"
  * import { Md } from "@beep/md"
  *
  * const node = Md.blockquote`Hello ${Md.strong("world")}`
- * console.log(node._tag) // "blockquote"
+ * node._tag // => "blockquote"
  * ```
  *
  * @category constructors
@@ -1063,11 +1063,11 @@ export const blockquote = makeBlockContentBuilder((children): BlockQuote => Bloc
  *
  * **Example** (Create fenced code block)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create fenced code block"
  * import { Md } from "@beep/md"
  *
  * const node = Md.pre("console.log('beep')", { language: "ts" })
- * console.log(node._tag) // "pre"
+ * node._tag // => "pre"
  * ```
  *
  * @category constructors
@@ -1087,11 +1087,11 @@ export const pre: {
  *
  * **Example** (Create table cell)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create table cell"
  * import { Md } from "@beep/md"
  *
  * const node = Md.tableCell("Name")
- * console.log(node._tag) // "tableCell"
+ * node._tag // => "tableCell"
  * ```
  *
  * @category constructors
@@ -1104,11 +1104,11 @@ export const tableCell = (children: InlineContent): TableCell => TableCell.make(
  *
  * **Example** (Create table row)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create table row"
  * import { Md } from "@beep/md"
  *
  * const node = Md.tableRow(["Name", "Value"])
- * console.log(node._tag) // "tableRow"
+ * node._tag // => "tableRow"
  * ```
  *
  * @category constructors
@@ -1122,11 +1122,11 @@ export const tableRow = (children: ReadonlyArray<TableCellInput>): TableRow =>
  *
  * **Example** (Create table with header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create table with header"
  * import { Md } from "@beep/md"
  *
  * const node = Md.table([["Name", "Value"]], { headerRow: true })
- * console.log(node._tag) // "table"
+ * node._tag // => "table"
  * ```
  *
  * @category constructors
@@ -1159,11 +1159,11 @@ export const table: {
  *
  * **Example** (Create math block)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create math block"
  * import { Md } from "@beep/md"
  *
  * const node = Md.mathBlock("a^2 + b^2 = c^2")
- * console.log(node._tag) // "mathBlock"
+ * node._tag // => "mathBlock"
  * ```
  *
  * @category constructors
@@ -1176,11 +1176,11 @@ export const mathBlock = (value: string): MathBlock => MathBlock.make({ value })
  *
  * **Example** (Create footnote definition)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create footnote definition"
  * import { Md } from "@beep/md"
  *
  * const node = Md.footnoteDef("note-1", "Body")
- * console.log(node._tag) // "footnoteDefinition"
+ * node._tag // => "footnoteDefinition"
  * ```
  *
  * @category constructors
@@ -1200,11 +1200,11 @@ export const footnoteDef: {
  *
  * **Example** (Create warning admonition)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create warning admonition"
  * import { Md } from "@beep/md"
  *
  * const node = Md.admonition("warning", "Careful")
- * console.log(node._tag) // "admonition"
+ * node._tag // => "admonition"
  * ```
  *
  * @category constructors
@@ -1224,11 +1224,11 @@ export const admonition: {
  *
  * **Example** (Create video embed)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create video embed"
  * import { Md } from "@beep/md"
  *
  * const node = Md.embed("video", "https://example.com/video", { title: "Demo" })
- * console.log(node._tag) // "embed"
+ * node._tag // => "embed"
  * ```
  *
  * @category constructors
@@ -1253,12 +1253,12 @@ export const embed: {
  *
  * **Example** (Create YouTube embed result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create YouTube embed result"
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
  *
  * const result = Md.youtube("M7lc1UVf-VE")
- * console.log(Result.isSuccess(result) && result.success._tag === "youtube") // true
+ * Result.isSuccess(result) && result.success._tag === "youtube" // => true
  * ```
  *
  * @category constructors
@@ -1271,12 +1271,12 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
  *
  * **Example** (Create YouTube embed)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create YouTube embed"
  * import { Md } from "@beep/md"
  * import { Result } from "effect"
  *
  * const result = Md.youtube("M7lc1UVf-VE")
- * console.log(Result.isSuccess(result) && result.success._tag === "youtube") // true
+ * Result.isSuccess(result) && result.success._tag === "youtube" // => true
  * ```
  *
  * @category constructors
@@ -1290,7 +1290,7 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
  *
  * **Example** (Effectful YouTube constructor)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Effectful YouTube constructor"
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  *
@@ -1314,11 +1314,11 @@ export const youtubeEffect = Effect.fn("Md.youtubeEffect")(function* (videoId: s
  *
  * **Example** (Unsafe YouTube constructor)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Unsafe YouTube constructor"
  * import { Md } from "@beep/md"
  *
  * const node = Md.youtubeUnsafe("M7lc1UVf-VE")
- * console.log(node._tag) // "youtube"
+ * node._tag // => "youtube"
  * ```
  *
  * @category constructors
@@ -1331,10 +1331,10 @@ export const youtubeUnsafe = (videoId: string): YouTube => YouTube.make({ videoI
  *
  * **Example** (Create horizontal rule)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create horizontal rule"
  * import { Md } from "@beep/md"
  *
- * console.log(Md.hr._tag) // "hr"
+ * Md.hr._tag // => "hr"
  * ```
  *
  * @category constructors
@@ -1347,11 +1347,11 @@ export const hr: Hr = Hr.make({});
  *
  * **Example** (Create Markdown document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Markdown document"
  * import { Md } from "@beep/md"
  *
  * const document = Md.make([Md.h1`Hello`, Md.p`World`])
- * console.log(document._tag) // "document"
+ * document._tag // => "document"
  * ```
  *
  * @category constructors
@@ -1380,12 +1380,12 @@ export const make: {
  *
  * **Example** (Build and render document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build and render document"
  * import { Md } from "@beep/md"
  * import { Result } from "effect"
  *
  * const document = Md.make([Md.h1`Hello`, Md.p`World`])
- * console.log(Result.getOrThrow(Md.render(document))) // "# Hello\n\nWorld"
+ * Result.getOrThrow(Md.render(document)) // => "# Hello\n\nWorld"
  * ```
  *
  * @category constructors

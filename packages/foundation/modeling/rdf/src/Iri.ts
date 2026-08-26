@@ -815,11 +815,11 @@ const startsWithinOrigin = (value: string, origin: string): boolean =>
  *
  * **Example** (Canonicalize a legacy schema.org IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Canonicalize a legacy schema.org IRI"
  * import { canonicalizeSchemaOrgIri } from "@beep/rdf/Iri"
  *
- * console.log(canonicalizeSchemaOrgIri("http://schema.org/name")) // "https://schema.org/name"
- * console.log(canonicalizeSchemaOrgIri("http://purl.org/dc/terms/creator")) // "http://purl.org/dc/terms/creator"
+ * canonicalizeSchemaOrgIri("http://schema.org/name") // => "https://schema.org/name"
+ * canonicalizeSchemaOrgIri("http://purl.org/dc/terms/creator") // => "http://purl.org/dc/terms/creator"
  * ```
  *
  * @category utilities
@@ -925,12 +925,12 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
  *
  * **Example** (Decode absolute IRI reference)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode absolute IRI reference"
  * import * as S from "effect/Schema"
  * import { IRIReference } from "@beep/rdf"
  *
  * const decoded = S.decodeUnknownSync(IRIReference)("https://example.org/resource")
- * console.log(decoded) // "https://example.org/resource"
+ * decoded // => "https://example.org/resource"
  * ```
  *
  * @category validation
@@ -956,7 +956,7 @@ export const IRIReference = S.String.pipe(
  *
  * **Example** (Accept IRIReference type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept IRIReference type"
  * import type { IRIReference } from "@beep/rdf/Iri"
  *
  * const acceptIRIReference = (value: IRIReference) => value
@@ -973,12 +973,12 @@ export type IRIReference = typeof IRIReference.Type;
  *
  * **Example** (Decode relative IRI path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode relative IRI path"
  * import * as S from "effect/Schema"
  * import { RelativeIRIReference } from "@beep/rdf"
  *
  * const decoded = S.decodeUnknownSync(RelativeIRIReference)("/path/to/resource")
- * console.log(decoded) // "/path/to/resource"
+ * decoded // => "/path/to/resource"
  * ```
  *
  * @category validation
@@ -1001,7 +1001,7 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks)
  *
  * **Example** (Accept RelativeIRIReference type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept RelativeIRIReference type"
  * import type { RelativeIRIReference } from "@beep/rdf/Iri"
  *
  * const acceptRelativeIRIReference = (value: RelativeIRIReference) => value
@@ -1018,12 +1018,12 @@ export type RelativeIRIReference = typeof RelativeIRIReference.Type;
  *
  * **Example** (Decode absolute IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode absolute IRI"
  * import * as S from "effect/Schema"
  * import { AbsoluteIRI } from "@beep/rdf"
  *
  * const decoded = S.decodeUnknownSync(AbsoluteIRI)("https://example.org")
- * console.log(decoded) // "https://example.org"
+ * decoded // => "https://example.org"
  * ```
  *
  * @category validation
@@ -1046,7 +1046,7 @@ export const AbsoluteIRI = S.String.pipe(
  *
  * **Example** (Accept AbsoluteIRI type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept AbsoluteIRI type"
  * import type { AbsoluteIRI } from "@beep/rdf/Iri"
  *
  * const acceptAbsoluteIRI = (value: AbsoluteIRI) => value
@@ -1063,12 +1063,12 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  *
  * **Example** (Decode IRI with fragment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode IRI with fragment"
  * import * as S from "effect/Schema"
  * import { IRI } from "@beep/rdf"
  *
  * const decoded = S.decodeUnknownSync(IRI)("https://example.org/page#section")
- * console.log(decoded) // "https://example.org/page#section"
+ * decoded // => "https://example.org/page#section"
  * ```
  *
  * @category validation
@@ -1093,7 +1093,7 @@ export const IRI = S.String.pipe(
  *
  * **Example** (Accept IRI type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept IRI type"
  * import type { IRI } from "@beep/rdf/Iri"
  *
  * const acceptIRI = (value: IRI) => value

@@ -18,12 +18,12 @@ const $I = $SchemaId.create("Thunk");
  *
  * **Example** (TypeId brand equality)
  *
- * ```ts
+ * ```ts import.meta.vitest name="TypeId brand equality"
  * import { TypeId, nominal } from "@beep/schema/Thunk"
  *
  * const typeId: typeof TypeId = TypeId
  * const thunk = nominal(() => "ready")
- * console.log(typeId === TypeId && thunk() === "ready") // true
+ * typeId === TypeId && thunk() === "ready" // => true
  * ```
  *
  * @category type-ids
@@ -36,11 +36,11 @@ export const TypeId = $I`ThunkUnknown`;
  *
  * **Example** (TypeId type satisfaction)
  *
- * ```ts
+ * ```ts import.meta.vitest name="TypeId type satisfaction"
  * import { TypeId, type TypeId as TypeIdType } from "@beep/schema/Thunk"
  *
  * const typeId = TypeId satisfies TypeIdType
- * console.log(typeId === TypeId) // true
+ * typeId === TypeId // => true
  * ```
  *
  * @category type-ids
@@ -54,7 +54,7 @@ export type TypeId = typeof TypeId;
  *
  * **Example** (Satisfy ThunkUnknown type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Satisfy ThunkUnknown type"
  * import { nominal, type ThunkUnknown } from "@beep/schema/Thunk"
  *
  * const thunk = nominal(() => "ready") satisfies ThunkUnknown
@@ -73,7 +73,7 @@ const isThunkUnknownValue = (u: unknown): u is () => unknown => P.isFunction(u);
  *
  * **Example** (Brand zero-arg function)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Brand zero-arg function"
  * import { nominal } from "@beep/schema/Thunk"
  *
  * const thunk = nominal(() => 42)
@@ -91,7 +91,7 @@ export const nominal = Brand.make<ThunkUnknown>(isThunkUnknownValue);
  *
  * **Example** (Decode unknown as thunk)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode unknown as thunk"
  * import * as S from "effect/Schema"
  * import { ThunkUnknown } from "@beep/schema/Thunk"
  *
@@ -119,11 +119,11 @@ export const ThunkUnknown = S.declare<() => unknown>(isThunkUnknownValue).pipe(
  *
  * **Example** (Guard function and string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard function and string"
  * import { isThunkUnknown } from "@beep/schema/Thunk"
  *
- * console.log(isThunkUnknown(() => 1)) // true
- * console.log(isThunkUnknown("hello")) // false
+ * isThunkUnknown(() => 1) // => true
+ * isThunkUnknown("hello") // => false
  * ```
  *
  * @category guards
@@ -139,7 +139,7 @@ export const isThunkUnknown = ThunkUnknown.is;
  *
  * **Example** (Make string thunk schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make string thunk schema"
  * import * as S from "effect/Schema"
  * import * as P from "effect/Predicate"
  * import { make } from "@beep/schema/Thunk"

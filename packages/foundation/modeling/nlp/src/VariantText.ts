@@ -24,11 +24,11 @@ const stringEquals: {
  *
  * **Example** (Dedupe keeping first occurrence)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Dedupe keeping first occurrence"
  * import * as VariantText from "@beep/nlp/VariantText"
  *
  * const deduped = VariantText.orderedDedupe(["foo", "bar", "foo", "", "baz"])
- * console.log(deduped) // ["foo", "bar", "baz"]
+ * deduped // => ["foo", "bar", "baz"]
  * ```
  *
  * @category normalization

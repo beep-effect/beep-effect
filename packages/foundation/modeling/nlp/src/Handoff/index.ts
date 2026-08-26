@@ -14,7 +14,7 @@
  *
  * **Example** (Log UnitInterval value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log UnitInterval value"
  * import { UnitInterval } from "@beep/nlp/Handoff"
  *
  * console.log(UnitInterval)
@@ -30,7 +30,7 @@ export { UnitInterval } from "@beep/schema/UnitInterval";
  *
  * **Example** (Log AnnotatedDocument schema)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Log AnnotatedDocument schema"
  * import { Contract } from "@beep/nlp/Handoff"
  *
  * console.log(Contract.AnnotatedDocument)

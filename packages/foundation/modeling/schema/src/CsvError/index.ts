@@ -3,7 +3,7 @@
  *
  * **Example** (Import CsvError namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import CsvError namespace"
  * import * as CsvError from "@beep/schema/CsvError"
  *
  * const error = CsvError.make("Failed to parse CSV")

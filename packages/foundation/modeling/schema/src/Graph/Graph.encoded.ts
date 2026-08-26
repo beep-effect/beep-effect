@@ -192,7 +192,7 @@ export interface GraphEncodedSchema<Node extends S.Top, Edge extends S.Top>
  *
  * **Example** (Decode encoded edge)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode encoded edge"
  * import { EdgeEncoded } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -225,7 +225,7 @@ export const EdgeEncoded = <Data extends S.Top>(data: Data): EdgeEncodedSchema<D
  *
  * **Example** (Decode encoded graph)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode encoded graph"
  * import { GraphEncoded } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *

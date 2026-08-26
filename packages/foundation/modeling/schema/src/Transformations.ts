@@ -29,7 +29,7 @@ const makeDestructiveOutput = <B>(): S.Codec<Readonly<B>> => S.make<S.Codec<Read
  *
  * **Example** (Data-first and data-last)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Data-first and data-last"
  * import * as S from "effect/Schema"
  * import { pipe } from "effect"
  * import { destructiveTransform } from "@beep/schema/Transformations"

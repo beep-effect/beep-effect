@@ -46,7 +46,7 @@ type ResolvedHeader = {
  *
  * **Example** (Make SecureHeaderOptions instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make SecureHeaderOptions instance"
  * import { SecureHeaderOptions } from "@beep/schema/SecureHeaderOptions"
  *
  * const options = SecureHeaderOptions.make({ nosniff: "nosniff" })
@@ -82,7 +82,7 @@ export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureH
  *
  * **Example** (Make SecureHeaderEntry pair)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make SecureHeaderEntry pair"
  * import { SecureHeaderEntry } from "@beep/schema/SecureHeaderOptions"
  *
  * const entry = SecureHeaderEntry.make({ key: "X-Content-Type-Options", value: "nosniff" })
@@ -152,12 +152,12 @@ const resolveHeaders = Effect.fnUntraced(function* (
  *
  * **Example** (Create headers record object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create headers record object"
  * import { Effect } from "effect"
  * import { createHeadersObject } from "@beep/schema/SecureHeaderOptions"
  *
  * const headers = Effect.runSync(createHeadersObject({ nosniff: "nosniff" }))
- * console.log(headers["X-Content-Type-Options"]) // "nosniff"
+ * headers["X-Content-Type-Options"] // => "nosniff"
  * ```
  *
  * @effects
@@ -184,12 +184,12 @@ export const createHeadersObject = Effect.fn("SecureHeaderOptions.createHeadersO
  *
  * **Example** (Create SecureHeaderEntry array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create SecureHeaderEntry array"
  * import { Effect } from "effect"
  * import { createSecureHeaders } from "@beep/schema/SecureHeaderOptions"
  *
  * const headers = Effect.runSync(createSecureHeaders({ nosniff: "nosniff" }))
- * console.log(headers[0]?.key) // "X-Content-Type-Options"
+ * headers[3]?.key // => "X-Content-Type-Options"
  * ```
  *
  * @effects

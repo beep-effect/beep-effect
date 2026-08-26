@@ -26,7 +26,7 @@ const defaultMaxAge = 60 * 60 * 24;
  *
  * **Example** (Making Expect-CT config)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Making Expect-CT config"
  * import { ExpectCTConfig } from "@beep/schema/ExpectCt"
  *
  * const config = ExpectCTConfig.make({ enforce: true, maxAge: 86400 })
@@ -52,12 +52,12 @@ export class ExpectCTConfig extends S.Class<ExpectCTConfig>($I`ExpectCTConfig`)(
  *
  * **Example** (Decoding enabled Expect-CT)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding enabled Expect-CT"
  * import * as S from "effect/Schema"
- * import { ExpectCTConfig, ExpectCTEnabled } from "@beep/schema/ExpectCt"
+ * import { ExpectCTEnabled } from "@beep/schema/ExpectCt"
  *
- * const enabled = S.decodeUnknownSync(ExpectCTEnabled)([true, ExpectCTConfig.make({ enforce: true })])
- * console.log(enabled[0])
+ * const enabled = S.decodeUnknownSync(ExpectCTEnabled)([true, { enforce: true }])
+ * enabled[0] // => true
  * ```
  *
  * @category schemas
@@ -74,7 +74,7 @@ export const ExpectCTEnabled = S.Tuple([S.Literal(true), ExpectCTConfig]).pipe(
  *
  * **Example** (Typing enabled Expect-CT)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typing enabled Expect-CT"
  * import { ExpectCTConfig, type ExpectCTEnabled } from "@beep/schema/ExpectCt"
  *
  * const enabled: ExpectCTEnabled = [true, ExpectCTConfig.make({ enforce: true })]
@@ -91,7 +91,7 @@ export type ExpectCTEnabled = typeof ExpectCTEnabled.Type;
  *
  * **Example** (Decoding Expect-CT option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding Expect-CT option"
  * import * as S from "effect/Schema"
  * import { ExpectCTOption } from "@beep/schema/ExpectCt"
  *
@@ -112,7 +112,7 @@ export const ExpectCTOption = S.Union([S.Boolean, ExpectCTEnabled]).pipe(
  *
  * **Example** (Typing Expect-CT option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typing Expect-CT option"
  * import type { ExpectCTOption } from "@beep/schema/ExpectCt"
  *
  * const option: ExpectCTOption = true
@@ -129,7 +129,7 @@ export type ExpectCTOption = typeof ExpectCTOption.Type;
  *
  * **Example** (Making response header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Making response header"
  * import * as O from "effect/Option"
  * import { ExpectCTResponseHeader } from "@beep/schema/ExpectCt"
  *
@@ -218,7 +218,7 @@ const decodeExpectCTValue = Effect.fn("ExpectCT.decodeExpectCTValue")(function* 
  *
  * **Example** (Decoding Expect-CT header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding Expect-CT header"
  * import * as S from "effect/Schema"
  * import { ExpectCTHeader } from "@beep/schema/ExpectCt"
  *
@@ -290,7 +290,7 @@ export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
  *
  * **Example** (Typing Expect-CT header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typing Expect-CT header"
  * import * as O from "effect/Option"
  * import { ExpectCTResponseHeader, type ExpectCTHeader } from "@beep/schema/ExpectCt"
  *
@@ -319,7 +319,7 @@ export { ExpectCTConfig as Config, ExpectCTResponseHeader as ResponseHeader };
  *
  * **Example** (Decoding Option alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding Option alias"
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/ExpectCt"
  *
@@ -336,7 +336,7 @@ export const Option = ExpectCTOption;
  *
  * **Example** (Typing Option alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typing Option alias"
  * import type { Option } from "@beep/schema/ExpectCt"
  *
  * const option: Option = true
@@ -353,7 +353,7 @@ export type Option = typeof Option.Type;
  *
  * **Example** (Decoding Header alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding Header alias"
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/ExpectCt"
  *
@@ -371,7 +371,7 @@ export const Header = ExpectCTHeader;
  *
  * **Example** (Typing Header alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typing Header alias"
  * import * as O from "effect/Option"
  * import { ExpectCTResponseHeader, type Header } from "@beep/schema/ExpectCt"
  *

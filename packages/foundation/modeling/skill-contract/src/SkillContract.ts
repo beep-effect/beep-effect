@@ -21,7 +21,7 @@ const $I = $SkillContractId.create("SkillContract");
  *
  * **Example** (Construct a contract id)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a contract id"
  * import { SkillContractId } from "@beep/skill-contract"
  *
  * console.log(SkillContractId.make("qa-inventory-judge"))
@@ -50,10 +50,10 @@ export type SkillContractId = typeof SkillContractId.Type;
  *
  * **Example** (Inspect receipt bindings)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect receipt bindings"
  * import { ReceiptTypeBindings } from "@beep/skill-contract"
  *
- * console.log(ReceiptTypeBindings.fields.gateSummary !== undefined) // true
+ * ReceiptTypeBindings.fields.gateSummary !== undefined // => true
  * ```
  *
  * @category models
@@ -82,10 +82,10 @@ export class ReceiptTypeBindings extends S.Class<ReceiptTypeBindings>($I`Receipt
  *
  * **Example** (Inspect aggregate fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect aggregate fields"
  * import { SkillContract } from "@beep/skill-contract"
  *
- * console.log(SkillContract.fields.receiptTypes !== undefined) // true
+ * SkillContract.fields.receiptTypes !== undefined // => true
  * ```
  *
  * @category aggregates

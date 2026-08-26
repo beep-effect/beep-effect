@@ -33,11 +33,11 @@ export { SCHEMA_ORG_NAMESPACE, SCHEMA_ORG_TERMS } from "./generated/SchemaOrg.te
  *
  * **Example** (Inspect SCHEMA_NAME NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect SCHEMA_NAME NamedNode"
  * import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg"
  *
- * console.log(SCHEMA_NAME.value) // "https://schema.org/name"
- * console.log(SCHEMA_NAME.termType) // "NamedNode"
+ * SCHEMA_NAME.value // => "https://schema.org/name"
+ * SCHEMA_NAME.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -50,11 +50,11 @@ export const SCHEMA_NAME = makeNamedNode(`${SCHEMA_ORG_NAMESPACE}name`);
  *
  * **Example** (Inspect SCHEMA_PERSON NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect SCHEMA_PERSON NamedNode"
  * import { SCHEMA_PERSON } from "@beep/rdf/Vocab/SchemaOrg"
  *
- * console.log(SCHEMA_PERSON.value) // "https://schema.org/Person"
- * console.log(SCHEMA_PERSON.termType) // "NamedNode"
+ * SCHEMA_PERSON.value // => "https://schema.org/Person"
+ * SCHEMA_PERSON.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -67,11 +67,11 @@ export const SCHEMA_PERSON = makeNamedNode(`${SCHEMA_ORG_NAMESPACE}Person`);
  *
  * **Example** (Inspect SCHEMA_THING NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect SCHEMA_THING NamedNode"
  * import { SCHEMA_THING } from "@beep/rdf/Vocab/SchemaOrg"
  *
- * console.log(SCHEMA_THING.value) // "https://schema.org/Thing"
- * console.log(SCHEMA_THING.termType) // "NamedNode"
+ * SCHEMA_THING.value // => "https://schema.org/Thing"
+ * SCHEMA_THING.termType // => "NamedNode"
  * ```
  *
  * @category constants

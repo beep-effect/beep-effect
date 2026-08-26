@@ -3,7 +3,7 @@
  *
  * **Example** (Import XssProtection namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import XssProtection namespace"
  * import * as XssProtection from "@beep/schema/XssProtection"
  *
  * console.log(Object.keys(XssProtection).includes("Header"))

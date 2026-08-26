@@ -41,13 +41,13 @@ type SchemaEncoder<Input, Output> = (input: Input, overrideOptions?: SchemaAST.P
  *
  * **Example** (Encode a typed value in an Effect)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode a typed value in an Effect"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { encodeEffect } from "@beep/schema/SchemaUtils/encoders"
  *
  * const encoded = await Effect.runPromise(encodeEffect(S.NumberFromString)(42))
- * console.log(encoded) // "42"
+ * encoded // => "42"
  * ```
  *
  * @see {@link encodeUnknownEffect} when the input is not already typed by the schema.
@@ -98,14 +98,14 @@ export const encodeEffect: {
  *
  * **Example** (Encoding a value to a string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoding a value to a string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { encodeUnknownEffect } from "@beep/schema/SchemaUtils/encoders"
  *
  * const input: unknown = 42
  * const encoded = await Effect.runPromise(encodeUnknownEffect(S.NumberFromString)(input))
- * console.log(encoded) // "42"
+ * encoded // => "42"
  * ```
  *
  * @see {@link encodeEffect} for encoding an input already typed by the schema.
@@ -159,13 +159,13 @@ export const encodeUnknownEffect: {
  *
  * **Example** (Inspect unknown-input encoding as an Exit)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect unknown-input encoding as an Exit"
  * import * as Exit from "effect/Exit"
  * import * as S from "effect/Schema"
  * import { encodeUnknownExit } from "@beep/schema/SchemaUtils/encoders"
  *
  * const encoded = encodeUnknownExit(S.NumberFromString)(42)
- * console.log(Exit.isSuccess(encoded)) // true
+ * Exit.isSuccess(encoded) // => true
  * ```
  *
  * @see {@link encodeExit} for input already typed by the schema.
@@ -219,13 +219,13 @@ export const encodeUnknownExit: {
  *
  * **Example** (Inspect typed-input encoding as an Exit)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect typed-input encoding as an Exit"
  * import * as Exit from "effect/Exit"
  * import * as S from "effect/Schema"
  * import { encodeExit } from "@beep/schema/SchemaUtils/encoders"
  *
  * const encoded = encodeExit(S.NumberFromString)(42)
- * console.log(Exit.isSuccess(encoded)) // true
+ * Exit.isSuccess(encoded) // => true
  * ```
  *
  * @see {@link encodeUnknownExit} for validating unknown input before encoding.
@@ -276,13 +276,13 @@ export const encodeExit: {
  *
  * **Example** (Discard unknown-input error details)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Discard unknown-input error details"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { encodeUnknownOption } from "@beep/schema/SchemaUtils/encoders"
  *
- * console.log(O.isSome(encodeUnknownOption(S.NumberFromString)(42))) // true
- * console.log(O.isNone(encodeUnknownOption(S.NumberFromString)("nope"))) // true
+ * O.isSome(encodeUnknownOption(S.NumberFromString)(42)) // => true
+ * O.isNone(encodeUnknownOption(S.NumberFromString)("nope")) // => true
  * ```
  *
  * @see {@link encodeOption} for input already typed by the schema.
@@ -333,13 +333,13 @@ export const encodeUnknownOption: {
  *
  * **Example** (Encode a typed value as an Option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode a typed value as an Option"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { encodeOption } from "@beep/schema/SchemaUtils/encoders"
  *
  * const encoded = encodeOption(S.NumberFromString)(42)
- * console.log(O.getOrElse(encoded, () => "missing")) // "42"
+ * O.getOrElse(encoded, () => "missing") // => "42"
  * ```
  *
  * @see {@link encodeUnknownOption} for validating unknown input before encoding.
@@ -390,13 +390,13 @@ export const encodeOption: {
  *
  * **Example** (Inspect unknown-input encoding as a Result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect unknown-input encoding as a Result"
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  * import { encodeUnknownResult } from "@beep/schema/SchemaUtils/encoders"
  *
  * const encoded = encodeUnknownResult(S.NumberFromString)(42)
- * console.log(Result.isSuccess(encoded)) // true
+ * Result.isSuccess(encoded) // => true
  * ```
  *
  * @see {@link encodeResult} for input already typed by the schema.
@@ -448,13 +448,13 @@ export const encodeUnknownResult: {
  *
  * **Example** (Inspect typed-input encoding as a Result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect typed-input encoding as a Result"
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  * import { encodeResult } from "@beep/schema/SchemaUtils/encoders"
  *
  * const encoded = encodeResult(S.NumberFromString)(42)
- * console.log(Result.isSuccess(encoded)) // true
+ * Result.isSuccess(encoded) // => true
  * ```
  *
  * @see {@link encodeUnknownResult} for validating unknown input before encoding.
@@ -503,12 +503,12 @@ export const encodeResult: {
  *
  * **Example** (Encode unknown input as a Promise)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode unknown input as a Promise"
  * import * as S from "effect/Schema"
  * import { encodeUnknownPromise } from "@beep/schema/SchemaUtils/encoders"
  *
  * const input: unknown = 42
- * console.log(await encodeUnknownPromise(S.NumberFromString)(input)) // "42"
+ * await encodeUnknownPromise(S.NumberFromString)(input) // => "42"
  * ```
  *
  * @see {@link encodePromise} for input already typed by the schema.
@@ -559,11 +559,11 @@ export const encodeUnknownPromise: {
  *
  * **Example** (Encode a typed value as a Promise)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode a typed value as a Promise"
  * import * as S from "effect/Schema"
  * import { encodePromise } from "@beep/schema/SchemaUtils/encoders"
  *
- * console.log(await encodePromise(S.NumberFromString)(42)) // "42"
+ * await encodePromise(S.NumberFromString)(42) // => "42"
  * ```
  *
  * @see {@link encodeUnknownPromise} for validating unknown input before encoding.
@@ -613,12 +613,12 @@ export const encodePromise: {
  *
  * **Example** (Synchronously encode unknown input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Synchronously encode unknown input"
  * import * as S from "effect/Schema"
  * import { encodeUnknownSync } from "@beep/schema/SchemaUtils/encoders"
  *
  * const input: unknown = 42
- * console.log(encodeUnknownSync(S.NumberFromString)(input)) // "42"
+ * encodeUnknownSync(S.NumberFromString)(input) // => "42"
  * ```
  *
  * @see {@link encodeSync} for input already typed by the schema.
@@ -664,11 +664,11 @@ export const encodeUnknownSync: {
  *
  * **Example** (Synchronously encode a typed value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Synchronously encode a typed value"
  * import * as S from "effect/Schema"
  * import { encodeSync } from "@beep/schema/SchemaUtils/encoders"
  *
- * console.log(encodeSync(S.NumberFromString)(42)) // "42"
+ * encodeSync(S.NumberFromString)(42) // => "42"
  * ```
  *
  * @see {@link encodeUnknownSync} for validating unknown input before encoding.

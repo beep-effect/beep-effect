@@ -19,7 +19,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log Shopify 430 literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log Shopify 430 literal"
  * import { RequestHeaderFieldsTooLargeShopify } from "@beep/schema/HttpStatus"
  *
  * console.log(RequestHeaderFieldsTooLargeShopify.literal)
@@ -50,7 +50,7 @@ export type RequestHeaderFieldsTooLargeShopify = typeof RequestHeaderFieldsTooLa
  *
  * **Example** (Log LoginTimeout literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log LoginTimeout literal"
  * import { LoginTimeout } from "@beep/schema/HttpStatus"
  *
  * console.log(LoginTimeout.literal)
@@ -80,7 +80,7 @@ export type LoginTimeout = typeof LoginTimeout.Type;
  *
  * **Example** (Log header too large)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log header too large"
  * import { RequestHeaderTooLarge } from "@beep/schema/HttpStatus"
  *
  * console.log(RequestHeaderTooLarge.literal)
@@ -110,7 +110,7 @@ export type RequestHeaderTooLarge = typeof RequestHeaderTooLarge.Type;
  *
  * **Example** (Log SSL certificate error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log SSL certificate error"
  * import { SslCertificateError } from "@beep/schema/HttpStatus"
  *
  * console.log(SslCertificateError.literal)
@@ -140,7 +140,7 @@ export type SslCertificateError = typeof SslCertificateError.Type;
  *
  * **Example** (Log SSL certificate required)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log SSL certificate required"
  * import { SslCertificateRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(SslCertificateRequired.literal)
@@ -170,7 +170,7 @@ export type SslCertificateRequired = typeof SslCertificateRequired.Type;
  *
  * **Example** (Log client closed request)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log client closed request"
  * import { ClientClosedRequest } from "@beep/schema/HttpStatus"
  *
  * console.log(ClientClosedRequest.literal)
@@ -201,7 +201,7 @@ export type ClientClosedRequest = typeof ClientClosedRequest.Type;
  *
  * **Example** (Log unknown server error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log unknown server error"
  * import { WebServerReturnedAnUnknownError } from "@beep/schema/HttpStatus"
  *
  * console.log(WebServerReturnedAnUnknownError.literal)
@@ -232,7 +232,7 @@ export type WebServerReturnedAnUnknownError = typeof WebServerReturnedAnUnknownE
  *
  * **Example** (Log web server down)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log web server down"
  * import { WebServerIsDown } from "@beep/schema/HttpStatus"
  *
  * console.log(WebServerIsDown.literal)
@@ -262,7 +262,7 @@ export type WebServerIsDown = typeof WebServerIsDown.Type;
  *
  * **Example** (Log SSL handshake failed)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log SSL handshake failed"
  * import { SslHandshakeFailed } from "@beep/schema/HttpStatus"
  *
  * console.log(SslHandshakeFailed.literal)
@@ -294,7 +294,7 @@ export type SslHandshakeFailed = typeof SslHandshakeFailed.Type;
  *
  * **Example** (Log invalid SSL certificate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log invalid SSL certificate"
  * import { InvalidSslCertificate } from "@beep/schema/HttpStatus"
  *
  * console.log(InvalidSslCertificate.literal)

@@ -23,7 +23,7 @@ import type * as Order from "effect/Order";
  *
  * **Example** (Non-empty vs empty arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Non-empty vs empty arrays"
  * import { A } from "@beep/utils"
  *
  * const hasItems = A.matchToBoolean([1, 2, 3])
@@ -310,7 +310,7 @@ const optionFromNativeIndex = (index: number): O.Option<number> => (index === -1
  *
  * **Example** (Find index with Option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Find index with Option"
  * import { pipe } from "effect"
  * import { A, O } from "@beep/utils"
  *
@@ -342,7 +342,7 @@ export const indexOf: IndexLookupSignature = dual(
  *
  * **Example** (Find last index with Option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Find last index with Option"
  * import { pipe } from "effect"
  * import { A, O } from "@beep/utils"
  *
@@ -375,7 +375,7 @@ export const lastIndexOf: IndexLookupSignature = dual(
  *
  * **Example** (Slice with options object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Slice with options object"
  * import { pipe } from "effect"
  * import { A } from "@beep/utils"
  *
@@ -400,7 +400,7 @@ export const slice: {
  *
  * **Example** (Index-value entry pairs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Index-value entry pairs"
  * import { A } from "@beep/utils"
  *
  * const indexed = A.entries(["x", "y"])
@@ -420,7 +420,7 @@ export const entries = <T>(self: ReadonlyArray<T>): Array<readonly [number, T]> 
  *
  * **Example** (Materialize numeric indexes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Materialize numeric indexes"
  * import { A } from "@beep/utils"
  *
  * const indexes = A.keys(["x", "y"])
@@ -437,7 +437,7 @@ export const keys = (self: ReadonlyArray<unknown>): Array<number> => A.makeBy(se
  *
  * **Example** (Shallow immutable value copy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Shallow immutable value copy"
  * import { A } from "@beep/utils"
  *
  * const source = ["x", "y"]
@@ -463,7 +463,7 @@ export const values = <T>(self: ReadonlyArray<T>): Array<T> => A.copy(self);
  *
  * **Example** (Mutating append same reference)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Mutating append same reference"
  * import { A } from "@beep/utils"
  *
  * const values = [1, 2]
@@ -494,7 +494,7 @@ export const appendInPlace: {
  *
  * **Example** (Mutating append multiple values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Mutating append multiple values"
  * import { A } from "@beep/utils"
  *
  * const values = ["a"]
@@ -526,7 +526,7 @@ export const appendAllInPlace: {
  *
  * **Example** (In-place sort with Order)
  *
- * ```ts
+ * ```ts import.meta.vitest name="In-place sort with Order"
  * import { A } from "@beep/utils"
  * import * as Order from "effect/Order"
  *
@@ -562,7 +562,7 @@ export const sortInPlace: {
  *
  * **Example** (In-place splice with options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="In-place splice with options"
  * import { A } from "@beep/utils"
  *
  * const values = ["a", "b", "c"]
@@ -604,7 +604,7 @@ export const spliceInPlace: {
  *
  * **Example** (Re-export makeReadonly usage)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Re-export makeReadonly usage"
  * import { A } from "@beep/utils"
  *
  * const values = A.makeReadonly("beep")
@@ -626,7 +626,7 @@ export * from "effect/Array";
  *
  * **Example** (Normalize value or array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize value or array"
  * import { A } from "@beep/utils"
  *
  * const single = A.makeReadonly("hello")

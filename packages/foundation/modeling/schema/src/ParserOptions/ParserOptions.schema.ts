@@ -43,7 +43,7 @@ const decodeRegExpResult = S.decodeResult(RegExpFromStr);
  *
  * **Example** (Decode header value input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode header value input"
  * import { HeaderValueInput } from "@beep/schema/ParserOptions"
  * import * as S from "effect/Schema"
  *
@@ -72,7 +72,7 @@ export type HeaderValueInput = typeof HeaderValueInput.Type;
  *
  * **Example** (Create parser options error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create parser options error"
  * import { Error as ParserOptionsError } from "@beep/schema/ParserOptions"
  * import * as O from "effect/Option"
  *
@@ -124,7 +124,7 @@ const buildNextTokenRegExp = (escapedDelimiter: string): globalThis.RegExp =>
  *
  * **Example** (Create parser options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create parser options"
  * import { ParserOptions } from "@beep/schema/ParserOptions"
  *
  * const options = ParserOptions.new({ delimiter: ";" })
@@ -213,7 +213,7 @@ export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
  *
  * **Example** (Satisfy parser options args)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Satisfy parser options args"
  * import type { ParserOptionsArgs } from "@beep/schema/ParserOptions"
  *
  * const options = { delimiter: ";" } satisfies ParserOptionsArgs

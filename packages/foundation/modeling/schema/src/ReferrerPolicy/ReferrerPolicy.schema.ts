@@ -36,11 +36,11 @@ const ReferrerPolicyValueBase = LiteralKit([
  *
  * **Example** (Validate strict-origin value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate strict-origin value"
  * import * as S from "effect/Schema"
  * import { ReferrerPolicyValue } from "@beep/schema/ReferrerPolicy"
  *
- * console.log(S.is(ReferrerPolicyValue)("strict-origin")) // true
+ * S.is(ReferrerPolicyValue)("strict-origin") // => true
  * ```
  *
  * @category schemas
@@ -58,7 +58,7 @@ export const ReferrerPolicyValue = ReferrerPolicyValueBase.pipe(
  *
  * **Example** (Assign typed policy value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign typed policy value"
  * import type { ReferrerPolicyValue } from "@beep/schema/ReferrerPolicy"
  *
  * const value: ReferrerPolicyValue = "strict-origin"
@@ -75,7 +75,7 @@ export type ReferrerPolicyValue = typeof ReferrerPolicyValue.Type;
  *
  * **Example** (Decode policy value list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode policy value list"
  * import * as S from "effect/Schema"
  * import { ReferrerPolicyValueList } from "@beep/schema/ReferrerPolicy"
  *
@@ -97,7 +97,7 @@ export const ReferrerPolicyValueList = S.Array(ReferrerPolicyValue).pipe(
  *
  * **Example** (Type policy value list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type policy value list"
  * import type { ReferrerPolicyValueList } from "@beep/schema/ReferrerPolicy"
  *
  * const values: ReferrerPolicyValueList = ["origin", "strict-origin"]
@@ -114,7 +114,7 @@ export type ReferrerPolicyValueList = typeof ReferrerPolicyValueList.Type;
  *
  * **Example** (Decode no-referrer option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode no-referrer option"
  * import * as S from "effect/Schema"
  * import { ReferrerPolicyOption } from "@beep/schema/ReferrerPolicy"
  *
@@ -135,7 +135,7 @@ export const ReferrerPolicyOption = S.Union([S.Literal(false), ReferrerPolicyVal
  *
  * **Example** (Assign typed option value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign typed option value"
  * import type { ReferrerPolicyOption } from "@beep/schema/ReferrerPolicy"
  *
  * const option: ReferrerPolicyOption = "no-referrer"
@@ -152,7 +152,7 @@ export type ReferrerPolicyOption = typeof ReferrerPolicyOption.Type;
  *
  * **Example** (Make response header model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make response header model"
  * import * as O from "effect/Option"
  * import { ReferrerPolicyResponseHeader } from "@beep/schema/ReferrerPolicy"
  *
@@ -204,7 +204,7 @@ const formatReferrerPolicyValue = Effect.fn("ReferrerPolicy.formatReferrerPolicy
  *
  * **Example** (Decode into response header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode into response header"
  * import * as S from "effect/Schema"
  * import { ReferrerPolicyHeader } from "@beep/schema/ReferrerPolicy"
  *
@@ -282,7 +282,7 @@ export const ReferrerPolicyHeader = S.Union([ReferrerPolicyOption, S.Undefined])
  *
  * **Example** (Type rendered header value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type rendered header value"
  * import * as O from "effect/Option"
  * import { ReferrerPolicyResponseHeader, type ReferrerPolicyHeader } from "@beep/schema/ReferrerPolicy"
  *
@@ -311,7 +311,7 @@ export { ReferrerPolicyResponseHeader as ResponseHeader, ReferrerPolicyValue as 
  *
  * **Example** (Decode via Option alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode via Option alias"
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/ReferrerPolicy"
  *
@@ -328,7 +328,7 @@ export const Option = ReferrerPolicyOption;
  *
  * **Example** (Type Option alias value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type Option alias value"
  * import type { Option } from "@beep/schema/ReferrerPolicy"
  *
  * const option: Option = "no-referrer"
@@ -345,7 +345,7 @@ export type Option = typeof Option.Type;
  *
  * **Example** (Decode via Header alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode via Header alias"
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/ReferrerPolicy"
  *
@@ -363,7 +363,7 @@ export const Header = ReferrerPolicyHeader;
  *
  * **Example** (Type Header alias value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type Header alias value"
  * import * as O from "effect/Option"
  * import { ReferrerPolicyResponseHeader, type Header } from "@beep/schema/ReferrerPolicy"
  *

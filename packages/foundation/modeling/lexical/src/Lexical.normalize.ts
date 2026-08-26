@@ -58,10 +58,10 @@ const youtubeVideoIdFromUrl = (url: URL): O.Option<string> =>
  *
  * **Example** (Decode youtu.be URL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode youtu.be URL"
  * import { legacyYouTubeVideoId } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(legacyYouTubeVideoId("https://youtu.be/M7lc1UVf-VE")) // "M7lc1UVf-VE"
+ * legacyYouTubeVideoId("https://youtu.be/M7lc1UVf-VE") // => "M7lc1UVf-VE"
  * ```
  *
  * @param value - Raw serialized YouTube embed value (bare id or legacy URL).
@@ -90,10 +90,10 @@ export const legacyYouTubeVideoId = (value: string): string => {
  *
  * **Example** (Reject javascript URL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject javascript URL"
  * import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(sanitizeUrl("javascript:alert(1)")) // "#"
+ * sanitizeUrl("javascript:alert(1)") // => "#"
  * ```
  *
  * @param value - Raw serialized Lexical link URL.
@@ -152,10 +152,10 @@ const parseSafeDeclaration = (declaration: string): O.Option<string> => {
  *
  * **Example** (Strip unsafe CSS properties)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Strip unsafe CSS properties"
  * import { sanitizeInlineStyle } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(sanitizeInlineStyle("position:fixed;color:red")) // "color: red"
+ * sanitizeInlineStyle("position:fixed;color:red") // => "color: red"
  * ```
  *
  * @param style - Raw serialized inline CSS declaration list.
@@ -175,10 +175,10 @@ export const sanitizeInlineStyle = (style: string): string =>
  *
  * **Example** (Reject multi-declaration value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject multi-declaration value"
  * import { sanitizeStyleValue } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(sanitizeStyleValue("red; position: fixed")) // ""
+ * sanitizeStyleValue("red; position: fixed") // => ""
  * ```
  *
  * @param value - Raw serialized single CSS value.

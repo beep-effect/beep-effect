@@ -133,7 +133,7 @@ const sparseKeywordOption =
  *
  * **Example** (Decode boolean and object schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode boolean and object schemas"
  * import { SubSchema } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -157,7 +157,7 @@ export const SubSchema = S.Union([S.Boolean, S.suspend((): S.Codec<Node.Type, No
  *
  * **Example** (Assign boolean SubSchema value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign boolean SubSchema value"
  * import type { SubSchema } from "@beep/schema/JSONSchema"
  *
  * const accepting: SubSchema = true
@@ -174,7 +174,7 @@ export type SubSchema = typeof SubSchema.Type;
  *
  * **Example** (Type and Encoded SubSchema values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type and Encoded SubSchema values"
  * import type { SubSchema } from "@beep/schema/JSONSchema"
  *
  * const runtime: SubSchema.Type = false
@@ -262,7 +262,7 @@ const Vocabulary = S.Record(S.String, S.Boolean)
  *
  * **Example** (Construct Node with optional keywords)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct Node with optional keywords"
  * import { Node } from "@beep/schema/JSONSchema"
  * import * as O from "effect/Option"
  *
@@ -404,7 +404,7 @@ export class Node extends S.Class<Node>($I`Node`)(
  *
  * **Example** (Decode wire object via NodeCodec)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode wire object via NodeCodec"
  * import { Node, NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -536,7 +536,7 @@ const mergeWire = ({ extensions = {}, ...known }: PartitionedWire): { readonly [
  *
  * **Example** (Decode flat schema with extensions)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode flat schema with extensions"
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -564,7 +564,7 @@ export const NodeCodec = S.Record(S.String, S.Unknown).pipe(
  *
  * **Example** (Decode object into Node instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode object into Node instance"
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -585,7 +585,7 @@ export type NodeCodec = typeof NodeCodec.Type;
  *
  * **Example** (Decode draft-2020-12 document envelope)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode draft-2020-12 document envelope"
  * import { Document } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -639,7 +639,7 @@ export class Document extends S.Class<Document>($I`Document`)(
  *
  * **Example** (Decode Document from Encoded wire)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Document from Encoded wire"
  * import { Document } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -693,7 +693,7 @@ const decodeUriFragment = O.liftThrowable(decodeURIComponent);
  *
  * **Example** (Resolve escaped local $defs key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Resolve escaped local $defs key"
  * import { resolveLocalRef } from "@beep/schema/JSONSchema"
  * import * as O from "effect/Option"
  *
@@ -731,7 +731,7 @@ export const resolveLocalRef: {
  *
  * **Example** (Resolve sibling $ref into $defs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Resolve sibling $ref into $defs"
  * import { NodeCodec, resolveNodeRef } from "@beep/schema/JSONSchema"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -759,7 +759,7 @@ export const resolveNodeRef = (node: Node.Type): O.Option<SubSchema.Type> =>
  *
  * **Example** (Resolve document top-level $ref)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Resolve document top-level $ref"
  * import { Document, resolveDocumentRef } from "@beep/schema/JSONSchema"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"

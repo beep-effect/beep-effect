@@ -34,7 +34,7 @@ const CsvText = S.String.pipe(
  *
  * **Example** (Satisfy row schema contract)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Satisfy row schema contract"
  * import type { RowSchemaWithFields } from "@beep/schema/Csv"
  * import * as S from "effect/Schema"
  *
@@ -296,7 +296,7 @@ const encodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
  *
  * **Example** (Decode CSV with coercion)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode CSV with coercion"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { CSV } from "@beep/schema/Csv"
@@ -306,7 +306,7 @@ const encodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
  *
  * const program = S.decodeUnknownEffect(CsvSchema)("name,age\nAda,36")
  * const rows = await Effect.runPromise(program)
- * console.log(rows[0]?.age) // 36
+ * rows[0]?.age // => 36
  * ```
  *
  * @category validation
@@ -338,7 +338,7 @@ export const Csv: {
  *
  * **Example** (Type branded CSV text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type branded CSV text"
  * import type { CsvText } from "@beep/schema/Csv"
  *
  * const describe = (text: CsvText): string => `${text.length} characters`

@@ -12,12 +12,12 @@ import { TerritoryName as TerritoryNameSchema } from "./TerritoryCode.ts";
  *
  * **Example** (Decode country display name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode country display name"
  * import * as S from "effect/Schema"
  * import { CountryName } from "@beep/schema/CountryName"
  *
  * const name = S.decodeUnknownSync(CountryName)("United States")
- * console.log(name) // "United States"
+ * name // => "United States"
  * ```
  *
  * @category schemas

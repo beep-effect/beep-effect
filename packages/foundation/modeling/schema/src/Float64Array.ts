@@ -28,14 +28,14 @@ const $I = $SchemaId.create("Float64Array");
  *
  * **Example** (Decode native Float64Array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode native Float64Array"
  * import * as S from "effect/Schema";
  * import { Float64Arr } from "@beep/schema/Float64Array";
  *
  * const decodeFloat64Array = S.decodeUnknownSync(Float64Arr);
  * const value = decodeFloat64Array(new Float64Array([1, 2, 3]));
  *
- * console.log(value.length); // 3
+ * value.length // => 3
  * ```
  *
  * @category validation
@@ -59,12 +59,12 @@ export const Float64Arr = S.instanceOf<globalThis.Float64ArrayConstructor, globa
  *
  * **Example** (Annotate decoded Float64Arr)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate decoded Float64Arr"
  * import * as S from "effect/Schema";
  * import { Float64Arr } from "@beep/schema/Float64Array";
  *
  * const value: Float64Arr = S.decodeUnknownSync(Float64Arr)(new Float64Array([1, 2, 3]));
- * console.log(value.length); // 3
+ * value.length // => 3
  * ```
  *
  * @category models
@@ -84,7 +84,7 @@ export type Float64Arr = typeof Float64Arr.Type;
  *
  * **Example** (Decode and encode values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode and encode values"
  * import * as S from "effect/Schema";
  * import { Float64ArrayFromArray } from "@beep/schema/Float64Array";
  *
@@ -94,8 +94,8 @@ export type Float64Arr = typeof Float64Arr.Type;
  * const value = decodeFloat64Array([0.5, 1.25, 2.75]);
  * const encoded = encodeFloat64Array(value);
  *
- * console.log(value instanceof Float64Array); // true
- * console.log(encoded); // [0.5, 1.25, 2.75]
+ * value instanceof Float64Array // => true
+ * encoded // => [0.5, 1.25, 2.75]
  * ```
  *
  * @category validation
@@ -121,12 +121,12 @@ export const Float64ArrayFromArray = S.Finite.pipe(
  *
  * **Example** (Type annotated Float64Array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated Float64Array"
  * import * as S from "effect/Schema";
  * import { Float64ArrayFromArray } from "@beep/schema/Float64Array";
  *
  * const value: Float64ArrayFromArray = S.decodeUnknownSync(Float64ArrayFromArray)([0.5, 1.25, 2.75]);
- * console.log(value instanceof Float64Array); // true
+ * value instanceof Float64Array // => true
  * ```
  *
  * @category models
@@ -139,11 +139,11 @@ export type Float64ArrayFromArray = typeof Float64ArrayFromArray.Type;
  *
  * **Example** (Use Encoded array type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use Encoded array type"
  * import { type Float64ArrayFromArray } from "@beep/schema/Float64Array";
  *
  * const payload: Float64ArrayFromArray.Encoded = [0.5, 1.25, 2.75];
- * console.log(payload.length); // 3
+ * payload.length // => 3
  * ```
  *
  * @category models
@@ -160,12 +160,12 @@ export declare namespace Float64ArrayFromArray {
    *
    * **Example** (Declare Encoded payload)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Declare Encoded payload"
    * import { type Float64ArrayFromArray } from "@beep/schema/Float64Array";
    *
    * const payload: Float64ArrayFromArray.Encoded = [0.5, 1.25, 2.75];
    *
-   * console.log(payload.length); // 3
+   * payload.length // => 3
    * ```
    *
    * @category models
@@ -188,7 +188,7 @@ export declare namespace Float64ArrayFromArray {
  *
  * **Example** (Inspect insert schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect insert schema"
  * import { Float64ArrayField } from "@beep/schema/Float64Array";
  * import * as S from "effect/Schema";
  *

@@ -80,7 +80,7 @@ const withAlphaValue = ({ color, alpha }: WithAlphaInput): RgbaColorString => {
  *
  * **Example** (Decode rgba color string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode rgba color string"
  * import * as S from "effect/Schema"
  * import { RgbaColorString } from "@beep/schema/Color"
  *
@@ -105,7 +105,7 @@ export const RgbaColorString = S.String.check(RgbaColorStringChecks).pipe(
  *
  * **Example** (Typed rgba color value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed rgba color value"
  * import * as S from "effect/Schema"
  * import { RgbaColorString } from "@beep/schema/Color"
  *
@@ -123,7 +123,7 @@ export type RgbaColorString = typeof RgbaColorString.Type;
  *
  * **Example** (Decode color amount)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode color amount"
  * import * as S from "effect/Schema"
  * import { ColorAmount } from "@beep/schema/Color"
  *
@@ -155,7 +155,7 @@ export const ColorAmount = S.Finite.check(
  *
  * **Example** (Typed color amount value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed color amount value"
  * import * as S from "effect/Schema"
  * import { ColorAmount } from "@beep/schema/Color"
  *
@@ -173,7 +173,7 @@ export type ColorAmount = typeof ColorAmount.Type;
  *
  * **Example** (Decode mix colors input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode mix colors input"
  * import * as S from "effect/Schema"
  * import { MixColorsInput } from "@beep/schema/Color"
  *
@@ -200,7 +200,7 @@ export class MixColorsInput extends S.Class<MixColorsInput>($I`MixColorsInput`)(
  *
  * **Example** (Mix two colors)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Mix two colors"
  * import * as S from "effect/Schema"
  * import { MixColors } from "@beep/schema/Color"
  *
@@ -226,7 +226,7 @@ export const MixColors = MixColorsInput.pipe(
  *
  * **Example** (Typed mixed color value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed mixed color value"
  * import * as S from "effect/Schema"
  * import { MixColors } from "@beep/schema/Color"
  *
@@ -244,7 +244,7 @@ export type MixColors = typeof MixColors.Type;
  *
  * **Example** (Decode lighten input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode lighten input"
  * import * as S from "effect/Schema"
  * import { LightenInput } from "@beep/schema/Color"
  *
@@ -270,7 +270,7 @@ export class LightenInput extends S.Class<LightenInput>($I`LightenInput`)(
  *
  * **Example** (Lighten a color)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Lighten a color"
  * import * as S from "effect/Schema"
  * import { Lighten } from "@beep/schema/Color"
  *
@@ -296,7 +296,7 @@ export const Lighten = LightenInput.pipe(
  *
  * **Example** (Typed lightened color value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed lightened color value"
  * import * as S from "effect/Schema"
  * import { Lighten } from "@beep/schema/Color"
  *
@@ -314,7 +314,7 @@ export type Lighten = typeof Lighten.Type;
  *
  * **Example** (Decode darken input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode darken input"
  * import * as S from "effect/Schema"
  * import { DarkenInput } from "@beep/schema/Color"
  *
@@ -340,7 +340,7 @@ export class DarkenInput extends S.Class<DarkenInput>($I`DarkenInput`)(
  *
  * **Example** (Darken a color)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Darken a color"
  * import * as S from "effect/Schema"
  * import { Darken } from "@beep/schema/Color"
  *
@@ -366,7 +366,7 @@ export const Darken = DarkenInput.pipe(
  *
  * **Example** (Typed darkened color value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed darkened color value"
  * import * as S from "effect/Schema"
  * import { Darken } from "@beep/schema/Color"
  *
@@ -384,7 +384,7 @@ export type Darken = typeof Darken.Type;
  *
  * **Example** (Decode with-alpha input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode with-alpha input"
  * import * as S from "effect/Schema"
  * import { WithAlphaInput } from "@beep/schema/Color"
  *
@@ -410,7 +410,7 @@ export class WithAlphaInput extends S.Class<WithAlphaInput>($I`WithAlphaInput`)(
  *
  * **Example** (Render rgba with alpha)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Render rgba with alpha"
  * import * as S from "effect/Schema"
  * import { WithAlpha } from "@beep/schema/Color"
  *
@@ -436,7 +436,7 @@ export const WithAlpha = WithAlphaInput.pipe(
  *
  * **Example** (Typed rgba with alpha)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed rgba with alpha"
  * import * as S from "effect/Schema"
  * import { WithAlpha } from "@beep/schema/Color"
  *

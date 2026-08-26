@@ -25,7 +25,7 @@ const $I = $SchemaId.create("Csp");
  *
  * **Example** (Decode self source)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode self source"
  * import * as S from "effect/Schema"
  * import { DirectiveSource } from "@beep/schema/Csp"
  *
@@ -47,7 +47,7 @@ export const DirectiveSource = S.Union([...internal.ArrayOfStrOrStr.members, S.U
  *
  * **Example** (Annotate self source)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate self source"
  * import type { DirectiveSource } from "@beep/schema/Csp"
  *
  * const source: DirectiveSource = "'self'"
@@ -70,7 +70,7 @@ const ContentSecurityPolicyHeaderNameBase = LiteralKit([headerName, reportOnlyHe
  *
  * **Example** (Decode CSP header name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode CSP header name"
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyHeaderName } from "@beep/schema/Csp"
  *
@@ -93,7 +93,7 @@ export const ContentSecurityPolicyHeaderName = ContentSecurityPolicyHeaderNameBa
  *
  * **Example** (Annotate CSP header name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate CSP header name"
  * import type { ContentSecurityPolicyHeaderName } from "@beep/schema/Csp"
  *
  * const name: ContentSecurityPolicyHeaderName = "Content-Security-Policy"
@@ -117,14 +117,14 @@ const unwrapDirectiveValue = <T>(value: undefined | T | O.Option<T>): T | undefi
  *
  * **Example** (Select enforcing or report-only)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Select enforcing or report-only"
  * import { getProperHeaderName } from "@beep/schema/Csp"
  *
  * const standardHeader = getProperHeaderName()
  * const reportOnlyHeader = getProperHeaderName(true)
  *
- * console.log(standardHeader) // "Content-Security-Policy"
- * console.log(reportOnlyHeader) // "Content-Security-Policy-Report-Only"
+ * standardHeader // => "Content-Security-Policy"
+ * reportOnlyHeader // => "Content-Security-Policy-Report-Only"
  * ```
  *
  * @param reportOnly - Whether to return the report-only header name.
@@ -153,14 +153,14 @@ type DirectiveValueOptions = {
  *
  * **Example** (Dual-call directive formatting)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Dual-call directive formatting"
  * import { createDirectiveValue } from "@beep/schema/Csp"
  *
  * const value = createDirectiveValue("default-src", ["'self'", "https://cdn.example.com"])
  * const style = createDirectiveValue(["'self'"])("style-src")
  *
- * console.log(value) // "default-src 'self' https://cdn.example.com"
- * console.log(style) // "style-src 'self'"
+ * value // => "default-src 'self' https://cdn.example.com"
+ * style // => "style-src 'self'"
  * ```
  *
  * @typeParam T - Literal directive source value preserved in the output template string.
@@ -197,7 +197,7 @@ export const createDirectiveValue: {
  *
  * **Example** (Decode plugin MIME types)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode plugin MIME types"
  * import * as S from "effect/Schema"
  * import { PluginTypes } from "@beep/schema/Csp"
  *
@@ -219,7 +219,7 @@ export const PluginTypes = internal.ArrayOfStrOrStr.pipe(
  *
  * **Example** (Annotate plugin MIME types)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate plugin MIME types"
  * import type { PluginTypes } from "@beep/schema/Csp"
  *
  * const pluginTypes: PluginTypes = ["application/pdf"]
@@ -253,7 +253,7 @@ const SandboxBase = LiteralKit([
  *
  * **Example** (Decode sandbox token)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode sandbox token"
  * import * as S from "effect/Schema"
  * import { Sandbox } from "@beep/schema/Csp"
  *
@@ -276,7 +276,7 @@ export const Sandbox = SandboxBase.pipe(
  *
  * **Example** (Annotate sandbox token)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate sandbox token"
  * import type { Sandbox } from "@beep/schema/Csp"
  *
  * const sandbox: Sandbox = "allow-scripts"
@@ -336,7 +336,7 @@ const fetchDirectiveNamesByKey = {
  *
  * **Example** (Serialize mixed fetch keys)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Serialize mixed fetch keys"
  * import * as O from "effect/Option"
  * import { FetchDirective } from "@beep/schema/Csp"
  *
@@ -346,7 +346,7 @@ const fetchDirectiveNamesByKey = {
  *   scriptSrc: O.none()
  * })
  *
- * console.log(value) // "default-src 'self'; img-src https:"
+ * value // => "default-src 'self'; img-src https:"
  * ```
  *
  * @category models
@@ -428,7 +428,7 @@ export class FetchDirective extends S.Class<FetchDirective>($I`FetchDirective`)(
  *
  * **Example** (Serialize bare sandbox flag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Serialize bare sandbox flag"
  * import { DocumentDirective } from "@beep/schema/Csp"
  *
  * const value = DocumentDirective.convertToString({
@@ -437,7 +437,7 @@ export class FetchDirective extends S.Class<FetchDirective>($I`FetchDirective`)(
  *   sandbox: true
  * })
  *
- * console.log(value) // "base-uri 'self'; plugin-types application/pdf; sandbox"
+ * value // => "base-uri 'self'; plugin-types application/pdf; sandbox"
  * ```
  *
  * @category models
@@ -493,7 +493,7 @@ export class DocumentDirective extends S.Class<DocumentDirective>($I`DocumentDir
  *
  * **Example** (Serialize navigation directives)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Serialize navigation directives"
  * import { NavigationDirective } from "@beep/schema/Csp"
  *
  * const value = NavigationDirective.convertToString({
@@ -502,7 +502,7 @@ export class DocumentDirective extends S.Class<DocumentDirective>($I`DocumentDir
  *   "navigate-to": "https://example.com"
  * })
  *
- * console.log(value) // "form-action 'self'; frame-ancestors 'none'; navigate-to https://example.com"
+ * value // => "form-action 'self'; frame-ancestors 'none'; navigate-to https://example.com"
  * ```
  *
  * @category models
@@ -553,7 +553,7 @@ export class NavigationDirective extends S.Class<NavigationDirective>($I`Navigat
  *
  * **Example** (Decode report URI path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode report URI path"
  * import * as S from "effect/Schema"
  * import { ReportURI } from "@beep/schema/Csp"
  *
@@ -575,7 +575,7 @@ export const ReportURI = S.Union([...internal.StringOrUrl.members, S.Array(inter
  *
  * **Example** (Annotate report URI path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate report URI path"
  * import type { ReportURI } from "@beep/schema/Csp"
  *
  * const uri: ReportURI = "/csp-report"
@@ -597,7 +597,7 @@ export type ReportURI = typeof ReportURI.Type;
  *
  * **Example** (Serialize report-uri and report-to)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Serialize report-uri and report-to"
  * import { ReportingDirective } from "@beep/schema/Csp"
  *
  * const value = ReportingDirective.convertToString({
@@ -605,7 +605,7 @@ export type ReportURI = typeof ReportURI.Type;
  *   reportTo: "default-endpoint"
  * })
  *
- * console.log(value) // "report-uri https://example.com/csp https://example.com/local-report; report-to default-endpoint"
+ * value // => "report-uri https://example.com/csp https://example.com/local-report; report-to default-endpoint"
  * ```
  *
  * @category models
@@ -655,13 +655,13 @@ export class ReportingDirective extends S.Class<ReportingDirective>($I`Reporting
  *
  * **Example** (Reject partial directive object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject partial directive object"
  * import * as S from "effect/Schema"
  * import { CspDirectives } from "@beep/schema/Csp"
  *
  * const result = S.decodeUnknownResult(CspDirectives)({ defaultSrc: "'self'" })
  *
- * console.log(result._tag) // "Failure"
+ * result._tag // => "Failure"
  * ```
  *
  * @category schemas
@@ -690,7 +690,7 @@ export class CspDirectives extends S.Class<CspDirectives>($I`CspDirectives`)(
  *
  * **Example** (Decode partial directives option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode partial directives option"
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyOptionStruct } from "@beep/schema/Csp"
  *
@@ -736,7 +736,7 @@ export class ContentSecurityPolicyOptionStruct extends S.Class<ContentSecurityPo
  *
  * **Example** (Decode disabled false option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode disabled false option"
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyOption } from "@beep/schema/Csp"
  *
@@ -758,7 +758,7 @@ export const ContentSecurityPolicyOption = S.Union([S.Literal(false), ContentSec
  *
  * **Example** (Annotate disabled false option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate disabled false option"
  * import type { ContentSecurityPolicyOption } from "@beep/schema/Csp"
  *
  * const option: ContentSecurityPolicyOption = false
@@ -775,7 +775,7 @@ export type ContentSecurityPolicyOption = typeof ContentSecurityPolicyOption.Typ
  *
  * **Example** (Decode alias false option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode alias false option"
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/Csp"
  *
@@ -793,7 +793,7 @@ export const Option = ContentSecurityPolicyOption;
  *
  * **Example** (Annotate alias false option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate alias false option"
  * import type { Option } from "@beep/schema/Csp"
  *
  * const option: Option = false
@@ -810,7 +810,7 @@ export type Option = typeof Option.Type;
  *
  * **Example** (Construct response header model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct response header model"
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader } from "@beep/schema/Csp"
  *
@@ -889,15 +889,15 @@ const decodeContentSecurityPolicyHeader = Effect.fn("Csp.decodeContentSecurityPo
  *
  * **Example** (Format option or disable)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Format option or disable"
  * import { ContentSecurityPolicyOptionStruct, createContentSecurityPolicyOptionHeaderValue } from "@beep/schema/Csp"
  *
  * const option = ContentSecurityPolicyOptionStruct.make({
  *   directives: { defaultSrc: "'self'", sandbox: true }
  * })
  *
- * console.log(createContentSecurityPolicyOptionHeaderValue(option)._tag) // "Some"
- * console.log(createContentSecurityPolicyOptionHeaderValue(false)._tag) // "None"
+ * createContentSecurityPolicyOptionHeaderValue(option)._tag // => "Some"
+ * createContentSecurityPolicyOptionHeaderValue(false)._tag // => "None"
  * ```
  *
  * @category formatting
@@ -934,7 +934,7 @@ export const createContentSecurityPolicyOptionHeaderValue = (
  *
  * **Example** (Create report-only response header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create report-only response header"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyHeader } from "@beep/schema/Csp"
@@ -945,8 +945,8 @@ export const createContentSecurityPolicyOptionHeaderValue = (
  * }))
  * const response = O.getOrThrow(header)
  *
- * console.log(response.name) // "Content-Security-Policy-Report-Only"
- * console.log(O.getOrUndefined(response.value)) // "default-src 'self'"
+ * response.name // => "Content-Security-Policy-Report-Only"
+ * O.getOrUndefined(response.value) // => "default-src 'self'"
  * ```
  *
  * @category schemas
@@ -1018,7 +1018,7 @@ export const ContentSecurityPolicyHeader = S.Union([ContentSecurityPolicyOption,
  *
  * **Example** (Annotate response header type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate response header type"
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader, type ContentSecurityPolicyHeader } from "@beep/schema/Csp"
  *
@@ -1047,14 +1047,14 @@ export { ContentSecurityPolicyResponseHeader as ResponseHeader };
  *
  * **Example** (Create header via alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create header via alias"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import { Header } from "@beep/schema/Csp"
  *
  * const header = Effect.runSync(Header.create({ directives: { scriptSrc: "'self'" } }))
  *
- * console.log(O.isSome(header)) // true
+ * O.isSome(header) // => true
  * ```
  *
  * @category schemas
@@ -1067,7 +1067,7 @@ export const Header = ContentSecurityPolicyHeader;
  *
  * **Example** (Annotate header alias type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate header alias type"
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader, type Header } from "@beep/schema/Csp"
  *

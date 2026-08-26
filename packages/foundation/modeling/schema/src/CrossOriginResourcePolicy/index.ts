@@ -3,7 +3,7 @@
  *
  * **Example** (Import CORP namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import CORP namespace"
  * import * as CrossOriginResourcePolicy from "@beep/schema/CrossOriginResourcePolicy"
  *
  * console.log(Object.keys(CrossOriginResourcePolicy).includes("Header"))

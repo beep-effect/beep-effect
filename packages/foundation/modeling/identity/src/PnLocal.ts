@@ -123,11 +123,11 @@ const iriReferenceValue = (iri: string): string => iri.replace(IriReferenceUnsaf
  *
  * **Example** (Validate safe local name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate safe local name"
  * import * as S from "effect/Schema"
  * import { SafePnLocal } from "@beep/identity"
  *
- * console.log(S.is(SafePnLocal)("prefLabel")) // true
+ * S.is(SafePnLocal)("prefLabel") // => true
  * ```
  *
  * @category predicates
@@ -152,7 +152,7 @@ export const SafePnLocal = S.String.check(
  *
  * **Example** (Type a safe local)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a safe local"
  * import type { SafePnLocal } from "@beep/identity"
  *
  * const local: SafePnLocal = "prefLabel"
@@ -171,11 +171,11 @@ const isSafePnLocal = S.is(SafePnLocal);
  *
  * **Example** (Validate safe prefix)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate safe prefix"
  * import * as S from "effect/Schema"
  * import { SafePnPrefix } from "@beep/identity"
  *
- * console.log(S.is(SafePnPrefix)("skos")) // true
+ * S.is(SafePnPrefix)("skos") // => true
  * ```
  *
  * @category predicates
@@ -200,7 +200,7 @@ export const SafePnPrefix = S.String.check(
  *
  * **Example** (Type a safe prefix)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a safe prefix"
  * import type { SafePnPrefix } from "@beep/identity"
  *
  * const prefix: SafePnPrefix = "skos"
@@ -219,11 +219,11 @@ const isSafePnPrefix = S.is(SafePnPrefix);
  *
  * **Example** (Check safe local names)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check safe local names"
  * import { isSafeLocal } from "@beep/identity"
  *
- * console.log(isSafeLocal("prefLabel")) // true
- * console.log(isSafeLocal("Ontology.models/HttpUrl")) // false
+ * isSafeLocal("prefLabel") // => true
+ * isSafeLocal("Ontology.models/HttpUrl") // => false
  * ```
  *
  * @category predicates
@@ -236,11 +236,11 @@ export const isSafeLocal = (local: string): boolean => isSafePnLocal(local);
  *
  * **Example** (Check safe prefixes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check safe prefixes"
  * import { isSafePrefix } from "@beep/identity"
  *
- * console.log(isSafePrefix("skos")) // true
- * console.log(isSafePrefix("bad:prefix")) // false
+ * isSafePrefix("skos") // => true
+ * isSafePrefix("bad:prefix") // => false
  * ```
  *
  * @category predicates
@@ -329,11 +329,11 @@ const acceptsEscapedLocalInternal = (local: string): boolean =>
  *
  * **Example** (Validate escaped local name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate escaped local name"
  * import * as S from "effect/Schema"
  * import { EscapedPnLocal } from "@beep/identity"
  *
- * console.log(S.is(EscapedPnLocal)("Ontology.models\\/HttpUrl")) // true
+ * S.is(EscapedPnLocal)("Ontology.models\\/HttpUrl") // => true
  * ```
  *
  * @category predicates
@@ -358,7 +358,7 @@ export const EscapedPnLocal = S.String.check(
  *
  * **Example** (Type an escaped local)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type an escaped local"
  * import type { EscapedPnLocal } from "@beep/identity"
  *
  * const local: EscapedPnLocal = "Ontology.models\\/HttpUrl"
@@ -377,10 +377,10 @@ const isEscapedPnLocal = S.is(EscapedPnLocal);
  *
  * **Example** (Accept escaped local name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept escaped local name"
  * import { acceptsEscapedLocal } from "@beep/identity"
  *
- * console.log(acceptsEscapedLocal("Ontology.models\\/HttpUrl")) // true
+ * acceptsEscapedLocal("Ontology.models\\/HttpUrl") // => true
  * ```
  *
  * @category predicates
@@ -393,10 +393,10 @@ export const acceptsEscapedLocal = (local: string): boolean => isEscapedPnLocal(
  *
  * **Example** (Unescape local name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Unescape local name"
  * import { unescapeLocal } from "@beep/identity"
  *
- * console.log(unescapeLocal("Ontology.models\\/HttpUrl")) // "Ontology.models/HttpUrl"
+ * unescapeLocal("Ontology.models\\/HttpUrl") // => "Ontology.models/HttpUrl"
  * ```
  *
  * @category codecs
@@ -415,10 +415,10 @@ export const unescapeLocal = (local: string): string => local.replace(/\\([_~.\-
  *
  * **Example** (Escape local name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Escape local name"
  * import { escapeLocal } from "@beep/identity"
  *
- * console.log(escapeLocal("Ontology.models/HttpUrl")) // "Ontology\\.models\\/HttpUrl"
+ * escapeLocal("Ontology.models/HttpUrl") // => "Ontology\\.models\\/HttpUrl"
  * ```
  *
  * @category codecs

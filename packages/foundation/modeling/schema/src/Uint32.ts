@@ -52,13 +52,13 @@ const Uint32Checks = S.makeFilterGroup(
  *
  * **Example** (Decode max uint32 value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode max uint32 value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Uint32 } from "@beep/schema/Uint32"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Uint32)(4_294_967_295))
- * console.log(value) // 4294967295
+ * value // => 4294967295
  * ```
  *
  * @invariant Values are integers from 0 through 4294967295.
@@ -81,7 +81,7 @@ export const Uint32 = S.Finite.annotate({
  *
  * **Example** (Narrow unknown to Uint32)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow unknown to Uint32"
  * import * as S from "effect/Schema"
  * import { Uint32 } from "@beep/schema/Uint32"
  * import type { Uint32 as Uint32Value } from "@beep/schema/Uint32"
@@ -89,7 +89,7 @@ export const Uint32 = S.Finite.annotate({
  * const input: unknown = 15
  * if (S.is(Uint32)(input)) {
  *   const value: Uint32Value = input
- *   console.log(value) // 15
+ *   value // => 15
  * }
  * ```
  *

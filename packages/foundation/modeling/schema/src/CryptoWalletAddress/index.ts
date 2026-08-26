@@ -3,7 +3,7 @@
  *
  * **Example** (Import CryptoWalletAddress namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import CryptoWalletAddress namespace"
  * import * as CryptoWalletAddress from "@beep/schema/CryptoWalletAddress"
  * import * as S from "effect/Schema"
  *

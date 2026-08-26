@@ -27,7 +27,7 @@ const NoSniffValueBase = LiteralKit([defaultValue]);
  *
  * **Example** (Decode nosniff value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode nosniff value"
  * import * as S from "effect/Schema"
  * import { NoSniffValue } from "@beep/schema/NoSniff"
  *
@@ -50,7 +50,7 @@ export const NoSniffValue = NoSniffValueBase.pipe(
  *
  * **Example** (Annotate nosniff type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate nosniff type"
  * import type { NoSniffValue } from "@beep/schema/NoSniff"
  *
  * const value: NoSniffValue = "nosniff"
@@ -69,7 +69,7 @@ const NoSniffOptionBase = LiteralKit([false, ...NoSniffValueBase.Options]);
  *
  * **Example** (Decode disabled option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode disabled option"
  * import * as S from "effect/Schema"
  * import { NoSniffOption } from "@beep/schema/NoSniff"
  *
@@ -92,7 +92,7 @@ export const NoSniffOption = NoSniffOptionBase.pipe(
  *
  * **Example** (Annotate false option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate false option"
  * import type { NoSniffOption } from "@beep/schema/NoSniff"
  *
  * const option: NoSniffOption = false
@@ -109,7 +109,7 @@ export type NoSniffOption = typeof NoSniffOption.Type;
  *
  * **Example** (Construct empty header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct empty header"
  * import * as O from "effect/Option"
  * import { NoSniffResponseHeader } from "@beep/schema/NoSniff"
  *
@@ -137,7 +137,7 @@ type NoSniffResponseHeaderEncoded = typeof NoSniffResponseHeader.Encoded;
  *
  * **Example** (Create default header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create default header"
  * import { Effect } from "effect"
  * import { NoSniffHeader } from "@beep/schema/NoSniff"
  *
@@ -213,7 +213,7 @@ export const NoSniffHeader = S.Union([NoSniffOption, S.Undefined]).pipe(
  *
  * **Example** (Assign response header type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign response header type"
  * import * as O from "effect/Option"
  * import { NoSniffResponseHeader, type NoSniffHeader } from "@beep/schema/NoSniff"
  *
@@ -239,7 +239,7 @@ export { NoSniffOption as Option, NoSniffResponseHeader as ResponseHeader, NoSni
  *
  * **Example** (Create via Header alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create via Header alias"
  * import { Effect } from "effect"
  * import { Header } from "@beep/schema/NoSniff"
  *
@@ -258,7 +258,7 @@ export const Header = NoSniffHeader;
  *
  * **Example** (Type Header as response)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type Header as response"
  * import * as O from "effect/Option"
  * import { NoSniffResponseHeader, type Header } from "@beep/schema/NoSniff"
  *

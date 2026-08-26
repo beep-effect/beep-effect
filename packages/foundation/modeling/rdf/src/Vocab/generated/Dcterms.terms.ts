@@ -12,10 +12,10 @@
  *
  * **Example** (Read the DCMI Terms namespace IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the DCMI Terms namespace IRI"
  * import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/generated/Dcterms.terms"
  *
- * console.log(DCTERMS_NAMESPACE.length > 0) // true
+ * DCTERMS_NAMESPACE.length > 0 // => true
  * ```
  *
  * @category constants
@@ -28,10 +28,10 @@ export const DCTERMS_NAMESPACE = "http://purl.org/dc/terms/" as const;
  *
  * **Example** (Read the DCMI Terms term inventory)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the DCMI Terms term inventory"
  * import { DCTERMS_TERMS } from "@beep/rdf/Vocab/generated/Dcterms.terms"
  *
- * console.log(DCTERMS_TERMS.length > 0) // true
+ * DCTERMS_TERMS.length > 0 // => true
  * ```
  *
  * @category constants

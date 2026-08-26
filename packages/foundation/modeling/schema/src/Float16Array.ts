@@ -47,7 +47,7 @@ const unsupportedFloat16ArrayRuntime = (): never => {
  *
  * **Example** (Type guard usage)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type guard usage"
  * import { isFloat16Array } from "@beep/schema/Float16Array";
  *
  * const value = new Float16Array([1, 2, 3]);
@@ -70,14 +70,14 @@ export const isFloat16Array = (u: unknown): u is Float16Array<ArrayBufferLike> =
  *
  * **Example** (Decode native Float16Array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode native Float16Array"
  * import * as S from "effect/Schema";
  * import { Float16Arr } from "@beep/schema/Float16Array";
  *
  * const decodeFloat16Array = S.decodeUnknownSync(Float16Arr);
  * const value = decodeFloat16Array(new Float16Array([1, 2, 3]));
  *
- * console.log(value.length); // 3
+ * value.length // => 3
  * ```
  *
  * @category validation
@@ -105,12 +105,12 @@ export const Float16Arr = S.declare(isFloat16Array)
  *
  * **Example** (Typed decoded value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed decoded value"
  * import * as S from "effect/Schema";
  * import { Float16Arr } from "@beep/schema/Float16Array";
  *
  * const value: Float16Arr = S.decodeUnknownSync(Float16Arr)(new Float16Array([1, 2, 3]));
- * console.log(value.length); // 3
+ * value.length // => 3
  * ```
  *
  * @category models
@@ -130,7 +130,7 @@ export type Float16Arr = typeof Float16Arr.Type;
  *
  * **Example** (Decode and encode arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode and encode arrays"
  * import * as S from "effect/Schema";
  * import { Float16ArrayFromArray } from "@beep/schema/Float16Array";
  *
@@ -140,8 +140,8 @@ export type Float16Arr = typeof Float16Arr.Type;
  * const value = decodeFloat16Array([0.5, 1.25, 2.75]);
  * const encoded = encodeFloat16Array(value);
  *
- * console.log(value instanceof Float16Array); // true
- * console.log(encoded); // [0.5, 1.25, 2.75]
+ * value instanceof Float16Array // => true
+ * encoded // => [0.5, 1.25, 2.75]
  * ```
  *
  * @category validation
@@ -170,12 +170,12 @@ export const Float16ArrayFromArray = S.Finite.pipe(
  *
  * **Example** (Typed decoded Float16Array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed decoded Float16Array"
  * import * as S from "effect/Schema";
  * import { Float16ArrayFromArray } from "@beep/schema/Float16Array";
  *
  * const value: Float16ArrayFromArray = S.decodeUnknownSync(Float16ArrayFromArray)([0.5, 1.25, 2.75]);
- * console.log(value instanceof Float16Array); // true
+ * value instanceof Float16Array // => true
  * ```
  *
  * @category models
@@ -188,11 +188,11 @@ export type Float16ArrayFromArray = typeof Float16ArrayFromArray.Type;
  *
  * **Example** (Encoded payload type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded payload type"
  * import { type Float16ArrayFromArray } from "@beep/schema/Float16Array";
  *
  * const payload: Float16ArrayFromArray.Encoded = [0.5, 1.25, 2.75];
- * console.log(payload.length); // 3
+ * payload.length // => 3
  * ```
  *
  * @category models
@@ -209,12 +209,12 @@ export declare namespace Float16ArrayFromArray {
    *
    * **Example** (Plain number array payload)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Plain number array payload"
    * import { type Float16ArrayFromArray } from "@beep/schema/Float16Array";
    *
    * const payload: Float16ArrayFromArray.Encoded = [0.5, 1.25, 2.75];
    *
-   * console.log(payload.length); // 3
+   * payload.length // => 3
    * ```
    *
    * @category models
@@ -237,7 +237,7 @@ export declare namespace Float16ArrayFromArray {
  *
  * **Example** (Check insert schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check insert schema"
  * import { Float16ArrayField } from "@beep/schema/Float16Array";
  * import * as S from "effect/Schema";
  *

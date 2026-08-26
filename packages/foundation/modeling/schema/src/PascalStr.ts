@@ -15,12 +15,12 @@ const $I = $SchemaId.create("PascalStr");
  *
  * **Example** (Decode PascalCase string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode PascalCase string"
  * import * as S from "effect/Schema"
  * import { PascalCaseStr } from "@beep/schema"
  *
  * const value = S.decodeUnknownSync(PascalCaseStr)("WorkflowStatus")
- * console.log(value) // "WorkflowStatus"
+ * value // => "WorkflowStatus"
  * ```
  *
  * @category validation
@@ -49,7 +49,7 @@ export const PascalCaseStr = NonEmptyTrimmedStr.pipe(
  *
  * **Example** (Type-annotated PascalCase decode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type-annotated PascalCase decode"
  * import * as S from "effect/Schema"
  * import type { PascalCaseStr } from "@beep/schema"
  * import { PascalCaseStr as PascalCaseStrSchema } from "@beep/schema"

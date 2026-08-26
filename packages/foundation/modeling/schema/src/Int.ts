@@ -16,12 +16,12 @@ const $I = $SchemaId.create("Int");
  *
  * **Example** (Decode finite integer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode finite integer"
  * import * as S from "effect/Schema"
  * import { Int } from "@beep/schema/Int"
  *
  * const value = S.decodeUnknownSync(Int)(42)
- * console.log(value) // 42
+ * value // => 42
  * ```
  *
  * @category validation
@@ -45,12 +45,12 @@ export const Int = S.Int.pipe(S.brand("Int"))
  *
  * **Example** (Typed integer value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed integer value"
  * import * as S from "effect/Schema"
  * import { Int } from "@beep/schema/Int"
  *
  * const value: Int = S.decodeUnknownSync(Int)(42)
- * console.log(value + 1) // 43
+ * value + 1 // => 43
  * ```
  *
  * @category models
@@ -63,12 +63,12 @@ export type Int = typeof Int.Type;
  *
  * **Example** (Decode positive integer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode positive integer"
  * import * as S from "effect/Schema"
  * import { PosInt } from "@beep/schema/Int"
  *
  * const value = S.decodeUnknownSync(PosInt)(5)
- * console.log(value) // 5
+ * value // => 5
  * ```
  *
  * @category validation
@@ -92,12 +92,12 @@ export const PosInt = Int.pipe(S.brand("PosInt"))
  *
  * **Example** (Typed positive integer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed positive integer"
  * import * as S from "effect/Schema"
  * import { PosInt } from "@beep/schema/Int"
  *
  * const count: PosInt = S.decodeUnknownSync(PosInt)(1)
- * console.log(count > 0) // true
+ * count > 0 // => true
  * ```
  *
  * @category models
@@ -110,7 +110,7 @@ export type PosInt = typeof PosInt.Type;
  *
  * **Example** (Decode serial identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode serial identifier"
  * import * as S from "effect/Schema"
  * import { PostgresSerialInt } from "@beep/schema/Int"
  *
@@ -134,12 +134,12 @@ export const PostgresSerialInt = Int.pipe(S.brand("PostgresSerialInt"))
  *
  * **Example** (Typed serial identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed serial identifier"
  * import * as S from "effect/Schema"
  * import { PostgresSerialInt } from "@beep/schema/Int"
  *
  * const id: PostgresSerialInt = S.decodeUnknownSync(PostgresSerialInt)(1)
- * console.log(id) // 1
+ * id // => 1
  * ```
  *
  * @category models
@@ -152,12 +152,12 @@ export type PostgresSerialInt = typeof PostgresSerialInt.Type;
  *
  * **Example** (Decode negative integer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode negative integer"
  * import * as S from "effect/Schema"
  * import { NegInt } from "@beep/schema/Int"
  *
  * const value = S.decodeUnknownSync(NegInt)(-3)
- * console.log(value) // -3
+ * value // => -3
  * ```
  *
  * @category validation
@@ -181,12 +181,12 @@ export const NegInt = Int.pipe(S.brand("NegInt"))
  *
  * **Example** (Typed negative integer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed negative integer"
  * import * as S from "effect/Schema"
  * import { NegInt } from "@beep/schema/Int"
  *
  * const debt: NegInt = S.decodeUnknownSync(NegInt)(-10)
- * console.log(debt < 0) // true
+ * debt < 0 // => true
  * ```
  *
  * @category models
@@ -199,12 +199,12 @@ export type NegInt = typeof NegInt.Type;
  *
  * **Example** (Decode non-positive values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-positive values"
  * import * as S from "effect/Schema"
  * import { NonPositiveInt } from "@beep/schema/Int"
  *
- * console.log(S.decodeUnknownSync(NonPositiveInt)(0)) // 0
- * console.log(S.decodeUnknownSync(NonPositiveInt)(-5)) // -5
+ * S.decodeUnknownSync(NonPositiveInt)(0) // => 0
+ * S.decodeUnknownSync(NonPositiveInt)(-5) // => -5
  * ```
  *
  * @category validation
@@ -228,12 +228,12 @@ export const NonPositiveInt = Int.pipe(S.brand("NonPositiveInt"))
  *
  * **Example** (Typed non-positive integer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed non-positive integer"
  * import * as S from "effect/Schema"
  * import { NonPositiveInt } from "@beep/schema/Int"
  *
  * const offset: NonPositiveInt = S.decodeUnknownSync(NonPositiveInt)(0)
- * console.log(offset <= 0) // true
+ * offset <= 0 // => true
  * ```
  *
  * @category models
@@ -251,12 +251,12 @@ export * from "./Int64.ts";
  *
  * **Example** (Decode non-negative values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-negative values"
  * import * as S from "effect/Schema"
  * import { NonNegativeInt } from "@beep/schema/Int"
  *
- * console.log(S.decodeUnknownSync(NonNegativeInt)(0)) // 0
- * console.log(S.decodeUnknownSync(NonNegativeInt)(100)) // 100
+ * S.decodeUnknownSync(NonNegativeInt)(0) // => 0
+ * S.decodeUnknownSync(NonNegativeInt)(100) // => 100
  * ```
  *
  * @category validation

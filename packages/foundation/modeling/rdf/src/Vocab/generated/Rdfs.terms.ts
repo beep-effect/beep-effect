@@ -12,10 +12,10 @@
  *
  * **Example** (Read the RDFS namespace IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the RDFS namespace IRI"
  * import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/generated/Rdfs.terms"
  *
- * console.log(RDFS_NAMESPACE.length > 0) // true
+ * RDFS_NAMESPACE.length > 0 // => true
  * ```
  *
  * @category constants
@@ -28,10 +28,10 @@ export const RDFS_NAMESPACE = "http://www.w3.org/2000/01/rdf-schema#" as const;
  *
  * **Example** (Read the RDFS term inventory)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the RDFS term inventory"
  * import { RDFS_TERMS } from "@beep/rdf/Vocab/generated/Rdfs.terms"
  *
- * console.log(RDFS_TERMS.length > 0) // true
+ * RDFS_TERMS.length > 0 // => true
  * ```
  *
  * @category constants

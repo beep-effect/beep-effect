@@ -3,7 +3,7 @@
  *
  * **Example** (Import secure headers module)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import secure headers module"
  * import * as HttpHeaders from "@beep/schema/HttpHeaders"
  *
  * console.log(HttpHeaders.createSecureHeaders)

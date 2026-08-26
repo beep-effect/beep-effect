@@ -76,7 +76,7 @@ const AppendFileSyncEncoding = S.Literals([
  *
  * **Example** (Make append options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make append options"
  * import { AppendFileSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = AppendFileSyncOptions.make({ encoding: "utf8", flag: "a" })
@@ -109,7 +109,7 @@ export class AppendFileSyncOptions extends S.Class<AppendFileSyncOptions>($I`App
  *
  * **Example** (Make recursive force options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make recursive force options"
  * import { RmSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = RmSyncOptions.make({ recursive: true, force: true })
@@ -139,7 +139,7 @@ export class RmSyncOptions extends S.Class<RmSyncOptions>($I`RmSyncOptions`)(
  *
  * **Example** (Make withFileTypes options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make withFileTypes options"
  * import { ReaddirSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = ReaddirSyncOptions.make({ withFileTypes: true })
@@ -251,7 +251,7 @@ const toFileInfo = (stats: NodeStats): FileSystem.File.Info => ({
  *
  * **Example** (Append log entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Append log entry"
  * import { appendFileSync } from "@beep/utils/FileSystem"
  *
  * // Build the effect; run it with `Effect.runSync` at a boundary.
@@ -298,7 +298,7 @@ export const appendFileSync: {
  *
  * **Example** (Check path exists)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check path exists"
  * import { Effect } from "effect"
  * import { existsSync } from "@beep/utils/FileSystem"
  *
@@ -323,7 +323,7 @@ export const existsSync = (path: string): Effect.Effect<boolean> => Effect.sync(
  *
  * **Example** (Remove directory recursively)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Remove directory recursively"
  * import { rmSync } from "@beep/utils/FileSystem"
  *
  * const program = rmSync("/tmp/beep-scratch", { recursive: true, force: true })
@@ -357,7 +357,7 @@ export const rmSync: {
  *
  * **Example** (Rename temporary file)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rename temporary file"
  * import { renameSync } from "@beep/utils/FileSystem"
  *
  * const program = renameSync("/tmp/beep-old.txt", "/tmp/beep-new.txt")
@@ -422,7 +422,7 @@ type ReaddirSyncDataFirst = {
  *
  * **Example** (List directory names)
  *
- * ```ts
+ * ```ts import.meta.vitest name="List directory names"
  * import { Effect } from "effect"
  * import { readdirSync } from "@beep/utils/FileSystem"
  *
@@ -452,7 +452,7 @@ export const readdirSync: ReaddirSyncDataLast & ReaddirSyncDataFirst = dual<Read
  *
  * **Example** (Read path file info)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read path file info"
  * import { Effect } from "effect"
  * import { statSync } from "@beep/utils/FileSystem"
  *
@@ -487,7 +487,7 @@ export const statSync = (path: string): Effect.Effect<FileSystem.File.Info, Plat
  *
  * **Example** (Wait for ready file)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Wait for ready file"
  * import { Effect } from "effect"
  * import { makeWaitForFile } from "@beep/utils/FileSystem"
  *

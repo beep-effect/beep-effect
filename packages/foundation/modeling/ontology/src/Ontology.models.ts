@@ -47,7 +47,7 @@ const FolioIriToken = S.NonEmptyString.pipe(
  *
  * **Example** (Checking github source type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Checking github source type"
  * import { SourceType } from "@beep/ontology/Ontology.models"
  *
  * console.log(SourceType.is.github("github"))
@@ -67,7 +67,7 @@ export const SourceType = LiteralKit(["http", "github"]).pipe(
  *
  * **Example** (Assigning github source type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assigning github source type"
  * import type { SourceType } from "@beep/ontology/Ontology.models"
  *
  * const sourceType: SourceType = "github"
@@ -98,7 +98,7 @@ const HttpUrlDefinition = S.String.check(
  *
  * **Example** (Inspecting HttpUrl schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting HttpUrl schema AST"
  * import { HttpUrl } from "@beep/ontology/Ontology.models"
  *
  * console.log(HttpUrl.ast)
@@ -121,7 +121,7 @@ export const HttpUrl = HttpUrlDefinition.pipe(
  *
  * **Example** (Assigning ontology HTTP URL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assigning ontology HTTP URL"
  * import type { HttpUrl } from "@beep/ontology/Ontology.models"
  *
  * const url: HttpUrl = "https://example.com/ontology.owl"
@@ -138,7 +138,7 @@ export type HttpUrl = typeof HttpUrl.Type;
  *
  * **Example** (Inspecting GraphInfo schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting GraphInfo schema AST"
  * import { GraphInfo } from "@beep/ontology/Ontology.models"
  *
  * console.log(GraphInfo.ast)
@@ -233,7 +233,7 @@ export class GraphInfo extends S.Class<GraphInfo>($I`GraphInfo`)(
  *
  * **Example** (Checking healthy status value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Checking healthy status value"
  * import { HealthStatus } from "@beep/ontology/Ontology.models"
  *
  * console.log(HealthStatus.is.healthy("healthy"))
@@ -253,7 +253,7 @@ export const HealthStatus = LiteralKit(["healthy", "unhealthy"]).pipe(
  *
  * **Example** (Assigning healthy status value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assigning healthy status value"
  * import type { HealthStatus } from "@beep/ontology/Ontology.models"
  *
  * const status: HealthStatus = "healthy"
@@ -270,7 +270,7 @@ export type HealthStatus = typeof HealthStatus.Type;
  *
  * **Example** (Inspecting HealthResponse schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting HealthResponse schema AST"
  * import { HealthResponse } from "@beep/ontology/Ontology.models"
  *
  * console.log(HealthResponse.ast)
@@ -301,7 +301,7 @@ export class HealthResponse extends S.Class<HealthResponse>($I`HealthResponse`)(
  *
  * **Example** (Inspecting OWLClass schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting OWLClass schema AST"
  * import { OWLClass } from "@beep/ontology/Ontology.models"
  *
  * console.log(OWLClass.ast)
@@ -501,7 +501,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
  *
  * **Example** (Inspecting OWLObjectProperty schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting OWLObjectProperty schema AST"
  * import { OWLObjectProperty } from "@beep/ontology/Ontology.models"
  *
  * console.log(OWLObjectProperty.ast)
@@ -604,7 +604,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
  *
  * **Example** (Inspecting OWLClassList schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting OWLClassList schema AST"
  * import { OWLClassList } from "@beep/ontology/Ontology.models"
  *
  * console.log(OWLClassList.ast)
@@ -649,7 +649,7 @@ export class OWLClassList extends S.Class<OWLClassList>($I`OWLClassList`)(
  *
  * **Example** (Inspecting OWLObjectPropertyList schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting OWLObjectPropertyList schema AST"
  * import { OWLObjectPropertyList } from "@beep/ontology/Ontology.models"
  *
  * console.log(OWLObjectPropertyList.ast)
@@ -685,7 +685,7 @@ export class OWLObjectPropertyList extends S.Class<OWLObjectPropertyList>($I`OWL
  *
  * **Example** (Inspecting OWLSearchScore schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting OWLSearchScore schema AST"
  * import { OWLSearchScore } from "@beep/ontology/Ontology.models"
  *
  * console.log(OWLSearchScore.ast)
@@ -705,7 +705,7 @@ export const OWLSearchScore = S.Finite.pipe(
  *
  * **Example** (Assigning search relevance score)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assigning search relevance score"
  * import type { OWLSearchScore } from "@beep/ontology/Ontology.models"
  *
  * const score: OWLSearchScore = 0.95
@@ -722,7 +722,7 @@ export type OWLSearchScore = typeof OWLSearchScore.Type;
  *
  * **Example** (Inspecting OWLSearchResult schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting OWLSearchResult schema AST"
  * import { OWLSearchResult } from "@beep/ontology/Ontology.models"
  *
  * console.log(OWLSearchResult.ast)
@@ -742,7 +742,7 @@ export const OWLSearchResult = S.Tuple([OWLClass, OWLSearchScore]).pipe(
  *
  * **Example** (Referencing OWLSearchResult type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Referencing OWLSearchResult type"
  * import type { OWLSearchResult } from "@beep/ontology/Ontology.models"
  *
  * type Result = OWLSearchResult
@@ -758,7 +758,7 @@ export type OWLSearchResult = typeof OWLSearchResult.Type;
  *
  * **Example** (Inspecting OWLSearchResults schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting OWLSearchResults schema AST"
  * import { OWLSearchResults } from "@beep/ontology/Ontology.models"
  *
  * console.log(OWLSearchResults.ast)
@@ -797,7 +797,7 @@ export class OWLSearchResults extends S.Class<OWLSearchResults>($I`OWLSearchResu
  *
  * **Example** (Inspecting location segment schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting location segment schema AST"
  * import { ValidationErrorLocationSegment } from "@beep/ontology/Ontology.models"
  *
  * console.log(ValidationErrorLocationSegment.ast)
@@ -817,7 +817,7 @@ export const ValidationErrorLocationSegment = S.Union([S.String, S.Int]).pipe(
  *
  * **Example** (Assigning body location segment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assigning body location segment"
  * import type { ValidationErrorLocationSegment } from "@beep/ontology/Ontology.models"
  *
  * const segment: ValidationErrorLocationSegment = "body"
@@ -834,7 +834,7 @@ export type ValidationErrorLocationSegment = typeof ValidationErrorLocationSegme
  *
  * **Example** (Inspecting ValidationError schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting ValidationError schema AST"
  * import { ValidationError } from "@beep/ontology/Ontology.models"
  *
  * console.log(ValidationError.ast)
@@ -879,7 +879,7 @@ export class ValidationError extends S.Class<ValidationError>($I`ValidationError
  *
  * **Example** (Inspecting HTTPValidationError schema AST)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspecting HTTPValidationError schema AST"
  * import { HTTPValidationError } from "@beep/ontology/Ontology.models"
  *
  * console.log(HTTPValidationError.ast)

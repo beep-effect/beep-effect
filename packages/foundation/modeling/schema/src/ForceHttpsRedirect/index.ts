@@ -3,7 +3,7 @@
  *
  * **Example** (Import and check Header key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import and check Header key"
  * import * as ForceHttpsRedirect from "@beep/schema/ForceHttpsRedirect"
  *
  * console.log(Object.keys(ForceHttpsRedirect).includes("Header"))

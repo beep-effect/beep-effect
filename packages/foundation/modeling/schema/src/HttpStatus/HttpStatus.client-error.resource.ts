@@ -17,7 +17,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log Gone literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log Gone literal"
  * import { Gone } from "@beep/schema/HttpStatus"
  *
  * console.log(Gone.literal)
@@ -47,7 +47,7 @@ export type Gone = typeof Gone.Type;
  *
  * **Example** (Log LengthRequired literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log LengthRequired literal"
  * import { LengthRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(LengthRequired.literal)
@@ -77,7 +77,7 @@ export type LengthRequired = typeof LengthRequired.Type;
  *
  * **Example** (Log PreconditionFailed literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log PreconditionFailed literal"
  * import { PreconditionFailed } from "@beep/schema/HttpStatus"
  *
  * console.log(PreconditionFailed.literal)
@@ -111,7 +111,7 @@ export type PreconditionFailed = typeof PreconditionFailed.Type;
  *
  * **Example** (Log PayloadTooLarge literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log PayloadTooLarge literal"
  * import { PayloadTooLarge } from "@beep/schema/HttpStatus"
  *
  * console.log(PayloadTooLarge.literal)
@@ -142,7 +142,7 @@ export type PayloadTooLarge = typeof PayloadTooLarge.Type;
  *
  * **Example** (Log UriTooLong literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log UriTooLong literal"
  * import { UriTooLong } from "@beep/schema/HttpStatus"
  *
  * console.log(UriTooLong.literal)
@@ -173,7 +173,7 @@ export type UriTooLong = typeof UriTooLong.Type;
  *
  * **Example** (Log UnsupportedMediaType literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log UnsupportedMediaType literal"
  * import { UnsupportedMediaType } from "@beep/schema/HttpStatus"
  *
  * console.log(UnsupportedMediaType.literal)
@@ -204,7 +204,7 @@ export type UnsupportedMediaType = typeof UnsupportedMediaType.Type;
  *
  * **Example** (Log RangeNotSatisfiable literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log RangeNotSatisfiable literal"
  * import { RangeNotSatisfiable } from "@beep/schema/HttpStatus"
  *
  * console.log(RangeNotSatisfiable.literal)
@@ -234,7 +234,7 @@ export type RangeNotSatisfiable = typeof RangeNotSatisfiable.Type;
  *
  * **Example** (Log ExpectationFailed literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log ExpectationFailed literal"
  * import { ExpectationFailed } from "@beep/schema/HttpStatus"
  *
  * console.log(ExpectationFailed.literal)
@@ -264,7 +264,7 @@ export type ExpectationFailed = typeof ExpectationFailed.Type;
  *
  * **Example** (Log ImATeapot literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log ImATeapot literal"
  * import { ImATeapot } from "@beep/schema/HttpStatus"
  *
  * console.log(ImATeapot.literal)

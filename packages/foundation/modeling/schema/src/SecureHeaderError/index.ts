@@ -3,7 +3,7 @@
  *
  * **Example** (Import SecureHeaderError namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import SecureHeaderError namespace"
  * import * as SecureHeaderError from "@beep/schema/SecureHeaderError"
  *
  * console.log(SecureHeaderError.Error)

@@ -63,12 +63,12 @@ const provDateTimeChecks = S.makeFilterGroup(
  *
  * **Example** (Decode CURIE object ref)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode CURIE object ref"
  * import * as S from "effect/Schema"
  * import { ObjectRef } from "@beep/rdf/Prov"
  *
  * const ref = S.decodeUnknownSync(ObjectRef)("prov:entity1")
- * console.log(ref) // "prov:entity1"
+ * ref // => "prov:entity1"
  * ```
  *
  * @category models
@@ -96,7 +96,7 @@ export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
  *
  * **Example** (Accept ObjectRef type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept ObjectRef type"
  * import type { ObjectRef } from "@beep/rdf/Prov"
  *
  * const acceptObjectRef = (value: ObjectRef) => value
@@ -113,12 +113,12 @@ export type ObjectRef = typeof ObjectRef.Type;
  *
  * **Example** (Decode encoded timestamp)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode encoded timestamp"
  * import * as S from "effect/Schema"
  * import { ProvDateTimeEncoded } from "@beep/rdf/Prov"
  *
  * const encoded = S.decodeUnknownSync(ProvDateTimeEncoded)("2024-01-02T03:04:05Z")
- * console.log(encoded) // "2024-01-02T03:04:05Z"
+ * encoded // => "2024-01-02T03:04:05Z"
  * ```
  *
  * @category models
@@ -146,7 +146,7 @@ export const ProvDateTimeEncoded = S.String.check(provDateTimeChecks).pipe(
  *
  * **Example** (Accept encoded datetime type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept encoded datetime type"
  * import type { ProvDateTimeEncoded } from "@beep/rdf/Prov"
  *
  * const acceptProvDateTimeEncoded = (value: ProvDateTimeEncoded) => value
@@ -163,7 +163,7 @@ export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
  *
  * **Example** (Decode to DateTime.Utc)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode to DateTime.Utc"
  * import * as S from "effect/Schema"
  * import { ProvDateTime } from "@beep/rdf/Prov"
  *
@@ -196,7 +196,7 @@ export const ProvDateTime = ProvDateTimeEncoded.pipe(
  *
  * **Example** (Accept ProvDateTime type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept ProvDateTime type"
  * import type { ProvDateTime } from "@beep/rdf/Prov"
  *
  * const acceptProvDateTime = (value: ProvDateTime) => value
@@ -213,14 +213,14 @@ export type ProvDateTime = typeof ProvDateTime.Type;
  *
  * **Example** (Decode observedAt option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode observedAt option"
  * import * as S from "effect/Schema"
  * import { LifecycleTimes } from "@beep/rdf/Prov"
  *
  * const times = S.decodeUnknownSync(LifecycleTimes)({
  *   observedAt: "2024-01-02T03:04:05Z"
  * })
- * console.log(times.observedAt._tag) // "Some"
+ * times.observedAt._tag // => "Some"
  * ```
  *
  * @category models
@@ -257,7 +257,7 @@ export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
  *
  * **Example** (Decode PROV entity)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode PROV entity"
  * import * as S from "effect/Schema"
  * import { Entity } from "@beep/rdf/Prov"
  *
@@ -265,7 +265,7 @@ export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
  *   provType: "Entity",
  *   id: "entity:artifact"
  * })
- * console.log(entity.provType) // "Entity"
+ * entity.provType // => "Entity"
  * ```
  *
  * @category models
@@ -304,7 +304,7 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  *
  * **Example** (Decode PROV activity)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode PROV activity"
  * import * as S from "effect/Schema"
  * import { Activity } from "@beep/rdf/Prov"
  *
@@ -312,7 +312,7 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  *   provType: "Activity",
  *   id: "activity:build"
  * })
- * console.log(activity.provType) // "Activity"
+ * activity.provType // => "Activity"
  * ```
  *
  * @category models
@@ -346,7 +346,7 @@ export class Activity extends S.Class<Activity>($I`Activity`)(
  *
  * **Example** (Decode PROV agent)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode PROV agent"
  * import * as S from "effect/Schema"
  * import { Agent } from "@beep/rdf/Prov"
  *
@@ -354,7 +354,7 @@ export class Activity extends S.Class<Activity>($I`Activity`)(
  *   provType: "Agent",
  *   name: "CI"
  * })
- * console.log(agent.provType) // "Agent"
+ * agent.provType // => "Agent"
  * ```
  *
  * @category models
@@ -385,7 +385,7 @@ export class Agent extends S.Class<Agent>($I`Agent`)(
  *
  * **Example** (Decode software agent)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode software agent"
  * import * as S from "effect/Schema"
  * import { SoftwareAgent } from "@beep/rdf/Prov"
  *
@@ -394,7 +394,7 @@ export class Agent extends S.Class<Agent>($I`Agent`)(
  *   id: "agent:ingest-worker",
  *   name: "ingest-worker"
  * })
- * console.log(agent.provType) // "SoftwareAgent"
+ * agent.provType // => "SoftwareAgent"
  * ```
  *
  * @category models
@@ -425,7 +425,7 @@ export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
  *
  * **Example** (Decode PROV plan)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode PROV plan"
  * import * as S from "effect/Schema"
  * import { Plan } from "@beep/rdf/Prov"
  *
@@ -434,7 +434,7 @@ export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
  *   id: "plan:refresh",
  *   name: "Refresh dataset"
  * })
- * console.log(plan.provType) // "Plan"
+ * plan.provType // => "Plan"
  * ```
  *
  * @category models
@@ -465,7 +465,7 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
  *
  * **Example** (Decode collection members)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode collection members"
  * import * as S from "effect/Schema"
  * import { Collection } from "@beep/rdf/Prov"
  *
@@ -474,7 +474,7 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
  *   id: "collection:bundle",
  *   hadMember: ["entity:source", "entity:derived"]
  * })
- * console.log(collection.hadMember.length) // 2
+ * collection.hadMember.length // => 2
  * ```
  *
  * @category models
@@ -505,7 +505,7 @@ export class Collection extends S.Class<Collection>($I`Collection`)(
  *
  * **Example** (Decode PROV person)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode PROV person"
  * import * as S from "effect/Schema"
  * import { Person } from "@beep/rdf/Prov"
  *
@@ -514,7 +514,7 @@ export class Collection extends S.Class<Collection>($I`Collection`)(
  *   id: "person:ada",
  *   name: "Ada"
  * })
- * console.log(person.provType) // "Person"
+ * person.provType // => "Person"
  * ```
  *
  * @category models
@@ -545,7 +545,7 @@ export class Person extends S.Class<Person>($I`Person`)(
  *
  * **Example** (Decode PROV organization)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode PROV organization"
  * import * as S from "effect/Schema"
  * import { Organization } from "@beep/rdf/Prov"
  *
@@ -554,7 +554,7 @@ export class Person extends S.Class<Person>($I`Person`)(
  *   id: "org:beep",
  *   name: "Beep"
  * })
- * console.log(organization.provType) // "Organization"
+ * organization.provType // => "Organization"
  * ```
  *
  * @category models
@@ -596,7 +596,7 @@ const relationMetadata = (canonicalName: string, overview: string, profile: "min
  *
  * **Example** (Decode usage relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode usage relation"
  * import * as S from "effect/Schema"
  * import { Usage } from "@beep/rdf/Prov"
  *
@@ -605,7 +605,7 @@ const relationMetadata = (canonicalName: string, overview: string, profile: "min
  *   activity: "activity:build",
  *   entity: "entity:source"
  * })
- * console.log(usage.activity) // "activity:build"
+ * usage.activity // => "activity:build"
  * ```
  *
  * @category models
@@ -629,7 +629,7 @@ export class Usage extends S.Class<Usage>($I`Usage`)(
  *
  * **Example** (Decode generation relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode generation relation"
  * import * as S from "effect/Schema"
  * import { Generation } from "@beep/rdf/Prov"
  *
@@ -638,7 +638,7 @@ export class Usage extends S.Class<Usage>($I`Usage`)(
  *   entity: "entity:artifact",
  *   activity: "activity:build"
  * })
- * console.log(generation.entity) // "entity:artifact"
+ * generation.entity // => "entity:artifact"
  * ```
  *
  * @category models
@@ -662,7 +662,7 @@ export class Generation extends S.Class<Generation>($I`Generation`)(
  *
  * **Example** (Decode association with plan)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode association with plan"
  * import * as S from "effect/Schema"
  * import { Association } from "@beep/rdf/Prov"
  *
@@ -672,7 +672,7 @@ export class Generation extends S.Class<Generation>($I`Generation`)(
  *   agent: "agent:ci",
  *   hadPlan: "plan:refresh"
  * })
- * console.log(association.agent) // "agent:ci"
+ * association.agent // => "agent:ci"
  * ```
  *
  * @category models
@@ -696,7 +696,7 @@ export class Association extends S.Class<Association>($I`Association`)(
  *
  * **Example** (Decode attribution relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode attribution relation"
  * import * as S from "effect/Schema"
  * import { Attribution } from "@beep/rdf/Prov"
  *
@@ -705,7 +705,7 @@ export class Association extends S.Class<Association>($I`Association`)(
  *   entity: "entity:artifact",
  *   agent: "agent:ci"
  * })
- * console.log(attribution.entity) // "entity:artifact"
+ * attribution.entity // => "entity:artifact"
  * ```
  *
  * @category models
@@ -728,7 +728,7 @@ export class Attribution extends S.Class<Attribution>($I`Attribution`)(
  *
  * **Example** (Decode delegation relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode delegation relation"
  * import * as S from "effect/Schema"
  * import { Delegation } from "@beep/rdf/Prov"
  *
@@ -738,7 +738,7 @@ export class Attribution extends S.Class<Attribution>($I`Attribution`)(
  *   responsible: "agent:service",
  *   activity: "activity:build"
  * })
- * console.log(delegation.delegate) // "agent:worker"
+ * delegation.delegate // => "agent:worker"
  * ```
  *
  * @category models
@@ -762,7 +762,7 @@ export class Delegation extends S.Class<Delegation>($I`Delegation`)(
  *
  * **Example** (Decode derivation relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode derivation relation"
  * import * as S from "effect/Schema"
  * import { Derivation } from "@beep/rdf/Prov"
  *
@@ -771,7 +771,7 @@ export class Delegation extends S.Class<Delegation>($I`Delegation`)(
  *   generatedEntity: "entity:derived",
  *   usedEntity: "entity:source"
  * })
- * console.log(derivation.usedEntity) // "entity:source"
+ * derivation.usedEntity // => "entity:source"
  * ```
  *
  * @category models
@@ -794,7 +794,7 @@ export class Derivation extends S.Class<Derivation>($I`Derivation`)(
  *
  * **Example** (Decode primary-source relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode primary-source relation"
  * import * as S from "effect/Schema"
  * import { PrimarySource } from "@beep/rdf/Prov"
  *
@@ -803,7 +803,7 @@ export class Derivation extends S.Class<Derivation>($I`Derivation`)(
  *   entity: "entity:claim",
  *   source: "entity:record"
  * })
- * console.log(source.source) // "entity:record"
+ * source.source // => "entity:record"
  * ```
  *
  * @category models
@@ -826,7 +826,7 @@ export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
  *
  * **Example** (Decode quotation relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode quotation relation"
  * import * as S from "effect/Schema"
  * import { Quotation } from "@beep/rdf/Prov"
  *
@@ -835,7 +835,7 @@ export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
  *   entity: "entity:quote",
  *   source: "entity:transcript"
  * })
- * console.log(quotation.entity) // "entity:quote"
+ * quotation.entity // => "entity:quote"
  * ```
  *
  * @category models
@@ -858,7 +858,7 @@ export class Quotation extends S.Class<Quotation>($I`Quotation`)(
  *
  * **Example** (Decode revision relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode revision relation"
  * import * as S from "effect/Schema"
  * import { Revision } from "@beep/rdf/Prov"
  *
@@ -867,7 +867,7 @@ export class Quotation extends S.Class<Quotation>($I`Quotation`)(
  *   entity: "entity:v2",
  *   source: "entity:v1"
  * })
- * console.log(revision.source) // "entity:v1"
+ * revision.source // => "entity:v1"
  * ```
  *
  * @category models
@@ -890,7 +890,7 @@ export class Revision extends S.Class<Revision>($I`Revision`)(
  *
  * **Example** (Decode start relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode start relation"
  * import * as S from "effect/Schema"
  * import { Start } from "@beep/rdf/Prov"
  *
@@ -900,7 +900,7 @@ export class Revision extends S.Class<Revision>($I`Revision`)(
  *   trigger: "entity:commit",
  *   atTime: "2024-01-02T03:04:05Z"
  * })
- * console.log(start.activity) // "activity:build"
+ * start.activity // => "activity:build"
  * ```
  *
  * @category models
@@ -924,7 +924,7 @@ export class Start extends S.Class<Start>($I`Start`)(
  *
  * **Example** (Decode end relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode end relation"
  * import * as S from "effect/Schema"
  * import { End } from "@beep/rdf/Prov"
  *
@@ -934,7 +934,7 @@ export class Start extends S.Class<Start>($I`Start`)(
  *   trigger: "entity:artifact",
  *   atTime: "2024-01-02T03:05:06Z"
  * })
- * console.log(end.trigger) // "entity:artifact"
+ * end.trigger // => "entity:artifact"
  * ```
  *
  * @category models
@@ -958,14 +958,14 @@ export class End extends S.Class<End>($I`End`)(
  *
  * **Example** (Narrow ProvRecord union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow ProvRecord union"
  * import * as S from "effect/Schema"
  * import { Agent, ProvRecord } from "@beep/rdf/Prov"
  *
  * const decoded = S.decodeUnknownSync(ProvRecord)({ provType: "Agent", name: "bob" })
  *
  * if (S.is(Agent)(decoded)) {
- *   console.log(decoded.provType) // "Agent"
+ *   decoded.provType // => "Agent"
  * }
  * ```
  *
@@ -1013,7 +1013,7 @@ export const ProvRecord = S.Union([
  *
  * **Example** (Accept ProvRecord type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept ProvRecord type"
  * import type { ProvRecord } from "@beep/rdf/Prov"
  *
  * const acceptProvRecord = (value: ProvRecord) => value
@@ -1030,12 +1030,12 @@ export type ProvRecord = typeof ProvRecord.Type;
  *
  * **Example** (Decode empty ProvBundle)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode empty ProvBundle"
  * import * as S from "effect/Schema"
  * import { ProvBundle } from "@beep/rdf/Prov"
  *
  * const bundle = S.decodeUnknownSync(ProvBundle)({ records: [] })
- * console.log(bundle.records.length) // 0
+ * bundle.records.length // => 0
  * ```
  *
  * @category models
@@ -1069,13 +1069,13 @@ export class ProvBundle extends S.Class<ProvBundle>($I`ProvBundle`)(
  *
  * **Example** (Narrow ProvO to bundle)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow ProvO to bundle"
  * import * as S from "effect/Schema"
  * import { ProvBundle, ProvO } from "@beep/rdf/Prov"
  *
  * const provenance = S.decodeUnknownSync(ProvO)({ records: [] })
  * if (S.is(ProvBundle)(provenance)) {
- *   console.log(provenance.records.length) // 0
+ *   provenance.records.length // => 0
  * }
  * ```
  *
@@ -1102,7 +1102,7 @@ export const ProvO = S.Union([ProvBundle, ProvRecord]).pipe(
  *
  * **Example** (Accept ProvO type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept ProvO type"
  * import type { ProvO } from "@beep/rdf/Prov"
  *
  * const acceptProvO = (value: ProvO) => value

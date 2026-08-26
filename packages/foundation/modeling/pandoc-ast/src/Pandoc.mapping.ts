@@ -48,7 +48,7 @@ const $I = $PandocAstId.create("Pandoc.mapping");
  *
  * **Example** (Catch tagged mapping error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Catch tagged mapping error"
  * import { Effect } from "effect"
  * import { PandocMappingError } from "@beep/pandoc-ast/Pandoc.mapping"
  *
@@ -1073,7 +1073,7 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
  *
  * **Example** (Make document mapping result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make document mapping result"
  * import * as Md from "@beep/md/Md.model"
  * import { PandocToDocumentResult } from "@beep/pandoc-ast/Pandoc.mapping"
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
@@ -1082,7 +1082,7 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
  *   document: Md.Document.make({ children: [] }),
  *   report: PandocCompatibilityReport.fromIssues([]),
  * })
- * console.log(result.report.profile) // "supported"
+ * result.report.profile // => "supported"
  * ```
  *
  * @category models
@@ -1107,7 +1107,7 @@ export class PandocToDocumentResult extends S.Class<PandocToDocumentResult>($I`P
  *
  * **Example** (Annotate companion result type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate companion result type"
  * import * as Md from "@beep/md/Md.model"
  * import { PandocToDocumentResult } from "@beep/pandoc-ast/Pandoc.mapping"
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
@@ -1116,7 +1116,7 @@ export class PandocToDocumentResult extends S.Class<PandocToDocumentResult>($I`P
  *   document: Md.Document.make({ children: [] }),
  *   report: PandocCompatibilityReport.fromIssues([]),
  * })
- * console.log(result.report.profile) // "supported"
+ * result.report.profile // => "supported"
  * ```
  *
  * @category models
@@ -1145,7 +1145,7 @@ export declare namespace PandocToDocumentResult {
  *
  * **Example** (Make pandoc mapping result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make pandoc mapping result"
  * import { DocumentToPandocResult } from "@beep/pandoc-ast/Pandoc.mapping"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
@@ -1154,7 +1154,7 @@ export declare namespace PandocToDocumentResult {
  *   pandoc: PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} }),
  *   report: PandocCompatibilityReport.fromIssues([]),
  * })
- * console.log(result.pandoc.apiVersion[0]) // 1
+ * result.pandoc.apiVersion[0] // => 1
  * ```
  *
  * @category models
@@ -1179,7 +1179,7 @@ export class DocumentToPandocResult extends S.Class<DocumentToPandocResult>($I`D
  *
  * **Example** (Annotate companion result type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate companion result type"
  * import { DocumentToPandocResult } from "@beep/pandoc-ast/Pandoc.mapping"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
@@ -1188,7 +1188,7 @@ export class DocumentToPandocResult extends S.Class<DocumentToPandocResult>($I`D
  *   pandoc: PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} }),
  *   report: PandocCompatibilityReport.fromIssues([]),
  * })
- * console.log(result.pandoc.apiVersion[0]) // 1
+ * result.pandoc.apiVersion[0] // => 1
  * ```
  *
  * @category models
@@ -1218,7 +1218,7 @@ export declare namespace DocumentToPandocResult {
  *
  * **Example** (Map empty pandoc document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map empty pandoc document"
  * import * as Effect from "effect/Effect"
  * import { pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
@@ -1267,7 +1267,7 @@ export const pandocToDocument = (
  *
  * **Example** (Map empty md document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map empty md document"
  * import * as Effect from "effect/Effect"
  * import * as Md from "@beep/md/Md.model"
  * import { documentToPandoc } from "@beep/pandoc-ast/Pandoc.mapping"

@@ -12,11 +12,11 @@ import { makeNamedNode } from "../Rdf.ts";
  *
  * **Example** (Construct entity IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct entity IRI"
  * import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov"
  *
  * const entityIri = `${PROV_NAMESPACE}Entity`
- * console.log(entityIri) // "http://www.w3.org/ns/prov#Entity"
+ * entityIri // => "http://www.w3.org/ns/prov#Entity"
  * ```
  *
  * @category configuration
@@ -29,11 +29,11 @@ export const PROV_NAMESPACE = "http://www.w3.org/ns/prov#" as const;
  *
  * **Example** (Inspect Entity NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Entity NamedNode"
  * import { PROV_ENTITY } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_ENTITY.value) // "http://www.w3.org/ns/prov#Entity"
- * console.log(PROV_ENTITY.termType) // "NamedNode"
+ * PROV_ENTITY.value // => "http://www.w3.org/ns/prov#Entity"
+ * PROV_ENTITY.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -46,11 +46,11 @@ export const PROV_ENTITY = makeNamedNode(`${PROV_NAMESPACE}Entity`);
  *
  * **Example** (Inspect Activity NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Activity NamedNode"
  * import { PROV_ACTIVITY } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_ACTIVITY.value) // "http://www.w3.org/ns/prov#Activity"
- * console.log(PROV_ACTIVITY.termType) // "NamedNode"
+ * PROV_ACTIVITY.value // => "http://www.w3.org/ns/prov#Activity"
+ * PROV_ACTIVITY.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -63,11 +63,11 @@ export const PROV_ACTIVITY = makeNamedNode(`${PROV_NAMESPACE}Activity`);
  *
  * **Example** (Inspect Agent NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Agent NamedNode"
  * import { PROV_AGENT } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_AGENT.value) // "http://www.w3.org/ns/prov#Agent"
- * console.log(PROV_AGENT.termType) // "NamedNode"
+ * PROV_AGENT.value // => "http://www.w3.org/ns/prov#Agent"
+ * PROV_AGENT.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -80,11 +80,11 @@ export const PROV_AGENT = makeNamedNode(`${PROV_NAMESPACE}Agent`);
  *
  * **Example** (Inspect wasGeneratedBy NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect wasGeneratedBy NamedNode"
  * import { PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_WAS_GENERATED_BY.value) // "http://www.w3.org/ns/prov#wasGeneratedBy"
- * console.log(PROV_WAS_GENERATED_BY.termType) // "NamedNode"
+ * PROV_WAS_GENERATED_BY.value // => "http://www.w3.org/ns/prov#wasGeneratedBy"
+ * PROV_WAS_GENERATED_BY.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -97,11 +97,11 @@ export const PROV_WAS_GENERATED_BY = makeNamedNode(`${PROV_NAMESPACE}wasGenerate
  *
  * **Example** (Inspect used NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect used NamedNode"
  * import { PROV_USED } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_USED.value) // "http://www.w3.org/ns/prov#used"
- * console.log(PROV_USED.termType) // "NamedNode"
+ * PROV_USED.value // => "http://www.w3.org/ns/prov#used"
+ * PROV_USED.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -114,10 +114,10 @@ export const PROV_USED = makeNamedNode(`${PROV_NAMESPACE}used`);
  *
  * **Example** (Inspect Software agent class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Software agent class"
  * import { PROV_SOFTWARE_AGENT } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_SOFTWARE_AGENT.value) // "http://www.w3.org/ns/prov#SoftwareAgent"
+ * PROV_SOFTWARE_AGENT.value // => "http://www.w3.org/ns/prov#SoftwareAgent"
  * ```
  *
  * @category constants
@@ -130,10 +130,10 @@ export const PROV_SOFTWARE_AGENT = makeNamedNode(`${PROV_NAMESPACE}SoftwareAgent
  *
  * **Example** (Inspect Usage influence class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Usage influence class"
  * import { PROV_USAGE } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_USAGE.value) // "http://www.w3.org/ns/prov#Usage"
+ * PROV_USAGE.value // => "http://www.w3.org/ns/prov#Usage"
  * ```
  *
  * @category constants
@@ -146,10 +146,10 @@ export const PROV_USAGE = makeNamedNode(`${PROV_NAMESPACE}Usage`);
  *
  * **Example** (Inspect Generation influence class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Generation influence class"
  * import { PROV_GENERATION } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_GENERATION.value) // "http://www.w3.org/ns/prov#Generation"
+ * PROV_GENERATION.value // => "http://www.w3.org/ns/prov#Generation"
  * ```
  *
  * @category constants
@@ -162,10 +162,10 @@ export const PROV_GENERATION = makeNamedNode(`${PROV_NAMESPACE}Generation`);
  *
  * **Example** (Inspect Association influence class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Association influence class"
  * import { PROV_ASSOCIATION } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_ASSOCIATION.value) // "http://www.w3.org/ns/prov#Association"
+ * PROV_ASSOCIATION.value // => "http://www.w3.org/ns/prov#Association"
  * ```
  *
  * @category constants
@@ -178,10 +178,10 @@ export const PROV_ASSOCIATION = makeNamedNode(`${PROV_NAMESPACE}Association`);
  *
  * **Example** (Inspect Attribution influence class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Attribution influence class"
  * import { PROV_ATTRIBUTION } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_ATTRIBUTION.value) // "http://www.w3.org/ns/prov#Attribution"
+ * PROV_ATTRIBUTION.value // => "http://www.w3.org/ns/prov#Attribution"
  * ```
  *
  * @category constants
@@ -194,10 +194,10 @@ export const PROV_ATTRIBUTION = makeNamedNode(`${PROV_NAMESPACE}Attribution`);
  *
  * **Example** (Inspect Derivation influence class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Derivation influence class"
  * import { PROV_DERIVATION } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_DERIVATION.value) // "http://www.w3.org/ns/prov#Derivation"
+ * PROV_DERIVATION.value // => "http://www.w3.org/ns/prov#Derivation"
  * ```
  *
  * @category constants
@@ -210,10 +210,10 @@ export const PROV_DERIVATION = makeNamedNode(`${PROV_NAMESPACE}Derivation`);
  *
  * **Example** (Inspect Primary-source influence class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Primary-source influence class"
  * import { PROV_PRIMARY_SOURCE } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_PRIMARY_SOURCE.value) // "http://www.w3.org/ns/prov#PrimarySource"
+ * PROV_PRIMARY_SOURCE.value // => "http://www.w3.org/ns/prov#PrimarySource"
  * ```
  *
  * @category constants
@@ -226,10 +226,10 @@ export const PROV_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}PrimarySource
  *
  * **Example** (Inspect Direct association property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Direct association property"
  * import { PROV_WAS_ASSOCIATED_WITH } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_WAS_ASSOCIATED_WITH.value) // "http://www.w3.org/ns/prov#wasAssociatedWith"
+ * PROV_WAS_ASSOCIATED_WITH.value // => "http://www.w3.org/ns/prov#wasAssociatedWith"
  * ```
  *
  * @category constants
@@ -242,10 +242,10 @@ export const PROV_WAS_ASSOCIATED_WITH = makeNamedNode(`${PROV_NAMESPACE}wasAssoc
  *
  * **Example** (Inspect Direct attribution property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Direct attribution property"
  * import { PROV_WAS_ATTRIBUTED_TO } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_WAS_ATTRIBUTED_TO.value) // "http://www.w3.org/ns/prov#wasAttributedTo"
+ * PROV_WAS_ATTRIBUTED_TO.value // => "http://www.w3.org/ns/prov#wasAttributedTo"
  * ```
  *
  * @category constants
@@ -258,10 +258,10 @@ export const PROV_WAS_ATTRIBUTED_TO = makeNamedNode(`${PROV_NAMESPACE}wasAttribu
  *
  * **Example** (Inspect Direct primary-source property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Direct primary-source property"
  * import { PROV_HAD_PRIMARY_SOURCE } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_HAD_PRIMARY_SOURCE.value) // "http://www.w3.org/ns/prov#hadPrimarySource"
+ * PROV_HAD_PRIMARY_SOURCE.value // => "http://www.w3.org/ns/prov#hadPrimarySource"
  * ```
  *
  * @category constants
@@ -274,10 +274,10 @@ export const PROV_HAD_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}hadPrimar
  *
  * **Example** (Inspect Direct derivation property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Direct derivation property"
  * import { PROV_WAS_DERIVED_FROM } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_WAS_DERIVED_FROM.value) // "http://www.w3.org/ns/prov#wasDerivedFrom"
+ * PROV_WAS_DERIVED_FROM.value // => "http://www.w3.org/ns/prov#wasDerivedFrom"
  * ```
  *
  * @category constants
@@ -290,10 +290,10 @@ export const PROV_WAS_DERIVED_FROM = makeNamedNode(`${PROV_NAMESPACE}wasDerivedF
  *
  * **Example** (Inspect Direct quotation property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Direct quotation property"
  * import { PROV_WAS_QUOTED_FROM } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_WAS_QUOTED_FROM.value) // "http://www.w3.org/ns/prov#wasQuotedFrom"
+ * PROV_WAS_QUOTED_FROM.value // => "http://www.w3.org/ns/prov#wasQuotedFrom"
  * ```
  *
  * @category constants
@@ -306,10 +306,10 @@ export const PROV_WAS_QUOTED_FROM = makeNamedNode(`${PROV_NAMESPACE}wasQuotedFro
  *
  * **Example** (Inspect Direct revision property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Direct revision property"
  * import { PROV_WAS_REVISION_OF } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_WAS_REVISION_OF.value) // "http://www.w3.org/ns/prov#wasRevisionOf"
+ * PROV_WAS_REVISION_OF.value // => "http://www.w3.org/ns/prov#wasRevisionOf"
  * ```
  *
  * @category constants
@@ -322,10 +322,10 @@ export const PROV_WAS_REVISION_OF = makeNamedNode(`${PROV_NAMESPACE}wasRevisionO
  *
  * **Example** (Inspect Entity generation timestamp property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Entity generation timestamp property"
  * import { PROV_GENERATED_AT_TIME } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_GENERATED_AT_TIME.value) // "http://www.w3.org/ns/prov#generatedAtTime"
+ * PROV_GENERATED_AT_TIME.value // => "http://www.w3.org/ns/prov#generatedAtTime"
  * ```
  *
  * @category constants
@@ -338,10 +338,10 @@ export const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedA
  *
  * **Example** (Inspect Entity invalidation timestamp property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Entity invalidation timestamp property"
  * import { PROV_INVALIDATED_AT_TIME } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_INVALIDATED_AT_TIME.value) // "http://www.w3.org/ns/prov#invalidatedAtTime"
+ * PROV_INVALIDATED_AT_TIME.value // => "http://www.w3.org/ns/prov#invalidatedAtTime"
  * ```
  *
  * @category constants
@@ -354,10 +354,10 @@ export const PROV_INVALIDATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}invalida
  *
  * **Example** (Inspect Activity start timestamp property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Activity start timestamp property"
  * import { PROV_STARTED_AT_TIME } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_STARTED_AT_TIME.value) // "http://www.w3.org/ns/prov#startedAtTime"
+ * PROV_STARTED_AT_TIME.value // => "http://www.w3.org/ns/prov#startedAtTime"
  * ```
  *
  * @category constants
@@ -370,10 +370,10 @@ export const PROV_STARTED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}startedAtTim
  *
  * **Example** (Inspect Activity end timestamp property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Activity end timestamp property"
  * import { PROV_ENDED_AT_TIME } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_ENDED_AT_TIME.value) // "http://www.w3.org/ns/prov#endedAtTime"
+ * PROV_ENDED_AT_TIME.value // => "http://www.w3.org/ns/prov#endedAtTime"
  * ```
  *
  * @category constants
@@ -386,10 +386,10 @@ export const PROV_ENDED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}endedAtTime`);
  *
  * **Example** (Inspect Qualified influence timestamp property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified influence timestamp property"
  * import { PROV_AT_TIME } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_AT_TIME.value) // "http://www.w3.org/ns/prov#atTime"
+ * PROV_AT_TIME.value // => "http://www.w3.org/ns/prov#atTime"
  * ```
  *
  * @category constants
@@ -402,10 +402,10 @@ export const PROV_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}atTime`);
  *
  * **Example** (Inspect Entity value property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Entity value property"
  * import { PROV_VALUE } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_VALUE.value) // "http://www.w3.org/ns/prov#value"
+ * PROV_VALUE.value // => "http://www.w3.org/ns/prov#value"
  * ```
  *
  * @category constants
@@ -418,10 +418,10 @@ export const PROV_VALUE = makeNamedNode(`${PROV_NAMESPACE}value`);
  *
  * **Example** (Inspect Association plan property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Association plan property"
  * import { PROV_HAD_PLAN } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_HAD_PLAN.value) // "http://www.w3.org/ns/prov#hadPlan"
+ * PROV_HAD_PLAN.value // => "http://www.w3.org/ns/prov#hadPlan"
  * ```
  *
  * @category constants
@@ -434,10 +434,10 @@ export const PROV_HAD_PLAN = makeNamedNode(`${PROV_NAMESPACE}hadPlan`);
  *
  * **Example** (Inspect Qualified usage property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified usage property"
  * import { PROV_QUALIFIED_USAGE } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_QUALIFIED_USAGE.value) // "http://www.w3.org/ns/prov#qualifiedUsage"
+ * PROV_QUALIFIED_USAGE.value // => "http://www.w3.org/ns/prov#qualifiedUsage"
  * ```
  *
  * @category constants
@@ -450,10 +450,10 @@ export const PROV_QUALIFIED_USAGE = makeNamedNode(`${PROV_NAMESPACE}qualifiedUsa
  *
  * **Example** (Inspect Qualified generation property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified generation property"
  * import { PROV_QUALIFIED_GENERATION } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_QUALIFIED_GENERATION.value) // "http://www.w3.org/ns/prov#qualifiedGeneration"
+ * PROV_QUALIFIED_GENERATION.value // => "http://www.w3.org/ns/prov#qualifiedGeneration"
  * ```
  *
  * @category constants
@@ -466,10 +466,10 @@ export const PROV_QUALIFIED_GENERATION = makeNamedNode(`${PROV_NAMESPACE}qualifi
  *
  * **Example** (Inspect Qualified association property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified association property"
  * import { PROV_QUALIFIED_ASSOCIATION } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_QUALIFIED_ASSOCIATION.value) // "http://www.w3.org/ns/prov#qualifiedAssociation"
+ * PROV_QUALIFIED_ASSOCIATION.value // => "http://www.w3.org/ns/prov#qualifiedAssociation"
  * ```
  *
  * @category constants
@@ -482,10 +482,10 @@ export const PROV_QUALIFIED_ASSOCIATION = makeNamedNode(`${PROV_NAMESPACE}qualif
  *
  * **Example** (Inspect Qualified attribution property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified attribution property"
  * import { PROV_QUALIFIED_ATTRIBUTION } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_QUALIFIED_ATTRIBUTION.value) // "http://www.w3.org/ns/prov#qualifiedAttribution"
+ * PROV_QUALIFIED_ATTRIBUTION.value // => "http://www.w3.org/ns/prov#qualifiedAttribution"
  * ```
  *
  * @category constants
@@ -498,10 +498,10 @@ export const PROV_QUALIFIED_ATTRIBUTION = makeNamedNode(`${PROV_NAMESPACE}qualif
  *
  * **Example** (Inspect Qualified derivation property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified derivation property"
  * import { PROV_QUALIFIED_DERIVATION } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_QUALIFIED_DERIVATION.value) // "http://www.w3.org/ns/prov#qualifiedDerivation"
+ * PROV_QUALIFIED_DERIVATION.value // => "http://www.w3.org/ns/prov#qualifiedDerivation"
  * ```
  *
  * @category constants
@@ -514,10 +514,10 @@ export const PROV_QUALIFIED_DERIVATION = makeNamedNode(`${PROV_NAMESPACE}qualifi
  *
  * **Example** (Inspect Qualified primary-source property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified primary-source property"
  * import { PROV_QUALIFIED_PRIMARY_SOURCE } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_QUALIFIED_PRIMARY_SOURCE.value) // "http://www.w3.org/ns/prov#qualifiedPrimarySource"
+ * PROV_QUALIFIED_PRIMARY_SOURCE.value // => "http://www.w3.org/ns/prov#qualifiedPrimarySource"
  * ```
  *
  * @category constants
@@ -530,10 +530,10 @@ export const PROV_QUALIFIED_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}qua
  *
  * **Example** (Inspect Qualified entity target property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified entity target property"
  * import { PROV_ENTITY_PROPERTY } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_ENTITY_PROPERTY.value) // "http://www.w3.org/ns/prov#entity"
+ * PROV_ENTITY_PROPERTY.value // => "http://www.w3.org/ns/prov#entity"
  * ```
  *
  * @category constants
@@ -546,10 +546,10 @@ export const PROV_ENTITY_PROPERTY = makeNamedNode(`${PROV_NAMESPACE}entity`);
  *
  * **Example** (Inspect Qualified activity target property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified activity target property"
  * import { PROV_ACTIVITY_PROPERTY } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_ACTIVITY_PROPERTY.value) // "http://www.w3.org/ns/prov#activity"
+ * PROV_ACTIVITY_PROPERTY.value // => "http://www.w3.org/ns/prov#activity"
  * ```
  *
  * @category constants
@@ -562,10 +562,10 @@ export const PROV_ACTIVITY_PROPERTY = makeNamedNode(`${PROV_NAMESPACE}activity`)
  *
  * **Example** (Inspect Qualified agent target property)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Qualified agent target property"
  * import { PROV_AGENT_PROPERTY } from "@beep/rdf/Vocab/Prov"
  *
- * console.log(PROV_AGENT_PROPERTY.value) // "http://www.w3.org/ns/prov#agent"
+ * PROV_AGENT_PROPERTY.value // => "http://www.w3.org/ns/prov#agent"
  * ```
  *
  * @category constants

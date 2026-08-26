@@ -22,10 +22,10 @@ const predicateTypeEquivalence = S.toEquivalence(EvidencePredicateType);
  *
  * **Example** (Inspect receipt reference fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect receipt reference fields"
  * import { EvidenceReceiptReference } from "@beep/skill-contract"
  *
- * console.log(EvidenceReceiptReference.fields.predicateType !== undefined) // true
+ * EvidenceReceiptReference.fields.predicateType !== undefined // => true
  * ```
  *
  * @category models
@@ -47,10 +47,10 @@ export class EvidenceReceiptReference extends S.Class<EvidenceReceiptReference>(
  *
  * **Example** (Inspect ladder receipt bindings)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect ladder receipt bindings"
  * import { EvidenceLadderReceiptTypes } from "@beep/skill-contract"
  *
- * console.log(EvidenceLadderReceiptTypes.fields.semanticallyApplied !== undefined) // true
+ * EvidenceLadderReceiptTypes.fields.semanticallyApplied !== undefined // => true
  * ```
  *
  * @category models
@@ -73,10 +73,10 @@ export class EvidenceLadderReceiptTypes extends S.Class<EvidenceLadderReceiptTyp
  *
  * **Example** (Inspect accepted evidence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect accepted evidence"
  * import { Accepted } from "@beep/skill-contract"
  *
- * console.log(Accepted.fields.accepted !== undefined) // true
+ * Accepted.fields.accepted !== undefined // => true
  * ```
  *
  * @category models
@@ -99,10 +99,10 @@ export class Accepted extends S.Class<Accepted>($I`Accepted`)(
  *
  * **Example** (Inspect persistence evidence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect persistence evidence"
  * import { Persisted } from "@beep/skill-contract"
  *
- * console.log(Persisted.fields.persisted !== undefined) // true
+ * Persisted.fields.persisted !== undefined // => true
  * ```
  *
  * @category models
@@ -126,10 +126,10 @@ export class Persisted extends S.Class<Persisted>($I`Persisted`)(
  *
  * **Example** (Inspect delivery evidence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect delivery evidence"
  * import { Delivered } from "@beep/skill-contract"
  *
- * console.log(Delivered.fields.delivered !== undefined) // true
+ * Delivered.fields.delivered !== undefined // => true
  * ```
  *
  * @category models
@@ -154,10 +154,10 @@ export class Delivered extends S.Class<Delivered>($I`Delivered`)(
  *
  * **Example** (Inspect semantic-application evidence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect semantic-application evidence"
  * import { SemanticallyApplied } from "@beep/skill-contract"
  *
- * console.log(SemanticallyApplied.fields.semanticallyApplied !== undefined) // true
+ * SemanticallyApplied.fields.semanticallyApplied !== undefined // => true
  * ```
  *
  * @category models
@@ -183,7 +183,7 @@ export class SemanticallyApplied extends S.Class<SemanticallyApplied>($I`Semanti
  *
  * **Example** (Inspect evidence rungs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect evidence rungs"
  * import { EvidenceLadderState } from "@beep/skill-contract"
  *
  * console.log(EvidenceLadderState.discriminants)
@@ -233,7 +233,7 @@ const ladderMatchesReceiptTypes = (types: EvidenceLadderReceiptTypes, state: Evi
  *
  * **Example** (Bind ladder receipt identities)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Bind ladder receipt identities"
  * import { EvidenceLadderReceiptTypes, EvidencePredicateType, evidenceLadderFor } from "@beep/skill-contract"
  *
  * const type = EvidencePredicateType.make("https://example.test/evidence/rung/v1")
@@ -243,7 +243,7 @@ const ladderMatchesReceiptTypes = (types: EvidenceLadderReceiptTypes, state: Evi
  *   persisted: type,
  *   semanticallyApplied: type
  * }))
- * console.log(Ladder.ast !== undefined) // true
+ * Ladder.ast !== undefined // => true
  * ```
  *
  * @param types - Predicate identities demanded by each rung.
@@ -275,10 +275,10 @@ export const evidenceLadderFor = (types: EvidenceLadderReceiptTypes) => {
  *
  * **Example** (Map transport completion to the lowest rung)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map transport completion to the lowest rung"
  * import { transportCompleted } from "@beep/skill-contract"
  *
- * console.log(typeof transportCompleted) // "function"
+ * typeof transportCompleted // => "function"
  * ```
  *
  * @param evidence - Receipt reference proving transport acceptance.
@@ -294,10 +294,10 @@ export const transportCompleted = (evidence: EvidenceReceiptReference): Accepted
  *
  * **Example** (Inspect persistence transition)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect persistence transition"
  * import { advanceToPersisted } from "@beep/skill-contract"
  *
- * console.log(typeof advanceToPersisted) // "function"
+ * typeof advanceToPersisted // => "function"
  * ```
  *
  * @param state - Accepted state that must precede persistence.
@@ -320,10 +320,10 @@ export const advanceToPersisted: {
  *
  * **Example** (Inspect delivery transition)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect delivery transition"
  * import { advanceToDelivered } from "@beep/skill-contract"
  *
- * console.log(typeof advanceToDelivered) // "function"
+ * typeof advanceToDelivered // => "function"
  * ```
  *
  * @param state - Persisted state that must precede delivery.
@@ -346,10 +346,10 @@ export const advanceToDelivered: {
  *
  * **Example** (Inspect semantic transition)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect semantic transition"
  * import { advanceToSemanticallyApplied } from "@beep/skill-contract"
  *
- * console.log(typeof advanceToSemanticallyApplied) // "function"
+ * typeof advanceToSemanticallyApplied // => "function"
  * ```
  *
  * @param state - Delivered state that must precede semantic application.

@@ -3,7 +3,7 @@
  *
  * **Example** (Import SecureHeaderOptions namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import SecureHeaderOptions namespace"
  * import * as SecureHeaderOptions from "@beep/schema/SecureHeaderOptions"
  *
  * console.log(SecureHeaderOptions.createSecureHeaders)

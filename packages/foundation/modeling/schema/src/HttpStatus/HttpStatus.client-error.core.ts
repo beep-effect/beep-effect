@@ -19,7 +19,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log BadRequest literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log BadRequest literal"
  * import { BadRequest } from "@beep/schema/HttpStatus"
  *
  * console.log(BadRequest.literal)
@@ -54,7 +54,7 @@ export type BadRequest = typeof BadRequest.Type;
  *
  * **Example** (Log Unauthorized literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log Unauthorized literal"
  * import { Unauthorized } from "@beep/schema/HttpStatus"
  *
  * console.log(Unauthorized.literal)
@@ -92,7 +92,7 @@ export type Unauthorized = typeof Unauthorized.Type;
  *
  * **Example** (Log PaymentRequired literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log PaymentRequired literal"
  * import { PaymentRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(PaymentRequired.literal)
@@ -128,7 +128,7 @@ export type PaymentRequired = typeof PaymentRequired.Type;
  *
  * **Example** (Log Forbidden literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log Forbidden literal"
  * import { Forbidden } from "@beep/schema/HttpStatus"
  *
  * console.log(Forbidden.literal)
@@ -161,7 +161,7 @@ export type Forbidden = typeof Forbidden.Type;
  *
  * **Example** (Log NotFound literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log NotFound literal"
  * import { NotFound } from "@beep/schema/HttpStatus"
  *
  * console.log(NotFound.literal)
@@ -191,7 +191,7 @@ export type NotFound = typeof NotFound.Type;
  *
  * **Example** (Log MethodNotAllowed literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log MethodNotAllowed literal"
  * import { MethodNotAllowed } from "@beep/schema/HttpStatus"
  *
  * console.log(MethodNotAllowed.literal)
@@ -221,7 +221,7 @@ export type MethodNotAllowed = typeof MethodNotAllowed.Type;
  *
  * **Example** (Log NotAcceptable literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log NotAcceptable literal"
  * import { NotAcceptable } from "@beep/schema/HttpStatus"
  *
  * console.log(NotAcceptable.literal)
@@ -252,7 +252,7 @@ export type NotAcceptable = typeof NotAcceptable.Type;
  *
  * **Example** (Log ProxyAuthenticationRequired literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log ProxyAuthenticationRequired literal"
  * import { ProxyAuthenticationRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(ProxyAuthenticationRequired.literal)
@@ -286,7 +286,7 @@ export type ProxyAuthenticationRequired = typeof ProxyAuthenticationRequired.Typ
  *
  * **Example** (Log RequestTimeout literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log RequestTimeout literal"
  * import { RequestTimeout } from "@beep/schema/HttpStatus"
  *
  * console.log(RequestTimeout.literal)
@@ -318,7 +318,7 @@ export type RequestTimeout = typeof RequestTimeout.Type;
  *
  * **Example** (Log Conflict literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log Conflict literal"
  * import { Conflict } from "@beep/schema/HttpStatus"
  *
  * console.log(Conflict.literal)

@@ -51,7 +51,7 @@ const NodeUrl = (): typeof import("node:url") => {
  *
  * **Example** (Convert file URL to path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Convert file URL to path"
  * import { Effect } from "effect"
  * import { fromFileUrl } from "@beep/utils/NodeUrl"
  *
@@ -65,7 +65,7 @@ const NodeUrl = (): typeof import("node:url") => {
  *
  * **Example** (Recover from invalid URL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Recover from invalid URL"
  * import { Effect } from "effect"
  * import { fromFileUrl } from "@beep/utils/NodeUrl"
  *
@@ -106,7 +106,7 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
  *
  * **Example** (Convert path to file URL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Convert path to file URL"
  * import { Effect } from "effect"
  * import { toFileUrl } from "@beep/utils/NodeUrl"
  *
@@ -120,7 +120,7 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
  *
  * **Example** (Recover from empty path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Recover from empty path"
  * import { Effect } from "effect"
  * import { toFileUrl } from "@beep/utils/NodeUrl"
  *
@@ -154,7 +154,7 @@ export const toFileUrl = (path: string): Effect.Effect<URL, PlatformError.BadArg
  *
  * **Example** (Convert file URL to path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Convert file URL to path"
  * import { fileURLToPath } from "@beep/utils/NodeUrl"
  *
  * const path = fileURLToPath(new URL("file:///tmp/beep.txt"))

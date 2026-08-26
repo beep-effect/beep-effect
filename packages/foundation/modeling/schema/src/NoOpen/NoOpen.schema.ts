@@ -27,11 +27,11 @@ const NoOpenValueBase = LiteralKit([defaultValue]);
  *
  * **Example** (Validate noopen header value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate noopen header value"
  * import * as S from "effect/Schema"
  * import { NoOpenValue } from "@beep/schema/NoOpen"
  *
- * console.log(S.is(NoOpenValue)("noopen")) // true
+ * S.is(NoOpenValue)("noopen") // => true
  * ```
  *
  * @category schemas
@@ -49,7 +49,7 @@ export const NoOpenValue = NoOpenValueBase.pipe(
  *
  * **Example** (Assign noopen type value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign noopen type value"
  * import { NoOpenValue } from "@beep/schema/NoOpen"
  *
  * const value: NoOpenValue = "noopen"
@@ -68,7 +68,7 @@ const NoOpenOptionBase = LiteralKit([false, ...NoOpenValueBase.Options]);
  *
  * **Example** (Decode noopen option value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode noopen option value"
  * import * as S from "effect/Schema"
  * import { NoOpenOption } from "@beep/schema/NoOpen"
  *
@@ -90,7 +90,7 @@ export const NoOpenOption = NoOpenOptionBase.pipe(
  *
  * **Example** (Type decoded noopen option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type decoded noopen option"
  * import * as S from "effect/Schema"
  * import { NoOpenOption } from "@beep/schema/NoOpen"
  *
@@ -108,7 +108,7 @@ export type NoOpenOption = typeof NoOpenOption.Type;
  *
  * **Example** (Make response header model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make response header model"
  * import * as O from "effect/Option"
  * import { NoOpenResponseHeader } from "@beep/schema/NoOpen"
  *
@@ -136,7 +136,7 @@ type NoOpenResponseHeaderEncoded = typeof NoOpenResponseHeader.Encoded;
  *
  * **Example** (Decode into response header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode into response header"
  * import * as S from "effect/Schema"
  * import { NoOpenHeader } from "@beep/schema/NoOpen"
  *
@@ -211,7 +211,7 @@ export const NoOpenHeader = S.UndefinedOr(NoOpenOption).pipe(
  *
  * **Example** (Type decoded response header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type decoded response header"
  * import * as S from "effect/Schema"
  * import { NoOpenHeader } from "@beep/schema/NoOpen"
  *

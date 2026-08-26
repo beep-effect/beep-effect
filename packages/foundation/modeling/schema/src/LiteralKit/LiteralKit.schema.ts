@@ -35,7 +35,7 @@ type EnumMappings<L extends Literals = Literals> = A.NonEmptyReadonlyArray<EnumM
  *
  * **Example** (Number literal key mapping)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Number literal key mapping"
  * import type { LiteralToKey } from "@beep/schema/LiteralKit"
  *
  * const key = "number200" satisfies LiteralToKey<200>
@@ -213,11 +213,11 @@ type ToTaggedUnionFn<L extends PropertyKeyLiteralArray, M extends EnumMappings<L
  *
  * **Example** (Runtime literal key conversion)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Runtime literal key conversion"
  * import { matchLiteral } from "@beep/schema/LiteralKit"
  *
  * const keys = [matchLiteral("pending"), matchLiteral(200), matchLiteral(true), matchLiteral(BigInt(1))]
- * console.log(keys) // ["pending", "number200", "true", "bigint1n"]
+ * keys // => ["pending", "number200", "true", "bigint1n"]
  * ```
  *
  * @category utilities
@@ -290,14 +290,14 @@ const LiteralValueSchema = S.Union([S.String, S.BigInt, S.Boolean, S.Finite]);
  *
  * **Example** (Create not-in-set error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create not-in-set error"
  * import { LiteralNotInSetError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralNotInSetError.make({
  *   literals: ["ready"],
  *   input: ["blocked"]
  * })
- * console.log(error.input.includes("blocked")) // true
+ * error.input.includes("blocked") // => true
  * ```
  *
  * @category errors
@@ -321,7 +321,7 @@ export class LiteralNotInSetError extends S.TaggedError<LiteralNotInSetError>($I
  *
  * **Example** (Create key collision error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create key collision error"
  * import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralKitKeyCollisionError.make({
@@ -329,7 +329,7 @@ export class LiteralNotInSetError extends S.TaggedError<LiteralNotInSetError>($I
  *   existing: "number1",
  *   incoming: 1
  * })
- * console.log(error.key) // "number1"
+ * error.key // => "number1"
  * ```
  *
  * @category errors
@@ -358,7 +358,7 @@ type SeenLiteralKeys = HashMap.HashMap<string, SchemaAST.LiteralValue>;
  *
  * **Example** (Create duplicate literal error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create duplicate literal error"
  * import { LiteralKitEnumMappingDuplicateLiteralError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralKitEnumMappingDuplicateLiteralError.make({
@@ -366,7 +366,7 @@ type SeenLiteralKeys = HashMap.HashMap<string, SchemaAST.LiteralValue>;
  *   firstIndex: 0,
  *   secondIndex: 2
  * })
- * console.log(error.secondIndex) // 2
+ * error.secondIndex // => 2
  * ```
  *
  * @category errors
@@ -393,7 +393,7 @@ export class LiteralKitEnumMappingDuplicateLiteralError extends S.TaggedError<Li
  *
  * **Example** (Create coverage error instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create coverage error instance"
  * import { LiteralKitEnumMappingCoverageError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralKitEnumMappingCoverageError.make({
@@ -402,7 +402,7 @@ export class LiteralKitEnumMappingDuplicateLiteralError extends S.TaggedError<Li
  *   missing: ["write"],
  *   unexpected: []
  * })
- * console.log(error.missing.includes("write")) // true
+ * error.missing.includes("write") // => true
  * ```
  *
  * @category errors
@@ -430,13 +430,13 @@ export class LiteralKitEnumMappingCoverageError extends S.TaggedError<LiteralKit
  *
  * **Example** (Create tagged-union literal error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create tagged-union literal error"
  * import { LiteralKitTaggedUnionLiteralError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralKitTaggedUnionLiteralError.make({
  *   literal: BigInt(1)
  * })
- * console.log(typeof error.literal) // "bigint"
+ * typeof error.literal // => "bigint"
  * ```
  *
  * @category errors
@@ -680,7 +680,7 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
  *
  * **Example** (Build mixed literal kit)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Build mixed literal kit"
  * import { LiteralKit } from "@beep/schema";
  * import * as HashSet from "effect/HashSet";
  * import * as S from "effect/Schema";
@@ -733,7 +733,7 @@ export function LiteralKit<const L extends Literals>(literals: L): LiteralKit<L>
  *
  * **Example** (Custom enum key mapping)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Custom enum key mapping"
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  *
  * const StatusKeys = LiteralKit({
@@ -741,7 +741,7 @@ export function LiteralKit<const L extends Literals>(literals: L): LiteralKit<L>
  *   enumMapping: [["one", "ONE"], ["two", "TWO"]]
  * })
  *
- * console.log(StatusKeys.Enum.ONE) // "one"
+ * StatusKeys.Enum.ONE // => "one"
  * ```
  *
  * @category models
@@ -757,7 +757,7 @@ export function LiteralKit<const L extends Literals, const M extends EnumMapping
  *
  * **Example** (Implementation signature usage)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Implementation signature usage"
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  *
  * const Status = LiteralKit(["ready", "blocked"])

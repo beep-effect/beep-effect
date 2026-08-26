@@ -22,10 +22,10 @@ const $I = $HtmlId.create("Html.meta");
  *
  * **Example** (Check an HtmlTag value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an HtmlTag value"
  * import { HtmlTag } from "@beep/html/Html.meta"
  *
- * console.log(HtmlTag.is.div("div")) // true
+ * HtmlTag.is.div("div") // => true
  * ```
  *
  * @category models
@@ -181,7 +181,7 @@ export const HtmlTag = LiteralKit([
  *
  * **Example** (Annotate an HtmlTag value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate an HtmlTag value"
  * import type { HtmlTag } from "@beep/html/Html.meta"
  *
  * const tag: HtmlTag = "div"
@@ -198,10 +198,10 @@ export type HtmlTag = typeof HtmlTag.Type;
  *
  * **Example** (Check an HtmlCategory value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an HtmlCategory value"
  * import { HtmlCategory } from "@beep/html/Html.meta"
  *
- * console.log(HtmlCategory.is.flow("flow")) // true
+ * HtmlCategory.is.flow("flow") // => true
  * ```
  *
  * @category models
@@ -229,7 +229,7 @@ export const HtmlCategory = LiteralKit([
  *
  * **Example** (Annotate an HtmlCategory value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate an HtmlCategory value"
  * import type { HtmlCategory } from "@beep/html/Html.meta"
  *
  * const category: HtmlCategory = "flow"
@@ -246,10 +246,10 @@ export type HtmlCategory = typeof HtmlCategory.Type;
  *
  * **Example** (Check an HtmlContentToken value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an HtmlContentToken value"
  * import { HtmlContentToken } from "@beep/html/Html.meta"
  *
- * console.log(HtmlContentToken.is.flow("flow")) // true
+ * HtmlContentToken.is.flow("flow") // => true
  * ```
  *
  * @category models
@@ -313,7 +313,7 @@ export const HtmlContentToken = LiteralKit([
  *
  * **Example** (Annotate an HtmlContentToken value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate an HtmlContentToken value"
  * import type { HtmlContentToken } from "@beep/html/Html.meta"
  *
  * const token: HtmlContentToken = "flow"
@@ -331,10 +331,10 @@ export type HtmlContentToken = typeof HtmlContentToken.Type;
  *
  * **Example** (Check an HtmlChildGrammar value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an HtmlChildGrammar value"
  * import { HtmlChildGrammar } from "@beep/html/Html.meta"
  *
- * console.log(HtmlChildGrammar.is.table("table")) // true
+ * HtmlChildGrammar.is.table("table") // => true
  * ```
  *
  * @category models
@@ -365,7 +365,7 @@ export const HtmlChildGrammar = LiteralKit([
  *
  * **Example** (Annotate an HtmlChildGrammar value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate an HtmlChildGrammar value"
  * import type { HtmlChildGrammar } from "@beep/html/Html.meta"
  *
  * const grammar: HtmlChildGrammar = "table"
@@ -382,7 +382,7 @@ export type HtmlChildGrammar = typeof HtmlChildGrammar.Type;
  *
  * **Example** (Build a conditional category rule)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a conditional category rule"
  * import { HtmlConditionalCategoryRule } from "@beep/html/Html.meta"
  *
  * const rule = HtmlConditionalCategoryRule.make({
@@ -390,7 +390,7 @@ export type HtmlChildGrammar = typeof HtmlChildGrammar.Type;
  *   category: "interactive",
  *   condition: "present"
  * })
- * console.log(rule.category) // "interactive"
+ * rule.category // => "interactive"
  * ```
  *
  * @category models
@@ -413,10 +413,10 @@ export class HtmlConditionalCategoryRule extends S.Class<HtmlConditionalCategory
  *
  * **Example** (Look up an SVG element-name adjustment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Look up an SVG element-name adjustment"
  * import { SVG_ELEMENT_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
  *
- * console.log(SVG_ELEMENT_NAME_ADJUSTMENTS.lineargradient) // "linearGradient"
+ * SVG_ELEMENT_NAME_ADJUSTMENTS.lineargradient // => "linearGradient"
  * ```
  *
  * @category constants
@@ -466,10 +466,10 @@ export const SVG_ELEMENT_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Ob
  *
  * **Example** (Look up an SVG attribute-name adjustment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Look up an SVG attribute-name adjustment"
  * import { SVG_ATTRIBUTE_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
  *
- * console.log(SVG_ATTRIBUTE_NAME_ADJUSTMENTS.viewbox) // "viewBox"
+ * SVG_ATTRIBUTE_NAME_ADJUSTMENTS.viewbox // => "viewBox"
  * ```
  *
  * @category constants
@@ -541,10 +541,10 @@ export const SVG_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = 
  *
  * **Example** (Look up a MathML attribute-name adjustment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Look up a MathML attribute-name adjustment"
  * import { MATHML_ATTRIBUTE_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
  *
- * console.log(MATHML_ATTRIBUTE_NAME_ADJUSTMENTS.definitionurl) // "definitionURL"
+ * MATHML_ATTRIBUTE_NAME_ADJUSTMENTS.definitionurl // => "definitionURL"
  * ```
  *
  * @category constants
@@ -560,10 +560,10 @@ export const MATHML_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>>
  *
  * **Example** (Check a foreign XML attribute name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a foreign XML attribute name"
  * import { XML_FOREIGN_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
  *
- * console.log(XML_FOREIGN_ATTRIBUTE_NAMES.includes("xlink:href")) // true
+ * XML_FOREIGN_ATTRIBUTE_NAMES.includes("xlink:href") // => true
  * ```
  *
  * @category constants
@@ -591,10 +591,10 @@ export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
  *
  * **Example** (Check a global attribute name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a global attribute name"
  * import { HTML_GLOBAL_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
  *
- * console.log(HTML_GLOBAL_ATTRIBUTE_NAMES.includes("inert")) // true
+ * HTML_GLOBAL_ATTRIBUTE_NAMES.includes("inert") // => true
  * ```
  *
  * @category constants
@@ -769,10 +769,10 @@ export const HTML_GLOBAL_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
  *
  * **Example** (Expand a content-model token)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Expand a content-model token"
  * import { HTML_CONTENT_TOKEN_EXPANSIONS } from "@beep/html/Html.meta"
  *
- * console.log(HTML_CONTENT_TOKEN_EXPANSIONS["option element inner content elements"]) // ["phrasing"]
+ * HTML_CONTENT_TOKEN_EXPANSIONS["option element inner content elements"] // => ["phrasing"]
  * ```
  *
  * @category constants
@@ -802,10 +802,10 @@ export const HTML_CONTENT_TOKEN_EXPANSIONS: Readonly<Record<string, ReadonlyArra
  *
  * **Example** (Read an autocomplete field group)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read an autocomplete field group"
  * import { HTML_AUTOCOMPLETE_FIELD_GROUPS } from "@beep/html/Html.meta"
  *
- * console.log(HTML_AUTOCOMPLETE_FIELD_GROUPS.password.includes("new-password")) // true
+ * HTML_AUTOCOMPLETE_FIELD_GROUPS.password.includes("new-password") // => true
  * ```
  *
  * @category constants
@@ -867,10 +867,10 @@ export const HTML_AUTOCOMPLETE_FIELD_GROUPS: Readonly<Record<string, ReadonlyArr
  *
  * **Example** (Read an autocomplete input-state group)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read an autocomplete input-state group"
  * import { HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS } from "@beep/html/Html.meta"
  *
- * console.log(HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS.email.includes("username")) // true
+ * HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS.email.includes("username") // => true
  * ```
  *
  * @category constants
@@ -906,10 +906,10 @@ export const HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS: Readonly<Record<string, Reado
  *
  * **Example** (Check an autocomplete contact field)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an autocomplete contact field"
  * import { HTML_AUTOCOMPLETE_CONTACT_FIELDS } from "@beep/html/Html.meta"
  *
- * console.log(HTML_AUTOCOMPLETE_CONTACT_FIELDS.includes("email")) // true
+ * HTML_AUTOCOMPLETE_CONTACT_FIELDS.includes("email") // => true
  * ```
  *
  * @category constants
@@ -933,10 +933,10 @@ export const HTML_AUTOCOMPLETE_CONTACT_FIELDS: ReadonlyArray<string> = Object.fr
  *
  * **Example** (Read input attribute applicability)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read input attribute applicability"
  * import { HTML_INPUT_ATTRIBUTE_APPLICABILITY } from "@beep/html/Html.meta"
  *
- * console.log(HTML_INPUT_ATTRIBUTE_APPLICABILITY.file.includes("accept")) // true
+ * HTML_INPUT_ATTRIBUTE_APPLICABILITY.file.includes("accept") // => true
  * ```
  *
  * @category constants
@@ -1059,10 +1059,10 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
  *
  * **Example** (Check a conditional input attribute)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a conditional input attribute"
  * import { HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
  *
- * console.log(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES.includes("autocomplete")) // true
+ * HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES.includes("autocomplete") // => true
  * ```
  *
  * @category constants
@@ -1105,10 +1105,10 @@ export const HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES: ReadonlyArray<string> = Obj
  *
  * **Example** (Check a submit-only button attribute)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a submit-only button attribute"
  * import { HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES } from "@beep/html/Html.meta"
  *
- * console.log(HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES.includes("formaction")) // true
+ * HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES.includes("formaction") // => true
  * ```
  *
  * @category constants
@@ -1127,10 +1127,10 @@ export const HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES: ReadonlyArray<string> = Object.
  *
  * **Example** (Check an icon link relation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an icon link relation"
  * import { HTML_ICON_LINK_RELATIONS } from "@beep/html/Html.meta"
  *
- * console.log(HTML_ICON_LINK_RELATIONS.includes("apple-touch-icon")) // true
+ * HTML_ICON_LINK_RELATIONS.includes("apple-touch-icon") // => true
  * ```
  *
  * @category constants
@@ -1143,10 +1143,10 @@ export const HTML_ICON_LINK_RELATIONS: ReadonlyArray<string> = Object.freeze(["i
  *
  * **Example** (Check an ID-reference-list attribute)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an ID-reference-list attribute"
  * import { HTML_ID_REFERENCE_LIST_ATTRIBUTES } from "@beep/html/Html.meta"
  *
- * console.log(HTML_ID_REFERENCE_LIST_ATTRIBUTES.includes("output/for")) // true
+ * HTML_ID_REFERENCE_LIST_ATTRIBUTES.includes("output/for") // => true
  * ```
  *
  * @category constants
@@ -1163,10 +1163,10 @@ export const HTML_ID_REFERENCE_LIST_ATTRIBUTES: ReadonlyArray<string> = Object.f
  *
  * **Example** (Check an ID-reference attribute)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an ID-reference attribute"
  * import { HTML_ID_REFERENCE_ATTRIBUTES } from "@beep/html/Html.meta"
  *
- * console.log(HTML_ID_REFERENCE_ATTRIBUTES.includes("button/commandfor")) // true
+ * HTML_ID_REFERENCE_ATTRIBUTES.includes("button/commandfor") // => true
  * ```
  *
  * @category constants
@@ -1179,10 +1179,10 @@ export const HTML_ID_REFERENCE_ATTRIBUTES: ReadonlyArray<string> = Object.freeze
  *
  * **Example** (Check an HtmlTextMode value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an HtmlTextMode value"
  * import { HtmlTextMode } from "@beep/html/Html.meta"
  *
- * console.log(HtmlTextMode.is.rcdata("rcdata")) // true
+ * HtmlTextMode.is.rcdata("rcdata") // => true
  * ```
  *
  * @category models
@@ -1197,7 +1197,7 @@ export const HtmlTextMode = LiteralKit(["normal", "raw-text", "rcdata", "plainte
  *
  * **Example** (Annotate an HtmlTextMode value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate an HtmlTextMode value"
  * import type { HtmlTextMode } from "@beep/html/Html.meta"
  *
  * const mode: HtmlTextMode = "normal"
@@ -1214,10 +1214,10 @@ export type HtmlTextMode = typeof HtmlTextMode.Type;
  *
  * **Example** (Check a boolean attribute name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a boolean attribute name"
  * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
  *
- * console.log(HtmlBooleanAttributeName.is.disabled("disabled")) // true
+ * HtmlBooleanAttributeName.is.disabled("disabled") // => true
  * ```
  *
  * @category models
@@ -1274,7 +1274,7 @@ export const HtmlBooleanAttributeName = LiteralKit([
  *
  * **Example** (Decode a boolean attribute name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode a boolean attribute name"
  * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1282,7 +1282,7 @@ export const HtmlBooleanAttributeName = LiteralKit([
  * const decoded = S.decodeUnknownResult(HtmlBooleanAttributeName)("disabled")
  * if (Result.isSuccess(decoded)) {
  *   const name: HtmlBooleanAttributeName = decoded.success
- *   console.log(name) // "disabled"
+ *   name // => "disabled"
  * }
  * ```
  *
@@ -1297,10 +1297,10 @@ export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
  *
  * **Example** (Check an HtmlAttributeSyntax value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an HtmlAttributeSyntax value"
  * import { HtmlAttributeSyntax } from "@beep/html/Html.meta"
  *
- * console.log(HtmlAttributeSyntax.is.srcset("srcset")) // true
+ * HtmlAttributeSyntax.is.srcset("srcset") // => true
  * ```
  *
  * @category models
@@ -1317,7 +1317,7 @@ export const HtmlAttributeSyntax = LiteralKit(["icon-sizes", "language-tag", "so
  *
  * **Example** (Annotate an HtmlAttributeSyntax value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate an HtmlAttributeSyntax value"
  * import type { HtmlAttributeSyntax } from "@beep/html/Html.meta"
  *
  * const syntax: HtmlAttributeSyntax = "srcset"
@@ -1335,10 +1335,10 @@ export type HtmlAttributeSyntax = typeof HtmlAttributeSyntax.Type;
  *
  * **Example** (Look up an attribute microsyntax)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Look up an attribute microsyntax"
  * import { HTML_ATTRIBUTE_SYNTAXES } from "@beep/html/Html.meta"
  *
- * console.log(HTML_ATTRIBUTE_SYNTAXES["link/sizes"]) // "icon-sizes"
+ * HTML_ATTRIBUTE_SYNTAXES["link/sizes"] // => "icon-sizes"
  * ```
  *
  * @category constants
@@ -1360,7 +1360,7 @@ export const HTML_ATTRIBUTE_SYNTAXES: Readonly<Record<string, HtmlAttributeSynta
  *
  * **Example** (Build an attribute equality)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build an attribute equality"
  * import { HtmlAttributeEquality } from "@beep/html/Html.meta"
  *
  * const equality = HtmlAttributeEquality.make({
@@ -1368,7 +1368,7 @@ export const HTML_ATTRIBUTE_SYNTAXES: Readonly<Record<string, HtmlAttributeSynta
  *   message: "id must equal name",
  *   right: "name"
  * })
- * console.log(equality.right) // "name"
+ * equality.right // => "name"
  * ```
  *
  * @category models
@@ -1425,7 +1425,7 @@ const HtmlAttributeRequirementPredicate = S.Union([
  *
  * **Example** (Build an attribute requirement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build an attribute requirement"
  * import { HtmlAttributeRequirement } from "@beep/html/Html.meta"
  *
  * const requirement = HtmlAttributeRequirement.make({
@@ -1460,7 +1460,7 @@ export class HtmlAttributeRequirement extends S.Class<HtmlAttributeRequirement>(
  *
  * **Example** (Build a numeric attribute relationship)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a numeric attribute relationship"
  * import { HtmlNumericAttributeRelationship } from "@beep/html/Html.meta"
  *
  * const relationship = HtmlNumericAttributeRelationship.make({
@@ -1495,7 +1495,7 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
  *
  * **Example** (Build a forbidden-descendants rule)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a forbidden-descendants rule"
  * import { HtmlForbiddenDescendants } from "@beep/html/Html.meta"
  *
  * const rule = HtmlForbiddenDescendants.make({
@@ -1503,7 +1503,7 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
  *   categories: [],
  *   tags: ["dfn"]
  * })
- * console.log(rule.tags[0]) // "dfn"
+ * rule.tags[0] // => "dfn"
  * ```
  *
  * @category models
@@ -1525,14 +1525,14 @@ export class HtmlForbiddenDescendants extends S.Class<HtmlForbiddenDescendants>(
  *
  * **Example** (Build a forbidden named-ancestor rule)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a forbidden named-ancestor rule"
  * import { HtmlForbiddenNamedAncestor } from "@beep/html/Html.meta"
  *
  * const rule = HtmlForbiddenNamedAncestor.make({
  *   attributes: ["aria-label", "aria-labelledby", "title"],
  *   tag: "form"
  * })
- * console.log(rule.tag) // "form"
+ * rule.tag // => "form"
  * ```
  *
  * @category models
@@ -1553,11 +1553,11 @@ export class HtmlForbiddenNamedAncestor extends S.Class<HtmlForbiddenNamedAncest
  *
  * **Example** (Build a document visibility limit)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a document visibility limit"
  * import { HtmlDocumentVisibilityLimit } from "@beep/html/Html.meta"
  *
  * const rule = HtmlDocumentVisibilityLimit.make({ maximum: 1, unlessAttribute: "hidden" })
- * console.log(rule.maximum) // 1
+ * rule.maximum // => 1
  * ```
  *
  * @category models
@@ -1578,7 +1578,7 @@ export class HtmlDocumentVisibilityLimit extends S.Class<HtmlDocumentVisibilityL
  *
  * **Example** (Build element conformance rules)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build element conformance rules"
  * import { HtmlElementConformanceRules } from "@beep/html/Html.meta"
  *
  * const rules = HtmlElementConformanceRules.make({ permittedAncestors: ["body", "html"] })
@@ -1606,11 +1606,11 @@ export class HtmlElementConformanceRules extends S.Class<HtmlElementConformanceR
  *
  * **Example** (Match ELEMENT_META against HtmlElementMeta)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Match ELEMENT_META against HtmlElementMeta"
  * import { ELEMENT_META, HtmlElementMeta } from "@beep/html/Html.meta"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlElementMeta)(ELEMENT_META.div)) // true
+ * S.is(HtmlElementMeta)(ELEMENT_META.div) // => true
  * ```
  *
  * @category models
@@ -4801,10 +4801,10 @@ const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): Html
  *
  * **Example** (Read metadata for div)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read metadata for div"
  * import { ELEMENT_META } from "@beep/html/Html.meta"
  *
- * console.log(ELEMENT_META.div.interface) // "HTMLDivElement"
+ * ELEMENT_META.div.interface // => "HTMLDivElement"
  * ```
  *
  * @category models

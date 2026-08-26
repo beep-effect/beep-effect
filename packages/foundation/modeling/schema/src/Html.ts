@@ -46,7 +46,7 @@ export const HtmlFragment = S.String.pipe(
  *
  * **Example** (Type HtmlFragment parameter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type HtmlFragment parameter"
  * import type { HtmlFragment } from "@beep/schema/Html"
  *
  * const render = (value: HtmlFragment) => value

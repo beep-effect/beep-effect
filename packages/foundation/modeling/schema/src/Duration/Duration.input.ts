@@ -50,14 +50,14 @@ const DurationObjectHasValue = S.makeFilter(hasDurationObjectValue, {
  *
  * **Example** (Decode a duration unit)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode a duration unit"
  * import * as S from "effect/Schema"
  * import { DurationUnit } from "@beep/schema/Duration"
  *
  * const decode = S.decodeUnknownSync(DurationUnit)
  *
  * const unit = decode("hours")
- * console.log(unit) // "hours"
+ * unit // => "hours"
  * ```
  *
  * @see {@link DurationInput} for the input schema that consumes these labels.
@@ -92,7 +92,7 @@ export const DurationUnit = LiteralKit([
  *
  * **Example** (Annotate a duration unit)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a duration unit"
  * import type { DurationUnit } from "@beep/schema/Duration"
  *
  * const unit: DurationUnit = "hours"
@@ -110,7 +110,7 @@ export type DurationUnit = typeof DurationUnit.Type;
  *
  * **Example** (Use the compatibility unit alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the compatibility unit alias"
  * import type { Unit } from "@beep/schema/Duration"
  *
  * const unit: Unit = "seconds"
@@ -141,15 +141,15 @@ export type Unit = DurationUnit;
  *
  * **Example** (Decode additive duration fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode additive duration fields"
  * import * as S from "effect/Schema"
  * import { DurationObject } from "@beep/schema/Duration"
  *
  * const decode = S.decodeUnknownSync(DurationObject)
  *
  * const d = decode({ hours: 1, minutes: 30 })
- * console.log(d.hours) // 1
- * console.log(d.minutes) // 30
+ * d.hours // => 1
+ * d.minutes // => 30
  * ```
  *
  * @category models
@@ -189,7 +189,7 @@ const NonEmptyDurationObject = DurationObject.check(DurationObjectHasValue);
  *
  * **Example** (Decode supported input shapes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode supported input shapes"
  * import * as S from "effect/Schema"
  * import { DurationInput } from "@beep/schema/Duration"
  *
@@ -197,8 +197,8 @@ const NonEmptyDurationObject = DurationObject.check(DurationObjectHasValue);
  *
  * const fromString = decode("5 hours")
  * const fromNumber = decode(1000)
- * const fromObject = decode({ minutes: 30 })
- * console.log([fromString, fromNumber, fromObject].length) // 3
+ * const decodedObject = decode({ minutes: 30 })
+ * const decodedCount = [fromString, fromNumber, decodedObject].length // => 3
  * ```
  *
  * @see {@link DurationFromInput} for normalization into an Effect `Duration`.
@@ -224,7 +224,7 @@ export const DurationInput = S.Union([
  *
  * **Example** (Annotate decoded duration input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate decoded duration input"
  * import * as S from "effect/Schema"
  * import { DurationInput } from "@beep/schema/Duration"
  *
@@ -275,14 +275,14 @@ const decodeDurationInput = (input: DurationInput): Effect.Effect<D.Duration, Sc
  *
  * **Example** (Normalize a duration string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize a duration string"
  * import { Duration, Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { DurationFromInput } from "@beep/schema/Duration"
  *
  * const program = S.decodeUnknownEffect(DurationFromInput)("2 hours")
  * const duration = await Effect.runPromise(program)
- * console.log(Duration.toMillis(duration)) // 7200000
+ * Duration.toMillis(duration) // => 7200000
  * ```
  *
  * @see {@link DurationInput} for the accepted encoded representations.
@@ -306,14 +306,14 @@ export const DurationFromInput = DurationInput.pipe(
  *
  * **Example** (Annotate a normalized duration)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a normalized duration"
  * import { Duration, Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { DurationFromInput } from "@beep/schema/Duration"
  *
  * const program = S.decodeUnknownEffect(DurationFromInput)("2 hours")
  * const duration: Duration.Duration = await Effect.runPromise(program)
- * console.log(Duration.toMillis(duration)) // 7200000
+ * Duration.toMillis(duration) // => 7200000
  * ```
  *
  * @see {@link DurationFromInput} for the runtime transformation schema.
@@ -327,7 +327,7 @@ export type DurationFromInput = typeof DurationFromInput.Type;
  *
  * **Example** (Decode through the input alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode through the input alias"
  * import * as S from "effect/Schema"
  * import { Input } from "@beep/schema/Duration"
  *
@@ -346,7 +346,7 @@ export const Input = DurationInput;
  *
  * **Example** (Annotate input through the alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate input through the alias"
  * import * as S from "effect/Schema"
  * import { Input } from "@beep/schema/Duration"
  *

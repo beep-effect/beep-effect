@@ -47,7 +47,7 @@ const {
  *
  * **Example** (Empty attributes schema check)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Empty attributes schema check"
  * import { SafeHtmlAttributes } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
  *
@@ -78,7 +78,7 @@ export const SafeHtmlAttributes = readonlyStruct({
  *
  * **Example** (Make empty attributes object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make empty attributes object"
  * import { SafeHtmlAttributesStruct } from "@beep/html/Html.policy"
  *
  * console.log(SafeHtmlAttributesStruct.make({}))
@@ -104,12 +104,12 @@ export class SafeHtmlAttributesStruct extends S.Class<SafeHtmlAttributesStruct>(
  *
  * **Example** (Allowed versus denied tags)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Allowed versus denied tags"
  * import { SafeHtmlElement } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(SafeHtmlElement)("p")) // true
- * console.log(S.is(SafeHtmlElement)("script")) // false
+ * S.is(SafeHtmlElement)("p") // => true
+ * S.is(SafeHtmlElement)("script") // => false
  * ```
  *
  * @category schemas
@@ -201,11 +201,11 @@ export const SafeHtmlElement = LiteralKit([
  *
  * **Example** (Typed safe element tag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed safe element tag"
  * import type { SafeHtmlElement } from "@beep/html/Html.policy"
  *
  * const tag: SafeHtmlElement = "p"
- * console.log(tag) // "p"
+ * tag // => "p"
  * ```
  *
  * @category models
@@ -244,12 +244,12 @@ const isSafeImageUrlAttribute = isSafeUrlAttributeWith(hasAllowedImageScheme);
  *
  * **Example** (Safe versus javascript URLs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Safe versus javascript URLs"
  * import { SafeUrlAttribute } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(SafeUrlAttribute)("/docs")) // true
- * console.log(S.is(SafeUrlAttribute)("javascript:alert(1)")) // false
+ * S.is(SafeUrlAttribute)("/docs") // => true
+ * S.is(SafeUrlAttribute)("javascript:alert(1)") // => false
  * ```
  *
  * @category schemas
@@ -276,11 +276,11 @@ export const SafeUrlAttribute = S.String.check(
  *
  * **Example** (Typed relative URL value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed relative URL value"
  * import type { SafeUrlAttribute } from "@beep/html/Html.policy"
  *
  * const url: SafeUrlAttribute = "/docs"
- * console.log(url) // "/docs"
+ * url // => "/docs"
  * ```
  *
  * @category models
@@ -293,12 +293,12 @@ export type SafeUrlAttribute = typeof SafeUrlAttribute.Type;
  *
  * **Example** (Image src URL validation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Image src URL validation"
  * import { SafeImageUrlAttribute } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(SafeImageUrlAttribute)("/logo.png")) // true
- * console.log(S.is(SafeImageUrlAttribute)("mailto:user@example.com")) // false
+ * S.is(SafeImageUrlAttribute)("/logo.png") // => true
+ * S.is(SafeImageUrlAttribute)("mailto:user@example.com") // => false
  * ```
  *
  * @category schemas
@@ -325,7 +325,7 @@ export const SafeImageUrlAttribute = S.String.check(
  *
  * **Example** (Decode HTTPS image URL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode HTTPS image URL"
  * import { SafeImageUrlAttribute } from "@beep/html/Html.policy"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -347,10 +347,10 @@ export type SafeImageUrlAttribute = typeof SafeImageUrlAttribute.Type;
  *
  * **Example** (Check deniedElement rule tag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check deniedElement rule tag"
  * import { HtmlPolicyRule } from "@beep/html/Html.policy"
  *
- * console.log(HtmlPolicyRule.is.deniedElement("deniedElement")) // true
+ * HtmlPolicyRule.is.deniedElement("deniedElement") // => true
  * ```
  *
  * @category models
@@ -374,7 +374,7 @@ export const HtmlPolicyRule = LiteralKit([
  *
  * **Example** (Decode unsafeUrl rule value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode unsafeUrl rule value"
  * import { HtmlPolicyRule } from "@beep/html/Html.policy"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -382,7 +382,7 @@ export const HtmlPolicyRule = LiteralKit([
  * const decoded = S.decodeUnknownResult(HtmlPolicyRule)("unsafeUrl")
  * if (Result.isSuccess(decoded)) {
  *   const rule: HtmlPolicyRule = decoded.success
- *   console.log(rule) // "unsafeUrl"
+ *   rule // => "unsafeUrl"
  * }
  * ```
  *
@@ -396,7 +396,7 @@ export type HtmlPolicyRule = typeof HtmlPolicyRule.Type;
  *
  * **Example** (Make path-addressed issue)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make path-addressed issue"
  * import { HtmlPolicyIssue } from "@beep/html/Html.policy"
  *
  * const issue = HtmlPolicyIssue.make({
@@ -404,7 +404,7 @@ export type HtmlPolicyRule = typeof HtmlPolicyRule.Type;
  *   rule: "deniedElement",
  *   message: "Element is not allowed"
  * })
- * console.log(issue.rule) // "deniedElement"
+ * issue.rule // => "deniedElement"
  * ```
  *
  * @category models
@@ -426,7 +426,7 @@ export class HtmlPolicyIssue extends S.Class<HtmlPolicyIssue>($I`HtmlPolicyIssue
  *
  * **Example** (Make error with issues)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make error with issues"
  * import { HtmlPolicyError, HtmlPolicyIssue } from "@beep/html/Html.policy"
  *
  * const error = HtmlPolicyError.make({
@@ -438,7 +438,7 @@ export class HtmlPolicyIssue extends S.Class<HtmlPolicyIssue>($I`HtmlPolicyIssue
  *     }),
  *   ],
  * })
- * console.log(error._tag) // "HtmlPolicyError"
+ * error._tag // => "HtmlPolicyError"
  * ```
  *
  * @category errors
@@ -481,15 +481,15 @@ const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
  *
  * **Example** (Issue and check safe proof)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Issue and check safe proof"
  * import { conform, enforceSafeHtml, Fragment, SafeHtmlAst } from "@beep/html"
  * import { Effect } from "effect"
  *
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
  * )
- * console.log(SafeHtmlAst.is(proof)) // true
- * console.log(SafeHtmlAst.is({ ...proof })) // false
+ * SafeHtmlAst.is(proof) // => true
+ * SafeHtmlAst.is({ ...proof }) // => false
  * ```
  *
  * @category schemas
@@ -507,7 +507,7 @@ export const SafeHtmlAst = S.declare(SafeHtmlAstValue.is).pipe(
  *
  * **Example** (Typed frozen safe proof)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed frozen safe proof"
  * import { conform, enforceSafeHtml, Fragment } from "@beep/html"
  * import type { SafeHtmlAst } from "@beep/html/Html.policy"
  * import { Effect } from "effect"
@@ -515,7 +515,7 @@ export const SafeHtmlAst = S.declare(SafeHtmlAstValue.is).pipe(
  * const proof: SafeHtmlAst = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
  * )
- * console.log(Object.isFrozen(proof)) // true
+ * Object.isFrozen(proof) // => true
  * ```
  *
  * @category models
@@ -528,15 +528,15 @@ export type SafeHtmlAst = typeof SafeHtmlAst.Type;
  *
  * **Example** (Check safe node provenance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check safe node provenance"
  * import { conform, enforceSafeHtml, Fragment, SafeHtmlNode } from "@beep/html"
  * import { Effect } from "effect"
  *
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
  * )
- * console.log(SafeHtmlNode.is(proof)) // true
- * console.log(SafeHtmlNode.is({ ...proof })) // false
+ * SafeHtmlNode.is(proof) // => true
+ * SafeHtmlNode.is({ ...proof }) // => false
  * ```
  *
  * @category schemas
@@ -549,12 +549,12 @@ export const SafeHtmlNode = SafeHtmlAst;
  *
  * **Example** (Root tag from safe node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Root tag from safe node"
  * import { safeHtmlAstRoot } from "@beep/html/Html.policy"
  * import type { SafeHtmlNode } from "@beep/html/Html.policy"
  *
  * const rootTag = (value: SafeHtmlNode) => safeHtmlAstRoot(value)._tag
- * console.log(typeof rootTag) // "function"
+ * typeof rootTag // => "function"
  * ```
  *
  * @category models
@@ -785,7 +785,7 @@ const inspectNode = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyAr
  *
  * **Example** (Inspect empty fragment issues)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect empty fragment issues"
  * import { conform, inspectSafeHtml } from "@beep/html"
  * import { Fragment } from "@beep/html/Html.model"
  * import { Effect } from "effect"
@@ -813,7 +813,7 @@ export const inspectSafeHtml = (value: ConformantHtml): ReadonlyArray<HtmlPolicy
  *
  * **Example** (Enforce policy on fragment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Enforce policy on fragment"
  * import { conform, enforceSafeHtml, Fragment } from "@beep/html"
  * import { Effect } from "effect"
  *
@@ -842,7 +842,7 @@ export const enforceSafeHtml: (value: ConformantHtml) => Effect.Effect<SafeHtmlA
  *
  * **Example** (Extract conformance proof)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Extract conformance proof"
  * import { conform, enforceSafeHtml, Fragment, safeHtmlAstConformant } from "@beep/html"
  * import { Effect } from "effect"
  *
@@ -871,14 +871,14 @@ export const safeHtmlAstConformant = (value: SafeHtmlAst): ConformantHtml =>
  *
  * **Example** (Extract validated AST root)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Extract validated AST root"
  * import { conform, enforceSafeHtml, Fragment, safeHtmlAstRoot } from "@beep/html"
  * import { Effect } from "effect"
  *
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
  * )
- * console.log(safeHtmlAstRoot(proof)._tag) // "#fragment"
+ * safeHtmlAstRoot(proof)._tag // => "#fragment"
  * ```
  *
  * @category getters

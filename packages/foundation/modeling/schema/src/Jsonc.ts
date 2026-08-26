@@ -19,12 +19,12 @@ const $I = $SchemaId.create("Jsonc");
  *
  * **Example** (Decode parse diagnostic object)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parse diagnostic object"
  * import { JsoncParseDiagnostic } from "@beep/schema/Jsonc"
  * import * as S from "effect/Schema"
  *
- * const diag = S.decodeUnknownSync(JsoncParseDiagnostic)({})
- * console.log(diag)
+ * const diag = S.decodeUnknownSync(JsoncParseDiagnostic)({ code: 1, offset: 0, length: 1 })
+ * diag.code // => 1
  * ```
  *
  * @category models
@@ -77,7 +77,7 @@ const decodeJsoncUnknown = Effect.fn("Jsonc.decodeJsoncUnknown")(function* (cont
  *
  * **Example** (Decode JSONC text to unknown)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode JSONC text to unknown"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { JsoncTextToUnknown } from "@beep/schema/Jsonc"
@@ -116,7 +116,7 @@ export type JsoncTextToUnknown = typeof JsoncTextToUnknown.Type;
  *
  * **Example** (Decode JSONC into schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode JSONC into schema"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { decodeJsoncTextAs } from "@beep/schema/Jsonc"
@@ -126,7 +126,7 @@ export type JsoncTextToUnknown = typeof JsoncTextToUnknown.Type;
  *
  * const program = decodeConfig('{ "port": 8080, "host": "localhost" }')
  * const config = await Effect.runPromise(program)
- * console.log(config.port) // 8080
+ * config.port // => 8080
  * ```
  *
  * @param schema - Target schema to decode parsed JSONC document into.

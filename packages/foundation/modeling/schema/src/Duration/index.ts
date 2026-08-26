@@ -7,7 +7,7 @@
  *
  * **Example** (Decode from the Duration namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode from the Duration namespace"
  * import * as Duration from "@beep/schema/Duration"
  * import * as S from "effect/Schema"
  *

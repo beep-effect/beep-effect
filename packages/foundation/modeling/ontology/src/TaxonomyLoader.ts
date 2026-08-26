@@ -25,11 +25,11 @@ const $I = $OntologyId.create("TaxonomyLoader");
  *
  * **Example** (Reject path traversal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject path traversal"
  * import { VendorSlicePath } from "@beep/ontology/TaxonomyLoader"
  * import * as S from "effect/Schema"
  *
- * console.log(S.decodeUnknownResult(VendorSlicePath)("../secrets.jsonld")._tag) // "Failure"
+ * S.decodeUnknownResult(VendorSlicePath)("../secrets.jsonld")._tag // => "Failure"
  * ```
  *
  * @category schemas
@@ -53,9 +53,9 @@ export const VendorSlicePath = S.NonEmptyString.check(
  *
  * **Example** (Check VETTED predicate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check VETTED predicate"
  * import { VendorLoadStatus } from "@beep/ontology/TaxonomyLoader"
- * console.log(VendorLoadStatus.is.VETTED("VETTED")) // true
+ * VendorLoadStatus.is.VETTED("VETTED") // => true
  * ```
  *
  * @category schemas
@@ -70,7 +70,7 @@ export const VendorLoadStatus = LiteralKit(["VETTED", "UNVETTED"]).pipe(
  *
  * **Example** (Assign UNVETTED status)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign UNVETTED status"
  * import type { VendorLoadStatus } from "@beep/ontology/TaxonomyLoader"
  * const status: VendorLoadStatus = "UNVETTED"
  * console.log(status)
@@ -86,7 +86,7 @@ export type VendorLoadStatus = typeof VendorLoadStatus.Type;
  *
  * **Example** (Make manifest entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make manifest entry"
  * import { VendorManifestEntry } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorManifestEntry.make({ format: "jsonld", id: "fixture", loadStatus: "VETTED", path: "fixture.jsonld" }).id)
  * ```
@@ -111,7 +111,7 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorM
  *
  * **Example** (Make read error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make read error"
  * import { TaxonomyManifestReadError } from "@beep/ontology/TaxonomyLoader"
  * console.log(TaxonomyManifestReadError.make({ path: "missing.jsonl" })._tag)
  * ```
@@ -132,7 +132,7 @@ export class TaxonomyManifestReadError extends S.TaggedError<TaxonomyManifestRea
  *
  * **Example** (Make parse error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make parse error"
  * import { TaxonomyManifestParseError } from "@beep/ontology/TaxonomyLoader"
  * console.log(TaxonomyManifestParseError.make({ line: 1, path: "manifest.jsonl" }).line)
  * ```
@@ -155,7 +155,7 @@ export class TaxonomyManifestParseError extends S.TaggedError<TaxonomyManifestPa
  *
  * **Example** (Make unvetted error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make unvetted error"
  * import { VendorSliceUnvetted } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorSliceUnvetted.make({ id: "folio" }).id)
  * ```
@@ -176,7 +176,7 @@ export class VendorSliceUnvetted extends S.TaggedError<VendorSliceUnvetted>($I`V
  *
  * **Example** (Make slice read error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make slice read error"
  * import { VendorSliceReadError } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorSliceReadError.make({ id: "fixture", path: "missing.jsonld" })._tag)
  * ```
@@ -197,7 +197,7 @@ export class VendorSliceReadError extends S.TaggedError<VendorSliceReadError>($I
  *
  * **Example** (Make slice parse error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make slice parse error"
  * import { VendorSliceParseError } from "@beep/ontology/TaxonomyLoader"
  * console.log(VendorSliceParseError.make({ id: "fixture", path: "fixture.jsonld" }).id)
  * ```
@@ -218,7 +218,7 @@ export class VendorSliceParseError extends S.TaggedError<VendorSliceParseError>(
  *
  * **Example** (Make path escape error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make path escape error"
  * import { VendorSlicePathEscape } from "@beep/ontology/TaxonomyLoader"
  *
  * const error = VendorSlicePathEscape.make({
@@ -345,7 +345,7 @@ const readSlice: {
  *
  * **Example** (Access service key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access service key"
  * import { TaxonomyLoader } from "@beep/ontology/TaxonomyLoader"
  * console.log(TaxonomyLoader.key)
  * ```
@@ -392,7 +392,7 @@ export class TaxonomyLoader extends Context.Service<
    *
    * **Example** (Access live layer)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Access live layer"
    * import { TaxonomyLoader } from "@beep/ontology/TaxonomyLoader"
    * console.log(TaxonomyLoader.layer)
    * ```

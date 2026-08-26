@@ -17,14 +17,14 @@ import { $I } from "./Graph.shared.ts";
  *
  * **Example** (Decode zero node index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode zero node index"
  * import * as S from "effect/Schema"
  * import { NodeIndex } from "@beep/schema/Graph"
  *
  * const decode = S.decodeUnknownSync(NodeIndex)
  *
  * const idx = decode(0)
- * console.log(idx) // 0
+ * idx // => 0
  * ```
  *
  * @category constructors
@@ -42,12 +42,12 @@ export const NodeIndex = S.Int.check(isNonNegative).pipe(
  *
  * **Example** (Type branded node index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type branded node index"
  * import * as S from "effect/Schema"
  * import { NodeIndex } from "@beep/schema/Graph"
  *
  * const idx: NodeIndex = S.decodeUnknownSync(NodeIndex)(0)
- * console.log(idx) // 0
+ * idx // => 0
  * ```
  *
  * @category models
@@ -60,14 +60,14 @@ export type NodeIndex = typeof NodeIndex.Type;
  *
  * **Example** (Decode string node index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode string node index"
  * import * as S from "effect/Schema"
  * import { NodeIndexFromString } from "@beep/schema/Graph"
  *
  * const decode = S.decodeUnknownSync(NodeIndexFromString)
  *
  * const idx = decode("3")
- * console.log(idx) // 3
+ * idx // => 3
  * ```
  *
  * @category constructors
@@ -85,7 +85,7 @@ export const NodeIndexFromString = S.FiniteFromString.pipe(
  *
  * **Example** (Decode edge index value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode edge index value"
  * import { EdgeIndex } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -108,7 +108,7 @@ export const EdgeIndex = S.Int.check(isNonNegative).pipe(
  *
  * **Example** (Type branded edge index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type branded edge index"
  * import * as S from "effect/Schema"
  * import { EdgeIndex } from "@beep/schema/Graph"
  *
@@ -126,7 +126,7 @@ export type EdgeIndex = typeof EdgeIndex.Type;
  *
  * **Example** (Decode string edge index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode string edge index"
  * import { EdgeIndexFromString } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -149,7 +149,7 @@ export const EdgeIndexFromString = S.FiniteFromString.pipe(
  *
  * **Example** (Decode directed graph kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode directed graph kind"
  * import { GraphKind } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -171,7 +171,7 @@ export const GraphKind = S.Literals(["directed", "undirected"]).pipe(
  *
  * **Example** (Type directed graph kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type directed graph kind"
  * import * as S from "effect/Schema"
  * import { GraphKind } from "@beep/schema/Graph"
  *

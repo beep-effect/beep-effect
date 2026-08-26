@@ -9,7 +9,7 @@
  *
  * **Example** (Decode category and combined schemas)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode category and combined schemas"
  * import * as S from "effect/Schema";
  * import { FileExtension, ImageFileExtension } from "@beep/schema/FileExtension";
  *
@@ -49,7 +49,7 @@ type MimeTypeExtension<T extends MimeTypeProperty> = T[keyof T]["extensions"][nu
  *
  * **Example** (Extract ordered unique extensions)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Extract ordered unique extensions"
  * import { extractMimeExtensions } from "@beep/schema/FileExtension";
  *
  * const extensions = extractMimeExtensions({
@@ -63,7 +63,7 @@ type MimeTypeExtension<T extends MimeTypeProperty> = T[keyof T]["extensions"][nu
  *   },
  * });
  *
- * console.log(extensions); // ["txt", "md", "markdown"]
+ * extensions // => ["txt", "md", "markdown"]
  * ```
  *
  * @param mime - The mime-type dictionary whose extensions should be collected.
@@ -88,12 +88,12 @@ export const extractMimeExtensions = <const T extends MimeTypeProperty>(
  *
  * **Example** (Decode application extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode application extension"
  * import * as S from "effect/Schema"
  * import { ApplicationFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext = S.decodeUnknownSync(ApplicationFileExtension)("pdf")
- * console.log(ext) // "pdf"
+ * ext // => "pdf"
  * ```
  *
  * @category validation
@@ -113,12 +113,12 @@ export const ApplicationFileExtension = pipe(
  *
  * **Example** (Type application extension literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type application extension literal"
  * import * as S from "effect/Schema"
  * import { ApplicationFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext: ApplicationFileExtension = S.decodeUnknownSync(ApplicationFileExtension)("pdf")
- * console.log(ext) // "pdf"
+ * ext // => "pdf"
  * ```
  *
  * @category models
@@ -131,12 +131,12 @@ export type ApplicationFileExtension = typeof ApplicationFileExtension.Type;
  *
  * **Example** (Decode video extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode video extension"
  * import * as S from "effect/Schema"
  * import { VideoFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext = S.decodeUnknownSync(VideoFileExtension)("mp4")
- * console.log(ext) // "mp4"
+ * ext // => "mp4"
  * ```
  *
  * @category validation
@@ -156,12 +156,12 @@ export const VideoFileExtension = pipe(
  *
  * **Example** (Type video extension literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type video extension literal"
  * import * as S from "effect/Schema"
  * import { VideoFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext: VideoFileExtension = S.decodeUnknownSync(VideoFileExtension)("mp4")
- * console.log(ext) // "mp4"
+ * ext // => "mp4"
  * ```
  *
  * @category models
@@ -174,12 +174,12 @@ export type VideoFileExtension = typeof VideoFileExtension.Type;
  *
  * **Example** (Decode text extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode text extension"
  * import * as S from "effect/Schema"
  * import { TextFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext = S.decodeUnknownSync(TextFileExtension)("txt")
- * console.log(ext) // "txt"
+ * ext // => "txt"
  * ```
  *
  * @category validation
@@ -199,12 +199,12 @@ export const TextFileExtension = pipe(
  *
  * **Example** (Type text extension literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type text extension literal"
  * import * as S from "effect/Schema"
  * import { TextFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext: TextFileExtension = S.decodeUnknownSync(TextFileExtension)("txt")
- * console.log(ext) // "txt"
+ * ext // => "txt"
  * ```
  *
  * @category models
@@ -217,12 +217,12 @@ export type TextFileExtension = typeof TextFileExtension.Type;
  *
  * **Example** (Decode image extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode image extension"
  * import * as S from "effect/Schema"
  * import { ImageFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext = S.decodeUnknownSync(ImageFileExtension)("png")
- * console.log(ext) // "png"
+ * ext // => "png"
  * ```
  *
  * @category validation
@@ -242,12 +242,12 @@ export const ImageFileExtension = pipe(
  *
  * **Example** (Type image extension literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type image extension literal"
  * import * as S from "effect/Schema"
  * import { ImageFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext: ImageFileExtension = S.decodeUnknownSync(ImageFileExtension)("png")
- * console.log(ext) // "png"
+ * ext // => "png"
  * ```
  *
  * @category models
@@ -260,12 +260,12 @@ export type ImageFileExtension = typeof ImageFileExtension.Type;
  *
  * **Example** (Decode audio extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode audio extension"
  * import * as S from "effect/Schema"
  * import { AudioFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext = S.decodeUnknownSync(AudioFileExtension)("mp3")
- * console.log(ext) // "mp3"
+ * ext // => "mp3"
  * ```
  *
  * @category validation
@@ -285,12 +285,12 @@ export const AudioFileExtension = pipe(
  *
  * **Example** (Type audio extension literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type audio extension literal"
  * import * as S from "effect/Schema"
  * import { AudioFileExtension } from "@beep/schema/FileExtension"
  *
  * const ext: AudioFileExtension = S.decodeUnknownSync(AudioFileExtension)("mp3")
- * console.log(ext) // "mp3"
+ * ext // => "mp3"
  * ```
  *
  * @category models
@@ -303,12 +303,12 @@ export type AudioFileExtension = typeof AudioFileExtension.Type;
  *
  * **Example** (Decode misc extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode misc extension"
  * import * as S from "effect/Schema"
  * import { MiscFileExtension } from "@beep/schema/FileExtension"
  *
- * const ext = S.decodeUnknownSync(MiscFileExtension)("ics")
- * console.log(ext) // "ics"
+ * const ext = S.decodeUnknownSync(MiscFileExtension)("cdx")
+ * ext // => "cdx"
  * ```
  *
  * @category validation
@@ -328,12 +328,12 @@ export const MiscFileExtension = pipe(
  *
  * **Example** (Type misc extension literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type misc extension literal"
  * import * as S from "effect/Schema"
  * import { MiscFileExtension } from "@beep/schema/FileExtension"
  *
- * const ext: MiscFileExtension = S.decodeUnknownSync(MiscFileExtension)("ics")
- * console.log(ext) // "ics"
+ * const ext: MiscFileExtension = S.decodeUnknownSync(MiscFileExtension)("cdx")
+ * ext // => "cdx"
  * ```
  *
  * @category models
@@ -346,12 +346,12 @@ export type MiscFileExtension = typeof MiscFileExtension.Type;
  *
  * **Example** (Decode any file extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode any file extension"
  * import * as S from "effect/Schema"
  * import { FileExtension } from "@beep/schema/FileExtension"
  *
  * const ext = S.decodeUnknownSync(FileExtension)("json")
- * console.log(ext) // "json"
+ * ext // => "json"
  * ```
  *
  * @category validation
@@ -375,12 +375,12 @@ export const FileExtension = LiteralKit([
  *
  * **Example** (Type any file extension literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type any file extension literal"
  * import * as S from "effect/Schema"
  * import { FileExtension } from "@beep/schema/FileExtension"
  *
  * const ext: FileExtension = S.decodeUnknownSync(FileExtension)("png")
- * console.log(ext) // "png"
+ * ext // => "png"
  * ```
  *
  * @category models

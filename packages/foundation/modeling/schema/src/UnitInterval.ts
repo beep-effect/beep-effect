@@ -20,12 +20,12 @@ const $I = $SchemaId.create("UnitInterval");
  *
  * **Example** (Decode unit interval value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode unit interval value"
  * import * as S from "effect/Schema"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  *
  * const value = S.decodeUnknownSync(UnitInterval)(0.92)
- * console.log(value) // 0.92
+ * value // => 0.92
  * ```
  *
  * @category models
@@ -54,11 +54,11 @@ export type UnitInterval = typeof UnitInterval.Type;
  *
  * **Example** (Check unit interval bounds)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check unit interval bounds"
  * import { isUnitInterval } from "@beep/schema/UnitInterval"
  *
- * console.log(isUnitInterval(0.5)) // true
- * console.log(isUnitInterval(1.5)) // false
+ * isUnitInterval(0.5) // => true
+ * isUnitInterval(1.5) // => false
  * ```
  *
  * @category validation
@@ -71,11 +71,11 @@ export const isUnitInterval = UnitInterval.is;
  *
  * **Example** (Use ZERO with complement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use ZERO with complement"
  * import { ZERO, complement, isUnitInterval } from "@beep/schema/UnitInterval"
  *
- * console.log(isUnitInterval(ZERO)) // true
- * console.log(complement(ZERO)) // 1
+ * isUnitInterval(ZERO) // => true
+ * complement(ZERO) // => 1
  * ```
  *
  * @category constants
@@ -88,11 +88,11 @@ export const ZERO: UnitInterval = UnitInterval.make(0);
  *
  * **Example** (Use ONE with complement)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use ONE with complement"
  * import { ONE, complement, isUnitInterval } from "@beep/schema/UnitInterval"
  *
- * console.log(isUnitInterval(ONE)) // true
- * console.log(complement(ONE)) // 0
+ * isUnitInterval(ONE) // => true
+ * complement(ONE) // => 0
  * ```
  *
  * @category constants
@@ -105,10 +105,10 @@ export const ONE: UnitInterval = UnitInterval.make(1);
  *
  * **Example** (Complement of ONE)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Complement of ONE"
  * import { complement, ONE } from "@beep/schema/UnitInterval"
  *
- * console.log(complement(ONE)) // 0
+ * complement(ONE) // => 0
  * ```
  *
  * @category utilities

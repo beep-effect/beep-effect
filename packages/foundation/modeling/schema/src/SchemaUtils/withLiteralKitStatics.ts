@@ -22,7 +22,7 @@ type LiteralKitStatics<L extends A.NonEmptyReadonlyArray<SchemaAST.LiteralValue>
  *
  * **Example** (Reattach statics after pipe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reattach statics after pipe"
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  * import { withLiteralKitStatics } from "@beep/schema/SchemaUtils/withLiteralKitStatics"
  *

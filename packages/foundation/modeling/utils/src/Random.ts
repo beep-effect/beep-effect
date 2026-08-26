@@ -15,7 +15,7 @@ const $I = $RepoUtilsId.create("Random");
  *
  * **Example** (Default RandomValues service)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Default RandomValues service"
  * import { RandomValues } from "@beep/utils/Random"
  *
  * console.log(RandomValues.Default)

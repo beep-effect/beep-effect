@@ -51,7 +51,7 @@ const INITIAL_COUNT_MAX = 476782367;
  *
  * **Example** (Decode branded CUID)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode branded CUID"
  * import * as S from "effect/Schema"
  * import { Cuid } from "@beep/schema/Cuid"
  *
@@ -78,7 +78,7 @@ export const Cuid = S.String.pipe(
  *
  * **Example** (Typed CUID decode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed CUID decode"
  * import * as S from "effect/Schema"
  * import type { Cuid } from "@beep/schema/Cuid"
  * import { Cuid as CuidSchema } from "@beep/schema/Cuid"
@@ -97,7 +97,7 @@ export type Cuid = typeof Cuid.Type;
  *
  * **Example** (Check CUID string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check CUID string"
  * import { isCuid } from "@beep/schema/Cuid"
  *
  * console.log(isCuid("a123"))
@@ -114,7 +114,7 @@ export const isCuid: (value: string) => value is Cuid = Cuid.is;
  *
  * **Example** (Make CUID seed)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make CUID seed"
  * import { CuidSeed } from "@beep/schema/Cuid"
  *
  * const seed = CuidSeed.make({ timestamp: 1, counter: 0, random: new Uint8Array([1]), fingerprint: "node" })

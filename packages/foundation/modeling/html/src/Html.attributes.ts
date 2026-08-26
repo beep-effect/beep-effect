@@ -61,7 +61,7 @@ const assertAsciiFoldUnique = (values: ReadonlyArray<string>, label: string, all
  *
  * **Example** (Validate with `makeAsciiCaseInsensitiveEnumerated`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with makeAsciiCaseInsensitiveEnumerated"
  * import { makeAsciiCaseInsensitiveEnumerated } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -122,10 +122,10 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
  *
  * **Example** (Validate with `Dir`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with Dir"
  * import { Dir } from "@beep/html/Html.attributes"
  *
- * console.log(Dir.is.ltr("ltr")) // true
+ * Dir.is.ltr("ltr") // => true
  * ```
  *
  * @category schemas
@@ -139,7 +139,7 @@ export const Dir = makeAsciiCaseInsensitiveEnumerated(["ltr", "rtl", "auto"]).pi
  *
  * **Example** (Annotate a `Dir` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a Dir value"
  * import type { Dir } from "@beep/html/Html.attributes"
  *
  * const dir: Dir = "ltr"
@@ -158,10 +158,10 @@ const TranslateInput = makeAsciiCaseInsensitiveEnumerated(["", ...TranslateBase.
  *
  * **Example** (Validate with `Translate`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with Translate"
  * import { Translate } from "@beep/html/Html.attributes"
  *
- * console.log(Translate.is.yes("yes")) // true
+ * Translate.is.yes("yes") // => true
  * ```
  *
  * @category schemas
@@ -183,7 +183,7 @@ export const Translate = TranslateInput.pipe(
  *
  * **Example** (Annotate a `Translate` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a Translate value"
  * import type { Translate } from "@beep/html/Html.attributes"
  *
  * const translate: Translate = "yes"
@@ -202,10 +202,10 @@ const ContentEditableInput = makeAsciiCaseInsensitiveEnumerated(["", ...ContentE
  *
  * **Example** (Validate with `ContentEditable`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with ContentEditable"
  * import { ContentEditable } from "@beep/html/Html.attributes"
  *
- * console.log(ContentEditable.is.true("true")) // true
+ * ContentEditable.is.true("true") // => true
  * ```
  *
  * @category schemas
@@ -227,7 +227,7 @@ export const ContentEditable = ContentEditableInput.pipe(
  *
  * **Example** (Annotate a `ContentEditable` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a ContentEditable value"
  * import type { ContentEditable } from "@beep/html/Html.attributes"
  *
  * const contentEditable: ContentEditable = "true"
@@ -243,10 +243,10 @@ export type ContentEditable = typeof ContentEditable.Type;
  *
  * **Example** (Validate with `Draggable`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with Draggable"
  * import { Draggable } from "@beep/html/Html.attributes"
  *
- * console.log(Draggable.is.true("true")) // true
+ * Draggable.is.true("true") // => true
  * ```
  *
  * @category schemas
@@ -260,7 +260,7 @@ export const Draggable = makeAsciiCaseInsensitiveEnumerated(["true", "false"]).p
  *
  * **Example** (Annotate a `Draggable` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a Draggable value"
  * import type { Draggable } from "@beep/html/Html.attributes"
  *
  * const draggable: Draggable = "true"
@@ -279,10 +279,10 @@ const SpellCheckInput = makeAsciiCaseInsensitiveEnumerated(["", ...SpellCheckBas
  *
  * **Example** (Validate with `SpellCheck`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with SpellCheck"
  * import { SpellCheck } from "@beep/html/Html.attributes"
  *
- * console.log(SpellCheck.is.true("true")) // true
+ * SpellCheck.is.true("true") // => true
  * ```
  *
  * @category schemas
@@ -304,7 +304,7 @@ export const SpellCheck = SpellCheckInput.pipe(
  *
  * **Example** (Annotate a `SpellCheck` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a SpellCheck value"
  * import type { SpellCheck } from "@beep/html/Html.attributes"
  *
  * const spellCheck: SpellCheck = "true"
@@ -323,10 +323,10 @@ const WritingSuggestionsInput = makeAsciiCaseInsensitiveEnumerated(["", ...Writi
  *
  * **Example** (Validate with `WritingSuggestions`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with WritingSuggestions"
  * import { WritingSuggestions } from "@beep/html/Html.attributes"
  *
- * console.log(WritingSuggestions.is.true("true")) // true
+ * WritingSuggestions.is.true("true") // => true
  * ```
  *
  * @category schemas
@@ -348,7 +348,7 @@ export const WritingSuggestions = WritingSuggestionsInput.pipe(
  *
  * **Example** (Annotate a `WritingSuggestions` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a WritingSuggestions value"
  * import type { WritingSuggestions } from "@beep/html/Html.attributes"
  *
  * const writingSuggestions: WritingSuggestions = "true"
@@ -364,10 +364,10 @@ export type WritingSuggestions = typeof WritingSuggestions.Type;
  *
  * **Example** (Validate with `AutoCapitalize`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with AutoCapitalize"
  * import { AutoCapitalize } from "@beep/html/Html.attributes"
  *
- * console.log(AutoCapitalize.is.off("off")) // true
+ * AutoCapitalize.is.off("off") // => true
  * ```
  *
  * @category schemas
@@ -386,7 +386,7 @@ export const AutoCapitalize = makeAsciiCaseInsensitiveEnumerated([
  *
  * **Example** (Annotate a `AutoCapitalize` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a AutoCapitalize value"
  * import type { AutoCapitalize } from "@beep/html/Html.attributes"
  *
  * const autoCapitalize: AutoCapitalize = "off"
@@ -405,10 +405,10 @@ const AutoCorrectInput = makeAsciiCaseInsensitiveEnumerated(["", ...AutoCorrectB
  *
  * **Example** (Validate with `AutoCorrect`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with AutoCorrect"
  * import { AutoCorrect } from "@beep/html/Html.attributes"
  *
- * console.log(AutoCorrect.is.on("on")) // true
+ * AutoCorrect.is.on("on") // => true
  * ```
  *
  * @category schemas
@@ -430,7 +430,7 @@ export const AutoCorrect = AutoCorrectInput.pipe(
  *
  * **Example** (Annotate a `AutoCorrect` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a AutoCorrect value"
  * import type { AutoCorrect } from "@beep/html/Html.attributes"
  *
  * const autoCorrect: AutoCorrect = "on"
@@ -446,10 +446,10 @@ export type AutoCorrect = typeof AutoCorrect.Type;
  *
  * **Example** (Validate with `InputMode`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with InputMode"
  * import { InputMode } from "@beep/html/Html.attributes"
  *
- * console.log(InputMode.is.text("text")) // true
+ * InputMode.is.text("text") // => true
  * ```
  *
  * @category schemas
@@ -470,7 +470,7 @@ export const InputMode = makeAsciiCaseInsensitiveEnumerated([
  *
  * **Example** (Annotate a `InputMode` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a InputMode value"
  * import type { InputMode } from "@beep/html/Html.attributes"
  *
  * const inputMode: InputMode = "text"
@@ -486,10 +486,10 @@ export type InputMode = typeof InputMode.Type;
  *
  * **Example** (Validate with `EnterKeyHint`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with EnterKeyHint"
  * import { EnterKeyHint } from "@beep/html/Html.attributes"
  *
- * console.log(EnterKeyHint.is.enter("enter")) // true
+ * EnterKeyHint.is.enter("enter") // => true
  * ```
  *
  * @category schemas
@@ -509,7 +509,7 @@ export const EnterKeyHint = makeAsciiCaseInsensitiveEnumerated([
  *
  * **Example** (Annotate a `EnterKeyHint` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a EnterKeyHint value"
  * import type { EnterKeyHint } from "@beep/html/Html.attributes"
  *
  * const enterKeyHint: EnterKeyHint = "enter"
@@ -528,10 +528,10 @@ const HiddenInput = makeAsciiCaseInsensitiveEnumerated(["", ...HiddenBase.Option
  *
  * **Example** (Validate with `Hidden`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with Hidden"
  * import { Hidden } from "@beep/html/Html.attributes"
  *
- * console.log(Hidden.is.hidden("hidden")) // true
+ * Hidden.is.hidden("hidden") // => true
  * ```
  *
  * @category schemas
@@ -553,7 +553,7 @@ export const Hidden = HiddenInput.pipe(
  *
  * **Example** (Annotate a `Hidden` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a Hidden value"
  * import type { Hidden } from "@beep/html/Html.attributes"
  *
  * const hidden: Hidden = "hidden"
@@ -572,10 +572,10 @@ const PopoverInput = makeAsciiCaseInsensitiveEnumerated(["", ...PopoverBase.Opti
  *
  * **Example** (Validate with `Popover`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with Popover"
  * import { Popover } from "@beep/html/Html.attributes"
  *
- * console.log(Popover.is.auto("auto")) // true
+ * Popover.is.auto("auto") // => true
  * ```
  *
  * @category schemas
@@ -597,7 +597,7 @@ export const Popover = PopoverInput.pipe(
  *
  * **Example** (Annotate a `Popover` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a Popover value"
  * import type { Popover } from "@beep/html/Html.attributes"
  *
  * const popover: Popover = "auto"
@@ -613,10 +613,10 @@ export type Popover = typeof Popover.Type;
  *
  * **Example** (Validate with `PopoverTargetAction`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with PopoverTargetAction"
  * import { PopoverTargetAction } from "@beep/html/Html.attributes"
  *
- * console.log(PopoverTargetAction.is.toggle("toggle")) // true
+ * PopoverTargetAction.is.toggle("toggle") // => true
  * ```
  *
  * @category schemas
@@ -630,7 +630,7 @@ export const PopoverTargetAction = makeAsciiCaseInsensitiveEnumerated(["toggle",
  *
  * **Example** (Annotate a `PopoverTargetAction` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a PopoverTargetAction value"
  * import type { PopoverTargetAction } from "@beep/html/Html.attributes"
  *
  * const action: PopoverTargetAction = "toggle"
@@ -652,11 +652,11 @@ export type PopoverTargetAction = typeof PopoverTargetAction.Type;
  *
  * **Example** (Call `BooleanAttribute`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call BooleanAttribute"
  * import { BooleanAttribute } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(BooleanAttribute)(true)) // true
+ * S.is(BooleanAttribute)(true) // => true
  * ```
  *
  * @category schemas
@@ -671,7 +671,7 @@ export const BooleanAttribute = S.Literals([true, ""]).pipe(
  *
  * **Example** (Annotate a `BooleanAttribute` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a BooleanAttribute value"
  * import type { BooleanAttribute } from "@beep/html/Html.attributes"
  *
  * const value: BooleanAttribute = true
@@ -691,7 +691,7 @@ const CrossOriginInput = makeAsciiCaseInsensitiveEnumerated(["", ...CrossOriginB
  *
  * **Example** (Validate with `CrossOrigin`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with CrossOrigin"
  * import { CrossOrigin } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -720,7 +720,7 @@ export const CrossOrigin = CrossOriginInput.pipe(
  *
  * **Example** (Annotate a `CrossOrigin` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a CrossOrigin value"
  * import type { CrossOrigin } from "@beep/html/Html.attributes"
  *
  * const value: CrossOrigin = "anonymous"
@@ -737,11 +737,11 @@ export type CrossOrigin = typeof CrossOrigin.Type;
  *
  * **Example** (Call `ReferrerPolicy`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call ReferrerPolicy"
  * import { ReferrerPolicy } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ReferrerPolicy)("strict-origin")) // true
+ * S.is(ReferrerPolicy)("strict-origin") // => true
  * ```
  *
  * @category schemas
@@ -764,7 +764,7 @@ export const ReferrerPolicy = makeAsciiCaseInsensitiveEnumerated([
  *
  * **Example** (Annotate a `ReferrerPolicy` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a ReferrerPolicy value"
  * import type { ReferrerPolicy } from "@beep/html/Html.attributes"
  *
  * const value: ReferrerPolicy = "strict-origin"
@@ -782,7 +782,7 @@ export type ReferrerPolicy = typeof ReferrerPolicy.Type;
  *
  * **Example** (Validate with `Utf8Charset`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with Utf8Charset"
  * import { Utf8Charset } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -803,7 +803,7 @@ export const Utf8Charset = makeAsciiCaseInsensitiveEnumerated(["utf-8"]).pipe(
  *
  * **Example** (Annotate a `Utf8Charset` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a Utf8Charset value"
  * import type { Utf8Charset } from "@beep/html/Html.attributes"
  *
  * const value: Utf8Charset = "utf-8"
@@ -821,7 +821,7 @@ export type Utf8Charset = typeof Utf8Charset.Type;
  *
  * **Example** (Validate with `FormAutocomplete`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with FormAutocomplete"
  * import { FormAutocomplete } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -842,7 +842,7 @@ export const FormAutocomplete = makeAsciiCaseInsensitiveEnumerated(["on", "off"]
  *
  * **Example** (Annotate a `FormAutocomplete` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a FormAutocomplete value"
  * import type { FormAutocomplete } from "@beep/html/Html.attributes"
  *
  * const value: FormAutocomplete = "off"
@@ -876,7 +876,7 @@ const CustomButtonCommand = S.String.check(
  *
  * **Example** (Validate with `ButtonCommand`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with ButtonCommand"
  * import { ButtonCommand } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -898,7 +898,7 @@ export const ButtonCommand = S.Union([BuiltInButtonCommand, CustomButtonCommand]
  *
  * **Example** (Annotate a `ButtonCommand` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a ButtonCommand value"
  * import type { ButtonCommand } from "@beep/html/Html.attributes"
  *
  * const value: ButtonCommand = "show-modal"
@@ -915,12 +915,12 @@ export type ButtonCommand = typeof ButtonCommand.Type;
  *
  * **Example** (Call `HeadingOffset`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call HeadingOffset"
  * import { HeadingOffset } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HeadingOffset)(8)) // true
- * console.log(S.is(HeadingOffset)(9)) // false
+ * S.is(HeadingOffset)(8) // => true
+ * S.is(HeadingOffset)(9) // => false
  * ```
  *
  * @category schemas
@@ -942,7 +942,7 @@ export const HeadingOffset = S.Int.check(
  *
  * **Example** (Annotate a `HeadingOffset` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HeadingOffset value"
  * import type { HeadingOffset } from "@beep/html/Html.attributes"
  *
  * const offset: HeadingOffset = 2
@@ -959,11 +959,11 @@ export type HeadingOffset = typeof HeadingOffset.Type;
  *
  * **Example** (Call `HtmlNonNegativeInteger`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call HtmlNonNegativeInteger"
  * import { HtmlNonNegativeInteger } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlNonNegativeInteger)(0)) // true
+ * S.is(HtmlNonNegativeInteger)(0) // => true
  * ```
  *
  * @category schemas
@@ -987,7 +987,7 @@ export const HtmlNonNegativeInteger = S.Int.check(
  *
  * **Example** (Annotate a `HtmlNonNegativeInteger` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlNonNegativeInteger value"
  * import type { HtmlNonNegativeInteger } from "@beep/html/Html.attributes"
  *
  * const value: HtmlNonNegativeInteger = 0
@@ -1004,11 +1004,11 @@ export type HtmlNonNegativeInteger = typeof HtmlNonNegativeInteger.Type;
  *
  * **Example** (Call `HtmlPositiveInteger`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call HtmlPositiveInteger"
  * import { HtmlPositiveInteger } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlPositiveInteger)(1)) // true
+ * S.is(HtmlPositiveInteger)(1) // => true
  * ```
  *
  * @category schemas
@@ -1032,7 +1032,7 @@ export const HtmlPositiveInteger = S.Int.check(
  *
  * **Example** (Annotate a `HtmlPositiveInteger` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlPositiveInteger value"
  * import type { HtmlPositiveInteger } from "@beep/html/Html.attributes"
  *
  * const value: HtmlPositiveInteger = 1
@@ -1049,12 +1049,12 @@ export type HtmlPositiveInteger = typeof HtmlPositiveInteger.Type;
  *
  * **Example** (Call `HtmlFiniteNumber`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call HtmlFiniteNumber"
  * import { HtmlFiniteNumber } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlFiniteNumber)(1.5)) // true
- * console.log(S.is(HtmlFiniteNumber)(Number.NaN)) // false
+ * S.is(HtmlFiniteNumber)(1.5) // => true
+ * S.is(HtmlFiniteNumber)(Number.NaN) // => false
  * ```
  *
  * @category schemas
@@ -1071,7 +1071,7 @@ export const HtmlFiniteNumber = S.Finite.pipe(
  *
  * **Example** (Annotate a `HtmlFiniteNumber` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlFiniteNumber value"
  * import type { HtmlFiniteNumber } from "@beep/html/Html.attributes"
  *
  * const value: HtmlFiniteNumber = 1.5
@@ -1088,12 +1088,12 @@ export type HtmlFiniteNumber = typeof HtmlFiniteNumber.Type;
  *
  * **Example** (Call `HtmlNonNegativeNumber`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call HtmlNonNegativeNumber"
  * import { HtmlNonNegativeNumber } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlNonNegativeNumber)(0.5)) // true
- * console.log(S.is(HtmlNonNegativeNumber)(-1)) // false
+ * S.is(HtmlNonNegativeNumber)(0.5) // => true
+ * S.is(HtmlNonNegativeNumber)(-1) // => false
  * ```
  *
  * @category schemas
@@ -1117,7 +1117,7 @@ export const HtmlNonNegativeNumber = HtmlFiniteNumber.check(
  *
  * **Example** (Annotate a `HtmlNonNegativeNumber` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlNonNegativeNumber value"
  * import type { HtmlNonNegativeNumber } from "@beep/html/Html.attributes"
  *
  * const value: HtmlNonNegativeNumber = 0.5
@@ -1134,12 +1134,12 @@ export type HtmlNonNegativeNumber = typeof HtmlNonNegativeNumber.Type;
  *
  * **Example** (Call `HtmlPositiveNumber`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call HtmlPositiveNumber"
  * import { HtmlPositiveNumber } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlPositiveNumber)(0.5)) // true
- * console.log(S.is(HtmlPositiveNumber)(0)) // false
+ * S.is(HtmlPositiveNumber)(0.5) // => true
+ * S.is(HtmlPositiveNumber)(0) // => false
  * ```
  *
  * @category schemas
@@ -1163,7 +1163,7 @@ export const HtmlPositiveNumber = HtmlFiniteNumber.check(
  *
  * **Example** (Annotate a `HtmlPositiveNumber` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlPositiveNumber value"
  * import type { HtmlPositiveNumber } from "@beep/html/Html.attributes"
  *
  * const value: HtmlPositiveNumber = 0.5
@@ -1180,14 +1180,14 @@ export type HtmlPositiveNumber = typeof HtmlPositiveNumber.Type;
  *
  * **Example** (Validate with `HtmlStep`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with HtmlStep"
  * import { HtmlStep } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlStep)("ANY")
  * if (Result.isSuccess(decoded)) console.log(decoded.success) // "any"
- * console.log(S.is(HtmlStep)(0)) // false
+ * S.is(HtmlStep)(0) // => false
  * ```
  *
  * @category schemas
@@ -1203,7 +1203,7 @@ export const HtmlStep = S.Union([makeAsciiCaseInsensitiveEnumerated(["any"]), Ht
  *
  * **Example** (Annotate a `HtmlStep` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlStep value"
  * import type { HtmlStep } from "@beep/html/Html.attributes"
  *
  * const value: HtmlStep = "any"
@@ -1221,11 +1221,11 @@ export type HtmlStep = typeof HtmlStep.Type;
  *
  * **Example** (Call `stripHtmlAsciiWhitespace`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call stripHtmlAsciiWhitespace"
  * import { stripHtmlAsciiWhitespace } from "@beep/html/Html.attributes"
  *
- * console.log(stripHtmlAsciiWhitespace("\t value \n")) // "value"
- * console.log(stripHtmlAsciiWhitespace("\u00a0")) // "\u00a0"
+ * stripHtmlAsciiWhitespace("\t value \n") // => "value"
+ * stripHtmlAsciiWhitespace("\u00a0") // => "\u00a0"
  * ```
  *
  * @category utilities
@@ -1243,7 +1243,7 @@ export const stripHtmlAsciiWhitespace = Str.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$
  *
  * **Example** (Call `tokenizeHtmlSpaceSeparated`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call tokenizeHtmlSpaceSeparated"
  * import { tokenizeHtmlSpaceSeparated } from "@beep/html/Html.attributes"
  *
  * console.log(tokenizeHtmlSpaceSeparated("noopener\tnoreferrer"))
@@ -1268,12 +1268,12 @@ export const tokenizeHtmlSpaceSeparated: (value: string) => ReadonlyArray<string
  *
  * **Example** (Call `makeSpaceSeparatedTokenList`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call makeSpaceSeparatedTokenList"
  * import { makeSpaceSeparatedTokenList } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
  * const Rel = makeSpaceSeparatedTokenList(["noopener", "noreferrer"])
- * console.log(S.is(Rel)("noopener noreferrer")) // true
+ * S.is(Rel)("noopener noreferrer") // => true
  * ```
  *
  * @category factories
@@ -1381,7 +1381,7 @@ const makeOpenSpaceSeparatedTokenList = (
  *
  * **Example** (Validate with `HtmlRelationList`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with HtmlRelationList"
  * import { HtmlRelationList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1404,7 +1404,7 @@ export const HtmlRelationList = makeOpenSpaceSeparatedTokenList(true, undefined,
  *
  * **Example** (Annotate a `HtmlRelationList` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlRelationList value"
  * import type { HtmlRelationList } from "@beep/html/Html.attributes"
  *
  * const value: HtmlRelationList = "me x-beep"
@@ -1427,7 +1427,7 @@ export type HtmlRelationList = typeof HtmlRelationList.Type;
  *
  * **Example** (Validate with `LinkRelationList`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with LinkRelationList"
  * import { LinkRelationList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1458,7 +1458,7 @@ export const LinkRelationList = makeOpenSpaceSeparatedTokenList(
  *
  * **Example** (Annotate a `LinkRelationList` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a LinkRelationList value"
  * import type { LinkRelationList } from "@beep/html/Html.attributes"
  *
  * const value: LinkRelationList = "icon"
@@ -1475,7 +1475,7 @@ export type LinkRelationList = typeof LinkRelationList.Type;
  *
  * **Example** (Validate with `HtmlIdReferenceList`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with HtmlIdReferenceList"
  * import { HtmlIdReferenceList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1498,7 +1498,7 @@ export const HtmlIdReferenceList = makeOpenSpaceSeparatedTokenList(false).pipe(
  *
  * **Example** (Annotate a `HtmlIdReferenceList` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlIdReferenceList value"
  * import type { HtmlIdReferenceList } from "@beep/html/Html.attributes"
  *
  * const value: HtmlIdReferenceList = "first second"
@@ -1537,7 +1537,7 @@ const CanonicalMetadataName = MetadataNameInput.check(
  *
  * **Example** (Validate with `MetadataName`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with MetadataName"
  * import { MetadataName } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1565,7 +1565,7 @@ export const MetadataName = MetadataNameInput.pipe(
  *
  * **Example** (Annotate a `MetadataName` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a MetadataName value"
  * import type { MetadataName } from "@beep/html/Html.attributes"
  *
  * const value: MetadataName = "x-beep"
@@ -1614,14 +1614,14 @@ const CanonicalAutocompleteAttribute = S.String.check(
  *
  * **Example** (Validate with `AutocompleteAttribute`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with AutocompleteAttribute"
  * import { AutocompleteAttribute } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(AutocompleteAttribute)("SHIPPING  Email")
  * if (Result.isSuccess(decoded)) {
- *   console.log(decoded.success) // "shipping email"
+ *   decoded.success // => "shipping email"
  * }
  * ```
  *
@@ -1646,7 +1646,7 @@ export const AutocompleteAttribute = AutocompleteAttributeInput.pipe(
  *
  * **Example** (Annotate a `AutocompleteAttribute` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a AutocompleteAttribute value"
  * import type { AutocompleteAttribute } from "@beep/html/Html.attributes"
  *
  * const value: AutocompleteAttribute = "email"
@@ -1663,12 +1663,12 @@ export type AutocompleteAttribute = typeof AutocompleteAttribute.Type;
  *
  * **Example** (Call `ForeignElementName`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call ForeignElementName"
  * import { ForeignElementName } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ForeignElementName)("svg:path")) // true
- * console.log(S.is(ForeignElementName)('path onload="x"')) // false
+ * S.is(ForeignElementName)("svg:path") // => true
+ * S.is(ForeignElementName)('path onload="x"') // => false
  * ```
  *
  * @category schemas
@@ -1692,7 +1692,7 @@ export const ForeignElementName = S.String.check(
  *
  * **Example** (Annotate a `ForeignElementName` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a ForeignElementName value"
  * import type { ForeignElementName } from "@beep/html/Html.attributes"
  *
  * const name: ForeignElementName = "path"
@@ -1709,11 +1709,11 @@ export type ForeignElementName = typeof ForeignElementName.Type;
  *
  * **Example** (Call `ForeignAttributeName`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call ForeignAttributeName"
  * import { ForeignAttributeName } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ForeignAttributeName)("viewBox")) // true
+ * S.is(ForeignAttributeName)("viewBox") // => true
  * ```
  *
  * @category schemas
@@ -1737,7 +1737,7 @@ export const ForeignAttributeName = S.String.check(
  *
  * **Example** (Annotate a `ForeignAttributeName` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a ForeignAttributeName value"
  * import type { ForeignAttributeName } from "@beep/html/Html.attributes"
  *
  * const name: ForeignAttributeName = "viewBox"
@@ -1759,12 +1759,12 @@ export type ForeignAttributeName = typeof ForeignAttributeName.Type;
  *
  * **Example** (Call `HtmlIdValue`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call HtmlIdValue"
  * import { HtmlIdValue } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlIdValue)("section-1")) // true
- * console.log(S.is(HtmlIdValue)("two ids")) // false
+ * S.is(HtmlIdValue)("section-1") // => true
+ * S.is(HtmlIdValue)("two ids") // => false
  * ```
  *
  * @category schemas
@@ -1788,7 +1788,7 @@ export const HtmlIdValue = S.String.check(
  *
  * **Example** (Annotate a `HtmlIdValue` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a HtmlIdValue value"
  * import type { HtmlIdValue } from "@beep/html/Html.attributes"
  *
  * const value: HtmlIdValue = "section-1"
@@ -1818,7 +1818,7 @@ type OptionalString = typeof OptionalString;
  *
  * **Example** (Validate with `EnumeratedGlobalAttributes`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate with EnumeratedGlobalAttributes"
  * import { EnumeratedGlobalAttributes } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1850,12 +1850,12 @@ export const EnumeratedGlobalAttributes = readonlyStruct({
  *
  * **Example** (Call `StandardGlobalAttributes`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call StandardGlobalAttributes"
  * import { StandardGlobalAttributes } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(StandardGlobalAttributes.lang)(O.none())) // true
+ * S.is(StandardGlobalAttributes.lang)(O.none()) // => true
  * ```
  *
  * @category schemas
@@ -1896,12 +1896,12 @@ export const StandardGlobalAttributes = readonlyStruct({
  *
  * **Example** (Call `DatasetKey`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call DatasetKey"
  * import { DatasetKey } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(DatasetKey)("testid")) // true
- * console.log(S.is(DatasetKey)('x" onclick')) // false
+ * S.is(DatasetKey)("testid") // => true
+ * S.is(DatasetKey)('x" onclick') // => false
  * ```
  *
  * @category schemas
@@ -1925,7 +1925,7 @@ export const DatasetKey = S.String.check(
  *
  * **Example** (Annotate a `DatasetKey` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a DatasetKey value"
  * import { DatasetKey } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1933,7 +1933,7 @@ export const DatasetKey = S.String.check(
  * const decoded = S.decodeUnknownResult(DatasetKey)("testid")
  * if (Result.isSuccess(decoded)) {
  *   const key: DatasetKey = decoded.success
- *   console.log(key) // "testid"
+ *   key // => "testid"
  * }
  * ```
  *
@@ -1948,12 +1948,12 @@ export type DatasetKey = typeof DatasetKey.Type;
  *
  * **Example** (Call `DatasetAttribute`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call DatasetAttribute"
  * import { DatasetAttribute } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(DatasetAttribute.dataset)(O.none())) // true
+ * S.is(DatasetAttribute.dataset)(O.none()) // => true
  * ```
  *
  * @category schemas
@@ -2025,12 +2025,12 @@ const ariaAttributeNames = LiteralKit([
  *
  * **Example** (Call `AriaAttributes`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call AriaAttributes"
  * import { AriaAttributes } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(AriaAttributes.role)(O.none())) // true
+ * S.is(AriaAttributes.role)(O.none()) // => true
  * ```
  *
  * @category schemas
@@ -2122,12 +2122,12 @@ const eventHandlerNames = LiteralKit([
  *
  * **Example** (Call `EventHandlerAttributes`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call EventHandlerAttributes"
  * import { EventHandlerAttributes } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(EventHandlerAttributes.onclick)(O.none())) // true
+ * S.is(EventHandlerAttributes.onclick)(O.none()) // => true
  * ```
  *
  * @category schemas
@@ -2143,12 +2143,12 @@ export const EventHandlerAttributes = readonlyStruct(
  *
  * **Example** (Call `GlobalAttributes`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call GlobalAttributes"
  * import { GlobalAttributes } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(GlobalAttributes.id)(O.none())) // true
+ * S.is(GlobalAttributes.id)(O.none()) // => true
  * ```
  *
  * @category schemas
@@ -2168,11 +2168,11 @@ export const GlobalAttributes = readonlyStruct({
  *
  * **Example** (Call `GlobalAttributesStruct`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call GlobalAttributesStruct"
  * import { GlobalAttributesStruct } from "@beep/html/Html.attributes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(GlobalAttributesStruct)({})) // false
+ * S.is(GlobalAttributesStruct)({}) // => false
  * ```
  *
  * @category schemas
@@ -2186,12 +2186,12 @@ export const GlobalAttributesStruct = S.Struct(GlobalAttributes).pipe(
  *
  * **Example** (Annotate a `GlobalAttributesStruct` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a GlobalAttributesStruct value"
  * import type { GlobalAttributesStruct } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
  *
  * const dir: GlobalAttributesStruct["dir"] = O.none()
- * console.log(O.isNone(dir)) // true
+ * O.isNone(dir) // => true
  * ```
  *
  * @category schemas
@@ -2204,12 +2204,12 @@ export type GlobalAttributesStruct = typeof GlobalAttributesStruct.Type;
  *
  * **Example** (Annotate a `GlobalAttributesType` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a GlobalAttributesType value"
  * import type { GlobalAttributesType } from "@beep/html/Html.attributes"
  * import * as O from "effect/Option"
  *
  * const isHidden = (attrs: GlobalAttributesType): boolean => O.isSome(attrs.hidden)
- * console.log(typeof isHidden) // "function"
+ * typeof isHidden // => "function"
  * ```
  *
  * @category schemas
@@ -2222,11 +2222,11 @@ export type GlobalAttributesType = GlobalAttributesStruct;
  *
  * **Example** (Annotate a `GlobalAttributesEncoded` value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a GlobalAttributesEncoded value"
  * import type { GlobalAttributesEncoded } from "@beep/html/Html.attributes"
  *
  * const getId = (attrs: GlobalAttributesEncoded): string | undefined => attrs.id
- * console.log(typeof getId) // "function"
+ * typeof getId // => "function"
  * ```
  *
  * @category schemas

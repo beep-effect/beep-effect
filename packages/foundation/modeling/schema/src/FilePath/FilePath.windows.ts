@@ -32,7 +32,7 @@ const isValidWindowsUncSegments = ValidWindowsUncSegments.is;
  *
  * **Example** (Decode Windows drive path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Windows drive path"
  * import { WindowsDrivePath } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -90,7 +90,7 @@ export const WindowsDrivePath = S.NonEmptyString.check(
  *
  * **Example** (Annotate WindowsDrivePath value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate WindowsDrivePath value"
  * import * as S from "effect/Schema"
  * import { WindowsDrivePath } from "@beep/schema/FilePath"
  *
@@ -109,7 +109,7 @@ export type WindowsDrivePath = typeof WindowsDrivePath.Type;
  *
  * **Example** (Decode Windows UNC path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Windows UNC path"
  * import { WindowsUncPath } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -173,7 +173,7 @@ export const WindowsUncPath = S.NonEmptyString.check(
  *
  * **Example** (Annotate WindowsUncPath value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate WindowsUncPath value"
  * import * as S from "effect/Schema"
  * import { WindowsUncPath } from "@beep/schema/FilePath"
  *
@@ -192,7 +192,7 @@ export type WindowsUncPath = typeof WindowsUncPath.Type;
  *
  * **Example** (Decode Windows relative path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Windows relative path"
  * import { WindowsRelativePath } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -268,7 +268,7 @@ export const WindowsRelativePath = S.NonEmptyString.check(
  *
  * **Example** (Annotate WindowsRelativePath value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate WindowsRelativePath value"
  * import * as S from "effect/Schema"
  * import { WindowsRelativePath } from "@beep/schema/FilePath"
  *

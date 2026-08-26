@@ -57,11 +57,11 @@ const PermissionsPolicyDirectiveBase = LiteralKit([
  *
  * **Example** (Validate camera directive name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate camera directive name"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyDirective } from "@beep/schema/PermissionsPolicy"
  *
- * console.log(S.is(PermissionsPolicyDirective)("camera")) // true
+ * S.is(PermissionsPolicyDirective)("camera") // => true
  * ```
  *
  * @category schemas
@@ -79,7 +79,7 @@ export const PermissionsPolicyDirective = PermissionsPolicyDirectiveBase.pipe(
  *
  * **Example** (Assign camera directive type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign camera directive type"
  * import type { PermissionsPolicyDirective } from "@beep/schema/PermissionsPolicy"
  *
  * const directive: PermissionsPolicyDirective = "camera"
@@ -96,7 +96,7 @@ export type PermissionsPolicyDirective = typeof PermissionsPolicyDirective.Type;
  *
  * **Example** (Decode fullscreen directive key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode fullscreen directive key"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyDirectiveKey } from "@beep/schema/PermissionsPolicy"
  *
@@ -124,7 +124,7 @@ export const PermissionsPolicyDirectiveKey = S.String.check(
  *
  * **Example** (Assign fullscreen key type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign fullscreen key type"
  * import type { PermissionsPolicyDirectiveKey } from "@beep/schema/PermissionsPolicy"
  *
  * const key: PermissionsPolicyDirectiveKey = "fullscreen"
@@ -141,7 +141,7 @@ export type PermissionsPolicyDirectiveKey = typeof PermissionsPolicyDirectiveKey
  *
  * **Example** (Decode quoted origin string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode quoted origin string"
  * import * as S from "effect/Schema"
  * import { QuotedOrigin } from "@beep/schema/PermissionsPolicy"
  *
@@ -168,7 +168,7 @@ export const QuotedOrigin = S.String.check(
  *
  * **Example** (Assign quoted origin type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign quoted origin type"
  * import type { QuotedOrigin } from "@beep/schema/PermissionsPolicy"
  *
  * const origin: QuotedOrigin = '"https://example.com"'
@@ -187,11 +187,11 @@ const PermissionsPolicyDirectiveValueSingleBase = LiteralKit(["*", "self", "none
  *
  * **Example** (Validate self allowlist token)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate self allowlist token"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyDirectiveValueSingle } from "@beep/schema/PermissionsPolicy"
  *
- * console.log(S.is(PermissionsPolicyDirectiveValueSingle)("self")) // true
+ * S.is(PermissionsPolicyDirectiveValueSingle)("self") // => true
  * ```
  *
  * @category schemas
@@ -209,7 +209,7 @@ export const PermissionsPolicyDirectiveValueSingle = PermissionsPolicyDirectiveV
  *
  * **Example** (Assign self value type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign self value type"
  * import type { PermissionsPolicyDirectiveValueSingle } from "@beep/schema/PermissionsPolicy"
  *
  * const value: PermissionsPolicyDirectiveValueSingle = "self"
@@ -226,7 +226,7 @@ export type PermissionsPolicyDirectiveValueSingle = typeof PermissionsPolicyDire
  *
  * **Example** (Decode self allowlisted origin)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode self allowlisted origin"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyAllowlistedOrigin } from "@beep/schema/PermissionsPolicy"
  *
@@ -247,7 +247,7 @@ export const PermissionsPolicyAllowlistedOrigin = S.Union([S.Literal("self"), Qu
  *
  * **Example** (Assign self origin type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign self origin type"
  * import type { PermissionsPolicyAllowlistedOrigin } from "@beep/schema/PermissionsPolicy"
  *
  * const origin: PermissionsPolicyAllowlistedOrigin = "self"
@@ -264,7 +264,7 @@ export type PermissionsPolicyAllowlistedOrigin = typeof PermissionsPolicyAllowli
  *
  * **Example** (Decode self array value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode self array value"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyDirectiveValue } from "@beep/schema/PermissionsPolicy"
  *
@@ -289,7 +289,7 @@ export const PermissionsPolicyDirectiveValue = S.Union([
  *
  * **Example** (Assign self array type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign self array type"
  * import type { PermissionsPolicyDirectiveValue } from "@beep/schema/PermissionsPolicy"
  *
  * const value: PermissionsPolicyDirectiveValue = ["self"]
@@ -310,7 +310,7 @@ const isPermissionsPolicyDirectiveKey = S.is(PermissionsPolicyDirectiveKey);
  *
  * **Example** (Decode camera none directives)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode camera none directives"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyDirectives } from "@beep/schema/PermissionsPolicy"
  *
@@ -342,7 +342,7 @@ export const PermissionsPolicyDirectives = PermissionsPolicyDirectivesInput.pipe
  *
  * **Example** (Assign camera none map type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign camera none map type"
  * import type { PermissionsPolicyDirectives } from "@beep/schema/PermissionsPolicy"
  *
  * const directives: PermissionsPolicyDirectives = { camera: "none" }
@@ -359,7 +359,7 @@ export type PermissionsPolicyDirectives = typeof PermissionsPolicyDirectives.Typ
  *
  * **Example** (Make camera none option struct)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make camera none option struct"
  * import { PermissionsPolicyOptionStruct } from "@beep/schema/PermissionsPolicy"
  *
  * const option = PermissionsPolicyOptionStruct.make({ directives: { camera: "none" } })
@@ -385,7 +385,7 @@ export class PermissionsPolicyOptionStruct extends S.Class<PermissionsPolicyOpti
  *
  * **Example** (Decode disabled policy option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode disabled policy option"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyOption } from "@beep/schema/PermissionsPolicy"
  *
@@ -406,7 +406,7 @@ export const PermissionsPolicyOption = S.Union([S.Literal(false), PermissionsPol
  *
  * **Example** (Assign disabled option type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign disabled option type"
  * import type { PermissionsPolicyOption } from "@beep/schema/PermissionsPolicy"
  *
  * const option: PermissionsPolicyOption = false
@@ -423,7 +423,7 @@ export type PermissionsPolicyOption = typeof PermissionsPolicyOption.Type;
  *
  * **Example** (Make camera empty header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make camera empty header"
  * import * as O from "effect/Option"
  * import { PermissionsPolicyResponseHeader } from "@beep/schema/PermissionsPolicy"
  *
@@ -483,7 +483,7 @@ const buildHeaderValue = (directives: PermissionsPolicyDirectives): O.Option<str
  *
  * **Example** (Decode camera none header)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode camera none header"
  * import * as S from "effect/Schema"
  * import { PermissionsPolicyHeader } from "@beep/schema/PermissionsPolicy"
  *
@@ -556,7 +556,7 @@ export const PermissionsPolicyHeader = S.Union([PermissionsPolicyOption, S.Undef
  *
  * **Example** (Assign rendered header type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign rendered header type"
  * import * as O from "effect/Option"
  * import { PermissionsPolicyResponseHeader, type PermissionsPolicyHeader } from "@beep/schema/PermissionsPolicy"
  *
@@ -585,7 +585,7 @@ export { PermissionsPolicyResponseHeader as ResponseHeader };
  *
  * **Example** (Decode disabled option alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode disabled option alias"
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/PermissionsPolicy"
  *
@@ -602,7 +602,7 @@ export const Option = PermissionsPolicyOption;
  *
  * **Example** (Assign option alias type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign option alias type"
  * import type { Option } from "@beep/schema/PermissionsPolicy"
  *
  * const option: Option = false
@@ -619,7 +619,7 @@ export type Option = typeof Option.Type;
  *
  * **Example** (Decode camera none header alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode camera none header alias"
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/PermissionsPolicy"
  *
@@ -637,7 +637,7 @@ export const Header = PermissionsPolicyHeader;
  *
  * **Example** (Assign header alias type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign header alias type"
  * import * as O from "effect/Option"
  * import { PermissionsPolicyResponseHeader, type Header } from "@beep/schema/PermissionsPolicy"
  *

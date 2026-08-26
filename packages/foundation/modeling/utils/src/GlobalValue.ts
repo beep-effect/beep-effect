@@ -48,7 +48,7 @@ export type GlobalValueOf<A> = A extends unknown ? A : never;
  *
  * **Example** (Cached compute across imports)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Cached compute across imports"
  * import { globalValue } from "@beep/utils"
  *
  * let computed = 0

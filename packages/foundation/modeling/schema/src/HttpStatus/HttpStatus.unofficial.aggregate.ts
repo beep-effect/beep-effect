@@ -28,7 +28,7 @@ import {
  *
  * **Example** (Log unofficial pairs length)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log unofficial pairs length"
  * import { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatusUnofficial.Pairs.length)
@@ -60,13 +60,13 @@ export const HttpStatusUnofficial = MappedLiteralKit([
  *
  * **Example** (Decode unofficial status code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode unofficial status code"
  * import * as S from "effect/Schema"
  * import { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatusUnofficial.Encoded = "RequestHeaderFieldsTooLargeShopify"
  * const status = S.decodeUnknownSync(HttpStatusUnofficial)(encoded)
- * console.log(status) // 430
+ * status // => 430
  * ```
  *
  * @category validation

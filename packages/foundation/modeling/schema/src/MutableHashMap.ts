@@ -97,7 +97,7 @@ export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = Readonly
  *
  * **Example** (Validates existing MutableHashMap)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validates existing MutableHashMap"
  * import { MutableHashMap } from "effect"
  * import * as S from "effect/Schema"
  * import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap"
@@ -127,7 +127,7 @@ export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
  *
  * **Example** (Decodes entries to MutableHashMap)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decodes entries to MutableHashMap"
  * import * as S from "effect/Schema"
  * import { MutableHashMap } from "@beep/schema/MutableHashMap"
  *
@@ -154,12 +154,12 @@ export interface MutableHashMap<Key extends S.Top, Value extends S.Top>
  *
  * **Example** (Guards MutableHashMap values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guards MutableHashMap values"
  * import { MutableHashMap } from "effect"
  * import { isMutableHashMap } from "@beep/schema/MutableHashMap"
  *
- * console.log(isMutableHashMap(MutableHashMap.empty())) // true
- * console.log(isMutableHashMap({})) // false
+ * isMutableHashMap(MutableHashMap.empty()) // => true
+ * isMutableHashMap({}) // => false
  * ```
  *
  * @param value - Unknown input to test.
@@ -176,7 +176,7 @@ export const isMutableHashMap = <Key, Value>(value: unknown): value is MutableHa
  *
  * **Example** (Decodes existing map entries)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decodes existing map entries"
  * import { MutableHashMap } from "effect"
  * import * as S from "effect/Schema"
  * import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap"
@@ -292,7 +292,7 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
  *
  * **Example** (Round-trips map via entry arrays)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Round-trips map via entry arrays"
  * import * as S from "effect/Schema"
  * import { MutableHashMap } from "@beep/schema/MutableHashMap"
  *

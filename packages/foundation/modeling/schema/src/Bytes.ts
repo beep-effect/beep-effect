@@ -34,13 +34,13 @@ const BytesLength = S.makeFilter<globalThis.Uint8Array<ArrayBufferLike>>(
  *
  * **Example** (Decode Uint8Array bytes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Uint8Array bytes"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Bytes } from "@beep/schema/Bytes"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Bytes)(new Uint8Array([1, 2, 3])))
- * console.log(value.byteLength) // 3
+ * value.byteLength // => 3
  * ```
  *
  * @invariant Values are Uint8Array instances with protobuf length-delimited size.
@@ -63,7 +63,7 @@ export const Bytes = S.Uint8Array.annotate({
  *
  * **Example** (Narrow unknown to Bytes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow unknown to Bytes"
  * import * as S from "effect/Schema"
  * import { Bytes } from "@beep/schema/Bytes"
  * import type { Bytes as BytesValue } from "@beep/schema/Bytes"
@@ -71,7 +71,7 @@ export const Bytes = S.Uint8Array.annotate({
  * const input: unknown = new Uint8Array([1, 2, 3])
  * if (S.is(Bytes)(input)) {
  *   const value: BytesValue = input
- *   console.log(value.byteLength) // 3
+ *   value.byteLength // => 3
  * }
  * ```
  *

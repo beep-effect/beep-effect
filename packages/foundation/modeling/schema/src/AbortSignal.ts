@@ -13,12 +13,12 @@ const $I = $SchemaId.create("AbortSignal");
  *
  * **Example** (Guard AbortSignal values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard AbortSignal values"
  * import { isAbortSignal } from "@beep/schema/AbortSignal"
  *
  * const controller = new AbortController()
- * console.log(isAbortSignal(controller.signal)) // true
- * console.log(isAbortSignal("nope")) // false
+ * isAbortSignal(controller.signal) // => true
+ * isAbortSignal("nope") // => false
  * ```
  *
  * @param u - The value to test.
@@ -33,13 +33,13 @@ export const isAbortSignal = (u: unknown): u is AbortSignal => u instanceof Abor
  *
  * **Example** (Decode AbortSignal schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode AbortSignal schema"
  * import * as S from "effect/Schema"
  * import { AbortSig } from "@beep/schema/AbortSignal"
  *
  * const controller = new AbortController()
  * const signal = S.decodeUnknownSync(AbortSig)(controller.signal)
- * console.log(signal.aborted) // false
+ * signal.aborted // => false
  * ```
  *
  * @category validation

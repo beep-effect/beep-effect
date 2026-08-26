@@ -55,7 +55,7 @@ const NPath = (): typeof import("node:path") => {
  *
  * **Example** (Round-trip file URL conversion)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Round-trip file URL conversion"
  * import { Effect } from "effect"
  * import { fromFileUrl, toFileUrl } from "@beep/utils/Path"
  *
@@ -73,7 +73,7 @@ export { fromFileUrl, toFileUrl } from "./NodeUrl.ts";
  *
  * **Example** (Parsed path object shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Parsed path object shape"
  * import type { Parsed } from "@beep/utils/Path"
  *
  * const parsed: Parsed = { root: "/", dir: "/x", base: "y.ts", ext: ".ts", name: "y" }
@@ -91,7 +91,7 @@ export type Parsed = PlatformPath.Path.Parsed;
  *
  * **Example** (Platform separator type check)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Platform separator type check"
  * import { sep } from "@beep/utils/Path"
  *
  * console.log(typeof sep)
@@ -107,7 +107,7 @@ export const sep: string = globalThis.process?.getBuiltinModule?.("node:path")?.
  *
  * **Example** (Join path segments)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Join path segments"
  * import { join } from "@beep/utils/Path"
  *
  * console.log(join("a", "b", "c"))
@@ -123,7 +123,7 @@ export const join = (...paths: ReadonlyArray<string>): string => NPath().join(..
  *
  * **Example** (Resolve absolute path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Resolve absolute path"
  * import { resolve } from "@beep/utils/Path"
  *
  * console.log(resolve("a", "b").length > 0)
@@ -139,7 +139,7 @@ export const resolve = (...pathSegments: ReadonlyArray<string>): string => NPath
  *
  * **Example** (Collapse dots and separators)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Collapse dots and separators"
  * import { normalize } from "@beep/utils/Path"
  *
  * console.log(normalize("a//b/../c"))
@@ -155,7 +155,7 @@ export const normalize: (path: string) => string = (path) => NPath().normalize(p
  *
  * **Example** (Relative path between dirs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Relative path between dirs"
  * import { relative } from "@beep/utils/Path"
  *
  * console.log(relative("/a/b", "/a/c"))
@@ -174,7 +174,7 @@ export const relative: {
  *
  * **Example** (Basename with suffix strip)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Basename with suffix strip"
  * import { basename } from "@beep/utils/Path"
  *
  * console.log(basename("/a/b/c.ts", ".ts"))
@@ -193,7 +193,7 @@ export const basename: {
  *
  * **Example** (Directory portion of path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Directory portion of path"
  * import { dirname } from "@beep/utils/Path"
  *
  * console.log(dirname("/a/b/c.ts"))
@@ -209,7 +209,7 @@ export const dirname: (path: string) => string = (path) => NPath().dirname(path)
  *
  * **Example** (Extension with leading dot)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Extension with leading dot"
  * import { extname } from "@beep/utils/Path"
  *
  * console.log(extname("/a/b/c.ts"))
@@ -225,7 +225,7 @@ export const extname: (path: string) => string = (path) => NPath().extname(path)
  *
  * **Example** (Check absolute path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check absolute path"
  * import { isAbsolute } from "@beep/utils/Path"
  *
  * console.log(isAbsolute("/a/b"))
@@ -241,7 +241,7 @@ export const isAbsolute: (path: string) => boolean = (path) => NPath().isAbsolut
  *
  * **Example** (Parse path components)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Parse path components"
  * import { parse } from "@beep/utils/Path"
  *
  * console.log(parse("/a/b/c.ts").name)
@@ -257,7 +257,7 @@ export const parse: (path: string) => Parsed = (path) => NPath().parse(path);
  *
  * **Example** (Format Parsed into path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Format Parsed into path"
  * import { format } from "@beep/utils/Path"
  *
  * console.log(format({ dir: "/a/b", base: "c.ts" }))
@@ -273,7 +273,7 @@ export const format: (pathObject: Partial<Parsed>) => string = (pathObject) => N
  *
  * **Example** (Namespace-prefixed path result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Namespace-prefixed path result"
  * import { toNamespacedPath } from "@beep/utils/Path"
  *
  * console.log(toNamespacedPath("/a/b").length > 0)

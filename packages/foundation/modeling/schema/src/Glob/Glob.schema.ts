@@ -9,7 +9,7 @@
  *
  * **Example** (Decode portable glob pattern)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode portable glob pattern"
  * import * as S from "effect/Schema";
  * import { Glob } from "@beep/schema/Glob";
  *
@@ -105,7 +105,7 @@ const GlobChecks = S.makeFilterGroup(
  *
  * **Example** (Decode non-empty glob)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-empty glob"
  * import * as S from "effect/Schema"
  * import { Glob } from "@beep/schema/Glob"
  *
@@ -132,7 +132,7 @@ export const Glob = S.String.check(GlobChecks)
  *
  * **Example** (Annotate decoded Glob type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate decoded Glob type"
  * import * as S from "effect/Schema"
  * import { Glob } from "@beep/schema/Glob"
  *
@@ -150,7 +150,7 @@ export type Glob = typeof Glob.Type;
  *
  * **Example** (Decode with Schema alias)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode with Schema alias"
  * import * as S from "effect/Schema"
  * import { Schema } from "@beep/schema/Glob"
  *
@@ -168,7 +168,7 @@ export const Schema = Glob;
  *
  * **Example** (Type extracted Schema value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type extracted Schema value"
  * import * as S from "effect/Schema"
  * import type { Schema as GlobValue } from "@beep/schema/Glob"
  * import { Schema as GlobSchema } from "@beep/schema/Glob"

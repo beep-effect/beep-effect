@@ -24,7 +24,7 @@ import type * as TF from "type-fest";
  *
  * **Example** (Call `equivalence`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call equivalence"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -54,7 +54,7 @@ export const equivalence: {
  *
  * **Example** (Call `orderAsc`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call orderAsc"
  * import { pipe } from "effect"
  * import { A, Str } from "@beep/utils"
  *
@@ -96,7 +96,7 @@ export type Prefixed<Pre extends string, S extends string> = Pre extends string 
  *
  * **Example** (Call `prefix`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call prefix"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -134,7 +134,7 @@ export const prefix: {
  *
  * **Example** (Call `prefixThunk`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call prefixThunk"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -188,7 +188,7 @@ export type Postfixed<S extends string, Post extends string> = Post extends stri
  *
  * **Example** (Call `postfix`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call postfix"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -226,7 +226,7 @@ export const postfix: {
  *
  * **Example** (Call `postfixThunk`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call postfixThunk"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -360,7 +360,7 @@ export const mapPostfix: {
  *
  * **Example** (Call `camelCase`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call camelCase"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.camelCase("my_cool_name")
@@ -378,7 +378,7 @@ export const camelCase = <TStr extends string>(str: TStr): TF.CamelCase<TStr> =>
  *
  * **Example** (Call `snakeCase`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call snakeCase"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.snakeCase("myCoolName")
@@ -396,7 +396,7 @@ export const snakeCase = <const TStr extends string>(str: TStr): TF.SnakeCase<TS
  *
  * **Example** (Call `kebabCase`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call kebabCase"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.kebabCase("myCoolName")
@@ -415,7 +415,7 @@ export const kebabCase = <const TStr extends string>(str: TStr): TF.KebabCase<TS
  *
  * **Example** (Call `screamingSnake`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call screamingSnake"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.screamingSnake("myCoolName")
@@ -434,7 +434,7 @@ export const screamingSnake = <const TStr extends string>(str: TStr): TF.Screami
  *
  * **Example** (Call `pascalCase`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call pascalCase"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.pascalCase("my_cool_name")
@@ -452,7 +452,7 @@ export const pascalCase = <const TStr extends string>(str: TStr): TF.PascalCase<
  *
  * **Example** (Call `pascalToSnake`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call pascalToSnake"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.pascalToSnake("MyCoolName")
@@ -471,7 +471,7 @@ export const pascalToSnake = <const TStr extends string>(str: TF.PascalCase<TStr
  *
  * **Example** (Call `snakeToCamel`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call snakeToCamel"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.snakeToCamel("my_cool_name")
@@ -490,7 +490,7 @@ export const snakeToCamel = <const TStr extends string>(str: TF.SnakeCase<TStr>)
  *
  * **Example** (Call `snakeToKebab`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call snakeToKebab"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.snakeToKebab("my_cool_name")
@@ -509,7 +509,7 @@ export const snakeToKebab = <const TStr extends string>(str: TF.SnakeCase<TStr>)
  *
  * **Example** (Call `camelToSnake`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call camelToSnake"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.camelToSnake("myCoolName")
@@ -528,7 +528,7 @@ export const camelToSnake = <const TStr extends string>(str: TF.CamelCase<TStr>)
  *
  * **Example** (Call `snakeToPascal`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call snakeToPascal"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.snakeToPascal("my_cool_name")
@@ -547,7 +547,7 @@ export const snakeToPascal = <const TStr extends TF.SnakeCase<string>>(str: TStr
  *
  * **Example** (Call `kebabToSnake`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call kebabToSnake"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.kebabToSnake("my-cool-name")
@@ -571,7 +571,7 @@ export const kebabToSnake = <const TStr extends string>(str: TF.KebabCase<TStr>)
  *
  * **Example** (Call `startsWith`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call startsWith"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -611,7 +611,7 @@ export const startsWith: {
  *
  * **Example** (Call `endsWith`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call endsWith"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -651,7 +651,7 @@ export const endsWith: {
  *
  * **Example** (Call `contains`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call contains"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -695,7 +695,7 @@ export const contains: {
  *
  * **Example** (Call `repeat`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call repeat"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -736,7 +736,7 @@ export const repeat: {
  *
  * **Example** (Call `replaceWith`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call replaceWith"
  * import { Str } from "@beep/utils"
  * import { pipe } from "effect"
  *
@@ -780,7 +780,7 @@ export const replaceWith: {
  *
  * **Example** (Call `replaceAllWith`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call replaceAllWith"
  * import { Str } from "@beep/utils"
  * import { pipe } from "effect"
  *
@@ -815,9 +815,9 @@ export const replaceAllWith: {
 /**
  * Re-export of all helpers from `effect/String`.
  *
- * **Example** (Call `trimThunk`)
+ * **Example** (Call a re-exported helper)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call a re-exported helper"
  * import { Str } from "@beep/utils"
  *
  * const lower = Str.toLowerCase("BEEP")
@@ -834,7 +834,7 @@ export * from "effect/String";
  *
  * **Example** (Call `trimThunk`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call trimThunk"
  * import { Str } from "@beep/utils"
  *
  * const lazy = Str.trimThunk("  hello  ")
@@ -854,7 +854,7 @@ export const trimThunk = (s: string) => () => Str.trim(s);
  *
  * **Example** (Call `fromNumber`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call fromNumber"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.fromNumber(42)
@@ -874,7 +874,7 @@ export const fromNumber = <const T extends number>(num: T): `${T}` => `${num}` a
  *
  * **Example** (Call `toSlug`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call toSlug"
  * import { Str } from "@beep/utils"
  *
  * const value = Str.toSlug("Hello, Beep Effect!")
@@ -902,7 +902,7 @@ export const toSlug = flow(
  *
  * **Example** (Call `truncate`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call truncate"
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
  *
@@ -938,7 +938,7 @@ export const truncate: {
  *
  * **Example** (Call `orEmpty`)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Call orEmpty"
  * import { Str } from "@beep/utils";
  *
  * const fn = (someStr: string | null | undefined) => console.log(Str.orEmpty(someStr)) // "" if null or undefined

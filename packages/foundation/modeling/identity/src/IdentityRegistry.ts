@@ -19,10 +19,10 @@ const $I = $IdentityId.create("IdentityRegistry");
  *
  * **Example** (Check an encoding literal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check an encoding literal"
  * import { IdentityEncoding } from "@beep/identity"
  *
- * console.log(IdentityEncoding.literals.includes("curie")) // true
+ * IdentityEncoding.literals.includes("curie") // => true
  * ```
  *
  * @category schemas
@@ -46,7 +46,7 @@ const makeIdentityRefMember = <Encoding extends IdentityEncoding>(encoding: S.Li
  *
  * **Example** (Decode an IRI reference)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode an IRI reference"
  * import { IdentityRef } from "@beep/identity"
  * import * as S from "effect/Schema"
  *
@@ -54,7 +54,7 @@ const makeIdentityRefMember = <Encoding extends IdentityEncoding>(encoding: S.Li
  *   _tag: "iri",
  *   value: "https://ns.beep.sh/identity/Widget"
  * })
- * console.log(ref._tag) // "iri"
+ * ref._tag // => "iri"
  * ```
  *
  * @category schemas
@@ -83,7 +83,7 @@ export type IdentityRef = typeof IdentityRef.Type;
  *
  * **Example** (Construct a registry entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a registry entry"
  * import { IdentityEntry } from "@beep/identity"
  *
  * const entry = IdentityEntry.make({
@@ -114,12 +114,12 @@ export class IdentityEntry extends S.Class<IdentityEntry>("@beep/identity/Identi
    *
    * **Example** (Build an entry from a package composer)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Build an entry from a package composer"
    * import { $IdentityId, IdentityEntry } from "@beep/identity"
    *
    * const composer = $IdentityId.create("Widget")
    * const entry = IdentityEntry.fromComposer(composer, { label: "Widget" })
-   * console.log(entry.iri === composer.iri) // true
+   * entry.iri === composer.iri // => true
    * ```
    *
    * @category constructors
@@ -163,13 +163,13 @@ export declare namespace IdentityEntry {
  *
  * **Example** (Construct a missing-reference failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a missing-reference failure"
  * import { IdentityNotFoundError } from "@beep/identity"
  *
  * const error = IdentityNotFoundError.make({
  *   ref: { _tag: "curie", value: "beep:missing" }
  * })
- * console.log(error._tag) // "IdentityNotFoundError"
+ * error._tag // => "IdentityNotFoundError"
  * ```
  *
  * @category errors
@@ -190,14 +190,14 @@ export class IdentityNotFoundError extends S.TaggedError<IdentityNotFoundError>(
  *
  * **Example** (Construct an identity conflict)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct an identity conflict"
  * import { IdentityRegistryConflictError } from "@beep/identity"
  *
  * const error = IdentityRegistryConflictError.make({
  *   encoding: "identity",
  *   key: "@beep/identity/Widget"
  * })
- * console.log(error.encoding) // "identity"
+ * error.encoding // => "identity"
  * ```
  *
  * @category errors
@@ -231,7 +231,7 @@ export interface IdentityRegistryShape {
  *
  * **Example** (Provide an empty local registry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Provide an empty local registry"
  * import { IdentityRegistry } from "@beep/identity"
  * import { Effect } from "effect"
  *
@@ -253,7 +253,7 @@ export class IdentityRegistry extends Context.Service<IdentityRegistry, Identity
    *
    * **Example** (Create a local registry layer)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Create a local registry layer"
    * import { IdentityEntry, IdentityRegistry } from "@beep/identity"
    *
    * const entry = IdentityEntry.make({

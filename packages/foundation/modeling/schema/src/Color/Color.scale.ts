@@ -121,7 +121,7 @@ const generateAlphaScaleValues = ({ scale, isDark }: GenerateAlphaScaleInput): H
  *
  * **Example** (Decode fixed 12-step scale)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode fixed 12-step scale"
  * import { HexColorScale12 } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -154,7 +154,7 @@ export const HexColorScale12 = S.Array(HexColor)
  *
  * **Example** (Type annotated scale decode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated scale decode"
  * import * as S from "effect/Schema"
  * import { HexColorScale12 } from "@beep/schema/Color"
  *
@@ -185,7 +185,7 @@ const HexColorScale12Input = S.Array(NormalizeHexColor)
  *
  * **Example** (Decode chromatic scale input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode chromatic scale input"
  * import { GenerateScaleInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -211,7 +211,7 @@ export class GenerateScaleInput extends S.Class<GenerateScaleInput>($I`GenerateS
  *
  * **Example** (Generate chromatic 12-step scale)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Generate chromatic 12-step scale"
  * import { GenerateScale } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -239,7 +239,7 @@ export const GenerateScale = GenerateScaleInput.pipe(
  *
  * **Example** (Type annotated scale generation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated scale generation"
  * import * as S from "effect/Schema"
  * import { GenerateScale } from "@beep/schema/Color"
  *
@@ -257,7 +257,7 @@ export type GenerateScale = typeof GenerateScale.Type;
  *
  * **Example** (Decode neutral scale input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode neutral scale input"
  * import { GenerateNeutralScaleInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -283,7 +283,7 @@ export class GenerateNeutralScaleInput extends S.Class<GenerateNeutralScaleInput
  *
  * **Example** (Generate neutral 12-step scale)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Generate neutral 12-step scale"
  * import { GenerateNeutralScale } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -311,7 +311,7 @@ export const GenerateNeutralScale = GenerateNeutralScaleInput.pipe(
  *
  * **Example** (Type annotated neutral generation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated neutral generation"
  * import * as S from "effect/Schema"
  * import { GenerateNeutralScale } from "@beep/schema/Color"
  *
@@ -329,7 +329,7 @@ export type GenerateNeutralScale = typeof GenerateNeutralScale.Type;
  *
  * **Example** (Decode alpha scale input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode alpha scale input"
  * import { GenerateAlphaScaleInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -363,7 +363,7 @@ export class GenerateAlphaScaleInput extends S.Class<GenerateAlphaScaleInput>($I
  *
  * **Example** (Generate alpha-blended scale)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Generate alpha-blended scale"
  * import { GenerateAlphaScale } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -399,7 +399,7 @@ export const GenerateAlphaScale = GenerateAlphaScaleInput.pipe(
  *
  * **Example** (Type annotated alpha generation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated alpha generation"
  * import * as S from "effect/Schema"
  * import { GenerateAlphaScale } from "@beep/schema/Color"
  *

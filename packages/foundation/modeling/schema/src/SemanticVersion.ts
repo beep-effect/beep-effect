@@ -3,7 +3,7 @@
  *
  * **Example** (Decode a semantic version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode a semantic version"
  * import * as S from "effect/Schema";
  * import { SemanticVersion } from "@beep/schema/SemanticVersion";
  *
@@ -77,12 +77,12 @@ export interface SemanticVersionSchema extends SemanticVersionSchemaBase {}
  *
  * **Example** (Validate accepted and rejected versions)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate accepted and rejected versions"
  * import * as S from "effect/Schema";
  * import { SemanticVersion } from "@beep/schema/SemanticVersion";
  *
- * console.log(S.is(SemanticVersion)("12.34.56")); // true
- * console.log(S.is(SemanticVersion)("01.2.3")); // false
+ * S.is(SemanticVersion)("12.34.56") // => true
+ * S.is(SemanticVersion)("01.2.3") // => false
  * ```
  *
  * @category validation
@@ -95,7 +95,7 @@ export const SemanticVersion: SemanticVersionSchema = SemanticVersionWithStatics
  *
  * **Example** (Annotate a decoded version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate a decoded version"
  * import type { SemanticVersion } from "@beep/schema/SemanticVersion";
  *
  * const currentVersion: SemanticVersion = "2.3.4";

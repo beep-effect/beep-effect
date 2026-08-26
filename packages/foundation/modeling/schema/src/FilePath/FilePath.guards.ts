@@ -15,14 +15,14 @@ import { $I, usesUnsupportedWindowsNamespacePrefix } from "./FilePath.shared.ts"
  *
  * **Example** (Detect embedded NUL byte)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Detect embedded NUL byte"
  * import * as S from "effect/Schema"
  * import { HasNullByte } from "@beep/schema/FilePath"
  *
  * const is = S.is(HasNullByte)
  *
- * console.log(is("hello\x00world")) // true
- * console.log(is("hello")) // false
+ * is("hello\x00world") // => true
+ * is("hello") // => false
  * ```
  *
  * @category guards
@@ -48,7 +48,7 @@ export const HasNullByte = S.String.check(
  *
  * **Example** (Decode branded NUL string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode branded NUL string"
  * import * as S from "effect/Schema"
  * import { HasNullByte } from "@beep/schema/FilePath"
  *
@@ -67,7 +67,7 @@ export type HasNullByte = typeof HasNullByte.Type;
  *
  * **Example** (Decode supported Windows path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode supported Windows path"
  * import { SupportedWindowsNamespace } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -98,7 +98,7 @@ export const SupportedWindowsNamespace = S.NonEmptyString.check(
  *
  * **Example** (Type annotated Windows path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated Windows path"
  * import * as S from "effect/Schema"
  * import { SupportedWindowsNamespace } from "@beep/schema/FilePath"
  *
@@ -116,7 +116,7 @@ export type SupportedWindowsNamespace = typeof SupportedWindowsNamespace.Type;
  *
  * **Example** (Decode POSIX separator path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode POSIX separator path"
  * import { UsesPosixSeparator } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -147,7 +147,7 @@ export const UsesPosixSeparator = S.String.check(
  *
  * **Example** (Type annotated POSIX path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated POSIX path"
  * import * as S from "effect/Schema"
  * import { UsesPosixSeparator } from "@beep/schema/FilePath"
  *
@@ -165,7 +165,7 @@ export type UsesPosixSeparator = typeof UsesPosixSeparator.Type;
  *
  * **Example** (Decode Windows separator path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Windows separator path"
  * import { UsesWindowsSeparator } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -196,7 +196,7 @@ export const UsesWindowsSeparator = S.String.check(
  *
  * **Example** (Type annotated Windows path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated Windows path"
  * import * as S from "effect/Schema"
  * import { UsesWindowsSeparator } from "@beep/schema/FilePath"
  *
@@ -214,7 +214,7 @@ export type UsesWindowsSeparator = typeof UsesWindowsSeparator.Type;
  *
  * **Example** (Decode trailing separator path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode trailing separator path"
  * import { EndsWithSeparator } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -245,7 +245,7 @@ export const EndsWithSeparator = S.String.check(
  *
  * **Example** (Type annotated trailing separator)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated trailing separator"
  * import * as S from "effect/Schema"
  * import { EndsWithSeparator } from "@beep/schema/FilePath"
  *
