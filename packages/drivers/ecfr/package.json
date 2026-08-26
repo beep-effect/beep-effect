@@ -31,7 +31,8 @@
     "codegen": "bun run generate",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
-    "generate": "bun run scripts/generate.ts && bunx biome check --write src/_generated/Ecfr.generated.ts",
+    "generate": "bun run scripts/generate.ts",
+    "generate:check": "bun run scripts/generate.ts --check",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
@@ -69,10 +70,10 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
-    "@effect/platform-bun": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/codegen-kit": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",

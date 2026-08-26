@@ -773,6 +773,28 @@ const doctestLaneSteps = (repoRoot: string, options: CiLaneRunOptions): Readonly
     full: () => doctestStepForTesting(repoRoot, undefined),
   });
 
+const CODEGEN_DRIVER_PACKAGE_DIRS = LiteralKit([
+  "packages/drivers/acp",
+  "packages/drivers/ecfr",
+  "packages/drivers/govinfo",
+  "packages/drivers/runpod",
+]);
+
+type CodegenDriverPackageDir = typeof CODEGEN_DRIVER_PACKAGE_DIRS.Type;
+
+const codegenDriverPackageName = Str.replace("packages/drivers/", "");
+
+const codegenDriverStep = (repoRoot: string, packageDir: CodegenDriverPackageDir): QualityTaskStep =>
+  QualityTaskStep.make({
+    label: `ci:codegen:${codegenDriverPackageName(packageDir)}`,
+    command: "bun",
+    args: ["run", "--cwd", packageDir, "generate:check"],
+    cwd: repoRoot,
+  });
+
+const codegenDriverSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
+  A.map(CODEGEN_DRIVER_PACKAGE_DIRS.Options, (packageDir) => codegenDriverStep(repoRoot, packageDir));
+
 const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;
 const FALLOW_ADVISORY_LANES = ["health", "boundaries", "flags", "security", "fix-preview"] as const;
 const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
@@ -881,24 +903,7 @@ export const ciLaneStepsForTesting: {
       // on 32GB fleet workers, so this lane stays serial.
       check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
       codegen: () => [
-        QualityTaskStep.make({
-          label: "ci:codegen:generate",
-          command: "bun",
-          args: ["run", "--cwd", "packages/drivers/ecfr", "generate"],
-          cwd: repoRoot,
-        }),
-        QualityTaskStep.make({
-          label: "ci:codegen:drift",
-          command: "git",
-          args: [
-            "diff",
-            "--exit-code",
-            "--",
-            "packages/drivers/ecfr/src/_generated",
-            "packages/drivers/ecfr/openapi.json",
-          ],
-          cwd: repoRoot,
-        }),
+        ...codegenDriverSteps(repoRoot),
         // The desktop migration bundle is generated from
         // packages/_internal/db-admin/drizzle, which the app has no dependency
         // edge to; this lane runs unaffected-gated so db-admin-only migration

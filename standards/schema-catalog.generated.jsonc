@@ -26556,6 +26556,144 @@
       "description": "Explicit marker for an undocumented native surface that V1 must not model by guesswork."
     },
     {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.errors.ts",
+      "symbol": "CodegenDriftError",
+      "kind": "tagged-error",
+      "owner": "@beep/codegen-kit",
+      "identity": "CodegenDriftError"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.errors.ts",
+      "symbol": "CodegenFetchError",
+      "kind": "tagged-error",
+      "owner": "@beep/codegen-kit",
+      "identity": "CodegenFetchError"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.errors.ts",
+      "symbol": "CodegenFormatError",
+      "kind": "tagged-error",
+      "owner": "@beep/codegen-kit",
+      "identity": "CodegenFormatError"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.errors.ts",
+      "symbol": "CodegenGenerateError",
+      "kind": "tagged-error",
+      "owner": "@beep/codegen-kit",
+      "identity": "CodegenGenerateError"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.errors.ts",
+      "symbol": "CodegenPatchError",
+      "kind": "tagged-error",
+      "owner": "@beep/codegen-kit",
+      "identity": "CodegenPatchError"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.errors.ts",
+      "symbol": "CodegenPostProcessError",
+      "kind": "tagged-error",
+      "owner": "@beep/codegen-kit",
+      "identity": "CodegenPostProcessError"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "DriftReport",
+      "kind": "schema-class",
+      "owner": "@beep/codegen-kit",
+      "identity": "DriftReport",
+      "description": "Generated-module drift status and changed-line count."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "DriftStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/codegen-kit",
+      "identity": "DriftStatus",
+      "description": "Comparison result for a generated destination."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "GenerateConfig",
+      "kind": "schema-class",
+      "owner": "@beep/codegen-kit",
+      "identity": "GenerateConfig",
+      "description": "Deterministic fetch, patch, generate, post-process, format, and output configuration."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "GeneratedModule",
+      "kind": "schema-class",
+      "owner": "@beep/codegen-kit",
+      "identity": "GeneratedModule",
+      "description": "Formatted generated source content paired with its destination path."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "NamedTransform",
+      "kind": "literal-kit",
+      "owner": "@beep/codegen-kit",
+      "identity": "NamedTransform",
+      "description": "Opt-in JSON Schema transforms composed into the generator onEnter hook."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "NumberPolicy",
+      "kind": "literal-kit",
+      "owner": "@beep/codegen-kit",
+      "identity": "NumberPolicy",
+      "description": "Policy deciding whether generated JSON numbers use S.Finite or S.Number."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "OutputFormat",
+      "kind": "literal-kit",
+      "owner": "@beep/codegen-kit",
+      "identity": "OutputFormat",
+      "description": "TypeScript module format produced by the generation pipeline."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "SchemaStyle",
+      "kind": "literal-kit",
+      "owner": "@beep/codegen-kit",
+      "identity": "SchemaStyle",
+      "description": "Rendering style for generated object schemas."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "SpecDialect",
+      "kind": "literal-kit",
+      "owner": "@beep/codegen-kit",
+      "identity": "SpecDialect",
+      "description": "Document dialect supplied to the shared code generator."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "SpecPinPolicy",
+      "kind": "literal-kit",
+      "owner": "@beep/codegen-kit",
+      "identity": "SpecPinPolicy",
+      "description": "Policy used to verify a remote source pin before its committed cache is replaced."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "SpecSource",
+      "kind": "tagged-union",
+      "owner": "@beep/codegen-kit",
+      "identity": "SpecSource",
+      "description": "Pinned source document, with remote sources backed by a committed local cache and an optional explicit pin policy."
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "symbol": "WarningPolicy",
+      "kind": "literal-kit",
+      "owner": "@beep/codegen-kit",
+      "identity": "WarningPolicy",
+      "description": "Policy deciding whether OpenAPI generator warnings fail or are logged."
+    },
+    {
       "file": "packages/tooling/library/qa-capture/src/ActionEvent.models.ts",
       "symbol": "ActionEvent",
       "kind": "tagged-union",
@@ -31148,7 +31286,9 @@
       "file": "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",
       "symbol": "DoctestFindingKind",
       "kind": "literal-kit",
-      "owner": "@beep/repo-cli"
+      "owner": "@beep/repo-cli",
+      "identity": "DoctestFindingKind",
+      "description": "Kinds of findings the doctest analyzer and verifier report."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",
@@ -31170,7 +31310,9 @@
       "file": "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",
       "symbol": "FenceLanguage",
       "kind": "literal-kit",
-      "owner": "@beep/repo-cli"
+      "owner": "@beep/repo-cli",
+      "identity": "FenceLanguage",
+      "description": "Fence info-string languages the doctest analyzer recognises."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",
@@ -31192,7 +31334,9 @@
       "file": "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",
       "symbol": "ImpurityReason",
       "kind": "literal-kit",
-      "owner": "@beep/repo-cli"
+      "owner": "@beep/repo-cli",
+      "identity": "ImpurityReason",
+      "description": "Stable reasons a fence is rejected by the purity classifier."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",

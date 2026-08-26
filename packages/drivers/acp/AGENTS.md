@@ -8,8 +8,9 @@ product-neutral; product-specific agent behavior belongs in the owning slice.
 exports for them; route generated schema/meta access through the root `Schema`
 namespace.
 
-Codegen: the ACP schema release is pinned to `v0.11.3`. `bun run generate`
-downloads upstream `schema.unstable.json`/`meta.unstable.json`, normalizes
-nullable JSON Schema unions, and rewrites `src/_generated/*.gen.ts`
-(`-- --skip-download` reuses existing JSON assets). Build/check must remain
-offline.
+Codegen uses `@beep/codegen-kit` and pins the ACP release to `v0.11.3`.
+`bun run generate` reads the committed `spec/*.unstable.json` caches without
+network access. `bun run generate -- --refresh` downloads, normalizes, and
+formats those caches before regenerating `src/_generated/*.gen.ts`.
+`bun run generate:check` stays offline and fails on generated-output drift.
+Build/check must remain offline.

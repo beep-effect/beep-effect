@@ -5,7 +5,9 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Package-specific overrides
+      coverage: {
+        exclude: ["src/_generated/**"],
+      },
     },
   })
 );

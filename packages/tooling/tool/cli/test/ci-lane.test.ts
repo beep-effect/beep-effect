@@ -290,18 +290,35 @@ describe("ciLaneStepsForTesting", () => {
     ]);
   });
 
-  it("builds the codegen drift lane as generate-then-diff-then-bundle-check", () => {
+  it("builds the codegen drift lane from stable driver checks followed by the desktop bundle check", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "codegen", baseOptions);
-    expect(A.map(steps, (step) => step.command)).toEqual(["bun", "git", "bun"]);
-    expect(steps[1]?.args).toEqual([
-      "diff",
-      "--exit-code",
-      "--",
-      "packages/drivers/ecfr/src/_generated",
-      "packages/drivers/ecfr/openapi.json",
+    expect(A.map(steps, (step) => ({ label: step.label, command: step.command, args: [...step.args] }))).toEqual([
+      {
+        label: "ci:codegen:acp",
+        command: "bun",
+        args: ["run", "--cwd", "packages/drivers/acp", "generate:check"],
+      },
+      {
+        label: "ci:codegen:ecfr",
+        command: "bun",
+        args: ["run", "--cwd", "packages/drivers/ecfr", "generate:check"],
+      },
+      {
+        label: "ci:codegen:govinfo",
+        command: "bun",
+        args: ["run", "--cwd", "packages/drivers/govinfo", "generate:check"],
+      },
+      {
+        label: "ci:codegen:runpod",
+        command: "bun",
+        args: ["run", "--cwd", "packages/drivers/runpod", "generate:check"],
+      },
+      {
+        label: "ci:codegen:desktop-migration-bundle",
+        command: "bun",
+        args: ["run", "--cwd", "apps/professional-desktop", "codegen:check"],
+      },
     ]);
-    const bundleCheck = lastOf(steps);
-    expect([...bundleCheck.args]).toEqual(["run", "--cwd", "apps/professional-desktop", "codegen:check"]);
   });
 
   it("builds commitlint range and last shapes", () => {
