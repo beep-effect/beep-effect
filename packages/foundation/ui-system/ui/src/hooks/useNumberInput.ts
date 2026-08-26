@@ -386,15 +386,15 @@ type SpinParamsValue = {
  *
  * **Example** (Parse editable text into a number)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Parse editable text into a number"
  * import * as O from "effect/Option"
  * import { toNumber } from "@beep/ui/hooks/useNumberInput"
  *
  * const parsed = O.getOrUndefined(toNumber("12.5"))
  * const missing = toNumber("")
  *
- * console.log(parsed) // 12.5
- * console.log(O.isNone(missing)) // true
+ * parsed // => 12.5
+ * O.isNone(missing) // => true
  * ```
  *
  * @category utilities
@@ -414,14 +414,14 @@ export const toNumber: (input: unknown) => O.Option<number> = S.decodeUnknownOpt
  *
  * **Example** (Format a value at fixed precision)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Format a value at fixed precision"
  * import { numberToString } from "@beep/ui/hooks/useNumberInput"
  *
  * const formatted = numberToString(12.345, 2)
  * const empty = numberToString(undefined, 2)
  *
- * console.log(formatted) // "12.35"
- * console.log(empty) // ""
+ * formatted // => "12.35"
+ * empty // => ""
  * ```
  *
  * @category utilities
@@ -453,25 +453,25 @@ export const numberToString: {
  *
  * **Example** (Apply shift and ctrl modifiers)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Apply shift and ctrl modifiers"
  * import { getStepFactor } from "@beep/ui/hooks/useNumberInput"
  *
  * const coarse = getStepFactor({ shiftKey: true }, 2, { precision: 0 })
  * const fine = getStepFactor({ ctrlKey: true }, 2, { precision: 2 })
  *
- * console.log(coarse) // 20
- * console.log(fine) // 0.2
+ * coarse // => 20
+ * fine // => 0.2
  * ```
  *
  * **Example** (Apply the data-last form in a pipe)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Apply the data-last form in a pipe"
  * import { pipe } from "effect"
  * import { getStepFactor } from "@beep/ui/hooks/useNumberInput"
  *
  * const factor = pipe({ metaKey: true }, getStepFactor(5, { precision: 2 }))
  *
- * console.log(factor) // 0.5
+ * factor // => 0.5
  * ```
  *
  * @category utilities

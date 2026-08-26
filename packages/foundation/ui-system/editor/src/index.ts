@@ -12,11 +12,11 @@
  *
  * **Example** (Read package version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read package version"
  * import { VERSION } from "@beep/editor"
  *
  * const packageVersion: "0.0.0" = VERSION
- * console.log(packageVersion) // "0.0.0"
+ * packageVersion // => "0.0.0"
  * ```
  *
  * @category configuration

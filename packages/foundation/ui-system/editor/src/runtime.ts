@@ -39,7 +39,7 @@ const revalidateSerializedEditorState = (
  *
  * **Example** (Decode valid root state)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode valid root state"
  * import { Result } from "effect"
  * import { decodeEditorStateForRuntimeResult } from "@beep/editor/runtime"
  *
@@ -52,7 +52,7 @@ const revalidateSerializedEditorState = (
  *     }]
  *   },
  * })
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category decoding
@@ -106,11 +106,11 @@ export const decodeEditorStateForRuntime = (input: unknown): Effect.Effect<Seria
  *
  * **Example** (Absent state stays None)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Absent state stays None"
  * import * as O from "effect/Option"
  * import { runtimeInitialStateOption } from "@beep/editor/runtime"
  *
- * console.log(O.isNone(runtimeInitialStateOption(undefined))) // true
+ * O.isNone(runtimeInitialStateOption(undefined)) // => true
  * ```
  *
  * @category decoding

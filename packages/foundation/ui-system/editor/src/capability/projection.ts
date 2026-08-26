@@ -21,7 +21,7 @@ const $I = $EditorId.create("capability/projection");
  *
  * **Example** (Create an unbound help row)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create an unbound help row"
  * import { ShortcutHelpEntry } from "@beep/editor/capability/projection"
  * import { CommandId } from "@beep/editor/capability/schemas"
  * import { Option } from "effect"
@@ -30,7 +30,7 @@ const $I = $EditorId.create("capability/projection");
  *   commandId: CommandId.make("format.bold"), label: "Bold", helpText: "Toggle bold.",
  *   chord: Option.none()
  * })
- * console.log(Option.isNone(entry.chord)) // true
+ * Option.isNone(entry.chord) // => true
  * ```
  *
  * @category projections
@@ -54,7 +54,7 @@ export class ShortcutHelpEntry extends S.Class<ShortcutHelpEntry>($I`ShortcutHel
  *
  * **Example** (Project an empty toolbar)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Project an empty toolbar"
  * import { projectCommands } from "@beep/editor/capability/projection"
  * import { CapabilityRegistrations, ProfileId, ResolvedEditorProfile } from "@beep/editor/capability/schemas"
  *
@@ -63,7 +63,7 @@ export class ShortcutHelpEntry extends S.Class<ShortcutHelpEntry>($I`ShortcutHel
  *   registrations: CapabilityRegistrations.make({ nodes: [], extensions: [], transformers: [] }),
  *   commands: [], guardedChords: []
  * })
- * console.log(projectCommands(resolved, "toolbar")) // []
+ * projectCommands(resolved, "toolbar") // => []
  * ```
  *
  * @category projections
@@ -88,7 +88,7 @@ export const projectCommands: {
  *
  * **Example** (Project empty shortcut help)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Project empty shortcut help"
  * import { projectShortcutHelp } from "@beep/editor/capability/projection"
  * import { CapabilityRegistrations, ProfileId, ResolvedEditorProfile } from "@beep/editor/capability/schemas"
  *
@@ -97,7 +97,7 @@ export const projectCommands: {
  *   registrations: CapabilityRegistrations.make({ nodes: [], extensions: [], transformers: [] }),
  *   commands: [], guardedChords: []
  * })
- * console.log(projectShortcutHelp(resolved, "apple")) // []
+ * projectShortcutHelp(resolved, "apple") // => []
  * ```
  *
  * @category projections
@@ -146,12 +146,12 @@ const formatModifier = (platform: Platform, modifier: Modifier): string =>
  *
  * **Example** (Format an Apple chord)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Format an Apple chord"
  * import { formatChord } from "@beep/editor/capability/projection"
  * import { KeyChord } from "@beep/editor/capability/schemas"
  *
  * const chord = KeyChord.make({ modifiers: ["meta", "shift"], key: "x" })
- * console.log(formatChord("apple", chord)) // "Cmd+Shift+X"
+ * formatChord("apple", chord) // => "Cmd+Shift+X"
  * ```
  *
  * @category formatting
@@ -176,7 +176,7 @@ export const formatChord: {
  *
  * **Example** (Project no slash commands)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Project no slash commands"
  * import { projectSlashItems } from "@beep/editor/capability/projection"
  * import { CapabilityRegistrations, ProfileId, ResolvedEditorProfile } from "@beep/editor/capability/schemas"
  *
@@ -185,7 +185,7 @@ export const formatChord: {
  *   registrations: CapabilityRegistrations.make({ nodes: [], extensions: [], transformers: [] }),
  *   commands: [], guardedChords: []
  * })
- * console.log(projectSlashItems(resolved, () => () => {})) // []
+ * projectSlashItems(resolved, () => () => {}) // => []
  * ```
  *
  * @category projections
@@ -223,12 +223,12 @@ const ariaModifier = Modifier.$match({
  *
  * **Example** (Serialize a chord for assistive technology)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Serialize a chord for assistive technology"
  * import { ariaKeyShortcuts } from "@beep/editor/capability/projection"
  * import { KeyChord } from "@beep/editor/capability/schemas"
  *
  * const chord = KeyChord.make({ modifiers: ["control", "alt"], key: "1" })
- * console.log(ariaKeyShortcuts(chord)) // "Control+Alt+1"
+ * ariaKeyShortcuts(chord) // => "Control+Alt+1"
  * ```
  *
  * @category formatting

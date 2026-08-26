@@ -25,10 +25,10 @@ const catalogBaseline = Result.getOrThrow(resolveEditorProfile(editorCapabilityC
  *
  * **Example** (Import and length check)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import and length check"
  * import { editorNodes } from "@beep/editor/nodes"
  *
- * console.log(editorNodes.length > 0) // true
+ * editorNodes.length > 0 // => true
  * ```
  *
  * @category configuration

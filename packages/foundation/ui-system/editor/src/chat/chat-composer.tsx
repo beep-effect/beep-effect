@@ -89,14 +89,14 @@ const PLACEHOLDER_CLASS_NAME =
  *
  * **Example** (Disable attachments in config)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Disable attachments in config"
  * import type { ChatComposerMountConfig } from "@beep/editor/chat/chat-composer"
  *
  * const mountConfig: ChatComposerMountConfig = {
  *   features: { attachments: false },
  *   maxAttachmentBytes: 5_000_000,
  * }
- * console.log(mountConfig.features?.attachments) // false
+ * mountConfig.features?.attachments // => false
  * ```
  *
  * @category configuration
@@ -127,7 +127,7 @@ export interface ChatComposerMountConfig {
  *
  * **Example** (Props with sendOn feature)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Props with sendOn feature"
  * import type { ChatComposerProps } from "@beep/editor/chat/chat-composer"
  *
  * const props: ChatComposerProps = {
@@ -138,7 +138,7 @@ export interface ChatComposerMountConfig {
  * }
  *
  * const sendOn = props.mountConfig?.features?.sendOn
- * console.log(sendOn) // "modifierEnter"
+ * sendOn // => "modifierEnter"
  * ```
  *
  * @category components

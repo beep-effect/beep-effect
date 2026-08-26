@@ -1,3 +1,4 @@
+import { tmpdir } from "node:os";
 import {
   emptyTurboPlanSnapshot,
   proofCoordinatorLockPath,
@@ -12,7 +13,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Ref } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
@@ -208,6 +209,28 @@ describe("yeet review fixes", () => {
         const repository = yield* proofCoordinatorLockPath("https://github.com/acme/repo.git");
         const other = yield* proofCoordinatorLockPath("https://github.com/acme/other.git");
         expect(repository).not.toBe(other);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("uses only absolute runtime roots and an ephemeral fallback", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const repositoryIdentity = "https://github.com/acme/repo.git";
+        const resolveWithEnvironment = (environment: Readonly<Record<string, string>>) =>
+          proofCoordinatorLockPath(repositoryIdentity).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment))
+          );
+        const fallbackPrefix = path.join(tmpdir(), "beep-yeet-proof-locks-");
+        const configuredRoot = path.join(tmpdir(), "configured-yeet-runtime");
+
+        const missing = yield* resolveWithEnvironment({});
+        const relative = yield* resolveWithEnvironment({ XDG_RUNTIME_DIR: "relative-runtime" });
+        const configured = yield* resolveWithEnvironment({ XDG_RUNTIME_DIR: configuredRoot });
+
+        expect(missing).toContain(fallbackPrefix);
+        expect(relative).toContain(fallbackPrefix);
+        expect(configured).toContain(path.join(configuredRoot, "beep-yeet-proof-locks-"));
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 

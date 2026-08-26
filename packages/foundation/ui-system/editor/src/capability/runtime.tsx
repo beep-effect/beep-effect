@@ -76,9 +76,9 @@ import type { CommandId, NodeRegistrationKey, Platform, ResolvedEditorProfile, T
 /** Runtime node constructors keyed by catalog registration name.
  *
  * **Example** (Read the paragraph registration)
- * ```ts
+ * ```ts import.meta.vitest name="Read the paragraph registration"
  * import { nodeRegistrations } from "@beep/editor/capability/runtime"
- * console.log(nodeRegistrations.ParagraphNode.name) // "ParagraphNode"
+ * nodeRegistrations.ParagraphNode.name // => "ParagraphNode"
  * ```
  * @category configuration
  * @since 0.0.0
@@ -104,9 +104,9 @@ export const nodeRegistrations: Record<NodeRegistrationKey, Klass<LexicalNode>> 
 /** Projects node constructors in resolved registration order.
  *
  * **Example** (Project readable nodes)
- * ```ts
+ * ```ts import.meta.vitest name="Project readable nodes"
  * import { resolvedNodes } from "@beep/editor/capability/runtime"
- * console.log(typeof resolvedNodes) // "function"
+ * typeof resolvedNodes // => "function"
  * ```
  * @category combinators
  * @since 0.0.0
@@ -117,9 +117,9 @@ export const resolvedNodes = (resolved: ResolvedEditorProfile): ReadonlyArray<Kl
 /** Markdown transformers keyed by catalog registration name.
  *
  * **Example** (Read heading transformer)
- * ```ts
+ * ```ts import.meta.vitest name="Read heading transformer"
  * import { transformerRegistrations } from "@beep/editor/capability/runtime"
- * console.log(transformerRegistrations.HEADING.type) // "element"
+ * transformerRegistrations.HEADING.type // => "element"
  * ```
  * @category configuration
  * @since 0.0.0
@@ -146,9 +146,9 @@ export const transformerRegistrations: Record<TransformerKey, Transformer> = {
 /** Projects Markdown transformers in resolved registration order.
  *
  * **Example** (Project transformers)
- * ```ts
+ * ```ts import.meta.vitest name="Project transformers"
  * import { resolvedTransformers } from "@beep/editor/capability/runtime"
- * console.log(typeof resolvedTransformers) // "function"
+ * typeof resolvedTransformers // => "function"
  * ```
  * @category combinators
  * @since 0.0.0
@@ -195,9 +195,9 @@ const toggleLink = (editor: LexicalEditor): void => {
 /** Executable Lexical handlers keyed by resolved command id.
  *
  * **Example** (Inspect the bold handler)
- * ```ts
+ * ```ts import.meta.vitest name="Inspect the bold handler"
  * import { commandHandlers } from "@beep/editor/capability/runtime"
- * console.log(typeof commandHandlers["format.bold"]) // "function"
+ * typeof commandHandlers["format.bold"] // => "function"
  * ```
  * @category commands
  * @since 0.0.0
@@ -231,9 +231,9 @@ export const commandHandlers: Readonly<Record<string, (editor: LexicalEditor) =>
 /** Runs a catalog command when a runtime handler exists.
  *
  * **Example** (Reference command runner)
- * ```ts
+ * ```ts import.meta.vitest name="Reference command runner"
  * import { runCommand } from "@beep/editor/capability/runtime"
- * console.log(typeof runCommand) // "function"
+ * typeof runCommand // => "function"
  * ```
  * @category commands
  * @since 0.0.0

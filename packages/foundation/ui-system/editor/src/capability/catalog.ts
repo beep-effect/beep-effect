@@ -77,11 +77,11 @@ const decodeCatalog = S.decodeUnknownResult(CapabilityCatalog);
  *
  * **Example** (Inspect the catalog)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect the catalog"
  * import { editorCapabilityCatalog } from "@beep/editor/capability/catalog"
  * import { Array as A } from "effect"
  *
- * console.log(A.length(editorCapabilityCatalog) > 0) // true
+ * A.length(editorCapabilityCatalog) > 0 // => true
  * ```
  *
  * @category configuration
