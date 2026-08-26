@@ -33,7 +33,9 @@ const C0InputServicesLive = Layer.mergeAll(
   ProviderCacheLive
 ).pipe(Layer.provide(InfrastructureLive));
 
-const C0CanaryLive = CanaryC0Live(AnthropicExtractionProviderLive).pipe(
+const AnthropicProviderLive = AnthropicExtractionProviderLive.pipe(Layer.provide(InfrastructureLive));
+
+const C0CanaryLive = CanaryC0Live(AnthropicProviderLive).pipe(
   Layer.provide(Layer.mergeAll(InfrastructureLive, P1ServicesLive, C0InputServicesLive))
 );
 

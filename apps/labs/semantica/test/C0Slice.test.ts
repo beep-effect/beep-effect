@@ -1,36 +1,32 @@
 // @vitest-environment node
 
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, FileSystem, Layer, Path, Ref, Result, Stream } from "effect";
+import { Effect, FileSystem, Layer, Path, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
 import { describe, expect, it } from "vitest";
 import { CorpusManifest } from "@/corpus/Manifest";
-import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
-import { F1Catalog, F1Index } from "@/fixtures/F1";
+import { CorpusManifestBuilderLive } from "@/corpus/ManifestBuilder";
+import { F1CatalogLive, F1Index } from "@/fixtures/F1";
 import { CanaryC0WithGoldSourceLive } from "@/layers/CanaryC0Live";
 import { CanonicalizerLive } from "@/layers/CanonicalizerLive";
 import { ChunkerLive } from "@/layers/ChunkerLive";
+import { DocumentSourceLive } from "@/layers/DocumentSourceLive";
 import { ParserLive } from "@/layers/ParserLive";
 import { ProviderCacheLive } from "@/layers/ProviderCacheLive";
 import { LabConfig, RuntimeMode } from "@/runtime/Config";
-import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
-import { DocumentUnavailable, GoldUnavailable } from "@/schema/Errors";
+import { GoldUnavailable, ReportInvalid } from "@/schema/Errors";
 import { EvalReport } from "@/schema/Eval";
 import { GoldFile, GoldRef, GoldSubset } from "@/schema/Gold";
-import { DocumentId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
-import { EventBody, makeProvenanceEventId } from "@/schema/Provenance";
 import { EvalRunTelemetry } from "@/schema/Telemetry";
 import { CanaryC0 } from "@/services/CanaryC0";
-import { DocumentSource } from "@/services/DocumentSource";
 import { GoldSource } from "@/services/GoldSource";
 
 const ManifestJson = S.fromJsonString(CorpusManifest);
@@ -49,7 +45,7 @@ describe("C0 F1 live-to-replay slice", () => {
     fc.assert(fc.property(S.toArbitrary(RuntimeMode)(fc), (mode) => S.is(RuntimeMode)(mode)));
   });
 
-  it("produces equal report digests and declared outcomes after a cache-writing live pass", () =>
+  it("runs real F1-only sources without a corpus root and replays to an equal report digest", () =>
     Effect.runPromise(
       provideScopedLayer(BunServices.layer)(
         Effect.scoped(
@@ -68,35 +64,6 @@ describe("C0 F1 live-to-replay slice", () => {
             const fixtures = yield* fs
               .readFileString("fixtures/f1/index.json")
               .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
-            const sourceEntries = yield* Effect.forEach(
-              fixtures.fixtures,
-              Effect.fnUntraced(function* (fixture) {
-                const bytes = yield* fs.readFile(path.join("fixtures/f1", fixture.relativePath));
-                const id = DocumentId.make(fixture.sha256);
-                const ingestedBody = EventBody.cases.Ingested.make({ document: id, kind: "Ingested" });
-                const acquired = Result.getOrThrow(makeProvenanceEventId({ body: ingestedBody, prev: O.none() }));
-                return {
-                  bytes,
-                  document: SourceDocument.make({
-                    acquired,
-                    bytes: NonNegativeInt.make(bytes.byteLength),
-                    id,
-                    mediaType: fixture.mediaType,
-                    origin: Origin.cases.Fixture.make({
-                      declared: FixtureDeclaration.make({
-                        degradedKind: fixture.degradedKind,
-                        expectation: fixture.expectation,
-                      }),
-                      fixtureId: fixture.id,
-                      kind: "Fixture",
-                      relativePath: fixture.relativePath,
-                    }),
-                    sha256: fixture.sha256,
-                  }),
-                };
-              }),
-              { concurrency: 1 }
-            );
             const goldIds = A.map(A.take(manifest.rows, 10), (row) => row.id);
             const proposer = ModelIdentity.make({
               artifactHash: Sha256Hex.make("8".repeat(64)),
@@ -141,31 +108,12 @@ describe("C0 F1 live-to-replay slice", () => {
                 providerCacheDirectory: cacheDirectory,
               })
             );
-            const manifestBuilder = Layer.succeed(
-              CorpusManifestBuilder,
-              CorpusManifestBuilder.of({
-                build: Effect.succeed(manifest),
-                check: Effect.fn("CorpusManifestBuilder.stubCheck")(() => Effect.succeed(manifest)),
-              })
+            const manifestBuilder = CorpusManifestBuilderLive.pipe(
+              Layer.provide(config),
+              Layer.provide(BunServices.layer)
             );
-            const fixtureCatalog = Layer.succeed(F1Catalog, F1Catalog.of({ load: Effect.succeed(fixtures) }));
-            const documentSource = Layer.succeed(
-              DocumentSource,
-              DocumentSource.of({
-                list: Effect.fn("DocumentSource.stubList")(() =>
-                  Effect.succeed(A.map(sourceEntries, (entry) => entry.document))
-                ),
-                read: Effect.fn("DocumentSource.stubRead")((document) =>
-                  A.findFirst(sourceEntries, (entry) => Str.Equivalence(entry.document.id, document.id)).pipe(
-                    O.map((entry) => entry.bytes),
-                    Effect.fromOption,
-                    Effect.mapError(() =>
-                      DocumentUnavailable.make({ message: "The F1 slice source entry is unavailable." })
-                    )
-                  )
-                ),
-              })
-            );
+            const fixtureCatalog = F1CatalogLive.pipe(Layer.provide(BunServices.layer));
+            const documentSource = DocumentSourceLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
             const canonicalizer = CanonicalizerLive.pipe(Layer.provide(BunServices.layer));
             const chunker = ChunkerLive.pipe(Layer.provide(canonicalizer), Layer.provide(BunServices.layer));
             const providerCache = ProviderCacheLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
@@ -208,6 +156,7 @@ describe("C0 F1 live-to-replay slice", () => {
                 offline: false,
                 out: O.some(liveOut),
                 paper: O.none(),
+                selection: "f1",
               });
               const callsAfterLive = yield* Ref.get(providerCalls);
               const replay = yield* service.run({
@@ -215,6 +164,7 @@ describe("C0 F1 live-to-replay slice", () => {
                 offline: true,
                 out: O.some(replayOut),
                 paper: O.none(),
+                selection: "f1",
               });
               const callsAfterReplay = yield* Ref.get(providerCalls);
               const writtenLive = yield* fs
@@ -231,7 +181,7 @@ describe("C0 F1 live-to-replay slice", () => {
                 .pipe(Effect.flatMap(S.decodeEffect(EvalTelemetryJson)));
 
               expect(live.reportDigest).toBe(replay.reportDigest);
-              expect(live.reportDigest).toBe("946a4d8124af67982a528617e87258577d2570445c173b5f382b4b9681928f65");
+              expect(live.reportDigest).toBe("256364712a13eb51253dac7199a9d9ad5473d56f0a1f4b9aa7ac8e96961849a9");
               expect(writtenLive.reportDigest).toBe(writtenReplay.reportDigest);
               expect(writtenLive.reportDigest).toBe(live.reportDigest);
               expect(live.unexpectedDegraded).toBe(0);
@@ -241,6 +191,8 @@ describe("C0 F1 live-to-replay slice", () => {
               expect(callsAfterReplay).toBe(callsAfterLive);
               expect(liveTelemetry.mode).toBe("live");
               expect(replayTelemetry.mode).toBe("replay");
+              expect(liveTelemetry.dependencyBytes).toEqual(O.none());
+              expect(liveTelemetry.modelBytes).toEqual(O.none());
               for (const outcome of live.documents) {
                 if (outcome.origin.kind === "Fixture") {
                   const expected = outcome.origin.declared;
@@ -250,6 +202,18 @@ describe("C0 F1 live-to-replay slice", () => {
                 }
               }
 
+              yield* fs.remove(cacheDirectory, { force: true, recursive: true });
+              const replayAfterCacheRemoval = yield* service
+                .run({
+                  manifest: "fixtures/w1.manifest.json",
+                  offline: true,
+                  out: O.some(replayOut),
+                  paper: O.none(),
+                  selection: "f1",
+                })
+                .pipe(Effect.flip);
+              expect(replayAfterCacheRemoval).toBeInstanceOf(ReportInvalid);
+
               const goldPath = path.join(goldDirectory, "gold.json");
               yield* fs.remove(goldPath);
               const missingGold = yield* service
@@ -258,6 +222,7 @@ describe("C0 F1 live-to-replay slice", () => {
                   offline: true,
                   out: O.some(replayOut),
                   paper: O.none(),
+                  selection: "f1",
                 })
                 .pipe(Effect.flip);
               expect(missingGold).toBeInstanceOf(GoldUnavailable);

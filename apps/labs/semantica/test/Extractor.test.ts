@@ -151,6 +151,35 @@ const hostedFailureLayer = (reason: "model-generation-failed" | "model-output-pa
   );
 
 describe("C0 hosted extractor", () => {
+  it("preserves hosted coreference cluster assignments on entity claims", () => {
+    const text = "Ada wrote notes.";
+    const extractions = [grounded("person", "Ada", 0, O.some({ cluster: "person-ada" }))];
+
+    return Effect.runPromise(
+      provideScopedLayer(Layer.merge(baseLayer, hostedLayer(extractions)))(
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
+
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            const cluster = A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Entity").pipe(
+              O.flatMap((claim) =>
+                ClaimBody.match(claim.body, {
+                  Entity: (body) => body.cluster,
+                  Relation: () => O.none(),
+                  Structure: () => O.none(),
+                })
+              )
+            );
+            expect(cluster).toEqual(O.some("person-ada"));
+          }
+        })
+      )
+    );
+  });
+
   it("resolves NFC-equal relation endpoints to the nearest preceding entity", () => {
     const decomposed = "Cafe\u0301";
     const text = `${decomposed} met Engine. Ada praised it.`;

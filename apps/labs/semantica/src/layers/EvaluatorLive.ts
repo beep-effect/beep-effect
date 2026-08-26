@@ -371,7 +371,9 @@ const predictedTriples = (
           Structure: () => O.none<string>(),
           Relation: (body) =>
             O.all([entityQuote(claims, body.subject), entityQuote(claims, body.object)]).pipe(
-              O.map(([subject, object]) => `${body.predicate}\u0000${subject}\u0000${object}`)
+              O.map(
+                ([subject, object]) => `${document.document.id}\u0000${body.predicate}\u0000${subject}\u0000${object}`
+              )
             ),
         })
       )
@@ -379,11 +381,14 @@ const predictedTriples = (
   });
 
 const goldTriples = (coverage: ReadonlyArray<Coverage>): ReadonlyArray<string> =>
-  A.flatMap(coverage, ([, file]) => {
+  A.flatMap(coverage, ([document, file]) => {
     if (file.subset !== "relation") {
       return [];
     }
-    return A.map(file.labels, (label) => `${label.predicate}\u0000${label.subject}\u0000${label.object}`);
+    return A.map(
+      file.labels,
+      (label) => `${document.document.id}\u0000${label.predicate}\u0000${label.subject}\u0000${label.object}`
+    );
   });
 
 const entityAssignments = (
@@ -394,10 +399,14 @@ const entityAssignments = (
   const predicted = predictedValues(coverage, outcomes, lane, (document, claim) =>
     ClaimBody.match(claim.body, {
       Entity: (body) =>
-        O.some<EntityClusterAssignment>([
-          spanKey(document.document.id, body),
-          `${document.document.id}:${Str.normalize("NFC")(body.quote)}`,
-        ]),
+        body.cluster.pipe(
+          O.map(
+            (cluster): EntityClusterAssignment => [
+              spanKey(document.document.id, body),
+              `${document.document.id}:${cluster}`,
+            ]
+          )
+        ),
       Relation: () => O.none<EntityClusterAssignment>(),
       Structure: () => O.none<EntityClusterAssignment>(),
     })
@@ -410,7 +419,7 @@ const entityAssignments = (
       file.labels,
       (label): EntityClusterAssignment => [
         spanKey(document.document.id, label),
-        `${document.document.id}:${Str.normalize("NFC")(label.quote)}`,
+        `${document.document.id}:${label.cluster}`,
       ]
     );
   });
@@ -447,7 +456,8 @@ const fixtureParseExpected = (document: DocumentOutcomeValue): boolean =>
 
 const unexpectedlyDegraded = (document: DocumentOutcomeValue): boolean =>
   Origin.match(document.origin, {
-    Fixture: () => !fixtureParseExpected(document),
+    Fixture: () =>
+      !fixtureParseExpected(document) || (document.parse === "parsed" && document.extraction.hosted !== "extracted"),
     W1Paper: () => document.parse !== "parsed" || document.extraction.hosted !== "extracted",
   });
 

@@ -6,7 +6,7 @@ import { Equal, HashSet, identity, Number as N, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { CorpusPaperId } from "@/corpus/Manifest";
-import { StructureRole } from "@/schema/Evidence";
+import { CoreferenceCluster, StructureRole } from "@/schema/Evidence";
 import { ModelIdentity } from "@/schema/Model";
 
 const $I = $SemanticaId.create("schema/Gold");
@@ -154,6 +154,7 @@ export class GoldStructureLabel extends S.Class<GoldStructureLabel>($I`GoldStruc
 const GoldEntityLabelFields = S.Struct({
   label: S.NonEmptyString,
   entityType: S.NonEmptyString,
+  cluster: CoreferenceCluster,
   ...TextAnchorFields,
   verified: S.Boolean,
 });
@@ -175,7 +176,8 @@ const GoldEntityLabelFields = S.Struct({
 export class GoldEntityLabel extends S.Class<GoldEntityLabel>($I`GoldEntityLabel`)(
   GoldEntityLabelFields.mapFields(identity).check(TextAnchorWidthCheck),
   $I.annote("GoldEntityLabel", {
-    description: "Entity surface label and type grounded to canonical paper text with a spot-check marker.",
+    description:
+      "Entity surface label, explicit coreference cluster, and type grounded to canonical paper text with a spot-check marker.",
   })
 ) {}
 

@@ -73,6 +73,7 @@ describe("Semantica canary command", () => {
             offline: true,
             out: O.none(),
             paper: O.none(),
+            selection: "f1+w1",
           },
           stage,
         });
@@ -86,7 +87,7 @@ describe("Semantica canary command", () => {
         const expected = ReportInvalid.make({ message: "stub-c0-ran" });
         const stub = CanaryC0.of({ run: Effect.fn("CanaryC0.stub")(() => Effect.fail(expected)) });
         const error = yield* provideScopedLayer(runtimeFromEnv({}))(
-          runCanary(["c0", "--offline", "--out", ".beep/test-run"]).pipe(
+          runCanary(["c0", "--offline", "--out", ".beep/test-run", "--selection", "f1"]).pipe(
             Effect.provideService(CanaryC0, stub),
             Effect.flip
           )
@@ -127,6 +128,7 @@ describe("Semantica canary schemas", () => {
           offline: true,
           out: O.some("fixture-output"),
           paper: O.some("paper-001"),
+          selection: "f1+w1",
         });
         const encoded = yield* S.encodeEffect(CanaryOptions)(options);
         const decoded = yield* S.decodeEffect(CanaryOptions)(encoded);
@@ -138,6 +140,7 @@ describe("Semantica canary schemas", () => {
             offline: true,
             out: "fixture-output",
             paper: "paper-001",
+            selection: "f1+w1",
           },
         });
       })

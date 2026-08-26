@@ -50,9 +50,28 @@ import type { CanonicalizerShape } from "@/services/Canonicalizer";
 const utf8Encoder = new TextEncoder();
 
 const HOSTED_TARGETS: A.NonEmptyReadonlyArray<ExtractionTarget> = [
-  ExtractionTarget.make({ kind: "entity", name: "person", description: O.some("A named person.") }),
-  ExtractionTarget.make({ kind: "entity", name: "organization", description: O.some("A named organization.") }),
-  ExtractionTarget.make({ kind: "entity", name: "method", description: O.some("A named research method or system.") }),
+  ExtractionTarget.make({
+    kind: "entity",
+    name: "person",
+    attributes: ["cluster"],
+    description: O.some("A named person. Reuse cluster for coreferring mentions; use a distinct cluster otherwise."),
+  }),
+  ExtractionTarget.make({
+    kind: "entity",
+    name: "organization",
+    attributes: ["cluster"],
+    description: O.some(
+      "A named organization. Reuse cluster for coreferring mentions; use a distinct cluster otherwise."
+    ),
+  }),
+  ExtractionTarget.make({
+    kind: "entity",
+    name: "method",
+    attributes: ["cluster"],
+    description: O.some(
+      "A named research method or system. Reuse cluster for coreferring mentions; use a distinct cluster otherwise."
+    ),
+  }),
   ExtractionTarget.make({ kind: "custom", name: "title", attributes: ["depth"] }),
   ExtractionTarget.make({ kind: "custom", name: "abstract", attributes: ["depth"] }),
   ExtractionTarget.make({ kind: "custom", name: "section", attributes: ["depth"] }),
@@ -69,8 +88,16 @@ const HOSTED_EXAMPLES = [
   ExtractionExample.make({
     text: "Ada Lovelace developed the Analytical Engine method.",
     extractions: [
-      ExtractionExampleItem.make({ label: "person", text: "Ada Lovelace" }),
-      ExtractionExampleItem.make({ label: "method", text: "Analytical Engine" }),
+      ExtractionExampleItem.make({
+        label: "person",
+        text: "Ada Lovelace",
+        attributes: O.some({ cluster: "person-ada-lovelace" }),
+      }),
+      ExtractionExampleItem.make({
+        label: "method",
+        text: "Analytical Engine",
+        attributes: O.some({ cluster: "method-analytical-engine" }),
+      }),
       ExtractionExampleItem.make({
         label: "relation",
         text: "Ada Lovelace developed the Analytical Engine method.",
@@ -86,25 +113,32 @@ const HOSTED_EXAMPLES = [
   }),
 ];
 
+const HOSTED_ARTIFACT_REQUEST = LangExtractRequest.make({
+  documentId: NlpDocumentId.make("semantica-hosted-artifact"),
+  examples: HOSTED_EXAMPLES,
+  targets: HOSTED_TARGETS,
+  text: Str.empty,
+});
+
 /**
- * Prompt/configuration identity used by the hosted extraction lane.
+ * Hash of the actual LangExtract prompt rendered from the pinned targets and examples.
  *
  * **Example** (Inspect the artifact digest)
  *
  * ```ts
  * import { HOSTED_EXTRACTION_ARTIFACT_HASH } from "@/layers/ExtractorLive"
+ * import { Effect } from "effect"
  *
- * console.log(HOSTED_EXTRACTION_ARTIFACT_HASH.length) // 64
+ * Effect.runPromise(HOSTED_EXTRACTION_ARTIFACT_HASH).then((hash) => console.log(hash.length)) // 64
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const HOSTED_EXTRACTION_ARTIFACT_HASH = sha256CanonicalSync({
-  examples: HOSTED_EXAMPLES,
-  schemaVersion: "semantica-hosted-extraction/v1",
-  targets: HOSTED_TARGETS,
-});
+export const HOSTED_EXTRACTION_ARTIFACT_HASH = buildPrompt(HOSTED_ARTIFACT_REQUEST).pipe(
+  Effect.flatMap((prompt) => Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(prompt))),
+  Effect.orDie
+);
 
 /**
  * Pinned local pattern identity and method table.
@@ -250,6 +284,12 @@ const structureDepth = (extraction: GroundedExtraction): NonNegativeInt =>
     O.getOrElse(() => NonNegativeInt.make(0))
   );
 
+const extractionAttribute = (extraction: GroundedExtraction, name: string): O.Option<string> =>
+  extraction.attributes.pipe(
+    O.flatMap((attributes) => R.get(attributes, name)),
+    O.filter(Str.isNonEmpty)
+  );
+
 const nonRelationBody = (extraction: GroundedExtraction, anchor: TextAnchor): ClaimBody =>
   isStructureRole(extraction.label)
     ? ClaimBody.cases.Structure.make({
@@ -260,6 +300,7 @@ const nonRelationBody = (extraction: GroundedExtraction, anchor: TextAnchor): Cl
       })
     : ClaimBody.cases.Entity.make({
         ...anchor,
+        cluster: extractionAttribute(extraction, "cluster"),
         entityType: extraction.label,
         kind: "Entity",
         label: anchor.quote,
@@ -305,12 +346,6 @@ const resolveEndpoint = (
 ): O.Option<EvidenceClaimValue> =>
   quote.pipe(
     O.flatMap((surface) => exactEntity(claims, surface).pipe(O.orElse(() => nearestNfcEntity(claims, surface, before))))
-  );
-
-const relationAttribute = (extraction: GroundedExtraction, name: string): O.Option<string> =>
-  extraction.attributes.pipe(
-    O.flatMap((attributes) => R.get(attributes, name)),
-    O.filter(Str.isNonEmpty)
   );
 
 const makeHostedExtractor = Effect.gen(function* () {
@@ -368,9 +403,9 @@ const makeHostedExtractor = Effect.gen(function* () {
         relationPairs,
         Effect.fnUntraced(function* ([extraction, anchor]) {
           const chunk = containingChunk(chunks, anchor);
-          const subject = resolveEndpoint(baseClaims, relationAttribute(extraction, "subject"), anchor.startChar);
-          const object = resolveEndpoint(baseClaims, relationAttribute(extraction, "object"), anchor.startChar);
-          const predicate = relationAttribute(extraction, "predicate");
+          const subject = resolveEndpoint(baseClaims, extractionAttribute(extraction, "subject"), anchor.startChar);
+          const object = resolveEndpoint(baseClaims, extractionAttribute(extraction, "object"), anchor.startChar);
+          const predicate = extractionAttribute(extraction, "predicate");
           if (O.isNone(subject) || O.isNone(object) || O.isNone(predicate)) {
             return Result.fail(
               DegradedClaim.make({
@@ -439,6 +474,7 @@ const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
     return Result.fail(fabricatedSpan(chunks));
   }
   const body = ClaimBody.cases.Entity.make({
+    cluster: O.none(),
     endChar: NonNegativeInt.make(end),
     entityType: Str.isNonEmpty(entity.entityType) ? entity.entityType : "UNKNOWN",
     kind: "Entity",

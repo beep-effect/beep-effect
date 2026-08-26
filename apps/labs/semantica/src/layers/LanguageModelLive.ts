@@ -1,4 +1,10 @@
-import { ANTHROPIC_DEFAULT_MODEL, ANTHROPIC_MODEL_ENV, AnthropicLanguageModelLive } from "@beep/anthropic";
+import {
+  ANTHROPIC_DEFAULT_MODEL,
+  ANTHROPIC_MODEL_ENV,
+  AnthropicLanguageModelLive,
+  AnthropicLanguageModelOptions,
+  makeAnthropicLanguageModelLayer,
+} from "@beep/anthropic";
 import { $SemanticaId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { XAi, XAiLanguageModel } from "@beep/xai";
@@ -455,7 +461,12 @@ export const XAiGoldModelIdentityLive = (options: {
   );
 
 /**
- * Raw Anthropic language-model Layer used outside the cache boundary.
+ * Raw Anthropic language-model Layer pinned to the exact configured extractor id.
+ *
+ * **Details**
+ *
+ * The driver receives `LabConfig.extractorModel` directly, so provider requests
+ * and the active cache identity cannot select different model defaults.
  *
  * **Example** (Inspect the provider layer)
  *
@@ -469,7 +480,13 @@ export const XAiGoldModelIdentityLive = (options: {
  * @category layers
  * @since 0.0.0
  */
-export const AnthropicExtractionProviderLive = AnthropicLanguageModelLive;
+export const AnthropicExtractionProviderLive = Layer.unwrap(
+  LabConfig.pipe(
+    Effect.map((config) =>
+      makeAnthropicLanguageModelLayer(AnthropicLanguageModelOptions.make({ model: config.extractorModel }))
+    )
+  )
+);
 
 /**
  * Live xAI gold-proposal model over the immutable cache boundary.

@@ -28,7 +28,7 @@ import { LabConfig, RuntimeMode } from "@/runtime/Config";
 import { SEMANTICA_VERSION } from "@/runtime/Version";
 import { contentDigest } from "@/schema/Digest";
 import { C0ExecutionFailed, GoldUnavailable, ReportInvalid } from "@/schema/Errors";
-import { EvalReport, EvalRun, EvalSelection, makeRunId } from "@/schema/Eval";
+import { EvalReport, EvalRun, EvalSelection, EvalSelectionMode, makeRunId } from "@/schema/Eval";
 import { GoldRef } from "@/schema/Gold";
 import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
 import { EvalRunTelemetry } from "@/schema/Telemetry";
@@ -180,7 +180,14 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
       const startedAt = yield* DateTime.now;
       const startedMillis = yield* Clock.currentTimeMillis;
       const paper = yield* selectedPaper(options.paper);
-      const selection = yield* loadDocumentSelection(options.manifest, paper).pipe(
+      const includeW1 = EvalSelectionMode.$match(options.selection, {
+        f1: () => false,
+        "f1+w1": () => true,
+      });
+      if (!includeW1 && O.isSome(paper)) {
+        return yield* executionFailed("The --paper flag requires --selection f1+w1.");
+      }
+      const selection = yield* loadDocumentSelection(options.manifest, paper, includeW1).pipe(
         Effect.provideService(CorpusManifestBuilder, corpusManifestBuilder),
         Effect.provideService(F1Catalog, f1Catalog),
         Effect.mapError(() => executionFailed("The C0 document selection failed validation."))
@@ -211,7 +218,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
         onNonEmpty: Effect.succeed,
       });
       const hostedModel = yield* AnthropicExtractionModelIdentity({
-        artifactHash: HOSTED_EXTRACTION_ARTIFACT_HASH,
+        artifactHash: yield* HOSTED_EXTRACTION_ARTIFACT_HASH.pipe(Effect.provideService(Crypto.Crypto, crypto)),
         model: config.extractorModel,
       });
       const runBody = {
@@ -233,6 +240,9 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
       });
       const selectedConfig = LabConfig.of({ ...config, mode, offline: mode === "replay" });
       const ledgerDirectory = path.join(config.ledgerRoot, run.id, mode);
+      yield* fs
+        .remove(ledgerDirectory, { force: true, recursive: true })
+        .pipe(Effect.mapError(() => executionFailed("The prior C0 mode ledger could not be cleared.")));
       const beforeBytes = yield* directoryBytes(fs, path, ledgerDirectory);
 
       const support = Layer.mergeAll(
@@ -350,10 +360,10 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
         .pipe(Effect.mapError(() => executionFailed("The C0 output directory could not be created.")));
       const telemetry = EvalRunTelemetry.make({
         coldStartMs: NonNegativeInt.make(execution.coldStartMs),
-        dependencyBytes: NonNegativeInt.make(0),
+        dependencyBytes: O.none(),
         diskGrowthBytes: NonNegativeInt.make(N.max(0, afterBytes - beforeBytes)),
         mode,
-        modelBytes: NonNegativeInt.make(0),
+        modelBytes: O.none(),
         p95Ms: NonNegativeInt.make(p95(execution.timings)),
         reportDigest: execution.report.reportDigest,
         rssBytes: NonNegativeInt.make(process.memoryUsage().rss),

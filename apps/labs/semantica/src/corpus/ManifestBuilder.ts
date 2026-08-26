@@ -35,6 +35,7 @@ interface CorpusManifestBuilderShape {
   readonly check: (
     manifestPath: string
   ) => Effect.Effect<CorpusManifest, ManifestDrift | CorpusRootUnavailable | ManifestDecodeFailed>;
+  readonly load: (manifestPath: string) => Effect.Effect<CorpusManifest, ManifestDecodeFailed>;
 }
 
 /**
@@ -218,7 +219,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
     });
   }).pipe(Effect.withSpan("CorpusManifestBuilder.build"));
 
-  const check = Effect.fn("CorpusManifestBuilder.check")(function* (manifestPath: string) {
+  const load = Effect.fn("CorpusManifestBuilder.load")(function* (manifestPath: string) {
     const source = yield* fs.readFileString(manifestPath).pipe(
       Effect.mapError(() =>
         ManifestDecodeFailed.make({
@@ -227,7 +228,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
         })
       )
     );
-    const manifest = yield* S.decodeEffect(ManifestFromJsonString)(source).pipe(
+    return yield* S.decodeEffect(ManifestFromJsonString)(source).pipe(
       Effect.mapError(() =>
         ManifestDecodeFailed.make({
           message: "The W1 manifest is not valid w1-manifest/v1 JSON.",
@@ -235,6 +236,10 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
         })
       )
     );
+  });
+
+  const check = Effect.fn("CorpusManifestBuilder.check")(function* (manifestPath: string) {
+    const manifest = yield* load(manifestPath);
     const corpusRoot = yield* resolveCorpusRoot();
     const expectations = A.map(manifest.rows, (row) =>
       ByteExpectation.make({ relativePath: row.relativePath, sha256: row.sha256, bytes: row.bytes })
@@ -262,7 +267,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
     return manifest;
   });
 
-  return CorpusManifestBuilder.of({ build, check });
+  return CorpusManifestBuilder.of({ build, check, load });
 });
 
 /**

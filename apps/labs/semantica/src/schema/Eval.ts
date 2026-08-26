@@ -56,6 +56,35 @@ export const CanaryStage = LiteralKit(["c0", "c1", "c2"]).pipe(
  */
 export type CanaryStage = typeof CanaryStage.Type;
 
+/**
+ * Source groups accepted by a Semantica evaluation invocation.
+ *
+ * **Example** (Select fixture-only execution)
+ *
+ * ```ts
+ * import { EvalSelectionMode } from "@/schema/Eval"
+ *
+ * console.log(EvalSelectionMode.is.f1("f1")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EvalSelectionMode = LiteralKit(["f1", "f1+w1"]).pipe(
+  $I.annoteSchema("EvalSelectionMode", {
+    description: "Fixture-only or fixture-plus-W1 source selection for one evaluation execution.",
+  })
+);
+
+/**
+ * Decoded source-group selection for a Semantica evaluation.
+ *
+ * @see {@link EvalSelectionMode} for literals.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EvalSelectionMode = typeof EvalSelectionMode.Type;
+
 const EvalSelectionFields = S.Struct({
   w1: S.Array(CorpusPaperId),
   f1: S.NonEmptyArray(F1FixtureId),
@@ -637,7 +666,8 @@ const selectedRelationPapersHaveHostedClaims = (report: EvalReportFields): boole
 const isUnexpectedlyDegraded = (document: DocumentOutcome): boolean =>
   Origin.match(document.origin, {
     W1Paper: () => document.parse !== "parsed" || document.extraction.hosted !== "extracted",
-    Fixture: () => !fixtureParseIsExpected(document),
+    Fixture: () =>
+      !fixtureParseIsExpected(document) || (document.parse === "parsed" && document.extraction.hosted !== "extracted"),
   });
 
 const EvalReportChecks = S.makeFilterGroup(

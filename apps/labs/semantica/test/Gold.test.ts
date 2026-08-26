@@ -61,7 +61,7 @@ const proposer = ModelIdentity.make({
 
 const proposalForPrompt = (prompt: string): string => {
   if (Str.includes("\nSUBSET=entity\nSOURCE_TEXT_BEGIN")(prompt)) {
-    return '{"labels":[{"endChar":4,"entityType":"concept","label":"Coffee concept","quote":"Café","startChar":0},{"endChar":20,"entityType":"concept","label":"Beta","quote":"Beta","startChar":16},{"endChar":4,"entityType":"fabricated","label":"Ghost","quote":"Ghost","startChar":0}]}';
+    return '{"labels":[{"cluster":"concept-cafe","endChar":4,"entityType":"concept","label":"Coffee concept","quote":"Café","startChar":0},{"cluster":"concept-beta","endChar":20,"entityType":"concept","label":"Beta","quote":"Beta","startChar":16},{"cluster":"fabricated-ghost","endChar":4,"entityType":"fabricated","label":"Ghost","quote":"Ghost","startChar":0}]}';
   }
   if (Str.includes("\nSUBSET=relation\nSOURCE_TEXT_BEGIN")(prompt)) {
     return '{"labels":[{"endChar":20,"object":"Beta","predicate":"relates-to","quote":"Café relates to Beta","startChar":0,"subject":"Café"},{"endChar":20,"object":"Beta","predicate":"fabricated","quote":"Café relates to Beta","startChar":0,"subject":"Ghost"}]}';
@@ -89,6 +89,7 @@ const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
     CorpusManifestBuilder.of({
       build: Effect.succeed(manifest),
       check: Effect.fn("CorpusManifestBuilder.check")(() => Effect.succeed(manifest)),
+      load: Effect.fn("CorpusManifestBuilder.load")(() => Effect.succeed(manifest)),
     })
   );
   const fixtureCatalog = Layer.succeed(F1Catalog, F1Catalog.of({ load: Effect.succeed(fixtures) }));
