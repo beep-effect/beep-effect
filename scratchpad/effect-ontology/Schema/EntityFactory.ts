@@ -13,61 +13,14 @@
  * @since 0.0.0
  */
 
-import type { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
-import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
-import { buildLocalNameToIriMapSafe, expandLocalNameToIri, extractLocalNameFromIri } from "../Utils/Iri.ts";
-
-/**
- * Helper: Creates a local name schema with case-insensitive validation
- *
- * Accepts local names (e.g., "Player", "Team") and validates them against
- * the allowed class IRIs. LLM outputs local names which are later expanded
- * to full IRIs post-extraction.
- *
- * This approach:
- * 1. Reduces token usage by 60-70% (local names vs full URIs)
- * 2. Provides enum-like constraints to prevent hallucinated classes
- * 3. Handles case mismatches gracefully
- *
- * @internal
- */
-const localNameSchema = (classIris: ReadonlyArray<IRI>): S.Codec<string, string, never, never> => {
-  // Build case-insensitive local name to IRI map for validation
-  const { map: localNameMap } = buildLocalNameToIriMapSafe(classIris);
-  const localNames = A.map(classIris, extractLocalNameFromIri);
-
-  // Schema that validates local names (case-insensitive) and normalizes to canonical form
-  return S.String.pipe(
-    S.decodeTo(S.String, {
-      decode: SchemaGetter.transform((canonical) => canonical),
-      encode: SchemaGetter.transform((input) => {
-        // Try to find matching IRI and extract its canonical local name
-        const matchedIri = expandLocalNameToIri(input, localNameMap);
-        return O.match(matchedIri, {
-          onNone: () => input,
-          onSome: extractLocalNameFromIri,
-        });
-      }),
-    }),
-    S.check(
-      S.makeFilter((name) => MutableHashMap.has(localNameMap, Str.toLowerCase(name)), {
-        message: `Type must be one of: ${A.join(A.take(localNames, 10), ", ")}${A.length(localNames) > 10 ? "..." : ""}`,
-      })
-    ),
-    S.annotate({
-      description: `Class name (one of: ${A.join(localNames, ", ")})`,
-    })
-  );
-};
+import { extractLocalNameFromIri, makeLocalNameSchema } from "../Utils/Iri.ts";
 
 /**
  * Creates Effect Schema for entity extraction (Stage 1)
@@ -126,7 +79,7 @@ export const makeEntitySchema = dual2(
 
     // Create local name schema for types array elements
     // LLM outputs local names (e.g., "Player") which are validated and later expanded to full IRIs
-    const ClassLocalName = localNameSchema(classIris);
+    const ClassLocalName = makeLocalNameSchema(classIris, "Type", "Class");
 
     // Determine available property names for description
     const availableProps = A.map(datatypeProperties, (property) => extractLocalNameFromIri(property.id));
@@ -139,7 +92,7 @@ export const makeEntitySchema = dual2(
     // Dynamic Attributes Schema
     // If properties are provided, build a specific Struct to enforce cardinality and valid keys
     const valueSchema = S.Union([S.String, S.Finite, S.Boolean]);
-    const AttributesSchema: S.Codec<Record<string, unknown>, unknown, never, never> = A.match(datatypeProperties, {
+    const AttributesSchema: S.Codec<Record<string, unknown>, unknown> = A.match(datatypeProperties, {
       onEmpty: () =>
         S.Record(S.String, S.Union([valueSchema, S.Array(valueSchema)])).annotate({
           description: "Entity attributes as property-value pairs",

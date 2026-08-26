@@ -11,20 +11,11 @@ import { Match } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
+import { SourceType } from "../Model/EnrichedContent.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/LinkIngestion");
 
 export { HttpUrl };
-
-const SourceType = LiteralKit(["news", "blog", "press_release", "official", "academic", "unknown"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("news", "blog", "press_release", "official", "academic", "unknown"),
-  })
-  .annotate(
-    $I.annote("SourceType", {
-      description: "Supported source classifications for ingested links.",
-    })
-  );
 
 /**
  * Canonical lifecycle status shared by link contracts and persistence.

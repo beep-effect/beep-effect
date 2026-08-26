@@ -11,7 +11,6 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import type { GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
 import { IRI, makeBlankNode, makeNamedNode } from "@beep/rdf";
@@ -37,8 +36,10 @@ import {
   Chunk,
   Clock,
   Context,
+  Crypto,
   Duration,
   Effect,
+  Encoding,
   HashMap,
   HashSet,
   Inspectable,
@@ -100,6 +101,11 @@ const collectSearchResultClasses = (
   A.forEach(results, collect);
   return Chunk.fromIterable(MutableHashMap.values(classes));
 };
+
+const collectOntologyClasses =
+  (ontology: OntologyContext) =>
+  (results: ReadonlyArray<OntologySearchResult>): Chunk.Chunk<ClassDefinition> =>
+    collectSearchResultClasses(ontology, results);
 
 const collectSearchResultProperties = (results: ReadonlyArray<OntologySearchResult>): Chunk.Chunk<PropertyDefinition> =>
   Chunk.fromIterable(
@@ -618,6 +624,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const storage = yield* StorageService;
     const rdf = yield* RdfBuilder;
     const nlp = yield* NlpService;
+    const crypto = yield* Crypto.Crypto;
     // Registry is optional - only available when ONTOLOGY.REGISTRY_PATH is configured
     const registryOpt = yield* Effect.serviceOption(OntologyRegistryService);
 
@@ -894,7 +901,18 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           );
         const namespace = yield* decodeIdentity(Namespace, "namespace");
         const name = yield* decodeIdentity(OntologyName, "name");
-        const hash = ContentHash.make(createHash("sha256").update(ontologyIri).digest("hex"));
+        const hash = ContentHash.make(
+          Encoding.encodeHex(
+            yield* crypto.digest("SHA-256", new TextEncoder().encode(ontologyIri)).pipe(
+              Effect.mapError((cause) =>
+                OntologyError.make({
+                  message: `Failed to hash ontology IRI: ${ontologyIri}`,
+                  cause: O.some(cause),
+                })
+              )
+            )
+          )
+        );
         return OntologyVersion.fromParts(namespace, name, hash);
       }),
       searchClassesHybridFromUri: Effect.fn("OntologyService.searchClassesHybridFromUri")(function* (
@@ -914,22 +932,16 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           { concurrency: 2 }
         );
         const searchLimit = Math.ceil(limit * 0.7);
+        const collectClasses = collectOntologyClasses(ontology);
         const [semanticResults, bm25Results] = yield* Effect.all(
           [
             P.isNotNull(semanticIndex)
-              ? Effect.gen(function* () {
-                  const results = yield* nlp.searchOntologySemanticIndex(
-                    semanticIndex,
-                    query,
-                    PosInt.make(searchLimit)
-                  );
-                  return collectSearchResultClasses(ontology, results);
-                }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
+              ? nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit)).pipe(
+                  Effect.map(collectClasses),
+                  Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>())
+                )
               : Effect.succeed(Chunk.empty<ClassDefinition>()),
-            Effect.gen(function* () {
-              const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              return collectSearchResultClasses(ontology, results);
-            }),
+            nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit)).pipe(Effect.map(collectClasses)),
           ],
           { concurrency: 2 }
         );
@@ -994,24 +1006,18 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             properties: Chunk.toReadonlyArray(properties),
           });
           const searchLimit = Math.ceil(limit * 0.7);
+          const collectClasses = collectOntologyClasses(ontology);
           const semanticIndex = yield* nlp.createOntologySemanticIndexFromPrecomputed(ontology, embeddings);
           const bm25Index = yield* nlp.createOntologyIndex(ontology);
           const [semanticResults, bm25Results] = yield* Effect.all(
             [
               P.isNotNull(semanticIndex)
-                ? Effect.gen(function* () {
-                    const results = yield* nlp.searchOntologySemanticIndex(
-                      semanticIndex,
-                      query,
-                      PosInt.make(searchLimit)
-                    );
-                    return collectSearchResultClasses(ontology, results);
-                  }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
+                ? nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit)).pipe(
+                    Effect.map(collectClasses),
+                    Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>())
+                  )
                 : Effect.succeed(Chunk.empty<ClassDefinition>()),
-              Effect.gen(function* () {
-                const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-                return collectSearchResultClasses(ontology, results);
-              }),
+              nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit)).pipe(Effect.map(collectClasses)),
             ],
             { concurrency: 2 }
           );
@@ -1118,20 +1124,21 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         limit: number = 100
       ) {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
-        const ontology = yield* S.decodeUnknownEffect(OntologyContext)({
+        const ontology = yield* OntologyContext.decodeUnknownEffect({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
           propertyHierarchy,
           properties: Chunk.toReadonlyArray(properties),
         });
         const searchLimit = Math.ceil(limit * 0.7);
+        const collectClasses = collectOntologyClasses(ontology);
         const [semanticResults, bm25Results] = yield* Effect.all(
           [
             Effect.gen(function* () {
               const semanticIndex = yield* getSemanticIndex;
-              const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
-              return collectSearchResultClasses(ontology, results);
+              return yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
             }).pipe(
+              Effect.map(collectClasses),
               Effect.catch(
                 Effect.fnUntraced(function* (error) {
                   yield* Effect.logWarning("Semantic search failed, using BM25 fallback", {
@@ -1144,9 +1151,8 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             ),
             Effect.gen(function* () {
               const bm25Index = yield* getBm25Index;
-              const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              return collectSearchResultClasses(ontology, results);
-            }),
+              return yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
+            }).pipe(Effect.map(collectClasses)),
           ],
           { concurrency: 2 }
         );
@@ -1186,13 +1192,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           properties: Chunk.toReadonlyArray(properties),
         });
         const searchLimit = Math.ceil(limit * 0.7);
+        const collectClasses = collectOntologyClasses(ontology);
         const semanticIndex = yield* nlp.createOntologySemanticIndexFromPrecomputed(ontology, embeddings);
         const [semanticResults, bm25Results] = yield* Effect.all(
           [
-            Effect.gen(function* () {
-              const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
-              return collectSearchResultClasses(ontology, results);
-            }).pipe(
+            nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit)).pipe(
+              Effect.map(collectClasses),
               Effect.catch(
                 Effect.fnUntraced(function* (error) {
                   yield* Effect.logWarning("Semantic search with embeddings failed, using BM25 fallback", {
@@ -1205,9 +1210,8 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             ),
             Effect.gen(function* () {
               const bm25Index = yield* getBm25Index;
-              const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              return collectSearchResultClasses(ontology, results);
-            }),
+              return yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
+            }).pipe(Effect.map(collectClasses)),
           ],
           { concurrency: 2 }
         );

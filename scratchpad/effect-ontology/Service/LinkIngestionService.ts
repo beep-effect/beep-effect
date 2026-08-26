@@ -20,31 +20,44 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
-import { DrizzleError } from "@beep/drizzle";
-import { $ScratchpadId } from "@beep/identity";
-import { PostgresDrizzle } from "@beep/postgres";
-import { and, eq, inArray, lt } from "drizzle-orm";
-import { Cache, Clock, Context, DateTime, Duration, Effect, Inspectable, Layer } from "effect";
-import * as A from "effect/Array";
+import {$ScratchpadId} from "@beep/identity";
+import {PostgresDrizzle} from "@beep/postgres";
+import {DrizzleError} from "@beep/drizzle";
+import {and, eq, inArray, lt} from "drizzle-orm";
+import {
+  Cache,
+  Context,
+  Crypto,
+  Duration,
+  Effect,
+  Encoding,
+  Layer
+} from "effect";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
-import type { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
-import type { IngestedLinkInsertRow, IngestedLinkRow } from "../Repository/schema.ts";
-import { IngestedLinks, ingestedLinks } from "../Repository/schema.ts";
-import { ContentEnrichmentAgent } from "./ContentEnrichmentAgent.ts";
-import { ImageExtractor } from "./ImageExtractor.ts";
-import { ImageFetcher } from "./ImageFetcher.ts";
-import { ImageStore } from "./ImageStore.ts";
-import { JinaReaderClient } from "./JinaReaderClient.ts";
-import { StorageService } from "./Storage.ts";
+import * as A from "@beep/utils/Array";
+import * as Inspectable from "effect/Inspectable";
+import type {EnrichedContent} from "../Domain/Model/EnrichedContent.ts";
+import type {LinkStatus} from "../Domain/Schema/LinkIngestion.ts";
+import type {
+  IngestedLinkInsertRow,
+  IngestedLinkRow
+} from "../Repository/schema.ts";
+import {IngestedLinks, ingestedLinks} from "../Repository/schema.ts";
+import {normalizeDrizzleError} from "../Utils/Sql.ts";
+import {ContentEnrichmentAgent} from "./ContentEnrichmentAgent.ts";
+import {ImageExtractor} from "./ImageExtractor.ts";
+import {ImageFetcher} from "./ImageFetcher.ts";
+import {ImageStore} from "./ImageStore.ts";
+import {JinaReaderClient} from "./JinaReaderClient.ts";
+import {StorageService} from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LinkIngestionService");
 
-const normalizeQueryError = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
-  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+const normalizeQueryError = normalizeDrizzleError("execute");
 
 const decodeIngestedLinkRows = (rows: unknown) =>
   S.decodeUnknownEffect(IngestedLinks.select.pipe(S.Array, S.mutable))(rows).pipe(
@@ -206,11 +219,6 @@ export interface IngestedLinkFilter {
 // =============================================================================
 
 /**
- * Compute SHA-256 hash of content
- */
-const computeContentHash = (content: string): string => createHash("sha256").update(content).digest("hex");
-
-/**
  * Build storage path for document
  */
 const buildStoragePath = (contentHash: string): string => `documents/${contentHash}/content.md`;
@@ -254,6 +262,24 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     const imageExtractor = yield* ImageExtractor;
     const imageFetcher = yield* ImageFetcher;
     const imageStore = yield* ImageStore;
+    const crypto = yield* Crypto.Crypto;
+
+    const computeContentHash = Effect.fn("LinkIngestionService.computeContentHash")(function* (
+      content: string,
+      url: string
+    ): Effect.fn.Return<string, LinkIngestionError> {
+      const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(content)).pipe(
+        Effect.mapError((cause) =>
+          LinkIngestionError.make({
+            message: "Failed to hash fetched content",
+            url,
+            phase: "store",
+            cause,
+          })
+        )
+      );
+      return Encoding.encodeHex(digest);
+    });
 
     // Raw DB lookup for content hash within an ontology (used by cache).
     const lookupByContentHash = Effect.fn("lookupByContentHash")(function* ({ hash, ontologyId }: ContentHashCacheKey) {
@@ -309,7 +335,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       const { content } = jinaResponse;
 
       // 2. Compute content hash
-      const contentHash = computeContentHash(content.content);
+      const contentHash = yield* computeContentHash(content.content, url);
 
       // 3. Check for duplicate (scoped by ontology)
       if (skipDuplicates) {
@@ -396,7 +422,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       // 5. Optionally enrich metadata
       let enrichedContent: EnrichedContent | undefined;
       if (enrich) {
-        const enrichResult = yield* enricher.enrichFromJina(content).pipe(
+
+        enrichedContent = yield * enricher.enrichFromJina(content).pipe(
           Effect.catch((error) =>
             Effect.gen(function* () {
               yield* Effect.logWarning("Enrichment failed, continuing without metadata", {
@@ -407,7 +434,6 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
             })
           )
         );
-        enrichedContent = enrichResult;
       }
 
       // 6. Persist to database
@@ -469,7 +495,10 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       Effect.gen(function* () {
         const { concurrency = 5, continueOnError = true, ...ingestOptions } = options;
 
-        const results = yield* Effect.forEach(
+
+
+
+        return yield * Effect.forEach(
           urls,
           (url) =>
             ingestUrl(url, ingestOptions).pipe(
@@ -479,10 +508,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
                   continueOnError ? Effect.succeed(error) : Effect.fail(error)
               )
             ),
-          { concurrency }
+          {concurrency}
         );
-
-        return results;
       });
 
     // -----------------------------------------------------------------------

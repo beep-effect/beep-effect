@@ -125,7 +125,9 @@ const JinaApiResponse = S.Struct({
     image: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     links: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   }),
-});
+}).pipe(
+  SchemaUtils.withEffectCodecStatics
+);
 
 // =============================================================================
 // Rate Limiting
@@ -207,7 +209,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       // Wait for rate limit
       yield* rateLimiter.acquire;
 
-      const targetUrl = yield* S.decodeEffect(URLStr)(url).pipe(
+      const targetUrl = yield* URLStr.decodeEffect(url).pipe(
         Effect.mapError((cause) =>
           JinaApiError.make({
             message: "Jina Reader target URL is invalid",
@@ -256,7 +258,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
           )
         ),
         Effect.mapError((error) => {
-          if (S.is(JinaTimeoutError)(error)) return error;
+          if (JinaTimeoutError.is(error)) return error;
           return JinaApiError.make({
             message: `Failed to fetch URL: ${error}`,
             url: O.some(targetUrl),
@@ -305,7 +307,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       );
 
       // Decode response
-      const parsed = yield* S.decodeUnknownEffect(JinaApiResponse)(json).pipe(
+      const parsed = yield* JinaApiResponse.decodeUnknownEffect(json).pipe(
         Effect.mapError((error) =>
           JinaParseError.make({
             message: `Invalid Jina response format: ${error}`,
@@ -316,7 +318,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       );
 
       // Build JinaContent
-      const content = yield* S.decodeEffect(JinaContent)({
+      const content = yield* JinaContent.decodeEffect({
         url: parsed.data.url,
         title: parsed.data.title,
         content: parsed.data.content,

@@ -106,6 +106,7 @@ export type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
  */
 export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
   S.brand("UUID"),
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("UUID", {
     description: "Universally Unique Identifier",
     documentation: "A 128-bit number used to identify information in computer systems.",

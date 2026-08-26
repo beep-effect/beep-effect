@@ -429,10 +429,57 @@ type EntityIdStatics<
 type EntityIdEquivalence<TBrand extends string> = {
   bivarianceHack(self: EntityIdValueFor<TBrand>, that: EntityIdValueFor<TBrand>): boolean;
 }["bivarianceHack"];
+
+type EntityIdSchema<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, number>;
+
+/**
+ * Codec statics carried by every entity id built with {@link factory}.
+ *
+ * **Details**
+ *
+ * The factory pipes each branded id schema through
+ * `SchemaUtils.withCodecStatics` (the canonical trio: `is`, `fromUnknown`,
+ * `decodeOption`) and `SchemaUtils.withEffectCodecStatics` (`decodeEffect`,
+ * `decodeUnknownEffect`, `encodeEffect`, `encodeUnknownEffect`, their
+ * `FromJsonString` variants, plus the shared `is` and `asserts`) before
+ * attaching the entity metadata statics, so both groups are uniform across the
+ * entity-id fleet. The sync group (`decodeSync`, `encodeSync`, ...) is not
+ * attached. The Effect group's dual `equivalence` is omitted here because the
+ * factory deliberately attaches its own plain two-argument entity-id
+ * equivalence last.
+ *
+ * **Example** (Guard through factory-attached codec statics)
+ *
+ * ```ts
+ * import { $SharedDomainId } from "@beep/identity/packages"
+ * import * as EntityId from "@beep/shared-domain/entity/EntityId"
+ *
+ * const $I = $SharedDomainId.create("identity/Shared")
+ * const OrganizationId = EntityId.factory("shared", $I)("organization")
+ * const statics: EntityId.EntityIdCodecStatics<"SharedOrganizationId"> = OrganizationId
+ *
+ * console.log(statics.is(1))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EntityIdCodecStatics<TBrand extends string> = Omit<
+  SchemaUtils.CodecStatics<EntityIdSchema<TBrand>> & SchemaUtils.EffectCodecStatics<EntityIdSchema<TBrand>>,
+  "equivalence"
+>;
+
 const decodeOptionsResult = S.decodeUnknownResult(Options);
 
 /**
  * Any entity id schema produced by {@link factory}.
+ *
+ * **Gotchas**
+ *
+ * `Any` intentionally omits {@link EntityIdCodecStatics}: widening it would
+ * break `extends EntityId.Any` consumers through `Brand` invariance. Narrowing
+ * a factory id to `Any` keeps the entity metadata statics but drops the codec
+ * groups, so keep the concrete id type when you need them.
  *
  * **Example** (Any factory entity id)
  *
@@ -463,7 +510,8 @@ type Maker<Slice extends string> = <
   ResolvedResource<Slice, Name, Overrides>,
   ResolvedEntityType<Slice, Name, Overrides>,
   ResolvedBrand<Slice, Name, Overrides>
->;
+> &
+  EntityIdCodecStatics<ResolvedBrand<Slice, Name, Overrides>>;
 
 type Factory = {
   <const Slice extends string>(slice: Slice, identity: IdentityComposer<string>): Maker<Slice>;
@@ -557,6 +605,16 @@ const buildDefinition = <
 /**
  * Build a slice-scoped entity id maker.
  *
+ * **Details**
+ *
+ * Every produced id schema carries the entity metadata statics plus the
+ * canonical codec trio (`is`, `fromUnknown`, `decodeOption`) and the Effect
+ * codec group (see {@link EntityIdCodecStatics}); the sync group is not
+ * attached. The codec groups are attached before the entity metadata statics
+ * so the factory's plain entity-id `equivalence` stays the canonical
+ * equivalence static, including on schemas produced by a later
+ * `.annotate(...)` call.
+ *
  * **Example** (Build slice-scoped id maker)
  *
  * ```ts
@@ -586,7 +644,8 @@ export const factory: Factory = dual(
       ResolvedResource<Slice, Name, Overrides>,
       ResolvedEntityType<Slice, Name, Overrides>,
       ResolvedBrand<Slice, Name, Overrides>
-    > => {
+    > &
+      EntityIdCodecStatics<ResolvedBrand<Slice, Name, Overrides>> => {
       const definition = buildDefinition(slice, name, overrides);
       const schema = EntityIdValue.pipe(
         S.brand(definition.brand),
@@ -596,7 +655,7 @@ export const factory: Factory = dual(
       );
       const typedSchema = schema as S.Codec<EntityIdValueFor<ResolvedBrand<Slice, Name, Overrides>>, number>;
 
-      return attachEntityIdStatics(typedSchema, {
+      return attachEntityIdStatics(typedSchema.pipe(SchemaUtils.withCodecStatics, SchemaUtils.withEffectCodecStatics), {
         brand: definition.brand,
         definition,
         entityType: definition.entityType,

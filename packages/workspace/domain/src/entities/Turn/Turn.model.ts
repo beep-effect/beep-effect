@@ -59,4 +59,5 @@ export class Turn extends TurnEntity.Entity<Turn>(TurnEntity.tableName)(
   ]
 ) {
   static readonly decodeUnknownSync = S.decodeUnknownSync(Turn);
+  static readonly encodeSync = S.encodeSync(Turn);
 }

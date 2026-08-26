@@ -700,7 +700,7 @@ export const LearnCorpus = LearnCorpusSource;
  * @category tools
  * @since 0.0.0
  */
-export const LearnCustomEntities = LearnCustomEntitiesSource;
+export const LearnCustomEntities: typeof LearnCustomEntitiesSource = LearnCustomEntitiesSource;
 /**
  * Character n-gram extraction tool contract.
  *

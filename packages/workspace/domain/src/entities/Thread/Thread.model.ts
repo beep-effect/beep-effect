@@ -46,4 +46,5 @@ export class Thread extends ThreadEntity.Entity<Thread>(ThreadEntity.tableName)(
   ]
 ) {
   static readonly decodeUnknownSync = S.decodeUnknownSync(Thread);
+  static readonly encodeSync = S.encodeSync(Thread);
 }

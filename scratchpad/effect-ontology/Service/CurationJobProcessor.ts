@@ -304,7 +304,7 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
      */
     const runBackground = Effect.fn("CurationJobProcessor.runBackground")(function* (
       pollInterval: Duration.Duration = Duration.seconds(5)
-    ): Effect.fn.Return<Fiber.Fiber<never, never>, never, Scope.Scope> {
+    ): Effect.fn.Return<Fiber.Fiber<never>, never, Scope.Scope> {
       const processor = Effect.gen(function* () {
         const pendingCount = yield* eventBus.pendingJobCount;
         if (pendingCount > 0) {

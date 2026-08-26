@@ -1,3 +1,4 @@
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, layer } from "@effect/vitest";
@@ -12,7 +13,7 @@ import {
   PgliteDrizzleLive,
 } from "@/runtime/Pglite";
 
-const TestServices = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
+const TestServices = Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPath.layer);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(scopeLayer: Layer.Layer<ROut, E2, RIn>) =>

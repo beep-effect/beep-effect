@@ -62,20 +62,20 @@ const ReportColumn = S.Int.check(S.isGreaterThanOrEqualTo(0));
 export const BiomeReport = S.Struct({
   diagnostics: S.Array(
     S.Struct({
-      category: S.String.pipe(S.optional),
-      message: S.String.pipe(S.optional),
-      severity: S.String.pipe(S.optional),
+      category: S.String.pipe(S.optionalKey),
+      message: S.String.pipe(S.optionalKey),
+      severity: S.String.pipe(S.optionalKey),
       location: S.Struct({
         start: S.Struct({
-          line: ReportLine.pipe(S.optional),
-          column: ReportColumn.pipe(S.optional),
-        }).pipe(S.optional),
-      }).pipe(S.optional),
+          line: ReportLine.pipe(S.optionalKey),
+          column: ReportColumn.pipe(S.optionalKey),
+        }).pipe(S.optionalKey),
+      }).pipe(S.optionalKey),
     })
-  ).pipe(S.optional),
+  ).pipe(S.optionalKey),
 });
 
-const emptyReport: typeof BiomeReport.Type = { diagnostics: undefined };
+const emptyReport: typeof BiomeReport.Type = {};
 
 /** Decode Biome's stdout, tolerating non-JSON noise by returning an empty report. */
 const parseReport = jsonReportParser(BiomeReport, emptyReport);

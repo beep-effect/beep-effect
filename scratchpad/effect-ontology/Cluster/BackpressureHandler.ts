@@ -18,6 +18,7 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect, Fiber, HashSet, Queue, Stream } from "effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
@@ -125,6 +126,18 @@ const CRITICAL_EVENT_TAGS = HashSet.make(
  */
 const isCriticalEvent = (event: ExtractionProgressEvent): boolean => HashSet.has(CRITICAL_EVENT_TAGS, event._tag);
 
+const consumeQueue = Effect.fn("BackpressureHandler.consumeQueue")(function* <A, E, R>(
+  queue: Queue.Queue<O.Option<A>>,
+  producer: Effect.Effect<void, E, R>
+) {
+  const fiber = yield* Effect.forkScoped(producer);
+  return Stream.fromQueue(queue).pipe(
+    Stream.takeWhile(O.isSome),
+    Stream.map((option) => option.value),
+    Stream.ensuring(Fiber.interrupt(fiber))
+  );
+});
+
 // =============================================================================
 // Backpressure Stream Operator
 // =============================================================================
@@ -172,7 +185,7 @@ export const withBackpressure: {
     Stream.unwrap(
       Effect.gen(function* () {
         // Create bounded queue for backpressure
-        const queue = yield* Queue.bounded<ExtractionProgressEvent>(config.maxQueuedEvents);
+        const queue = yield* Queue.bounded<O.Option<ExtractionProgressEvent>>(config.maxQueuedEvents);
 
         // Track sampling state
         let sampleCounter = 0;
@@ -190,7 +203,7 @@ export const withBackpressure: {
                 if (size >= config.maxQueuedEvents) {
                   yield* Queue.take(queue); // Drop oldest
                 }
-                yield* Queue.offer(queue, event);
+                yield* Queue.offer(queue, O.some(event));
                 return;
               }
 
@@ -205,22 +218,15 @@ export const withBackpressure: {
               }
 
               // Try to enqueue, drop if full
-              yield* Queue.offer(queue, event);
+              yield* Queue.offer(queue, O.some(event));
             })
           ),
           Stream.runDrain,
           // Ensure queue is shutdown when producer completes
-          Effect.ensuring(Queue.shutdown(queue))
+          Effect.ensuring(Queue.offer(queue, O.none()))
         );
 
-        // Fork producer to run in background
-        const fiber = yield* Effect.forkScoped(producer);
-
-        // Consumer: drain from queue
-        return Stream.fromQueue(queue).pipe(
-          // Ensure we wait for producer on completion
-          Stream.ensuring(Fiber.join(fiber).pipe(Effect.ignore))
-        );
+        return yield* consumeQueue(queue, producer);
       })
     )
 );
@@ -293,7 +299,7 @@ export const withBackpressureMetered: {
   ): Stream.Stream<ExtractionProgressEvent, E> =>
     Stream.unwrap(
       Effect.gen(function* () {
-        const queue = yield* Queue.bounded<ExtractionProgressEvent>(config.maxQueuedEvents);
+        const queue = yield* Queue.bounded<O.Option<ExtractionProgressEvent>>(config.maxQueuedEvents);
 
         // Metrics tracking
         let eventsReceived = 0;
@@ -326,7 +332,7 @@ export const withBackpressureMetered: {
                   yield* Queue.take(queue);
                   eventsDropped++;
                 }
-                yield* Queue.offer(queue, event);
+                yield* Queue.offer(queue, O.some(event));
                 eventsDelivered++;
                 return;
               }
@@ -341,7 +347,7 @@ export const withBackpressureMetered: {
                 }
               }
 
-              const offered = yield* Queue.offer(queue, event).pipe(
+              const offered = yield* Queue.offer(queue, O.some(event)).pipe(
                 Effect.map(() => true),
                 Effect.orElseSucceed(() => false)
               );
@@ -362,12 +368,10 @@ export const withBackpressureMetered: {
             })
           ),
           Stream.runDrain,
-          Effect.ensuring(Queue.shutdown(queue))
+          Effect.ensuring(Queue.offer(queue, O.none()))
         );
 
-        const fiber = yield* Effect.forkScoped(producer);
-
-        return Stream.fromQueue(queue).pipe(Stream.ensuring(Fiber.join(fiber).pipe(Effect.ignore)));
+        return yield* consumeQueue(queue, producer);
       })
     )
 );

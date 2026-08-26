@@ -113,16 +113,21 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
     return result;
   });
 
+  const transitionHandle = Effect.fn("ExecutionDeduplicator.transitionHandle")(
+    (key: string, status: ExecutionHandle["status"]) =>
+      Ref.modify(map, (handles) =>
+        O.match(HashMap.get(handles, key), {
+          onNone: () => [O.none<ExecutionHandle>(), handles],
+          onSome: (existing) => {
+            const updated: ExecutionHandle = { ...existing, status };
+            return [O.some(updated), HashMap.set(handles, key, updated)];
+          },
+        })
+      )
+  );
+
   const complete = Effect.fn("ExecutionDeduplicator.complete")(function* (key: string, result: KnowledgeGraph) {
-    const handle = yield* Ref.modify(map, (handles) =>
-      O.match(HashMap.get(handles, key), {
-        onNone: () => [O.none<ExecutionHandle>(), handles],
-        onSome: (existing) => {
-          const updated: ExecutionHandle = { ...existing, status: "completed" };
-          return [O.some(updated), HashMap.set(handles, key, updated)];
-        },
-      })
-    );
+    const handle = yield* transitionHandle(key, "completed");
     if (O.isSome(handle)) {
       yield* Deferred.succeed(handle.value.deferred, result);
       yield* Effect.logInfo(`Execution completed key=${key}`);
@@ -130,15 +135,7 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
   });
 
   const fail = Effect.fn("ExecutionDeduplicator.fail")(function* (key: string, error: ExecutionFailure) {
-    const handle = yield* Ref.modify(map, (handles) =>
-      O.match(HashMap.get(handles, key), {
-        onNone: () => [O.none<ExecutionHandle>(), handles],
-        onSome: (existing) => {
-          const updated: ExecutionHandle = { ...existing, status: "failed" };
-          return [O.some(updated), HashMap.set(handles, key, updated)];
-        },
-      })
-    );
+    const handle = yield* transitionHandle(key, "failed");
     if (O.isSome(handle)) {
       yield* Deferred.fail(handle.value.deferred, error);
       yield* Effect.logInfo(`Execution failed key=${key} error=${error.message}`);

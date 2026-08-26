@@ -12,7 +12,6 @@
 import { Cause, DateTime, Effect, HashSet, Inspectable, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { AuthenticationError } from "../Domain/Error/Auth.ts";
@@ -31,9 +30,6 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
   const raw = Redacted.value(redacted);
   return HashSet.fromIterable(A.filter(A.map(Str.split(",")(raw), Str.trim), Str.isNonEmpty));
 };
-
-const decodeTicketRequest = S.decodeUnknownEffect(TicketRequest);
-const decodeTicketResponse = S.decodeUnknownEffect(TicketResponse);
 
 // =============================================================================
 // Auth Router
@@ -78,7 +74,7 @@ const createTicketHandler = Effect.gen(function* () {
 
   // Parse request body
   const body = yield* request.json.pipe(
-    Effect.flatMap(decodeTicketRequest),
+    Effect.flatMap(TicketRequest.decodeUnknownEffect),
     Effect.mapError((cause) =>
       AuthenticationError.make({
         message: `Invalid request body: ${Inspectable.toStringUnknown(cause, 0)}`,
@@ -95,7 +91,7 @@ const createTicketHandler = Effect.gen(function* () {
     expiresAt: DateTime.toDateUtc(DateTime.makeUnsafe(result.expiresAt)).toISOString(),
   });
 
-  const response = yield* decodeTicketResponse(result).pipe(
+  const response = yield* TicketResponse.decodeUnknownEffect(result).pipe(
     Effect.mapError((cause) =>
       AuthenticationError.make({
         message: `Invalid ticket response: ${Inspectable.toStringUnknown(cause, 0)}`,

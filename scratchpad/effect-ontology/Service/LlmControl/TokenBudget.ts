@@ -190,9 +190,9 @@ const getStageBudget = (stage: string, total: number): number => {
 /**
  * Default implementation using Effect Ref for state
  */
-const make = Effect.gen(function* () {
+const make = Effect.fn("TokenBudgetService.make")(function* (initialTotal: number = 4096) {
   const state = yield* Ref.make<TokenBudgetState>({
-    total: 4096,
+    total: initialTotal,
     used: 0,
     byStage: {},
   });
@@ -248,7 +248,7 @@ const make = Effect.gen(function* () {
  * @category layers
  * @since 0.0.0
  */
-export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make);
+export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make());
 
 /**
  * Test layer with configurable initial state
@@ -265,49 +265,4 @@ export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make);
  * @since 0.0.0
  */
 export const TokenBudgetServiceTest = (initialTotal: number = 4096): Layer.Layer<TokenBudgetService> =>
-  Layer.effect(
-    TokenBudgetService,
-    Effect.gen(function* () {
-      const state = yield* Ref.make<TokenBudgetState>({
-        total: initialTotal,
-        used: 0,
-        byStage: {},
-      });
-
-      return {
-        canAfford: Effect.fn("TokenBudgetService.canAfford")((stage: string, tokens: number) =>
-          Ref.get(state).pipe(
-            Effect.map((s) => {
-              const stageLimit = getStageBudget(stage, s.total);
-              const stageUsed = s.byStage[stage] ?? 0;
-              return stageUsed + tokens <= stageLimit;
-            })
-          )
-        ),
-        recordUsage: Effect.fn("TokenBudgetService.recordUsage")((stage: string, tokens: number) =>
-          Ref.update(state, (s) => ({
-            ...s,
-            used: s.used + tokens,
-            byStage: {
-              ...s.byStage,
-              [stage]: (s.byStage[stage] ?? 0) + tokens,
-            },
-          }))
-        ),
-        getRemaining: Ref.get(state).pipe(Effect.map((s) => s.total - s.used)),
-        getStageRemaining: Effect.fn("TokenBudgetService.getStageRemaining")((stage: string) =>
-          Ref.get(state).pipe(
-            Effect.map((s) => {
-              const stageLimit = getStageBudget(stage, s.total);
-              const stageUsed = s.byStage[stage] ?? 0;
-              return stageLimit - stageUsed;
-            })
-          )
-        ),
-        getState: Ref.get(state),
-        reset: Effect.fn("TokenBudgetService.reset")((total: number = 4096) =>
-          Ref.set(state, { total, used: 0, byStage: {} })
-        ),
-      };
-    })
-  );
+  Layer.effect(TokenBudgetService, make(initialTotal));

@@ -292,7 +292,9 @@ export class ExtractionRunService extends Context.Service<ExtractionRunService, 
 const makeExtractionRunService = Effect.gen(function* () {
   const storage = yield* StorageService;
 
-  const KeyIndex = S.Record(S.String, DocumentId);
+  const KeyIndex = S.Record(S.String, DocumentId).pipe(
+    SchemaUtils.withEffectCodecStatics,
+  );
   const KeyIndexJson = S.fromJsonString(KeyIndex, { space: 2 }).pipe(
     SchemaUtils.withStatics((schema) => ({
       decodeKeyIndex: S.decodeUnknownEffect(schema),
@@ -337,7 +339,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     Effect.flatMap(
       O.match({
         onNone: () =>
-          S.decodeEffect(KeyIndex)({}).pipe(
+          KeyIndex.decodeEffect({}).pipe(
             Effect.mapError(mapRunError("Failed to initialize extraction idempotency index"))
           ),
         onSome: (content) =>
@@ -548,20 +550,26 @@ const makeExtractionRunService = Effect.gen(function* () {
   const emitEvent = (runId: ExtractionRunId, type: AuditEventType, data?: Record<string, unknown>) =>
     emitEventRaw(runId, type, data).pipe(Effect.mapError(mapRunError("Failed to emit extraction audit event", runId)));
 
-  const recordErrorRaw = Effect.fn("ExtractionRunService.recordError")(function* (
-    runId: ExtractionRunId,
+  const makeAuditError = Effect.fn("ExtractionRunService.makeAuditError")(function* (
     type: AuditErrorType,
     message: string,
     context?: Record<string, unknown>
   ) {
     const now = yield* DateTime.now;
     const decodedContext = P.isUndefined(context) ? {} : yield* JsonRecord.decodeUnknownEffect(context);
-    const error = AuditError.make({
-      timestamp: now,
-      type,
-      message,
-      context: decodedContext,
-    });
+    return {
+      now,
+      error: AuditError.make({ timestamp: now, type, message, context: decodedContext }),
+    };
+  });
+
+  const recordErrorRaw = Effect.fn("ExtractionRunService.recordError")(function* (
+    runId: ExtractionRunId,
+    type: AuditErrorType,
+    message: string,
+    context?: Record<string, unknown>
+  ) {
+    const { error, now } = yield* makeAuditError(type, message, context);
     yield* updateMetadata(runId, (run) =>
       ExtractionRun.make({
         ...run,
@@ -592,14 +600,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     message: string,
     context?: Record<string, unknown>
   ) {
-    const now = yield* DateTime.now;
-    const decodedContext = P.isUndefined(context) ? {} : yield* JsonRecord.decodeUnknownEffect(context);
-    const error = AuditError.make({
-      timestamp: now,
-      type: errorType,
-      message,
-      context: decodedContext,
-    });
+    const { error, now } = yield* makeAuditError(errorType, message, context);
     yield* updateMetadata(runId, (run) =>
       ExtractionRun.make({
         ...run,

@@ -109,7 +109,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   // Calculate prompt length for telemetry
   const promptLength = P.isString(prompt) ? prompt.length : prompt.systemMessage.length + prompt.userMessage.length;
 
-  const retryPolicy = yield* S.decodeEffect(RetryPolicy)({ ...retryPolicyInput, serviceName });
+  const retryPolicy = yield* RetryPolicy.decodeEffect({ ...retryPolicyInput, serviceName });
 
   const attemptCount = yield* Ref.make(0);
   const schemaJson = yield* schema.pipe(S.toJsonSchemaDocument, Unknown.encodeUnknownEffectFromJsonString);

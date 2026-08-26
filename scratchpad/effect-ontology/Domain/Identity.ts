@@ -228,6 +228,33 @@ export const ContentHash = Sha256Hex.annotate({
 export type ContentHash = typeof ContentHash.Type;
 
 /**
+ * Attach a content-hash constructor to a string-backed identifier schema.
+ *
+ * **Example** (Derive a document identifier)
+ *
+ * ```ts
+ * import { ContentHash, DocumentId } from "@effect-ontology/Domain/Identity"
+ *
+ * const hash = ContentHash.make("a".repeat(64))
+ * console.log(DocumentId.fromContentHash(hash)) // "doc-aaaaaaaaaaaa"
+ * ```
+ *
+ * @param prefix - Stable identifier prefix placed before the hash fragment.
+ * @returns A schema transform carrying `fromContentHash`.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const withContentHashIdStatics =
+  <const Prefix extends string>(prefix: Prefix) =>
+  <Schema extends S.Top & { readonly Type: string; readonly "~type.make.in": string }>(schema: Schema) =>
+    schema.pipe(
+      SchemaUtils.withStatics(() => ({
+        fromContentHash: (hash: ContentHash): Schema["Type"] =>
+          schema.make(`${prefix}-${ContentHash.idFragment(hash)}`),
+      }))
+    );
+
+/**
  * Branded idempotency key represented by a complete lowercase SHA-256 digest.
  *
  * **Details**
@@ -808,9 +835,7 @@ export const DocumentId = S.String.check(
         "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
     }),
     SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`doc-${Str.takeLeft(12)(hash)}`),
-    }))
+    withContentHashIdStatics("doc")
   );
 
 /**
@@ -966,9 +991,8 @@ export const BatchId = S.String.check(
     }),
     SchemaUtils.withCodecStatics,
     SchemaUtils.withEffectCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`batch-${Str.takeLeft(12)(hash)}`),
-    }))
+    SchemaUtils.withOptionCodecStatics,
+    withContentHashIdStatics("batch")
   );
 
 /**

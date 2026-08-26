@@ -11,17 +11,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect, MutableHashMap, MutableHashSet, Order } from "effect";
+import { Effect, MutableHashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
+import { mergeEntityFields } from "../Utils/Entity.ts";
 import { combinedSimilarity, overlapRatio } from "../Utils/String.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/EntityResolution");
@@ -177,48 +176,21 @@ const mergeEntityCluster = (
 ): O.Option<Entity> => {
   const entities = A.getSomes(A.map(clusterIds, (id) => MutableHashMap.get(entityMap, id)));
 
-  if (entities.length === 0) return O.none();
-  if (entities.length === 1) return O.some(entities[0]);
-
-  // Select canonical entity (prefer longest mention - usually most complete)
-  const sorted = A.sort(
-    entities,
-    Order.mapInput(Order.flip(Order.Number), (entity: Entity) => entity.mention.length)
-  );
-  const canonical = sorted[0];
-
-  // Merge types using frequency voting
-  const typeFreq = MutableHashMap.empty<IRI, number>();
-  for (const entity of entities) {
-    for (const type of entity.types) {
-      MutableHashMap.set(typeFreq, type, O.getOrElse(MutableHashMap.get(typeFreq, type), () => 0) + 1);
-    }
-  }
-
-  // Select types appearing in at least half the entities
-  const threshold = Math.ceil(entities.length / 2);
-  const mergedTypes = A.fromIterable(typeFreq)
-    .filter(([_, count]) => count >= threshold)
-    .map(([type]) => type);
-
-  const finalTypes: Entity["types"] = mergedTypes.length > 0 ? [canonical.types[0], ...mergedTypes] : canonical.types;
-
-  // Merge attributes (prefer values from longer mentions)
-  const mergedAttrs: Record<string, string | number | boolean> = {};
-  for (const entity of sorted) {
-    for (const [key, value] of R.toEntries(entity.attributes)) {
-      if (!(key in mergedAttrs)) mergedAttrs[key] = value;
-    }
-  }
-
-  return O.some(
-    Entity.make({
-      id: canonical.id,
-      mention: canonical.mention,
-      types: finalTypes,
-      attributes: mergedAttrs,
-    })
-  );
+  return A.match(entities, {
+    onEmpty: O.none<Entity>,
+    onNonEmpty: (values) => {
+      if (values.length === 1) return O.some(A.headNonEmpty(values));
+      const merged = mergeEntityFields(values);
+      return O.some(
+        Entity.make({
+          id: merged.canonical.id,
+          mention: merged.canonical.mention,
+          types: merged.types,
+          attributes: merged.attributes,
+        })
+      );
+    },
+  });
 };
 
 /**

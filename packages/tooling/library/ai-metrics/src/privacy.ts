@@ -6,39 +6,41 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, NonEmptyTrimmedStr, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Encoding, flow, Order, pipe, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { firstString, metricEventName, optionalTimestamp, transcriptLines } from "./internal/transcript-utils.ts";
+import { metricEventName, transcriptLines } from "./internal/transcript-utils.ts";
 import { AiMetricsSourceAttribution, AiMetricsSourceRole, AiMetricsTranscriptSource } from "./models.ts";
 import type { TranscriptIngestSummary } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("privacy");
 const decodeNonEmptyTrimmedOption = S.decodeUnknownOption(NonEmptyTrimmedStr);
-const NonEmptyTrimmedStringInput = S.Union([S.String, S.Option(NonEmptyTrimmedStr)]);
-
-const decodeOptionalNonEmptyTrimmed = (
-  value: O.Option<string | O.Option<NonEmptyTrimmedStr>>
-): O.Option<O.Option<string>> =>
-  O.some(
-    pipe(
-      value,
-      O.flatMap((input) => (O.isOption(input) ? input : decodeNonEmptyTrimmedOption(input)))
-    )
-  );
-
-const OptionalNonEmptyTrimmed = S.optionalKey(NonEmptyTrimmedStringInput).pipe(
+const decodeSha256Hex = S.decodeEffect(Sha256Hex);
+const OptionalNonEmptyTrimmed = S.optionalKey(S.Union([S.String, S.Option(NonEmptyTrimmedStr)])).pipe(
   S.decodeTo(
-    S.Option(NonEmptyTrimmedStr),
+    S.Option(S.String),
     SchemaTransformation.transformOptional<O.Option<string>, string | O.Option<NonEmptyTrimmedStr>>({
-      decode: decodeOptionalNonEmptyTrimmed,
-      encode: (value) => O.flatten(value),
+      decode: (value): O.Option<O.Option<string>> =>
+        O.some(
+          pipe(
+            value,
+            O.flatMap((input) => (O.isOption(input) ? input : O.some(input))),
+            O.flatMap(decodeNonEmptyTrimmedOption)
+          )
+        ),
+      encode: O.flatten,
     })
   ),
   SchemaUtils.withNoneDefault
+);
+const AiMetricsEncodedSha256 = S.toEncoded(Sha256Hex).pipe(
+  $I.annoteSchema("AiMetricsEncodedSha256", {
+    description: "Canonical lowercase SHA-256 digest stored in AI metrics metadata.",
+  })
 );
 
 /**
@@ -57,6 +59,9 @@ const OptionalNonEmptyTrimmed = S.optionalKey(NonEmptyTrimmedStringInput).pipe(
  * @since 0.0.0
  */
 export const AI_METRICS_LOCAL_INSECURE_HASH_SALT = "beep-ai-metrics-local-smoke-insecure-salt";
+
+const normalizeHashSalt = (input: unknown): O.Option<string> =>
+  O.isOption(input) ? O.filter(input, P.isString) : O.liftPredicate(input, P.isString);
 
 // These global regexes are safe for concurrent use here because matchAll and replace
 // start each string operation from index 0 even when the expression has the g flag.
@@ -128,12 +133,12 @@ export type AiMetricsHashSaltStatus = typeof AiMetricsHashSaltStatus.Type;
  */
 export class AiMetricsRedactionResult extends S.Class<AiMetricsRedactionResult>($I`AiMetricsRedactionResult`)(
   {
-    authHeaderCount: S.Finite,
-    bearerTokenCount: S.Finite,
-    excludedRawTextFieldCount: S.Finite,
-    openAiKeyCount: S.Finite,
+    authHeaderCount: S.Natural,
+    bearerTokenCount: S.Natural,
+    excludedRawTextFieldCount: S.Natural,
+    openAiKeyCount: S.Natural,
     safeForDerivedUi: S.Boolean,
-    secretAssignmentCount: S.Finite,
+    secretAssignmentCount: S.Natural,
   },
   $I.annote("AiMetricsRedactionResult", {
     description: "Counts of private material detected or excluded before producing derived AI metrics payloads.",
@@ -149,11 +154,11 @@ export class AiMetricsRedactionResult extends S.Class<AiMetricsRedactionResult>(
  * import { AiMetricsRawEventEnvelope } from "@beep/repo-ai-metrics"
  *
  * const envelope = AiMetricsRawEventEnvelope.make({
- *   eventName: "codex.event_msg",
+ *   eventName: "event_msg",
  *   lineNumber: 1,
- *   rawEventHash: "event-hash",
+ *   rawEventHash: "2222222222222222222222222222222222222222222222222222222222222222",
  *   sourceKind: "codex",
- *   sourcePathHash: "source-hash"
+ *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111"
  * })
  * console.log(envelope.sourceRole)
  * ```
@@ -164,15 +169,15 @@ export class AiMetricsRedactionResult extends S.Class<AiMetricsRedactionResult>(
 export class AiMetricsRawEventEnvelope extends S.Class<AiMetricsRawEventEnvelope>($I`AiMetricsRawEventEnvelope`)(
   {
     eventName: S.String,
-    lineNumber: S.Finite,
-    rawEventHash: S.String,
+    lineNumber: S.Int,
+    rawEventHash: AiMetricsEncodedSha256,
     sourceKind: AiMetricsTranscriptSource,
-    sourcePathHash: S.String,
+    sourcePathHash: AiMetricsEncodedSha256,
     sourceRole: AiMetricsSourceRole.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
     ),
-    timestamp: S.optionalKey(S.String),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AiMetricsRawEventEnvelope", {
     description: "Safe raw-event envelope that retains only hashes, line numbers, event names, and timestamps.",
@@ -189,11 +194,11 @@ export class AiMetricsRawEventEnvelope extends S.Class<AiMetricsRawEventEnvelope
  *
  * const sanitized = AiMetricsSanitizedTranscript.make({
  *   acceptedEvents: 1,
- *   eventNames: ["codex.event_msg"],
+ *   eventNames: ["event_msg"],
  *   rawEventEnvelopes: [],
  *   rejectedLines: 0,
  *   sourceKind: "codex",
- *   sourcePathHash: "source-hash",
+ *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111",
  *   totalLines: 1
  * })
  * console.log(sanitized.eventNames)
@@ -206,26 +211,26 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
   $I`AiMetricsSanitizedTranscript`
 )(
   {
-    acceptedEvents: S.Finite,
-    agentNicknameHash: S.optionalKey(S.String),
-    agentRoleHash: S.optionalKey(S.String),
+    acceptedEvents: S.Natural,
+    agentNicknameHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
+    agentRoleHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
     eventNames: S.Array(S.String),
-    firstTimestamp: S.optionalKey(S.String),
-    forkedFromIdHash: S.optionalKey(S.String),
-    lastTimestamp: S.optionalKey(S.String),
-    parentSessionIdHash: S.optionalKey(S.String),
-    parentThreadIdHash: S.optionalKey(S.String),
+    firstTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    forkedFromIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
+    lastTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    parentSessionIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
+    parentThreadIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
     rawEventEnvelopes: S.Array(AiMetricsRawEventEnvelope),
-    rejectedLines: S.Finite,
-    sessionIdHash: S.optionalKey(S.String),
+    rejectedLines: S.Natural,
+    sessionIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
     sourceKind: AiMetricsTranscriptSource,
-    sourcePathHash: S.String,
+    sourcePathHash: AiMetricsEncodedSha256,
     sourceRole: AiMetricsSourceRole.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
     ),
-    threadSpawn: S.optionalKey(S.Boolean),
-    totalLines: S.Finite,
+    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    totalLines: S.Natural,
   },
   $I.annote("AiMetricsSanitizedTranscript", {
     description: "Allowlisted transcript projection that excludes prompt, output, message, and payload text.",
@@ -246,7 +251,7 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
  *
  * const result = AiMetricsPrivacyCheckResult.make({
  *   hashSaltStatus: "provided",
- *   inputPathHash: "input-path-hash",
+ *   inputPathHash: "3333333333333333333333333333333333333333333333333333333333333333",
  *   redaction: AiMetricsRedactionResult.make({
  *     authHeaderCount: 0,
  *     bearerTokenCount: 0,
@@ -257,11 +262,11 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
  *   }),
  *   sanitized: AiMetricsSanitizedTranscript.make({
  *     acceptedEvents: 1,
- *     eventNames: ["codex.event_msg"],
+ *     eventNames: ["event_msg"],
  *     rawEventEnvelopes: [],
  *     rejectedLines: 0,
  *     sourceKind: "codex",
- *     sourcePathHash: "source-hash",
+ *     sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111",
  *     totalLines: 1
  *   }),
  *   sourceKind: "codex"
@@ -275,7 +280,7 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
 export class AiMetricsPrivacyCheckResult extends S.Class<AiMetricsPrivacyCheckResult>($I`AiMetricsPrivacyCheckResult`)(
   {
     hashSaltStatus: AiMetricsHashSaltStatus,
-    inputPathHash: S.String,
+    inputPathHash: AiMetricsEncodedSha256,
     redaction: AiMetricsRedactionResult,
     sanitized: AiMetricsSanitizedTranscript,
     sourceKind: AiMetricsTranscriptSource,
@@ -316,10 +321,10 @@ export class AiMetricsPrivacyError extends S.TaggedError<AiMetricsPrivacyError>(
 
 class GenericTranscriptLine extends S.Class<GenericTranscriptLine>($I`GenericTranscriptLine`)(
   {
-    event: S.optionalKey(S.String),
-    sessionId: S.optionalKey(S.String),
-    timestamp: S.optionalKey(S.String),
-    type: S.optionalKey(S.String),
+    event: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    sessionId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("GenericTranscriptLine", {
     description: "Minimal event metadata decoded from arbitrary transcript JSONL lines.",
@@ -335,7 +340,7 @@ class CodexSubagentSource extends S.Class<CodexSubagentSource>($I`CodexSubagentS
     forked_from_id: OptionalNonEmptyTrimmed,
     parent_session_id: OptionalNonEmptyTrimmed,
     parent_thread_id: OptionalNonEmptyTrimmed,
-    thread_spawn: S.optionalKey(S.Boolean),
+    thread_spawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CodexSubagentSource", {
     description: "Hash-only source metadata shape decoded from Codex session_meta lines.",
@@ -344,7 +349,7 @@ class CodexSubagentSource extends S.Class<CodexSubagentSource>($I`CodexSubagentS
 
 class CodexSessionSource extends S.Class<CodexSessionSource>($I`CodexSessionSource`)(
   {
-    subagent: S.optionalKey(CodexSubagentSource),
+    subagent: S.OptionFromOptionalKey(CodexSubagentSource).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CodexSessionSource", {
     description: "Codex session_meta source metadata used for attribution.",
@@ -356,7 +361,7 @@ class CodexSessionPayload extends S.Class<CodexSessionPayload>($I`CodexSessionPa
     id: OptionalNonEmptyTrimmed,
     parent_session_id: OptionalNonEmptyTrimmed,
     parent_thread_id: OptionalNonEmptyTrimmed,
-    source: S.optionalKey(CodexSessionSource),
+    source: S.OptionFromOptionalKey(CodexSessionSource).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CodexSessionPayload", {
     description: "Codex session_meta payload fields used for privacy-preserving attribution.",
@@ -365,7 +370,7 @@ class CodexSessionPayload extends S.Class<CodexSessionPayload>($I`CodexSessionPa
 
 class CodexSessionMetaLine extends S.Class<CodexSessionMetaLine>($I`CodexSessionMetaLine`)(
   {
-    payload: S.optionalKey(CodexSessionPayload),
+    payload: S.OptionFromOptionalKey(CodexSessionPayload).pipe(SchemaUtils.withNoneDefault),
     type: S.String,
   },
   $I.annote("CodexSessionMetaLine", {
@@ -384,7 +389,8 @@ const encodePrivacyCheckJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsP
  *
  * ```ts
  * import { resolveAiMetricsHashSaltValue } from "@beep/repo-ai-metrics"
- * console.log(resolveAiMetricsHashSaltValue("salt"))
+ * import * as O from "effect/Option"
+ * console.log(resolveAiMetricsHashSaltValue(O.some("salt")))
  * ```
  *
  * @param hashSalt - Operator-provided salt, or an empty value for local smoke mode.
@@ -392,8 +398,12 @@ const encodePrivacyCheckJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsP
  * @category utilities
  * @since 0.0.0
  */
-export const resolveAiMetricsHashSaltValue = (hashSalt: string | undefined): string =>
-  hashSalt === undefined || Str.isEmpty(Str.trim(hashSalt)) ? AI_METRICS_LOCAL_INSECURE_HASH_SALT : hashSalt;
+export const resolveAiMetricsHashSaltValue = (hashSalt: O.Option<string>): string =>
+  pipe(
+    normalizeHashSalt(hashSalt),
+    O.filter(flow(Str.trim, Str.isNonEmpty)),
+    O.getOrElse(() => AI_METRICS_LOCAL_INSECURE_HASH_SALT)
+  );
 
 /**
  * Resolve the effective private hash salt status.
@@ -402,7 +412,8 @@ export const resolveAiMetricsHashSaltValue = (hashSalt: string | undefined): str
  *
  * ```ts
  * import { resolveAiMetricsHashSaltStatus } from "@beep/repo-ai-metrics"
- * console.log(resolveAiMetricsHashSaltStatus("salt"))
+ * import * as O from "effect/Option"
+ * console.log(resolveAiMetricsHashSaltStatus(O.some("salt")))
  * ```
  *
  * @param hashSalt - Operator-provided salt, or an empty value for local smoke mode.
@@ -410,10 +421,10 @@ export const resolveAiMetricsHashSaltValue = (hashSalt: string | undefined): str
  * @category utilities
  * @since 0.0.0
  */
-export const resolveAiMetricsHashSaltStatus = (hashSalt: string | undefined): AiMetricsHashSaltStatus =>
-  hashSalt === undefined || Str.isEmpty(Str.trim(hashSalt))
-    ? AiMetricsHashSaltStatus.Enum.insecure_default
-    : AiMetricsHashSaltStatus.Enum.provided;
+export const resolveAiMetricsHashSaltStatus = (hashSalt: O.Option<string>): AiMetricsHashSaltStatus =>
+  O.exists(normalizeHashSalt(hashSalt), flow(Str.trim, Str.isNonEmpty))
+    ? AiMetricsHashSaltStatus.Enum.provided
+    : AiMetricsHashSaltStatus.Enum.insecure_default;
 
 /**
  * Compute a deterministic public SHA-256 digest for non-private content identity.
@@ -432,17 +443,26 @@ export const resolveAiMetricsHashSaltStatus = (hashSalt: string | undefined): Ai
  * @category utilities
  * @since 0.0.0
  */
-export const hashPublicTextSha256: (value: string) => Effect.Effect<string, AiMetricsPrivacyError> = Effect.fn(
+export const hashPublicTextSha256: (value: string) => Effect.Effect<Sha256Hex, AiMetricsPrivacyError> = Effect.fn(
   "AiMetrics.hashPublicTextSha256"
 )(function* (value) {
-  return yield* Effect.tryPromise({
+  const buffer = yield* Effect.tryPromise({
     try: () => globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
     catch: (cause) =>
       AiMetricsPrivacyError.make({
         cause,
         message: "Failed to compute public SHA-256 digest.",
       }),
-  }).pipe(Effect.map((buffer) => Encoding.encodeHex(new Uint8Array(buffer))));
+  });
+
+  return yield* decodeSha256Hex(Encoding.encodeHex(new Uint8Array(buffer))).pipe(
+    Effect.mapError((cause) =>
+      AiMetricsPrivacyError.make({
+        cause,
+        message: "Failed to validate the computed public SHA-256 digest.",
+      })
+    )
+  );
 });
 
 /**
@@ -453,8 +473,9 @@ export const hashPublicTextSha256: (value: string) => Effect.Effect<string, AiMe
  * ```ts
  * import { hashPrivateIdentifier } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
- * const pathHash = Effect.runPromise(hashPrivateIdentifier("/home/me/.codex/session.jsonl", "salt"))
+ * const pathHash = Effect.runPromise(hashPrivateIdentifier("/home/me/.codex/session.jsonl", O.some("salt")))
  * console.log(pathHash)
  * ```
  *
@@ -463,27 +484,26 @@ export const hashPublicTextSha256: (value: string) => Effect.Effect<string, AiMe
  * @since 0.0.0
  */
 export const hashPrivateIdentifier: {
-  (value: string, hashSalt: string | undefined): Effect.Effect<string, AiMetricsPrivacyError>;
-  (hashSalt: string | undefined): (value: string) => Effect.Effect<string, AiMetricsPrivacyError>;
+  (value: string, hashSalt: O.Option<string>): Effect.Effect<Sha256Hex, AiMetricsPrivacyError>;
+  (hashSalt: O.Option<string>): (value: string) => Effect.Effect<Sha256Hex, AiMetricsPrivacyError>;
 } = dual(
   2,
-  Effect.fn("AiMetrics.hashPrivateIdentifier")(function* (value: string, hashSalt: string | undefined) {
+  Effect.fn("AiMetrics.hashPrivateIdentifier")(function* (value: string, hashSalt: O.Option<string>) {
     return yield* hashPublicTextSha256(`${resolveAiMetricsHashSaltValue(hashSalt)}\u0000${value}`);
   })
 );
 
-const firstNonEmptyString = (...values: ReadonlyArray<O.Option<string> | undefined>): O.Option<string> =>
-  pipe(values, A.map(O.fromNullishOr), A.getSomes, A.head, O.flatten);
+const firstNonEmptyString = (...values: ReadonlyArray<O.Option<string>>): O.Option<string> =>
+  pipe(values, A.getSomes, A.head);
 
 const optionalHashPrivateIdentifier = Effect.fn("AiMetrics.optionalHashPrivateIdentifier")(function* (
   value: O.Option<string>,
-  hashSalt: string | undefined
+  hashSalt: O.Option<string>
 ) {
-  if (O.isNone(value)) {
-    return undefined;
-  }
-
-  return yield* hashPrivateIdentifier(value.value, hashSalt);
+  return yield* O.match(value, {
+    onNone: () => Effect.succeed(O.none()),
+    onSome: flow(hashPrivateIdentifier(hashSalt), Effect.map(O.some)),
+  });
 });
 
 const codexSessionMetaLines: (content: string) => ReadonlyArray<CodexSessionMetaLine> = flow(
@@ -494,7 +514,7 @@ const codexSessionMetaLines: (content: string) => ReadonlyArray<CodexSessionMeta
 );
 
 const firstCodexSessionPayload: (lines: ReadonlyArray<CodexSessionMetaLine>) => O.Option<CodexSessionPayload> = flow(
-  A.map((line) => O.fromNullishOr(line.payload)),
+  A.map((line) => line.payload),
   A.getSomes,
   A.head
 );
@@ -502,9 +522,9 @@ const firstCodexSessionPayload: (lines: ReadonlyArray<CodexSessionMetaLine>) => 
 const firstCodexSubagentSource: (lines: ReadonlyArray<CodexSessionMetaLine>) => O.Option<CodexSubagentSource> = flow(
   A.map((line) =>
     pipe(
-      O.fromUndefinedOr(line.payload),
-      O.flatMap((payload) => O.fromUndefinedOr(payload.source)),
-      O.flatMap((source) => O.fromUndefinedOr(source.subagent))
+      line.payload,
+      O.flatMap((payload) => payload.source),
+      O.flatMap((source) => source.subagent)
     )
   ),
   A.getSomes,
@@ -520,15 +540,6 @@ const firstSubagentValue = <A>(
   subagent: O.Option<CodexSubagentSource>,
   pick: (subagent: CodexSubagentSource) => O.Option<A>
 ): O.Option<A> => pipe(subagent, O.flatMap(pick));
-
-const firstSubagentNullableValue = <A>(
-  subagent: O.Option<CodexSubagentSource>,
-  pick: (subagent: CodexSubagentSource) => A | undefined
-): O.Option<A> =>
-  pipe(
-    subagent,
-    O.flatMap((value) => O.fromUndefinedOr(pick(value)))
-  );
 
 const codexAttributionMetadata = (content: string, sourcePath: string) => {
   const sessionMetaLines = codexSessionMetaLines(content);
@@ -552,7 +563,7 @@ const codexAttributionMetadata = (content: string, sourcePath: string) => {
       O.some(sourcePath)
     ),
     sourceRole: O.isSome(subagent) ? AiMetricsSourceRole.Enum.subagent : AiMetricsSourceRole.Enum.primary,
-    threadSpawn: firstSubagentNullableValue(subagent, (value) => value.thread_spawn),
+    threadSpawn: firstSubagentValue(subagent, (value) => value.thread_spawn),
   };
 };
 
@@ -579,10 +590,11 @@ const pathRoleFor = (relativePath: string): AiMetricsSourceRole => {
  * ```ts
  * import { makeAiMetricsSourceAttribution } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * const attribution = Effect.runPromise(
  *   makeAiMetricsSourceAttribution({
  *     content: "{\"type\":\"session_meta\",\"payload\":{\"id\":\"session-1\"}}",
- *     hashSalt: "salt",
+ *     hashSalt: O.some("salt"),
  *     relativePath: "sessions/session-1.jsonl",
  *     sourceKind: "codex",
  *     sourcePath: "/repo/.codex/sessions/session-1.jsonl"
@@ -603,14 +615,14 @@ export const makeAiMetricsSourceAttribution = Effect.fn("AiMetrics.makeAiMetrics
   sourcePath,
 }: {
   readonly content: string;
-  readonly hashSalt?: string;
+  readonly hashSalt: O.Option<string>;
   readonly relativePath: string;
   readonly sourceKind: AiMetricsTranscriptSource;
   readonly sourcePath: string;
 }) {
   const claudeAttribution = Effect.fn("AiMetrics.makeAiMetricsSourceAttribution.claude")(function* () {
     return AiMetricsSourceAttribution.make({
-      sessionIdHash: yield* hashPrivateIdentifier(sourcePath, hashSalt),
+      sessionIdHash: O.some(yield* hashPrivateIdentifier(sourcePath, hashSalt)),
       sourceRole: pathRoleFor(relativePath),
     });
   });
@@ -624,19 +636,19 @@ export const makeAiMetricsSourceAttribution = Effect.fn("AiMetrics.makeAiMetrics
     const sessionIdHash = yield* optionalHashPrivateIdentifier(metadata.sessionId, hashSalt);
 
     return AiMetricsSourceAttribution.make({
-      ...O.getSomesStruct({ threadSpawn: metadata.threadSpawn }),
-      ...O.getSomesStruct({ agentNicknameHash: O.fromUndefinedOr(agentNicknameHash) }),
-      ...O.getSomesStruct({ agentRoleHash: O.fromUndefinedOr(agentRoleHash) }),
-      ...O.getSomesStruct({ forkedFromIdHash: O.fromUndefinedOr(forkedFromIdHash) }),
-      ...O.getSomesStruct({ parentSessionIdHash: O.fromUndefinedOr(parentSessionIdHash) }),
-      ...O.getSomesStruct({ parentThreadIdHash: O.fromUndefinedOr(parentThreadIdHash) }),
-      ...O.getSomesStruct({ sessionIdHash: O.fromUndefinedOr(sessionIdHash) }),
+      threadSpawn: metadata.threadSpawn,
+      agentNicknameHash,
+      agentRoleHash,
+      forkedFromIdHash,
+      parentSessionIdHash,
+      parentThreadIdHash,
+      sessionIdHash,
       sourceRole: metadata.sourceRole,
     });
   });
   const openClawAttribution = Effect.fn("AiMetrics.makeAiMetricsSourceAttribution.openclaw")(function* () {
     return AiMetricsSourceAttribution.make({
-      sessionIdHash: yield* hashPrivateIdentifier("openclaw-gateway.service", hashSalt),
+      sessionIdHash: O.some(yield* hashPrivateIdentifier("openclaw-gateway.service", hashSalt)),
       sourceRole: AiMetricsSourceRole.Enum.gateway_metadata,
     });
   });
@@ -692,8 +704,9 @@ const redactionResultFor = (content: string): AiMetricsRedactionResult => {
 
 const eventNameFor = (sourceKind: AiMetricsTranscriptSource, decoded: GenericTranscriptLine): string =>
   pipe(
-    firstString(decoded.type, decoded.event),
-    O.map((value) => metricEventName({ fallback: "event", sourceKind, value })),
+    decoded.type,
+    O.orElse(() => decoded.event),
+    O.map((value) => metricEventName({ fallback: "event", sourceKind, value: O.some(value) })),
     O.getOrElse(() => "event")
   );
 
@@ -712,7 +725,7 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
 }: {
   readonly attribution: AiMetricsSourceAttribution;
   readonly content: string;
-  readonly hashSalt?: string;
+  readonly hashSalt: O.Option<string>;
   readonly sourceKind: AiMetricsTranscriptSource;
   readonly sourcePathHash: string;
 }) {
@@ -733,7 +746,7 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
           sourceKind,
           sourcePathHash,
           sourceRole: attribution.sourceRole,
-          ...optionalTimestamp(decoded.value.timestamp),
+          timestamp: decoded.value.timestamp,
         })
       );
     }),
@@ -751,17 +764,19 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
  * ```ts
  * import { TranscriptIngestSummary, makeSanitizedTranscript } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * const sanitized = Effect.runPromise(
  *   makeSanitizedTranscript({
  *     content: "{\"type\":\"event_msg\"}",
- *     hashSalt: "salt",
+ *     hashSalt: O.some("salt"),
+ *     relativePath: O.some("sessions/session-1.jsonl"),
  *     sourcePath: "session.jsonl",
  *     summary: TranscriptIngestSummary.make({
  *       acceptedEvents: 1,
- *       eventNames: ["codex.event_msg"],
+ *       eventNames: ["event_msg"],
  *       rejectedLines: 0,
  *       sourceKind: "codex",
- *       sourcePathHash: "source-hash",
+ *       sourcePathHash: "0000000000000000000000000000000000000000000000000000000000000000",
  *       totalLines: 1
  *     })
  *   })
@@ -781,15 +796,16 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
   summary,
 }: {
   readonly content: string;
-  readonly hashSalt?: string;
-  readonly relativePath?: string;
+  readonly hashSalt: O.Option<string>;
+  readonly relativePath?: O.Option<string>;
   readonly sourcePath: string;
   readonly summary: TranscriptIngestSummary;
 }) {
+  const normalizedRelativePath = O.isOption(relativePath) ? relativePath : O.none<string>();
   const attribution = yield* makeAiMetricsSourceAttribution({
     content,
-    ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(hashSalt) }),
-    relativePath: relativePath ?? basenameAttributionPath(sourcePath),
+    hashSalt,
+    relativePath: O.getOrElse(normalizedRelativePath, () => basenameAttributionPath(sourcePath)),
     sourceKind: summary.sourceKind,
     sourcePath,
   });
@@ -798,27 +814,27 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
     content,
     sourceKind: summary.sourceKind,
     sourcePathHash: summary.sourcePathHash,
-    ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(hashSalt) }),
+    hashSalt,
   });
 
   return AiMetricsSanitizedTranscript.make({
     acceptedEvents: summary.acceptedEvents,
-    ...O.getSomesStruct({ agentNicknameHash: O.fromUndefinedOr(attribution.agentNicknameHash) }),
-    ...O.getSomesStruct({ agentRoleHash: O.fromUndefinedOr(attribution.agentRoleHash) }),
+    agentNicknameHash: attribution.agentNicknameHash,
+    agentRoleHash: attribution.agentRoleHash,
     eventNames: eventNameList(envelopes),
-    ...O.getSomesStruct({ forkedFromIdHash: O.fromUndefinedOr(attribution.forkedFromIdHash) }),
+    forkedFromIdHash: attribution.forkedFromIdHash,
     rawEventEnvelopes: envelopes,
     rejectedLines: summary.rejectedLines,
-    ...O.getSomesStruct({ parentSessionIdHash: O.fromUndefinedOr(attribution.parentSessionIdHash) }),
-    ...O.getSomesStruct({ parentThreadIdHash: O.fromUndefinedOr(attribution.parentThreadIdHash) }),
-    ...O.getSomesStruct({ sessionIdHash: O.fromUndefinedOr(attribution.sessionIdHash) }),
+    parentSessionIdHash: attribution.parentSessionIdHash,
+    parentThreadIdHash: attribution.parentThreadIdHash,
+    sessionIdHash: attribution.sessionIdHash,
     sourceKind: summary.sourceKind,
     sourcePathHash: summary.sourcePathHash,
     sourceRole: attribution.sourceRole,
-    ...O.getSomesStruct({ threadSpawn: O.fromUndefinedOr(attribution.threadSpawn) }),
+    threadSpawn: attribution.threadSpawn,
     totalLines: summary.totalLines,
-    ...O.getSomesStruct({ firstTimestamp: O.fromUndefinedOr(summary.firstTimestamp) }),
-    ...O.getSomesStruct({ lastTimestamp: O.fromUndefinedOr(summary.lastTimestamp) }),
+    firstTimestamp: summary.firstTimestamp,
+    lastTimestamp: summary.lastTimestamp,
   });
 });
 
@@ -830,17 +846,19 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
  * ```ts
  * import { TranscriptIngestSummary, makeAiMetricsPrivacyCheckResult } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * const proof = Effect.runPromise(
  *   makeAiMetricsPrivacyCheckResult({
  *     content: "{\"type\":\"event_msg\",\"message\":\"redacted at boundary\"}",
- *     hashSalt: "salt",
+ *     hashSalt: O.some("salt"),
+ *     relativePath: O.some("sessions/session-1.jsonl"),
  *     sourcePath: "session.jsonl",
  *     summary: TranscriptIngestSummary.make({
  *       acceptedEvents: 1,
- *       eventNames: ["codex.event_msg"],
+ *       eventNames: ["event_msg"],
  *       rejectedLines: 0,
  *       sourceKind: "codex",
- *       sourcePathHash: "source-hash",
+ *       sourcePathHash: "0000000000000000000000000000000000000000000000000000000000000000",
  *       totalLines: 1
  *     })
  *   })
@@ -852,30 +870,16 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
  * @category constructors
  * @since 0.0.0
  */
-export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetricsPrivacyCheckResult")(function* ({
-  content,
-  hashSalt,
-  relativePath,
-  sourcePath,
-  summary,
-}: {
-  readonly content: string;
-  readonly hashSalt?: string;
-  readonly relativePath?: string;
-  readonly sourcePath: string;
-  readonly summary: TranscriptIngestSummary;
-}) {
+export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetricsPrivacyCheckResult")(function* (
+  input: Parameters<typeof makeSanitizedTranscript>[0]
+) {
+  const { content, hashSalt, sourcePath, summary } = input;
+
   return AiMetricsPrivacyCheckResult.make({
     hashSaltStatus: resolveAiMetricsHashSaltStatus(hashSalt),
     inputPathHash: yield* hashPrivateIdentifier(sourcePath, hashSalt),
     redaction: redactionResultFor(content),
-    sanitized: yield* makeSanitizedTranscript({
-      content,
-      ...O.getSomesStruct({ relativePath: O.fromUndefinedOr(relativePath) }),
-      sourcePath,
-      summary,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(hashSalt) }),
-    }),
+    sanitized: yield* makeSanitizedTranscript(input),
     sourceKind: summary.sourceKind,
   });
 });
@@ -897,7 +901,7 @@ export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetric
  *   privacyCheckToJson(
  *     AiMetricsPrivacyCheckResult.make({
  *       hashSaltStatus: "provided",
- *       inputPathHash: "input-path-hash",
+ *       inputPathHash: "3333333333333333333333333333333333333333333333333333333333333333",
  *       redaction: AiMetricsRedactionResult.make({
  *         authHeaderCount: 0,
  *         bearerTokenCount: 0,
@@ -912,7 +916,7 @@ export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetric
  *         rawEventEnvelopes: [],
  *         rejectedLines: 0,
  *         sourceKind: "codex",
- *         sourcePathHash: "source-hash",
+ *         sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111",
  *         totalLines: 0
  *       }),
  *       sourceKind: "codex"

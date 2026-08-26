@@ -2,6 +2,7 @@ import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "
 import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
 import { makeDrizzle, makeDrizzleLayer, migrateBundle } from "@beep/postgres";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, layer } from "@effect/vitest";
@@ -62,6 +63,7 @@ const migrateEpistemicUsage = Effect.fnUntraced(function* () {
 const UsageRecordSinkLayer = UsageRecordSinkDrizzle.pipe(
   Layer.provideMerge(makeDrizzleLayer()),
   Layer.provideMerge(makeInProcessPgliteLayer()),
+  Layer.provideMerge(BunCrypto.layer),
   Layer.provideMerge(BunFileSystem.layer),
   Layer.provideMerge(BunPath.layer)
 );

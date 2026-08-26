@@ -14,7 +14,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
-import { MutableHashMap, MutableHashSet, Number as N } from "effect";
+import { MutableHashMap, MutableHashSet, Number as N, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -181,6 +181,65 @@ export const extractLocalNameFromIri = (iri: string): string => {
   );
   return N.isGreaterThanOrEqualTo(splitIndex, 0) ? Str.slice(splitIndex + 1)(iri) : iri;
 };
+
+/**
+ * Build a case-insensitive schema for local names derived from canonical IRIs.
+ *
+ * **Details**
+ *
+ * Decoding accepts any case-equivalent local name. Encoding restores the
+ * canonical spelling from the source IRI collection when a match exists.
+ *
+ * **Example** (Create a local-name codec)
+ *
+ * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { makeLocalNameSchema } from "@effect-ontology/Utils/Iri"
+ * import * as S from "effect/Schema"
+ *
+ * const TypeName = makeLocalNameSchema([IRI.make("https://schema.org/Person")], "Type", "Class")
+ * console.log(S.is(TypeName)("Person")) // true
+ * ```
+ *
+ * @param iris - Canonical IRIs whose local names are accepted.
+ * @param diagnosticNoun - Noun used in validation diagnostics, such as `Type`.
+ * @param descriptionNoun - Noun used in schema descriptions, such as `Class`.
+ * @returns A schema constrained to the supplied local-name vocabulary.
+ * @category schemas
+ * @since 0.0.0
+ */
+export const makeLocalNameSchema: {
+  (iris: ReadonlyArray<IRI>, diagnosticNoun: string, descriptionNoun: string): S.Codec<string, string, never, never>;
+  (
+    diagnosticNoun: string,
+    descriptionNoun: string
+  ): (iris: ReadonlyArray<IRI>) => S.Codec<string, string, never, never>;
+} = dual(3, (iris: ReadonlyArray<IRI>, diagnosticNoun: string, descriptionNoun: string) => {
+  const { map: localNameMap } = buildLocalNameToIriMapSafe(iris);
+  const localNames = A.map(iris, extractLocalNameFromIri);
+  const preview = `${A.join(A.take(localNames, 10), ", ")}${A.length(localNames) > 10 ? "..." : ""}`;
+
+  return S.String.pipe(
+    S.decodeTo(S.String, {
+      decode: SchemaGetter.transform((canonical) => canonical),
+      encode: SchemaGetter.transform((input) =>
+        pipe(
+          expandLocalNameToIri(input, localNameMap),
+          O.map(extractLocalNameFromIri),
+          O.getOrElse(() => input)
+        )
+      ),
+    }),
+    S.check(
+      S.makeFilter((name) => MutableHashMap.has(localNameMap, Str.toLowerCase(name)), {
+        message: `${diagnosticNoun} must be one of: ${preview}`,
+      })
+    ),
+    S.annotate({
+      description: `${descriptionNoun} name (one of: ${A.join(localNames, ", ")})`,
+    })
+  );
+});
 
 /**
  * Result of building a local name to IRI map, including collision info

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import {
   FaceDetectionImageRequest,
   FaceDetectionModelConfig,
@@ -15,10 +14,22 @@ import {
 } from "@beep/face-detection";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, pipe } from "effect";
+import {
+  Console,
+  Crypto,
+  Effect,
+  Encoding,
+  FileSystem,
+  MutableHashMap,
+  MutableHashSet,
+  Order,
+  Path,
+  pipe,
+} from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import sharp from "sharp";
+import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { hashFileSha256 as hashFileSha256Hex } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
 import { isSupportedMetadataImageExtension, normalizeBareExtension } from "../Files.media.ts";
@@ -44,7 +55,6 @@ import {
 import { FileSha256Hash } from "./Media.schemas.ts";
 import type { LoadedFaceDetector } from "@beep/face-detection";
 import type { Terminal } from "effect";
-import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ImageAuditOptions } from "./ImageAudit.schemas.ts";
 import type {
@@ -499,7 +509,7 @@ const imageAuditMetadataPresence = (metadata: SharpMetadata): ImageAuditMetadata
 
 const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
   source: AuditSourceFile
-): Effect.fn.Return<AuditedPixels, FilesCommandError> {
+): Effect.fn.Return<AuditedPixels, FilesCommandError, Crypto.Crypto> {
   const metadata = yield* Effect.tryPromise({
     try: () => sharp(source.path, { failOn: "error", limitInputPixels: maxAuditPixels }).metadata(),
     catch: FilesCommandError.new(`Failed to decode image audit pixels for "${source.path}"`),
@@ -555,7 +565,12 @@ const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
   const decodedHeader = new TextEncoder().encode(
     `${decoded.info.width}x${decoded.info.height}x${decoded.info.channels}:`
   );
-  const decodedHash = createHash("sha256").update(decodedHeader).update(decoded.data).digest("hex");
+  const crypto = yield* Crypto.Crypto;
+  const decodedHash = Encoding.encodeHex(
+    yield* crypto
+      .digest("SHA-256", concatBytes([decodedHeader, decoded.data]))
+      .pipe(FilesCommandError.mapError(`Failed to hash decoded pixels for "${source.path}"`))
+  );
 
   return {
     colorHash: colorHashFromRgb(color.data, color.info.channels),

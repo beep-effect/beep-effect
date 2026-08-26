@@ -5,17 +5,17 @@
  * @since 0.0.0
  */
 
-import { createHash, randomUUID } from "node:crypto";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
+import { Console, Crypto, DateTime, Effect, Encoding, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { commandTextForStep } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
@@ -33,6 +33,8 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofState");
+const textEncoder = new TextEncoder();
+const fingerprintSeparator = new Uint8Array([0]);
 
 class YeetLaneProofState extends S.Class<YeetLaneProofState>($I`YeetLaneProofState`)(
   {
@@ -276,18 +278,19 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const status = yield* runGitOutput(context.repoRoot, ["status", "--short"]);
   const unstagedDiff = yield* collectGitDiffBytes(context, ["HEAD"], "worktree");
   const stagedDiff = yield* collectGitDiffBytes(context, ["--cached"], "index");
-  return createHash("sha256")
-    .update(status)
-    .update("\0")
-    .update(unstagedDiff)
-    .update("\0")
-    .update(stagedDiff)
-    .digest("hex");
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest(
+      "SHA-256",
+      concatBytes([textEncoder.encode(status), fingerprintSeparator, unstagedDiff, fingerprintSeparator, stagedDiff])
+    )
+    .pipe(YeetCommandError.mapError("Failed to hash Yeet worktree fingerprint."));
+  return Encoding.encodeHex(digest);
 });
 
 /**
@@ -323,19 +326,31 @@ const proofCommandForSteps: (steps: ReadonlyArray<RepoPlanStep>) => string = flo
   A.join(" && ")
 );
 
-const hashText = (text: string): string => createHash("sha256").update(text).digest("hex");
+const hashText = Effect.fn("Yeet.hashText")(function* (
+  value: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest("SHA-256", textEncoder.encode(value))
+    .pipe(YeetCommandError.mapError("Failed to hash Yeet proof command."));
+  return Encoding.encodeHex(digest);
+});
 
-const laneProofStateForStep = (step: RepoPlanStep, diffFingerprint: string, verifiedAt: string): YeetLaneProofState => {
+const laneProofStateForStep = Effect.fn("Yeet.laneProofStateForStep")(function* (
+  step: RepoPlanStep,
+  diffFingerprint: string,
+  verifiedAt: string
+) {
   const commandText = commandTextForStep(step);
   return YeetLaneProofState.make({
-    commandHash: hashText(commandText),
+    commandHash: yield* hashText(commandText),
     commandText,
     diffFingerprint,
     label: step.label,
     stepId: step.id,
     verifiedAt,
   });
-};
+});
 
 /**
  * Proof-lock state schema exposed for lock-disposition tests.
@@ -438,13 +453,29 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
   );
 });
 
-const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
-  `${lockPath}.reap-${hashText(observedText)}.claim`;
+const proofLockReapClaimPath = Effect.fn("Yeet.proofLockReapClaimPath")(function* (
+  lockPath: string,
+  observedText: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  return `${lockPath}.reap-${yield* hashText(observedText)}.claim`;
+});
 
-const proofLockReapClaimTombstonePath = (claimPath: string, observedText: string): string =>
-  `${claimPath}.reap-${hashText(observedText)}.claim`;
+const proofLockReapClaimTombstonePath = Effect.fn("Yeet.proofLockReapClaimTombstonePath")(function* (
+  claimPath: string,
+  observedText: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  return `${claimPath}.reap-${yield* hashText(observedText)}.claim`;
+});
 
-const proofLockReapPath = (lockPath: string): string => `${lockPath}.reap-${process.pid}-${randomUUID()}`;
+const proofLockReapPath = Effect.fn("Yeet.proofLockReapPath")(function* (
+  lockPath: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  const uuid = yield* crypto.randomUUIDv4.pipe(
+    YeetCommandError.mapError("Failed to generate Yeet proof-lock reap identifier.")
+  );
+  return `${lockPath}.reap-${process.pid}-${uuid}`;
+});
 
 const legacyProofLockRefusal = (lockPath: string, state: YeetProofLockStateV2): YeetCommandError =>
   YeetCommandError.make({
@@ -472,9 +503,9 @@ const tryRecoverObservedProofLockReapClaim = Effect.fn("Yeet.tryRecoverObservedP
   claimPath: string,
   claimText: string,
   observedClaimText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const tombstonePath = proofLockReapClaimTombstonePath(claimPath, observedClaimText);
+  const tombstonePath = yield* proofLockReapClaimTombstonePath(claimPath, observedClaimText);
   if (!(yield* tryClaimProofLockExclusive(tombstonePath, claimText))) {
     const tombstoneText = yield* readProofCoordinationFile(
       tombstonePath,
@@ -561,7 +592,7 @@ export const tryRecoverObservedProofLockReapClaimForTesting = tryRecoverObserved
 const tryClaimProofLockReapClaim = Effect.fn("Yeet.tryClaimProofLockReapClaim")(function* (
   claimPath: string,
   claimText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   if (yield* tryClaimProofLockExclusive(claimPath, claimText)) {
     return true;
   }
@@ -598,9 +629,9 @@ const tryClaimProofLockReapClaim = Effect.fn("Yeet.tryClaimProofLockReapClaim")(
 const tryMoveObservedProofLock = Effect.fn("Yeet.tryMoveObservedProofLock")(function* (
   lockPath: string,
   observedText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const claimPath = proofLockReapClaimPath(lockPath, observedText);
+  const claimPath = yield* proofLockReapClaimPath(lockPath, observedText);
   const claimText = `${yield* renderJson(
     YeetProofLockReapClaim.make({
       schemaVersion: "yeet-proof-lock-reap-claim/v1",
@@ -620,7 +651,7 @@ const tryMoveObservedProofLock = Effect.fn("Yeet.tryMoveObservedProofLock")(func
       return false;
     }
 
-    const reapPath = proofLockReapPath(lockPath);
+    const reapPath = yield* proofLockReapPath(lockPath);
     const renamed = yield* fs.rename(lockPath, reapPath).pipe(
       Effect.as(true),
       Effect.catchTag("PlatformError", (error) =>
@@ -642,7 +673,7 @@ const tryReclaimStaleProofLock = Effect.fn("Yeet.tryReclaimStaleProofLock")(func
   lockPath: string,
   observedText: string,
   replacementText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   if (!(yield* tryMoveObservedProofLock(lockPath, observedText))) {
     return false;
   }
@@ -702,7 +733,7 @@ const tryReplaceStaleProofLock = Effect.fn("Yeet.tryReplaceStaleProofLock")(func
   lockPath: string,
   staleText: string,
   lockText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   if (yield* tryReclaimStaleProofLock(lockPath, staleText, lockText)) {
     return true;
   }
@@ -732,7 +763,7 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
   lockPath: string,
   lockText: string,
   lease: YeetProofLockLease
-): Effect.fn.Return<YeetProofLockLease, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<YeetProofLockLease, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   let observed = yield* observeProofLockState(lockPath);
   const disposition = proofLockDisposition(observed.state, observed.ownerAlive, O.isSome(observed.legacyState));
   if (ProofLockDisposition.is["refuse-legacy"](disposition) && O.isSome(observed.legacyState)) {
@@ -801,7 +832,7 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
 ): Effect.fn.Return<
   YeetProofLockLease,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -929,12 +960,17 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const artifactDir = yield* artifactDirForContext(context);
   const statePath = yield* runStatePathForContext(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
   const verifiedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const laneProofs = yield* Effect.forEach(
+    proofSteps,
+    (step) => laneProofStateForStep(step, diffFingerprint, verifiedAt),
+    { concurrency: "unbounded" }
+  );
   const state = YeetRunState.make({
     schemaVersion: "yeet-run-state/v1",
     artifactDir,
@@ -943,7 +979,7 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
     commitSha: yield* currentCommitSha(context),
     diffFingerprint,
     head: context.head,
-    laneProofs: A.map(proofSteps, (step) => laneProofStateForStep(step, diffFingerprint, verifiedAt)),
+    laneProofs,
     proofCommand: proofCommandForSteps(proofSteps),
     proofTier: tier,
     runId: runIdForContext(context),
@@ -1111,7 +1147,7 @@ export const assertReusableVerifiedState = Effect.fn("Yeet.assertReusableVerifie
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const state = yield* loadVerifiedState(context);
   const expectedCommitSha = yield* currentCommitSha(context);

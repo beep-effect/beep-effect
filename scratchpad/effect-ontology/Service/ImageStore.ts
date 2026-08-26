@@ -245,7 +245,7 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
               totalCount: 1,
               updatedAt,
             };
-            const json = yield* S.encodeEffect(S.fromJsonString(ImageManifest, { space: 2 }))(newManifest);
+            const json = yield* ImageManifest.encodeEffectFromJsonStringFormatted(newManifest);
             yield* storage.setIfGenerationMatch(manifestPath, json, "0");
           }
         }),

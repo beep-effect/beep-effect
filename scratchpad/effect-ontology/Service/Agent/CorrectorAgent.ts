@@ -49,6 +49,7 @@ import { OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import type { Agent } from "../../Domain/Model/Agent.ts";
 import { AgentId, AgentMetadata, ValidationResult } from "../../Domain/Model/Agent.ts";
 import type { OntologyContext } from "../../Domain/Model/Ontology.ts";
+import { extractLocalNameFromIri as extractLocalName } from "../../Utils/Iri.ts";
 import { ConfigService, ConfigServiceDefault } from "../Config.ts";
 import { generateObjectWithFeedback } from "../GenerateWithFeedback.ts";
 import type { RdfStore } from "../Rdf.ts";
@@ -457,6 +458,8 @@ export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>("Batch
   get allCorrected(): boolean {
     return this.correctedCount === this.totalViolations;
   }
+
+  static readonly decodeUnknownOption = S.decodeUnknownOption(BatchCorrectionResult);
 }
 
 /**
@@ -1057,14 +1060,3 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/**
- * Extract local name from IRI
- */
-const extractLocalName = (iri: string): string => {
-  const hashIndex = iri.lastIndexOf("#");
-  if (hashIndex >= 0) return iri.slice(hashIndex + 1);
-  const slashIndex = iri.lastIndexOf("/");
-  if (slashIndex >= 0) return iri.slice(slashIndex + 1);
-  return iri;
-};

@@ -29,6 +29,7 @@ import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
 import { ErrorMessage, OptionalErrorCause, OptionalNonNegativeInt } from "../Domain/Error/Base.ts";
 import type { OntologyContext } from "../Domain/Model/Ontology.ts";
+import { extractLocalNameFromIri as extractLocalName } from "../Utils/Iri.ts";
 import { ConfigService } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 import type { RetryPolicy } from "./Retry.ts";
@@ -606,14 +607,3 @@ Return a JSON object with:
 - confidence: Confidence score between 0 and 1
 
 Generate the corrected query now.`;
-
-/**
- * Extract local name from IRI
- */
-const extractLocalName = (iri: string): string => {
-  const hashIndex = iri.lastIndexOf("#");
-  if (hashIndex >= 0) return iri.slice(hashIndex + 1);
-  const slashIndex = iri.lastIndexOf("/");
-  if (slashIndex >= 0) return iri.slice(slashIndex + 1);
-  return iri;
-};

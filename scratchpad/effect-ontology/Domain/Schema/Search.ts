@@ -7,54 +7,12 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { DateTime, SchemaGetter } from "effect";
+import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { RdfObject } from "./KnowledgeModel.ts";
-import { ArticleSummary, ClaimRank, ClaimWithRank } from "./Timeline.ts";
+import { ArticleSummary, ClaimRank, ClaimWithRank, OrderedUtcRange } from "./Timeline.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Search");
-
-const SearchDateRangeDefinition = S.Struct({
-  from: S.DateTimeUtcFromString.annotateKey({ description: "Inclusive UTC range start." }),
-  to: S.DateTimeUtcFromString.annotateKey({ description: "Inclusive UTC range end." }),
-}).check(
-  S.makeFilter(
-    (range) =>
-      DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)
-        ? undefined
-        : {
-            path: ["to"],
-            issue: "Search date-range end must not precede its start.",
-          },
-    {
-      identifier: $I`SearchDateRangeOrderCheck`,
-      title: "Ordered Search Date Range",
-      description: "A UTC search range whose end is not before its start.",
-      message: "Search date-range end must be greater than or equal to its start.",
-    }
-  )
-);
-
-const SearchDateRangeFromSelf = S.declare((input: unknown): input is typeof SearchDateRangeDefinition.Type =>
-  S.is(SearchDateRangeDefinition)(input)
-).annotate({
-  toArbitrary: () => (fc) =>
-    fc
-      .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
-      .map(([from, duration]) =>
-        SearchDateRangeDefinition.make({
-          from: DateTime.makeUnsafe(from),
-          to: DateTime.makeUnsafe(from + duration),
-        })
-      ),
-});
-
-const SearchDateRange = SearchDateRangeDefinition.pipe(
-  S.decodeTo(SearchDateRangeFromSelf),
-  $I.annoteSchema("SearchDateRange", {
-    description: "Ordered UTC date range used by search filters.",
-  })
-);
 
 const PositiveLimitFromString = S.FiniteFromString.pipe(
   S.decodeTo(PosInt, {
@@ -90,7 +48,7 @@ export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSear
     query: S.NonEmptyString,
     predicates: IRI.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    dateRange: S.OptionFromOptionalKey(SearchDateRange).pipe(SchemaUtils.withNoneDefault),
+    dateRange: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
     rank: S.OptionFromOptionalKey(ClaimRank).pipe(SchemaUtils.withNoneDefault),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
     offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
@@ -334,7 +292,7 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
     ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for article search." }),
     query: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    dateRange: S.OptionFromOptionalKey(SearchDateRange).pipe(SchemaUtils.withNoneDefault),
+    dateRange: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
     offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
   },

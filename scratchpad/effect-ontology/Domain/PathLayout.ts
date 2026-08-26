@@ -96,6 +96,21 @@ const makeImageHashPathSchema = <const Name extends string, const Suffix extends
     }))
   );
 
+const makeImageOwnerPathSchema = <const Name extends string, const Suffix extends string>(
+  name: Name,
+  suffix: Suffix,
+  description: string
+) =>
+  S.TemplateLiteral(["assets/owners/", ImageOwnerType, "/", StoragePathSegment, `/images${suffix}`]).pipe(
+    annotateStoragePath(name, description),
+    S.brand(name),
+    SchemaUtils.withCodecStatics,
+    SchemaUtils.withStatics((schema) => ({
+      fromParts: (ownerType: ImageOwnerType, ownerId: StoragePathSegment): typeof schema.Type =>
+        schema.fromUnknown(`assets/owners/${ownerType}/${ownerId}/images${suffix}`),
+    }))
+  );
+
 /**
  * Safe, single storage-key segment for owner identifiers.
  *
@@ -1220,20 +1235,10 @@ export type ImageVariantPath = typeof ImageVariantPath.Type;
  * @category value-objects
  * @since 0.0.0
  */
-export const ImageOwnerBasePath = S.TemplateLiteral([
-  "assets/owners/",
-  ImageOwnerType,
-  "/",
-  StoragePathSegment,
-  "/images",
-]).pipe(
-  annotateStoragePath("ImageOwnerBasePath", "Traversal-safe base path for all images associated with one owner."),
-  S.brand("ImageOwnerBasePath"),
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withStatics((schema) => ({
-    fromParts: (ownerType: ImageOwnerType, ownerId: StoragePathSegment): typeof schema.Type =>
-      schema.make(`assets/owners/${ownerType}/${ownerId}/images`),
-  }))
+export const ImageOwnerBasePath = makeImageOwnerPathSchema(
+  "ImageOwnerBasePath",
+  "",
+  "Traversal-safe base path for all images associated with one owner."
 );
 
 /** Runtime value decoded by {@link ImageOwnerBasePath}.
@@ -1266,20 +1271,10 @@ export type ImageOwnerBasePath = typeof ImageOwnerBasePath.Type;
  * @category value-objects
  * @since 0.0.0
  */
-export const ImageManifestPath = S.TemplateLiteral([
-  "assets/owners/",
-  ImageOwnerType,
-  "/",
-  StoragePathSegment,
-  "/images/manifest.json",
-]).pipe(
-  annotateStoragePath("ImageManifestPath", "Traversal-safe owner image-manifest path."),
-  S.brand("ImageManifestPath"),
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withStatics((schema) => ({
-    fromParts: (ownerType: ImageOwnerType, ownerId: StoragePathSegment): typeof schema.Type =>
-      schema.make(`assets/owners/${ownerType}/${ownerId}/images/manifest.json`),
-  }))
+export const ImageManifestPath = makeImageOwnerPathSchema(
+  "ImageManifestPath",
+  "/manifest.json",
+  "Traversal-safe owner image-manifest path."
 );
 
 /** Runtime value decoded by {@link ImageManifestPath}.

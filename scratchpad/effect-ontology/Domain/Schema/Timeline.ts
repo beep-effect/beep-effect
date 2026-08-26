@@ -127,7 +127,7 @@ const PositiveIntQuery = S.FiniteFromString.pipe(
   })
 );
 
-const TimelineRangeDefinition = S.Struct({
+const OrderedUtcRangeDefinition = S.Struct({
   from: S.DateTimeUtcFromString.annotateKey({
     description: "Inclusive UTC range start.",
   }),
@@ -145,37 +145,64 @@ const TimelineRangeDefinition = S.Struct({
               issue: "Timeline range end must not precede its start.",
             },
       {
-        identifier: $I`TimelineRangeOrderCheck`,
-        title: "Ordered Timeline Range",
-        description: "A UTC query range whose end is not before its start.",
-        message: "Timeline range end must be greater than or equal to its start.",
+        identifier: $I`OrderedUtcRangeCheck`,
+        title: "Ordered UTC Range",
+        description: "A UTC range whose end is not before its start.",
+        message: "UTC range end must be greater than or equal to its start.",
       }
     )
   )
   .pipe(SchemaUtils.withCodecStatics);
 
-const TimelineRangeFromSelf = S.declare((input: unknown): input is typeof TimelineRangeDefinition.Type =>
-  TimelineRangeDefinition.is(input)
+const OrderedUtcRangeFromSelf = S.declare((input: unknown): input is typeof OrderedUtcRangeDefinition.Type =>
+  OrderedUtcRangeDefinition.is(input)
 ).annotate({
   toArbitrary: () => (fc) =>
     fc
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
-        TimelineRangeDefinition.make({
+        OrderedUtcRangeDefinition.make({
           from: DateTime.makeUnsafe(from),
           to: DateTime.makeUnsafe(from + duration),
         })
       ),
 });
 
-const TimelineRange = TimelineRangeDefinition.pipe(
-  S.decodeTo(TimelineRangeFromSelf),
-  $I.annoteSchema("TimelineRange", {
-    description: "Ordered UTC range used by timeline queries.",
+/**
+ * Ordered inclusive UTC date-time range shared by search and timeline inputs.
+ *
+ * **Example** (Decode an ordered range)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OrderedUtcRange } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * const range = S.decodeUnknownOption(OrderedUtcRange)({
+ *   from: "2026-01-01T00:00:00.000Z",
+ *   to: "2026-01-02T00:00:00.000Z"
+ * })
+ * console.log(range)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OrderedUtcRange = OrderedUtcRangeDefinition.pipe(
+  S.decodeTo(OrderedUtcRangeFromSelf),
+  $I.annoteSchema("OrderedUtcRange", {
+    description: "Ordered inclusive UTC range shared by search filters and timeline queries.",
   })
 );
 
-const TimelineRangeQuery = S.fromJsonString(TimelineRangeDefinition).pipe(
+/**
+ * Runtime value decoded by {@link OrderedUtcRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OrderedUtcRange = typeof OrderedUtcRange.Type;
+
+const TimelineRangeQuery = S.fromJsonString(OrderedUtcRangeDefinition).pipe(
   $I.annoteSchema("TimelineRangeQuery", {
     description: "JSON-encoded ordered UTC range accepted in a URL-query value.",
   })
@@ -256,7 +283,7 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
     object: RdfObject,
     rank: ClaimRank,
     source: ArticleSummary,
-    validTime: S.OptionFromOptionalKey(TimelineRange).pipe(SchemaUtils.withNoneDefault),
+    validTime: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
     transactionTime: S.Struct({
       assertedAt: S.DateTimeUtcFromString,
       derivedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),

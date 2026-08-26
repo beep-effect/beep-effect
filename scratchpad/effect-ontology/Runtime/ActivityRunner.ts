@@ -17,7 +17,6 @@
 import { LiteralKit, SchemaUtils, Unknown } from "@beep/schema";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import { Config, Console, Effect, Layer, Match } from "effect";
-import * as S from "effect/Schema";
 import { Workflow, WorkflowEngine } from "effect/unstable/workflow";
 import { WorkflowInstance } from "effect/unstable/workflow/WorkflowEngine";
 import {
@@ -114,7 +113,7 @@ const program = Effect.gen(function* () {
   yield* Console.log(`  ACTIVITY_PAYLOAD length: ${payloadJson.length} chars`);
 
   // Parse and validate activity name
-  const activityName = yield* S.decodeUnknownEffect(ActivityName)(activityNameRaw);
+  const activityName = yield* ActivityName.decodeUnknownEffect(activityNameRaw);
 
   // Dispatch to activity
   const result = yield* dispatchActivity(activityName, payloadJson).pipe(

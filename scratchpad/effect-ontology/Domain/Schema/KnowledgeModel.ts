@@ -20,7 +20,7 @@ import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import type { FastCheck } from "effect/testing";
-import { ContentHash, GcsUri } from "../Identity.ts";
+import { GcsUri, withContentHashIdStatics } from "../Identity.ts";
 import { EventId as CanonicalEventId } from "../Model/CoreOntology.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
@@ -62,9 +62,7 @@ export const ClaimId = S.String.check(
       description: "Deterministic compact identifier for one extracted claim.",
     }),
     SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`claim-${ContentHash.idFragment(hash)}`),
-    }))
+    withContentHashIdStatics("claim")
   );
 
 /**
@@ -115,10 +113,7 @@ export const AssertionId = S.String.check(
       description: "Deterministic compact identifier for one curated assertion.",
     }),
     SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type =>
-        schema.make(`assertion-${ContentHash.idFragment(hash)}`),
-    }))
+    withContentHashIdStatics("assertion")
   );
 
 /**
@@ -169,10 +164,7 @@ export const DerivedAssertionId = S.String.check(
       description: "Deterministic compact identifier for one rule-derived assertion.",
     }),
     SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type =>
-        schema.make(`derived-${ContentHash.idFragment(hash)}`),
-    }))
+    withContentHashIdStatics("derived")
   );
 
 /**

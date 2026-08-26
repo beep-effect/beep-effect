@@ -78,7 +78,7 @@ export const makeEmbeddingResolver = dual2(
 const processChunk = (
   provider: EmbeddingProviderMethods,
   chunk: ReadonlyArray<Request.Entry<EmbedTextRequest>>
-): Effect.Effect<void, never, never> =>
+): Effect.Effect<void> =>
   provider
     .embedBatch(
       A.map(chunk, (entry) => ({

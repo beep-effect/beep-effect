@@ -13,8 +13,9 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Duration } from "effect";
 import * as A from "effect/Array";
 import type * as HashMap from "effect/HashMap";
@@ -31,11 +32,10 @@ import { isRdfStore } from "../Rdf.ts";
 import { ShaclValidationReport } from "../Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/types");
-const RdfStoreFromSelf: S.Codec<RdfStore, unknown> = S.declare(isRdfStore).annotate({
+const RdfStoreFromSelf = S.declare(isRdfStore).annotate({
   title: "RdfStore",
   description: "Opaque mutable RDF workflow store created by RdfBuilder.",
 });
-type AgentGraphValue = KnowledgeGraph | RdfStore;
 
 /**
  * Graph representation accepted at agent workflow boundaries.
@@ -58,11 +58,12 @@ type AgentGraphValue = KnowledgeGraph | RdfStore;
  * @category schemas
  * @since 0.0.0
  */
-export const AgentGraph: S.Codec<AgentGraphValue, unknown> = S.Union([KnowledgeGraph, RdfStoreFromSelf]).pipe(
+export const AgentGraph = S.Union([KnowledgeGraph, RdfStoreFromSelf]).pipe(
   $I.annoteSchema("AgentGraph", {
     description: "Agent graph boundary accepting a knowledge graph or opaque RDF store.",
     toArbitrary: () => S.toArbitrary(KnowledgeGraph),
-  })
+  }),
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**
@@ -82,7 +83,7 @@ export const AgentGraph: S.Codec<AgentGraphValue, unknown> = S.Union([KnowledgeG
  * @category type-level
  * @since 0.0.0
  */
-export type AgentGraph = AgentGraphValue;
+export type AgentGraph = typeof AgentGraph.Type;
 
 // =============================================================================
 // Agent Task Definition
@@ -222,12 +223,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
    * @param agentConfig - Input consumed by this operation.
    * @returns Result produced by this operation.
    */
-  static forExtraction(
-    taskId: string,
-    text: string,
-    documentId?: string,
-    agentConfig?: OntologyAgentConfig
-  ): AgentTask {
+  static forExtraction(taskId: string, text: string, documentId?: string, agentConfig?: OntologyAgentConfig) {
     return AgentTask.make({
       taskId,
       text: O.some(text),
@@ -252,7 +248,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
    * @param graph - Input consumed by this operation.
    * @returns Result produced by this operation.
    */
-  static forValidation(taskId: string, graph: KnowledgeGraph | RdfStore): AgentTask {
+  static forValidation(taskId: string, graph: KnowledgeGraph | RdfStore) {
     return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(NonNegativeInt.make(2)) });
   }
 
@@ -272,7 +268,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
    * @param ingestionOptions - Input consumed by this operation.
    * @returns Result produced by this operation.
    */
-  static forIngestion(taskId: string, sourceUrl: string, ingestionOptions?: unknown): AgentTask {
+  static forIngestion(taskId: string, sourceUrl: string, ingestionOptions?: unknown) {
     return AgentTask.make({
       taskId,
       sourceUrl: O.some(sourceUrl),
@@ -297,11 +293,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
    * @param validationReport - Input consumed by this operation.
    * @returns Result produced by this operation.
    */
-  static forCorrection(
-    taskId: string,
-    graph: KnowledgeGraph | RdfStore,
-    validationReport: ShaclValidationReport
-  ): AgentTask {
+  static forCorrection(taskId: string, graph: KnowledgeGraph | RdfStore, validationReport: ShaclValidationReport) {
     return AgentTask.make({
       taskId,
       graph: O.some(graph),
@@ -325,46 +317,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
  * @category type-level
  * @since 0.0.0
  */
-export interface AgentTask {
-  readonly taskId: string;
-  readonly ontologyId: O.Option<string>;
-  readonly text: O.Option<string>;
-  readonly sourceUrl: O.Option<string>;
-  readonly agentConfig: O.Option<OntologyAgentConfig>;
-  readonly ingestionOptions: O.Option<unknown>;
-  readonly ingestionResult: O.Option<unknown>;
-  readonly graph: O.Option<AgentGraph>;
-  readonly knowledgeGraph: O.Option<KnowledgeGraph>;
-  readonly rdfStore: O.Option<RdfStore>;
-  readonly turtle: O.Option<string>;
-  readonly ontologyContext: O.Option<OntologyContext>;
-  readonly ontologyRef: O.Option<OntologyRef>;
-  readonly validationReport: O.Option<ShaclValidationReport>;
-  readonly validationExplanations: O.Option<ReadonlyArray<ViolationExplanation>>;
-  readonly correctionResult: O.Option<unknown>;
-  readonly documentId: O.Option<string>;
-  readonly context: O.Option<Readonly<Record<string, S.Json>>>;
-  readonly priority: O.Option<NonNegativeInt>;
-}
-
-type AgentTaskInput = Readonly<Pick<AgentTask, "taskId"> & Partial<Omit<AgentTask, "taskId">>>;
-
-interface AgentTaskSchema extends S.Codec<AgentTask, unknown> {
-  readonly make: (props: AgentTaskInput, options?: S.MakeOptions) => AgentTask;
-  readonly forExtraction: (
-    taskId: string,
-    text: string,
-    documentId?: string,
-    agentConfig?: OntologyAgentConfig
-  ) => AgentTask;
-  readonly forValidation: (taskId: string, graph: KnowledgeGraph | RdfStore) => AgentTask;
-  readonly forIngestion: (taskId: string, sourceUrl: string, ingestionOptions?: unknown) => AgentTask;
-  readonly forCorrection: (
-    taskId: string,
-    graph: KnowledgeGraph | RdfStore,
-    validationReport: ShaclValidationReport
-  ) => AgentTask;
-}
+export type AgentTask = typeof AgentTask.Type;
 
 /**
  * Schema-backed unit of work processed by the agent pipeline.
@@ -386,7 +339,7 @@ interface AgentTaskSchema extends S.Codec<AgentTask, unknown> {
  * @category schemas
  * @since 0.0.0
  */
-export const AgentTask: AgentTaskSchema = AgentTaskModel;
+export const AgentTask = AgentTaskModel.pipe(SchemaUtils.withEffectCodecStatics);
 
 // =============================================================================
 // Pipeline Configuration

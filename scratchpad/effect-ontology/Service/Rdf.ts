@@ -10,40 +10,72 @@
  * @since 0.0.0
  */
 
-import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
-import { $ScratchpadId } from "@beep/identity";
-import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
-import type { BlankNode as BlankNodeType, GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
+import type {Confidence} from "@beep/epistemic-domain/values/EvidenceSpan";
+import {$ScratchpadId} from "@beep/identity";
+import {
+  N3ParseTurtleRequest,
+  N3SerializeTurtleRequest,
+  N3TurtleCodec,
+  N3TurtleCodecLive
+} from "@beep/n3";
+import type {
+  BlankNode as BlankNodeType,
+  GraphTerm,
+  NamedNode,
+  ObjectTerm,
+  Quad,
+  Subject
+} from "@beep/rdf";
 import {
   IRI,
   makeBlankNode,
-  makeNamedNode as makeCanonicalNamedNode,
   makeLiteral,
+  makeNamedNode as makeCanonicalNamedNode,
   makeNamedNode,
   makeQuad,
 } from "@beep/rdf";
 import * as CanonicalRdf from "@beep/rdf/Rdf";
-import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/Dcterms";
-import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
-import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
-import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
-import type { Scope } from "effect";
-import { Chunk, Context, Duration, Effect, Layer, Match, MutableHashSet } from "effect";
+import {DCTERMS_NAMESPACE} from "@beep/rdf/Vocab/Dcterms";
+import {OWL_NAMESPACE} from "@beep/rdf/Vocab/Owl";
+import {
+  PROV_ACTIVITY,
+  PROV_NAMESPACE,
+  PROV_WAS_GENERATED_BY
+} from "@beep/rdf/Vocab/Prov";
+import {RDF_NAMESPACE, RDF_TYPE} from "@beep/rdf/Vocab/Rdf";
+import {
+  XSD_BOOLEAN,
+  XSD_DOUBLE,
+  XSD_INTEGER,
+  XSD_NAMESPACE
+} from "@beep/rdf/Vocab/Xsd";
+import type {Scope} from "effect";
+import {
+  Chunk,
+  Context,
+  Duration,
+  Effect,
+  Layer,
+  Match,
+  MutableHashSet
+} from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import {dual} from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";
-import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
-import type { Entity, Relation } from "../Domain/Model/Entity.ts";
-import { RelationObject } from "../Domain/Model/Entity.ts";
-import { CLAIMS, CORE, EXTR } from "../Domain/Rdf/Constants.ts";
-import { buildIri } from "../Utils/Rdf.ts";
-import { ConfigService, ConfigServiceDefault } from "./Config.ts";
+import {
+  ParsingFailed,
+  RdfError,
+  SerializationFailed
+} from "../Domain/Error/Rdf.ts";
+import type {Entity, Relation} from "../Domain/Model/Entity.ts";
+import {RelationObject} from "../Domain/Model/Entity.ts";
+import {CLAIMS, CORE, EXTR} from "../Domain/Rdf/Constants.ts";
+import {buildIri} from "../Utils/Rdf.ts";
+import {ConfigService, ConfigServiceDefault} from "./Config.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Rdf");
 const OWL_SAME_AS = makeCanonicalNamedNode(`${OWL_NAMESPACE}sameAs`);
@@ -904,9 +936,9 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             const n3Graph = domainTermToN3Term(pattern.graph ?? null);
 
             // Query N3 store
-            const n3Quads = n3Store.getQuads(n3Subject, n3Predicate, n3Object, n3Graph);
 
-            return n3Quads;
+
+            return n3Store.getQuads(n3Subject, n3Predicate, n3Object, n3Graph);
           },
           catch: (error) =>
             RdfError.make({
@@ -927,7 +959,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @returns IRI domain type
        */
       createIri: (iri: string) =>
-        S.decodeEffect(IRI)(iri).pipe(
+        IRI.decodeEffect(iri).pipe(
           Effect.mapError((cause) =>
             RdfError.make({
               message: "Invalid IRI.",
@@ -1499,8 +1531,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
           try: () => {
             const n3Store = backend(store);
             const graphNode = N3.DataFactory.namedNode(graphIri);
-            const n3Quads = n3Store.getQuads(null, null, null, graphNode);
-            return n3Quads;
+
+            return n3Store.getQuads(null, null, null, graphNode);
           },
           catch: (error) =>
             RdfError.make({

@@ -6,12 +6,12 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { firstString, metricEventName, optionalTimestamp, transcriptLines } from "./internal/transcript-utils.ts";
+import { metricEventName, transcriptLines } from "./internal/transcript-utils.ts";
 import {
   AgentTurn,
   AiMetricsTranscriptSource,
@@ -23,7 +23,6 @@ import {
 import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("ingest");
-const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString(TranscriptIngestSummary));
 
 /**
  * Error raised by AI metrics ingest helpers.
@@ -78,7 +77,7 @@ export class AiMetricsTranscriptTextSummaryInput extends S.Class<AiMetricsTransc
 )(
   {
     content: S.String,
-    hashSalt: S.optionalKey(S.String),
+    hashSalt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sourceKind: AiMetricsTranscriptSource,
     sourcePath: S.String,
   },
@@ -92,12 +91,12 @@ const codexTurn = (sourcePathHash: string, lineNumber: number, line: CodexTransc
     eventName: metricEventName({
       fallback: "event",
       sourceKind: AiMetricsTranscriptSource.Enum.codex,
-      value: line.type,
+      value: O.some(line.type),
     }),
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.codex,
     sourcePathHash,
-    ...optionalTimestamp(line.timestamp),
+    timestamp: line.timestamp,
   });
 
 const claudeTurn = (sourcePathHash: string, lineNumber: number, line: ClaudeTranscriptLine): AgentTurn =>
@@ -110,26 +109,23 @@ const claudeTurn = (sourcePathHash: string, lineNumber: number, line: ClaudeTran
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.claude,
     sourcePathHash,
-    ...optionalTimestamp(line.timestamp),
+    timestamp: line.timestamp,
   });
 
 const openClawTurn = (sourcePathHash: string, lineNumber: number, line: OpenClawTranscriptLine): AgentTurn =>
   AgentTurn.make({
-    eventName: pipe(
-      firstString(line.event, line.type),
-      O.map((value) =>
-        metricEventName({
-          fallback: "event",
-          sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
-          value,
-        })
+    eventName: metricEventName({
+      fallback: "event",
+      sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
+      value: pipe(
+        line.event,
+        O.orElse(() => line.type)
       ),
-      O.getOrElse(() => "event")
-    ),
+    }),
     lineNumber,
     sourceKind: AiMetricsTranscriptSource.Enum.openclaw,
     sourcePathHash,
-    ...optionalTimestamp(line.timestamp),
+    timestamp: line.timestamp,
   });
 
 const decodeTranscriptTurn = (
@@ -163,23 +159,10 @@ const eventNameList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string>
 );
 
 const timestampList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string> = flow(
-  A.map((event) => O.fromNullishOr(event.timestamp)),
+  A.map((event) => event.timestamp),
   A.getSomes,
   A.sort(Order.String)
 );
-
-const summaryTimestampFields = (
-  events: ReadonlyArray<AgentTurn>
-): { readonly firstTimestamp?: string; readonly lastTimestamp?: string } => {
-  const timestamps = timestampList(events);
-  const firstTimestamp = A.head(timestamps);
-  const lastTimestamp = A.get(timestamps, A.length(timestamps) - 1);
-
-  return {
-    ...(O.isSome(firstTimestamp) ? { firstTimestamp: firstTimestamp.value } : {}),
-    ...(O.isSome(lastTimestamp) ? { lastTimestamp: lastTimestamp.value } : {}),
-  };
-};
 
 /**
  * Summarize JSONL transcript text into a stable ingest summary.
@@ -189,10 +172,11 @@ const summaryTimestampFields = (
  * ```ts
  * import { summarizeTranscriptText } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * const result = Effect.runPromise(
  *   summarizeTranscriptText({
  *     content: "{\"type\":\"event_msg\"}",
- *     hashSalt: "local-smoke-salt",
+ *     hashSalt: O.some("local-smoke-salt"),
  *     sourceKind: "codex",
  *     sourcePath: "sample.jsonl"
  *   })
@@ -216,12 +200,12 @@ export const summarizeTranscriptText: (
       )
     );
     const lines = transcriptLines(content);
-    const parsed = yield* Effect.forEach(
+    const events = pipe(
       lines,
-      (line, index) => Effect.succeed(decodeTranscriptTurn(sourceKind, sourcePathHash, index + 1, line)),
-      { concurrency: 16 }
+      A.map((line, index) => decodeTranscriptTurn(sourceKind, sourcePathHash, index + 1, line)),
+      A.getSomes
     );
-    const events = A.getSomes(parsed);
+    const timestamps = timestampList(events);
 
     return TranscriptIngestSummary.make({
       acceptedEvents: A.length(events),
@@ -230,7 +214,8 @@ export const summarizeTranscriptText: (
       sourceKind,
       sourcePathHash,
       totalLines: A.length(lines),
-      ...summaryTimestampFields(events),
+      firstTimestamp: A.head(timestamps),
+      lastTimestamp: A.last(timestamps),
     });
   }
 );
@@ -247,10 +232,10 @@ export const summarizeTranscriptText: (
  *   summaryToJson(
  *     TranscriptIngestSummary.make({
  *       acceptedEvents: 1,
- *       eventNames: ["codex.event_msg"],
+ *       eventNames: ["event_msg"],
  *       rejectedLines: 0,
  *       sourceKind: "codex",
- *       sourcePathHash: "source-hash",
+ *       sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111",
  *       totalLines: 1
  *     })
  *   )
@@ -264,7 +249,7 @@ export const summarizeTranscriptText: (
  */
 export const summaryToJson: (summary: TranscriptIngestSummary) => Effect.Effect<string, AiMetricsIngestError> =
   Effect.fn("AiMetrics.summaryToJson")(function* (summary) {
-    return yield* encodeTranscriptIngestSummaryJson(summary).pipe(
+    return yield* TranscriptIngestSummary.encodeJsonEffect(summary).pipe(
       Effect.mapError((cause) =>
         AiMetricsIngestError.make({
           cause,

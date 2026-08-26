@@ -31,6 +31,7 @@ import {
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { DocgenWorkspacePackage } from "./Operations.ts";
@@ -111,7 +112,7 @@ const decodeTurboDryRunDocument = S.decodeUnknownEffect(S.fromJsonString(TurboDr
 const decodeDocgenProcessDiagnostic = S.decodeUnknownOption(DocgenProcessDiagnostic);
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
-type DocgenLocalEnvironment = FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
+type DocgenLocalEnvironment = Crypto.Crypto | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
 type DocgenLocalOptions = {
   readonly allowFull: boolean;
   readonly base: string;
@@ -905,9 +906,8 @@ const directTurboArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string
 // 60-minute budget after 2m8s of real work (run 31991634069, and again on the
 // following push). The parent then sits in `runToExit` waiting on a child that
 // is already done, so the CLI's exit-on-success teardown never gets to run --
-// the stall is mid-program, not at exit, which is why the existing
-// `Exit.isSuccess -> process.exit(0)` fixes in bin-main.ts and the docgen bin
-// cannot help.
+// the stall is mid-program, not at exit, which is why the forced-exit
+// teardowns in bin-main.ts and the docgen bin cannot help.
 //
 // By the time turbo wedges, every task has succeeded and its output is on disk
 // and in .turbo/cache, so abandoning it and retrying costs seconds: the retry

@@ -18,11 +18,10 @@ import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, HashMap, HashSet, Layer, MutableHashMap } from "effect";
+import { Context, Effect, HashMap, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { Entity } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
@@ -32,6 +31,7 @@ import {
   EntityRegistryRepository,
   normalizeEntityMention,
 } from "../Repository/EntityRegistry.ts";
+import { tokenizeMentionForBlocking } from "../Utils/Text.ts";
 import { EmbeddingService } from "./Embedding.ts";
 import { Embedding } from "./EmbeddingProvider.ts";
 
@@ -605,65 +605,5 @@ export const CrossBatchEntityResolverLive = CrossBatchEntityResolver.Default;
  * Tokenize a mention for blocking index
  */
 function tokenize(mention: string): Array<string> {
-  const stopWords = HashSet.make(
-    "the",
-    "a",
-    "an",
-    "and",
-    "or",
-    "but",
-    "in",
-    "on",
-    "at",
-    "to",
-    "for",
-    "of",
-    "with",
-    "by",
-    "from",
-    "as",
-    "is",
-    "was",
-    "are",
-    "were",
-    "been",
-    "be",
-    "have",
-    "has",
-    "had",
-    "do",
-    "does",
-    "did",
-    "will",
-    "would",
-    "could",
-    "should",
-    "may",
-    "might",
-    "must",
-    "shall",
-    "can",
-    "this",
-    "that",
-    "these",
-    "those",
-    "i",
-    "you",
-    "he",
-    "she",
-    "it",
-    "we",
-    "they",
-    "inc",
-    "corp",
-    "llc",
-    "ltd",
-    "co",
-    "company"
-  );
-
-  return A.filter(
-    Str.split(/[\s\-_.,;:!?'"()[\]{}]+/)(Str.toLowerCase(mention)),
-    (token) => token.length > 2 && !HashSet.has(stopWords, token)
-  );
+  return tokenizeMentionForBlocking(mention);
 }

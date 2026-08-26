@@ -182,7 +182,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
         return yield* RegistryNotFoundError.make({ path: registryPath });
       }
 
-      const registry = yield* S.decodeEffect(OntologyRegistryJson)(contentOpt.value).pipe(
+      const registry = yield* OntologyRegistryJson.decodeEffect(contentOpt.value).pipe(
         Effect.mapError((cause) => RegistryParseError.make({ path: registryPath, cause }))
       );
 

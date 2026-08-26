@@ -23,9 +23,11 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/Examples");
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, desc, sql as drizzleSql, eq } from "drizzle-orm";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SqlClient } from "effect/unstable/sql";
+import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { LlmExampleRow } from "./schema.ts";
 import { LlmExamples, llmExamples } from "./schema.ts";
 
@@ -347,22 +349,67 @@ const ExampleStatsSqlRow = S.Struct({
   })
 );
 
-const normalizeDecodedRows = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
-  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause)));
-const normalizeQueryError = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
-  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
-const decodeOneLlmExampleRow = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([LlmExamples.select]))(rows));
+const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
+const normalizeQueryError = normalizeDrizzleError("execute");
+const LlmExampleRows = S.Tuple([LlmExamples.select]).pipe(SchemaUtils.withEffectCodecStatics);
+const ExampleStatsRows = S.Tuple([ExampleStatsSqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
+
+const decodeOneLlmExampleRow = (rows: unknown) => normalizeDecodedRows(LlmExampleRows.decodeUnknownEffect(rows));
 const decodeLlmExampleRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(LlmExamples.select.pipe(S.Array, S.mutable))(rows));
 const decodeScoredExampleSqlRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(ScoredExample.pipe(S.Array, S.mutable))(rows));
-const decodeOneExampleStatsSqlRow = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([ExampleStatsSqlRow]))(rows));
+const decodeOneExampleStatsSqlRow = (rows: unknown) => normalizeDecodedRows(ExampleStatsRows.decodeUnknownEffect(rows));
 
 // =============================================================================
 // Service
 // =============================================================================
+
+type ExamplesRepositoryError = DrizzleError;
+
+interface ExamplesRepositoryShape {
+  readonly create: (input: CreateExampleInputInput) => Effect.Effect<LlmExampleRow, ExamplesRepositoryError>;
+  readonly getById: (id: ExampleId) => Effect.Effect<O.Option<LlmExampleRow>, ExamplesRepositoryError>;
+  readonly findSimilar: {
+    (
+      ontologyId: string,
+      embedding: ReadonlyArray<number>,
+      options?: ExampleRetrievalOptionsInput
+    ): Effect.Effect<ReadonlyArray<ScoredExample>, ExamplesRepositoryError>;
+    (
+      embedding: ReadonlyArray<number>,
+      options?: ExampleRetrievalOptionsInput
+    ): (ontologyId: string) => Effect.Effect<ReadonlyArray<ScoredExample>, ExamplesRepositoryError>;
+  };
+  readonly findNegatives: {
+    (
+      ontologyId: string,
+      queryText: string,
+      k?: number
+    ): Effect.Effect<ReadonlyArray<ScoredExample>, ExamplesRepositoryError>;
+    (
+      queryText: string,
+      k?: number
+    ): (ontologyId: string) => Effect.Effect<ReadonlyArray<ScoredExample>, ExamplesRepositoryError>;
+  };
+  readonly getByType: {
+    (
+      ontologyId: string,
+      exampleType: ExampleType,
+      limit?: number
+    ): Effect.Effect<ReadonlyArray<LlmExampleRow>, ExamplesRepositoryError>;
+    (
+      exampleType: ExampleType,
+      limit?: number
+    ): (ontologyId: string) => Effect.Effect<ReadonlyArray<LlmExampleRow>, ExamplesRepositoryError>;
+  };
+  readonly recordUsage: {
+    (id: ExampleId, wasSuccessful: boolean): Effect.Effect<void, ExamplesRepositoryError>;
+    (wasSuccessful: boolean): (id: ExampleId) => Effect.Effect<void, ExamplesRepositoryError>;
+  };
+  readonly deactivate: (id: ExampleId) => Effect.Effect<void, ExamplesRepositoryError>;
+  readonly getStats: (ontologyId: string) => Effect.Effect<typeof ExampleStatsSqlRow.Type, ExamplesRepositoryError>;
+}
 
 /**
  * Validates and represents examples repository values at runtime.
@@ -378,86 +425,87 @@ const decodeOneExampleStatsSqlRow = (rows: unknown) =>
  * @category layers
  * @since 0.0.0
  */
-export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I`ExamplesRepository`, {
-  make: Effect.gen(function* () {
-    const drizzle = yield* PostgresDrizzle;
-    const sql = yield* SqlClient.SqlClient;
+export class ExamplesRepository extends Context.Service<ExamplesRepository, ExamplesRepositoryShape>()(
+  $I`ExamplesRepository`,
+  {
+    make: Effect.gen(function* () {
+      const drizzle = yield* PostgresDrizzle;
+      const sql = yield* SqlClient.SqlClient;
 
-    // -------------------------------------------------------------------------
-    // Insert Operations
-    // -------------------------------------------------------------------------
+      // -------------------------------------------------------------------------
+      // Insert Operations
+      // -------------------------------------------------------------------------
 
-    /**
-     * Create a new example
-     */
-    const create = Effect.fn("ExamplesRepository.create")(function* (
-      input: CreateExampleInputInput
-    ): Effect.fn.Return<LlmExampleRow, DrizzleError> {
-      const resolvedInput = CreateExampleInput.make(input);
-      const result = yield* normalizeQueryError(
-        drizzle
-          .insert(llmExamples)
-          .values({
-            ontologyId: resolvedInput.ontologyId,
-            exampleType: resolvedInput.exampleType,
-            source: resolvedInput.source,
-            inputText: resolvedInput.inputText,
-            targetClass: O.getOrNull(O.fromUndefinedOr(resolvedInput.targetClass)),
-            targetPredicate: O.getOrNull(O.fromUndefinedOr(resolvedInput.targetPredicate)),
-            evidenceText: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceText)),
-            evidenceStartOffset: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceStartOffset)),
-            evidenceEndOffset: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceEndOffset)),
-            expectedOutput: resolvedInput.expectedOutput,
-            promptMessages: O.getOrNull(O.fromUndefinedOr(resolvedInput.promptMessages)),
-            explanation: O.getOrNull(O.fromUndefinedOr(resolvedInput.explanation)),
-            embedding: formatVector(resolvedInput.embedding),
-            isNegative: resolvedInput.isNegative,
-            negativePattern: O.getOrNull(O.fromUndefinedOr(resolvedInput.negativePattern)),
-            createdBy: O.getOrNull(O.fromUndefinedOr(resolvedInput.createdBy)),
-          })
-          .returning()
-      );
-      const [row] = yield* decodeOneLlmExampleRow(result);
-      return row;
-    });
+      /**
+       * Create a new example
+       */
+      const create: ExamplesRepositoryShape["create"] = Effect.fn("ExamplesRepository.create")(function* (
+        input: CreateExampleInputInput
+      ): Effect.fn.Return<LlmExampleRow, DrizzleError> {
+        const resolvedInput = CreateExampleInput.make(input);
+        const result = yield* normalizeQueryError(
+          drizzle
+            .insert(llmExamples)
+            .values({
+              ontologyId: resolvedInput.ontologyId,
+              exampleType: resolvedInput.exampleType,
+              source: resolvedInput.source,
+              inputText: resolvedInput.inputText,
+              targetClass: O.getOrNull(O.fromUndefinedOr(resolvedInput.targetClass)),
+              targetPredicate: O.getOrNull(O.fromUndefinedOr(resolvedInput.targetPredicate)),
+              evidenceText: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceText)),
+              evidenceStartOffset: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceStartOffset)),
+              evidenceEndOffset: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceEndOffset)),
+              expectedOutput: resolvedInput.expectedOutput,
+              promptMessages: O.getOrNull(O.fromUndefinedOr(resolvedInput.promptMessages)),
+              explanation: O.getOrNull(O.fromUndefinedOr(resolvedInput.explanation)),
+              embedding: formatPgVector(resolvedInput.embedding),
+              isNegative: resolvedInput.isNegative,
+              negativePattern: O.getOrNull(O.fromUndefinedOr(resolvedInput.negativePattern)),
+              createdBy: O.getOrNull(O.fromUndefinedOr(resolvedInput.createdBy)),
+            })
+            .returning()
+        );
+        const [row] = yield* decodeOneLlmExampleRow(result);
+        return row;
+      });
 
-    // -------------------------------------------------------------------------
-    // Read Operations
-    // -------------------------------------------------------------------------
+      // -------------------------------------------------------------------------
+      // Read Operations
+      // -------------------------------------------------------------------------
 
-    /**
-     * Get example by ID
-     */
-    const getById = (id: ExampleId): Effect.Effect<O.Option<LlmExampleRow>, DrizzleError> =>
-      Effect.gen(function* () {
+      /**
+       * Get example by ID
+       */
+      const getById: ExamplesRepositoryShape["getById"] = Effect.fn("ExamplesRepository.getById")(function* (
+        id: ExampleId
+      ) {
         const rows = yield* normalizeQueryError(
           drizzle.select().from(llmExamples).where(eq(llmExamples.id, id)).limit(1)
         );
         return A.head(yield* decodeLlmExampleRows(rows));
       });
 
-    /**
-     * Find similar examples using vector search
-     */
-    const findSimilar = (
-      ontologyId: string,
-      embedding: ReadonlyArray<number>,
-      options: ExampleRetrievalOptionsInput = {}
-    ): Effect.Effect<Array<ScoredExample>, DrizzleError> =>
-      Effect.gen(function* () {
-        const { includeNegatives, k, minSimilarity, targetClass, targetPredicate } =
-          ExampleRetrievalOptions.make(options);
-        const vectorStr = formatVector(embedding);
+      /**
+       * Find similar examples using vector search
+       */
+      const findSimilar: ExamplesRepositoryShape["findSimilar"] = dual(
+        (args) => P.isString(args[0]),
+        (ontologyId: string, embedding: ReadonlyArray<number>, options: ExampleRetrievalOptionsInput = {}) =>
+          Effect.gen(function* () {
+            const { includeNegatives, k, minSimilarity, targetClass, targetPredicate } =
+              ExampleRetrievalOptions.make(options);
+            const vectorStr = formatPgVector(embedding);
 
-        const conditions = [
-          sql`ontology_id = ${ontologyId}`,
-          sql`is_active = true`,
-          sql`1 - (embedding <=> ${vectorStr}::vector) >= ${minSimilarity}`,
-          ...(includeNegatives ? [] : [sql`is_negative = false`]),
-          ...(P.isNotUndefined(targetClass) ? [sql`target_class = ${targetClass}`] : []),
-          ...(P.isNotUndefined(targetPredicate) ? [sql`target_predicate = ${targetPredicate}`] : []),
-        ];
-        const results = yield* normalizeQueryError(sql`
+            const conditions = [
+              sql`ontology_id = ${ontologyId}`,
+              sql`is_active = true`,
+              sql`1 - (embedding <=> ${vectorStr}::vector) >= ${minSimilarity}`,
+              ...(includeNegatives ? [] : [sql`is_negative = false`]),
+              ...(P.isNotUndefined(targetClass) ? [sql`target_class = ${targetClass}`] : []),
+              ...(P.isNotUndefined(targetPredicate) ? [sql`target_predicate = ${targetPredicate}`] : []),
+            ];
+            const results = yield* normalizeQueryError(sql`
           SELECT id,
                  ontology_id as "ontologyId",
                  example_type as "exampleType",
@@ -473,20 +521,19 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
           ORDER BY embedding <=> ${vectorStr}::vector
           LIMIT ${k}
         `);
-        return yield* decodeScoredExampleSqlRows(results);
-      });
+            return yield* decodeScoredExampleSqlRows(results);
+          })
+      );
 
-    /**
-     * Find negative examples using lexical search (for pattern matching)
-     */
-    const findNegatives = (
-      ontologyId: string,
-      queryText: string,
-      k: number = 5
-    ): Effect.Effect<Array<ScoredExample>, DrizzleError> =>
-      Effect.gen(function* () {
-        // Use trigram similarity for fuzzy matching
-        const results = yield* normalizeQueryError(sql`
+      /**
+       * Find negative examples using lexical search (for pattern matching)
+       */
+      const findNegatives: ExamplesRepositoryShape["findNegatives"] = dual(
+        (args) => P.isString(args[1]),
+        (ontologyId: string, queryText: string, k: number = 5) =>
+          Effect.gen(function* () {
+            // Use trigram similarity for fuzzy matching
+            const results = yield* normalizeQueryError(sql`
           SELECT
             id, ontology_id as "ontologyId", example_type as "exampleType",
             input_text as "inputText", expected_output as "expectedOutput",
@@ -501,88 +548,80 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
           ORDER BY similarity(input_text, ${queryText}) DESC
           LIMIT ${k}
         `);
-        return yield* decodeScoredExampleSqlRows(results);
-      });
+            return yield* decodeScoredExampleSqlRows(results);
+          })
+      );
 
-    /**
-     * Get examples by type for an ontology
-     */
-    const getByType = (
-      ontologyId: string,
-      exampleType: ExampleType,
-      limit: number = 100
-    ): Effect.Effect<Array<LlmExampleRow>, DrizzleError> =>
-      normalizeQueryError(
-        drizzle
-          .select()
-          .from(llmExamples)
-          .where(
-            and(
-              eq(llmExamples.ontologyId, ontologyId),
-              eq(llmExamples.exampleType, exampleType),
-              eq(llmExamples.isActive, true)
-            )
-          )
-          .orderBy(desc(llmExamples.usageCount))
-          .limit(limit)
-      ).pipe(Effect.flatMap(decodeLlmExampleRows));
+      /**
+       * Get examples by type for an ontology
+       */
+      const getByType: ExamplesRepositoryShape["getByType"] = dual(
+        (args) => P.isString(args[1]),
+        (ontologyId: string, exampleType: ExampleType, limit: number = 100) =>
+          normalizeQueryError(
+            drizzle
+              .select()
+              .from(llmExamples)
+              .where(
+                and(
+                  eq(llmExamples.ontologyId, ontologyId),
+                  eq(llmExamples.exampleType, exampleType),
+                  eq(llmExamples.isActive, true)
+                )
+              )
+              .orderBy(desc(llmExamples.usageCount))
+              .limit(limit)
+          ).pipe(Effect.flatMap(decodeLlmExampleRows))
+      );
 
-    // -------------------------------------------------------------------------
-    // Update Operations
-    // -------------------------------------------------------------------------
+      // -------------------------------------------------------------------------
+      // Update Operations
+      // -------------------------------------------------------------------------
 
-    /**
-     * Record example usage and update success rate
-     */
-    const recordUsage = (id: ExampleId, wasSuccessful: boolean): Effect.Effect<void, DrizzleError> =>
-      Effect.asVoid(
-        normalizeQueryError(
-          drizzle
-            .update(llmExamples)
-            .set({
-              usageCount: drizzleSql`${llmExamples.usageCount} + 1`,
-              successRate: drizzleSql`CASE
+      /**
+       * Record example usage and update success rate
+       */
+      const recordUsage: ExamplesRepositoryShape["recordUsage"] = dual(2, (id: ExampleId, wasSuccessful: boolean) =>
+        Effect.asVoid(
+          normalizeQueryError(
+            drizzle
+              .update(llmExamples)
+              .set({
+                usageCount: drizzleSql`${llmExamples.usageCount} + 1`,
+                successRate: drizzleSql`CASE
                 WHEN ${llmExamples.usageCount} = 0 THEN ${wasSuccessful ? 1 : 0}::numeric(4,3)
                 ELSE (${llmExamples.successRate} * ${llmExamples.usageCount} + ${wasSuccessful ? 1 : 0}) /
                   (${llmExamples.usageCount} + 1)
               END`,
-            })
-            .where(eq(llmExamples.id, id))
+              })
+              .where(eq(llmExamples.id, id))
+          )
         )
       );
 
-    /**
-     * Deactivate an example (soft delete)
-     */
-    const deactivate = (id: ExampleId): Effect.Effect<void, DrizzleError> =>
-      drizzle
-        .update(llmExamples)
-        .set({ isActive: false })
-        .where(eq(llmExamples.id, id))
-        .pipe(
-          Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)),
-          Effect.asVoid
-        );
+      /**
+       * Deactivate an example (soft delete)
+       */
+      const deactivate: ExamplesRepositoryShape["deactivate"] = (id: ExampleId) =>
+        drizzle
+          .update(llmExamples)
+          .set({ isActive: false })
+          .where(eq(llmExamples.id, id))
+          .pipe(
+            Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)),
+            Effect.asVoid
+          );
 
-    // -------------------------------------------------------------------------
-    // Stats
-    // -------------------------------------------------------------------------
+      // -------------------------------------------------------------------------
+      // Stats
+      // -------------------------------------------------------------------------
 
-    /**
-     * Get example statistics for an ontology
-     */
-    const getStats = (
-      ontologyId: string
-    ): Effect.Effect<
-      {
-        total: number;
-        byType: Record<string, number>;
-        negativeCount: number;
-        avgSuccessRate: number | null;
-      },
-      DrizzleError
-    > =>
-      Effect.gen(function* () {
+      /**
+       * Get example statistics for an ontology
+       */
+      const getStats: ExamplesRepositoryShape["getStats"] = Effect.fn("ExamplesRepository.getStats")(function* (
+        ontologyId: string
+      ) {
         const result = yield* normalizeQueryError(sql`
           SELECT
             COUNT(*)::int as total,
@@ -604,18 +643,19 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
         return row;
       });
 
-    return {
-      create,
-      getById,
-      findSimilar,
-      findNegatives,
-      getByType,
-      recordUsage,
-      deactivate,
-      getStats,
-    };
-  }),
-}) {
+      return {
+        create,
+        getById,
+        findSimilar,
+        findNegatives,
+        getByType,
+        recordUsage,
+        deactivate,
+        getStats,
+      };
+    }),
+  }
+) {
   static readonly Default = Layer.effect(this, this.make);
 }
 
@@ -626,6 +666,3 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
 /**
  * Format a vector array as PostgreSQL vector literal
  */
-function formatVector(vector: ReadonlyArray<number>): string {
-  return `[${A.join(A.map(vector, globalThis.String), ",")}]`;
-}
