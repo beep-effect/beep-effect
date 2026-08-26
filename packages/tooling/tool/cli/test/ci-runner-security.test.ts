@@ -156,7 +156,8 @@ describe("CI runner security", () => {
       assert.include(workflowText, "packages/**/tsconfig*.json");
       assert.include(workflowText, "apps/**/package.json");
       assert.notInclude(workflowText, "grep -l -F 'import.meta.vitest'");
-      assert.include(workflowText, "The CLI owns package-graph expansion and marker discovery.");
+      assert.notInclude(workflowText, '[[ -f "$file" ]]');
+      assert.include(workflowText, "The CLI owns package-graph expansion, existence filtering,");
     }, provideScopedLayer(NodeServices.layer))
   );
 

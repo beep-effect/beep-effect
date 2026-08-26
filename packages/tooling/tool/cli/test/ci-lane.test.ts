@@ -628,14 +628,63 @@ const deletedAffectedDoctestCommands = A.empty<string>();
 layer(doctestCiLayer(["packages/a/src/deleted.ts"], dependentDoctestSources, deletedAffectedDoctestCommands))(
   "deleted affected Doctest path",
   (it) => {
-    it.effect("ignores deleted paths before package expansion", () =>
+    it.effect("expands the owning package and dependents for a delete-only diff without running the deleted path", () =>
       Effect.gen(function* () {
         yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
 
-        expect(deletedAffectedDoctestCommands).toEqual(["git diff --name-only origin/main...HEAD -- packages apps"]);
-        expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
-          "[ci] doctest: no marked affected source files (skipped)"
+        expect(deletedAffectedDoctestCommands).toHaveLength(3);
+        expect(lastOf(deletedAffectedDoctestCommands)).toContain(
+          "bunx vitest run --config vitest.docs.ts packages/a/src/marked.ts packages/b/src/marked.tsx"
         );
+        expect(lastOf(deletedAffectedDoctestCommands)).not.toContain("packages/a/src/deleted.ts");
+        expect(lastOf(deletedAffectedDoctestCommands)).not.toContain("packages/c/src/marked.ts");
+      })
+    );
+  }
+);
+
+const deletedWithUnrelatedChangeCommands = A.empty<string>();
+
+layer(
+  doctestCiLayer(
+    ["packages/a/src/deleted.ts", "packages/c/src/marked.ts"],
+    dependentDoctestSources,
+    deletedWithUnrelatedChangeCommands
+  )
+)("deleted Doctest path with an unrelated change", (it) => {
+  it.effect("retains deleted-path dependent expansion alongside an unrelated changed package", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+      expect(lastOf(deletedWithUnrelatedChangeCommands)).toContain(
+        "bunx vitest run --config vitest.docs.ts packages/a/src/marked.ts packages/b/src/marked.tsx packages/c/src/marked.ts"
+      );
+      expect(lastOf(deletedWithUnrelatedChangeCommands)).not.toContain("packages/a/src/deleted.ts");
+    })
+  );
+});
+
+const excludedDoctestSourceCommands = A.empty<string>();
+const excludedDoctestSources: ReadonlyArray<readonly [string, string]> = [
+  ...dependentDoctestSources,
+  ["packages/a/src/types.d.ts", "const markedDeclaration = import.meta.vitest;"],
+  ["packages/a/src/test/fixtures/marked.ts", "const markedFixture = import.meta.vitest;"],
+  ["packages/a/node_modules/dep/src/marked.ts", "const markedDependency = import.meta.vitest;"],
+];
+
+layer(doctestCiLayer(["packages/a/src/marked.ts"], excludedDoctestSources, excludedDoctestSourceCommands))(
+  "excluded affected Doctest sources",
+  (it) => {
+    it.effect("excludes declarations, fixtures, and node_modules while retaining real dependent sources", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+        expect(lastOf(excludedDoctestSourceCommands)).toContain(
+          "bunx vitest run --config vitest.docs.ts packages/a/src/marked.ts packages/b/src/marked.tsx"
+        );
+        expect(lastOf(excludedDoctestSourceCommands)).not.toContain("packages/a/src/types.d.ts");
+        expect(lastOf(excludedDoctestSourceCommands)).not.toContain("packages/a/src/test/fixtures/marked.ts");
+        expect(lastOf(excludedDoctestSourceCommands)).not.toContain("packages/a/node_modules/dep/src/marked.ts");
       })
     );
   }

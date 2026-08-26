@@ -121,9 +121,10 @@ jobs:
             if grep -Eq '(^vitest\.docs\.ts$|^vitest\.shared\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/heavy\.yml$|^packages/tooling/tool/cli/src/commands/Docgen/|^packages/tooling/tool/cli/src/internal/jsdoc/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
               doctest_mode=full
             else
-              # Any existing package/app source or package-level config can
+              # Any package/app source or package-level config can
               # affect marked examples in that workspace or its dependents.
-              # The CLI owns package-graph expansion and marker discovery.
+              # The CLI owns package-graph expansion, existence filtering,
+              # and marker discovery.
               mapfile -t affected_inputs < <(
                 git diff --name-only "${base_ref}...HEAD" -- \
                   ':(glob)packages/**/src/**/*.ts' \
@@ -138,14 +139,7 @@ jobs:
                   ':(glob)apps/**/tsconfig*.json'
               )
 
-              existing_inputs=()
-              for file in "${affected_inputs[@]}"; do
-                if [[ -f "$file" ]]; then
-                  existing_inputs+=("$file")
-                fi
-              done
-
-              if (( ${#existing_inputs[@]} == 0 )); then
+              if (( ${#affected_inputs[@]} == 0 )); then
                 should_run=false
               fi
             fi

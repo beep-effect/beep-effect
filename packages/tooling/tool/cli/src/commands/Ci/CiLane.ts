@@ -1221,6 +1221,10 @@ const expandDoctestDependents = (
   return affected;
 };
 
+const byDoctestWorkspaceDirLengthDescending: Order.Order<
+  readonly [name: string, dir: string, dependencies: ReadonlyArray<string>]
+> = Order.mapInput(Order.Number, ([, dir]) => -Str.length(dir));
+
 const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFiles")(function* (
   repoRoot: string,
   base: string,
@@ -1244,12 +1248,7 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
     A.dedupe,
     A.sort(Order.String)
   );
-  const existingChangedPaths = yield* Effect.filter(changedPaths, (file) =>
-    fs
-      .exists(path.join(repoRoot, file))
-      .pipe(CiCommandError.mapError(`Failed to inspect changed Doctest path ${file}.`))
-  );
-  if (A.isReadonlyArrayEmpty(existingChangedPaths)) return A.empty<string>();
+  if (A.isReadonlyArrayEmpty(changedPaths)) return A.empty<string>();
 
   const trackedResult = yield* runCaptured({
     command: "git",
@@ -1279,14 +1278,28 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
       CiCommandError.mapError(`Failed to read Doctest workspace manifest ${manifestPath}.`)
     )
   );
+  const orderedWorkspaces = A.sort(workspaces, byDoctestWorkspaceDirLengthDescending);
+  const deletedPackageDirs = pipe(changedPaths, A.filter(Str.endsWith("/package.json")), A.map(path.dirname));
   const changedPackageNames = HashSet.fromIterable(
-    A.flatMap(existingChangedPaths, (file) =>
-      pipe(
-        workspaces,
-        A.filter(([, packageDir]) => isDoctestPackageInput(packageDir, file)),
-        A.map(([name]) => name)
-      )
-    )
+    A.flatMap(changedPaths, (file) => {
+      const directOwner = A.findFirst(orderedWorkspaces, ([, packageDir]) => isDoctestPackageInput(packageDir, file));
+      const deletedPackageOwner = pipe(
+        orderedWorkspaces,
+        A.findFirst(([, packageDir]) => Str.startsWith(`${packageDir}/`)(file)),
+        O.filter(() =>
+          A.some(
+            deletedPackageDirs,
+            (deletedPackageDir) =>
+              file === `${deletedPackageDir}/package.json` || Str.startsWith(`${deletedPackageDir}/`)(file)
+          )
+        )
+      );
+      return pipe(
+        directOwner,
+        O.orElse(() => deletedPackageOwner),
+        O.match({ onNone: A.empty<string>, onSome: ([name]) => [name] })
+      );
+    })
   );
   const affectedPackageNames = expandDoctestDependents(changedPackageNames, workspaces);
   const affectedPackageDirs = pipe(
@@ -1294,14 +1307,19 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
     A.filter(([name]) => HashSet.has(affectedPackageNames, name)),
     A.map(([, packageDir]) => packageDir)
   );
-  const directlyChangedSources = A.filter(existingChangedPaths, isDoctestSourcePath);
+  const directlyChangedSources = A.filter(changedPaths, isDoctestSourcePath);
   const packageSources = pipe(
     trackedPaths,
     A.filter(isDoctestSourcePath),
     A.filter((file) => A.some(affectedPackageDirs, (packageDir) => Str.startsWith(`${packageDir}/src/`)(file)))
   );
   const candidates = pipe(A.appendAll(directlyChangedSources, packageSources), A.dedupe, A.sort(Order.String));
-  return yield* Effect.filter(candidates, (file) =>
+  const existingCandidates = yield* Effect.filter(candidates, (file) =>
+    fs
+      .exists(path.join(repoRoot, file))
+      .pipe(CiCommandError.mapError(`Failed to inspect affected Doctest path ${file}.`))
+  );
+  return yield* Effect.filter(existingCandidates, (file) =>
     fs
       .readFileString(path.join(repoRoot, file))
       .pipe(Effect.map(Str.includes("import.meta.vitest")), Effect.orElseSucceed(thunkFalse))
