@@ -20131,15 +20131,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 74.04,
-      "statements": 73.81,
-      "branches": 60.78,
-      "functions": 67.17,
+      "lines": 74.49,
+      "statements": 74.26,
+      "branches": 61.14,
+      "functions": 67.85,
       "uncovered": {
-        "lines": 8269,
-        "statements": 8690,
-        "branches": 4653,
-        "functions": 3090
+        "lines": 8258,
+        "statements": 8684,
+        "branches": 4690,
+        "functions": 3105
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -20575,15 +20575,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
-          "lines": 63.35,
-          "statements": 62.87,
-          "branches": 63.46,
-          "functions": 64.83,
+          "lines": 81.27,
+          "statements": 81.38,
+          "branches": 77.27,
+          "functions": 76.92,
           "uncovered": {
-            "lines": 70,
-            "statements": 75,
-            "branches": 19,
-            "functions": 32
+            "lines": 41,
+            "statements": 43,
+            "branches": 15,
+            "functions": 24
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts": {
@@ -21295,15 +21295,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts": {
-          "lines": 55.76,
-          "statements": 55.39,
-          "branches": 43.15,
-          "functions": 50,
+          "lines": 60.65,
+          "statements": 60.19,
+          "branches": 44.07,
+          "functions": 58.53,
           "uncovered": {
-            "lines": 119,
-            "statements": 124,
-            "branches": 83,
-            "functions": 16
+            "lines": 120,
+            "statements": 125,
+            "branches": 85,
+            "functions": 17
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/Docgen.errors.ts": {
@@ -21342,6 +21342,42 @@
             "functions": 1
           }
         },
+        "packages/tooling/tool/cli/src/commands/Docgen/Doctest.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Docgen/Doctest.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Docgen/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -21366,6 +21402,18 @@
             "functions": 1
           }
         },
+        "packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts": {
+          "lines": 90.78,
+          "statements": 89.34,
+          "branches": 79.11,
+          "functions": 84.96,
+          "uncovered": {
+            "lines": 28,
+            "statements": 36,
+            "branches": 33,
+            "functions": 23
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts": {
           "lines": 76.66,
           "statements": 74.61,
@@ -21379,15 +21427,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts": {
-          "lines": 63.23,
-          "statements": 63.76,
-          "branches": 39.25,
-          "functions": 60.24,
+          "lines": 67.02,
+          "statements": 67.78,
+          "branches": 47.74,
+          "functions": 64.7,
           "uncovered": {
-            "lines": 100,
-            "statements": 104,
-            "branches": 65,
-            "functions": 33
+            "lines": 93,
+            "statements": 96,
+            "branches": 58,
+            "functions": 30
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts": {
@@ -22879,38 +22927,50 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts": {
-          "lines": 97.67,
-          "statements": 95.65,
-          "branches": 87.5,
-          "functions": 92.85,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 1,
-            "functions": 2
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Qa/JudgeContract.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Qa/JudgeIngest.ts": {
-          "lines": 96,
-          "statements": 96.15,
-          "branches": 50,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 1,
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Qa/JudgeLint.ts": {
-          "lines": 88.23,
-          "statements": 88.23,
-          "branches": 50,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 1,
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
@@ -22926,9 +22986,21 @@
             "functions": 20
           }
         },
+        "packages/tooling/tool/cli/src/commands/Qa/JudgeSkill.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Qa/Qa.command.ts": {
-          "lines": 60.29,
-          "statements": 60.29,
+          "lines": 61.42,
+          "statements": 61.42,
           "branches": 0,
           "functions": 0,
           "uncovered": {
@@ -23143,15 +23215,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": {
-          "lines": 69.97,
-          "statements": 70.72,
-          "branches": 64.48,
-          "functions": 75.39,
+          "lines": 72.4,
+          "statements": 73.21,
+          "branches": 66.98,
+          "functions": 77.98,
           "uncovered": {
-            "lines": 215,
-            "statements": 219,
-            "branches": 103,
-            "functions": 62
+            "lines": 207,
+            "statements": 210,
+            "branches": 105,
+            "functions": 59
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/index.ts": {
@@ -23167,26 +23239,26 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts": {
-          "lines": 82.29,
-          "statements": 82.42,
-          "branches": 69.87,
-          "functions": 75.75,
+          "lines": 86.07,
+          "statements": 86.51,
+          "branches": 77.57,
+          "functions": 81.56,
           "uncovered": {
-            "lines": 57,
-            "statements": 58,
-            "branches": 25,
-            "functions": 32
+            "lines": 60,
+            "statements": 60,
+            "branches": 24,
+            "functions": 33
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 92.85,
+          "branches": 98,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 2,
+            "branches": 1,
             "functions": 0
           }
         },
@@ -23239,14 +23311,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts": {
-          "lines": 91.27,
-          "statements": 91.26,
-          "branches": 73.03,
-          "functions": 89.38,
+          "lines": 90.68,
+          "statements": 90.65,
+          "branches": 72.5,
+          "functions": 88.23,
           "uncovered": {
             "lines": 45,
             "statements": 47,
-            "branches": 72,
+            "branches": 69,
             "functions": 12
           }
         },
@@ -23287,15 +23359,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts": {
-          "lines": 60.89,
-          "statements": 59.87,
-          "branches": 50.51,
-          "functions": 57.14,
+          "lines": 53.5,
+          "statements": 52.06,
+          "branches": 38.18,
+          "functions": 46.66,
           "uncovered": {
-            "lines": 61,
-            "statements": 65,
-            "branches": 48,
-            "functions": 15
+            "lines": 53,
+            "statements": 58,
+            "branches": 34,
+            "functions": 16
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts": {
@@ -23359,14 +23431,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts": {
-          "lines": 88.46,
-          "statements": 88.75,
-          "branches": 72,
-          "functions": 92.1,
+          "lines": 86.24,
+          "statements": 86.66,
+          "branches": 63.82,
+          "functions": 91.42,
           "uncovered": {
-            "lines": 27,
-            "statements": 27,
-            "branches": 35,
+            "lines": 26,
+            "statements": 26,
+            "branches": 34,
             "functions": 3
           }
         },
@@ -25470,6 +25542,30 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts": {
+          "lines": 95.8,
+          "statements": 96.12,
+          "branches": 69.52,
+          "functions": 97.61,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 32,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/internal/process/StepExec.ts": {
           "lines": 95.06,
           "statements": 95.12,
@@ -26317,14 +26413,14 @@
     },
     "@beep/repo-docgen": {
       "path": "packages/tooling/tool/docgen",
-      "lines": 62.45,
-      "statements": 62.53,
-      "branches": 62.29,
-      "functions": 61.4,
+      "lines": 63.18,
+      "statements": 63.23,
+      "branches": 61.9,
+      "functions": 61.84,
       "uncovered": {
         "lines": 377,
         "statements": 393,
-        "branches": 92,
+        "branches": 96,
         "functions": 132
       },
       "files": {
@@ -26365,14 +26461,14 @@
           }
         },
         "packages/tooling/tool/docgen/src/Core.ts": {
-          "lines": 20.28,
-          "statements": 20.06,
-          "branches": 17.64,
-          "functions": 11.76,
+          "lines": 25.58,
+          "statements": 25.24,
+          "branches": 22.03,
+          "functions": 15.73,
           "uncovered": {
             "lines": 224,
             "statements": 231,
-            "branches": 42,
+            "branches": 46,
             "functions": 75
           }
         },

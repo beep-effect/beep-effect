@@ -1,0 +1,4 @@
+console.log("ok") // "ok"
+console.log([1, true, null]) // [1, true, null]
+console.log({ ok: true }) // { ok: true }
+console.log("skip") // displayed prose

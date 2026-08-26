@@ -14,15 +14,16 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { A, Str } from "@beep/utils";
+import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Duration, Effect, FileSystem, Match, Path, pipe } from "effect";
+import { Console, Duration, Effect, FileSystem, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LABS_TURBO_EXCLUDE_FILTER, LABS_TURBO_SELECT_FILTER } from "../../internal/cli/Labs/index.ts";
+import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
 import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
 import { CiCommandError } from "./Ci.errors.ts";
@@ -35,6 +36,7 @@ type CiLaneEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
+const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
 /**
  * Parity classes for CI lanes (one-round-loop D2 taxonomy).
@@ -164,6 +166,7 @@ export const CI_LANE_ID_VALUES = [
   "coverage",
   "desktop-ipc",
   "docgen",
+  "doctest",
   "ecosystem",
   "fallow",
   "jsdoc-ratchet",
@@ -400,6 +403,15 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   CiLaneDescriptor.make({
     id: "docgen",
     contextName: "Docgen",
+    required: true,
+    laneClass: "workflow-gated",
+    replay: "exact",
+    flags: ["--mode", "--base", "--head"],
+    notes: "Lane-gate mode computation stays in the workflow and arrives as --mode.",
+  }),
+  CiLaneDescriptor.make({
+    id: "doctest",
+    contextName: "Doctest",
     required: true,
     laneClass: "workflow-gated",
     replay: "exact",
@@ -713,6 +725,54 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
     full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],
   });
 
+/**
+ * Build the exact Vitest step for the Doctest lane.
+ *
+ * **When to use**
+ *
+ * Use to prove the hosted lane's final argv in focused tests and after
+ * affected-file resolution, without performing Git I/O.
+ *
+ * **Example** (Build the full Doctest step)
+ *
+ * ```ts
+ * import { doctestStepForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * const steps = doctestStepForTesting("/repo", undefined)
+ * console.log(steps[0]?.args)
+ * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param files - Sorted affected source paths, or undefined for the full corpus.
+ * @returns No step for an empty affected set; otherwise one exact Vitest step.
+ * @category testing
+ * @since 0.0.0
+ */
+export const doctestStepForTesting: {
+  (files: ReadonlyArray<string> | undefined): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+  (repoRoot: string, files: ReadonlyArray<string> | undefined): ReadonlyArray<QualityTaskStep>;
+} = dual(
+  2,
+  (repoRoot: string, files: ReadonlyArray<string> | undefined): ReadonlyArray<QualityTaskStep> =>
+    files !== undefined && A.isReadonlyArrayEmpty(files)
+      ? A.empty<QualityTaskStep>()
+      : [
+          QualityTaskStep.make({
+            label: "ci:doctest",
+            command: "bunx",
+            args: ["vitest", "run", "--config", "vitest.docs.ts", ...(files ?? A.empty<string>())],
+            cwd: repoRoot,
+          }),
+        ]
+);
+
+const doctestLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
+  DocgenLaneMode.$match(options.mode, {
+    none: A.empty<QualityTaskStep>,
+    affected: A.empty<QualityTaskStep>,
+    full: () => doctestStepForTesting(repoRoot, undefined),
+  });
+
 const CODEGEN_DRIVER_PACKAGE_DIRS = LiteralKit([
   "packages/drivers/acp",
   "packages/drivers/ecfr",
@@ -883,6 +943,7 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       docgen: () => docgenLaneSteps(repoRoot, options),
+      doctest: () => doctestLaneSteps(repoRoot, options),
       // Target the first ecosystem member explicitly. Generalize member
       // discovery only when a second ecosystem member exists.
       ecosystem: () => [
@@ -1111,6 +1172,54 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
 });
 
+const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFiles")(function* (
+  repoRoot: string,
+  base: string,
+  head: string
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, CiLaneEnvironment> {
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["diff", "--name-only", `${base}...${head}`, "--", "packages", "apps"],
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(CiCommandError.mapError("Failed to resolve affected Doctest source files."));
+  if (result.exitCode !== 0) {
+    return yield* CiCommandError.make({ message: `git diff for Doctest failed with exit code ${result.exitCode}.` });
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const candidates = pipe(
+    Str.split(/\r?\n/)(result.output),
+    A.map(normalizeSlashes),
+    A.filter(isDoctestSourcePath),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  return yield* Effect.filter(candidates, (file) =>
+    fs
+      .readFileString(path.join(repoRoot, file))
+      .pipe(Effect.map(Str.includes("import.meta.vitest")), Effect.orElseSucceed(thunkFalse))
+  );
+});
+
+const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
+  repoRoot: string,
+  options: CiLaneRunOptions
+): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
+  const files = yield* DocgenLaneMode.$match(options.mode, {
+    none: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
+    affected: () => Effect.map(resolveAffectedDoctestFiles(repoRoot, options.base, options.head), O.some),
+    full: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
+  });
+  const steps =
+    options.mode === "none" ? A.empty<QualityTaskStep>() : doctestStepForTesting(repoRoot, O.getOrUndefined(files));
+  if (A.isReadonlyArrayEmpty(steps)) {
+    yield* Console.log("[ci] doctest: no marked affected source files (skipped)");
+    return;
+  }
+  yield* runQualityTaskStreamingStepGroup("ci:doctest", steps);
+});
+
 /**
  * Run a CI lane body exactly as hosted CI would.
  *
@@ -1148,6 +1257,7 @@ export const runCiLane = Effect.fn("CiLane.runCiLane")(function* (
 
   yield* pipe(
     Match.value(laneId),
+    Match.when("doctest", () => runCiDoctestLane(repoRoot, options)),
     Match.when("fallow", () => runCiFallowLane(repoRoot, options)),
     Match.orElse((stepLaneId) => runCiStepLane(repoRoot, stepLaneId, options))
   );
@@ -1310,6 +1420,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "test-integration",
   "property",
   "docgen",
+  "doctest",
   "coverage",
   "desktop-ipc",
   "fallow",
@@ -1410,6 +1521,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     coverage: () => turboShapeFlags,
     "desktop-ipc": A.empty<string>,
     docgen: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
+    doctest: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,

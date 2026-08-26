@@ -5,13 +5,75 @@ import {
   CiLocalStepPlan,
   ciLaneStepsForTesting,
   ciLocalStepsForTesting,
+  doctestStepForTesting,
+  runCiLane,
 } from "@beep/repo-cli/commands/Ci";
 import { A } from "@beep/utils";
-import { Order, pipe } from "effect";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { Effect, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
+import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const REPO_ROOT = "/repo";
+const encoder = new TextEncoder();
+
+const commandHandle = (output = "") =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.make(encoder.encode(output)),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: Stream.make(encoder.encode(output)),
+    unref: Effect.succeed(Effect.void),
+  });
+
+const doctestCiLayer = (
+  changedFiles: ReadonlyArray<string>,
+  sources: ReadonlyArray<readonly [string, string]>,
+  spawned: Array<string>
+) => {
+  const fileSystemLayer = FileSystem.layerNoop({
+    exists: (file) => Effect.succeed(Str.endsWith("/.git")(file)),
+    makeDirectory: () => Effect.void,
+    readFileString: (file) => {
+      const source = A.findFirst(sources, ([suffix]) => Str.endsWith(suffix)(file));
+      return O.match(source, {
+        onNone: () =>
+          Effect.fail(
+            PlatformError.systemError({
+              _tag: "NotFound",
+              module: "CiLaneTest",
+              method: "readFileString",
+              pathOrDescriptor: file,
+            })
+          ),
+        onSome: ([, content]) => Effect.succeed(content),
+      });
+    },
+    writeFileString: () => Effect.void,
+  });
+  const processLayer = Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("the CI lane test never spawns a piped command");
+      }
+      const rendered = A.join([command.command, ...command.args], " ");
+      spawned.push(rendered);
+      return Effect.succeed(commandHandle(command.command === "git" ? A.join(changedFiles, "\n") : ""));
+    })
+  );
+  return Layer.mergeAll(fileSystemLayer, Path.layer, processLayer, TestConsole.layer);
+};
 
 const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
 const lastOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.last(items));
@@ -41,6 +103,7 @@ const REQUIRED_CONTEXT_NAMES = [
   "Commitlint",
   "Coverage Regression",
   "Docgen",
+  "Doctest",
   "Knip",
   "Lint",
   "Lint Policy",
@@ -58,7 +121,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(24);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(25);
   });
 
   it("covers every runnable lane id", () => {
@@ -293,6 +356,23 @@ describe("ciLaneStepsForTesting", () => {
     expect([...full.args]).toEqual(["run", "docgen"]);
   });
 
+  it("builds exact full and affected Doctest argv", () => {
+    const full = firstOf(doctestStepForTesting(REPO_ROOT, undefined));
+    expect(full.command).toBe("bunx");
+    expect([...full.args]).toEqual(["vitest", "run", "--config", "vitest.docs.ts"]);
+
+    const affected = firstOf(doctestStepForTesting(REPO_ROOT, ["apps/a/src/index.ts", "packages/z/src/index.ts"]));
+    expect([...affected.args]).toEqual([
+      "vitest",
+      "run",
+      "--config",
+      "vitest.docs.ts",
+      "apps/a/src/index.ts",
+      "packages/z/src/index.ts",
+    ]);
+    expect(doctestStepForTesting(REPO_ROOT, [])).toEqual([]);
+  });
+
   it("always runs the changeset graph and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual(["ci:repo-sanity:changeset-graph", "ci:repo-sanity"]);
@@ -458,4 +538,110 @@ describe("ciLocalStepsForTesting", () => {
     const onBranch = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["repo-sanity"], branchPlan));
     expect([...onBranch.args]).toEqual(["run", "beep", "ci", "lane", "repo-sanity", "--changeset-status"]);
   });
+});
+
+const affectedDoctestCommands = A.empty<string>();
+const affectedDoctestFiles = [
+  "packages/example/src/unmarked.ts",
+  "packages/example/src/marked.ts",
+  "packages/example/src/deleted.ts",
+  "packages/example/src/view.tsx",
+  "packages/example/src/value.d.ts",
+  "packages/example/src/test/fixtures/fixture.ts",
+  "packages/example/src/node_modules/generated.ts",
+  "apps\\demo\\src\\marked.ts",
+  "packages/example/src/marked.ts",
+];
+const affectedDoctestSources: ReadonlyArray<readonly [string, string]> = [
+  ["packages/example/src/marked.ts", "const marked = import.meta.vitest;"],
+  ["packages/example/src/unmarked.ts", "export const unmarked = true;"],
+  ["packages/example/src/view.tsx", "const markedTsx = import.meta.vitest;"],
+  ["apps/demo/src/marked.ts", "if (import.meta.vitest) {}"],
+];
+
+layer(doctestCiLayer(affectedDoctestFiles, affectedDoctestSources, affectedDoctestCommands))(
+  "affected Doctest CI lane",
+  (it) => {
+    it.effect("resolves only existing marked TypeScript source files and runs their exact argv", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+        expect(affectedDoctestCommands).toHaveLength(2);
+        expect(affectedDoctestCommands[0]).toBe("git diff --name-only origin/main...HEAD -- packages apps");
+        expect(affectedDoctestCommands[1]).toContain(
+          "bunx vitest run --config vitest.docs.ts apps/demo/src/marked.ts packages/example/src/marked.ts packages/example/src/view.tsx"
+        );
+      })
+    );
+  }
+);
+
+const emptyAffectedDoctestCommands = A.empty<string>();
+
+layer(
+  doctestCiLayer(
+    ["packages/example/src/unmarked.ts", "packages/example/src/deleted.ts", "packages/example/src/view.tsx"],
+    [["packages/example/src/unmarked.ts", "export const unmarked = true;"]],
+    emptyAffectedDoctestCommands
+  )
+)("empty affected Doctest CI lane", (it) => {
+  it.effect("logs the early exit without spawning Vitest", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+      expect(emptyAffectedDoctestCommands).toEqual(["git diff --name-only origin/main...HEAD -- packages apps"]);
+      expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
+        "[ci] doctest: no marked affected source files (skipped)"
+      );
+    })
+  );
+});
+
+const fullDoctestCommands = A.empty<string>();
+
+layer(doctestCiLayer([], [], fullDoctestCommands))("full Doctest CI lane", (it) => {
+  it.effect("runs the complete documentation Vitest corpus without Git discovery", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "full" }));
+
+      expect(fullDoctestCommands).toHaveLength(1);
+      expect(fullDoctestCommands[0]).toContain("bunx vitest run --config vitest.docs.ts");
+    })
+  );
+});
+
+const disabledDoctestCommands = A.empty<string>();
+
+layer(doctestCiLayer([], [], disabledDoctestCommands))("disabled Doctest CI lane", (it) => {
+  it.effect("takes the no-step branch without Git discovery or Vitest", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "none" }));
+
+      expect(disabledDoctestCommands).toEqual([]);
+      expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
+        "[ci] doctest: no marked affected source files (skipped)"
+      );
+    })
+  );
+});
+
+const fallowCommands = A.empty<string>();
+const fallowReports: ReadonlyArray<readonly [string, string]> = [
+  [".beep/fallow/audit.check.json", "{}"],
+  [".beep/fallow/dead-code.check.json", "{}"],
+];
+
+layer(doctestCiLayer([], fallowReports, fallowCommands))("Fallow CI lane execution", (it) => {
+  it.effect("runs blocking and advisory sublanes before validating blocking envelopes", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("fallow", CiLaneRunOptions.make({ ...baseOptions, validateEnvelopes: true }));
+
+      expect(fallowCommands).toHaveLength(14);
+      expect(fallowCommands[0]).toContain("beep quality fallow audit --check");
+      expect(fallowCommands[1]).toContain("beep quality fallow dead-code --check");
+      expect(fallowCommands[2]).toContain("beep quality fallow health --advisory");
+      expect(fallowCommands[12]).toContain("fallow envelope-check .beep/fallow/audit.check.json");
+      expect(fallowCommands[13]).toContain("fallow envelope-check .beep/fallow/dead-code.check.json");
+    })
+  );
 });

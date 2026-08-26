@@ -184,6 +184,7 @@
     "@beep/tika": "workspace:^",
     "@beep/uspto": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@effect/doctest": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
     "@openai/codex-sdk": "catalog:",

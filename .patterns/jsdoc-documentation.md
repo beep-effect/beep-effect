@@ -301,6 +301,31 @@ bun run beep docgen quality -p <package> --json --score codex
 Never remove an Example to make compilation pass. Fix the imports, API usage, or
 example itself.
 
+### Runnable Example fences
+
+Examples selected for runtime documentation testing use the canonical fence info
+string `ts import.meta.vitest name="<Example title>"`. The name is derived from
+the enclosing `**Example** (Title)` heading. A trailing `// => expected` comment
+asserts the value of the expression on the same line using Effect equality. It
+may trail an expression statement or one initialized `const` identifier. It may
+appear inside control flow only when that control-flow body has an explicit
+block.
+
+Runnable fences complement the docgen TypeScript gate; they do not replace it.
+Type-only fences still compile through docgen and are reported as vacuous by
+`bun run beep docgen doctest verify`. Do not add a tautological runtime assertion
+to make a type-only fence appear executable.
+
+For pure new and touched Examples, run `bun run beep docgen doctest verify` and
+use `bun run beep docgen doctest mark --write` to apply the canonical marker and
+safe assertion rewrites. `console.log(expression) // expected` is cleanup-on-touch:
+when the expected text is literal-like and the command can prove an equivalent
+doctest assertion, rewrite it to `expression // => expected`. Keep console output
+when the displayed value is prose, formatting, or otherwise not a valid expected
+TypeScript expression. Never mark examples that use environment variables,
+filesystem, network, child processes, Bun APIs, databases, external or relative
+imports, JSX, or React.
+
 ## Imports inside Examples
 
 Keep beep's namespace-import law; do not port Effect's named-import rule.
