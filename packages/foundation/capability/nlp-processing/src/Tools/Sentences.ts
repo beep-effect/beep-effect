@@ -46,7 +46,7 @@ class SentencesSuccess extends S.Class<SentencesSuccess>($I`SentencesSuccess`)(
  *
  * **Example** (Decode parameters schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { Sentences } from "@beep/nlp-processing/Tools/Sentences"
  *

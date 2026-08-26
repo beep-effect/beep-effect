@@ -1,12 +1,13 @@
 // @vitest-environment node
 
 import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text";
-import { TextAnchor } from "@beep/provenance";
+import { isUtf16Boundary, SourceTextExtractor, TextAnchor } from "@beep/provenance";
 import { NonNegativeInt } from "@beep/schema";
 import { ConfigProvider, Effect, Layer, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 import { F1Catalog } from "@/fixtures/F1";
 import { GOLD_PROMPT_ARTIFACT_HASH } from "@/gold/Prompts";
@@ -16,9 +17,12 @@ import { extractHtmlText } from "@/parse/Html";
 import { RuntimeLayer } from "@/runtime/Layer";
 import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
+import { makeChunkId, ParseOutcome } from "@/schema/Text";
 import { Canonicalizer } from "@/services/Canonicalizer";
+import { Chunker } from "@/services/Chunker";
 import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
+import type { Crypto } from "effect";
 import type { F1Fixture } from "@/fixtures/F1";
 
 const runtime = RuntimeLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} }))));
@@ -209,6 +213,155 @@ describe("C0 F1 input services", () => {
           expect(A.length(outcomes)).toBe(9);
           expect(A.length(A.filter(outcomes, ({ outcome }) => outcome === "Parsed"))).toBe(6);
           expect(A.length(A.filter(outcomes, ({ outcome }) => outcome === "Degraded"))).toBe(3);
+        })
+      )
+    ));
+
+  it("chunks every parsed F1 text with exact global UTF-16 anchors", () =>
+    Effect.runPromise(
+      provideScopedLayer(runtime)(
+        Effect.gen(function* () {
+          const catalog = yield* F1Catalog;
+          const canonicalizer = yield* Canonicalizer;
+          const chunker = yield* Chunker;
+          const source = yield* DocumentSource;
+          const parser = yield* Parser;
+          const index = yield* catalog.load;
+
+          const parsedCounts = yield* Effect.forEach(
+            index.fixtures,
+            Effect.fnUntraced(function* (fixture) {
+              const document = fixtureDocument(fixture);
+              const bytes = yield* source.read(document);
+              const outcome = yield* parser.parse(document, bytes);
+              if (outcome.outcome === "Degraded") {
+                return 0;
+              }
+              const canonical = yield* canonicalizer.identify(document, outcome);
+              const chunks = yield* chunker.chunk(canonical);
+              for (const chunk of chunks) {
+                expect(Str.slice(chunk.anchor.startChar, chunk.anchor.endChar)(canonical.text)).toBe(
+                  chunk.anchor.quote
+                );
+                expect(isUtf16Boundary(canonical.text, chunk.anchor.startChar)).toBe(true);
+                expect(isUtf16Boundary(canonical.text, chunk.anchor.endChar)).toBe(true);
+                expect(makeChunkId(chunk)).toMatchObject({ _tag: "Success", success: chunk.id });
+              }
+              if (fixture.id === "md-unicode") {
+                expect(canonical.text).toContain("\r\n");
+                expect(A.some(chunks, (chunk) => chunk.anchor.quote.includes("🧑🏽‍🔬"))).toBe(true);
+              }
+              return A.length(chunks);
+            }),
+            { concurrency: 1 }
+          );
+
+          expect(A.every(parsedCounts, (count) => count >= 0)).toBe(true);
+          expect(A.length(A.filter(parsedCounts, (count) => count > 0))).toBe(6);
+        })
+      )
+    ));
+
+  it("preserves slice-back and UTF-16 boundaries across generated Unicode layouts", () =>
+    Effect.runPromise(
+      provideScopedLayer(runtime)(
+        Effect.gen(function* () {
+          const catalog = yield* F1Catalog;
+          const canonicalizer = yield* Canonicalizer;
+          const chunker = yield* Chunker;
+          const context = yield* Effect.context<Canonicalizer | Chunker | Crypto.Crypto>();
+          const fixture = A.headNonEmpty((yield* catalog.load).fixtures);
+          const document = fixtureDocument(fixture);
+          const textArbitrary = fc
+            .array(fc.constantFrom("word", " ", ". ", "\r\n", "\n\n", "🧑🏽‍🔬", "Cafe\u0301", "# Heading\r\n\r\n"), {
+              minLength: 1,
+              maxLength: 20,
+            })
+            .map((parts) => A.join(parts, ""))
+            .filter((text) => Str.isNonEmpty(Str.trim(text)));
+
+          const headingText = "# Heading\r\nBody sentence.";
+          const headingParsed = ParseOutcome.cases.Parsed.make({
+            document: document.id,
+            extractor: SourceTextExtractor.make({ name: "chunker-heading", version: "0.0.0" }),
+            outcome: "Parsed",
+            text: headingText,
+          });
+          const headingCanonical = Effect.runSyncWith(context)(canonicalizer.identify(document, headingParsed));
+          const headingChunks = Effect.runSyncWith(context)(chunker.chunk(headingCanonical));
+          expect(A.headNonEmpty(headingChunks)).toMatchObject({
+            anchor: { endChar: 9, quote: "# Heading", startChar: 0 },
+            kind: "heading",
+          });
+
+          const sentenceCases = [
+            {
+              expected: [{ kind: "paragraph", quote: "One sentence." }],
+              text: "One sentence.",
+            },
+            {
+              expected: [
+                { kind: "sentence", quote: "First." },
+                { kind: "sentence", quote: "Second!" },
+              ],
+              text: "First. Second!",
+            },
+            {
+              expected: [
+                { kind: "sentence", quote: "Wait!" },
+                { kind: "sentence", quote: "Why?" },
+                { kind: "sentence", quote: "Fine" },
+              ],
+              text: "Wait!  Why? Fine",
+            },
+            {
+              expected: [
+                { kind: "sentence", quote: "Version 1.2 works." },
+                { kind: "sentence", quote: "Next" },
+              ],
+              text: "Version 1.2 works. Next",
+            },
+            {
+              expected: [{ kind: "paragraph", quote: "Question?Trailing" }],
+              text: "Question?Trailing",
+            },
+          ];
+          for (const sentenceCase of sentenceCases) {
+            const parsed = ParseOutcome.cases.Parsed.make({
+              document: document.id,
+              extractor: SourceTextExtractor.make({ name: "chunker-sentence-branches", version: "0.0.0" }),
+              outcome: "Parsed",
+              text: sentenceCase.text,
+            });
+            const canonical = Effect.runSyncWith(context)(canonicalizer.identify(document, parsed));
+            const chunks = Effect.runSyncWith(context)(chunker.chunk(canonical));
+            expect(A.map(chunks, (chunk) => ({ kind: chunk.kind, quote: chunk.anchor.quote }))).toEqual(
+              sentenceCase.expected
+            );
+          }
+
+          yield* Effect.sync(() =>
+            fc.assert(
+              fc.property(textArbitrary, (text) => {
+                const parsed = ParseOutcome.cases.Parsed.make({
+                  document: document.id,
+                  extractor: SourceTextExtractor.make({ name: "chunker-property", version: "0.0.0" }),
+                  outcome: "Parsed",
+                  text,
+                });
+                const canonical = Effect.runSyncWith(context)(canonicalizer.identify(document, parsed));
+                const chunks = Effect.runSyncWith(context)(chunker.chunk(canonical));
+                return A.every(
+                  chunks,
+                  (chunk) =>
+                    Str.slice(chunk.anchor.startChar, chunk.anchor.endChar)(canonical.text) === chunk.anchor.quote &&
+                    isUtf16Boundary(canonical.text, chunk.anchor.startChar) &&
+                    isUtf16Boundary(canonical.text, chunk.anchor.endChar)
+                );
+              }),
+              { numRuns: 30 }
+            )
+          );
         })
       )
     ));

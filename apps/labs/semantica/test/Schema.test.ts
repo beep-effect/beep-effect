@@ -249,6 +249,7 @@ const providerEntry = ProviderCacheEntry.make({
 });
 
 const entityBody = ClaimBody.cases.Entity.make({
+  cluster: Option.some("software-effect"),
   kind: "Entity",
   label: "Effect",
   entityType: "software",
@@ -257,6 +258,7 @@ const entityBody = ClaimBody.cases.Entity.make({
   quote: anchor.quote,
 });
 const secondEntityBody = ClaimBody.cases.Entity.make({
+  cluster: Option.some("concept-data"),
   kind: "Entity",
   label: "data",
   entityType: "concept",
@@ -594,6 +596,7 @@ describe("C0 schema round trips", () => {
     roundTrip(
       GoldEntityLabel,
       GoldEntityLabel.make({
+        cluster: "software-effect",
         label: "Effect",
         entityType: "software",
         startChar: anchor.startChar,
@@ -1044,12 +1047,22 @@ describe("gold refinements", () => {
       verified: true,
     };
     expect(rejects(GoldStructureLabel, { ...shared, role: "title", depth: NonNegativeInt.make(0) })).toBe(false);
-    expect(rejects(GoldEntityLabel, { ...shared, label: "Effect", entityType: "software" })).toBe(false);
+    expect(
+      rejects(GoldEntityLabel, { ...shared, cluster: "software-effect", label: "Effect", entityType: "software" })
+    ).toBe(false);
     expect(rejects(GoldRelationLabel, { ...shared, predicate: "uses", subject: "Effect", object: "Schema" })).toBe(
       false
     );
     expect(rejects(GoldStructureLabel, { ...shared, endChar: 5, role: "title", depth: 0 })).toBe(true);
-    expect(rejects(GoldEntityLabel, { ...shared, endChar: 5, label: "Effect", entityType: "software" })).toBe(true);
+    expect(
+      rejects(GoldEntityLabel, {
+        ...shared,
+        cluster: "software-effect",
+        endChar: 5,
+        label: "Effect",
+        entityType: "software",
+      })
+    ).toBe(true);
     expect(
       rejects(GoldRelationLabel, {
         ...shared,

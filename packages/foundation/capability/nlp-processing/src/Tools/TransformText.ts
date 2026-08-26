@@ -80,7 +80,7 @@ class TransformTextSuccess extends S.Class<TransformTextSuccess>($I`TransformTex
  *
  * **Example** (Decode transform parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode transform parameters"
  * import * as S from "effect/Schema"
  * import { TransformText } from "@beep/nlp-processing/Tools/TransformText"
  *

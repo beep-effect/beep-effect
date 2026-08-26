@@ -22,7 +22,7 @@ import * as internal from "./generated/iana-timezones.ts";
  *
  * **Example** (Type a timezone identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a timezone identifier"
  * import type { TimezoneName } from "@beep/data/Timezones"
  *
  * const tz: TimezoneName = "America/New_York"
@@ -39,7 +39,7 @@ export type TimezoneName = (typeof internal.TimezoneNameValues)[number];
  *
  * **Example** (Reference a generated timezone entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reference a generated timezone entry"
  * import { TimezoneDataByName, type TimezoneData } from "@beep/data/Timezones"
  *
  * const utc: TimezoneData = TimezoneDataByName.UTC
@@ -63,7 +63,7 @@ export type TimezoneData = (typeof internal.TimezoneDataValues)[number];
  *
  * **Example** (Check a known identifier is present)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a known identifier is present"
  * import { TimezoneNameValues } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneNameValues.includes("UTC"))
@@ -79,7 +79,7 @@ export const TimezoneNameValues: typeof internal.TimezoneNameValues = internal.T
  *
  * **Example** (Read the tzdb metadata)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the tzdb metadata"
  * import { TimezoneDataMetadata } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneDataMetadata.version === "2026c")
@@ -95,7 +95,7 @@ export const TimezoneDataMetadata: typeof internal.TimezoneDataMetadata = intern
  *
  * **Example** (Read the tzdb version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the tzdb version"
  * import { TimezoneDataVersion } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneDataVersion === "2026c")
@@ -111,7 +111,7 @@ export const TimezoneDataVersion: typeof internal.TimezoneDataVersion = internal
  *
  * **Example** (Inspect the source URL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect the source URL"
  * import { TimezoneDataSourceUrl } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneDataSourceUrl.endsWith("tzdata-latest.tar.gz"))
@@ -127,7 +127,7 @@ export const TimezoneDataSourceUrl: typeof internal.TimezoneDataSourceUrl = inte
  *
  * **Example** (Inspect the source digest)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect the source digest"
  * import { TimezoneDataSourceSha256 } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneDataSourceSha256.length === 64)
@@ -143,7 +143,7 @@ export const TimezoneDataSourceSha256: typeof internal.TimezoneDataSourceSha256 
  *
  * **Example** (Find the UTC entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Find the UTC entry"
  * import { TimezoneDataValues } from "@beep/data/Timezones"
  *
  * const utc = TimezoneDataValues.find((entry) => entry.name === "UTC")
@@ -160,7 +160,7 @@ export const TimezoneDataValues: typeof internal.TimezoneDataValues = internal.T
  *
  * **Example** (Look up a timezone by name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Look up a timezone by name"
  * import { TimezoneDataByName } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneDataByName["America/New_York"].name === "America/New_York")

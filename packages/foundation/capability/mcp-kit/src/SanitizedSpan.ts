@@ -158,12 +158,12 @@ export const sanitizeTracerAttributes: {
  *
  * **Example** (Run under sanitized span)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Run under sanitized span"
  * import { Effect } from "effect"
  * import { withSanitizedToolSpan } from "@beep/mcp-kit"
  *
  * const program = withSanitizedToolSpan(Effect.annotateCurrentSpan({ parameters: { secret: "x" } }), "mcp.tool.call")
- * Effect.runSync(program)
+ * Effect.runSync(program) // => undefined
  * ```
  *
  * @category combinators

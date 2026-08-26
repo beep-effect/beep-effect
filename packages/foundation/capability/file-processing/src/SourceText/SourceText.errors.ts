@@ -17,10 +17,10 @@ const $I = $FileProcessingId.create("SourceText");
  *
  * **Example** (Check reason membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check reason membership"
  * import { SourceTextResolverErrorReason } from "@beep/file-processing/SourceText"
  *
- * console.log(SourceTextResolverErrorReason.is["source-digest-mismatch"]("source-digest-mismatch")) // true
+ * SourceTextResolverErrorReason.is["source-digest-mismatch"]("source-digest-mismatch") // => true
  * ```
  *
  * @category schemas
@@ -64,11 +64,11 @@ export type SourceTextResolverErrorReason = typeof SourceTextResolverErrorReason
  *
  * **Example** (Create source-unavailable error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create source-unavailable error"
  * import { SourceTextResolverError } from "@beep/file-processing/SourceText"
  *
  * const error = SourceTextResolverError.new("source-unavailable", "The source file could not be read.")
- * console.log(error.reason) // "source-unavailable"
+ * error.reason // => "source-unavailable"
  * ```
  *
  * @category errors
@@ -90,11 +90,11 @@ export class SourceTextResolverError extends S.TaggedError<SourceTextResolverErr
    *
    * **Example** (Create page-out-of-range error)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Create page-out-of-range error"
    * import { SourceTextResolverError } from "@beep/file-processing/SourceText"
    *
    * const error = SourceTextResolverError.new("page-out-of-range", "Page 2 does not exist.")
-   * console.log(error._tag) // "SourceTextResolverError"
+   * error._tag // => "SourceTextResolverError"
    * ```
    *
    * @category constructors

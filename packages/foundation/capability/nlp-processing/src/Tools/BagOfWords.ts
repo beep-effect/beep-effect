@@ -47,7 +47,7 @@ class BagOfWordsSuccess extends S.Class<BagOfWordsSuccess>($I`BagOfWordsSuccess`
  *
  * **Example** (Decode parameters schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { BagOfWords } from "@beep/nlp-processing/Tools/BagOfWords"
  *

@@ -83,7 +83,7 @@ class LearnCustomEntitiesSuccess extends S.Class<LearnCustomEntitiesSuccess>($I`
  *
  * **Example** (Decode custom entity parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode custom entity parameters"
  * import * as S from "effect/Schema"
  * import { LearnCustomEntities } from "@beep/nlp-processing/Tools/LearnCustomEntities"
  *

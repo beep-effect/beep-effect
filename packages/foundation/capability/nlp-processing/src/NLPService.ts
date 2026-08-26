@@ -184,7 +184,7 @@ export const layer = <E, R>(backendLayer: Layer.Layer<Backend.NLPBackend, E, R>)
  *
  * **Example** (Process text with stub service)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Process text with stub service"
  * import { Effect } from "effect"
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { NLPService, processText } from "@beep/nlp-processing/NLPService"
@@ -222,7 +222,7 @@ export const layer = <E, R>(backendLayer: Layer.Layer<Backend.NLPBackend, E, R>)
  *   Effect.provideService(processText("Effect models typed failure."), NLPService, service),
  *   nodeCount
  * )
- * Effect.runPromise(program).then(console.log) // 0
+ * await Effect.runPromise(program) // => 0
  * ```
  *
  * @effects Requires an {@link NLPService} in context and executes the

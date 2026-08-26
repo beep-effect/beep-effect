@@ -15,7 +15,7 @@
  *
  * **Example** (Non-empty string type filtering)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Non-empty string type filtering"
  * import type { TString } from "@beep/types"
  *
  * type Hello = TString.NonEmpty<"hello">
@@ -43,7 +43,7 @@ export type NonEmpty<T extends string = string> = T extends "" ? never : T;
  *
  * **Example** (Filtering empty and slash strings)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Filtering empty and slash strings"
  * import type { TString } from "@beep/types"
  *
  * type Segment = TString.NonEmptyTrimmed<"users/42">
@@ -71,7 +71,7 @@ export type NonEmptyTrimmed<T extends string = string> = T extends `/${string}` 
  *
  * **Example** (Splitting string into characters)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Splitting string into characters"
  * import type { TString } from "@beep/types"
  *
  * type ABC = TString.Chars<"abc">
@@ -108,7 +108,7 @@ type IsDotPropertyNameRest<S extends string> = S extends ""
  *
  * **Example** (Validating dot property names)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Validating dot property names"
  * import type { TString } from "@beep/types"
  *
  * type Name = TString.DotPropertyName<"hello4">

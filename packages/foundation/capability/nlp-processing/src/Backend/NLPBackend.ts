@@ -47,7 +47,7 @@ const isBackendOperationErrorDataFirst = (args: IArguments): boolean => args.len
  *
  * **Example** (Create unsupported backend error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create unsupported backend error"
  * import { BackendNotSupported } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = BackendNotSupported.make({
@@ -55,7 +55,7 @@ const isBackendOperationErrorDataFirst = (args: IArguments): boolean => args.len
  *   operation: "parseDependencies",
  *   message: "Dependency parsing is unavailable"
  * })
- * console.log(error._tag) // "BackendNotSupported"
+ * error._tag // => "BackendNotSupported"
  * ```
  *
  * @category errors
@@ -91,7 +91,7 @@ export class BackendNotSupported extends S.TaggedError<BackendNotSupported>($I`B
  *
  * **Example** (Create backend init error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create backend init error"
  * import { BackendInitError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = BackendInitError.make({
@@ -99,7 +99,7 @@ export class BackendNotSupported extends S.TaggedError<BackendNotSupported>($I`B
  *   cause: new Error("model load failed"),
  *   message: "Backend wink-nlp failed to initialize"
  * })
- * console.log(error.backend) // "wink-nlp"
+ * error.backend // => "wink-nlp"
  * ```
  *
  * @category errors
@@ -135,7 +135,7 @@ export class BackendInitError extends S.TaggedError<BackendInitError>($I`Backend
  *
  * **Example** (Create operation failure error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create operation failure error"
  * import { BackendOperationError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = BackendOperationError.make({
@@ -144,7 +144,7 @@ export class BackendInitError extends S.TaggedError<BackendInitError>($I`Backend
  *   cause: new Error("tokenizer failed"),
  *   message: "Backend wink-nlp operation posTag failed"
  * })
- * console.log(error.operation) // "posTag"
+ * error.operation // => "posTag"
  * ```
  *
  * @category errors
@@ -185,11 +185,11 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
  *
  * **Example** (Check union membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check union membership"
  * import { notSupported, NLPBackendError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = notSupported("minimal", "ner")
- * console.log(NLPBackendError.is(error)) // true
+ * NLPBackendError.is(error) // => true
  * ```
  *
  * @category errors
@@ -225,7 +225,7 @@ export type NLPBackendError = typeof NLPBackendError.Type;
  *
  * **Example** (Declare capability bitmap)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Declare capability bitmap"
  * import type { BackendCapabilities } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const capabilities: BackendCapabilities = {
@@ -239,7 +239,7 @@ export type NLPBackendError = typeof NLPBackendError.Type;
  *   sentencization: true,
  *   tokenization: true
  * }
- * console.log(capabilities.tokenization) // true
+ * capabilities.tokenization // => true
  * ```
  *
  * @category models
@@ -301,7 +301,7 @@ export class BackendCapabilities extends S.Class<BackendCapabilities>($I`Backend
  *
  * **Example** (Implement minimal backend shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Implement minimal backend shape"
  * import { Effect } from "effect"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -326,7 +326,7 @@ export class BackendCapabilities extends S.Class<BackendCapabilities>($I`Backend
  *   parseDependencies: () => Effect.succeed([]),
  *   extractRelations: () => Effect.succeed([])
  * }
- * console.log(backend.name) // "minimal"
+ * backend.name // => "minimal"
  * ```
  *
  * @category models
@@ -376,7 +376,7 @@ export class NLPBackend extends Context.Service<NLPBackend, NLPBackendShape>()($
  *
  * **Example** (Check single capability support)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check single capability support"
  * import { Effect } from "effect"
  * import { supportsCapability } from "@beep/nlp-processing/Backend/NLPBackend"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -402,7 +402,7 @@ export class NLPBackend extends Context.Service<NLPBackend, NLPBackendShape>()($
  *   parseDependencies: () => Effect.succeed([]),
  *   extractRelations: () => Effect.succeed([])
  * }
- * console.log(supportsCapability(backend, "tokenization")) // true
+ * supportsCapability(backend, "tokenization") // => true
  * ```
  *
  * @category utilities
@@ -421,7 +421,7 @@ export const supportsCapability: {
  *
  * **Example** (List supported capability keys)
  *
- * ```ts
+ * ```ts import.meta.vitest name="List supported capability keys"
  * import { Effect } from "effect"
  * import { getSupportedCapabilities } from "@beep/nlp-processing/Backend/NLPBackend"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -447,7 +447,7 @@ export const supportsCapability: {
  *   parseDependencies: () => Effect.succeed([]),
  *   extractRelations: () => Effect.succeed([])
  * }
- * console.log(getSupportedCapabilities(backend)) // ["tokenization"]
+ * getSupportedCapabilities(backend) // => ["sentencization", "tokenization"]
  * ```
  *
  * @category utilities
@@ -470,15 +470,15 @@ export const getSupportedCapabilities = (backend: NLPBackendShape): ReadonlyArra
  *
  * **Example** (Build not-supported failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build not-supported failure"
  * import { pipe } from "effect"
  * import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = notSupported("minimal", "dependencyParsing")
  * const custom = pipe("minimal", notSupported("dependencyParsing", { message: "No parser bundled" }))
  *
- * console.log(error.message.includes("dependencyParsing")) // true
- * console.log(custom.message) // "No parser bundled"
+ * error.message.includes("dependencyParsing") // => true
+ * custom.message // => "No parser bundled"
  * ```
  *
  * @category constructors
@@ -498,11 +498,11 @@ export const notSupported: {
  *
  * **Example** (Build init error from cause)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build init error from cause"
  * import { initError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = initError("wink-nlp", new Error("missing model"))
- * console.log(error.backend) // "wink-nlp"
+ * error.backend // => "wink-nlp"
  * ```
  *
  * @category constructors
@@ -515,11 +515,11 @@ export const initError: typeof BackendInitError.fromCause = BackendInitError.fro
  *
  * **Example** (Build operation error from cause)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build operation error from cause"
  * import { operationError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = operationError("wink-nlp", "tokenize", new Error("bad input"))
- * console.log(error.operation) // "tokenize"
+ * error.operation // => "tokenize"
  * ```
  *
  * @category constructors

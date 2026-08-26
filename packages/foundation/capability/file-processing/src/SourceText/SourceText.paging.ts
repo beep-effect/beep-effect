@@ -90,7 +90,7 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  *
  * **Example** (Load first page)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Load first page"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
  * import { pageSourceText } from "@beep/file-processing/SourceText"
  * import { NonNegativeInt } from "@beep/schema"
@@ -98,6 +98,8 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  *
  * const loadFirstPage = (source: ResolvedSourceText) =>
  *   Effect.runPromise(pageSourceText(source, NonNegativeInt.make(0)))
+ *
+ * typeof loadFirstPage // => "function"
  * ```
  *
  * @effects Performs deterministic in-memory paging only. It does not read or
@@ -125,7 +127,7 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  *
  * **Example** (Load page for offset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Load page for offset"
  * import {
  *   pageSourceTextContainingOffset
  * } from "@beep/file-processing/SourceText"
@@ -137,6 +139,8 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  *   Effect.runPromise(
  *     pageSourceTextContainingOffset(source, NonNegativeInt.make(offset))
  *   )
+ *
+ * typeof loadPageContaining // => "function"
  * ```
  *
  * @effects Searches deterministic in-memory page bounds only. It does not read

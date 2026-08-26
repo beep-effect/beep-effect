@@ -21,9 +21,9 @@ import * as internal from "./internal/data/mime-types/index.ts";
  *
  * Each member is a full MIME type string such as `"application/json"` or `"image/png"`.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use MIME type union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type union"
  * import type { MimeType } from "@beep/data/MimeTypes"
  *
  * const contentType: MimeType = "application/json"
@@ -38,9 +38,9 @@ export type MimeType = internal.MimeType;
 /**
  * Union of official IANA media type strings from the generated registry data.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use official MIME type union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use official MIME type union"
  * import type { OfficialMimeType } from "@beep/data/MimeTypes"
  *
  * const contentType: OfficialMimeType = "application/json"
@@ -55,9 +55,9 @@ export type OfficialMimeType = (typeof official.OfficialMimeTypeDataTypeValues)[
 /**
  * Union of official IANA `application/*` media type strings.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use application MIME type union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use application MIME type union"
  * import type { ApplicationMimeType } from "@beep/data/MimeTypes"
  *
  * const contentType: ApplicationMimeType = "application/json"
@@ -72,9 +72,9 @@ export type ApplicationMimeType = (typeof official.ApplicationMimeTypeValues)[nu
 /**
  * Union of official IANA `audio/*` media type strings.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use audio MIME type union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use audio MIME type union"
  * import type { AudioMimeType } from "@beep/data/MimeTypes"
  *
  * const contentType: AudioMimeType = "audio/mpeg"
@@ -89,9 +89,9 @@ export type AudioMimeType = (typeof official.AudioMimeTypeValues)[number];
 /**
  * Union of official IANA `image/*` media type strings.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use image MIME type union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use image MIME type union"
  * import type { ImageMimeType } from "@beep/data/MimeTypes"
  *
  * const contentType: ImageMimeType = "image/png"
@@ -106,9 +106,9 @@ export type ImageMimeType = (typeof official.ImageMimeTypeValues)[number];
 /**
  * Union of official IANA `text/*` media type strings.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use text MIME type union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use text MIME type union"
  * import type { TextMimeType } from "@beep/data/MimeTypes"
  *
  * const contentType: TextMimeType = "text/plain"
@@ -123,9 +123,9 @@ export type TextMimeType = (typeof official.TextMimeTypeValues)[number];
 /**
  * Union of official IANA `video/*` media type strings.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use video MIME type union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use video MIME type union"
  * import type { VideoMimeType } from "@beep/data/MimeTypes"
  *
  * const contentType: VideoMimeType = "video/mp4"
@@ -140,9 +140,9 @@ export type VideoMimeType = (typeof official.VideoMimeTypeValues)[number];
 /**
  * Union of official IANA media type strings outside the primary top-level categories.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use miscellaneous MIME type union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use miscellaneous MIME type union"
  * import type { MiscMimeType } from "@beep/data/MimeTypes"
  *
  * const contentType: MiscMimeType = "font/woff2"
@@ -157,9 +157,9 @@ export type MiscMimeType = (typeof official.MiscMimeTypeValues)[number];
 /**
  * A single official IANA media type registry entry.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect official MIME type data)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect official MIME type data"
  * import { OfficialMimeTypeDataByType, type OfficialMimeTypeData } from "@beep/data/MimeTypes"
  *
  * const json: OfficialMimeTypeData = OfficialMimeTypeDataByType["application/json"]
@@ -177,9 +177,9 @@ export type OfficialMimeTypeData = (typeof official.OfficialMimeTypeDataValues)[
  *
  * Each member is a bare extension like `"json"`, `"html"`, or `"png"`.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use file extension union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use file extension union"
  * import type { FileExtension } from "@beep/data/MimeTypes"
  *
  * const ext: FileExtension = "json"
@@ -204,9 +204,9 @@ type MimeTypeDefinition = {
  * Record of `application/*` MIME type definitions sourced from IANA, Apache,
  * and Nginx registries.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use application MIME records)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use application MIME records"
  * import { application } from "@beep/data/MimeTypes"
  *
  * console.assert(application["application/json"].extensions.includes("json"))
@@ -221,9 +221,9 @@ export const application: typeof internal.application = internal.application;
  * Record of `audio/*` MIME type definitions sourced from IANA, Apache,
  * and Nginx registries.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use audio MIME records)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use audio MIME records"
  * import { audio } from "@beep/data/MimeTypes"
  *
  * console.assert(audio["audio/mpeg"].extensions.includes("mp3"))
@@ -238,9 +238,9 @@ export const audio: typeof internal.audio = internal.audio;
  * Record of `image/*` MIME type definitions sourced from IANA, Apache,
  * and Nginx registries.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use image MIME records)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use image MIME records"
  * import { image } from "@beep/data/MimeTypes"
  *
  * console.assert(image["image/png"].extensions.includes("png"))
@@ -255,9 +255,9 @@ export const image: typeof internal.image = internal.image;
  * Record of miscellaneous MIME type definitions covering chemical, font,
  * message, model, and x-conference types.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use miscellaneous MIME records)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use miscellaneous MIME records"
  * import { misc } from "@beep/data/MimeTypes"
  *
  * console.assert(misc["font/woff2"].extensions.includes("woff2"))
@@ -272,9 +272,9 @@ export const misc: typeof internal.misc = internal.misc;
  * Record of `text/*` MIME type definitions sourced from IANA, Apache,
  * and Nginx registries.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use text MIME records)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use text MIME records"
  * import { text } from "@beep/data/MimeTypes"
  *
  * console.assert(text["text/html"].extensions.includes("html"))
@@ -289,9 +289,9 @@ export const text: typeof internal.text = internal.text;
  * Record of `video/*` MIME type definitions sourced from IANA, Apache,
  * and Nginx registries.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use video MIME records)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use video MIME records"
  * import { video } from "@beep/data/MimeTypes"
  *
  * console.assert(video["video/mp4"].extensions.includes("mp4"))
@@ -312,9 +312,9 @@ export const video: typeof internal.video = internal.video;
  *
  * This is the raw merged data object that backs the `mimeTypes` typed record.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use extension-to-MIME map)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use extension-to-MIME map"
  * import { mimes } from "@beep/data/MimeTypes"
  *
  * console.assert(mimes["text/css"].extensions.includes("css"))
@@ -330,9 +330,9 @@ export const mimes: typeof internal.mimes = internal.mimes;
  * file extensions. The source indicates where the MIME type definition
  * originated (`"iana"`, `"apache"`, or `"nginx"`).
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Use MIME-to-extension map)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME-to-extension map"
  * import { mimeTypes } from "@beep/data/MimeTypes"
  *
  * const json = mimeTypes["application/json"]
@@ -347,9 +347,9 @@ export const mimeTypes: Record<MimeType, MimeTypeDefinition> = internal.mimeType
 /**
  * Stable source metadata for the generated official IANA media type registry.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect MIME registry metadata)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect MIME registry metadata"
  * import { OfficialMimeTypeDataMetadata, OfficialMimeTypeDataUpdated } from "@beep/data/MimeTypes"
  *
  * console.assert(OfficialMimeTypeDataMetadata.updated === OfficialMimeTypeDataUpdated)
@@ -364,9 +364,9 @@ export const OfficialMimeTypeDataMetadata: typeof official.OfficialMimeTypeDataM
 /**
  * Last updated date reported by the official IANA media type registry.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Read MIME registry update date)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read MIME registry update date"
  * import { OfficialMimeTypeDataUpdated } from "@beep/data/MimeTypes"
  *
  * console.assert(OfficialMimeTypeDataUpdated.length === "YYYY-MM-DD".length)
@@ -381,9 +381,9 @@ export const OfficialMimeTypeDataUpdated: typeof official.OfficialMimeTypeDataUp
 /**
  * Official IANA media type registry source URL.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Read MIME registry source URL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read MIME registry source URL"
  * import { OfficialMimeTypeDataSourceUrl } from "@beep/data/MimeTypes"
  *
  * console.assert(OfficialMimeTypeDataSourceUrl.endsWith("media-types.xml"))
@@ -398,9 +398,9 @@ export const OfficialMimeTypeDataSourceUrl: typeof official.OfficialMimeTypeData
 /**
  * SHA-256 digest of the official source payload used for the generated dataset.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Read MIME registry source digest)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read MIME registry source digest"
  * import { OfficialMimeTypeDataSourceSha256 } from "@beep/data/MimeTypes"
  *
  * console.assert(OfficialMimeTypeDataSourceSha256.length === 64)
@@ -415,9 +415,9 @@ export const OfficialMimeTypeDataSourceSha256: typeof official.OfficialMimeTypeD
 /**
  * Official IANA media type registry entries.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect MIME registry values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect MIME registry values"
  * import { OfficialMimeTypeDataValues } from "@beep/data/MimeTypes"
  *
  * const json = OfficialMimeTypeDataValues.find((entry) => entry.type === "application/json")
@@ -433,9 +433,9 @@ export const OfficialMimeTypeDataValues: typeof official.OfficialMimeTypeDataVal
 /**
  * Official IANA media type registry entries keyed by full media type.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Look up an official MIME type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Look up an official MIME type"
  * import { OfficialMimeTypeDataByType } from "@beep/data/MimeTypes"
  *
  * console.assert(OfficialMimeTypeDataByType["application/json"].name === "json")
@@ -450,9 +450,9 @@ export const OfficialMimeTypeDataByType: typeof official.OfficialMimeTypeDataByT
 /**
  * Official IANA media type literal values.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect official MIME type values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect official MIME type values"
  * import { OfficialMimeTypeDataTypeValues } from "@beep/data/MimeTypes"
  *
  * console.assert(OfficialMimeTypeDataTypeValues.includes("application/json"))
@@ -467,9 +467,9 @@ export const OfficialMimeTypeDataTypeValues: typeof official.OfficialMimeTypeDat
 /**
  * Official IANA `application/*` media type literal values.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect application MIME type values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect application MIME type values"
  * import { ApplicationMimeTypeValues } from "@beep/data/MimeTypes"
  *
  * console.assert(ApplicationMimeTypeValues.includes("application/json"))
@@ -483,9 +483,9 @@ export const ApplicationMimeTypeValues: typeof official.ApplicationMimeTypeValue
 /**
  * Official IANA `audio/*` media type literal values.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect audio MIME type values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect audio MIME type values"
  * import { AudioMimeTypeValues } from "@beep/data/MimeTypes"
  *
  * console.assert(AudioMimeTypeValues.includes("audio/mpeg"))
@@ -499,9 +499,9 @@ export const AudioMimeTypeValues: typeof official.AudioMimeTypeValues = official
 /**
  * Official IANA `image/*` media type literal values.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect image MIME type values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect image MIME type values"
  * import { ImageMimeTypeValues } from "@beep/data/MimeTypes"
  *
  * console.assert(ImageMimeTypeValues.includes("image/png"))
@@ -515,9 +515,9 @@ export const ImageMimeTypeValues: typeof official.ImageMimeTypeValues = official
 /**
  * Official IANA `text/*` media type literal values.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect text MIME type values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect text MIME type values"
  * import { TextMimeTypeValues } from "@beep/data/MimeTypes"
  *
  * console.assert(TextMimeTypeValues.includes("text/plain"))
@@ -531,9 +531,9 @@ export const TextMimeTypeValues: typeof official.TextMimeTypeValues = official.T
 /**
  * Official IANA `video/*` media type literal values.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect video MIME type values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect video MIME type values"
  * import { VideoMimeTypeValues } from "@beep/data/MimeTypes"
  *
  * console.assert(VideoMimeTypeValues.includes("video/mp4"))
@@ -547,9 +547,9 @@ export const VideoMimeTypeValues: typeof official.VideoMimeTypeValues = official
 /**
  * Official IANA media type literal values outside the primary top-level categories.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Inspect miscellaneous MIME type values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect miscellaneous MIME type values"
  * import { MiscMimeTypeValues } from "@beep/data/MimeTypes"
  *
  * console.assert(MiscMimeTypeValues.includes("font/woff2"))
@@ -563,9 +563,9 @@ export const MiscMimeTypeValues: typeof official.MiscMimeTypeValues = official.M
 /**
  * Official IANA media type entries grouped for schema category helpers.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Group MIME types by top level)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Group MIME types by top level"
  * import { OfficialMimeTypeDataByTopLevel } from "@beep/data/MimeTypes"
  *
  * console.assert(OfficialMimeTypeDataByTopLevel.application["application/json"].name === "json")
@@ -589,9 +589,9 @@ export const OfficialMimeTypeDataByTopLevel: typeof official.OfficialMimeTypeDat
  * Lazily populates the internal lookup tables on first call; subsequent
  * calls return the same cached object.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Get MIME types for an extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Get MIME types for an extension"
  * import { getTypes } from "@beep/data/MimeTypes"
  *
  * const types = getTypes()
@@ -610,9 +610,9 @@ export const getTypes: () => Record<FileExtension, MimeType> = internal.getTypes
  * Lazily populates the internal lookup tables on first call; subsequent
  * calls return the same cached object.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Get extensions for a MIME type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Get extensions for a MIME type"
  * import { getExtensions } from "@beep/data/MimeTypes"
  *
  * const extensions = getExtensions()
@@ -635,9 +635,9 @@ export const getExtensions: () => Record<MimeType, FileExtension[]> = internal.g
  * full file path (`"path/to/file.json"`). The lookup is case-insensitive.
  * Returns the matching MIME type string, or `false` if no match is found.
  *
- * **Example** (Use MIME type registry data)
+ * **Example** (Look up a MIME type by extension)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Look up a MIME type by extension"
  * import { lookup } from "@beep/data/MimeTypes"
  *
  * console.assert(lookup("json") === "application/json")
