@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Should we graduate this exploration to a `goals/` packet and build the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) within the five-day appetite?"
+      "Does BRIEF.md hold as shaped (problem, appetite, sketch, rabbit holes, no-gos), or what changes before decompose?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

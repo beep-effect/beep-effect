@@ -16,8 +16,8 @@ foundations, then offer a measured service-as-software pilot.
 
 ## Next Open Question
 
-Should we graduate this exploration to a `goals/` packet and build the proposed
-`lejeune-bolt-workbench` lab (under `apps/labs/`) within the five-day appetite?
+Does [`BRIEF.md`](./BRIEF.md) hold as shaped — problem, appetite, sketch, rabbit holes,
+no-gos — or what changes before decompose? Graduation comes after decompose per the pipeline.
 
 ## Read This First
 
@@ -45,5 +45,6 @@ Should we graduate this exploration to a `goals/` packet and build the proposed
   script (17 bot threads answered), fallow ignore for packet `ops/**`, and three
   machine-local path tokens reworded in CAPTURE/DECISIONS/MAP so the knowledge-refs
   gate sees no live host paths (CAPTURE content otherwise untouched).
-- 2026-08-26: align round completed with Benjamin; 13 decisions ratified, including the two
-  2026-08-25 pins; browser-lane corpus-refresh decision recorded.
+- 2026-08-26: align round completed with Benjamin; 17 decisions ratified — the six 2026-08-25
+  operator pins confirmed plus the eleven align answers — and the browser-lane corpus-refresh
+  decision recorded.
