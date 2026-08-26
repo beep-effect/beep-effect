@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { makeLiteral, NamedNode } from "@beep/rdf/Rdf";
+import { makeLiteral } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
 import { Effect, HashSet, pipe } from "effect";
@@ -16,9 +16,10 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ShaclNodeShape, ShaclPropertyShape } from "../services/shacl-validation.ts";
-import { IdentityEntryIriError, IdentityFiberPathError } from "./IdentityRdfBinding.ts";
+import { decodeEntrySubject, IdentityFiberPathError } from "./IdentityRdfBinding.ts";
 import type { IdentityEntry } from "@beep/identity";
-import type { IdentityRdfBinding } from "./IdentityRdfBinding.ts";
+import type { NamedNode } from "@beep/rdf/Rdf";
+import type { IdentityEntryIriError, IdentityRdfBinding } from "./IdentityRdfBinding.ts";
 
 const $I = $SemanticWebId.create("identity/IdentityShaclProjection");
 
@@ -57,12 +58,6 @@ const IdentityRequiredFibersDistinct = S.makeFilter<ReadonlyArray<string>>(
 );
 
 const RequiredIdentityFibers = S.Array(S.String).pipe(S.check(IdentityRequiredFibersDistinct));
-
-const decodeEntrySubject = Effect.fn("IdentityShaclProjection.decodeEntrySubject")(function* (entry: IdentityEntry) {
-  return yield* S.decodeEffect(NamedNode)({ termType: "NamedNode", value: entry.iri }).pipe(
-    Effect.mapError(() => IdentityEntryIriError.make({ identity: entry.identity, iri: entry.iri }))
-  );
-});
 
 const addressPropertyShapes = (path: NamedNode, value: string): ReadonlyArray<ShaclPropertyShape> => [
   ShaclPropertyShape.make({

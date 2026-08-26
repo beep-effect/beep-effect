@@ -199,7 +199,38 @@ export class IdentityDatasetDecodeError extends S.TaggedError<IdentityDatasetDec
   })
 ) {}
 
-const decodeEntrySubject = Effect.fn("IdentityRdfBinding.decodeEntrySubject")(function* (entry: IdentityEntry) {
+/**
+ * Decodes an identity entry's IRI as its RDF subject, failing typed instead of defecting.
+ *
+ * **Example** (Decode a registered entry's subject)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { IdentityEntry } from "@beep/identity"
+ * import { decodeEntrySubject } from "@beep/semantic-web/identity/IdentityRdfBinding"
+ *
+ * const entry = IdentityEntry.make({
+ *   identity: "@beep/semantic-web/Example",
+ *   iri: "https://ns.beep.sh/semantic-web/Example",
+ *   curie: "beep:semantic-web/Example",
+ *   fibers: {}
+ * })
+ * const subject = Effect.runSync(decodeEntrySubject(entry))
+ * console.log(subject.value)
+ * ```
+ *
+ * **Details**
+ *
+ * A schema-valid `IdentityEntry` only guarantees `iri` is a string; this is the single
+ * boundary where that string becomes a `NamedNode`, shared by the dataset codec and the
+ * SHACL projection so both surface `IdentityEntryIriError` for malformed IRIs.
+ *
+ * @param entry - Registered identity entry whose `iri` becomes the subject.
+ * @returns The entry's subject as an RDF named node.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodeEntrySubject = Effect.fn("IdentityRdfBinding.decodeEntrySubject")(function* (entry: IdentityEntry) {
   return yield* S.decodeEffect(NamedNode)({ termType: "NamedNode", value: entry.iri }).pipe(
     Effect.mapError(() => IdentityEntryIriError.make({ identity: entry.identity, iri: entry.iri }))
   );

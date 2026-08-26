@@ -113,4 +113,9 @@ tree, then `yeet publish --reuse-verified` and `yeet monitor` to merge-ready
   `@category`; fixed on touch with `@category configuration` and a
   `@beep/repo-docgen` changeset line. Local proofs after: `quality test-tsgo` 0,
   `docgen:local --full` 0, `laws effect-imports --check` 0, changeset gate ok.
+- Hosted `Fallow Advisory Envelopes` (blocking `fallow audit --check`, new-only
+  gate): one introduced clone group — `decodeEntrySubject` had been defined in
+  both identity modules; consolidated as a single documented export in
+  `IdentityRdfBinding.ts` imported by the projection. Local
+  `quality fallow audit --check --base origin/main` → exit 0.
 
