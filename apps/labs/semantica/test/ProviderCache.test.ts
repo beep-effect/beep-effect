@@ -68,13 +68,18 @@ const encodeProviderCacheEntry = Effect.fn("ProviderCacheTest.encodeProviderCach
 );
 const CacheTestServices = Layer.mergeAll(BunServices.layer, TestClock.layer());
 
-const advanceCacheClock = Effect.fn("ProviderCacheTest.advanceClock")(function* (steps: number) {
-  yield* Effect.forEach(
-    A.range(1, steps),
-    () =>
-      TestClock.adjust(Duration.seconds(4)).pipe(Effect.andThen(TestClock.withLive(Effect.sleep(Duration.millis(10))))),
-    { discard: true }
+const advanceCacheClockUntilSettled = Effect.fn("ProviderCacheTest.advanceClockUntilSettled")(function* (
+  fiber: Fiber.Fiber<unknown, unknown>
+) {
+  yield* Effect.findFirst(A.range(1, 100), () =>
+    fiber.pollUnsafe() === undefined
+      ? TestClock.adjust(Duration.seconds(4)).pipe(
+          Effect.andThen(TestClock.withLive(Effect.sleep(Duration.millis(10)))),
+          Effect.andThen(Effect.sync(() => fiber.pollUnsafe() !== undefined))
+        )
+      : Effect.succeed(true)
   );
+  expect(fiber.pollUnsafe(), "Provider cache contender did not settle after 100 virtual clock advances.").toBeDefined();
 });
 
 const providerCacheRuntime = (cacheDirectory: string) =>
@@ -289,7 +294,7 @@ describe("C0 provider cache and language-model boundary", () => {
                 );
                 const contender = yield* cache.store(entry).pipe(Effect.forkChild);
                 yield* TestClock.withLive(Effect.sleep(Duration.millis(10)));
-                yield* advanceCacheClock(2);
+                yield* advanceCacheClockUntilSettled(contender);
                 yield* Fiber.join(contender);
                 yield* Fiber.join(winner);
 
@@ -654,7 +659,7 @@ describe("C0 provider cache and language-model boundary", () => {
                 yield* fs.writeFileString(path.join(lock, "owner.pid"), `${process.pid}\n`);
                 const contender = yield* cache.store(entry).pipe(Effect.flip, Effect.forkChild);
                 yield* TestClock.withLive(Effect.sleep(Duration.millis(10)));
-                yield* advanceCacheClock(10);
+                yield* advanceCacheClockUntilSettled(contender);
                 const error = yield* Fiber.join(contender);
 
                 expect(error).toBeInstanceOf(ProviderCacheCorrupt);
