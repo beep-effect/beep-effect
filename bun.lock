@@ -647,13 +647,12 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/codegen-kit": "workspace:^",
         "@beep/test-utils": "workspace:^",
-        "@effect/openapi-generator": "catalog:",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
-        "ts-morph": "catalog:",
       },
     },
     "packages/drivers/ai-provider-cli": {
@@ -798,10 +797,10 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
-        "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/codegen-kit": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -903,9 +902,11 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/codegen-kit": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1239,10 +1240,11 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
-        "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/codegen-kit": "workspace:^",
+        "@effect/openapi-generator": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -2434,6 +2436,24 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/library/codegen-kit": {
+      "name": "@beep/codegen-kit",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@effect/openapi-generator": "catalog:",
+        "@effect/platform-node": "catalog:",
+        "effect": "catalog:",
+        "ts-morph": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/library/qa-capture": {
       "name": "@beep/qa-capture",
       "version": "0.0.0",
@@ -3179,6 +3199,8 @@
     "@beep/box": ["@beep/box@workspace:packages/drivers/box"],
 
     "@beep/chalk": ["@beep/chalk@workspace:packages/foundation/capability/chalk"],
+
+    "@beep/codegen-kit": ["@beep/codegen-kit@workspace:packages/tooling/library/codegen-kit"],
 
     "@beep/colors": ["@beep/colors@workspace:packages/foundation/capability/colors"],
 

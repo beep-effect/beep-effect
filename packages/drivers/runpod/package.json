@@ -29,7 +29,8 @@
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
-    "generate": "bun run scripts/generate.ts && bunx biome check --write src/_generated/Runpod.generated.ts",
+    "generate": "bun run scripts/generate.ts",
+    "generate:check": "bun run scripts/generate.ts --check",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
@@ -45,6 +46,7 @@
   },
   "files": [
     "openapi.json",
+    "openapi.patch.json",
     "scripts/**/*.ts",
     "src/**/*.ts",
     "dist/**/*.js",
@@ -67,10 +69,11 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
-    "@effect/platform-bun": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/codegen-kit": "workspace:^",
+    "@effect/openapi-generator": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"
