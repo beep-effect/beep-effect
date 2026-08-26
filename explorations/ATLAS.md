@@ -156,9 +156,9 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   synthesis (join layer over five laws; practice-as-repo / lint-as-trust;
   agents as FDEs; clone-and-go distribution) plus the training-data-flywheel
   coda. Critical path already lives in packet-system-redesign Amendments
-  H/I/J and protocol-as-value. Reopen when H/I/J are ruled, the
-  substrate/instance partition goes live, the cold-agent eval is wanted, or
-  the training-data-flywheel coda is picked up as a docs-surface goal.
+  H/I/J and protocol-as-value. Reopen triggers are recorded in the packet's
+  [`DECISIONS.md`](./knowledge-endgame/DECISIONS.md) 2026-08-25 park entry
+  (the authoritative list).
 - [`project-intelligence`](./project-intelligence/README.md) — parked
   2026-08-13, superseded by the operating loop in
   `goals/nightly-research-routine`; resume when a legal-grade provenance
