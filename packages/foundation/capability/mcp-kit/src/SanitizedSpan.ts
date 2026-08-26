@@ -163,7 +163,7 @@ export const sanitizeTracerAttributes: {
  * import { withSanitizedToolSpan } from "@beep/mcp-kit"
  *
  * const program = withSanitizedToolSpan(Effect.annotateCurrentSpan({ parameters: { secret: "x" } }), "mcp.tool.call")
- * Effect.runSync(program)
+ * Effect.runSync(program) // => undefined
  * ```
  *
  * @category combinators

@@ -401,6 +401,7 @@ export const createColors = (enabled: boolean = isColorSupported): Colors => {
  * import colors from "@beep/colors"
  *
  * const rendered = colors.cyan("beep")
+ * typeof rendered // => "string"
  * ```
  *
  * @category utilities

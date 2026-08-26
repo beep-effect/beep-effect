@@ -80,7 +80,7 @@ export type FileProcessingServiceShape = {
  *
  * **Example** (Provide service with layer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Provide service with layer"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { FileProcessingService } from "@beep/file-processing/Service"
  * import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service"

@@ -335,7 +335,8 @@ export class ApiTransportOptions extends S.Class<ApiTransportOptions>($I`ApiTran
  *   return yield* readSnapshot(transport)
  * }).pipe(Effect.provide(RateLimiter.layerStoreMemory))
  *
- * void program
+ * const snapshot = await Effect.runPromise(program)
+ * snapshot._tag // => "None"
  * ```
  *
  * @category models
@@ -373,7 +374,8 @@ export interface ApiTransport {
  *   return transport.transformClient
  * }).pipe(Effect.provide(RateLimiter.layerStoreMemory))
  *
- * void program
+ * const transformClient = await Effect.runPromise(program)
+ * typeof transformClient // => "function"
  * ```
  *
  * @category constructors

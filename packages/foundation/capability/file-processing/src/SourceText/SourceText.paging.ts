@@ -98,6 +98,8 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  *
  * const loadFirstPage = (source: ResolvedSourceText) =>
  *   Effect.runPromise(pageSourceText(source, NonNegativeInt.make(0)))
+ *
+ * typeof loadFirstPage // => "function"
  * ```
  *
  * @effects Performs deterministic in-memory paging only. It does not read or
@@ -137,6 +139,8 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  *   Effect.runPromise(
  *     pageSourceTextContainingOffset(source, NonNegativeInt.make(offset))
  *   )
+ *
+ * typeof loadPageContaining // => "function"
  * ```
  *
  * @effects Searches deterministic in-memory page bounds only. It does not read
