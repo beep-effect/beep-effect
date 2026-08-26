@@ -1,0 +1,51 @@
+/*
+ * Opt-in bridge from @beep/ui's shadcn tokens onto the beep brand scale.
+ *
+ * Import order in an app stylesheet:
+ *   @import "@beep/brand/styles/fonts.css";
+ *   @import "@beep/ui/styles/globals.css";
+ *   @import "@beep/brand/styles/brand.css";
+ *   @import "@beep/brand/styles/bridge.css";
+ *
+ * Every value here is a var() reference into brand.css, so the bridge follows the
+ * light/dark scheme without restating a single color. `--font-geist-*` is the font
+ * variable @beep/ui expects an app to define; the brand stacks satisfy it.
+ */
+:root {
+  --font-geist-sans: var(--font-brand-sans);
+  --font-geist-mono: var(--font-brand-mono);
+
+  --background: var(--color-surface-0);
+  --foreground: var(--color-fg);
+  --card: var(--color-surface-50);
+  --card-foreground: var(--color-fg);
+  --popover: var(--color-surface-100);
+  --popover-foreground: var(--color-fg);
+  --primary: var(--color-brand-400);
+  --primary-foreground: var(--color-brand-50);
+  --secondary: var(--color-surface-100);
+  --secondary-foreground: var(--color-fg);
+  --muted: var(--color-surface-100);
+  --muted-foreground: var(--color-fg-muted);
+  --accent: var(--color-surface-200);
+  --accent-foreground: var(--color-fg);
+  --destructive: var(--color-error);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-brand-500);
+  --sidebar: var(--color-surface-50);
+  --sidebar-foreground: var(--color-fg);
+  --sidebar-primary: var(--color-brand-400);
+  --sidebar-primary-foreground: var(--color-brand-50);
+  --sidebar-accent: var(--color-surface-200);
+  --sidebar-accent-foreground: var(--color-fg);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-brand-500);
+}
+
+.dark {
+  --primary-foreground: var(--color-brand-900);
+  --sidebar-primary-foreground: var(--color-brand-900);
+}
