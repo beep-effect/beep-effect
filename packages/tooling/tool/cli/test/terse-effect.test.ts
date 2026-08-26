@@ -199,6 +199,8 @@ describe("terse effect laws", () => {
               "",
               "export const values = {",
               "  onNone: () => A.empty<string>(),",
+              "  onNoneTyped: () => O.none<string>(),",
+              "  onSomeTyped: (value) => O.some<string>(value),",
               "  onEmpty: () => O.none(),",
               "  onBare: () => A.empty(),",
               "  onRef: (value) => O.some(value),",
@@ -210,15 +212,21 @@ describe("terse effect laws", () => {
           yield* writeProjectFile(DemoSourcePath, source);
 
           const checkSummary = yield* runTerseRules(false, true);
-          expect(checkSummary.helpersSimplified).toBe(1);
-          expect(checkSummary.blockingFindings).toEqual([
-            expect.stringMatching(/^packages\/demo\/src\/index\.ts:\d+:\d+ helper-ref$/u),
-          ]);
+          expect(checkSummary.helpersSimplified).toBe(3);
+          expect(checkSummary.blockingFindings).toEqual(
+            A.make(
+              expect.stringMatching(/^packages\/demo\/src\/index\.ts:\d+:\d+ helper-ref$/u),
+              expect.stringMatching(/^packages\/demo\/src\/index\.ts:\d+:\d+ helper-ref$/u),
+              expect.stringMatching(/^packages\/demo\/src\/index\.ts:\d+:\d+ helper-ref$/u)
+            )
+          );
 
           const writeSummary = yield* runTerseRules(true, false);
           const rewritten = yield* readProjectFile(DemoSourcePath);
-          expect(writeSummary.helpersSimplified).toBe(1);
+          expect(writeSummary.helpersSimplified).toBe(3);
           expect(rewritten).toContain("onNone: A.empty<string>");
+          expect(rewritten).toContain("onNoneTyped: O.none<string>");
+          expect(rewritten).toContain("onSomeTyped: O.some<string>");
           expect(rewritten).toContain("onEmpty: () => O.none()");
           expect(rewritten).toContain("onBare: () => A.empty()");
           expect(rewritten).toContain("onRef: (value) => O.some(value)");

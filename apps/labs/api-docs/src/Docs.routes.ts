@@ -1,3 +1,10 @@
+/**
+ * HTTP routes for the API documentation catalog.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { escapeHtml } from "@beep/utils/Html";
 import { Effect, FileSystem, Layer, Match } from "effect";
 import * as A from "effect/Array";
@@ -146,5 +153,23 @@ const entryLayer = (entry: CatalogEntry) =>
 
 const IndexRoute = HttpRouter.add("GET", "/", HttpServerResponse.html(indexHtml()));
 
-/** Index, documentation, and raw-spec routes for the complete catalog. */
+/**
+ * Router layer for the catalog index, Scalar documentation pages, and raw specifications.
+ *
+ * **Details**
+ *
+ * Routes are mounted directly at `/` and `/apis/:slug`; callers must not add an API prefix before merging the layer.
+ *
+ * **Example** (Inspect the route layer)
+ *
+ * ```ts
+ * import { CatalogRoutes } from "@beep/api-docs/src/Docs.routes"
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(CatalogRoutes)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const CatalogRoutes = Layer.mergeAll(IndexRoute, ...A.map(Catalog, entryLayer));

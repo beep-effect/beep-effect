@@ -51,7 +51,7 @@ catalog (contract entries + spec-file entries); v1 coverage below.
     `Match`-based fold — match helpers over conditional chains (repo law).
 - `Catalog.ts` — the catalog value (see table below). Spec paths are
   repo-root-relative; resolve the repo root from `import.meta` (this file lives
-  at `apps/labs/api-docs/src/`, so root is three dirs up) via the Path service,
+  at `apps/labs/api-docs/src/`, so root is four dirs up) via the Path service,
   never from cwd.
 - `Docs.routes.ts` — fold `CatalogEntry -> Layer` (Scalar layer + spec route
   for contract entries; embed page + file route for spec entries), plus the
