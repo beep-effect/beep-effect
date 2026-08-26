@@ -28,3 +28,10 @@
 - Evidence: the first indexing loop stopped with `zsh: read-only variable: status`.
 - Cause: `status` is a reserved read-only parameter in zsh.
 - Prevention: use task-specific names such as `http_status` in portable shell loops.
+
+## 2026-08-26: the honest identity is challenged, not refused
+
+- Work: probing the three seed hosts with the research-crawler identity before finalizing the mining script.
+- Evidence: `robots.txt` and the homepage on all three hosts returned HTTP `202` with the host's captcha challenge markup instead of `403`.
+- Cause: the site's bot filtering answers unknown crawler identities with a challenge page rather than a refusal status.
+- Prevention: treat any status other than `200` as a block for stored content, scan textual bodies for challenge markers before storing, and expect the honest run to end at preflight until the site owner allows the identity; do not read a `2xx` as acceptance.

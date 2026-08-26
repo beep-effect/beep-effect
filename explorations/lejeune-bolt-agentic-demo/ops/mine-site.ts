@@ -1,29 +1,40 @@
 /**
  * Ethical, reproducible miner for the public LeJeune Bolt first-party sites.
- * It uses an honest identity, obeys robots.txt, sends serial requests at least one second apart
- * per host, and stops on any 401, 403, or 429 without retrying, even with Retry-After.
+ *
+ * Boundary (research/08-demo-options.md "Reproducible lejeunebolt.com mining sketch" and
+ * RESEARCH.md "2026-08-25 constraints discovered"): one honest identity, robots.txt read per
+ * host before any page request and applied to every URL, HTTPS on the three first-party hosts
+ * (www. aliases included) for sitemap entries, discovered links, and redirects, exactly one
+ * stored body per HTTP 200 response, and a stop without retry on any 401, 403, 429, challenge
+ * page, or unexpected status. A refusal is the expected outcome when the site filters crawlers;
+ * never switch identities to get past it.
+ *
  * Usage: bun run explorations/lejeune-bolt-agentic-demo/ops/mine-site.ts [--dry-run] [--root PATH]
  * Output stays staged until its manifest and hashes validate, then atomically updates current.
  * Runs contain manifest.jsonl, run.log, pages/, files/, meta/robots/, and meta/sitemaps/.
+ *
+ * Fixture-only overrides (production uses the defaults): LEJEUNE_SEED_HOSTS (space-separated
+ * hosts), LEJEUNE_SCHEME (http for a local fixture), LEJEUNE_PREFLIGHT (space-separated URLs).
+ *
+ * Exit codes: 2 usage or refused corpus root, 3 remote refusal, challenge, or unexpected
+ * response, 4 robots.txt unreadable or newly prohibitive, 6 manifest validation failed.
  */
 import { createHash } from "node:crypto";
 import { appendFile, copyFile, mkdir, readFile, realpath, rename, symlink } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
-const UA =
-  "beep-explorations-site-miner/0.1 (research corpus for explorations/" +
-  "lejeune-bolt-agentic-demo; contact via repository)";
 const UA_TOKEN = "beep-explorations-site-miner";
-const HOSTS = new Set([
-  "lejeunebolt.com",
-  "www.lejeunebolt.com",
-  "rentals.lejeunebolt.com",
-  "www.rentals.lejeunebolt.com",
-  "tightenright.com",
-  "www.tightenright.com",
-]);
-const PREFLIGHT = ["https://lejeunebolt.com/", "https://www.tightenright.com/"];
+const UA = `${UA_TOKEN}/0.1 (research corpus for explorations/lejeune-bolt-agentic-demo; contact via repository)`;
+const SCHEME = process.env.LEJEUNE_SCHEME === "http" ? "http:" : "https:";
+const SEEDS = (process.env.LEJEUNE_SEED_HOSTS ?? "lejeunebolt.com rentals.lejeunebolt.com tightenright.com")
+  .split(/\s+/)
+  .filter(Boolean)
+  .map((host) => host.toLowerCase());
+const HOSTS = new Set(SEEDS.flatMap((host) => (host.startsWith("www.") ? [host] : [host, `www.${host}`])));
+const PREFLIGHT = (process.env.LEJEUNE_PREFLIGHT ?? `https://lejeunebolt.com/ https://www.tightenright.com/`)
+  .split(/\s+/)
+  .filter(Boolean);
 const FILE_EXT = new Set([".pdf", ".docx", ".xlsx", ".dxf", ".dwg"]);
 const SKIP_EXT = new Set([
   ".avif",
@@ -46,9 +57,13 @@ const SKIP_EXT = new Set([
   ".woff2",
 ]);
 const TRACKING = /^(utm_.+|fbclid|gclid|dclid|_ga|mc_cid|mc_eid)$/i;
+const CHALLENGE = /sgcaptcha|\/\.well-known\/[a-z_-]*captcha|cf-chl|challenge-platform|just a moment/i;
+const MAX_REDIRECTS = 3;
+
 type Kind = "robots" | "sitemap" | "page" | "file";
 type Rule = { allow: boolean; path: string };
-type Robots = { groups: Array<{ agents: string[]; rules: Rule[]; delay: number }>; sitemaps: string[] };
+type Group = { agents: string[]; rules: Rule[]; delay: number };
+type Robots = { groups: Group[]; sitemaps: string[] };
 type Policy = { current: Robots; previous?: Robots; changed: boolean };
 type Entry = {
   url: string;
@@ -62,6 +77,23 @@ type Entry = {
   artifact?: string;
 };
 type Result = { entry: Entry; path: string };
+type Options = { dryRun: boolean; root: string };
+type Ctx = {
+  root: string;
+  staging: string;
+  current: string;
+  manifest: string;
+  logFile: string;
+  cap: number;
+  entries: Entry[];
+  results: Map<string, Result | null>;
+  policies: Map<string, Policy>;
+  counts: Map<string, number>;
+  lastRequest: Map<string, number>;
+  prior: Map<string, Entry>;
+};
+type Fetched = { status: number; contentType: string; location: string | null; body: Uint8Array };
+
 class Stop extends Error {
   constructor(
     message: string,
@@ -70,6 +102,7 @@ class Stop extends Error {
     super(message);
   }
 }
+
 const decoder = new TextDecoder();
 const now = () => new Date().toISOString();
 const digest = (value: string | Uint8Array) => createHash("sha256").update(value).digest("hex");
@@ -81,86 +114,163 @@ const usage = () =>
     "  --root <path>  Root (default: LEJEUNE_CORPUS_ROOT or ~/data-home/lejeune-bolt-corpus).",
     "Environment: LEJEUNE_REQUEST_CAP sets the per-host cap (default 800).",
   ].join("\n");
-function parseArgs(argv: string[]): { dryRun: boolean; root: string } {
-  let dryRun = false;
-  let root = process.env.LEJEUNE_CORPUS_ROOT ?? join(homedir(), "data-home/lejeune-bolt-corpus");
+
+// --- options and corpus root ---------------------------------------------------------------
+
+const defaultRoot = () => process.env.LEJEUNE_CORPUS_ROOT ?? join(homedir(), "data-home/lejeune-bolt-corpus");
+
+function parseArgs(argv: string[]): Options {
+  const options: Options = { dryRun: false, root: defaultRoot() };
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === "--dry-run") dryRun = true;
-    else if (argv[i] === "--root" && argv[i + 1]) root = argv[++i];
-    else throw new Stop(`unknown or incomplete option: ${argv[i]}\n${usage()}`, 2);
+    i = applyArg(options, argv, i);
   }
-  return { dryRun, root };
+  return options;
 }
+
+function applyArg(options: Options, argv: string[], i: number): number {
+  const arg = argv[i];
+  if (arg === "--dry-run") {
+    options.dryRun = true;
+    return i;
+  }
+  if (arg === "--root" && argv[i + 1]) {
+    options.root = argv[i + 1];
+    return i + 1;
+  }
+  throw new Stop(`unknown or incomplete option: ${arg}\n${usage()}`, 2);
+}
+
+const expandHome = (path: string): string =>
+  path === "~" ? homedir() : path.startsWith(`~${sep}`) ? join(homedir(), path.slice(2)) : path;
+
 async function canonical(path: string): Promise<string> {
-  const expanded = path === "~" ? homedir() : path.startsWith(`~${sep}`) ? join(homedir(), path.slice(2)) : path;
-  const absolute = resolve(expanded);
+  const absolute = resolve(expandHome(path));
   try {
     return await realpath(absolute);
   } catch {
-    if (dirname(absolute) === absolute) throw new Stop(`cannot resolve corpus root: ${path}`, 2);
-    return join(await canonical(dirname(absolute)), basename(absolute));
+    return canonicalMissing(path, absolute);
   }
 }
-function normalize(raw: string, base?: string): string | undefined {
+
+async function canonicalMissing(path: string, absolute: string): Promise<string> {
+  if (dirname(absolute) === absolute) throw new Stop(`cannot resolve corpus root: ${path}`, 2);
+  return join(await canonical(dirname(absolute)), basename(absolute));
+}
+
+async function repoRoot(): Promise<string> {
+  const git = Bun.spawnSync(["git", "rev-parse", "--show-toplevel"], { stdout: "pipe", stderr: "pipe" });
+  if (git.exitCode !== 0) throw new Stop("cannot determine repository root; refusing corpus output", 2);
+  return canonical(decoder.decode(git.stdout).trim());
+}
+
+async function guardRoot(root: string): Promise<void> {
+  const checkout = await repoRoot();
+  const inside = root === checkout || root.startsWith(`${checkout}${sep}`) || root.includes(`${sep}beep-effect`);
+  if (inside) throw new Stop(`refusing corpus root inside a checkout or beep-effect path: ${root}`, 2);
+}
+
+// --- URL scope --------------------------------------------------------------------------------
+
+const parseUrl = (raw: string, base?: string): URL | undefined => {
   try {
-    const url = new URL(raw.replaceAll("&amp;", "&"), base);
-    if (url.protocol !== "https:" || !HOSTS.has(url.hostname.toLowerCase())) return undefined;
-    url.hostname = url.hostname.toLowerCase();
-    url.hash = "";
-    for (const key of [...url.searchParams.keys()]) if (TRACKING.test(key)) url.searchParams.delete(key);
-    url.searchParams.sort();
-    return url.href;
+    return new URL(raw.replaceAll("&amp;", "&"), base);
   } catch {
     return undefined;
   }
+};
+
+const hostOf = (url: string): string => new URL(url).host.toLowerCase();
+const inScope = (url: URL): boolean => url.protocol === SCHEME && HOSTS.has(url.host.toLowerCase());
+
+function stripTracking(url: URL): string {
+  url.hostname = url.hostname.toLowerCase();
+  url.hash = "";
+  for (const key of [...url.searchParams.keys()]) {
+    if (TRACKING.test(key)) url.searchParams.delete(key);
+  }
+  url.searchParams.sort();
+  return url.href;
 }
+
+function normalize(raw: string, base?: string): string | undefined {
+  const url = parseUrl(raw, base);
+  return url && inScope(url) ? stripTracking(url) : undefined;
+}
+
 function classify(url: string): Kind | "skip" {
   const ext = extname(new URL(url).pathname).toLowerCase();
   return FILE_EXT.has(ext) ? "file" : SKIP_EXT.has(ext) ? "skip" : "page";
 }
-function parseRobots(body: string): Robots {
-  const groups: Robots["groups"] = [];
-  const sitemaps: string[] = [];
-  let group: Robots["groups"][number] | undefined;
-  let directives = false;
-  for (const source of body.split(/\r?\n/)) {
-    const line = source.replace(/\s*#.*$/, "").trim();
-    const at = line.indexOf(":");
-    if (at < 0) continue;
-    const key = line.slice(0, at).trim().toLowerCase();
-    const value = line.slice(at + 1).trim();
-    if (key === "sitemap" && value) {
-      sitemaps.push(value);
-      continue;
-    }
-    if (key === "user-agent") {
-      if (!group || directives) {
-        group = { agents: [], rules: [], delay: 0 };
-        groups.push(group);
-        directives = false;
-      }
-      group.agents.push(value.toLowerCase());
-    } else if (group && (key === "allow" || key === "disallow")) {
-      directives = true;
-      if (value) group.rules.push({ allow: key === "allow", path: value });
-    } else if (group && key === "crawl-delay") {
-      directives = true;
-      const delay = Number(value);
-      if (Number.isFinite(delay) && delay >= 0) group.delay = delay;
-    }
+
+const isSitemapUrl = (url: string): boolean => /\.xml(?:\.gz)?$/i.test(new URL(url).pathname);
+
+// --- robots.txt ------------------------------------------------------------------------------
+
+type RobotsState = { robots: Robots; group?: Group; directives: boolean };
+
+const robotsLine = (source: string): [string, string] | undefined => {
+  const line = source.replace(/\s*#.*$/, "").trim();
+  const at = line.indexOf(":");
+  return at < 0 ? undefined : [line.slice(0, at).trim().toLowerCase(), line.slice(at + 1).trim()];
+};
+
+function robotsAgent(state: RobotsState, value: string): void {
+  if (!state.group || state.directives) {
+    state.group = { agents: [], rules: [], delay: 0 };
+    state.robots.groups.push(state.group);
+    state.directives = false;
   }
-  return { groups, sitemaps };
+  state.group.agents.push(value.toLowerCase());
 }
+
+function robotsRule(state: RobotsState, allow: boolean, value: string): void {
+  if (!state.group) return;
+  state.directives = true;
+  if (value) state.group.rules.push({ allow, path: value });
+}
+
+function robotsDelay(state: RobotsState, value: string): void {
+  if (!state.group) return;
+  state.directives = true;
+  const delay = Number(value);
+  if (Number.isFinite(delay) && delay >= 0) state.group.delay = delay;
+}
+
+function robotsSitemap(state: RobotsState, value: string): void {
+  if (value) state.robots.sitemaps.push(value);
+}
+
+const DIRECTIVES: Record<string, (state: RobotsState, value: string) => void> = {
+  sitemap: robotsSitemap,
+  "user-agent": robotsAgent,
+  allow: (state, value) => robotsRule(state, true, value),
+  disallow: (state, value) => robotsRule(state, false, value),
+  "crawl-delay": robotsDelay,
+};
+
+const robotsDirective = (state: RobotsState, key: string, value: string): void => DIRECTIVES[key]?.(state, value);
+
+function parseRobots(body: string): Robots {
+  const state: RobotsState = { robots: { groups: [], sitemaps: [] }, directives: false };
+  for (const source of body.split(/\r?\n/)) {
+    const parsed = robotsLine(source);
+    if (parsed) robotsDirective(state, parsed[0], parsed[1]);
+  }
+  return state.robots;
+}
+
+const namesToken = (group: Group): boolean => group.agents.some((agent) => agent !== "*" && UA_TOKEN.includes(agent));
+const namesWildcard = (group: Group): boolean => group.agents.includes("*");
+
 function applicable(policy: Robots): { rules: Rule[]; delay: number } {
-  const exact = policy.groups.filter((group) =>
-    group.agents.some((agent) => agent !== "*" && UA_TOKEN.includes(agent))
-  );
-  const selected = exact.length ? exact : policy.groups.filter((group) => group.agents.includes("*"));
+  const exact = policy.groups.filter(namesToken);
+  const selected = exact.length ? exact : policy.groups.filter(namesWildcard);
   return {
     rules: selected.flatMap((group) => group.rules),
     delay: Math.max(1, ...selected.map((group) => group.delay || 0)),
   };
 }
+
 function decide(url: string, robots: Robots): { allowed: boolean; note: string } {
   const parsed = new URL(url);
   const target = parsed.pathname + parsed.search;
@@ -171,322 +281,517 @@ function decide(url: string, robots: Robots): { allowed: boolean; note: string }
     ? { allowed: rule.allow, note: `${rule.allow ? "allowed" : "disallowed"}: ${rule.path}` }
     : { allowed: true, note: "allowed: no matching rule" };
 }
-function validType(kind: Kind, value: string): boolean {
-  if (kind === "robots") return /^text\/plain\b/i.test(value);
-  if (kind === "sitemap") return /(?:xml|text\/plain)/i.test(value);
-  if (kind === "page") return /(?:text\/html|application\/xhtml\+xml)/i.test(value);
-  return /(?:pdf|officedocument|dxf|dwg|acad|octet-stream|text\/plain)/i.test(value);
+
+const TYPE_RULES: Record<Kind, RegExp> = {
+  robots: /^text\/plain\b/i,
+  sitemap: /(?:xml|text\/plain)/i,
+  page: /(?:text\/html|application\/xhtml\+xml)/i,
+  file: /(?:pdf|officedocument|dxf|dwg|acad|octet-stream|text\/plain)/i,
+};
+const validType = (kind: Kind, value: string): boolean => TYPE_RULES[kind].test(value);
+
+// --- run context ------------------------------------------------------------------------------
+
+async function loadPrior(current: string): Promise<Map<string, Entry>> {
+  try {
+    const lines = (await readFile(join(current, "manifest.jsonl"), "utf8")).trim().split("\n");
+    return new Map(lines.filter(Boolean).map((line) => [JSON.parse(line).url as string, JSON.parse(line) as Entry]));
+  } catch {
+    return new Map();
+  }
 }
+
+function requestCap(): number {
+  const cap = Number(process.env.LEJEUNE_REQUEST_CAP ?? "800");
+  if (!Number.isInteger(cap) || cap < 1) throw new Stop("LEJEUNE_REQUEST_CAP must be a positive integer", 2);
+  return cap;
+}
+
+async function makeContext(root: string): Promise<Ctx> {
+  const clock = now();
+  const stamp = `${clock.slice(0, 10)}-${clock.slice(11, 23).replace(/\D/g, "")}`;
+  const staging = join(root, "runs", `${stamp}.staging`);
+  const current = join(root, "current");
+  for (const folder of ["meta/robots", "meta/sitemaps", ".tmp", "pages", "files"]) {
+    await mkdir(join(staging, folder), { recursive: true });
+  }
+  return {
+    root,
+    staging,
+    current,
+    manifest: join(staging, "manifest.jsonl"),
+    logFile: join(staging, "run.log"),
+    cap: requestCap(),
+    entries: [],
+    results: new Map(),
+    policies: new Map(),
+    counts: new Map(),
+    lastRequest: new Map(),
+    prior: await loadPrior(current),
+  };
+}
+
+const log = (ctx: Ctx, message: string) => appendFile(ctx.logFile, `${now()} ${message}\n`);
+
+async function record(ctx: Ctx, row: Entry): Promise<void> {
+  ctx.entries.push(row);
+  await appendFile(ctx.manifest, `${JSON.stringify(row)}\n`);
+}
+
+const emptyRow = (
+  url: string,
+  finalUrl: string,
+  status: number,
+  contentType: string,
+  robotsDecision: string
+): Entry => ({
+  url,
+  finalUrl,
+  status,
+  contentType,
+  bytes: 0,
+  sha256: "",
+  fetchedAt: now(),
+  robotsDecision,
+});
+
+function hostDelay(ctx: Ctx, host: string): number {
+  const policy = ctx.policies.get(host);
+  return policy ? applicable(policy.current).delay : 1;
+}
+
+function countRequest(ctx: Ctx, host: string): void {
+  const count = (ctx.counts.get(host) ?? 0) + 1;
+  if (count > ctx.cap) throw new Stop(`request cap ${ctx.cap} reached for ${host}`, 3);
+  ctx.counts.set(host, count);
+}
+
+async function throttle(ctx: Ctx, host: string): Promise<void> {
+  const wait = hostDelay(ctx, host) * 1000 - (Date.now() - (ctx.lastRequest.get(host) ?? 0));
+  if (wait > 0) await sleep(wait);
+  ctx.lastRequest.set(host, Date.now());
+}
+
+async function pace(ctx: Ctx, host: string): Promise<void> {
+  countRequest(ctx, host);
+  await throttle(ctx, host);
+}
+
+// --- robots decisions -------------------------------------------------------------------------
+
+function policyFor(ctx: Ctx, url: string): Policy {
+  const policy = ctx.policies.get(hostOf(url));
+  if (!policy) throw new Stop(`no robots policy loaded for ${url}`, 4);
+  return policy;
+}
+
+const newlyProhibited = (policy: Policy, url: string, allowed: boolean): boolean =>
+  !allowed && policy.changed && policy.previous !== undefined && decide(url, policy.previous).allowed;
+
+async function permitted(ctx: Ctx, url: string): Promise<string | undefined> {
+  const policy = policyFor(ctx, url);
+  const decision = decide(url, policy.current);
+  if (newlyProhibited(policy, url, decision.allowed)) {
+    await log(ctx, `REFUSAL robots policy newly prohibits ${url} (${decision.note})`);
+    throw new Stop(`robots.txt changed to prohibit ${url}`, 4);
+  }
+  if (decision.allowed) return decision.note;
+  await log(ctx, `SKIP ${url} (${decision.note})`);
+  await record(ctx, emptyRow(url, url, 0, "", decision.note));
+  return undefined;
+}
+
+// --- fetching ------------------------------------------------------------------------------------
+
+const folderFor = (kind: Kind): string =>
+  kind === "page" ? "pages" : kind === "file" ? "files" : kind === "robots" ? "meta/robots" : "meta/sitemaps";
+
+function extensionFor(kind: Kind, url: string): string {
+  if (kind === "page") return ".html";
+  if (kind === "robots") return ".txt";
+  return kind === "sitemap" ? ".xml" : extname(new URL(url).pathname).toLowerCase();
+}
+
+function artifactName(kind: Kind, url: string): string {
+  const extension = extensionFor(kind, url);
+  return kind === "robots" ? hostOf(url) + extension : digest(url).slice(0, 20) + extension;
+}
+
+const safeArtifact = (artifact: string | undefined): artifact is string =>
+  artifact !== undefined && !isAbsolute(artifact) && !artifact.split(/[\\/]/).includes("..");
+
+const reusable = (prior: Entry | undefined): prior is Entry & { artifact: string } =>
+  prior !== undefined && prior.status === 200 && safeArtifact(prior.artifact);
+
+async function priorBytes(ctx: Ctx, prior: Entry & { artifact: string }): Promise<Uint8Array | undefined> {
+  try {
+    const bytes = await readFile(join(ctx.current, prior.artifact));
+    return bytes.length === prior.bytes && digest(bytes) === prior.sha256 ? bytes : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function cacheHit(ctx: Ctx, url: string, robots: string, name: string, artifact: string): Promise<Result | null> {
+  const prior = ctx.prior.get(url);
+  if (!reusable(prior)) return null;
+  const bytes = await priorBytes(ctx, prior);
+  if (!bytes) {
+    await log(ctx, `CACHE MISS invalid prior artifact for ${url}`);
+    return null;
+  }
+  const destination = join(ctx.staging, artifact);
+  const temp = join(ctx.staging, ".tmp", `${name}.resume`);
+  await copyFile(join(ctx.current, prior.artifact), temp);
+  await rename(temp, destination);
+  const row = { ...prior, url, robotsDecision: robots, artifact };
+  await record(ctx, row);
+  return { entry: row, path: destination };
+}
+
+async function request(ctx: Ctx, url: string): Promise<Fetched> {
+  await pace(ctx, hostOf(url));
+  try {
+    const response = await fetch(url, {
+      headers: { "User-Agent": UA },
+      redirect: "manual",
+      signal: AbortSignal.timeout(60_000),
+    });
+    return {
+      status: response.status,
+      contentType: response.headers.get("content-type") ?? "",
+      location: response.headers.get("location"),
+      body: new Uint8Array(await response.arrayBuffer()),
+    };
+  } catch (cause) {
+    await log(ctx, `ERROR request failed for ${url}: ${cause instanceof Error ? cause.message : "unknown error"}`);
+    throw new Stop(`request failed for ${url}; see ${ctx.logFile}`, 3);
+  }
+}
+
+type Outcome = "refusal" | "redirect" | "missing" | "ok" | "unexpected";
+
+const REFUSAL_STATUSES = new Set([401, 403, 429]);
+const MISSING_STATUSES = new Set([404, 410]);
+const OUTCOMES: ReadonlyArray<readonly [(status: number) => boolean, Outcome]> = [
+  [(status) => status === 200, "ok"],
+  [(status) => REFUSAL_STATUSES.has(status), "refusal"],
+  [(status) => status >= 300 && status < 400, "redirect"],
+  [(status) => MISSING_STATUSES.has(status) || status >= 500, "missing"],
+];
+const outcomeOf = (status: number): Outcome => OUTCOMES.find(([test]) => test(status))?.[1] ?? "unexpected";
+
+type Hop = { url: string; finalUrl: string; kind: Kind; robots: string; redirects: number };
+
+async function refuse(ctx: Ctx, hop: Hop, fetched: Fetched): Promise<never> {
+  await log(ctx, `REFUSAL ${fetched.status} for ${hop.finalUrl}; stopped without retry`);
+  await record(ctx, emptyRow(hop.url, hop.finalUrl, fetched.status, fetched.contentType, hop.robots));
+  throw new Stop(`remote refusal ${fetched.status} for ${hop.finalUrl}; see ${ctx.logFile}`, 3);
+}
+
+async function unexpected(ctx: Ctx, hop: Hop, fetched: Fetched): Promise<never> {
+  await log(ctx, `REFUSAL unexpected HTTP ${fetched.status} for ${hop.finalUrl}; stopped without retry`);
+  await record(ctx, emptyRow(hop.url, hop.finalUrl, fetched.status, fetched.contentType, hop.robots));
+  throw new Stop(`unexpected HTTP ${fetched.status} for ${hop.finalUrl}; treat it as a block and stop`, 3);
+}
+
+async function skipRedirect(ctx: Ctx, hop: Hop, fetched: Fetched, reason: string): Promise<null> {
+  await log(ctx, `SKIP ${reason} for ${hop.finalUrl} (HTTP ${fetched.status} -> ${fetched.location ?? "no Location"})`);
+  await record(ctx, emptyRow(hop.url, hop.finalUrl, fetched.status, fetched.contentType, hop.robots));
+  ctx.results.set(hop.url, null);
+  return null;
+}
+
+async function redirectTarget(ctx: Ctx, hop: Hop, fetched: Fetched): Promise<string | null> {
+  if (!fetched.location || hop.redirects >= MAX_REDIRECTS) {
+    return skipRedirect(ctx, hop, fetched, "redirect limit or missing Location");
+  }
+  const target = normalize(fetched.location, hop.finalUrl);
+  return target ?? skipRedirect(ctx, hop, fetched, "off-scope redirect");
+}
+
+async function redirectRobots(ctx: Ctx, hop: Hop, target: string): Promise<string> {
+  const robots = hop.kind === "robots" ? hop.robots : await permitted(ctx, target);
+  if (!robots) throw new Stop(`redirect target disallowed by robots.txt: ${target}`, 4);
+  return robots;
+}
+
+async function redirectHop(ctx: Ctx, hop: Hop, fetched: Fetched): Promise<Hop | null> {
+  const target = await redirectTarget(ctx, hop, fetched);
+  if (!target) return null;
+  const robots = await redirectRobots(ctx, hop, target);
+  return { ...hop, finalUrl: target, robots, redirects: hop.redirects + 1 };
+}
+
+async function missing(ctx: Ctx, hop: Hop, fetched: Fetched): Promise<null> {
+  await log(ctx, `SKIP HTTP ${fetched.status} ${hop.finalUrl}`);
+  await record(ctx, emptyRow(hop.url, hop.finalUrl, fetched.status, fetched.contentType, hop.robots));
+  ctx.results.set(hop.url, null);
+  return null;
+}
+
+function guardType(hop: Hop, fetched: Fetched): void {
+  if (!validType(hop.kind, fetched.contentType)) {
+    throw new Stop(`unexpected content type ${fetched.contentType || "(missing)"} for ${hop.finalUrl}`, 3);
+  }
+}
+
+const isChallenge = (kind: Kind, body: Uint8Array): boolean =>
+  kind !== "file" && CHALLENGE.test(decoder.decode(body.subarray(0, 65_536)));
+
+async function guardBody(ctx: Ctx, hop: Hop, fetched: Fetched): Promise<void> {
+  guardType(hop, fetched);
+  if (isChallenge(hop.kind, fetched.body)) {
+    await log(ctx, `REFUSAL challenge page served for ${hop.finalUrl}; the crawler identity is being filtered`);
+    throw new Stop(`${hop.finalUrl} served a challenge page to the research identity; stop and do not change it`, 3);
+  }
+}
+
+async function store(ctx: Ctx, hop: Hop, fetched: Fetched, name: string, artifact: string): Promise<Result> {
+  await guardBody(ctx, hop, fetched);
+  const destination = join(ctx.staging, artifact);
+  const temp = join(ctx.staging, ".tmp", `${name}.${crypto.randomUUID()}`);
+  await Bun.write(temp, fetched.body);
+  await rename(temp, destination);
+  const row: Entry = {
+    ...emptyRow(hop.url, hop.finalUrl, fetched.status, fetched.contentType, hop.robots),
+    bytes: fetched.body.length,
+    sha256: digest(fetched.body),
+    artifact,
+  };
+  await record(ctx, row);
+  const result = { entry: row, path: destination };
+  ctx.results.set(hop.url, result);
+  return result;
+}
+
+type Terminal = Exclude<Outcome, "redirect">;
+type Handler = (ctx: Ctx, hop: Hop, fetched: Fetched, name: string, artifact: string) => Promise<Result | null>;
+const HANDLERS: Record<Terminal, Handler> = {
+  refusal: (ctx, hop, fetched) => refuse(ctx, hop, fetched),
+  unexpected: (ctx, hop, fetched) => unexpected(ctx, hop, fetched),
+  missing: (ctx, hop, fetched) => missing(ctx, hop, fetched),
+  ok: store,
+};
+
+async function follow(ctx: Ctx, hop: Hop, name: string, artifact: string): Promise<Result | null> {
+  for (let current = hop; ; ) {
+    const fetched = await request(ctx, current.finalUrl);
+    const outcome = outcomeOf(fetched.status);
+    if (outcome !== "redirect") return HANDLERS[outcome](ctx, current, fetched, name, artifact);
+    const next = await redirectHop(ctx, current, fetched);
+    if (!next) return null;
+    current = next;
+  }
+}
+
+const knownResult = (ctx: Ctx, url: string): Result | null => ctx.results.get(url) ?? null;
+
+async function resolveCached(ctx: Ctx, url: string, robots: string, name: string, artifact: string, force: boolean) {
+  const cached = force ? null : await cacheHit(ctx, url, robots, name, artifact);
+  if (cached) ctx.results.set(url, cached);
+  return cached;
+}
+
+async function fetchOne(ctx: Ctx, input: string, kind: Kind, robots: string, force = false): Promise<Result | null> {
+  const url = normalize(input);
+  if (!url) {
+    await log(ctx, `SKIP out-of-scope URL ${input}`);
+    return null;
+  }
+  if (ctx.results.has(url)) return knownResult(ctx, url);
+  const name = artifactName(kind, url);
+  const artifact = `${folderFor(kind)}/${name}`;
+  const cached = await resolveCached(ctx, url, robots, name, artifact, force);
+  if (cached) return cached;
+  return follow(ctx, { url, finalUrl: url, kind, robots, redirects: 0 }, name, artifact);
+}
+
+// --- phases -----------------------------------------------------------------------------------------
+
+async function previousRobots(ctx: Ctx, host: string): Promise<string | undefined> {
+  try {
+    return await readFile(join(ctx.current, "meta", "robots", `${host}.txt`), "utf8");
+  } catch {
+    return undefined;
+  }
+}
+
+async function loadPolicy(ctx: Ctx, host: string): Promise<void> {
+  const result = await fetchOne(ctx, `${SCHEME}//${host}/robots.txt`, "robots", "robots bootstrap", true);
+  if (!result)
+    throw new Stop(`robots.txt for ${host} is unavailable; the policy cannot be evaluated, so the crawl stops`, 4);
+  const currentText = await readFile(result.path, "utf8");
+  const previousText = await previousRobots(ctx, host);
+  ctx.policies.set(host, {
+    current: parseRobots(currentText),
+    previous: previousText === undefined ? undefined : parseRobots(previousText),
+    changed: previousText !== undefined && previousText !== currentText,
+  });
+}
+
+async function preflight(ctx: Ctx): Promise<void> {
+  for (const url of PREFLIGHT) {
+    const robots = await permitted(ctx, url);
+    if (!robots || !(await fetchOne(ctx, url, "page", robots, true))) {
+      throw new Stop(`preflight failed for ${url}; the research identity was not accepted, so the crawl stops`, 3);
+    }
+  }
+}
+
+const sitemapSeeds = (ctx: Ctx): string[] =>
+  [...HOSTS].flatMap((host) => [
+    `${SCHEME}//${host}/sitemap.xml`,
+    `${SCHEME}//${host}/sitemap_index.xml`,
+    ...(ctx.policies.get(host)?.current.sitemaps ?? []),
+  ]);
+
+type SitemapWork = { queue: string[]; candidates: Set<string> };
+
+async function routeLocation(ctx: Ctx, raw: string, work: SitemapWork): Promise<void> {
+  const located = normalize(raw);
+  if (!located) {
+    await log(ctx, `SKIP out-of-scope sitemap loc ${raw}`);
+  } else if (isSitemapUrl(located)) {
+    work.queue.push(located);
+  } else if (classify(located) !== "skip") {
+    work.candidates.add(located);
+  }
+}
+
+async function sitemapLocations(ctx: Ctx, path: string, work: SitemapWork): Promise<void> {
+  const xml = await readFile(path, "utf8");
+  for (const match of xml.matchAll(/<loc(?:\s[^>]*)?>([\s\S]*?)<\/loc>/gi)) {
+    await routeLocation(ctx, match[1].trim(), work);
+  }
+}
+
+async function sitemapResult(ctx: Ctx, url: string): Promise<Result | null> {
+  const robots = await permitted(ctx, url);
+  return robots ? fetchOne(ctx, url, "sitemap", robots, true) : null;
+}
+
+async function crawlSitemap(ctx: Ctx, raw: string, seen: Set<string>, work: SitemapWork): Promise<void> {
+  const url = normalize(raw);
+  if (!url) {
+    await log(ctx, `SKIP out-of-scope sitemap URL ${raw}`);
+    return;
+  }
+  if (seen.has(url)) return;
+  seen.add(url);
+  const result = await sitemapResult(ctx, url);
+  if (result) await sitemapLocations(ctx, result.path, work);
+}
+
+async function crawlSitemaps(ctx: Ctx): Promise<Set<string>> {
+  const work: SitemapWork = { queue: sitemapSeeds(ctx), candidates: new Set<string>() };
+  const seen = new Set<string>();
+  while (work.queue.length) {
+    await crawlSitemap(ctx, work.queue.shift() as string, seen, work);
+  }
+  return work.candidates;
+}
+
+async function fetchCandidates(ctx: Ctx, urls: Iterable<string>): Promise<void> {
+  for (const url of urls) {
+    const kind = classify(url);
+    if (kind === "skip") continue;
+    const robots = await permitted(ctx, url);
+    if (robots) await fetchOne(ctx, url, kind, robots);
+  }
+}
+
+function noteCandidate(ctx: Ctx, url: string, discovered: Set<string>): void {
+  if (!ctx.results.has(url) && classify(url) !== "skip") discovered.add(url);
+}
+
+async function noteOffScope(ctx: Ctx, href: string): Promise<void> {
+  if (/^https?:/i.test(href)) await log(ctx, `SKIP out-of-scope discovered URL ${href}`);
+}
+
+async function discoverHref(ctx: Ctx, href: string, base: string, discovered: Set<string>): Promise<void> {
+  const url = normalize(href, base);
+  if (url) noteCandidate(ctx, url, discovered);
+  else await noteOffScope(ctx, href);
+}
+
+async function discoverIn(ctx: Ctx, result: Result, discovered: Set<string>): Promise<void> {
+  const html = await readFile(result.path, "utf8");
+  for (const match of html.matchAll(/\bhref\s*=\s*["']([^"']+)["']/gi)) {
+    await discoverHref(ctx, match[1], result.entry.finalUrl, discovered);
+  }
+}
+
+async function discoverLinks(ctx: Ctx): Promise<Set<string>> {
+  const discovered = new Set<string>();
+  for (const result of ctx.results.values()) {
+    if (result?.entry.artifact?.startsWith("pages/")) await discoverIn(ctx, result, discovered);
+  }
+  return discovered;
+}
+
+async function validateArtifact(ctx: Ctx, row: Entry): Promise<void> {
+  if (!row.artifact) throw new Stop(`2xx manifest row has no artifact: ${row.url}`, 6);
+  const bytes = await readFile(join(ctx.staging, row.artifact));
+  if (bytes.length !== row.bytes || digest(bytes) !== row.sha256) {
+    throw new Stop(`artifact validation failed: ${row.url}`, 6);
+  }
+}
+
+async function validate(ctx: Ctx): Promise<void> {
+  const lines = (await readFile(ctx.manifest, "utf8")).trim().split("\n").filter(Boolean);
+  for (const line of lines) JSON.parse(line);
+  if (lines.length !== ctx.entries.length) throw new Stop("manifest line count changed during validation", 6);
+  for (const row of ctx.entries.filter((entry) => entry.status === 200)) {
+    await validateArtifact(ctx, row);
+  }
+}
+
+async function publish(ctx: Ctx): Promise<string> {
+  const final = ctx.staging.replace(/\.staging$/, "");
+  await rename(ctx.staging, final);
+  const pointer = join(ctx.root, `.current-${basename(final)}.tmp`);
+  await symlink(relative(ctx.root, final), pointer);
+  await rename(pointer, ctx.current);
+  return final;
+}
+
+async function crawl(root: string): Promise<string> {
+  const ctx = await makeContext(root);
+  for (const host of HOSTS) await loadPolicy(ctx, host);
+  await preflight(ctx);
+  await fetchCandidates(ctx, await crawlSitemaps(ctx));
+  await fetchCandidates(ctx, await discoverLinks(ctx));
+  await validate(ctx);
+  return publish(ctx);
+}
+
+const bootstrapUrls = (): string[] =>
+  [...HOSTS].flatMap((host) => [
+    `${SCHEME}//${host}/robots.txt`,
+    `${SCHEME}//${host}/sitemap.xml`,
+    `${SCHEME}//${host}/sitemap_index.xml`,
+  ]);
+
 async function main(): Promise<void> {
   if (process.argv.includes("--help")) {
+    console.log(usage());
     return;
   }
   const options = parseArgs(process.argv.slice(2));
   const root = await canonical(options.root);
-  const git = Bun.spawnSync(["git", "rev-parse", "--show-toplevel"], { stdout: "pipe", stderr: "pipe" });
-  if (git.exitCode !== 0) throw new Stop("cannot determine repository root; refusing corpus output", 2);
-  const checkout = await canonical(decoder.decode(git.stdout).trim());
-  if (root === checkout || root.startsWith(`${checkout}${sep}`) || root.includes(`${sep}beep-effect`)) {
-    throw new Stop(`refusing corpus root inside a checkout or beep-effect path: ${root}`, 2);
-  }
-  const bootstrap = [...HOSTS].flatMap((host) => [
-    `https://${host}/robots.txt`,
-    `https://${host}/sitemap.xml`,
-    `https://${host}/sitemap_index.xml`,
-  ]);
+  await guardRoot(root);
   if (options.dryRun) {
+    console.log(`dry run: ${bootstrapUrls().length} bootstrap URLs for ${HOSTS.size} hosts; root ${root} untouched`);
+    console.log(bootstrapUrls().join(" "));
     return;
   }
-  const cap = Number(process.env.LEJEUNE_REQUEST_CAP ?? "800");
-  if (!Number.isInteger(cap) || cap < 1) throw new Stop("LEJEUNE_REQUEST_CAP must be a positive integer", 2);
-  const clock = now();
-  const stamp = `${clock.slice(0, 10)}-${clock.slice(11, 23).replace(/\D/g, "")}`;
-  const staging = join(root, "runs", `${stamp}.staging`);
-  const final = join(root, "runs", stamp);
-  const current = join(root, "current");
-  for (const folder of ["meta/robots", "meta/sitemaps", ".tmp", "pages", "files"])
-    await mkdir(join(staging, folder), { recursive: true });
-  const manifest = join(staging, "manifest.jsonl");
-  const logFile = join(staging, "run.log");
-  const entries: Entry[] = [];
-  const results = new Map<string, Result | null>();
-  const policies = new Map<string, Policy>();
-  const counts = new Map<string, number>();
-  const lastRequest = new Map<string, number>();
-  let priorRows = new Map<string, Entry>();
-  try {
-    const lines = (await readFile(join(current, "manifest.jsonl"), "utf8")).trim().split("\n");
-    priorRows = new Map(
-      lines.filter(Boolean).map((line) => {
-        const row: Entry = JSON.parse(line);
-        return [row.url, row];
-      })
-    );
-  } catch {
-    /* There is no validated prior run. */
-  }
-  const log = (message: string) => appendFile(logFile, `${now()} ${message}\n`);
-  const record = async (row: Entry) => {
-    entries.push(row);
-    await appendFile(manifest, `${JSON.stringify(row)}\n`);
-  };
-  const pace = async (host: string) => {
-    const count = (counts.get(host) ?? 0) + 1;
-    if (count > cap) throw new Stop(`request cap ${cap} reached for ${host}`);
-    counts.set(host, count);
-    const delay = policies.has(host) ? applicable(policies.get(host)!.current).delay : 1;
-    const wait = delay * 1000 - (Date.now() - (lastRequest.get(host) ?? 0));
-    if (wait > 0) await sleep(wait);
-    lastRequest.set(host, Date.now());
-  };
-  const permitted = async (url: string): Promise<string | undefined> => {
-    const policy = policies.get(new URL(url).hostname);
-    if (!policy) throw new Stop(`no robots policy loaded for ${url}`);
-    const decision = decide(url, policy.current);
-    const old = policy.previous && decide(url, policy.previous);
-    if (!decision.allowed && policy.changed && old?.allowed) {
-      await log(`REFUSAL robots policy newly prohibits ${url} (${decision.note})`);
-      throw new Stop(`robots.txt changed to prohibit ${url}`);
-    }
-    if (decision.allowed) return decision.note;
-    await log(`SKIP ${url} (${decision.note})`);
-    await record({
-      url,
-      finalUrl: url,
-      status: 0,
-      contentType: "",
-      bytes: 0,
-      sha256: "",
-      fetchedAt: now(),
-      robotsDecision: decision.note,
-    });
-    return undefined;
-  };
-  const fetchOne = async (input: string, kind: Kind, robots: string, force = false): Promise<Result | null> => {
-    const url = normalize(input);
-    if (!url) {
-      await log(`SKIP out-of-scope URL ${input}`);
-      return null;
-    }
-    if (results.has(url)) return results.get(url) ?? null;
-    const folder =
-      kind === "page" ? "pages" : kind === "file" ? "files" : kind === "robots" ? "meta/robots" : "meta/sitemaps";
-    const extension =
-      kind === "page"
-        ? ".html"
-        : kind === "robots"
-          ? ".txt"
-          : kind === "sitemap"
-            ? ".xml"
-            : extname(new URL(url).pathname).toLowerCase();
-    const name = kind === "robots" ? new URL(url).hostname + extension : digest(url).slice(0, 20) + extension;
-    const artifact = `${folder}/${name}`;
-    const destination = join(staging, artifact);
-    const prior = priorRows.get(url);
-    if (
-      !force &&
-      prior?.status &&
-      prior.status >= 200 &&
-      prior.status < 300 &&
-      prior.artifact &&
-      !isAbsolute(prior.artifact) &&
-      !prior.artifact.split(/[\\/]/).includes("..")
-    ) {
-      try {
-        const source = join(current, prior.artifact);
-        const bytes = await readFile(source);
-        if (bytes.length === prior.bytes && digest(bytes) === prior.sha256) {
-          const temp = join(staging, ".tmp", `${name}.resume`);
-          await copyFile(source, temp);
-          await rename(temp, destination);
-          const row = { ...prior, url, robotsDecision: robots, artifact };
-          await record(row);
-          const result = { entry: row, path: destination };
-          results.set(url, result);
-          return result;
-        }
-      } catch {
-        await log(`CACHE MISS invalid prior artifact for ${url}`);
-      }
-    }
-    let finalUrl = url;
-    for (let redirects = 0; ; ) {
-      await pace(new URL(finalUrl).hostname);
-      let response: Response;
-      try {
-        response = await fetch(finalUrl, {
-          headers: { "User-Agent": UA },
-          redirect: "manual",
-          signal: AbortSignal.timeout(60_000),
-        });
-      } catch (cause) {
-        await log(`ERROR request failed for ${finalUrl}: ${cause instanceof Error ? cause.message : "unknown error"}`);
-        throw new Stop(`request failed for ${finalUrl}; see ${logFile}`);
-      }
-      const status = response.status;
-      const contentType = response.headers.get("content-type") ?? "";
-      if (status === 401 || status === 403 || status === 429) {
-        await response.body?.cancel();
-        await log(`REFUSAL ${status} for ${finalUrl}; stopped without retry`);
-        await record({
-          url,
-          finalUrl,
-          status,
-          contentType,
-          bytes: 0,
-          sha256: "",
-          fetchedAt: now(),
-          robotsDecision: robots,
-        });
-        throw new Stop(`remote refusal ${status} for ${finalUrl}; see ${logFile}`);
-      }
-      if (status >= 300 && status < 400) {
-        const location = response.headers.get("location");
-        await response.body?.cancel();
-        if (!location || redirects >= 3) throw new Stop(`redirect limit or missing Location for ${finalUrl}`);
-        const target = normalize(location, finalUrl);
-        if (!target) {
-          await log(`REFUSAL off-scope redirect from ${finalUrl} to ${location}`);
-          throw new Stop(`off-scope redirect refused for ${finalUrl}`);
-        }
-        if (kind !== "robots") {
-          const next = await permitted(target);
-          if (!next) throw new Stop(`redirect target disallowed by robots.txt: ${target}`);
-          robots = next;
-        }
-        finalUrl = target;
-        redirects++;
-        continue;
-      }
-      if (status < 200 || status >= 300) {
-        await response.body?.cancel();
-        const row = {
-          url,
-          finalUrl,
-          status,
-          contentType,
-          bytes: 0,
-          sha256: "",
-          fetchedAt: now(),
-          robotsDecision: robots,
-        };
-        await log(`SKIP HTTP ${status} ${finalUrl}`);
-        await record(row);
-        results.set(url, null);
-        return null;
-      }
-      if (!validType(kind, contentType)) {
-        await response.body?.cancel();
-        throw new Stop(`unexpected content type ${contentType || "(missing)"} for ${finalUrl}`);
-      }
-      const temp = join(staging, ".tmp", `${name}.${crypto.randomUUID()}`);
-      await Bun.write(temp, response);
-      const bytes = await readFile(temp);
-      const sha256 = digest(bytes);
-      await rename(temp, destination);
-      const row = {
-        url,
-        finalUrl,
-        status,
-        contentType,
-        bytes: bytes.length,
-        sha256,
-        fetchedAt: now(),
-        robotsDecision: robots,
-        artifact,
-      };
-      await record(row);
-      const result = { entry: row, path: destination };
-      results.set(url, result);
-      return result;
-    }
-  };
-  for (const host of HOSTS) {
-    const url = `https://${host}/robots.txt`;
-    const result = await fetchOne(url, "robots", "robots bootstrap", true);
-    const currentText = result ? await readFile(result.path, "utf8") : "";
-    let previousText: string | undefined;
-    try {
-      previousText = await readFile(join(current, "meta", "robots", `${host}.txt`), "utf8");
-    } catch {
-      /* There is no prior robots copy for this host. */
-    }
-    policies.set(host, {
-      current: parseRobots(currentText),
-      previous: previousText === undefined ? undefined : parseRobots(previousText),
-      changed: previousText !== undefined && previousText !== currentText,
-    });
-  }
-  for (const url of PREFLIGHT) {
-    const robots = await permitted(url);
-    if (!robots || !(await fetchOne(url, "page", robots, true))) throw new Stop(`preflight failed for ${url}`);
-  }
-  const sitemapQueue = [...HOSTS].flatMap((host) => {
-    const robots = policies.get(host)!.current;
-    return [`https://${host}/sitemap.xml`, `https://${host}/sitemap_index.xml`, ...robots.sitemaps];
-  });
-  const seenSitemaps = new Set<string>();
-  const candidates = new Set<string>();
-  while (sitemapQueue.length) {
-    const raw = sitemapQueue.shift()!;
-    const url = normalize(raw);
-    if (!url) {
-      await log(`SKIP out-of-scope sitemap URL ${raw}`);
-      continue;
-    }
-    if (seenSitemaps.has(url)) continue;
-    seenSitemaps.add(url);
-    const robots = await permitted(url);
-    if (!robots) continue;
-    const result = await fetchOne(url, "sitemap", robots, true);
-    if (!result) continue;
-    const xml = await readFile(result.path, "utf8");
-    for (const match of xml.matchAll(/<loc(?:\s[^>]*)?>([\s\S]*?)<\/loc>/gi)) {
-      const located = normalize(match[1].trim());
-      if (!located) {
-        await log(`SKIP out-of-scope sitemap loc ${match[1].trim()}`);
-        continue;
-      }
-      if (/\.xml(?:\.gz)?$/i.test(new URL(located).pathname)) sitemapQueue.push(located);
-      else if (classify(located) !== "skip") candidates.add(located);
-    }
-  }
-  for (const url of candidates) {
-    const kind = classify(url);
-    const robots = await permitted(url);
-    if (kind !== "skip" && robots) await fetchOne(url, kind, robots);
-  }
-  const discovered = new Set<string>();
-  for (const result of results.values()) {
-    if (!result?.entry.artifact?.startsWith("pages/")) continue;
-    const html = await readFile(result.path, "utf8");
-    for (const match of html.matchAll(/\bhref\s*=\s*["']([^"']+)["']/gi)) {
-      const url = normalize(match[1], result.entry.finalUrl);
-      if (url && !results.has(url) && classify(url) !== "skip") discovered.add(url);
-      else if (!url && /^https?:/i.test(match[1])) await log(`SKIP out-of-scope discovered URL ${match[1]}`);
-    }
-  }
-  for (const url of discovered) {
-    const kind = classify(url);
-    const robots = await permitted(url);
-    if (kind !== "skip" && robots) await fetchOne(url, kind, robots);
-  }
-  const lines = (await readFile(manifest, "utf8")).trim().split("\n").filter(Boolean);
-  for (const line of lines) JSON.parse(line);
-  if (lines.length !== entries.length) throw new Stop("manifest line count changed during validation");
-  for (const row of entries.filter((entry) => entry.status >= 200 && entry.status < 300)) {
-    if (!row.artifact) throw new Stop(`2xx manifest row has no artifact: ${row.url}`);
-    const bytes = await readFile(join(staging, row.artifact));
-    if (bytes.length !== row.bytes || digest(bytes) !== row.sha256) {
-      throw new Stop(`artifact validation failed: ${row.url}`);
-    }
-  }
-  await rename(staging, final);
-  const pointer = join(root, `.current-${stamp}.tmp`);
-  await symlink(relative(root, final), pointer);
-  await rename(pointer, current);
+  const final = await crawl(root);
+  console.log(`published ${final}; current -> ${basename(final)}`);
 }
+
 main().catch((cause: unknown) => {
   const failure = cause instanceof Stop ? cause : new Stop(cause instanceof Error ? cause.message : "unknown failure");
+  console.error(`mine-site: ${failure.message}`);
   process.exitCode = failure.exitCode;
 });

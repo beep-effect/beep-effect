@@ -146,3 +146,47 @@ A read-only Bun comparison checked every PDF ledger row against its machine-loca
 
 The CLI stdout limit is met: help uses four lines, dry-run uses two, and successful publication
 uses one. Failures write one concise line to stderr.
+
+## Follow-up 2026-08-26: CI gates and a challenge-page gap
+
+The head that resolved the threads was red on two required lanes, and a probe exposed one
+behaviour gap. All three are fixed in the same follow-up commit.
+
+- `Heavy / Lint Policy` failed on `knowledge refs --check`: three machine-local paths in
+  `CAPTURE.md:36`, `DECISIONS.md:74`, and `MAP.md:85` classified as gated external-mirror
+  references. Reworded without the home-relative paths (landed concurrently in `433d499c27`).
+- `Fallow Advisory Envelopes` failed on `ops/mine-site.ts`: an unused-file finding (the script is
+  a `bun run` executable, never imported) and eight complexity findings (`main` cyclomatic 49,
+  `fetchOne` 40, `parseRobots` 16, five more above the uncovered-code CRAP ceiling).
+  `433d499c27` excludes the packet's `ops/**` from Fallow as packet tooling; independently, the
+  miner is now split into phase, robots, and response-outcome functions that each stay under
+  cyclomatic 4, cognitive 8, and 60 lines, so it passes the audit with the script registered as
+  an entry as well (verified locally before the exclusion landed). Behaviour is unchanged except
+  for the two items below.
+- Challenge pages: a single honest-identity probe on 2026-08-26 received HTTP `202` with the
+  host's captcha challenge markup from all three seed hosts. The previous script stored any 2xx
+  body with an HTML content type, so its preflight would have passed and the challenge page
+  would have entered the corpus. The miner now stores exactly HTTP `200`, treats any other
+  non-redirect, non-missing status as a block (exit 3), and stops when a textual body carries a
+  challenge marker.
+- Off-scope redirects: skipped and recorded (status row without an artifact) instead of
+  aborting the whole run, matching how off-scope sitemap entries and links are handled.
+
+Proof against a local fixture site (robots with `Disallow: /private/` and a longer
+`Allow: /private/allowed/`, a sitemap index with an off-host child, page locs including an
+off-host entry, a `404`, an in-scope and an off-scope `302`, a PDF, an image, a `www.` alias
+link, and modes that return a `202` challenge, a `403`, or a changed `robots.txt`):
+
+- normal run publishes 8 pages and 1 file; `/private/x/` is never requested, the longer Allow
+  wins, the `404` and both off-scope destinations leave no artifact, the `www.` link is
+  discovered, and every request carries `beep-explorations-site-miner/0.1`;
+- a second run reuses every page and file record and re-requests only robots, preflight,
+  sitemaps, and the previously missing URLs;
+- the challenge mode stops at preflight with exit 3 and publishes nothing; the `403` mode stops
+  with exit 3; a `robots.txt` that newly prohibits a queued URL stops with exit 4;
+- `--root` inside the checkout exits 2; `--dry-run` prints the bootstrap URLs and creates
+  nothing.
+
+Gates on the follow-up head: `bunx tsc --ignoreConfig --noEmit --strict ... mine-site.ts` exit
+0; `bun run beep quality fallow audit --base origin/main --check` verdict pass with zero
+introduced findings; `bun run beep knowledge refs --check` and `knowledge semantic-delta` exit 0.
