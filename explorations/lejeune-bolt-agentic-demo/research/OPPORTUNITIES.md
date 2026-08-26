@@ -13,9 +13,14 @@
 ## 2026-08-25: custom crawler user agent triggered site-wide 403 responses
 
 - Work: bulk-fetching the LeJeune Bolt sitemap corpus for the site-mining lane.
-- Evidence: the first parallel `curl` pass returned HTTP `403` for all 198 requested URLs, while earlier plain `curl` requests to the same pages returned HTTP `200`.
-- Cause: the bulk pass identified itself as a research crawler in the `User-Agent` header. The site's request filtering rejected that profile.
-- Prevention: test the exact bulk-fetch request headers against two representative pages before launching the full crawl, then preserve the request profile that returned `200`.
+- Evidence: the first parallel `curl` pass returned HTTP `403` for all 198 requested URLs. Earlier
+  plain `curl` requests to the same pages returned HTTP `200`.
+- Cause: the bulk pass identified itself as a research crawler in the `User-Agent` header. The
+  site's request filtering rejected that profile.
+- Prevention: use the honest `beep-explorations-site-miner` identity and preflight two
+  representative pages. Stop the run on any `401`, `403`, or `429`. A browser or plain-request
+  success is diagnostic evidence, not permission to change identities or continue around a
+  refusal.
 
 ## 2026-08-25: zsh reserved parameter interrupted raw-index generation
 

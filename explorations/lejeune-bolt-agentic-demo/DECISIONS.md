@@ -15,7 +15,7 @@ decision.
 **Question:** Which demo architecture should carry the lunch scenario?
 
 **Answer:** Build Option C, a new customer-demo lab at
-`apps/labs/lejeune-bolt-workbench`, with the working product title "LeJeune Knowledge Desk."
+the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`), with the working product title "LeJeune Knowledge Desk."
 The lab is beep-branded and gets a deletion-dated charter. Treat the local TrustGraph TypeScript
 port as a component donor after Benjamin licenses it, and as a day-zero escape hatch only.
 
@@ -141,7 +141,7 @@ dependency; leaving the license absent and treating the port as reusable.
 
 **Status:** PROPOSED
 
-**Question:** Confirm `apps/labs/lejeune-bolt-workbench` and "LeJeune Knowledge Desk"?
+**Question:** Confirm the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) and "LeJeune Knowledge Desk"?
 
 **Recommended answer:** Yes. Keep the package slug descriptive and disposable. Use the product
 name only on the demo surface, with beep branding and no copied third-party marks.

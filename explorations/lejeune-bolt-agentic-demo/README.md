@@ -16,10 +16,9 @@ foundations, then offer a measured service-as-software pilot.
 
 ## Next Open Question
 
-Benjamin's align round over the `PROPOSED` items in
-[`DECISIONS.md`](./DECISIONS.md#proposed-for-benjamins-align-round). The operator-ratified
-Option C, top-three use cases, lunch data boundary, tailnet deployment, engagement framing, and
-five-day appetite are pinned pending his confirmation.
+Should Benjamin license the TypeScript port under MIT or Apache-2.0 so its workbench components
+can be reused? The remaining questions stay queued in [`ops/manifest.json`](./ops/manifest.json)
+and [`DECISIONS.md`](./DECISIONS.md#proposed-for-benjamins-align-round).
 
 ## Read This First
 

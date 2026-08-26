@@ -235,9 +235,10 @@ capability. [L4, "Capability-to-demo mapping"](./research/04-in-repo-capability-
 1. **Public-site collection needs restraint.** The lane made 550 source requests and retained
    a much smaller normalized corpus. Firecrawl was unavailable locally. A custom crawler
    `User-Agent` caused 403 responses across all 198 URLs in the first bulk pass, while the
-   earlier plain request profile returned 200. Test the exact request profile against two pages,
-   honor `robots.txt` and sitemaps, rate-limit, cache, deduplicate, and stop on blocks. Do not
-   treat a successful plain profile as permission to evade controls. [L1, "Scope and method"](./research/01-lejeunebolt-site-mining.md#scope-and-method),
+   earlier plain request profile returned 200. Use an honest tool-specific identity, preflight it
+   against two pages, honor `robots.txt` and sitemaps, rate-limit, cache, and deduplicate. Stop the
+   run on any `401`, `403`, or `429`; browser-profile success is not permission to change
+   identities or continue around a refusal. [L1, "Scope and method"](./research/01-lejeunebolt-site-mining.md#scope-and-method),
    [friction receipt](./research/OPPORTUNITIES.md#2026-08-25-custom-crawler-user-agent-triggered-site-wide-403-responses),
    [homepage](https://lejeunebolt.com/).
 2. **Supplier portals are not browser-automation targets.** Grainger bars scraping and robots;

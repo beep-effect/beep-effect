@@ -86,7 +86,7 @@ corpus contains no current price, stock, lead-time, or supplier authority.
 
 ### Product and deployment boundary
 
-Create `apps/labs/lejeune-bolt-workbench` through the repo package generator. Keep the screen
+Create the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) through the repo package generator. Keep the screen
 small: RFQ and quote, graph or table, source evidence, approval, and the memory change. Use beep
 branding and the working title "LeJeune Knowledge Desk." Port only named, permissively licensed
 interaction patterns after preserving notices.

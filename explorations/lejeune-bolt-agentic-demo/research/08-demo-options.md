@@ -4,7 +4,7 @@ Date: 2026-08-25
 
 ## Decision summary
 
-Recommend **Option C**, a narrow `apps/labs/lejeune-bolt-workbench` that composes existing beep
+Recommend **Option C**, a narrow the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) that composes existing beep
 bricks and permissively licensed UI patterns. It gives the five-day demo a deterministic local
 bundle, explicit evidence and approval boundaries, and a small tailnet deployment without
 depending on the full TrustGraph runtime.
@@ -173,7 +173,7 @@ status, Serve, MagicDNS, and HTTPS proof as Option A, based on
 
 [L5, "Comparison with current beep labs"](./05-open-source-references.md#comparison-with-current-beep-labs-and-the-typescript-port).
 
-## Option C: new `apps/labs/lejeune-bolt-workbench`
+## Option C: new the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`)
 
 ### Architecture and pipeline
 
@@ -246,85 +246,40 @@ needed.
 
 The corpus stays machine-local at `~/data-home/lejeune-bolt-corpus/` and is never committed.
 The previous lane made 550 requests and retained page, PDF, and attachment records. Its first
-bulk pass failed because a custom crawler `User-Agent` received 403 for all 198 requested URLs,
-while the earlier plain request profile returned 200. The correct lesson is to test the exact
-profile on two representative pages, retain the allowed profile, slow down, and stop on blocking.
-It is not permission to disguise a crawler or evade access controls. [L1, "Scope and method"](./01-lejeunebolt-site-mining.md#scope-and-method),
+bulk pass failed because an honest crawler `User-Agent` received 403 for all 198 requested URLs,
+while an earlier plain request returned 200. That difference is diagnostic evidence only. The
+miner must keep its honest identity and stop the whole run on any `401`, `403`, or `429`; it must
+not switch to a browser profile or retry around the refusal. [L1, "Scope and method"](./01-lejeunebolt-site-mining.md#scope-and-method),
 [403 friction receipt](./OPPORTUNITIES.md#2026-08-25-custom-crawler-user-agent-triggered-site-wide-403-responses).
 
-The local Firecrawl CLI shim was not configured during research, so this is a TypeScript script
-sketch against the checked-in `@beep/firecrawl` service rather than unverified CLI flags. The
-driver exposes schema-decoded `map` and `scrape` payloads and reads its credential through
-environment injection. No credential belongs in the script, corpus manifest, or repo.
-`packages/drivers/firecrawl/src/Firecrawl.models.ts:2078-2086,2380-2388`,
-`packages/drivers/firecrawl/src/Firecrawl.service.ts:757-840`.
+The checked-in runner is [`ops/mine-site.ts`](../ops/mine-site.ts). It needs only Bun and the
+repository's existing dependencies:
 
-```ts
-// scripts/mine-lejeunebolt.ts -- proposal only; corpus output is ignored and machine-local.
-import {
-  Firecrawl,
-  FirecrawlMapPayload,
-  FirecrawlScrapePayload,
-} from "@beep/firecrawl";
-import { Effect } from "effect";
-
-const roots = [
-  "https://lejeunebolt.com/",
-  "https://rentals.lejeunebolt.com/",
-  "https://www.tightenright.com/",
-];
-
-const outputRoot = "~/data-home/lejeune-bolt-corpus/";
-
-const program = Effect.gen(function* () {
-  const firecrawl = yield* Firecrawl;
-
-  // 1. Map each allowed root. Normalize URLs, keep only the three hosts, honor
-  // robots/sitemaps, remove fragments and tracking parameters, then deduplicate.
-  const maps = yield* Effect.forEach(
-    roots,
-    (url) => firecrawl.map(FirecrawlMapPayload.make({ url })),
-    { concurrency: 1 },
-  );
-  const urls = normalizeAndFilterMappedUrls(maps);
-
-  // 2. Preflight the exact SDK request profile on two representative pages.
-  // Abort on 401/403/429 or changed robots policy. Do not switch to a custom
-  // crawler User-Agent to work around a refusal.
-  yield* Effect.forEach(
-    pickRepresentativeUrls(urls),
-    (url) => firecrawl.scrape(FirecrawlScrapePayload.make({ url })),
-    { concurrency: 1 },
-  );
-
-  // 3. Scrape slowly. Persist one content file plus one manifest record per URL:
-  // canonical URL, retrieval time, status, content type, hash, title, links,
-  // source host, and request-profile id. Cache by URL+hash and retry 429 only
-  // according to Retry-After. Stop the run on a site-wide authorization change.
-  const documents = yield* Effect.forEach(
-    urls,
-    (url) => firecrawl.scrape(FirecrawlScrapePayload.make({ url })),
-    { concurrency: 2 },
-  );
-
-  yield* writeMachineLocalCorpus(outputRoot, documents);
-});
-
-Effect.runPromise(program.pipe(Effect.provide(Firecrawl.layer)));
+```sh
+bun run explorations/lejeune-bolt-agentic-demo/ops/mine-site.ts --dry-run
+bun run explorations/lejeune-bolt-agentic-demo/ops/mine-site.ts \
+  --root ~/data-home/lejeune-bolt-corpus
 ```
+
+The runner fetches each allowed host's robots policy, preflights two pages with the same honest
+identity used by the crawl, recursively expands sitemap indexes, and performs one link-closure
+pass. It accepts only allowlisted HTTPS URLs, including redirect targets. Successful responses
+move from temporary files into a staged run only after status, content type, size, and SHA-256
+checks pass. Validation publishes the run and updates `current`; a refusal or interruption leaves
+the `.staging` directory and `run.log` for diagnosis.
 
 Implementation requirements for the real script:
 
-- Resolve `~` through the Effect path/filesystem boundary before writing. Refuse an output path
-  inside the repository.
+- Resolve the corpus root through `realpath` before writing. Refuse paths inside the checkout or
+  any path containing `/beep-effect`.
 - Write atomically to a dated run directory, then update a local `current` pointer only after the
   manifest and hashes validate.
 - Keep raw pages, extracted text, PDFs, and attachments separate. Never store form submissions,
   credentials, cookies, or authenticated pages.
 - Record `EXTRACTED`, `INFERRED`, and `UNVERIFIED` status in the normalized graph, not in the raw
   corpus.
-- Reuse cached content. On later runs, map first, fetch only new or changed candidates, and cap
-  requests per host.
+- Reuse only content backed by a validated 2xx manifest row. On later runs, map first, fetch new
+  candidates, and cap requests per host.
 - Keep technical documents as cited source material. Do not reproduce copyrighted standards or
   whole sites in the public repository.
 

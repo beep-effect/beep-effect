@@ -43,7 +43,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (2026-08-25): lunch pitch next week to LeJeune Bolt (Burnsville MN structural
   fastener distributor; stadium/bridge/TNA work) whose veterans are retiring.
   Six research lanes synthesized; operator-ratified thesis: Option C — a
-  disposable `apps/labs/lejeune-bolt-workbench` ("LeJeune Knowledge Desk")
+  disposable the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) ("LeJeune Knowledge Desk")
   composing beep bricks, deployed to the tailnet only, running a fixed 30-minute
   scenario over the public site corpus + synthetic Office records. Top three
   use cases: RFQ email → reviewed quote request with exact spans; cited
