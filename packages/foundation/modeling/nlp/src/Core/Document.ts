@@ -32,11 +32,11 @@ const getRangeEnd = (
  *
  * **Example** (Make a DocumentId)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make a DocumentId"
  * import { DocumentId } from "@beep/nlp/Core/Document"
  *
  * const id = DocumentId.make("doc-001")
- * console.log(id) // "doc-001"
+ * id // => "doc-001"
  * ```
  *
  * @category models
@@ -55,11 +55,11 @@ export const DocumentId = S.NonEmptyString.pipe(
  *
  * **Example** (Type a DocumentId parameter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a DocumentId parameter"
  * import type { DocumentId } from "@beep/nlp/Core/Document"
  *
  * const label = (id: DocumentId): string => `document:${id}`
- * console.log(typeof label) // "function"
+ * typeof label // => "function"
  * ```
  *
  * @category models
@@ -72,11 +72,11 @@ export type DocumentId = typeof DocumentId.Type;
  *
  * **Example** (Advance a DocumentIndex)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Advance a DocumentIndex"
  * import type { DocumentIndex } from "@beep/nlp/Core/Document"
  *
  * const next = (index: DocumentIndex): number => index + 1
- * console.log(typeof next) // "function"
+ * typeof next // => "function"
  * ```
  *
  * @category models
@@ -89,11 +89,11 @@ export type DocumentIndex = Brand.Branded<NonNegativeInt, "DocumentIndex">;
  *
  * **Example** (Validate non-negative index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate non-negative index"
  * import { documentIndex } from "@beep/nlp/Core/Document"
  *
  * const first = documentIndex(0)
- * console.log(first) // 0
+ * first // => 0
  * ```
  *
  * @category validation
@@ -108,11 +108,11 @@ export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<Docum
  *
  * **Example** (Decode index via schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode index via schema"
  * import { DocumentIndex } from "@beep/nlp/Core/Document"
  *
  * const index = DocumentIndex.make(3)
- * console.log(index) // 3
+ * index // => 3
  * ```
  *
  * @category validation
@@ -181,7 +181,7 @@ const filterDocument = (document: Document, predicate: (token: Token) => boolean
  *
  * **Example** (Construct empty Document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct empty Document"
  * import { Chunk } from "effect"
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
@@ -193,7 +193,7 @@ const filterDocument = (document: Document, predicate: (token: Token) => boolean
  *   sentences: Chunk.empty(),
  *   sentiment: O.none()
  * })
- * console.log(document.tokenCount) // 0
+ * document.tokenCount // => 0
  * ```
  *
  * @category models

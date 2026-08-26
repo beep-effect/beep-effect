@@ -195,6 +195,74 @@ const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
       "Run `bun run beep laws terse-effect --check` and inspect blocking, rewritable, and informational files.",
   },
   {
+    needle: "cheap-gates:config-sync",
+    subCategory: "tsconfig-sync",
+    category: "repo-law",
+    remediation: "Run `bun run config-sync`, then rerun `bun run beep yeet verify --tier cheap-gates`.",
+  },
+  {
+    needle: "cheap-gates:tsgo-rules",
+    subCategory: "tsgo-rules",
+    category: "effect-tsgo-policy",
+    remediation: "Repair the reported tsgo or Vitest alias drift, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "cheap-gates:effect-imports",
+    subCategory: "effect-imports",
+    category: "repo-law",
+    remediation:
+      "Run `bun run beep laws effect-imports --write`, inspect the changes, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "cheap-gates:schema-first",
+    subCategory: "schema-first",
+    category: "schema-first-policy",
+    remediation: "Run `bun run beep lint schema-first`, fix every finding, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "cheap-gates:allowlist-check",
+    subCategory: "allowlist-check",
+    category: "repo-law",
+    remediation: "Run `bun run beep laws allowlist-check`, fix every finding, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "cheap-gates:goals-index",
+    subCategory: "goals-index",
+    category: "repo-law",
+    remediation: "Run `bun run beep goals index`, inspect the update, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "cheap-gates:goals-doctor",
+    subCategory: "goals-doctor",
+    category: "repo-law",
+    remediation: "Run `bun run beep goals doctor`, fix every finding, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "cheap-gates:jsdoc-ratchet",
+    subCategory: "jsdoc-ratchet",
+    category: "docgen-jsdoc-quality",
+    remediation: "Repair the committed JSDoc inventory regression, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "cheap-gates:knip",
+    subCategory: "knip",
+    category: "lint-tool",
+    remediation: "Run `bun run beep quality knip`, fix every finding, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "fallow:audit",
+    subCategory: "fallow-audit",
+    category: "lint-tool",
+    remediation: "Run `bun run beep quality fallow audit --check`, fix every finding, then rerun the cheap-gates tier.",
+  },
+  {
+    needle: "fallow:dead-code",
+    subCategory: "fallow-dead-code",
+    category: "lint-tool",
+    remediation:
+      "Run `bun run beep quality fallow dead-code --check`, fix every finding, then rerun the cheap-gates tier.",
+  },
+  {
     needle: "repo-exports",
     subCategory: "stale-repo-export-workflow",
     category: "repo-export-policy",
@@ -235,7 +303,7 @@ const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
     subCategory: "changeset-status",
     category: "changeset-policy",
     remediation:
-      "Run `bun run changeset:status:since-main`. Write a changeset listing each changed package with `patch`; packages on the changesets config `ignore` list are exempt.",
+      "Run `bun run beep quality changeset-status --since origin/main`. Write a changeset listing each changed package with `patch`; packages on the changesets config `ignore` list are exempt.",
   },
   {
     needle: "typos",

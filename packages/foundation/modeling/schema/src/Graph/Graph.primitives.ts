@@ -17,14 +17,14 @@ import { $I } from "./Graph.shared.ts";
  *
  * **Example** (Decode zero node index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode zero node index"
  * import * as S from "effect/Schema"
  * import { NodeIndex } from "@beep/schema/Graph"
  *
  * const decode = S.decodeUnknownSync(NodeIndex)
  *
  * const idx = decode(0)
- * console.log(idx) // 0
+ * idx // => 0
  * ```
  *
  * @category constructors
@@ -42,12 +42,12 @@ export const NodeIndex = S.Int.check(isNonNegative).pipe(
  *
  * **Example** (Type branded node index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type branded node index"
  * import * as S from "effect/Schema"
  * import { NodeIndex } from "@beep/schema/Graph"
  *
  * const idx: NodeIndex = S.decodeUnknownSync(NodeIndex)(0)
- * console.log(idx) // 0
+ * idx // => 0
  * ```
  *
  * @category models
@@ -60,14 +60,14 @@ export type NodeIndex = typeof NodeIndex.Type;
  *
  * **Example** (Decode string node index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode string node index"
  * import * as S from "effect/Schema"
  * import { NodeIndexFromString } from "@beep/schema/Graph"
  *
  * const decode = S.decodeUnknownSync(NodeIndexFromString)
  *
  * const idx = decode("3")
- * console.log(idx) // 3
+ * idx // => 3
  * ```
  *
  * @category constructors

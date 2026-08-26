@@ -345,13 +345,13 @@ export type HttpStatus3XX = typeof HttpStatus3XX.Type;
  *
  * **Example** (Decode encoded 3XX name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode encoded 3XX name"
  * import * as S from "effect/Schema"
  * import { HttpStatus3XX } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatus3XX.Encoded = "MultipleChoices"
  * const status = S.decodeUnknownSync(HttpStatus3XX)(encoded)
- * console.log(status) // 300
+ * status // => 300
  * ```
  *
  * @category validation

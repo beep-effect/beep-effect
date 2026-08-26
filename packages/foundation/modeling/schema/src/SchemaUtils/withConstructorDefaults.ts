@@ -28,7 +28,7 @@ import * as S from "effect/Schema";
  *
  * **Example** (Omitting Option at construction)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Omitting Option at construction"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { withNoneDefault } from "@beep/schema/SchemaUtils/withConstructorDefaults"
@@ -37,7 +37,7 @@ import * as S from "effect/Schema";
  *   label: S.OptionFromOptionalKey(S.String).pipe(withNoneDefault)
  * })
  *
- * console.log(O.isNone(Node.make({}).label)) // true
+ * O.isNone(Node.make({}).label) // => true
  * ```
  *
  * @typeParam A - Element type carried by the field's `Option`.
@@ -66,7 +66,7 @@ export const withNoneDefault = <
  *
  * **Example** (Constant constructor default)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Constant constructor default"
  * import * as S from "effect/Schema"
  * import { withConstantDefault } from "@beep/schema/SchemaUtils/withConstructorDefaults"
  *
@@ -74,7 +74,7 @@ export const withNoneDefault = <
  *   version: S.Literal(1).pipe(withConstantDefault(1))
  * })
  *
- * console.log(Node.make({}).version) // 1
+ * Node.make({}).version // => 1
  * ```
  *
  * @typeParam A - Default value type, which must satisfy the field's make input.

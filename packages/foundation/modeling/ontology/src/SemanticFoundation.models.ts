@@ -29,11 +29,11 @@ const isSafeFilingSegment = (segment: string): boolean =>
  *
  * **Example** (Reject path traversal decode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject path traversal decode"
  * import { FilingSegment } from "@beep/ontology/SemanticFoundation.models"
  * import * as S from "effect/Schema"
  *
- * console.log(S.decodeUnknownResult(FilingSegment)("../escape")._tag) // "Failure"
+ * S.decodeUnknownResult(FilingSegment)("../escape")._tag // => "Failure"
  * ```
  *
  * @category schemas
@@ -74,10 +74,10 @@ export type FilingSegment = typeof FilingSegment.Type;
  *
  * **Example** (Guard valid filing segment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard valid filing segment"
  * import { isFilingSegment } from "@beep/ontology/SemanticFoundation.models"
  *
- * console.log(isFilingSegment("received")) // true
+ * isFilingSegment("received") // => true
  * ```
  *
  * @category guards
@@ -90,10 +90,10 @@ export const isFilingSegment = S.is(FilingSegment);
  *
  * **Example** (Check received document class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check received document class"
  * import { DocumentClass } from "@beep/ontology/SemanticFoundation.models"
  *
- * console.log(DocumentClass.is.received("received")) // true
+ * DocumentClass.is.received("received") // => true
  * ```
  *
  * @category schemas
@@ -134,10 +134,10 @@ export type DocumentClass = typeof DocumentClass.Type;
  *
  * **Example** (Check closeMatch mapping)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check closeMatch mapping"
  * import { SkosMappingKind } from "@beep/ontology/SemanticFoundation.models"
  *
- * console.log(SkosMappingKind.is.closeMatch("closeMatch")) // true
+ * SkosMappingKind.is.closeMatch("closeMatch") // => true
  * ```
  *
  * @category schemas
@@ -237,10 +237,10 @@ export class TaxonomyConcept extends S.Class<TaxonomyConcept>($I`TaxonomyConcept
  *
  * **Example** (Check box-mirror root kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check box-mirror root kind"
  * import { FilingRootKind } from "@beep/ontology/SemanticFoundation.models"
  *
- * console.log(FilingRootKind.is["box-mirror"]("box-mirror")) // true
+ * FilingRootKind.is["box-mirror"]("box-mirror") // => true
  * ```
  *
  * @category schemas

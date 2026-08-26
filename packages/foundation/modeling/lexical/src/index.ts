@@ -11,11 +11,11 @@
  *
  * **Example** (Import package version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import package version"
  * import { VERSION } from "@beep/lexical-schema"
  *
  * const packageVersion: "0.0.0" = VERSION
- * console.log(packageVersion) // "0.0.0"
+ * packageVersion // => "0.0.0"
  * ```
  *
  * @category configuration
@@ -28,13 +28,13 @@ export const VERSION = "0.0.0" as const;
  *
  * **Example** (Project linebreak to text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Project linebreak to text"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode, nodeToPlainText } from "@beep/lexical-schema"
  *
  * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(Result.isSuccess(result) && nodeToPlainText(result.success) === "\n") // true
+ * Result.isSuccess(result) && nodeToPlainText(result.success) === "\n" // => true
  * ```
  *
  * @category getters
@@ -46,10 +46,10 @@ export { editorStateToPlainText, nodeToPlainText } from "./Lexical.behavior.ts";
  *
  * **Example** (Read artifact URI prefix)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read artifact URI prefix"
  * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema"
  *
- * console.log(ARTIFACT_URI_PREFIX) // "artifact://"
+ * ARTIFACT_URI_PREFIX // => "artifact://"
  * ```
  *
  * @category combinators
@@ -68,13 +68,13 @@ export {
  *
  * **Example** (Decode linebreak node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode linebreak node"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema"
  *
  * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(Result.isSuccess(result) && result.success.type === "linebreak") // true
+ * Result.isSuccess(result) && result.success.type === "linebreak" // => true
  * ```
  *
  * @category models

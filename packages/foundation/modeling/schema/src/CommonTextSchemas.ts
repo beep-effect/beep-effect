@@ -23,12 +23,12 @@ const normalizeBooleanString: (value: string) => boolean = flow(Str.trim, Str.to
  *
  * **Example** (Decode trimmed non-empty text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode trimmed non-empty text"
  * import * as S from "effect/Schema"
  * import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas"
  *
  * const value = S.decodeUnknownSync(TrimmedNonEmptyText)("  hello  ")
- * console.log(value) // "hello"
+ * value // => "hello"
  * ```
  *
  * @category validation
@@ -52,12 +52,12 @@ export const TrimmedNonEmptyText = S.String.pipe(
  *
  * **Example** (Type annotated trimmed text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated trimmed text"
  * import * as S from "effect/Schema"
  * import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas"
  *
  * const name: TrimmedNonEmptyText = S.decodeUnknownSync(TrimmedNonEmptyText)("  hello  ")
- * console.log(name) // "hello"
+ * name // => "hello"
  * ```
  *
  * @category models
@@ -70,12 +70,12 @@ export type TrimmedNonEmptyText = typeof TrimmedNonEmptyText.Type;
  *
  * **Example** (Decode comma-separated items)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode comma-separated items"
  * import * as S from "effect/Schema"
  * import { CommaSeparatedList } from "@beep/schema/CommonTextSchemas"
  *
  * const items = S.decodeUnknownSync(CommaSeparatedList)("foo, bar, baz")
- * console.log(items) // ["foo", "bar", "baz"]
+ * items // => ["foo", "bar", "baz"]
  * ```
  *
  * @category validation
@@ -99,12 +99,12 @@ export const CommaSeparatedList = S.String.pipe(
  *
  * **Example** (Type annotated list decode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated list decode"
  * import * as S from "effect/Schema"
  * import { CommaSeparatedList } from "@beep/schema/CommonTextSchemas"
  *
  * const tags: CommaSeparatedList = S.decodeUnknownSync(CommaSeparatedList)("a, b")
- * console.log(tags.join("|")) // "a|b"
+ * tags.join("|") // => "a|b"
  * ```
  *
  * @category models
@@ -117,12 +117,12 @@ export type CommaSeparatedList = typeof CommaSeparatedList.Type;
  *
  * **Example** (Normalize boolean string values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize boolean string values"
  * import * as S from "effect/Schema"
  * import { NormalizedBooleanString } from "@beep/schema/CommonTextSchemas"
  *
- * console.log(S.decodeUnknownSync(NormalizedBooleanString)("yes")) // true
- * console.log(S.decodeUnknownSync(NormalizedBooleanString)("0")) // false
+ * S.decodeUnknownSync(NormalizedBooleanString)("yes") // => true
+ * S.decodeUnknownSync(NormalizedBooleanString)("0") // => false
  * ```
  *
  * @category validation
@@ -146,12 +146,12 @@ export const NormalizedBooleanString = S.String.pipe(
  *
  * **Example** (Type annotated boolean flag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotated boolean flag"
  * import * as S from "effect/Schema"
  * import { NormalizedBooleanString } from "@beep/schema/CommonTextSchemas"
  *
  * const flag: NormalizedBooleanString = S.decodeUnknownSync(NormalizedBooleanString)("yes")
- * console.log(flag) // true
+ * flag // => true
  * ```
  *
  * @category models

@@ -9,7 +9,7 @@
  *
  * **Example** (Decode portable glob pattern)
  *
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema";
  * import { Glob } from "@beep/schema/Glob";
  *

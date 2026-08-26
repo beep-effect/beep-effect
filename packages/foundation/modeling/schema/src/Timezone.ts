@@ -16,12 +16,12 @@ const $I = $SchemaId.create("Timezone");
  *
  * **Example** (Decode IANA timezone)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode IANA timezone"
  * import * as S from "effect/Schema"
  * import { Timezone } from "@beep/schema/Timezone"
  *
  * const tz = S.decodeUnknownSync(Timezone)("America/New_York")
- * console.log(tz) // "America/New_York"
+ * tz // => "America/New_York"
  * ```
  *
  * @category validation

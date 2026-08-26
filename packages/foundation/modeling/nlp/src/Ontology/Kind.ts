@@ -42,10 +42,10 @@ const $I = $NlpId.create("Ontology/Kind");
  *
  * **Example** (Document kind membership check)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Document kind membership check"
  * import { TextKind } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(TextKind.is.Document("Document")) // true
+ * TextKind.is.Document("Document") // => true
  * ```
  *
  * @category models
@@ -94,11 +94,11 @@ export type TextKind = typeof TextKind.Type;
  *
  * **Example** (Make Sentence kind value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make Sentence kind value"
  * import { TextKindSchema } from "@beep/nlp/Ontology/Kind"
  *
  * const kind = TextKindSchema.make("Sentence")
- * console.log(kind) // "Sentence"
+ * kind // => "Sentence"
  * ```
  *
  * @category schemas
@@ -119,13 +119,13 @@ export const TextKindSchema: S.Schema<TextKind> = TextKind.pipe(
  *
  * **Example** (Build Token typed schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build Token typed schema"
  * import * as S from "effect/Schema"
  * import { TypedTextSchema } from "@beep/nlp/Ontology/Kind"
  *
  * const schema = TypedTextSchema(S.Literal("Token"))
  * const token = schema.make({ kind: "Token", content: "Effect" })
- * console.log(token.kind) // "Token"
+ * token.kind // => "Token"
  * ```
  *
  * @category schemas
@@ -195,10 +195,10 @@ const makeTyped = <K extends TextKind>(kind: K): TypedTextConstructor<K> =>
  *
  * **Example** (Create Document typed text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Document typed text"
  * import { Document } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Document("This is a document.").kind) // "Document"
+ * Document("This is a document.").kind // => "Document"
  * ```
  *
  * @category constructors
@@ -211,10 +211,10 @@ export const Document: TypedTextConstructor<"Document"> = makeTyped("Document");
  *
  * **Example** (Create Paragraph typed text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Paragraph typed text"
  * import { Paragraph } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Paragraph("A paragraph.").kind) // "Paragraph"
+ * Paragraph("A paragraph.").kind // => "Paragraph"
  * ```
  *
  * @category constructors
@@ -227,10 +227,10 @@ export const Paragraph: TypedTextConstructor<"Paragraph"> = makeTyped("Paragraph
  *
  * **Example** (Create Sentence typed text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Sentence typed text"
  * import { Sentence } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Sentence("A sentence.").kind) // "Sentence"
+ * Sentence("A sentence.").kind // => "Sentence"
  * ```
  *
  * @category constructors
@@ -243,10 +243,10 @@ export const Sentence: TypedTextConstructor<"Sentence"> = makeTyped("Sentence");
  *
  * **Example** (Create Token typed text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Token typed text"
  * import { Token } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Token("word").kind) // "Token"
+ * Token("word").kind // => "Token"
  * ```
  *
  * @category constructors
@@ -259,10 +259,10 @@ export const Token: TypedTextConstructor<"Token"> = makeTyped("Token");
  *
  * **Example** (Create Character typed text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Character typed text"
  * import { Character } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Character("a").kind) // "Character"
+ * Character("a").kind // => "Character"
  * ```
  *
  * @category constructors
@@ -275,10 +275,10 @@ export const Character: TypedTextConstructor<"Character"> = makeTyped("Character
  *
  * **Example** (Create Entity with type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Entity with type"
  * import { Entity } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Entity("Apple Inc.", { type: "ORG" }).kind) // "Entity"
+ * Entity("Apple Inc.", { type: "ORG" }).kind // => "Entity"
  * ```
  *
  * @category constructors
@@ -291,10 +291,10 @@ export const Entity: TypedTextConstructor<"Entity"> = makeTyped("Entity");
  *
  * **Example** (Create Relation with type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Relation with type"
  * import { Relation } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Relation("founded", { type: "FOUNDER_OF" }).kind) // "Relation"
+ * Relation("founded", { type: "FOUNDER_OF" }).kind // => "Relation"
  * ```
  *
  * @category constructors
@@ -307,10 +307,10 @@ export const Relation: TypedTextConstructor<"Relation"> = makeTyped("Relation");
  *
  * **Example** (Create Embedding with model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Embedding with model"
  * import { Embedding } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Embedding("apple", { model: "word2vec" }).kind) // "Embedding"
+ * Embedding("apple", { model: "word2vec" }).kind // => "Embedding"
  * ```
  *
  * @category constructors
@@ -323,10 +323,10 @@ export const Embedding: TypedTextConstructor<"Embedding"> = makeTyped("Embedding
  *
  * **Example** (Create Dependency with head)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Dependency with head"
  * import { Dependency } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Dependency("nsubj", { head: "runs" }).kind) // "Dependency"
+ * Dependency("nsubj", { head: "runs" }).kind // => "Dependency"
  * ```
  *
  * @category constructors
@@ -339,10 +339,10 @@ export const Dependency: TypedTextConstructor<"Dependency"> = makeTyped("Depende
  *
  * **Example** (Create Chunk typed text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Chunk typed text"
  * import { Chunk } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Chunk("the dog").kind) // "Chunk"
+ * Chunk("the dog").kind // => "Chunk"
  * ```
  *
  * @category constructors
@@ -355,10 +355,10 @@ export const Chunk: TypedTextConstructor<"Chunk"> = makeTyped("Chunk");
  *
  * **Example** (Create POS with tag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create POS with tag"
  * import { POS } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(POS("dog", { tag: "NN" }).kind) // "POS"
+ * POS("dog", { tag: "NN" }).kind // => "POS"
  * ```
  *
  * @category constructors
@@ -371,10 +371,10 @@ export const POS: TypedTextConstructor<"POS"> = makeTyped("POS");
  *
  * **Example** (Create Lemma with original)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create Lemma with original"
  * import { Lemma } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(Lemma("run", { original: "running" }).kind) // "Lemma"
+ * Lemma("run", { original: "running" }).kind // => "Lemma"
  * ```
  *
  * @category constructors
@@ -397,10 +397,10 @@ export const Lemma: TypedTextConstructor<"Lemma"> = makeTyped("Lemma");
  *
  * **Example** (Sentence contains Token check)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Sentence contains Token check"
  * import { KindContainment } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(KindContainment.containment.Sentence.includes("Token")) // true
+ * KindContainment.containment.Sentence.includes("Token") // => true
  * ```
  *
  * @category models
@@ -460,11 +460,11 @@ export class KindContainment extends S.Class<KindContainment>($I`KindContainment
  *
  * **Example** (Check parent-child containment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check parent-child containment"
  * import { canContain } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(canContain("Document", "Sentence")) // true
- * console.log(canContain("Token", "Document")) // false
+ * canContain("Document", "Sentence") // => true
+ * canContain("Token", "Document") // => false
  * ```
  *
  * @category predicates
@@ -480,10 +480,10 @@ export const canContain: {
  *
  * **Example** (List Token child kinds)
  *
- * ```ts
+ * ```ts import.meta.vitest name="List Token child kinds"
  * import { getValidChildren } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(getValidChildren("Token")) // ["Character", "POS", "Lemma"]
+ * getValidChildren("Token") // => ["Character", "POS", "Lemma"]
  * ```
  *
  * @category getters
@@ -500,10 +500,10 @@ export const getValidChildren = (kind: TextKind): ReadonlyArray<TextKind> => Kin
  *
  * **Example** (Extract Document content)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Extract Document content"
  * import { Document, content } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(content(Document("hello"))) // "hello"
+ * content(Document("hello")) // => "hello"
  * ```
  *
  * @category getters
@@ -516,10 +516,10 @@ export const content = <K extends TextKind>(text: TypedText<K>): string => text.
  *
  * **Example** (Get Token kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Get Token kind"
  * import { Token, kindOf } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(kindOf(Token("word"))) // "Token"
+ * kindOf(Token("word")) // => "Token"
  * ```
  *
  * @category getters
@@ -532,10 +532,10 @@ export const kindOf = <K extends TextKind>(text: TypedText<K>): K => text.kind;
  *
  * **Example** (Uppercase Token content)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Uppercase Token content"
  * import { Token, mapContent } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(mapContent(Token("dog"), (s) => s.toUpperCase()).content) // "DOG"
+ * mapContent(Token("dog"), (s) => s.toUpperCase()).content // => "DOG"
  * ```
  *
  * @category mapping
@@ -557,10 +557,10 @@ export const mapContent: {
  *
  * **Example** (Add Entity type metadata)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Add Entity type metadata"
  * import { Entity, withMetadata } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(withMetadata(Entity("Acme"), { type: "ORG" }).metadata) // { type: "ORG" }
+ * withMetadata(Entity("Acme"), { type: "ORG" }).metadata // => { type: "ORG" }
  * ```
  *
  * @category mapping
@@ -582,10 +582,10 @@ export const withMetadata: {
  *
  * **Example** (Guard Token typed text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard Token typed text"
  * import { Token, isKind } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(isKind("Token")(Token("word"))) // true
+ * isKind("Token")(Token("word")) // => true
  * ```
  *
  * @category predicates
@@ -601,10 +601,10 @@ export const isKind =
  *
  * **Example** (Recast Token to Lemma)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Recast Token to Lemma"
  * import { Token, recast } from "@beep/nlp/Ontology/Kind"
  *
- * console.log(recast(Token("word"), "Lemma").kind) // "Lemma"
+ * recast(Token("word"), "Lemma").kind // => "Lemma"
  * ```
  *
  * @category mapping

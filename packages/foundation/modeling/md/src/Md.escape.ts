@@ -87,11 +87,11 @@ class LegacyUrlPolicy extends S.Class<LegacyUrlPolicy>($I`UrlPolicy`)(
  *
  * **Example** (Make HTTPS-only policy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make HTTPS-only policy"
  * import { UrlPolicy } from "@beep/md/Md.escape"
  *
  * const policy = UrlPolicy.make({ allowedProtocols: ["https:"], allowRelative: false })
- * console.log(policy.allowedProtocols[0]) // "https:"
+ * policy.allowedProtocols[0] // => "https:"
  * ```
  *
  * @deprecated Prefer the schema-owned {@link UrlPolicySpec}. This constructor
@@ -106,12 +106,12 @@ export const UrlPolicy = LegacyUrlPolicy;
  *
  * **Example** (Type constructed policy instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type constructed policy instance"
  * import { UrlPolicy } from "@beep/md/Md.escape"
  * import type { UrlPolicy as UrlPolicyType } from "@beep/md/Md.escape"
  *
  * const policy: UrlPolicyType = UrlPolicy.make({})
- * console.log(policy.allowRelative) // true
+ * policy.allowRelative // => true
  * ```
  *
  * @deprecated Prefer the schema-owned {@link UrlPolicySpec} type.
@@ -144,10 +144,10 @@ const NormalizedUrlScheme = S.Trim.pipe(
  *
  * **Example** (Create compatibility policy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create compatibility policy"
  * import { CompatibilityUrlPolicy } from "@beep/md/Md.escape"
  *
- * console.log(CompatibilityUrlPolicy.make({})._tag) // "Compatibility"
+ * CompatibilityUrlPolicy.make({})._tag // => "Compatibility"
  * ```
  *
  * @category models
@@ -172,11 +172,11 @@ export class CompatibilityUrlPolicy extends S.TaggedClass<CompatibilityUrlPolicy
  *
  * **Example** (Make HTTPS allow-list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make HTTPS allow-list"
  * import { AllowListUrlPolicySpec } from "@beep/md/Md.escape"
  *
  * const policy = AllowListUrlPolicySpec.make({ schemes: ["https:"] })
- * console.log(policy.schemes) // ["https:"]
+ * policy.schemes // => ["https:"]
  * ```
  *
  * @category models
@@ -209,13 +209,13 @@ export class AllowListUrlPolicySpec extends S.TaggedClass<AllowListUrlPolicySpec
  *
  * **Example** (Decode allow-list policy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode allow-list policy"
  * import { UrlPolicySpec } from "@beep/md/Md.escape"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const policy = S.decodeUnknownResult(UrlPolicySpec)({ _tag: "AllowList", schemes: [" HTTPS: "] })
- * console.log(Result.isSuccess(policy)) // true
+ * Result.isSuccess(policy) // => true
  * ```
  *
  * @category models
@@ -233,12 +233,12 @@ export const UrlPolicySpec = S.Union([CompatibilityUrlPolicy, AllowListUrlPolicy
  *
  * **Example** (Assign compatibility policy type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign compatibility policy type"
  * import { CompatibilityUrlPolicySpec } from "@beep/md/Md.escape"
  * import type { UrlPolicySpec } from "@beep/md/Md.escape"
  *
  * const policy: UrlPolicySpec = CompatibilityUrlPolicySpec
- * console.log(policy._tag) // "Compatibility"
+ * policy._tag // => "Compatibility"
  * ```
  *
  * @category models
@@ -251,10 +251,10 @@ export type UrlPolicySpec = typeof UrlPolicySpec.Type;
  *
  * **Example** (Read compatibility policy tag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read compatibility policy tag"
  * import { CompatibilityUrlPolicySpec } from "@beep/md/Md.escape"
  *
- * console.log(CompatibilityUrlPolicySpec._tag) // "Compatibility"
+ * CompatibilityUrlPolicySpec._tag // => "Compatibility"
  * ```
  *
  * @category utilities
@@ -267,10 +267,10 @@ export const CompatibilityUrlPolicySpec = CompatibilityUrlPolicy.make({});
  *
  * **Example** (Include artifact scheme)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Include artifact scheme"
  * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
  *
- * console.log(BrowserSafeUrlPolicySpec.schemes.includes("artifact:")) // true
+ * BrowserSafeUrlPolicySpec.schemes.includes("artifact:") // => true
  * ```
  *
  * @category utilities
@@ -287,10 +287,10 @@ export const BrowserSafeUrlPolicySpec = AllowListUrlPolicySpec.make({
  *
  * **Example** (Exclude artifact scheme)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Exclude artifact scheme"
  * import { StrictWebUrlPolicySpec } from "@beep/md/Md.escape"
  *
- * console.log(StrictWebUrlPolicySpec.schemes.includes("artifact:")) // false
+ * StrictWebUrlPolicySpec.schemes.includes("artifact:") // => false
  * ```
  *
  * @category utilities
@@ -307,10 +307,10 @@ export const StrictWebUrlPolicySpec = AllowListUrlPolicySpec.make({
  *
  * **Example** (Include tel scheme)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Include tel scheme"
  * import { UserContentLinkUrlPolicySpec } from "@beep/md/Md.escape"
  *
- * console.log(UserContentLinkUrlPolicySpec.schemes.includes("tel:")) // true
+ * UserContentLinkUrlPolicySpec.schemes.includes("tel:") // => true
  * ```
  *
  * @category utilities
@@ -327,10 +327,10 @@ export const UserContentLinkUrlPolicySpec = AllowListUrlPolicySpec.make({
  *
  * **Example** (List HTTPS image schemes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="List HTTPS image schemes"
  * import { UserContentImageUrlPolicySpec } from "@beep/md/Md.escape"
  *
- * console.log(UserContentImageUrlPolicySpec.schemes) // ["https:"]
+ * UserContentImageUrlPolicySpec.schemes // => ["https:"]
  * ```
  *
  * @category utilities
@@ -352,13 +352,13 @@ export const UserContentImageUrlPolicySpec = AllowListUrlPolicySpec.make({
  *
  * **Example** (Decode compatibility policy input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode compatibility policy input"
  * import { UrlPolicyInput } from "@beep/md/Md.escape"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const policy = S.decodeUnknownResult(UrlPolicyInput)({ _tag: "Compatibility" })
- * console.log(Result.isSuccess(policy)) // true
+ * Result.isSuccess(policy) // => true
  * ```
  *
  * @category models
@@ -376,12 +376,12 @@ export const UrlPolicyInput = S.Union([UrlPolicySpec, LegacyUrlPolicySchema]).pi
  *
  * **Example** (Type browser-safe policy input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type browser-safe policy input"
  * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
  * import type { UrlPolicyInput } from "@beep/md/Md.escape"
  *
  * const policy: UrlPolicyInput = BrowserSafeUrlPolicySpec
- * console.log("schemes" in policy) // true
+ * "schemes" in policy // => true
  * ```
  *
  * @category models
@@ -394,10 +394,10 @@ export type UrlPolicyInput = typeof UrlPolicyInput.Type;
  *
  * **Example** (Read allowRelative flag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read allowRelative flag"
  * import { CompatUrlPolicy } from "@beep/md/Md.escape"
  *
- * console.log(CompatUrlPolicy.allowRelative) // true
+ * CompatUrlPolicy.allowRelative // => true
  * ```
  *
  * @deprecated Prefer {@link CompatibilityUrlPolicySpec}.
@@ -411,10 +411,10 @@ export const CompatUrlPolicy = LegacyUrlPolicySchema.make({});
  *
  * **Example** (Include artifact protocol)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Include artifact protocol"
  * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
  *
- * console.log(BrowserSafeUrlPolicy.allowedProtocols.includes("artifact:")) // true
+ * BrowserSafeUrlPolicy.allowedProtocols.includes("artifact:") // => true
  * ```
  *
  * @deprecated Prefer {@link BrowserSafeUrlPolicySpec}.
@@ -432,10 +432,10 @@ export const BrowserSafeUrlPolicy = LegacyUrlPolicySchema.make({
  *
  * **Example** (Exclude artifact protocol)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Exclude artifact protocol"
  * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
  *
- * console.log(StrictWebUrlPolicy.allowedProtocols.includes("artifact:")) // false
+ * StrictWebUrlPolicy.allowedProtocols.includes("artifact:") // => false
  * ```
  *
  * @deprecated Prefer {@link StrictWebUrlPolicySpec}.
@@ -568,11 +568,11 @@ const normalizeLegacyScheme = flow(Str.trim, Str.toLowerCase, (scheme) =>
  *
  * **Example** (Normalize legacy HTTPS policy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize legacy HTTPS policy"
  * import { normalizeUrlPolicy, UrlPolicy } from "@beep/md/Md.escape"
  *
  * const policy = normalizeUrlPolicy(UrlPolicy.make({ allowedProtocols: ["HTTPS"] }))
- * console.log(policy._tag) // "AllowList"
+ * policy._tag // => "AllowList"
  * ```
  *
  * @category utilities
@@ -674,11 +674,11 @@ const urlSafetyCandidates = (destination: string): ReadonlyArray<string> => {
  *
  * **Example** (Allow and reject destinations)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Allow and reject destinations"
  * import { StrictWebUrlPolicySpec, isUrlDestinationAllowedWithPolicy } from "@beep/md/Md.escape"
  *
- * console.log(isUrlDestinationAllowedWithPolicy("https://example.com", StrictWebUrlPolicySpec)) // true
- * console.log(isUrlDestinationAllowedWithPolicy("artifact:123", StrictWebUrlPolicySpec)) // false
+ * isUrlDestinationAllowedWithPolicy("https://example.com", StrictWebUrlPolicySpec) // => true
+ * isUrlDestinationAllowedWithPolicy("artifact:123", StrictWebUrlPolicySpec) // => false
  * ```
  *
  * @category utilities
@@ -704,10 +704,10 @@ export const isUrlDestinationAllowedWithPolicy: {
  *
  * **Example** (Reject javascript destination)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject javascript destination"
  * import { isUrlDestinationAllowed } from "@beep/md/Md.escape"
  *
- * console.log(isUrlDestinationAllowed("javascript:alert(1)")) // false
+ * isUrlDestinationAllowed("javascript:alert(1)") // => false
  * ```
  *
  * @category utilities
@@ -720,11 +720,11 @@ export const isUrlDestinationAllowed = isUrlDestinationAllowedWithPolicy(Compati
  *
  * **Example** (Join title and body)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Join title and body"
  * import { joinBlocks } from "@beep/md/Md.escape"
  *
  * const markdown = joinBlocks(["# Title", "Body text"])
- * console.log(markdown) // "# Title\n\nBody text"
+ * markdown // => "# Title\n\nBody text"
  * ```
  *
  * @category utilities
@@ -741,11 +741,11 @@ export const joinBlocks = (blocks: string | ReadonlyArray<string>): Markdown => 
  *
  * **Example** (Prefix lines as blockquote)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Prefix lines as blockquote"
  * import { prefixLines } from "@beep/md/Md.escape"
  *
  * const quoted = prefixLines("alpha\nbeta", "> ")
- * console.log(quoted) // "> alpha\n> beta"
+ * quoted // => "> alpha\n> beta"
  * ```
  *
  * @category utilities
@@ -763,11 +763,11 @@ export const prefixLines: {
  *
  * **Example** (Escape hash character)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Escape hash character"
  * import { escapeMarkdownText } from "@beep/md/Md.escape"
  *
  * const escaped = escapeMarkdownText("# title")
- * console.log(escaped) // "\\# title"
+ * escaped // => "\\# title"
  * ```
  *
  * @category utilities
@@ -784,10 +784,10 @@ export const escapeMarkdownText = Str.replace(/([\\`*_{}[\]()#+\-.|<>~])/g, "\\$
  *
  * **Example** (Replace javascript with fragment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Replace javascript with fragment"
  * import { sanitizeUrlDestination } from "@beep/md/Md.escape"
  *
- * console.log(sanitizeUrlDestination("javascript:alert(1)")) // "#"
+ * sanitizeUrlDestination("javascript:alert(1)") // => "#"
  * ```
  *
  * @category utilities
@@ -810,10 +810,10 @@ export const sanitizeUrlDestinationWithPolicy: {
  *
  * **Example** (Replace javascript with fragment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Replace javascript with fragment"
  * import { sanitizeUrlDestination } from "@beep/md/Md.escape"
  *
- * console.log(sanitizeUrlDestination("javascript:alert(1)")) // "#"
+ * sanitizeUrlDestination("javascript:alert(1)") // => "#"
  * ```
  *
  * @category utilities
@@ -826,11 +826,11 @@ export const sanitizeUrlDestination = sanitizeUrlDestinationWithPolicy(Compatibi
  *
  * **Example** (Escape parenthesis in destination)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Escape parenthesis in destination"
  * import { escapeMarkdownDestination } from "@beep/md/Md.escape"
  *
  * const escaped = escapeMarkdownDestination("https://example.com/a)b")
- * console.log(escaped) // "https://example.com/a\\)b"
+ * escaped // => "https://example.com/a\\)b"
  * ```
  *
  * @category utilities
@@ -849,10 +849,10 @@ export const escapeMarkdownDestinationWithPolicy: {
  *
  * **Example** (Escape parenthesis in destination)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Escape parenthesis in destination"
  * import { escapeMarkdownDestination } from "@beep/md/Md.escape"
  *
- * console.log(escapeMarkdownDestination("https://example.com/a)b")) // "https://example.com/a\\)b"
+ * escapeMarkdownDestination("https://example.com/a)b") // => "https://example.com/a\\)b"
  * ```
  *
  * @category utilities
@@ -869,10 +869,10 @@ export const escapeMarkdownDestination = flow(
  *
  * **Example** (Percent-encode space)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Percent-encode space"
  * import { escapeHtmlUrlAttribute } from "@beep/md/Md.escape"
  *
- * console.log(escapeHtmlUrlAttribute("a b")) // "a%20b"
+ * escapeHtmlUrlAttribute("a b") // => "a%20b"
  * ```
  *
  * @category utilities
@@ -890,10 +890,10 @@ export const escapeHtmlUrlAttributeWithPolicy: {
  *
  * **Example** (Escape ampersand in attribute)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Escape ampersand in attribute"
  * import { escapeHtmlUrlAttribute } from "@beep/md/Md.escape"
  *
- * console.log(escapeHtmlUrlAttribute("https://example.com?a=1&b=2")) // "https://example.com?a=1&amp;b=2"
+ * escapeHtmlUrlAttribute("https://example.com?a=1&b=2") // => "https://example.com?a=1&amp;b=2"
  * ```
  *
  * @category utilities
@@ -910,13 +910,13 @@ export const escapeHtmlUrlAttribute = flow(
  *
  * **Example** (Measure longest backtick run)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Measure longest backtick run"
  * import { Str } from "@beep/utils"
  * import { maxBackticks } from "@beep/md/Md.escape"
  *
  * const triple = Str.repeat("`", 3)
  * const count = maxBackticks(`\`one\` and ${triple}three${triple}`)
- * console.log(count) // 3
+ * count // => 3
  * ```
  *
  * @category utilities
@@ -938,11 +938,11 @@ export const maxBackticks: (text: string) => number = flow(
  *
  * **Example** (Fence nested backtick code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Fence nested backtick code"
  * import { renderInlineCode } from "@beep/md/Md.escape"
  *
  * const code = renderInlineCode("`single`")
- * console.log(code) // "`` `single` ``"
+ * code // => "`` `single` ``"
  * ```
  *
  * Empty and multiline payloads fall back to raw `<code>` HTML because Markdown
@@ -975,13 +975,13 @@ export const renderInlineCode = (text: string): string => {
  *
  * **Example** (Render TypeScript code fence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Render TypeScript code fence"
  * import { Str } from "@beep/utils"
  * import { renderFencedCode } from "@beep/md/Md.escape"
  *
  * const block = renderFencedCode("console.log('beep')", "ts")
  * const fence = Str.repeat("`", 3)
- * console.log(Str.includes(`${fence}ts`)(block)) // true
+ * Str.includes(`${fence}ts`)(block) // => true
  * ```
  *
  * @category utilities
@@ -1002,10 +1002,10 @@ export const renderFencedCode: {
  *
  * **Example** (Guard rendered string array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard rendered string array"
  * import { isStringArray } from "@beep/md/Md.escape"
  *
- * console.log(isStringArray(["a", "b"])) // true
+ * isStringArray(["a", "b"]) // => true
  * ```
  *
  * @category guards

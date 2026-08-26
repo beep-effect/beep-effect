@@ -32,14 +32,14 @@ const $I = $SchemaId.create("SchemaUtils/withKeyDefaults");
  *
  * **Example** (Missing key defaults to draft)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Missing key defaults to draft"
  * import * as S from "effect/Schema"
  * import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults"
  *
  * const Status = withKeyDefaults(S.String, "draft")
  * const Settings = S.Struct({ status: Status })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).status) // "draft"
+ * S.decodeUnknownSync(Settings)({}).status // => "draft"
  * ```
  *
  * @typeParam TSchema - Schema receiving the shared default value.
@@ -178,14 +178,14 @@ export function withEmptyArrayDefaults<
  *
  * **Example** (Boolean field defaults to true)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Boolean field defaults to true"
  * import * as S from "effect/Schema"
  * import { boolKeyWithDefault } from "@beep/schema/SchemaUtils/withKeyDefaults"
  *
  * const Enabled = boolKeyWithDefault(true)
  * const Settings = S.Struct({ enabled: Enabled })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).enabled) // true
+ * S.decodeUnknownSync(Settings)({}).enabled // => true
  * ```
  *
  * @param defaultValue - Boolean value used when constructing or decoding a
@@ -202,13 +202,13 @@ export const boolKeyWithDefault = (defaultValue: boolean) => withKeyDefaults(S.B
  *
  * **Example** (Visible defaults to false)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Visible defaults to false"
  * import * as S from "effect/Schema"
  * import { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults"
  *
  * const Settings = S.Struct({ visible: BoolKeyDefaultFalse })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).visible) // false
+ * S.decodeUnknownSync(Settings)({}).visible // => false
  * ```
  *
  * @category constructors
@@ -233,13 +233,13 @@ export type BoolKeyDefaultFalse = typeof BoolKeyDefaultFalse.Type;
  *
  * **Example** (Enabled defaults to true)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Enabled defaults to true"
  * import * as S from "effect/Schema"
  * import { BoolKeyDefaultTrue } from "@beep/schema/SchemaUtils/withKeyDefaults"
  *
  * const Settings = S.Struct({ enabled: BoolKeyDefaultTrue })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).enabled) // true
+ * S.decodeUnknownSync(Settings)({}).enabled // => true
  * ```
  *
  * @category constructors

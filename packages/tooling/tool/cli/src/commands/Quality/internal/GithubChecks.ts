@@ -487,6 +487,83 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
   ),
 ];
 
+/**
+ * Build the deterministic cheap-gate tier that precedes local full proofs.
+ *
+ * **Details**
+ *
+ * Every lane belongs to the same preflight wave so the caller can collect all
+ * failures without scheduling any heavyweight build, lint, check, test, or
+ * docgen lane. The JSDoc lane reads the committed inventory and baseline; the
+ * full inventory rescan remains in the documentation wave of `pre-push`.
+ *
+ * **Example** (Inspect cheap gates)
+ *
+ * ```ts
+ * import { githubCheckCheapGateLanes } from "@beep/repo-cli/test/Quality"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.every(githubCheckCheapGateLanes("/repo"), (lane) => lane.wave === "preflight"))
+ * ```
+ *
+ * @param repoRoot - Repository root used as every subprocess working directory.
+ * @returns Ordered cheap-gate lane specifications.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
+  githubCheckLane(
+    "cheap-gates:config-sync",
+    "repo-sanity",
+    "preflight",
+    bunRunLane(repoRoot, "cheap-gates:config-sync", ["config-sync:check"])
+  ),
+  githubCheckLane(
+    "cheap-gates:tsgo-rules",
+    "repo-quality",
+    "preflight",
+    repoCliLane(repoRoot, "cheap-gates:tsgo-rules", ["tsgo-rules"])
+  ),
+  githubCheckLane(
+    "cheap-gates:effect-imports",
+    "repo-quality",
+    "preflight",
+    bunRunLane(repoRoot, "cheap-gates:effect-imports", ["beep", "laws", "effect-imports", "--check"])
+  ),
+  githubCheckLane(
+    "cheap-gates:schema-first",
+    "repo-quality",
+    "preflight",
+    bunRunLane(repoRoot, "cheap-gates:schema-first", ["beep", "lint", "schema-first"])
+  ),
+  githubCheckLane(
+    "cheap-gates:allowlist-check",
+    "repo-sanity",
+    "preflight",
+    bunRunLane(repoRoot, "cheap-gates:allowlist-check", ["beep", "laws", "allowlist-check"])
+  ),
+  githubCheckLane(
+    "cheap-gates:goals-index",
+    "repo-sanity",
+    "preflight",
+    bunRunLane(repoRoot, "cheap-gates:goals-index", ["beep", "goals", "index", "--check"])
+  ),
+  githubCheckLane(
+    "cheap-gates:goals-doctor",
+    "repo-sanity",
+    "preflight",
+    bunRunLane(repoRoot, "cheap-gates:goals-doctor", ["beep", "goals", "doctor"])
+  ),
+  githubCheckLane(
+    "cheap-gates:jsdoc-ratchet",
+    "repo-quality",
+    "preflight",
+    repoCliLane(repoRoot, "cheap-gates:jsdoc-ratchet", ["jsdoc-ratchet"])
+  ),
+  githubCheckLane("cheap-gates:knip", "repo-quality", "preflight", repoCliLane(repoRoot, "cheap-gates:knip", ["knip"])),
+  ...githubCheckFallowLanes(repoRoot),
+];
+
 const isBlockingFallowMatrixRow = (row: GithubChecksFallowFeatureMatrixRow): boolean =>
   row.promotionStatus === "candidate-blocking" || row.promotionStatus === "blocking" || row.ciMode === "blocking-check";
 
@@ -552,6 +629,7 @@ export const githubCheckLanesForModeForTesting: {
 
   return pipe(
     Match.value(mode),
+    Match.when("cheap-gates", () => githubCheckCheapGateLanes(repoRoot)),
     Match.when("quality", () => [...githubCheckQualityLanes(repoRoot), ...githubCheckRepoSanityLanes(repoRoot)]),
     Match.when("repo-sanity", () => githubCheckRepoSanityLanes(repoRoot)),
     Match.when("secrets", () => externalLane("pre-push:secrets")),

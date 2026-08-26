@@ -195,7 +195,7 @@ const make = <
  *
  * **Example** (Build and inspect a two-point family)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build and inspect a two-point family"
  * import { Fibered } from "@beep/identity"
  * import * as S from "effect/Schema"
  *
@@ -208,7 +208,7 @@ const make = <
  *   }
  * })
  *
- * console.log(family.meta("text").label) // "Text"
+ * family.meta("text").label // => "Text"
  * ```
  *
  * @category constructors

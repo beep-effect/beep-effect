@@ -264,12 +264,12 @@ const assertResolvedAddressesAllowed: (
  *
  * **Example** (Checking blocked hostnames)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Checking blocked hostnames"
  * import { isBlockedRemoteHost } from "@beep/schema"
  *
- * console.log(isBlockedRemoteHost("169.254.169.254")) // true
- * console.log(isBlockedRemoteHost("example.com")) // false
- * console.log(isBlockedRemoteHost("10.0.0.5", { allowlist: ["10.0.0.5"] })) // false
+ * isBlockedRemoteHost("169.254.169.254") // => true
+ * isBlockedRemoteHost("example.com") // => false
+ * isBlockedRemoteHost("10.0.0.5", { allowlist: ["10.0.0.5"] }) // => false
  * ```
  *
  * @category predicates

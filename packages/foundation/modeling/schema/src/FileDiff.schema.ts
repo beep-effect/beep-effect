@@ -29,7 +29,7 @@ class InfoBase extends S.Class<InfoBase>($I`InfoBase`)(
  *
  * **Example** (Decode added file-diff)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode added file-diff"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { FileDiff } from "@beep/schema"
@@ -43,7 +43,7 @@ class InfoBase extends S.Class<InfoBase>($I`InfoBase`)(
  *   })
  * )
  *
- * console.log(added.status) // "added"
+ * added.status // => "added"
  * ```
  *
  * @category models
@@ -63,7 +63,7 @@ export class Added extends InfoBase.extend<Added>($I`Added`)(
  *
  * **Example** (Decode deleted file-diff)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode deleted file-diff"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { FileDiff } from "@beep/schema"
@@ -77,7 +77,7 @@ export class Added extends InfoBase.extend<Added>($I`Added`)(
  *   })
  * )
  *
- * console.log(deleted.deletions) // 8
+ * deleted.deletions // => 8
  * ```
  *
  * @category models
@@ -97,7 +97,7 @@ export class Deleted extends InfoBase.extend<Deleted>($I`Deleted`)(
  *
  * **Example** (Decode modified file-diff)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode modified file-diff"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { FileDiff } from "@beep/schema"
@@ -112,7 +112,7 @@ export class Deleted extends InfoBase.extend<Deleted>($I`Deleted`)(
  *   })
  * )
  *
- * console.log(modified.patch) // "@@ -1 +1 @@"
+ * modified.patch // => "@@ -1 +1 @@"
  * ```
  *
  * @category models
@@ -132,7 +132,7 @@ export class Modified extends InfoBase.extend<Modified>($I`Modified`)(
  *
  * **Example** (Decode file-diff union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode file-diff union"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { FileDiff } from "@beep/schema"
@@ -146,7 +146,7 @@ export class Modified extends InfoBase.extend<Modified>($I`Modified`)(
  *   })
  * )
  *
- * console.log(info.status) // "modified"
+ * info.status // => "modified"
  * ```
  *
  * @category schemas

@@ -26,12 +26,12 @@ const DocumentChild = S.Union([HtmlElement, Comment]).pipe(
  *
  * **Example** (Validate text child node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate text child node"
  * import { HtmlChildNode } from "@beep/html/Html.contract"
  * import { Text } from "@beep/html/Html.nodes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlChildNode)(Text.make({ value: "Hello" }))) // true
+ * S.is(HtmlChildNode)(Text.make({ value: "Hello" })) // => true
  * ```
  *
  * @category schemas
@@ -44,11 +44,11 @@ export const HtmlChildNode = HtmlChild;
  *
  * **Example** (Access child node tag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access child node tag"
  * import type { HtmlChildNode } from "@beep/html/Html.contract"
  *
  * const nodeTag = (node: HtmlChildNode) => node._tag
- * console.log(typeof nodeTag) // "function"
+ * typeof nodeTag // => "function"
  * ```
  *
  * @category models
@@ -66,12 +66,12 @@ export type HtmlChildNode = HtmlChild.Type;
  *
  * **Example** (Validate comment document child)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate comment document child"
  * import { HtmlDocumentChild } from "@beep/html/Html.contract"
  * import { Comment } from "@beep/html/Html.nodes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlDocumentChild)(Comment.make({ value: "note" }))) // true
+ * S.is(HtmlDocumentChild)(Comment.make({ value: "note" })) // => true
  * ```
  *
  * @category schemas
@@ -84,7 +84,7 @@ export const HtmlDocumentChild = DocumentChild.pipe(S.revealCodec);
  *
  * **Example** (Decode comment as document child)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode comment as document child"
  * import { HtmlDocumentChild } from "@beep/html/Html.contract"
  * import { Comment } from "@beep/html/Html.nodes"
  * import { Result } from "effect"
@@ -93,7 +93,7 @@ export const HtmlDocumentChild = DocumentChild.pipe(S.revealCodec);
  * const decoded = S.decodeUnknownResult(HtmlDocumentChild)(Comment.make({ value: "note" }))
  * if (Result.isSuccess(decoded)) {
  *   const child: HtmlDocumentChild = decoded.success
- *   console.log(child._tag) // "#comment"
+ *   child._tag // => "#comment"
  * }
  * ```
  *
@@ -114,12 +114,12 @@ export type HtmlDocumentChild = typeof HtmlDocumentChild.Type;
  *
  * **Example** (Make document with html child)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make document with html child"
  * import { HtmlDocument } from "@beep/html/Html.contract"
  * import { Html } from "@beep/html/Html.model"
  *
  * const document = HtmlDocument.make({ children: [Html.make({ children: [] })] })
- * console.log(document._tag) // "#document"
+ * document._tag // => "#document"
  * ```
  *
  * @category models
@@ -141,11 +141,11 @@ export class HtmlDocument extends S.TaggedClass<HtmlDocument>($I`HtmlDocument`)(
  *
  * **Example** (Make empty HTML fragment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make empty HTML fragment"
  * import { HtmlFragment } from "@beep/html/Html.contract"
  *
  * const fragment = HtmlFragment.make({ children: [] })
- * console.log(fragment._tag) // "#fragment"
+ * fragment._tag // => "#fragment"
  * ```
  *
  * @category schemas
@@ -158,11 +158,11 @@ export const HtmlFragment = Fragment;
  *
  * **Example** (Count fragment children)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count fragment children"
  * import type { HtmlFragment } from "@beep/html/Html.contract"
  *
  * const childCount = (fragment: HtmlFragment) => fragment.children.length
- * console.log(typeof childCount) // "function"
+ * typeof childCount // => "function"
  * ```
  *
  * @category models

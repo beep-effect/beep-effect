@@ -30,7 +30,7 @@ export { UnitInterval } from "@beep/schema/UnitInterval";
  *
  * **Example** (Log AnnotatedDocument schema)
  *
- * ```typescript
+ * ```ts
  * import { Contract } from "@beep/nlp/Handoff"
  *
  * console.log(Contract.AnnotatedDocument)

@@ -52,13 +52,13 @@ const Sfixed32Checks = S.makeFilterGroup(
  *
  * **Example** (Decode negative sfixed32 value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode negative sfixed32 value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Sfixed32 } from "@beep/schema/Sfixed32"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Sfixed32)(-1024))
- * console.log(value) // -1024
+ * value // => -1024
  * ```
  *
  * @invariant Values are integers from -2147483648 through 2147483647.
@@ -81,7 +81,7 @@ export const Sfixed32 = S.Finite.annotate({
  *
  * **Example** (Narrow unknown to Sfixed32)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow unknown to Sfixed32"
  * import * as S from "effect/Schema"
  * import { Sfixed32 } from "@beep/schema/Sfixed32"
  * import type { Sfixed32 as Sfixed32Value } from "@beep/schema/Sfixed32"
@@ -89,7 +89,7 @@ export const Sfixed32 = S.Finite.annotate({
  * const input: unknown = -32
  * if (S.is(Sfixed32)(input)) {
  *   const value: Sfixed32Value = input
- *   console.log(value) // -32
+ *   value // => -32
  * }
  * ```
  *

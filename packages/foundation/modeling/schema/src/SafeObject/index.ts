@@ -3,7 +3,7 @@
  *
  * **Example** (Import SafeObject namespace)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import SafeObject namespace"
  * import * as SafeObject from "@beep/schema/SafeObject"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -11,7 +11,7 @@
  * const value = await Effect.runPromise(
  *   S.decodeUnknownEffect(SafeObject.Schema)({ enabled: true })
  * )
- * console.log(value.enabled) // true
+ * value.enabled // => true
  * ```
  *
  * @packageDocumentation

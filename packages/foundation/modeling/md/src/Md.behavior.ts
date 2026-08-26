@@ -83,7 +83,7 @@ export interface SegmentStrategy<I, B> {
  *
  * **Example** (Segment inline and block runs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Segment inline and block runs"
  * import { Inline } from "@beep/md/Md.model"
  * import { segmentInlineRuns } from "@beep/md/Md.behavior"
  * import { Md } from "@beep/md"
@@ -93,7 +93,7 @@ export interface SegmentStrategy<I, B> {
  *   renderInlineRun: (run) => `inline:${run.length}`,
  *   renderBlock: (block) => `block:${block._tag}`,
  * })
- * console.log(segments) // ["inline:2", "block:p"]
+ * segments // => ["inline:2", "block:p"]
  * ```
  *
  * @typeParam I - Inline child element type.
@@ -179,11 +179,11 @@ const renderPlainTextInlineMatcher = Match.type<Inline>().pipe(
  *
  * **Example** (Plain text from inline)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Plain text from inline"
  * import { Md } from "@beep/md"
  * import { renderPlainTextInline } from "@beep/md/Md.behavior"
  *
- * console.log(renderPlainTextInline(Md.strong("beep"))) // "beep"
+ * renderPlainTextInline(Md.strong("beep")) // => "beep"
  * ```
  *
  * @category utilities
@@ -198,11 +198,11 @@ export function renderPlainTextInline(inline: Inline): string {
  *
  * **Example** (Plain text from block)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Plain text from block"
  * import { Md } from "@beep/md"
  * import { renderPlainTextBlock } from "@beep/md/Md.behavior"
  *
- * console.log(renderPlainTextBlock(Md.h1("Hello"))) // "Hello"
+ * renderPlainTextBlock(Md.h1("Hello")) // => "Hello"
  * ```
  *
  * @category utilities
@@ -232,11 +232,11 @@ export const renderPlainTextBlock: (block: Block) => string = Match.type<Block>(
  *
  * **Example** (Plain text blocks per line)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Plain text blocks per line"
  * import { Md } from "@beep/md"
  * import { renderPlainTextBlocks } from "@beep/md/Md.behavior"
  *
- * console.log(renderPlainTextBlocks([Md.h1("Hello"), Md.p("World")])) // "Hello\nWorld"
+ * renderPlainTextBlocks([Md.h1("Hello"), Md.p("World")]) // => "Hello\nWorld"
  * ```
  *
  * @category utilities

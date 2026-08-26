@@ -40,14 +40,14 @@ const effectAnnotations = {
  *
  * **Example** (Check Effect runtime values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check Effect runtime values"
  * import { Effect } from "effect"
  * import { isEffect } from "@beep/schema/EffectSchema"
  *
  * const program = Effect.succeed(1)
  *
- * console.log(isEffect(program)) // true
- * console.log(isEffect("hello")) // false
+ * isEffect(program) // => true
+ * isEffect("hello") // => false
  * ```
  *
  * @param u - The value to test.
@@ -66,7 +66,7 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
  *
  * **Example** (Decode Effect runtime values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Effect runtime values"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { EffectSchema } from "@beep/schema/EffectSchema"
@@ -74,7 +74,7 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
  * const program = Effect.succeed("done")
  * const decoded = S.decodeUnknownSync(EffectSchema())(program)
  *
- * console.log(Effect.isEffect(decoded)) // true
+ * Effect.isEffect(decoded) // => true
  * ```
  *
  * @effects

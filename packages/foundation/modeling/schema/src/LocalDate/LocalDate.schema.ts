@@ -673,7 +673,7 @@ export const daysInMonth: {
  *
  * **Example** (Decode and encode date strings)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode and encode date strings"
  * import * as S from "effect/Schema";
  * import { LocalDateFromString } from "@beep/schema/LocalDate";
  *
@@ -683,7 +683,7 @@ export const daysInMonth: {
  * const date = decodeLocalDate("2024-06-15");
  * const str = encodeLocalDate(date);
  *
- * console.log(str); // "2024-06-15"
+ * str // => "2024-06-15"
  * ```
  *
  * @category constructors
@@ -725,13 +725,13 @@ export type LocalDateFromString = typeof LocalDateFromString.Type;
  *
  * **Example** (Encode LocalDate to string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode LocalDate to string"
  * import * as S from "effect/Schema"
  * import { LocalDateFromString } from "@beep/schema/LocalDate"
  *
  * const date = S.decodeUnknownSync(LocalDateFromString)("2024-06-15")
  * const encoded: LocalDateFromString.Encoded = S.encodeSync(LocalDateFromString)(date)
- * console.log(encoded) // "2024-06-15"
+ * encoded // => "2024-06-15"
  * ```
  *
  * @category models

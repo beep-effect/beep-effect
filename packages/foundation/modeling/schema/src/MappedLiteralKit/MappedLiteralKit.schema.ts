@@ -66,7 +66,7 @@ type DirectionalKit<
  *
  * **Example** (Construct duplicate mapping error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct duplicate mapping error"
  * import { MappedLiteralDuplicateError } from "@beep/schema/MappedLiteralKit"
  *
  * const error = MappedLiteralDuplicateError.make({
@@ -75,7 +75,7 @@ type DirectionalKit<
  *   firstIndex: 0,
  *   secondIndex: 1
  * })
- * console.log(error.side) // "to"
+ * error.side // => "to"
  * ```
  *
  * @category errors
@@ -258,7 +258,7 @@ const makeDirectionalKit = <
  *
  * **Example** (Map SQL state literals)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Map SQL state literals"
  * import { MappedLiteralKit } from "@beep/schema";
  * import * as S from "effect/Schema";
  *
@@ -330,7 +330,7 @@ export interface MappedLiteralKit<M extends MappedPairs> extends MappedLiteralKi
  *
  * **Example** (Build HTTP status mapping)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build HTTP status mapping"
  * import * as S from "effect/Schema"
  * import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"
  *

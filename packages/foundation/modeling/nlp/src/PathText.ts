@@ -36,11 +36,11 @@ const pathFragmentVariants = (input: string): ReadonlyArray<string> => {
  *
  * **Example** (Normalize backslash path phrase)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Normalize backslash path phrase"
  * import * as PathText from "@beep/nlp/PathText"
  *
  * const normalized = PathText.normalizePathPhrase("src\\\\utils\\\\index.ts")
- * console.log(normalized) // "src/utils/index.ts"
+ * normalized // => "src/utils/index.ts"
  * ```
  *
  * @category normalization
@@ -59,12 +59,12 @@ export const normalizePathPhrase = flow(QueryText.normalizePhrase, Str.replace(/
  *
  * **Example** (Classify path-like tokens)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Classify path-like tokens"
  * import * as PathText from "@beep/nlp/PathText"
  *
- * console.log(PathText.isPathLike("src/index.ts")) // true
- * console.log(PathText.isPathLike("@beep/utils")) // true
- * console.log(PathText.isPathLike("hello world")) // false
+ * PathText.isPathLike("src/index.ts") // => true
+ * PathText.isPathLike("@beep/utils") // => true
+ * PathText.isPathLike("hello world") // => false
  * ```
  *
  * @category predicates
@@ -83,12 +83,12 @@ export const isPathLike = (input: string): boolean => /^[A-Za-z0-9_./@-]+$/.test
  *
  * **Example** (Generate file path variants)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Generate file path variants"
  * import * as PathText from "@beep/nlp/PathText"
  *
  * const variants = PathText.filePathVariants("./src/utils/index.ts")
- * console.log(variants.includes("src/utils/index")) // true
- * console.log(variants.includes("index")) // true
+ * variants.includes("src/utils/index") // => true
+ * variants.includes("index") // => true
  * ```
  *
  * @category normalization
@@ -106,12 +106,12 @@ export const filePathVariants = pathFragmentVariants;
  *
  * **Example** (Generate module specifier variants)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Generate module specifier variants"
  * import * as PathText from "@beep/nlp/PathText"
  *
  * const variants = PathText.moduleSpecifierVariants("@beep/utils/Str.ts")
- * console.log(variants.includes("@beep/utils/Str")) // true
- * console.log(variants.includes("Str")) // true
+ * variants.includes("@beep/utils/Str") // => true
+ * variants.includes("Str") // => true
  * ```
  *
  * @category normalization

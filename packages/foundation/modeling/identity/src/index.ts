@@ -3,12 +3,12 @@
  *
  * **Example** (Make package identity ID)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make package identity ID"
  * import { make } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
  * const id = $MyPkgId.make("Service")
- * console.log(id)// "@beep/my-pkg/Service"
+ * id // => "@beep/my-pkg/Service"
  * ```
  *
  * @packageDocumentation
@@ -35,7 +35,7 @@ export * from "./Curie.ts";
  *
  * **Example** (Build a single-point family)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a single-point family"
  * import { Fibered } from "@beep/identity"
  * import * as S from "effect/Schema"
  *
@@ -48,7 +48,7 @@ export * from "./Curie.ts";
  *   }
  * })
  *
- * console.log(family.points) // ["text"]
+ * family.points // => ["text"]
  * ```
  *
  * @category models

@@ -10,11 +10,11 @@
  *
  * **Example** (Access typed package version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Access typed package version"
  * import { VERSION } from "@beep/pandoc-ast"
  *
  * const packageVersion: "0.0.0" = VERSION
- * console.log(packageVersion) // "0.0.0"
+ * packageVersion // => "0.0.0"
  * ```
  *
  * @category constants

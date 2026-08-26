@@ -25,11 +25,11 @@ export { RDF_NAMESPACE, RDF_TERMS } from "./generated/Rdf.terms.ts";
  *
  * **Example** (Inspect type NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect type NamedNode"
  * import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf"
  *
- * console.log(RDF_TYPE.value) // "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
- * console.log(RDF_TYPE.termType) // "NamedNode"
+ * RDF_TYPE.value // => "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+ * RDF_TYPE.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -42,11 +42,11 @@ export const RDF_TYPE = makeNamedNode(`${RDF_NAMESPACE}type`);
  *
  * **Example** (Inspect first NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect first NamedNode"
  * import { RDF_FIRST } from "@beep/rdf/Vocab/Rdf"
  *
- * console.log(RDF_FIRST.value) // "http://www.w3.org/1999/02/22-rdf-syntax-ns#first"
- * console.log(RDF_FIRST.termType) // "NamedNode"
+ * RDF_FIRST.value // => "http://www.w3.org/1999/02/22-rdf-syntax-ns#first"
+ * RDF_FIRST.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -59,11 +59,11 @@ export const RDF_FIRST = makeNamedNode(`${RDF_NAMESPACE}first`);
  *
  * **Example** (Inspect rest NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect rest NamedNode"
  * import { RDF_REST } from "@beep/rdf/Vocab/Rdf"
  *
- * console.log(RDF_REST.value) // "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest"
- * console.log(RDF_REST.termType) // "NamedNode"
+ * RDF_REST.value // => "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest"
+ * RDF_REST.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -76,11 +76,11 @@ export const RDF_REST = makeNamedNode(`${RDF_NAMESPACE}rest`);
  *
  * **Example** (Inspect nil NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect nil NamedNode"
  * import { RDF_NIL } from "@beep/rdf/Vocab/Rdf"
  *
- * console.log(RDF_NIL.value) // "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"
- * console.log(RDF_NIL.termType) // "NamedNode"
+ * RDF_NIL.value // => "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"
+ * RDF_NIL.termType // => "NamedNode"
  * ```
  *
  * @category constants

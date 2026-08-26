@@ -42,13 +42,13 @@ const Sfixed64BigInt = S.BigInt.check(Sfixed64Range);
  *
  * **Example** (Decode min sfixed64 string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode min sfixed64 string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Sfixed64 } from "@beep/schema/Sfixed64"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Sfixed64)("-9223372036854775808"))
- * console.log(value.toString()) // "-9223372036854775808"
+ * value.toString() // => "-9223372036854775808"
  * ```
  *
  * @invariant Values are bigints from -9223372036854775808 through 9223372036854775807.
@@ -71,7 +71,7 @@ export const Sfixed64 = ProtobufInt64Input.pipe(S.decodeTo(Sfixed64BigInt, decod
  *
  * **Example** (Narrow unknown to Sfixed64)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow unknown to Sfixed64"
  * import * as S from "effect/Schema"
  * import { Sfixed64 } from "@beep/schema/Sfixed64"
  * import type { Sfixed64 as Sfixed64Value } from "@beep/schema/Sfixed64"
@@ -79,7 +79,7 @@ export const Sfixed64 = ProtobufInt64Input.pipe(S.decodeTo(Sfixed64BigInt, decod
  * const input: unknown = -BigInt(64)
  * if (S.is(Sfixed64)(input)) {
  *   const value: Sfixed64Value = input
- *   console.log(value.toString()) // "-64"
+ *   value.toString() // => "-64"
  * }
  * ```
  *

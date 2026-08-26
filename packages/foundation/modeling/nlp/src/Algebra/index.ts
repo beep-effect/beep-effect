@@ -10,10 +10,10 @@
  *
  * **Example** (Fold numbers with NumberSum)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Fold numbers with NumberSum"
  * import { Monoid } from "@beep/nlp/Algebra"
  *
- * console.log(Monoid.fold(Monoid.NumberSum)([1, 2, 3])) // 6
+ * Monoid.fold(Monoid.NumberSum)([1, 2, 3]) // => 6
  * ```
  *
  * @category combinators
@@ -25,10 +25,10 @@ export * as Monoid from "./Monoid.ts";
  *
  * **Example** (Concatenate tokens with TokenConcat)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Concatenate tokens with TokenConcat"
  * import { NLPMonoid } from "@beep/nlp/Algebra"
  *
- * console.log(NLPMonoid.TokenConcat.combine("hello", "world")) // "hello world"
+ * NLPMonoid.TokenConcat.combine("hello", "world") // => "hello world"
  * ```
  *
  * @category combinators

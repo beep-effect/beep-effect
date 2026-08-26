@@ -15,12 +15,12 @@ const $I = $SchemaId.create("SnakeStr");
  *
  * **Example** (Decode snake_case string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode snake_case string"
  * import * as S from "effect/Schema"
  * import { SnakeCaseStr } from "@beep/schema"
  *
  * const value = S.decodeUnknownSync(SnakeCaseStr)("workflow_status_2")
- * console.log(value) // "workflow_status_2"
+ * value // => "workflow_status_2"
  * ```
  *
  * @category validation

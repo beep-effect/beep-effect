@@ -12,10 +12,10 @@
  *
  * **Example** (Read the SKOS namespace IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the SKOS namespace IRI"
  * import { SKOS_NAMESPACE } from "@beep/rdf/Vocab/generated/Skos.terms"
  *
- * console.log(SKOS_NAMESPACE.length > 0) // true
+ * SKOS_NAMESPACE.length > 0 // => true
  * ```
  *
  * @category constants
@@ -28,10 +28,10 @@ export const SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#" as const;
  *
  * **Example** (Read the SKOS term inventory)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the SKOS term inventory"
  * import { SKOS_TERMS } from "@beep/rdf/Vocab/generated/Skos.terms"
  *
- * console.log(SKOS_TERMS.length > 0) // true
+ * SKOS_TERMS.length > 0 // => true
  * ```
  *
  * @category constants

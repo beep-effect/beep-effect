@@ -355,13 +355,13 @@ export const HttpStatus2XX = MappedLiteralKit([
  *
  * **Example** (Decode encoded Ok status)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode encoded Ok status"
  * import * as S from "effect/Schema"
  * import { HttpStatus2XX } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatus2XX.Encoded = "Ok"
  * const status = S.decodeUnknownSync(HttpStatus2XX)(encoded)
- * console.log(status) // 200
+ * status // => 200
  * ```
  *
  * @category validation
