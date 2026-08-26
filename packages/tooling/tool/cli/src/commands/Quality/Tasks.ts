@@ -102,6 +102,7 @@ import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
+import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
 import type {
   GithubCheckFailurePolicy,
@@ -1180,6 +1181,20 @@ type QuarantineStepAttempt = {
   readonly command: string;
 };
 
+type QuarantineStandaloneRun = {
+  readonly taskId: string;
+  readonly packageName: string;
+  readonly task: string;
+  readonly standaloneCommand: string;
+  readonly detectedAt: string;
+  readonly standaloneDurationMs: number;
+};
+
+type QuarantineWave = {
+  readonly tasks: ReadonlyArray<FlakeQuarantineTask>;
+  readonly detectedAt: string;
+};
+
 // Quarantine-eligible lanes capture while teeing so a failure's output can be
 // matched against the no-location TS2589 signature; everything else keeps the
 // inherited-stdio path unchanged.
@@ -1216,93 +1231,116 @@ const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQ
   };
 });
 
-// Every newly flake-attributed package reruns standalone once, then the whole
-// lane resumes from cache so tasks Turbo skipped after the flake still execute.
-// A resumed lane can expose another near-ceiling package, so arbitration
-// continues while each failure has the strict signature and the cumulative
-// task cap is intact. Any repeated task or non-matching failure stays hard.
-// Returns every incident only after a complete lane rerun succeeds.
-const attemptFlakeQuarantine = Effect.fn("QualityTasks.attemptFlakeQuarantine")(function* (
+const selectFlakeQuarantineWave = Effect.fn("QualityTasks.selectFlakeQuarantineWave")(function* (
   step: QualityTaskStep,
-  attempt: QuarantineStepAttempt
-): Effect.fn.Return<ReadonlyArray<FlakeQuarantineIncident>, QualityTaskConfigurationError, QualityTaskEnvironment> {
-  const policy = step.flakeQuarantine;
-  if (policy === undefined) {
-    return A.empty();
+  attempt: QuarantineStepAttempt,
+  standaloneRuns: ReadonlyArray<QuarantineStandaloneRun>
+) {
+  if (attempt.truncated) {
+    yield* Console.log(`[flake-quarantine] ${step.label}: captured output truncated; keeping failure hard`);
+    return O.none<QuarantineWave>();
   }
 
-  const standaloneRuns: Array<{
-    readonly taskId: string;
-    readonly packageName: string;
-    readonly task: string;
-    readonly standaloneCommand: string;
-    readonly detectedAt: string;
-    readonly standaloneDurationMs: number;
-  }> = [];
+  const detected = detectNoLocationTs2589Flake(attempt.output);
+  if (O.isNone(detected)) {
+    yield* Console.log(
+      `[flake-quarantine] ${step.label}: failure does not match the no-location TS2589 flake signature; keeping failure hard`
+    );
+    return O.none<QuarantineWave>();
+  }
+
+  const recordedTaskIds = A.map(standaloneRuns, (run) => run.taskId);
+  const repeatedTaskIds = pipe(
+    detected.value,
+    A.filter((task) => A.contains(recordedTaskIds, task.taskId)),
+    A.map((task) => task.taskId)
+  );
+  if (A.isReadonlyArrayNonEmpty(repeatedTaskIds)) {
+    yield* Console.log(
+      `[flake-quarantine] ${step.label}: lane rerun repeated the flake for ${A.join(repeatedTaskIds, ", ")}; keeping failure hard`
+    );
+    return O.none<QuarantineWave>();
+  }
+
+  if (A.length(detected.value) > MAX_QUARANTINED_TASKS_PER_LANE - A.length(standaloneRuns)) {
+    yield* Console.log(
+      `[flake-quarantine] ${step.label}: cumulative task cap ${MAX_QUARANTINED_TASKS_PER_LANE} exceeded; keeping failure hard`
+    );
+    return O.none<QuarantineWave>();
+  }
+
+  const detectedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  yield* Console.log(
+    `[flake-quarantine] ${step.label}: no-location TS2589 flake signature detected for ${A.join(
+      A.map(detected.value, (task) => task.taskId),
+      ", "
+    )}; rerunning standalone once`
+  );
+  return O.some<QuarantineWave>({ tasks: detected.value, detectedAt });
+});
+
+const runStandaloneQuarantineWave = Effect.fn("QualityTasks.runStandaloneQuarantineWave")(function* (
+  step: QualityTaskStep,
+  wave: QuarantineWave
+) {
+  const runs: Array<QuarantineStandaloneRun> = [];
+  for (const task of wave.tasks) {
+    const [elapsed, rerun] = yield* runStepCapturedForQuarantine(standaloneQuarantineRerunStep(step, task)).pipe(
+      Effect.timed
+    );
+    if (rerun.exitCode !== 0) {
+      yield* Console.log(
+        `[flake-quarantine] ${step.label}: standalone rerun for ${task.taskId} failed with exit ${rerun.exitCode}; keeping failure hard`
+      );
+      return O.none<ReadonlyArray<QuarantineStandaloneRun>>();
+    }
+    runs.push({
+      taskId: task.taskId,
+      packageName: task.packageName,
+      task: task.task,
+      standaloneCommand: rerun.command,
+      detectedAt: wave.detectedAt,
+      standaloneDurationMs: Duration.toMillis(elapsed),
+    });
+  }
+  return O.some<ReadonlyArray<QuarantineStandaloneRun>>(runs);
+});
+
+const quarantineIncidents = (
+  policy: NonNullable<QualityTaskStep["flakeQuarantine"]>,
+  laneLabel: string,
+  laneRerunDurationMs: number,
+  runs: ReadonlyArray<QuarantineStandaloneRun>
+): ReadonlyArray<FlakeQuarantineIncident> =>
+  A.map(runs, (run) =>
+    FlakeQuarantineIncident.make({
+      policy,
+      laneLabel,
+      taskId: run.taskId,
+      packageName: run.packageName,
+      task: run.task,
+      standaloneCommand: run.standaloneCommand,
+      detectedAt: run.detectedAt,
+      standaloneDurationMs: run.standaloneDurationMs,
+      laneRerunDurationMs,
+    })
+  );
+
+const runFlakeQuarantineWaves = Effect.fn("QualityTasks.runFlakeQuarantineWaves")(function* (
+  step: QualityTaskStep,
+  attempt: QuarantineStepAttempt,
+  policy: NonNullable<QualityTaskStep["flakeQuarantine"]>
+) {
+  const standaloneRuns: Array<QuarantineStandaloneRun> = [];
   let currentAttempt = attempt;
 
   while (true) {
-    if (currentAttempt.truncated) {
-      yield* Console.log(`[flake-quarantine] ${step.label}: captured output truncated; keeping failure hard`);
-      return A.empty();
-    }
+    const wave = yield* selectFlakeQuarantineWave(step, currentAttempt, standaloneRuns);
+    if (O.isNone(wave)) return A.empty<FlakeQuarantineIncident>();
 
-    const detected = detectNoLocationTs2589Flake(currentAttempt.output);
-    if (O.isNone(detected)) {
-      yield* Console.log(
-        `[flake-quarantine] ${step.label}: failure does not match the no-location TS2589 flake signature; keeping failure hard`
-      );
-      return A.empty();
-    }
-
-    const tasks = detected.value;
-    const recordedTaskIds = A.map(standaloneRuns, (run) => run.taskId);
-    const repeatedTaskIds = pipe(
-      tasks,
-      A.filter((task) => A.contains(recordedTaskIds, task.taskId)),
-      A.map((task) => task.taskId)
-    );
-    if (A.isReadonlyArrayNonEmpty(repeatedTaskIds)) {
-      yield* Console.log(
-        `[flake-quarantine] ${step.label}: lane rerun repeated the flake for ${A.join(repeatedTaskIds, ", ")}; keeping failure hard`
-      );
-      return A.empty();
-    }
-
-    if (A.length(tasks) > MAX_QUARANTINED_TASKS_PER_LANE - A.length(standaloneRuns)) {
-      yield* Console.log(
-        `[flake-quarantine] ${step.label}: cumulative task cap ${MAX_QUARANTINED_TASKS_PER_LANE} exceeded; keeping failure hard`
-      );
-      return A.empty();
-    }
-
-    const detectedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-    yield* Console.log(
-      `[flake-quarantine] ${step.label}: no-location TS2589 flake signature detected for ${A.join(
-        A.map(tasks, (task) => task.taskId),
-        ", "
-      )}; rerunning standalone once`
-    );
-
-    for (const task of tasks) {
-      const [elapsed, rerun] = yield* runStepCapturedForQuarantine(standaloneQuarantineRerunStep(step, task)).pipe(
-        Effect.timed
-      );
-      if (rerun.exitCode !== 0) {
-        yield* Console.log(
-          `[flake-quarantine] ${step.label}: standalone rerun for ${task.taskId} failed with exit ${rerun.exitCode}; keeping failure hard`
-        );
-        return A.empty();
-      }
-      standaloneRuns.push({
-        taskId: task.taskId,
-        packageName: task.packageName,
-        task: task.task,
-        standaloneCommand: rerun.command,
-        detectedAt,
-        standaloneDurationMs: Duration.toMillis(elapsed),
-      });
-    }
+    const waveRuns = yield* runStandaloneQuarantineWave(step, wave.value);
+    if (O.isNone(waveRuns)) return A.empty<FlakeQuarantineIncident>();
+    standaloneRuns.push(...waveRuns.value);
 
     const [laneElapsed, laneRerun] = yield* runStepCapturedForQuarantine(laneQuarantineRerunStep(step)).pipe(
       Effect.timed
@@ -1319,20 +1357,25 @@ const attemptFlakeQuarantine = Effect.fn("QualityTasks.attemptFlakeQuarantine")(
     yield* Console.log(
       `[flake-quarantine] ${step.label}: quarantined ${A.length(standaloneRuns)} environment-only TS2589 flake incident(s); lane rerun green`
     );
-    return A.map(standaloneRuns, (run) =>
-      FlakeQuarantineIncident.make({
-        policy,
-        laneLabel: step.label,
-        taskId: run.taskId,
-        packageName: run.packageName,
-        task: run.task,
-        standaloneCommand: run.standaloneCommand,
-        detectedAt: run.detectedAt,
-        standaloneDurationMs: run.standaloneDurationMs,
-        laneRerunDurationMs,
-      })
-    );
+    return quarantineIncidents(policy, step.label, laneRerunDurationMs, standaloneRuns);
   }
+});
+
+// Every newly flake-attributed package reruns standalone once, then the whole
+// lane resumes from cache so tasks Turbo skipped after the flake still execute.
+// A resumed lane can expose another near-ceiling package, so arbitration
+// continues while each failure has the strict signature and the cumulative
+// task cap is intact. Any repeated task or non-matching failure stays hard.
+// Returns every incident only after a complete lane rerun succeeds.
+const attemptFlakeQuarantine = Effect.fn("QualityTasks.attemptFlakeQuarantine")(function* (
+  step: QualityTaskStep,
+  attempt: QuarantineStepAttempt
+): Effect.fn.Return<ReadonlyArray<FlakeQuarantineIncident>, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  const policy = step.flakeQuarantine;
+  if (policy === undefined) {
+    return A.empty();
+  }
+  return yield* runFlakeQuarantineWaves(step, attempt, policy);
 });
 
 const quarantineArtifactCwd = (steps: ReadonlyArray<QualityTaskStep>): O.Option<string> =>
