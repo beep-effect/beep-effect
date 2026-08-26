@@ -306,14 +306,14 @@ const entityLabelsFor = Effect.fn("Gold.entityLabelsFor")(function* (
   return A.flatMap(files, (file) => (file.subset === "entity" ? file.labels : []));
 });
 
+type RelationEndpoint = { readonly endChar: number; readonly quote: string; readonly startChar: number };
+type RelationEndpoints = { readonly object: RelationEndpoint; readonly subject: RelationEndpoint };
+
 const relationEndpointsFor = (
   label: ProposedLabel,
   entityLabels: ReadonlyArray<GoldEntityLabel>,
   evidence: TextAnchor
-): O.Option<{
-  readonly object: { readonly endChar: number; readonly quote: string; readonly startChar: number };
-  readonly subject: { readonly endChar: number; readonly quote: string; readonly startChar: number };
-}> =>
+): O.Option<RelationEndpoints> =>
   isRelationProposalLabel(label)
     ? O.all({
         object: A.findFirst(entityLabels, (entity) =>
@@ -346,6 +346,51 @@ const relationEndpointsFor = (
         ),
       })
     : O.none();
+
+const makeVerifiedGoldLabel = Effect.fnUntraced(function* (
+  label: ProposedLabel,
+  anchor: TextAnchor,
+  endpoints: O.Option<RelationEndpoints>
+) {
+  if (isEntityProposalLabel(label)) {
+    return yield* GoldEntityLabel.makeEffect({
+      cluster: label.cluster,
+      endChar: anchor.endChar,
+      entityType: label.entityType,
+      label: anchor.quote,
+      quote: anchor.quote,
+      startChar: anchor.startChar,
+      verified: false,
+    }).pipe(Effect.result, Effect.map(Result.getSuccess));
+  }
+  if (isRelationProposalLabel(label)) {
+    return yield* O.match(endpoints, {
+      onNone: () => Effect.succeed(O.none()),
+      onSome: (resolved) =>
+        GoldRelationLabel.makeEffect({
+          endChar: anchor.endChar,
+          object: resolved.object.quote,
+          objectEndChar: NonNegativeInt.make(resolved.object.endChar),
+          objectStartChar: NonNegativeInt.make(resolved.object.startChar),
+          predicate: label.predicate,
+          quote: anchor.quote,
+          startChar: anchor.startChar,
+          subject: resolved.subject.quote,
+          subjectEndChar: NonNegativeInt.make(resolved.subject.endChar),
+          subjectStartChar: NonNegativeInt.make(resolved.subject.startChar),
+          verified: false,
+        }).pipe(Effect.result, Effect.map(Result.getSuccess)),
+    });
+  }
+  return yield* GoldStructureLabel.makeEffect({
+    depth: label.depth,
+    endChar: anchor.endChar,
+    quote: anchor.quote,
+    role: label.role,
+    startChar: anchor.startChar,
+    verified: false,
+  }).pipe(Effect.result, Effect.map(Result.getSuccess));
+});
 
 // A 2,000-character window tolerates roughly a page of PDF extraction drift
 // while preventing short evidence strings from re-anchoring across a paper.
@@ -583,46 +628,7 @@ const proposeJob = Effect.fn("Gold.proposeJob")(function* (
         return O.none();
       }
       const endpoints = relationEndpointsFor(label, entityLabels, anchor.success);
-      if (isRelationProposalLabel(label) && O.isNone(endpoints)) {
-        return O.none();
-      }
-      if (isEntityProposalLabel(label)) {
-        return yield* GoldEntityLabel.makeEffect({
-          cluster: label.cluster,
-          endChar: anchor.success.endChar,
-          entityType: label.entityType,
-          label: anchor.success.quote,
-          quote: anchor.success.quote,
-          startChar: anchor.success.startChar,
-          verified: false,
-        }).pipe(Effect.result, Effect.map(Result.getSuccess));
-      }
-      if (isRelationProposalLabel(label) && O.isSome(endpoints)) {
-        return yield* GoldRelationLabel.makeEffect({
-          endChar: anchor.success.endChar,
-          object: endpoints.value.object.quote,
-          objectEndChar: NonNegativeInt.make(endpoints.value.object.endChar),
-          objectStartChar: NonNegativeInt.make(endpoints.value.object.startChar),
-          predicate: label.predicate,
-          quote: anchor.success.quote,
-          startChar: anchor.success.startChar,
-          subject: endpoints.value.subject.quote,
-          subjectEndChar: NonNegativeInt.make(endpoints.value.subject.endChar),
-          subjectStartChar: NonNegativeInt.make(endpoints.value.subject.startChar),
-          verified: false,
-        }).pipe(Effect.result, Effect.map(Result.getSuccess));
-      }
-      if (isRelationProposalLabel(label)) {
-        return O.none();
-      }
-      return yield* GoldStructureLabel.makeEffect({
-        depth: label.depth,
-        endChar: anchor.success.endChar,
-        quote: anchor.success.quote,
-        role: label.role,
-        startChar: anchor.success.startChar,
-        verified: false,
-      }).pipe(Effect.result, Effect.map(Result.getSuccess));
+      return yield* makeVerifiedGoldLabel(label, anchor.success, endpoints);
     })
   );
   const labels = A.getSomes(verified);
