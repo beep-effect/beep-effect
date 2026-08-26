@@ -25,11 +25,11 @@ export { RDFS_NAMESPACE, RDFS_TERMS } from "./generated/Rdfs.terms.ts";
  *
  * **Example** (Inspect RDFS_LABEL NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect RDFS_LABEL NamedNode"
  * import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs"
  *
- * console.log(RDFS_LABEL.value) // "http://www.w3.org/2000/01/rdf-schema#label"
- * console.log(RDFS_LABEL.termType) // "NamedNode"
+ * RDFS_LABEL.value // => "http://www.w3.org/2000/01/rdf-schema#label"
+ * RDFS_LABEL.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -42,11 +42,11 @@ export const RDFS_LABEL = makeNamedNode(`${RDFS_NAMESPACE}label`);
  *
  * **Example** (Inspect RDFS_COMMENT NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect RDFS_COMMENT NamedNode"
  * import { RDFS_COMMENT } from "@beep/rdf/Vocab/Rdfs"
  *
- * console.log(RDFS_COMMENT.value) // "http://www.w3.org/2000/01/rdf-schema#comment"
- * console.log(RDFS_COMMENT.termType) // "NamedNode"
+ * RDFS_COMMENT.value // => "http://www.w3.org/2000/01/rdf-schema#comment"
+ * RDFS_COMMENT.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -59,11 +59,11 @@ export const RDFS_COMMENT = makeNamedNode(`${RDFS_NAMESPACE}comment`);
  *
  * **Example** (Inspect RDFS_CLASS NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect RDFS_CLASS NamedNode"
  * import { RDFS_CLASS } from "@beep/rdf/Vocab/Rdfs"
  *
- * console.log(RDFS_CLASS.value) // "http://www.w3.org/2000/01/rdf-schema#Class"
- * console.log(RDFS_CLASS.termType) // "NamedNode"
+ * RDFS_CLASS.value // => "http://www.w3.org/2000/01/rdf-schema#Class"
+ * RDFS_CLASS.termType // => "NamedNode"
  * ```
  *
  * @category constants

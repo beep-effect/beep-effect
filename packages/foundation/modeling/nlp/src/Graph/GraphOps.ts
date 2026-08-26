@@ -117,10 +117,10 @@ export interface SearchIndex<K, A> {
  *
  * **Example** (Check dfs order predicate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check dfs order predicate"
  * import { TraversalOrder } from "@beep/nlp/Graph/GraphOps"
  *
- * console.log(TraversalOrder.is.dfs("dfs")) // true
+ * TraversalOrder.is.dfs("dfs") // => true
  * ```
  *
  * @category schemas

@@ -1,9 +1,10 @@
 # LeJeune Knowledge Desk map
 
-**DRAFT — pending Benjamin's align round**
+**DRAFT — align ratified 2026-08-26; awaiting shape review**
 
-Later-stage artifacts are pre-seeded for review. The manifest remains at `align` until Benjamin
-closes or defers the proposed decisions in [`DECISIONS.md`](./DECISIONS.md).
+Benjamin closed the align round on 2026-08-26: every entry in
+[`DECISIONS.md`](./DECISIONS.md) is ratified and the manifest stage is `shape`. This map stays
+a draft until the brief passes shape review and decompose begins.
 
 ## Candidate goal packets
 
@@ -92,9 +93,9 @@ packet, as required by the exploration graduation contract.
 
 ## Sequencing
 
-1. **Freeze decisions, fixtures, ontology, and rule checks.** Benjamin's align round chooses the
-   proposed details without reopening the operator-ratified Option C, lunch boundary, or five-day
-   appetite.
+1. **Freeze decisions, fixtures, ontology, and rule checks.** Done 2026-08-26: the align round
+   ratified every proposed detail without reopening the operator-ratified Option C, lunch
+   boundary, or five-day appetite ([`DECISIONS.md`](./DECISIONS.md)).
 2. **Build `lejeune-demo-corpus-and-ontology`.** The deterministic bundle is the shared contract
    for extraction, retrieval, citations, spec checks, synthetic offers, and veteran correction.
    It gives the UI stable data and keeps provider or network failures out of the critical path.
@@ -148,8 +149,8 @@ may narrow the day-two upper bound from three layouts to two.
 
 ## Open risks inherited from the brief
 
-- **Align remains open.** All proposed choices in `DECISIONS.md` still need Benjamin's answer or
-  an explicit deferral.
+- **Align is closed.** Every choice in `DECISIONS.md` was ratified on 2026-08-26; reopening one
+  requires a new dated entry, not an edit.
 - **Five days leave little recovery margin.** New schemas, fixtures, UI, review behavior, and
   packaging must stay within the fixed scenario.
   [Option C risks](./research/08-demo-options.md#risks-2).

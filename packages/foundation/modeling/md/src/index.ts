@@ -27,11 +27,11 @@ export const VERSION = "0.0.2" as const;
  *
  * **Example** (Render plain-text heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Render plain-text heading"
  * import { Md } from "@beep/md"
  * import { renderPlainTextBlocks } from "@beep/md"
  *
- * console.log(renderPlainTextBlocks([Md.h1("Hello")])) // "Hello"
+ * renderPlainTextBlocks([Md.h1("Hello")]) // => "Hello"
  * ```
  *
  * @category utilities
@@ -43,10 +43,10 @@ export * from "./Md.behavior.ts";
  *
  * **Example** (Escape markdown hash)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Escape markdown hash"
  * import { escapeMarkdownText } from "@beep/md"
  *
- * console.log(escapeMarkdownText("#")) // "\\#"
+ * escapeMarkdownText("#") // => "\\#"
  * ```
  *
  * @category utilities
@@ -75,10 +75,10 @@ export * from "./Md.html.ts";
  *
  * **Example** (Create empty Document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create empty Document"
  * import { Document } from "@beep/md"
  *
- * console.log(Document.make({ children: [] })._tag) // "document"
+ * Document.make({ children: [] })._tag // => "document"
  * ```
  *
  * @category models
@@ -90,10 +90,10 @@ export * from "./Md.model.ts";
  *
  * **Example** (Render via MarkdownAdapter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Render via MarkdownAdapter"
  * import { Md, MarkdownAdapter } from "@beep/md"
  *
- * console.log(MarkdownAdapter.render(Md.make([Md.p`Hello`]))) // "Hello"
+ * MarkdownAdapter.render(Md.make([Md.p`Hello`])) // => "Hello"
  * ```
  *
  * @category formatting
@@ -105,11 +105,11 @@ export * from "./Md.render.ts";
  *
  * **Example** (Refine safe document success)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Refine safe document success"
  * import { Md, refineSafeDocument } from "@beep/md"
  * import { Result } from "effect"
  *
- * console.log(Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")])))) // true
+ * Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")]))) // => true
  * ```
  *
  * @category validation
@@ -121,12 +121,12 @@ export * from "./Md.safe.ts";
  *
  * **Example** (Build and render heading)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build and render heading"
  * import { Md } from "@beep/md"
  * import { Result } from "effect"
  *
  * const markdown = Md.render(Md.make([Md.h1`Hello`]))
- * console.log(Result.getOrThrow(markdown)) // "# Hello"
+ * Result.getOrThrow(markdown) // => "# Hello"
  * ```
  *
  * @category constructors

@@ -4,19 +4,9 @@
     "slug": "lejeune-bolt-agentic-demo",
     "title": "LeJeune Bolt Agentic Demo",
     "status": "active",
-    "stage": "align",
+    "stage": "shape",
     "openQuestions": [
-      "License the TypeScript port for component reuse?",
-      "Confirm the lab slug and working product name?",
-      "Which two RFQ layouts should the demo fix?",
-      "Ask for one anonymized RFQ before lunch?",
-      "Which model-provider posture should the demo use?",
-      "Freeze which ontology and rule-check slice?",
-      "What deletion date governs the lab and corpus?",
-      "Who reviews veteran-memory claims in a pilot?",
-      "How should the draft-only PO closing beat look?",
-      "What is the paid pilot's first scope and success measure?",
-      "What pricing shape should the pilot use?"
+      "Does BRIEF.md hold as shaped (problem, appetite, sketch, rabbit holes, no-gos), or what changes before decompose?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -25,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-08-25",
-    "updated": "2026-08-25"
+    "updated": "2026-08-26"
   }
 }

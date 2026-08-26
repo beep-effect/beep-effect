@@ -29,12 +29,12 @@ const currencyNameOptionsNonEmpty = cast<
  *
  * **Example** (Decode USD currency code)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode USD currency code"
  * import * as S from "effect/Schema"
  * import { CurrencyCode } from "@beep/schema/CurrencyCode"
  *
  * const code = S.decodeUnknownSync(CurrencyCode)("USD")
- * console.log(code) // "USD"
+ * code // => "USD"
  * ```
  *
  * @category models
@@ -60,12 +60,12 @@ export type CurrencyCode = typeof CurrencyCode.Type;
  *
  * **Example** (Decode US Dollar name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode US Dollar name"
  * import * as S from "effect/Schema"
  * import { CurrencyName } from "@beep/schema/CurrencyCode"
  *
  * const name = S.decodeUnknownSync(CurrencyName)("US Dollar")
- * console.log(name) // "US Dollar"
+ * name // => "US Dollar"
  * ```
  *
  * @category models
@@ -89,11 +89,11 @@ export type CurrencyName = typeof CurrencyName.Type;
  *
  * **Example** (Validate currency code guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate currency code guard"
  * import { isCurrencyCode } from "@beep/schema/CurrencyCode"
  *
- * console.log(isCurrencyCode("USD")) // true
- * console.log(isCurrencyCode("ZZZ")) // false
+ * isCurrencyCode("USD") // => true
+ * isCurrencyCode("ZZZ") // => false
  * ```
  *
  * @category validation
@@ -106,10 +106,10 @@ export const isCurrencyCode = (value: string): value is CurrencyCode => HashSet.
  *
  * **Example** (Compare USD constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare USD constant"
  * import { USD } from "@beep/schema/CurrencyCode"
  *
- * console.log(USD === "USD") // true
+ * USD === "USD" // => true
  * ```
  *
  * @category constants
@@ -121,10 +121,10 @@ export const USD: CurrencyCode = CurrencyCode.make("USD");
  *
  * **Example** (Compare EUR constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare EUR constant"
  * import { EUR } from "@beep/schema/CurrencyCode"
  *
- * console.log(EUR === "EUR") // true
+ * EUR === "EUR" // => true
  * ```
  *
  * @category constants
@@ -136,10 +136,10 @@ export const EUR: CurrencyCode = CurrencyCode.make("EUR");
  *
  * **Example** (Compare GBP constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare GBP constant"
  * import { GBP } from "@beep/schema/CurrencyCode"
  *
- * console.log(GBP === "GBP") // true
+ * GBP === "GBP" // => true
  * ```
  *
  * @category constants
@@ -151,10 +151,10 @@ export const GBP: CurrencyCode = CurrencyCode.make("GBP");
  *
  * **Example** (Compare JPY constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare JPY constant"
  * import { JPY } from "@beep/schema/CurrencyCode"
  *
- * console.log(JPY === "JPY") // true
+ * JPY === "JPY" // => true
  * ```
  *
  * @category constants
@@ -166,10 +166,10 @@ export const JPY: CurrencyCode = CurrencyCode.make("JPY");
  *
  * **Example** (Compare CHF constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare CHF constant"
  * import { CHF } from "@beep/schema/CurrencyCode"
  *
- * console.log(CHF === "CHF") // true
+ * CHF === "CHF" // => true
  * ```
  *
  * @category constants
@@ -181,10 +181,10 @@ export const CHF: CurrencyCode = CurrencyCode.make("CHF");
  *
  * **Example** (Compare CAD constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare CAD constant"
  * import { CAD } from "@beep/schema/CurrencyCode"
  *
- * console.log(CAD === "CAD") // true
+ * CAD === "CAD" // => true
  * ```
  *
  * @category constants
@@ -196,10 +196,10 @@ export const CAD: CurrencyCode = CurrencyCode.make("CAD");
  *
  * **Example** (Compare AUD constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare AUD constant"
  * import { AUD } from "@beep/schema/CurrencyCode"
  *
- * console.log(AUD === "AUD") // true
+ * AUD === "AUD" // => true
  * ```
  *
  * @category constants
@@ -211,10 +211,10 @@ export const AUD: CurrencyCode = CurrencyCode.make("AUD");
  *
  * **Example** (Compare CNY constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare CNY constant"
  * import { CNY } from "@beep/schema/CurrencyCode"
  *
- * console.log(CNY === "CNY") // true
+ * CNY === "CNY" // => true
  * ```
  *
  * @category constants
@@ -226,10 +226,10 @@ export const CNY: CurrencyCode = CurrencyCode.make("CNY");
  *
  * **Example** (Compare HKD constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare HKD constant"
  * import { HKD } from "@beep/schema/CurrencyCode"
  *
- * console.log(HKD === "HKD") // true
+ * HKD === "HKD" // => true
  * ```
  *
  * @category constants
@@ -241,10 +241,10 @@ export const HKD: CurrencyCode = CurrencyCode.make("HKD");
  *
  * **Example** (Compare SGD constant)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare SGD constant"
  * import { SGD } from "@beep/schema/CurrencyCode"
  *
- * console.log(SGD === "SGD") // true
+ * SGD === "SGD" // => true
  * ```
  *
  * @category constants

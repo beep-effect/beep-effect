@@ -24,11 +24,11 @@ const $I = $HtmlId.create("Html.nodes");
  *
  * **Example** (Make a text node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make a text node"
  * import { Text } from "@beep/html/Html.nodes"
  *
  * const node = Text.make({ value: "Hello" })
- * console.log(node._tag) // "#text"
+ * node._tag // => "#text"
  * ```
  *
  * @category models
@@ -49,11 +49,11 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
  *
  * **Example** (Encoded text shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded text shape"
  * import { Text } from "@beep/html/Html.nodes"
  *
  * const encoded: Text.Encoded = { _tag: "#text", value: "Hello" }
- * console.log(encoded._tag) // "#text"
+ * encoded._tag // => "#text"
  * ```
  *
  * @category models
@@ -74,12 +74,12 @@ export declare namespace Text {
  *
  * **Example** (Validate comment data)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate comment data"
  * import { HtmlCommentData } from "@beep/html/Html.nodes"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlCommentData)("note")) // true
- * console.log(S.is(HtmlCommentData)("-->")) // false
+ * S.is(HtmlCommentData)("note") // => true
+ * S.is(HtmlCommentData)("-->") // => false
  * ```
  *
  * @category schemas
@@ -159,11 +159,11 @@ export type HtmlCommentData = typeof HtmlCommentData.Type;
  *
  * **Example** (Make a comment node)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make a comment node"
  * import { Comment } from "@beep/html/Html.nodes"
  *
  * const node = Comment.make({ value: "note" })
- * console.log(node._tag) // "#comment"
+ * node._tag // => "#comment"
  * ```
  *
  * @category models
@@ -184,11 +184,11 @@ export class Comment extends S.TaggedClass<Comment>($I`Comment`)(
  *
  * **Example** (Encoded comment shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded comment shape"
  * import { Comment } from "@beep/html/Html.nodes"
  *
  * const encoded: Comment.Encoded = { _tag: "#comment", value: "note" }
- * console.log(encoded._tag) // "#comment"
+ * encoded._tag // => "#comment"
  * ```
  *
  * @category models
@@ -209,11 +209,11 @@ export declare namespace Comment {
  *
  * **Example** (Create HTML doctype)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create HTML doctype"
  * import { Doctype } from "@beep/html/Html.nodes"
  *
  * const node = Doctype.html()
- * console.log(node._tag) // "#doctype"
+ * node._tag // => "#doctype"
  * ```
  *
  * @category models
@@ -242,11 +242,11 @@ export class Doctype extends S.TaggedClass<Doctype>($I`Doctype`)(
  *
  * **Example** (Encoded doctype shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encoded doctype shape"
  * import { Doctype } from "@beep/html/Html.nodes"
  *
  * const encoded: Doctype.Encoded = { _tag: "#doctype", name: "html" }
- * console.log(encoded._tag) // "#doctype"
+ * encoded._tag // => "#doctype"
  * ```
  *
  * @category models

@@ -154,12 +154,12 @@ export interface MutableHashMap<Key extends S.Top, Value extends S.Top>
  *
  * **Example** (Guards MutableHashMap values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guards MutableHashMap values"
  * import { MutableHashMap } from "effect"
  * import { isMutableHashMap } from "@beep/schema/MutableHashMap"
  *
- * console.log(isMutableHashMap(MutableHashMap.empty())) // true
- * console.log(isMutableHashMap({})) // false
+ * isMutableHashMap(MutableHashMap.empty()) // => true
+ * isMutableHashMap({}) // => false
  * ```
  *
  * @param value - Unknown input to test.

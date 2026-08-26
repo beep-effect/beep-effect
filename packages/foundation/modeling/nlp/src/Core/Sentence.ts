@@ -24,11 +24,11 @@ const getRangeEnd = (options: { readonly end: number } | number): number =>
  *
  * **Example** (Type-safe index increment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type-safe index increment"
  * import type { SentenceIndex } from "@beep/nlp/Core/Sentence"
  *
  * const next = (index: SentenceIndex): number => index + 1
- * console.log(typeof next) // "function"
+ * typeof next // => "function"
  * ```
  *
  * @category models
@@ -41,11 +41,11 @@ export type SentenceIndex = Brand.Branded<NonNegativeInt, "SentenceIndex">;
  *
  * **Example** (Construct zero sentence index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct zero sentence index"
  * import { sentenceIndex } from "@beep/nlp/Core/Sentence"
  *
  * const first = sentenceIndex(0)
- * console.log(first) // 0
+ * first // => 0
  * ```
  *
  * @category validation
@@ -60,11 +60,11 @@ export const sentenceIndex: Brand.Constructor<SentenceIndex> = Brand.check<Sente
  *
  * **Example** (Decode non-negative index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode non-negative index"
  * import { SentenceIndex } from "@beep/nlp/Core/Sentence"
  *
  * const index = SentenceIndex.make(1)
- * console.log(index) // 1
+ * index // => 1
  * ```
  *
  * @category validation
@@ -89,7 +89,7 @@ export const SentenceIndex = NonNegativeInt.pipe(
  *
  * **Example** (Construct empty sentence model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct empty sentence model"
  * import { Chunk } from "effect"
  * import * as O from "effect/Option"
  * import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence"
@@ -106,7 +106,7 @@ export const SentenceIndex = NonNegativeInt.pipe(
  *   negationFlag: O.none(),
  *   markedUpText: O.none()
  * })
- * console.log(sentence.tokenCount) // 0
+ * sentence.tokenCount // => 0
  * ```
  *
  * @category models

@@ -80,10 +80,10 @@ const renderTermsModule = (prefix: SharedPrefix): string => {
  *
  * **Example** (Read the ${display} namespace IRI)
  *
- * \`\`\`ts
+ * \`\`\`ts import.meta.vitest name="Read the ${display} namespace IRI"
  * import { ${constant}_NAMESPACE } from "@beep/rdf/Vocab/generated/${moduleName}.terms"
  *
- * console.log(${constant}_NAMESPACE.length > 0) // true
+ * ${constant}_NAMESPACE.length > 0 // => true
  * \`\`\`
  *
  * @category constants
@@ -96,10 +96,10 @@ export const ${constant}_NAMESPACE = "${CoreVocab[prefix].iri}" as const;
  *
  * **Example** (Read the ${display} term inventory)
  *
- * \`\`\`ts
+ * \`\`\`ts import.meta.vitest name="Read the ${display} term inventory"
  * import { ${constant}_TERMS } from "@beep/rdf/Vocab/generated/${moduleName}.terms"
  *
- * console.log(${constant}_TERMS.length > 0) // true
+ * ${constant}_TERMS.length > 0 // => true
  * \`\`\`
  *
  * @category constants

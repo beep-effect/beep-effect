@@ -17,7 +17,7 @@ import { Number as N } from "effect";
  *
  * **Example** (Filter and type-guard positives)
  *
- * ```typescript
+ * ```ts
  * import { isPositive } from "@beep/utils/Number";
  * import * as A from "effect/Array";
  *

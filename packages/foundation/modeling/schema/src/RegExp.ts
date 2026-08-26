@@ -45,12 +45,12 @@ const decodeRegExp = (value: string): Effect.Effect<globalThis.RegExp, SchemaIss
  *
  * **Example** (Decode valid pattern string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode valid pattern string"
  * import * as S from "effect/Schema"
  * import { RegExpStr } from "@beep/schema/RegExp"
  *
  * const pattern = S.decodeUnknownSync(RegExpStr)("^[a-z]+$")
- * console.log(pattern) // "^[a-z]+$"
+ * pattern // => "^[a-z]+$"
  * ```
  *
  * @category validation
@@ -68,12 +68,12 @@ export const RegExpStr = S.String.check(RegExpStrCheck).pipe(
  *
  * **Example** (Type and test pattern)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type and test pattern"
  * import * as S from "effect/Schema"
  * import { RegExpStr } from "@beep/schema/RegExp"
  *
  * const pattern: RegExpStr = S.decodeUnknownSync(RegExpStr)("\\d+")
- * console.log(new RegExp(pattern).test("123")) // true
+ * new RegExp(pattern).test("123") // => true
  * ```
  *
  * @category models
@@ -93,13 +93,13 @@ const encodeRegExpStrForbidden = (): Effect.Effect<RegExpStr, SchemaIssue.Issue>
  *
  * **Example** (Decode string to RegExp)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode string to RegExp"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { RegExpFromStr } from "@beep/schema/RegExp"
  *
  * const pattern = Effect.runSync(S.decodeUnknownEffect(RegExpFromStr)("[a-z]+"))
- * console.log(pattern.test("abc")) // true
+ * pattern.test("abc") // => true
  * ```
  *
  * @category validation
@@ -123,13 +123,13 @@ export const RegExpFromStr = RegExpStr.pipe(
  *
  * **Example** (Type decoded RegExp value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type decoded RegExp value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { RegExpFromStr } from "@beep/schema/RegExp"
  *
  * const re: RegExpFromStr = Effect.runSync(S.decodeUnknownEffect(RegExpFromStr)("hello"))
- * console.log(re.test("hello world")) // true
+ * re.test("hello world") // => true
  * ```
  *
  * @category models

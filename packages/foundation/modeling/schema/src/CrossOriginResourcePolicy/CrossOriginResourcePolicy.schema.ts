@@ -26,11 +26,11 @@ const CorpValueBase = LiteralKit(["same-site", "same-origin", "cross-origin"]);
  *
  * **Example** (Validate same-origin CORP value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate same-origin CORP value"
  * import * as S from "effect/Schema"
  * import { CorpValue } from "@beep/schema/CrossOriginResourcePolicy"
  *
- * console.log(S.is(CorpValue)("same-origin")) // true
+ * S.is(CorpValue)("same-origin") // => true
  * ```
  *
  * @category schemas

@@ -15,11 +15,11 @@ import type { EntityPatternElement, LiteralPatternElement, PatternElement, POSPa
  *
  * **Example** (True for POS element)
  *
- * ```ts
+ * ```ts import.meta.vitest name="True for POS element"
  * import { pos } from "@beep/nlp/Core/PatternBuilders"
  * import { isPOSElement } from "@beep/nlp/Core/PatternOperations"
  *
- * console.log(isPOSElement(pos("NOUN"))) // true
+ * isPOSElement(pos("NOUN")) // => true
  * ```
  *
  * @category predicates
@@ -32,11 +32,11 @@ export const isPOSElement: (element: PatternElement) => element is POSPatternEle
  *
  * **Example** (True for entity element)
  *
- * ```ts
+ * ```ts import.meta.vitest name="True for entity element"
  * import { entity } from "@beep/nlp/Core/PatternBuilders"
  * import { isEntityElement } from "@beep/nlp/Core/PatternOperations"
  *
- * console.log(isEntityElement(entity("EMAIL"))) // true
+ * isEntityElement(entity("EMAIL")) // => true
  * ```
  *
  * @category predicates
@@ -49,11 +49,11 @@ export const isEntityElement: (element: PatternElement) => element is EntityPatt
  *
  * **Example** (True for literal element)
  *
- * ```ts
+ * ```ts import.meta.vitest name="True for literal element"
  * import { literal } from "@beep/nlp/Core/PatternBuilders"
  * import { isLiteralElement } from "@beep/nlp/Core/PatternOperations"
  *
- * console.log(isLiteralElement(literal("Effect"))) // true
+ * isLiteralElement(literal("Effect")) // => true
  * ```
  *
  * @category predicates
@@ -66,11 +66,11 @@ export const isLiteralElement: (element: PatternElement) => element is LiteralPa
  *
  * **Example** (Optional literal value array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Optional literal value array"
  * import { optionalLiteral } from "@beep/nlp/Core/PatternBuilders"
  * import { extractElementValues } from "@beep/nlp/Core/PatternOperations"
  *
- * console.log(extractElementValues(optionalLiteral("Inc."))) // ["", "Inc."]
+ * extractElementValues(optionalLiteral("Inc.")) // => ["", "Inc."]
  * ```
  *
  * @category getters
@@ -83,11 +83,11 @@ export const extractElementValues = (element: PatternElement): ReadonlyArray<str
  *
  * **Example** (Slice bracketed string content)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Slice bracketed string content"
  * import * as O from "effect/Option"
  * import { extractBracketContent } from "@beep/nlp/Core/PatternOperations"
  *
- * console.log(O.getOrThrow(extractBracketContent("[ADJ|NOUN]"))) // "ADJ|NOUN"
+ * O.getOrThrow(extractBracketContent("[ADJ|NOUN]")) // => "ADJ|NOUN"
  * ```
  *
  * @category getters
@@ -101,10 +101,10 @@ export const extractBracketContent = (value: string): O.Option<string> =>
  *
  * **Example** (Split trimmed bracket segments)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Split trimmed bracket segments"
  * import { splitBracketValues } from "@beep/nlp/Core/PatternOperations"
  *
- * console.log(splitBracketValues("ADJ | NOUN")) // ["ADJ", "NOUN"]
+ * splitBracketValues("ADJ | NOUN") // => ["ADJ", "NOUN"]
  * ```
  *
  * @category getters
@@ -117,10 +117,10 @@ export const splitBracketValues = (content: string): ReadonlyArray<string> => A.
  *
  * **Example** (Join values as brackets)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Join values as brackets"
  * import { joinBracketValues } from "@beep/nlp/Core/PatternOperations"
  *
- * console.log(joinBracketValues(["ADJ", "NOUN"])) // "[ADJ|NOUN]"
+ * joinBracketValues(["ADJ", "NOUN"]) // => "[ADJ|NOUN]"
  * ```
  *
  * @category getters

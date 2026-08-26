@@ -742,7 +742,7 @@ export const OWLSearchResult = S.Tuple([OWLClass, OWLSearchScore]).pipe(
  *
  * **Example** (Referencing OWLSearchResult type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Referencing OWLSearchResult type"
  * import type { OWLSearchResult } from "@beep/ontology/Ontology.models"
  *
  * type Result = OWLSearchResult

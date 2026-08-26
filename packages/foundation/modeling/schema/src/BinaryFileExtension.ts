@@ -10,15 +10,15 @@
  *
  * **Example** (Decode extension and helpers)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode extension and helpers"
  * import * as S from "effect/Schema";
  * import { BinaryFileExtension, hasBinaryExtension, isBinaryContent } from "@beep/schema/BinaryFileExtension";
  *
  * const extension = S.decodeUnknownSync(BinaryFileExtension)(".png");
  *
- * console.log(extension); // ".png"
- * console.log(hasBinaryExtension("photo.png")); // true
- * console.log(isBinaryContent(new Uint8Array([0, 159, 146, 150]))); // true
+ * extension // => ".png"
+ * hasBinaryExtension("photo.png") // => true
+ * isBinaryContent(new Uint8Array([0, 159, 146, 150])) // => true
  * ```
  *
  * @packageDocumentation
@@ -167,12 +167,12 @@ const isNonPrintableByte = (byte: number): boolean => byte < 32 && byte !== 9 &&
  *
  * **Example** (Decode PDF extension)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode PDF extension"
  * import * as S from "effect/Schema";
  * import { BinaryFileExtension } from "@beep/schema/BinaryFileExtension";
  *
  * const extension = S.decodeUnknownSync(BinaryFileExtension)(".pdf");
- * console.log(extension); // ".pdf"
+ * extension // => ".pdf"
  * ```
  *
  * @category validation
@@ -191,12 +191,12 @@ const binaryFileExtensionSet = HashSet.fromIterable(BinaryFileExtension.Options)
  *
  * **Example** (Annotate extension union type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate extension union type"
  * import * as S from "effect/Schema"
  * import { BinaryFileExtension } from "@beep/schema/BinaryFileExtension"
  *
  * const ext: BinaryFileExtension = S.decodeUnknownSync(BinaryFileExtension)(".png")
- * console.log(ext) // ".png"
+ * ext // => ".png"
  * ```
  *
  * @category models
@@ -209,11 +209,11 @@ export type BinaryFileExtension = typeof BinaryFileExtension.Type;
  *
  * **Example** (Guard dotted extensions)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Guard dotted extensions"
  * import { isBinaryFileExtension } from "@beep/schema/BinaryFileExtension";
  *
- * console.log(isBinaryFileExtension(".png")); // true
- * console.log(isBinaryFileExtension("png")); // false
+ * isBinaryFileExtension(".png") // => true
+ * isBinaryFileExtension("png") // => false
  * ```
  *
  * @param value - The value to test as a binary file extension.
@@ -234,11 +234,11 @@ export const isBinaryFileExtension = (value: string): value is BinaryFileExtensi
  *
  * **Example** (Detect path binary extension)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Detect path binary extension"
  * import { hasBinaryExtension } from "@beep/schema/BinaryFileExtension";
  *
- * console.log(hasBinaryExtension("photo.PNG")); // true
- * console.log(hasBinaryExtension("notes.md")); // false
+ * hasBinaryExtension("photo.PNG") // => true
+ * hasBinaryExtension("notes.md") // => false
  * ```
  *
  * @param filePath - The file path or file name whose extension should be checked.
@@ -261,14 +261,14 @@ export function hasBinaryExtension(filePath: string): boolean {
  *
  * **Example** (Detect binary byte samples)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Detect binary byte samples"
  * import { isBinaryContent } from "@beep/schema/BinaryFileExtension";
  *
  * const text = new TextEncoder().encode("hello world");
  * const binary = new Uint8Array([0, 159, 146, 150]);
  *
- * console.log(isBinaryContent(text)); // false
- * console.log(isBinaryContent(binary)); // true
+ * isBinaryContent(text) // => false
+ * isBinaryContent(binary) // => true
  * ```
  *
  * @param bytes - The bytes to inspect for binary content markers.

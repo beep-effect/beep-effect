@@ -20,14 +20,14 @@ import * as S from "effect/Schema";
  *
  * **Example** (Defaulting a missing optional key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Defaulting a missing optional key"
  * import * as S from "effect/Schema"
  * import { optionalKeyWithDefault } from "@beep/schema/SchemaUtils/optionalKeyWithDefaults"
  *
  * const Settings = S.Struct({ label: optionalKeyWithDefault(S.String, "draft") })
  * const settings = S.decodeUnknownSync(Settings)({})
  *
- * console.log(settings.label) // "draft"
+ * settings.label // => "draft"
  * ```
  *
  * @param schema - Schema for the required decoded value.

@@ -26,14 +26,14 @@ const $I = $SchemaId.create("SchemaUtils/withEncodeDefault");
  *
  * **Example** (Default for missing encoded key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Default for missing encoded key"
  * import * as S from "effect/Schema"
  * import { withEncodeDefault } from "@beep/schema/SchemaUtils/withEncodeDefault"
  *
  * const Status = withEncodeDefault(S.String, () => "draft")
  * const Settings = S.Struct({ status: Status })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).status) // "draft"
+ * S.decodeUnknownSync(Settings)({}).status // => "draft"
  * ```
  *
  * @typeParam TSchema - Schema receiving the decoding default.
@@ -73,14 +73,14 @@ export const withEncodeDefault: {
  *
  * **Example** (Boolean field with default)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Boolean field with default"
  * import * as S from "effect/Schema"
  * import { boolWithDefault } from "@beep/schema/SchemaUtils/withEncodeDefault"
  *
  * const Enabled = boolWithDefault(true)
  * const Settings = S.Struct({ enabled: Enabled })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).enabled) // true
+ * S.decodeUnknownSync(Settings)({}).enabled // => true
  * ```
  *
  * @param defaultValue - Boolean value returned when the encoded key is missing.
@@ -95,13 +95,13 @@ export const boolWithDefault = (defaultValue: boolean) => withEncodeDefault(S.Bo
  *
  * **Example** (Missing key decodes false)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Missing key decodes false"
  * import * as S from "effect/Schema"
  * import { BoolDefaultFalse } from "@beep/schema/SchemaUtils/withEncodeDefault"
  *
  * const Settings = S.Struct({ visible: BoolDefaultFalse })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).visible) // false
+ * S.decodeUnknownSync(Settings)({}).visible // => false
  * ```
  *
  * @category constructors
@@ -125,13 +125,13 @@ export type BoolDefaultFalse = typeof BoolDefaultFalse.Type;
  *
  * **Example** (Missing key decodes true)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Missing key decodes true"
  * import * as S from "effect/Schema"
  * import { BoolDefaultTrue } from "@beep/schema/SchemaUtils/withEncodeDefault"
  *
  * const Settings = S.Struct({ enabled: BoolDefaultTrue })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).enabled) // true
+ * S.decodeUnknownSync(Settings)({}).enabled // => true
  * ```
  *
  * @category constructors

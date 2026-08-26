@@ -30,7 +30,7 @@ import * as S from "effect/Schema";
  *
  * **Example** (Splitting delimited text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Splitting delimited text"
  * import * as S from "effect/Schema";
  * import { split } from "@beep/schema/SchemaUtils/split";
  *
@@ -38,8 +38,8 @@ import * as S from "effect/Schema";
  * const decodeCsvCells = S.decodeSync(CsvCells);
  * const encodeCsvCells = S.encodeSync(CsvCells);
  *
- * console.log(decodeCsvCells("red,green,blue")); // ["red", "green", "blue"]
- * console.log(encodeCsvCells(["red", "green", "blue"])); // "red,green,blue"
+ * decodeCsvCells("red,green,blue") // => ["red", "green", "blue"]
+ * encodeCsvCells(["red", "green", "blue"]) // => "red,green,blue"
  * ```
  *
  * @param separator - Delimiter used for both decoding and encoding.

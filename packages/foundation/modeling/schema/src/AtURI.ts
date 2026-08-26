@@ -193,7 +193,7 @@ const AtUriChecks = S.makeFilterGroup(
  *
  * **Example** (Decode DID AT URI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode DID AT URI"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { AtUri } from "@beep/schema/AtURI"
@@ -204,19 +204,19 @@ const AtUriChecks = S.makeFilterGroup(
  *   )
  * )
  *
- * console.log(uri) // "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3jui7kd54zh2y"
+ * uri // => "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3jui7kd54zh2y"
  * ```
  *
  * **Example** (Reject uppercase handles)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject uppercase handles"
  * import * as S from "effect/Schema"
  * import { AtUri } from "@beep/schema/AtURI"
  *
  * const isAtUri = S.is(AtUri)
  *
- * console.log(isAtUri("at://alice.example.com/app.bsky.feed.post/self")) // true
- * console.log(isAtUri("at://Alice.example.com/app.bsky.feed.post/self")) // false
+ * isAtUri("at://alice.example.com/app.bsky.feed.post/self") // => true
+ * isAtUri("at://Alice.example.com/app.bsky.feed.post/self") // => false
  * ```
  *
  * @see {@link https://atproto.com/specs/at-uri-scheme | AT Protocol AT URI scheme} for the AT URI scheme.
@@ -276,7 +276,7 @@ export const AtUri = S.String.check(AtUriChecks)
  *
  * **Example** (Type decoded AT URI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type decoded AT URI"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { AtUri, type AtUri as AtUriValue } from "@beep/schema/AtURI"
@@ -285,7 +285,7 @@ export const AtUri = S.String.check(AtUriChecks)
  *   S.decodeUnknownEffect(AtUri)("at://alice.example.com/app.bsky.feed.post/self")
  * )
  *
- * console.log(uri) // "at://alice.example.com/app.bsky.feed.post/self"
+ * uri // => "at://alice.example.com/app.bsky.feed.post/self"
  * ```
  *
  * @category models
@@ -298,7 +298,7 @@ export type AtUri = typeof AtUri.Type;
  *
  * **Example** (Encode decoded AT URI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode decoded AT URI"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { AtUri } from "@beep/schema/AtURI"
@@ -308,7 +308,7 @@ export type AtUri = typeof AtUri.Type;
  * )
  * const encoded: AtUri.Encoded = Effect.runSync(S.encodeEffect(AtUri)(uri))
  *
- * console.log(encoded) // "at://did:web:example.com/app.bsky.feed.post/self"
+ * encoded // => "at://did:web:example.com/app.bsky.feed.post/self"
  * ```
  *
  * @category type-level
@@ -320,7 +320,7 @@ export declare namespace AtUri {
    *
    * **Example** (Round-trip encode AT URI)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Round-trip encode AT URI"
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"
    * import { AtUri } from "@beep/schema/AtURI"
@@ -330,7 +330,7 @@ export declare namespace AtUri {
    * )
    * const encoded: AtUri.Encoded = Effect.runSync(S.encodeEffect(AtUri)(decoded))
    *
-   * console.log(encoded) // "at://alice.example.com/app.bsky.feed.post/self"
+   * encoded // => "at://alice.example.com/app.bsky.feed.post/self"
    * ```
    *
    * @category models

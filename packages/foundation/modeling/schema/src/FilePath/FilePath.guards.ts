@@ -15,14 +15,14 @@ import { $I, usesUnsupportedWindowsNamespacePrefix } from "./FilePath.shared.ts"
  *
  * **Example** (Detect embedded NUL byte)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Detect embedded NUL byte"
  * import * as S from "effect/Schema"
  * import { HasNullByte } from "@beep/schema/FilePath"
  *
  * const is = S.is(HasNullByte)
  *
- * console.log(is("hello\x00world")) // true
- * console.log(is("hello")) // false
+ * is("hello\x00world") // => true
+ * is("hello") // => false
  * ```
  *
  * @category guards

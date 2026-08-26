@@ -1,10 +1,18 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Console, Effect, FileSystem, Path } from "effect";
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
+import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
+import { GOLD_SUBSETS, proposeGold } from "@/canary/Gold";
 import { CorpusManifest, ManifestWriteFailed } from "@/corpus/Manifest";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
+import { GOLD_PROMPT_ARTIFACT_HASH } from "@/gold/Prompts";
+import { XAiGoldModelIdentityLive, XAiGoldProviderLive } from "@/layers/LanguageModelLive";
+import { LabConfig } from "@/runtime/Config";
+import { LanguageModelRuntimeLive } from "@/runtime/Layer";
 import { CanaryStage } from "@/schema/Eval";
+import type * as O from "effect/Option";
+import type { GoldFile } from "@/schema/Gold";
 
 export { CanaryStage } from "@/schema/Eval";
 
@@ -169,8 +177,61 @@ const ManifestCommand = Command.make("manifest").pipe(
   ])
 );
 
+const goldSubset = Flag.choice("subset", GOLD_SUBSETS).pipe(
+  Flag.optional,
+  Flag.withDescription("Propose every frozen paper in one gold subset.")
+);
+
+const runGoldProposal = Effect.fn("SemanticaCanary.runGoldProposal")(function* (options: {
+  readonly manifest: string;
+  readonly offline: boolean;
+  readonly paper: O.Option<string>;
+  readonly subset: O.Option<GoldFile["subset"]>;
+}) {
+  const config = yield* LabConfig;
+  const selectedOffline = config.offline || options.offline;
+  const selectedConfig = LabConfig.of({
+    ...config,
+    mode: Bool.match(selectedOffline, {
+      onFalse: () => "live" as const,
+      onTrue: () => "replay" as const,
+    }),
+    offline: selectedOffline,
+  });
+  const identity = XAiGoldModelIdentityLive({
+    artifactHash: GOLD_PROMPT_ARTIFACT_HASH,
+    model: config.goldModel,
+  });
+  const model = LanguageModelRuntimeLive(XAiGoldProviderLive(config.goldModel)).pipe(
+    Layer.provide(identity),
+    Layer.provide(Layer.succeed(LabConfig, selectedConfig))
+  );
+  return yield* Effect.scoped(
+    Layer.build(Layer.merge(model, identity)).pipe(
+      Effect.flatMap((modelContext) =>
+        proposeGold({
+          manifestPath: options.manifest,
+          outputDirectory: "fixtures/gold/v1",
+          paper: options.paper,
+          subset: options.subset,
+        }).pipe(Effect.provide(modelContext))
+      )
+    )
+  );
+});
+
+const GoldCommand = Command.make("gold").pipe(
+  Command.withDescription("Propose independently anchored gold-v1 labels."),
+  Command.withSubcommands([
+    Command.make("propose", { manifest: stageManifest, offline, paper, subset: goldSubset }, runGoldProposal).pipe(
+      Command.withDescription("Propose frozen structure, entity, or relation labels through xAI or cache replay.")
+    ),
+  ])
+);
+
 /**
- * Headless Semantica canary command with manifest, C0, C1, and C2 subcommands.
+ * Headless Semantica canary command with manifest, gold, C0, C1, and C2
+ * subcommands.
  *
  * **Details**
  *
@@ -194,6 +255,7 @@ export const CanaryCommand = Command.make("canary").pipe(
   Command.withDescription("Headless Semantica canary over F1 + the W1 manifest; each stage runs live, then --offline."),
   Command.withSubcommands([
     ManifestCommand,
+    GoldCommand,
     makeStageCommand(CanaryStage.Enum.c0),
     makeStageCommand(CanaryStage.Enum.c1),
     makeStageCommand(CanaryStage.Enum.c2),

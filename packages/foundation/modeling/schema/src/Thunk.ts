@@ -18,12 +18,12 @@ const $I = $SchemaId.create("Thunk");
  *
  * **Example** (TypeId brand equality)
  *
- * ```ts
+ * ```ts import.meta.vitest name="TypeId brand equality"
  * import { TypeId, nominal } from "@beep/schema/Thunk"
  *
  * const typeId: typeof TypeId = TypeId
  * const thunk = nominal(() => "ready")
- * console.log(typeId === TypeId && thunk() === "ready") // true
+ * typeId === TypeId && thunk() === "ready" // => true
  * ```
  *
  * @category type-ids
@@ -36,11 +36,11 @@ export const TypeId = $I`ThunkUnknown`;
  *
  * **Example** (TypeId type satisfaction)
  *
- * ```ts
+ * ```ts import.meta.vitest name="TypeId type satisfaction"
  * import { TypeId, type TypeId as TypeIdType } from "@beep/schema/Thunk"
  *
  * const typeId = TypeId satisfies TypeIdType
- * console.log(typeId === TypeId) // true
+ * typeId === TypeId // => true
  * ```
  *
  * @category type-ids
@@ -119,11 +119,11 @@ export const ThunkUnknown = S.declare<() => unknown>(isThunkUnknownValue).pipe(
  *
  * **Example** (Guard function and string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard function and string"
  * import { isThunkUnknown } from "@beep/schema/Thunk"
  *
- * console.log(isThunkUnknown(() => 1)) // true
- * console.log(isThunkUnknown("hello")) // false
+ * isThunkUnknown(() => 1) // => true
+ * isThunkUnknown("hello") // => false
  * ```
  *
  * @category guards

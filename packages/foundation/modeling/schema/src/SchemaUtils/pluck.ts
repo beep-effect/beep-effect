@@ -34,7 +34,7 @@ import type { TUnsafe } from "@beep/types";
  *
  * **Example** (Plucking one struct field)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Plucking one struct field"
  * import * as S from "effect/Schema";
  * import { pluck } from "@beep/schema/SchemaUtils/pluck";
  *
@@ -46,8 +46,8 @@ import type { TUnsafe } from "@beep/types";
  * const decodeColumn1 = S.decodeUnknownSync(Column1);
  * const encodeColumn1 = S.encodeSync(Column1);
  *
- * console.log(decodeColumn1({ column1: "1" })); // 1
- * console.log(encodeColumn1(2)); // { column1: "2" }
+ * decodeColumn1({ column1: "1" }) // => 1
+ * encodeColumn1(2) // => { column1: "2" }
  * ```
  *
  * @typeParam P - Property key to extract from the struct schema.

@@ -52,13 +52,13 @@ const Fixed32Checks = S.makeFilterGroup(
  *
  * **Example** (Decode fixed32 number)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode fixed32 number"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Fixed32 } from "@beep/schema/Fixed32"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Fixed32)(1024))
- * console.log(value) // 1024
+ * value // => 1024
  * ```
  *
  * @invariant Values are integers from 0 through 4294967295.
@@ -81,7 +81,7 @@ export const Fixed32 = S.Finite.annotate({
  *
  * **Example** (Narrow Fixed32 with is)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow Fixed32 with is"
  * import * as S from "effect/Schema"
  * import { Fixed32 } from "@beep/schema/Fixed32"
  * import type { Fixed32 as Fixed32Value } from "@beep/schema/Fixed32"
@@ -89,7 +89,7 @@ export const Fixed32 = S.Finite.annotate({
  * const input: unknown = 32
  * if (S.is(Fixed32)(input)) {
  *   const value: Fixed32Value = input
- *   console.log(value) // 32
+ *   value // => 32
  * }
  * ```
  *

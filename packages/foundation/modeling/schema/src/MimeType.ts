@@ -32,7 +32,7 @@ type MimeTypeKey<T extends MimeTypeProperty> = keyof T & string;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import { extractMimeTypes } from "@beep/schema/MimeType"
  *
  * const values = extractMimeTypes({
@@ -40,7 +40,7 @@ type MimeTypeKey<T extends MimeTypeProperty> = keyof T & string;
  *   "text/plain": {},
  * })
  *
- * console.log(values.join(", ")) // "application/json, text/plain"
+ * values.join(", ") // => "application/json, text/plain"
  * ```
  *
  * @since 0.0.0
@@ -69,12 +69,12 @@ type MimeTypeSchema = LiteralKitSchema<typeof OfficialMimeTypeDataTypeValues> & 
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { MimeType } from "@beep/schema/MimeType"
  *
  * const mediaType = S.decodeUnknownSync(MimeType)("application/json")
- * console.log(S.is(MimeType.kinds.Application)(mediaType)) // true
+ * S.is(MimeType.kinds.Application)(mediaType) // => true
  * ```
  *
  * @since 0.0.0
@@ -95,12 +95,12 @@ export const MimeType: MimeTypeSchema = pipe(mimeTypeKinds, (kinds) => {
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { MimeType } from "@beep/schema/MimeType"
  *
  * const mediaType: MimeType = S.decodeUnknownSync(MimeType)("text/plain")
- * console.log(mediaType) // "text/plain"
+ * mediaType // => "text/plain"
  * ```
  *
  * @since 0.0.0
@@ -113,12 +113,12 @@ export type MimeType = typeof MimeType.Type;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { ApplicationMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType = S.decodeUnknownSync(ApplicationMimeType)("application/json")
- * console.log(mediaType) // "application/json"
+ * mediaType // => "application/json"
  * ```
  *
  * @since 0.0.0
@@ -131,12 +131,12 @@ export const ApplicationMimeType = MimeType.kinds.Application;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { ApplicationMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType: ApplicationMimeType = S.decodeUnknownSync(ApplicationMimeType)("application/json")
- * console.log(mediaType) // "application/json"
+ * mediaType // => "application/json"
  * ```
  *
  * @since 0.0.0
@@ -149,12 +149,12 @@ export type ApplicationMimeType = typeof MimeType.kinds.Application.Type;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { VideoMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType = S.decodeUnknownSync(VideoMimeType)("video/mp4")
- * console.log(mediaType) // "video/mp4"
+ * mediaType // => "video/mp4"
  * ```
  *
  * @since 0.0.0
@@ -167,12 +167,12 @@ export const VideoMimeType = MimeType.kinds.Video;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { VideoMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType: VideoMimeType = S.decodeUnknownSync(VideoMimeType)("video/mp4")
- * console.log(mediaType) // "video/mp4"
+ * mediaType // => "video/mp4"
  * ```
  *
  * @since 0.0.0
@@ -185,12 +185,12 @@ export type VideoMimeType = typeof MimeType.kinds.Video.Type;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { TextMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType = S.decodeUnknownSync(TextMimeType)("text/plain")
- * console.log(mediaType) // "text/plain"
+ * mediaType // => "text/plain"
  * ```
  *
  * @since 0.0.0
@@ -203,12 +203,12 @@ export const TextMimeType = MimeType.kinds.Text;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { TextMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType: TextMimeType = S.decodeUnknownSync(TextMimeType)("text/plain")
- * console.log(mediaType) // "text/plain"
+ * mediaType // => "text/plain"
  * ```
  *
  * @since 0.0.0
@@ -221,12 +221,12 @@ export type TextMimeType = typeof MimeType.kinds.Text.Type;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { ImageMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType = S.decodeUnknownSync(ImageMimeType)("image/png")
- * console.log(mediaType) // "image/png"
+ * mediaType // => "image/png"
  * ```
  *
  * @since 0.0.0
@@ -239,12 +239,12 @@ export const ImageMimeType = MimeType.kinds.Image;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { ImageMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType: ImageMimeType = S.decodeUnknownSync(ImageMimeType)("image/png")
- * console.log(mediaType) // "image/png"
+ * mediaType // => "image/png"
  * ```
  *
  * @since 0.0.0
@@ -257,12 +257,12 @@ export type ImageMimeType = typeof MimeType.kinds.Image.Type;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { AudioMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType = S.decodeUnknownSync(AudioMimeType)("audio/mpeg")
- * console.log(mediaType) // "audio/mpeg"
+ * mediaType // => "audio/mpeg"
  * ```
  *
  * @since 0.0.0
@@ -275,12 +275,12 @@ export const AudioMimeType = MimeType.kinds.Audio;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { AudioMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType: AudioMimeType = S.decodeUnknownSync(AudioMimeType)("audio/mpeg")
- * console.log(mediaType) // "audio/mpeg"
+ * mediaType // => "audio/mpeg"
  * ```
  *
  * @since 0.0.0
@@ -293,12 +293,12 @@ export type AudioMimeType = typeof MimeType.kinds.Audio.Type;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { MiscMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType = S.decodeUnknownSync(MiscMimeType)("font/woff2")
- * console.log(mediaType) // "font/woff2"
+ * mediaType // => "font/woff2"
  * ```
  *
  * @since 0.0.0
@@ -311,12 +311,12 @@ export const MiscMimeType = MimeType.kinds.Misc;
  *
  * **Example** (Use MIME type schemas)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use MIME type schemas"
  * import * as S from "effect/Schema"
  * import { MiscMimeType } from "@beep/schema/MimeType"
  *
  * const mediaType: MiscMimeType = S.decodeUnknownSync(MiscMimeType)("font/woff2")
- * console.log(mediaType) // "font/woff2"
+ * mediaType // => "font/woff2"
  * ```
  *
  * @since 0.0.0

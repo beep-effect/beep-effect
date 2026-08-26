@@ -55,12 +55,12 @@ const OptionalStatSize = (description: string) =>
  *
  * **Example** (Pick an entry kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Pick an entry kind"
  * import { FileInfoType } from "@beep/schema/FileInfo";
  *
  * const kind: FileInfoType = FileInfoType.Enum.SymbolicLink;
  *
- * console.log(kind); // "SymbolicLink"
+ * kind // => "SymbolicLink"
  * ```
  *
  * @category schemas
@@ -108,12 +108,12 @@ export const FileInfoType = LiteralKit([
  *
  * **Example** (Use the literal type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use the literal type"
  * import { FileInfoType } from "@beep/schema/FileInfo";
  *
  * const kind: FileInfoType = FileInfoType.Enum.Directory;
  *
- * console.log(kind); // "Directory"
+ * kind // => "Directory"
  * ```
  *
  * @category type-level

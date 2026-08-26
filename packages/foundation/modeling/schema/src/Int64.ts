@@ -23,12 +23,12 @@ const int64Maximum = BigInt("9223372036854775807");
  *
  * **Example** (Validate max signed int64)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate max signed int64"
  * import { isInt64 } from "@beep/schema/Int"
  * import * as S from "effect/Schema"
  *
  * const SignedInt64 = S.BigInt.check(isInt64())
- * console.log(S.is(SignedInt64)(BigInt("9223372036854775807"))) // true
+ * S.is(SignedInt64)(BigInt("9223372036854775807")) // => true
  * ```
  *
  * @category validation
@@ -62,12 +62,12 @@ export function isInt64(annotations?: S.Annotations.Filter) {
  *
  * **Example** (Validate minimum signed int64)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate minimum signed int64"
  * import { Int64 } from "@beep/schema/Int"
  * import * as S from "effect/Schema"
  *
  * const isSignedInt64 = S.is(Int64)
- * console.log(isSignedInt64(-BigInt("9223372036854775808"))) // true
+ * isSignedInt64(-BigInt("9223372036854775808")) // => true
  * ```
  *
  * @category validation

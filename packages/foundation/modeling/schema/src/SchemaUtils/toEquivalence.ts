@@ -50,15 +50,15 @@ export type DualEquivalence<A> = {
  *
  * **Example** (Schema-backed dual equivalence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Schema-backed dual equivalence"
  * import { pipe } from "effect"
  * import * as S from "effect/Schema"
  * import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence"
  *
  * const sameTags = toEquivalence(S.Array(S.String))
  *
- * console.log(sameTags(["docs", "tests"], ["docs", "tests"])) // true
- * console.log(pipe(["docs", "tests"], sameTags(["docs", "lint"]))) // false
+ * sameTags(["docs", "tests"], ["docs", "tests"]) // => true
+ * pipe(["docs", "tests"], sameTags(["docs", "lint"])) // => false
  * ```
  *
  * @typeParam A - Decoded value type described by the schema.

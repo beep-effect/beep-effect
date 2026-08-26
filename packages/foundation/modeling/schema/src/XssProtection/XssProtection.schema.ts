@@ -28,11 +28,11 @@ const XSSProtectionModeBase = LiteralKit(["sanitize", "block-rendering"]);
  *
  * **Example** (Validate block-rendering mode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate block-rendering mode"
  * import * as S from "effect/Schema"
  * import { XSSProtectionMode } from "@beep/schema/XssProtection"
  *
- * console.log(S.is(XSSProtectionMode)("block-rendering")) // true
+ * S.is(XSSProtectionMode)("block-rendering") // => true
  * ```
  *
  * @category schemas

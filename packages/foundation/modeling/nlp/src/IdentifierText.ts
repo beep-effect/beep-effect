@@ -29,11 +29,11 @@ const normalizeIdentifierWords = flow(
  *
  * **Example** (Tokenize camelCase identifier)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Tokenize camelCase identifier"
  * import * as IdentifierText from "@beep/nlp/IdentifierText"
  *
  * const result = IdentifierText.tokens("myVariableName")
- * console.log(result) // ["my", "variable", "name"]
+ * result // => ["my", "variable", "name"]
  * ```
  *
  * @category parsing
@@ -53,14 +53,14 @@ export const tokens = flow(normalizeIdentifierWords, Str.split(" "), A.map(Str.t
  *
  * **Example** (Generate user name variants)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Generate user name variants"
  * import * as IdentifierText from "@beep/nlp/IdentifierText"
  *
  * const result = IdentifierText.variants("user name")
  * // Produces camelCase, PascalCase, snake_case, kebab-case, and joined variants
- * console.log(result.includes("userName")) // true
- * console.log(result.includes("UserName")) // true
- * console.log(result.includes("user_name")) // true
+ * result.includes("userName") // => true
+ * result.includes("UserName") // => true
+ * result.includes("user_name") // => true
  * ```
  *
  * @category normalization

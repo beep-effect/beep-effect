@@ -50,10 +50,10 @@ const contractEquivalence = S.toEquivalence(SkillContract);
  *
  * **Example** (Construct a projection model)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a projection model"
  * import { SkillMarkdownProjection } from "@beep/skill-contract"
  *
- * console.log(SkillMarkdownProjection.fields.contract !== undefined) // true
+ * SkillMarkdownProjection.fields.contract !== undefined // => true
  * ```
  *
  * @category projections
@@ -107,7 +107,7 @@ export type SkillArtifactDenialReason = typeof SkillArtifactDenialReason.Type;
  *
  * **Example** (Record a successful check)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Record a successful check"
  * import { SkillArtifactCheck } from "@beep/skill-contract"
  *
  * const check = SkillArtifactCheck.make({
@@ -115,7 +115,7 @@ export type SkillArtifactDenialReason = typeof SkillArtifactDenialReason.Type;
  *   detail: "Rendered bytes equal the committed artifact.",
  *   outcome: "passed"
  * })
- * console.log(check.outcome) // "passed"
+ * check.outcome // => "passed"
  * ```
  *
  * @category models
@@ -163,10 +163,10 @@ const DeniedChecksRecordAFailure = S.makeFilter(
  *
  * **Example** (Inspect allowed verdict fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect allowed verdict fields"
  * import { SkillArtifactAllowed } from "@beep/skill-contract"
  *
- * console.log(SkillArtifactAllowed.fields.checks !== undefined) // true
+ * SkillArtifactAllowed.fields.checks !== undefined // => true
  * ```
  *
  * @category models
@@ -189,10 +189,10 @@ export class SkillArtifactAllowed extends S.Class<SkillArtifactAllowed>($I`Skill
  *
  * **Example** (Inspect denied verdict fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect denied verdict fields"
  * import { SkillArtifactDenied } from "@beep/skill-contract"
  *
- * console.log(SkillArtifactDenied.fields.reasons !== undefined) // true
+ * SkillArtifactDenied.fields.reasons !== undefined // => true
  * ```
  *
  * @category models
@@ -216,10 +216,10 @@ export class SkillArtifactDenied extends S.Class<SkillArtifactDenied>($I`SkillAr
  *
  * **Example** (Inspect verdict cases)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect verdict cases"
  * import { SkillArtifactVerdict } from "@beep/skill-contract"
  *
- * console.log(SkillArtifactVerdict.discriminants) // ["allowed", "denied"]
+ * SkillArtifactVerdict.discriminants // => ["allowed", "denied"]
  * ```
  *
  * @category schemas
@@ -247,10 +247,10 @@ export type SkillArtifactVerdict = typeof SkillArtifactVerdict.Type;
  *
  * **Example** (Inspect verification input fields)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect verification input fields"
  * import { VerifySkillArtifactInput } from "@beep/skill-contract"
  *
- * console.log(VerifySkillArtifactInput.fields.committed !== undefined) // true
+ * VerifySkillArtifactInput.fields.committed !== undefined // => true
  * ```
  *
  * @category models
@@ -351,10 +351,10 @@ const projectionBlocks = (contract: SkillContract) =>
  *
  * **Example** (Project a contract)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Project a contract"
  * import { projectSkillDocument } from "@beep/skill-contract"
  *
- * console.log(typeof projectSkillDocument) // "function"
+ * typeof projectSkillDocument // => "function"
  * ```
  *
  * @param contract - Typed skill contract to project.
@@ -383,10 +383,10 @@ export const projectSkillDocument = (contract: SkillContract): Result.Result<Doc
  *
  * **Example** (Render a contract Result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Render a contract Result"
  * import { renderSkillMarkdown } from "@beep/skill-contract"
  *
- * console.log(typeof renderSkillMarkdown) // "function"
+ * typeof renderSkillMarkdown // => "function"
  * ```
  *
  * @param contract - Typed skill contract to render.
@@ -424,11 +424,11 @@ const frontmatterDenied = (
  *
  * **Example** (Reject missing frontmatter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject missing frontmatter"
  * import { decodeSkillFrontmatter } from "@beep/skill-contract"
  * import { Result } from "effect"
  *
- * console.log(Result.isFailure(decodeSkillFrontmatter("# no frontmatter"))) // true
+ * Result.isFailure(decodeSkillFrontmatter("# no frontmatter")) // => true
  * ```
  *
  * @param markdown - Committed Markdown expected to begin with JSON frontmatter.
@@ -534,10 +534,10 @@ const checkForFrontmatter = (
  *
  * **Example** (Build an artifact verification Effect)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build an artifact verification Effect"
  * import { verifySkillArtifact } from "@beep/skill-contract"
  *
- * console.log(typeof verifySkillArtifact) // "function"
+ * typeof verifySkillArtifact // => "function"
  * ```
  *
  * @param input - Contract and committed artifact bytes to verify.

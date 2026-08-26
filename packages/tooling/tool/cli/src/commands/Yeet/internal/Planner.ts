@@ -24,6 +24,7 @@ import {
 } from "../../../internal/repo-run/index.ts";
 import {
   githubCheckChangesetStatusLane,
+  githubCheckCheapGateLanes,
   githubCheckFallowLanes,
   githubCheckLanePlan,
   githubCheckPrePushExternalLanes,
@@ -32,6 +33,7 @@ import {
 } from "../../Quality/internal/GithubChecks.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/index.ts";
+import type { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Planner");
 
@@ -103,7 +105,7 @@ export type YeetRunMode = typeof YeetRunMode.Type;
  * @category models
  * @since 0.0.0
  */
-export const YeetProofTier = LiteralKit(["full", "review-fix"]).pipe(
+export const YeetProofTier = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe(
   $I.annoteSchema("YeetProofTier", {
     description: "Local proof tier selected for yeet verify loops.",
   })
@@ -253,7 +255,8 @@ export const emptyTurboPlanSnapshot = (warnings: ReadonlyArray<string>): TurboPl
   });
 
 // Deterministic auto-fixers run sequentially (runPhase concurrency:1). Code
-// rewriters run first, then config generation, formatting, and docgen.
+// rewriters run first, then config generation. The collected cheap tier runs
+// before formatting, docgen, or affected feedback can consume heavyweight work.
 // terse-effect applies only safe rewrites here; its manual candidates stay
 // advisory during verification. Schema-first remains excluded from repair.
 const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
@@ -278,8 +281,6 @@ const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
     "repo"
   ),
   bunRunStep(context, "prepare:03-config-sync", "prepare:config-sync", "prepare", "config-sync", [], "write", "repo"),
-  bunRunStep(context, "prepare:04-lint-fix", "prepare:lint:fix", "prepare", "lint:fix", [], "write", "repo"),
-  bunRunStep(context, "prepare:05-docgen", "prepare:docgen", "prepare", "docgen", [], "write", "repo"),
 ];
 
 const packageNameForFeedbackTask =
@@ -335,6 +336,21 @@ const feedbackStep = (
 
 const feedbackSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> =>
   A.getSomes([
+    O.some(
+      bunRunStep(
+        context,
+        "feedback:00-heavy:01-lint-fix",
+        "feedback:lint:fix",
+        "feedback",
+        "lint:fix",
+        [],
+        "write",
+        "repo"
+      )
+    ),
+    O.some(
+      bunRunStep(context, "feedback:00-heavy:02-docgen", "feedback:docgen", "feedback", "docgen", [], "write", "repo")
+    ),
     feedbackStep(context, "feedback:01-build", "feedback:build", "build", "build"),
     feedbackStep(context, "feedback:02-check", "feedback:check", "check", "check"),
     feedbackStep(context, "feedback:03-lint", "feedback:lint", "lint", "lint"),
@@ -361,29 +377,66 @@ const fallowAdvisoryFeedbackStep = (context: RepoRunContext): RepoPlanStep =>
     "repo"
   );
 
-const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boolean): RepoPlanStep => {
-  const proof = repoProofStepDefinition(tier === "review-fix" ? "review-fix" : "pre-push");
-  const proofArgs =
-    tier === "review-fix"
-      ? [...proof.args, "--base", context.base, "--head", context.head]
-      : [...proof.args, ...(collectAll ? ["--collect-all"] : [])];
-  const step = bunRunStep(context, proof.id, proof.label, "full", "beep", proofArgs, "readonly", "repo");
-  if (tier === "review-fix") {
-    return step;
-  }
+const proofDefinitionForTier = (tier: YeetProofTier) =>
+  YeetProofTier.$match(tier, {
+    full: () => repoProofStepDefinition("pre-push"),
+    "cheap-gates": () => repoProofStepDefinition("cheap-gates"),
+    "review-fix": () => repoProofStepDefinition("review-fix"),
+  });
 
-  const lanes = [
-    ...(context.branch === "main" ? [] : [githubCheckChangesetStatusLane(context.repoRoot)]),
-    ...githubCheckRepoSanityLanes(context.repoRoot),
-    ...githubCheckQualityLanes(context.repoRoot),
-    ...githubCheckFallowLanes(context.repoRoot),
-    ...githubCheckPrePushExternalLanes(context.repoRoot),
-  ];
+const proofArgsForTier = (
+  context: RepoRunContext,
+  tier: YeetProofTier,
+  collectAll: boolean,
+  args: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  YeetProofTier.$match(tier, {
+    full: () => [...args, ...(collectAll ? ["--collect-all"] : [])],
+    "cheap-gates": () => args,
+    "review-fix": () => [...args, "--base", context.base, "--head", context.head],
+  });
+
+const changesetStatusLanesForProof = (context: RepoRunContext): ReadonlyArray<GithubCheckLaneSpec> =>
+  context.branch === "main" ? [] : [githubCheckChangesetStatusLane(context.repoRoot)];
+
+const proofLanesForTier = (context: RepoRunContext, tier: YeetProofTier): ReadonlyArray<GithubCheckLaneSpec> =>
+  YeetProofTier.$match(tier, {
+    full: () => [
+      ...changesetStatusLanesForProof(context),
+      ...githubCheckRepoSanityLanes(context.repoRoot),
+      ...githubCheckQualityLanes(context.repoRoot),
+      ...githubCheckFallowLanes(context.repoRoot),
+      ...githubCheckPrePushExternalLanes(context.repoRoot),
+    ],
+    "cheap-gates": () => [...changesetStatusLanesForProof(context), ...githubCheckCheapGateLanes(context.repoRoot)],
+    "review-fix": A.empty<GithubCheckLaneSpec>,
+  });
+
+const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boolean): RepoPlanStep => {
+  const proof = proofDefinitionForTier(tier);
+  const proofArgs = proofArgsForTier(context, tier, collectAll, proof.args);
+  const step = bunRunStep(context, proof.id, proof.label, "full", "beep", proofArgs, "readonly", "repo");
+  const lanes = proofLanesForTier(context, tier);
   return RepoPlanStep.make({
     ...step,
     waves: A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) =>
       RepoPlanWave.make({ id: wave.wave, laneIds: A.map(wave.lanes, (lane) => lane.id) })
     ),
+  });
+};
+
+const fullProofSteps = (context: RepoRunContext, collectAll: boolean): ReadonlyArray<RepoPlanStep> => [
+  proofStep(context, "cheap-gates", true),
+  proofStep(context, "full", collectAll),
+];
+
+const repairCheapGateStep = (context: RepoRunContext): RepoPlanStep => {
+  const step = proofStep(context, "cheap-gates", true);
+  return RepoPlanStep.make({
+    ...step,
+    id: "feedback:00-cheap-gates",
+    label: "feedback:cheap-gates",
+    phase: "feedback",
   });
 };
 
@@ -605,13 +658,13 @@ const publishSteps = (
           headInstallPreflightStep(context, "early-publish"),
           earlyPushStep(context),
           ...(options.pr ? [prCreateStep(context, "early-publish")] : []),
-          proofStep(context, "full", options.collectAll),
+          ...fullProofSteps(context, options.collectAll),
           ...(options.monitor ? monitorSteps(context) : []),
         ]
       : [
           fallowAdvisoryFeedbackStep(context),
           commitStep(context, message, options),
-          ...(options.fast && options.monitor ? [] : [proofStep(context, "full", options.collectAll)]),
+          ...(options.fast && options.monitor ? [] : fullProofSteps(context, options.collectAll)),
           headInstallPreflightStep(context, "publish"),
           pushStep(context),
           ...(options.pr ? [prCreateStep(context)] : []),
@@ -624,10 +677,12 @@ const stepsForMode = (
   options: YeetRunPlanModeOptions
 ): ReadonlyArray<RepoPlanStep> =>
   YeetRunMode.$match(options.mode, {
-    repair: () => [...repairSteps(context), ...feedbackSteps(context)],
+    repair: () => [...repairSteps(context), repairCheapGateStep(context), ...feedbackSteps(context)],
     verify: () => [
       fallowAdvisoryFeedbackStep(context),
-      proofStep(context, options.tier, options.collectAll),
+      ...(options.tier === "full"
+        ? fullProofSteps(context, options.collectAll)
+        : [proofStep(context, options.tier, options.collectAll)]),
       ...(options.tier === "full" ? [headInstallPreflightStep(context, "prepare")] : []),
     ],
     publish: () => publishSteps(context, message, options),

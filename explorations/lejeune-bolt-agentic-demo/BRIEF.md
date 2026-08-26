@@ -1,6 +1,6 @@
 # LeJeune Knowledge Desk brief
 
-**DRAFT — pending Benjamin's align round**
+**DRAFT — ready for shape review**
 
 ## Problem
 

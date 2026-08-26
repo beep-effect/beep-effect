@@ -10,7 +10,7 @@
  *
  * **Example** (Compose a package identity)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compose a package identity"
  * import { make } from "@beep/identity"
  *
  * // Create a package-level identity composer
@@ -20,8 +20,8 @@
  * const userId = $MyPkgId.make("UserId")
  * const sym = $MyPkgId.symbol()
  *
- * console.log(userId)// "@beep/my-pkg/UserId"
- * console.log(sym)// Symbol.for("@beep/my-pkg")
+ * userId // => "@beep/my-pkg/UserId"
+ * sym // => Symbol.for("@beep/my-pkg")
  * ```
  *
  * @packageDocumentation
@@ -169,11 +169,11 @@ export class IdentityInterpolationError extends S.TaggedError<IdentityInterpolat
  *
  * **Example** (Read the segment-count message)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the segment-count message"
  * import { IdentitySegmentCountError } from "@beep/identity"
  *
  * const error = IdentitySegmentCountError.make()
- * console.log(error.message) // "Identity template tags must use a single literal segment."
+ * error.message // => "Identity template tags must use a single literal segment."
  * ```
  *
  * @since 0.0.0
@@ -204,10 +204,10 @@ export class IdentitySegmentCountError extends S.TaggedError<IdentitySegmentCoun
  *
  * **Example** (Read the package version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the package version"
  * import { VERSION } from "@beep/identity"
  *
- * console.log(VERSION) // "0.0.0"
+ * VERSION // => "0.0.0"
  * ```
  *
  * @since 0.0.0
@@ -225,7 +225,7 @@ export const VERSION = S.decodeSync(IdentityVersion)("0.0.0");
  *
  * **Example** (Contrast a valid and an invalid segment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Contrast a valid and an invalid segment"
  * import type { SegmentValue } from "@beep/identity"
  *
  * type Valid = SegmentValue<"UserService">
@@ -362,7 +362,7 @@ type StripLeadingAt<Value extends string> = Value extends `@${infer Rest}` ? Res
  *
  * **Example** (Title a kebab-case identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Title a kebab-case identifier"
  * import type { TitleFromIdentifier } from "@beep/identity"
  *
  * type Title = TitleFromIdentifier<"my-service"> // "My Service"
@@ -488,7 +488,7 @@ type HasInvalidModuleChar<S extends string> = S extends `${string}${InvalidModul
  *
  * **Example** (Reject a digit-leading segment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject a digit-leading segment"
  * import type { ModuleSegmentValue } from "@beep/identity"
  *
  * type Valid = ModuleSegmentValue<"auth">
@@ -510,7 +510,7 @@ export type ModuleSegmentValue<S extends TString.NonEmpty> =
  *
  * **Example** (Derive an accessor name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Derive an accessor name"
  * import type { ModuleAccessor } from "@beep/identity"
  *
  * type Acc = ModuleAccessor<"my-service"> // "MyServiceId"
@@ -531,7 +531,7 @@ export type ModuleAccessor<S extends TString.NonEmpty> = `${PascalCaseValue<Modu
  *
  * **Example** (Derive a tagged accessor key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Derive a tagged accessor key"
  * import type { TaggedAccessor } from "@beep/identity"
  *
  * type Tag = TaggedAccessor<"my-service"> // "$MyServiceId"
@@ -618,7 +618,7 @@ export type SchemaAnnotationExtras<
  *
  * **Example** (Type declaration-only annotation hooks)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type declaration-only annotation hooks"
  * import type { DeclarationAnnotationExtras } from "@beep/identity"
  * import * as S from "effect/Schema"
  *
@@ -786,7 +786,7 @@ declare module "effect/Schema" {
  *
  * **Example** (Describe a JSON payload encoding)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a JSON payload encoding"
  * import type { HttpApiEncoding } from "@beep/identity"
  *
  * const enc: HttpApiEncoding = { _tag: "Json", contentType: "application/json" }
@@ -859,7 +859,7 @@ export type IdentityAnyAnnotationExtras<
  *
  * **Example** (Name a resolved annotation record)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Name a resolved annotation record"
  * import type { IdentityAnnotation } from "@beep/identity"
  *
  * type Ann = IdentityAnnotation<"@beep/utils/User", "User">
@@ -914,7 +914,7 @@ type IdentityAnnotationMetadataKeys = "identifier" | "schemaId" | "title" | "iri
  *
  * **Example** (Name a merged annotation result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Name a merged annotation result"
  * import type { IdentityAnnotationResult } from "@beep/identity"
  *
  * type Result = IdentityAnnotationResult<"@beep/utils/User", "User">
@@ -950,7 +950,7 @@ export type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaSt
  *
  * **Example** (Name the record `compose` returns)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Name the record compose returns"
  * import type { TaggedModuleRecord } from "@beep/identity"
  *
  * type Modules = TaggedModuleRecord<"@beep/pkg", readonly ["auth", "billing"]>
@@ -987,7 +987,7 @@ export type TaggedModuleRecord<
  *
  * **Example** (Walk the composer surface)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Walk the composer surface"
  * import { make } from "@beep/identity"
  *
  * // Create a root composer for "my-pkg"
@@ -995,28 +995,28 @@ export type TaggedModuleRecord<
  *
  * // Template tag: derive a child identity string
  * const serviceId = $MyPkgId`UserService`
- * console.log(serviceId)// "@beep/my-pkg/UserService"
+ * serviceId // => "@beep/my-pkg/UserService"
  *
  * // make: one-shot string creation
  * const modelId = $MyPkgId.make("UserModel")
- * console.log(modelId)// "@beep/my-pkg/UserModel"
+ * modelId // => "@beep/my-pkg/UserModel"
  *
  * // create: derive a child composer for further nesting
  * const sub = $MyPkgId.create("domain")
  * const nested = sub.make("Entity")
- * console.log(nested)// "@beep/my-pkg/domain/Entity"
+ * nested // => "@beep/my-pkg/domain/Entity"
  *
  * // compose: batch-create tagged child composers
  * const modules = $MyPkgId.compose("auth", "billing")
  * const authId = modules.$AuthId.make("Session")
- * console.log(authId)// "@beep/my-pkg/auth/Session"
+ * authId // => "@beep/my-pkg/auth/Session"
  *
  * // annote: produce an annotation record for Effect schemas
  * const annotation = $MyPkgId.annote("UserSchema", {
  *
  * })
- * console.log(annotation.identifier)// "@beep/my-pkg/UserSchema"
- * console.log(annotation.title)// "UserSchema"
+ * annotation.identifier // => "@beep/my-pkg/UserSchema"
+ * annotation.title // => "UserSchema"
  * ```
  *
  * @since 0.0.0
@@ -1043,15 +1043,15 @@ export interface IdentityComposer<
    *
    * **Example** (Annotate a domain event)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Annotate a domain event"
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
    * const ann = $MyPkgId.annote("UserCreated", { description: "A user was created." })
    *
-   * console.log(ann.identifier)// "@beep/my-pkg/UserCreated"
-   * console.log(ann.title)// "UserCreated"
-   * console.log(ann.description)// "A user was created."
+   * ann.identifier // => "@beep/my-pkg/UserCreated"
+   * ann.title // => "UserCreated"
+   * ann.description // => "A user was created."
    * ```
    *
    * @since 0.0.0
@@ -1167,14 +1167,14 @@ export interface IdentityComposer<
    *
    * **Example** (Annotate a struct field by path)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Annotate a struct field by path"
    * import { make } from "@beep/identity"
    * import * as S from "effect/Schema";
    * const { $MyPkgId } = make("my-pkg")
    * const modules = $MyPkgId.compose("auth", "billing")
    *
    * const $I = modules.$AuthId.create("Session")
-   * console.log($I.string())// "@beep/my-pkg/auth/Session"
+   * $I.string() // => "@beep/my-pkg/auth/Session"
    *
    * const MyStruct = S.Struct({
    *  prop1: S.String.annotateKey($I.annoteKey("MyStruct.prop1", { description: "A string" }))
@@ -1233,15 +1233,15 @@ export interface IdentityComposer<
    *
    * **Example** (Annotate an ontology concept)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Annotate an ontology concept"
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg", { authority: "https://ns.beep.sh/", prefix: "beep" })
    * const $I = $MyPkgId.create("patent")
    * const ann = $I.class("Claim", { description: "A patent claim.", skos: "concept" })
    *
-   * console.log(ann.identifier)// "@beep/my-pkg/patent/Claim"
-   * console.log(ann.skosClassification)// "concept"
+   * ann.identifier // => "@beep/my-pkg/patent/Claim"
+   * ann.skosClassification // => "concept"
    * ```
    *
    * @since 0.0.0
@@ -1268,14 +1268,14 @@ export interface IdentityComposer<
    *
    * **Example** (Create module composers in one call)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Create module composers in one call"
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
    * const modules = $MyPkgId.compose("auth", "billing")
    *
    * const authId = modules.$AuthId.make("Session")
-   * console.log(authId)// "@beep/my-pkg/auth/Session"
+   * authId // => "@beep/my-pkg/auth/Session"
    * ```
    *
    * @since 0.0.0
@@ -1295,13 +1295,13 @@ export interface IdentityComposer<
    *
    * **Example** (Nest a child composer)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Nest a child composer"
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
    * const sub = $MyPkgId.create("domain")
    * const entityId = sub.make("Entity")
-   * console.log(entityId)// "@beep/my-pkg/domain/Entity"
+   * entityId // => "@beep/my-pkg/domain/Entity"
    * ```
    *
    * @since 0.0.0
@@ -1316,12 +1316,12 @@ export interface IdentityComposer<
    *
    * **Example** (Read a bound CURIE)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Read a bound CURIE"
    * import { make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
    * const curie = $BeepId.create("schema").curie
-   * console.log(curie) // "beep:schema"
+   * curie // => "beep:schema"
    * ```
    *
    * @since 0.0.0
@@ -1348,12 +1348,12 @@ export interface IdentityComposer<
    *
    * **Example** (Read a bound IRI)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Read a bound IRI"
    * import { make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
    * const iri = $BeepId.create("schema").iri
-   * console.log(iri) // "https://ns.beep.sh/schema"
+   * iri // => "https://ns.beep.sh/schema"
    * ```
    *
    * @since 0.0.0
@@ -1375,7 +1375,7 @@ export interface IdentityComposer<
    *
    * **Example** (Borrow, reverse, and own predicates)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Borrow, reverse, and own predicates"
    * import { make } from "@beep/identity"
    * import * as S from "effect/Schema"
    *
@@ -1388,7 +1388,7 @@ export interface IdentityComposer<
    *   text: S.String.pipe($I.key({ description: "Claim text." })),
    * })
    *
-   * console.log(S.resolveAnnotationsKey(Claim.fields.prefLabel)?.ontologyTerm)// "skos:prefLabel"
+   * S.resolveAnnotationsKey(Claim.fields.prefLabel)?.ontologyTerm // => "skos:prefLabel"
    * ```
    *
    * @since 0.0.0
@@ -1402,12 +1402,12 @@ export interface IdentityComposer<
    *
    * **Example** (Append one segment)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Append one segment"
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
    * const id = $MyPkgId.make("UserModel")
-   * console.log(id)// "@beep/my-pkg/UserModel"
+   * id // => "@beep/my-pkg/UserModel"
    * ```
    *
    * @since 0.0.0
@@ -1422,13 +1422,13 @@ export interface IdentityComposer<
    *
    * **Example** (Rebase onto a foreign namespace)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Rebase onto a foreign namespace"
    * import { make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
    * const patent = $BeepId.create("ontology").create("patent")
    * const rebased = patent.rebase({ iri: "https://opip.law/ns/patent#", prefix: "patent" })
-   * console.log(rebased.iri) // "https://opip.law/ns/patent#ontology/patent"
+   * rebased.iri // => "https://opip.law/ns/patent#ontology/patent"
    * ```
    *
    * @since 0.0.0
@@ -1444,12 +1444,12 @@ export interface IdentityComposer<
    *
    * **Example** (Slug a nested composer path)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Slug a nested composer path"
    * import { make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep")
    * const slug = $BeepId.create("Ontology.models").create("HttpUrl").slug
-   * console.log(slug) // "beep-ontology-models-http-url"
+   * slug // => "beep-ontology-models-http-url"
    * ```
    *
    * @since 0.0.0
@@ -1488,11 +1488,11 @@ export interface IdentityComposer<
    *
    * **Example** (Read the bound vocabulary)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Read the bound vocabulary"
    * import { CoreVocab, make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep", vocab: CoreVocab })
-   * console.log($BeepId.vocabRegistry === CoreVocab) // true
+   * $BeepId.vocabRegistry === CoreVocab // => true
    * ```
    *
    * @since 0.0.0
@@ -1510,12 +1510,12 @@ export interface IdentityComposer<
    *
    * **Example** (Derive a service identity)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Derive a service identity"
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
    * const id = $MyPkgId`UserService`
-   * console.log(id)// "@beep/my-pkg/UserService"
+   * id // => "@beep/my-pkg/UserService"
    * ```
    *
    * @since 0.0.0
@@ -1617,13 +1617,13 @@ const normalizeBaseValue = (value: string): string => {
  *
  * **Example** (Normalize a scoped package name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize a scoped package name"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { BaseIdentityInput } from "@beep/identity"
  *
  * const normalized = S.decodeUnknownOption(BaseIdentityInput)("@beep/my-pkg")
- * console.log(O.getOrElse(normalized, () => "invalid")) // "my-pkg"
+ * O.getOrElse(normalized, () => "invalid") // => "my-pkg"
  * ```
  *
  * @category constructors
@@ -2151,13 +2151,13 @@ type MakeReturn<
  *
  * **Example** (Compose from a bare package name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compose from a bare package name"
  * import { make } from "@beep/identity"
  *
  * // Bare name -- "@beep/" prefix is added automatically
  * const { $MyPkgId } = make("my-pkg")
  * const id = $MyPkgId.make("Service")
- * console.log(id)// "@beep/my-pkg/Service"
+ * id // => "@beep/my-pkg/Service"
  * ```
  *
  * **Example** (Compose from a fully scoped name)

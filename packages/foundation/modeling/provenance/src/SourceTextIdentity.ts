@@ -15,13 +15,13 @@ const $I = $ProvenanceId.create("SourceTextIdentity");
  *
  * **Example** (Make empty SHA-256 digest)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make empty SHA-256 digest"
  * import { SourceTextDigest } from "@beep/provenance/SourceTextIdentity"
  *
  * const digest = SourceTextDigest.make(
  *   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(digest) // "sha256:e3b0..."
+ * digest // => "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * ```
  *
  * @category schemas
@@ -42,13 +42,13 @@ export const SourceTextDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
  *
  * **Example** (Type annotate SourceTextDigest value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type annotate SourceTextDigest value"
  * import { SourceTextDigest } from "@beep/provenance/SourceTextIdentity"
  *
  * const digest: SourceTextDigest = SourceTextDigest.make(
  *   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(digest) // "sha256:e3b0..."
+ * digest // => "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * ```
  *
  * @category models
@@ -61,11 +61,11 @@ export type SourceTextDigest = typeof SourceTextDigest.Type;
  *
  * **Example** (Create SourceTextExtractor instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create SourceTextExtractor instance"
  * import { SourceTextExtractor } from "@beep/provenance/SourceTextIdentity"
  *
  * const extractor = SourceTextExtractor.make({ name: "doc-text", version: "1" })
- * console.log(extractor.name) // "doc-text"
+ * extractor.name // => "doc-text"
  * ```
  *
  * @category models
@@ -96,7 +96,7 @@ export class SourceTextExtractor extends S.Class<SourceTextExtractor>($I`SourceT
  *
  * **Example** (Build complete SourceTextIdentity)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build complete SourceTextIdentity"
  * import {
  *   SourceTextDigest,
  *   SourceTextExtractor,
@@ -116,7 +116,7 @@ export class SourceTextExtractor extends S.Class<SourceTextExtractor>($I`SourceT
  *   extractor: SourceTextExtractor.make({ name: "doc-text", version: "1" }),
  *   normalizationVersion: "1",
  * })
- * console.log(identity.scopeRef) // "matter:example"
+ * identity.scopeRef // => "matter:example"
  * ```
  *
  * @category models

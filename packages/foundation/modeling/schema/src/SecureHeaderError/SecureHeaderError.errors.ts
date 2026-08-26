@@ -349,13 +349,13 @@ export class CoreError extends S.TaggedError<CoreError>($I.make("CoreError"))(
  *
  * **Example** (Check SecureHeaderError membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check SecureHeaderError membership"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { CspError, SecureHeaderError } from "@beep/schema/SecureHeaderError"
  *
  * const error = CspError.make({ message: "Invalid CSP directive", cause: O.none() })
- * console.log(S.is(SecureHeaderError)(error)) // true
+ * S.is(SecureHeaderError)(error) // => true
  * ```
  *
  * @category errors
@@ -390,7 +390,7 @@ export const SecureHeaderError = SecureHeader.mapMembers(
  *
  * **Example** (Handle SecureHeaderError type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Handle SecureHeaderError type"
  * import { Effect } from "effect"
  * import type { SecureHeaderError } from "@beep/schema/SecureHeaderError"
  *

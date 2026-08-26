@@ -12,10 +12,10 @@
  *
  * **Example** (Read the OWL namespace IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the OWL namespace IRI"
  * import { OWL_NAMESPACE } from "@beep/rdf/Vocab/generated/Owl.terms"
  *
- * console.log(OWL_NAMESPACE.length > 0) // true
+ * OWL_NAMESPACE.length > 0 // => true
  * ```
  *
  * @category constants
@@ -28,10 +28,10 @@ export const OWL_NAMESPACE = "http://www.w3.org/2002/07/owl#" as const;
  *
  * **Example** (Read the OWL term inventory)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the OWL term inventory"
  * import { OWL_TERMS } from "@beep/rdf/Vocab/generated/Owl.terms"
  *
- * console.log(OWL_TERMS.length > 0) // true
+ * OWL_TERMS.length > 0 // => true
  * ```
  *
  * @category constants
