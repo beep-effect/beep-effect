@@ -69,7 +69,7 @@ export const isColorSupported = false;
  * **Example** (supportsColor always false)
  *
  * ```ts import.meta.vitest name="supportsColor always false"
- * import { supportsColor } from "@beep/colors"
+ * import { supportsColor } from "@beep/colors/Colors.browser"
  *
  * supportsColor() // => false
  * ```
