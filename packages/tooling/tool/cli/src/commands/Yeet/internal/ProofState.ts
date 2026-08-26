@@ -347,7 +347,12 @@ const validateProofCoordinatorOwnership = Effect.fn("Yeet.validateProofCoordinat
     O.exists(info.uid, (owner) => owner === effectiveUserId),
     `Yeet proof lock directory ${directory} reported ${reportedOwner}; expected effective uid ${effectiveUserId}. Refusing to use it.`
   );
+});
 
+const validateProofCoordinatorMode = Effect.fn("Yeet.validateProofCoordinatorMode")(function* (
+  directory: string,
+  info: FileSystem.File.Info
+) {
   const mode = info.mode & 0o777;
   yield* requireSafeProofCoordinator(
     mode === 0o700,
@@ -360,22 +365,20 @@ const validateProofCoordinatorDirectory = Effect.fn("Yeet.validateProofCoordinat
   effectiveUserId: O.Option<number>
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const resolvedDirectory = yield* fs
-    .realPath(directory)
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to resolve Yeet proof lock directory ${directory}.`)));
+  const symbolicLinkTarget = yield* fs.readLink(directory).pipe(Effect.option);
   const info = yield* fs
     .stat(directory)
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect Yeet proof lock directory ${directory}.`)));
 
   yield* requireSafeProofCoordinator(
-    Str.Equivalence(resolvedDirectory, path.resolve(directory)),
+    O.isNone(symbolicLinkTarget),
     `Yeet proof lock directory ${directory} is a symbolic link. Refusing to use it.`
   );
   yield* requireSafeProofCoordinator(
     info.type === "Directory",
     `Yeet proof lock directory ${directory} is not a directory. Refusing to use it.`
   );
+  yield* validateProofCoordinatorMode(directory, info);
 
   yield* O.match(effectiveUserId, {
     onNone: () => Effect.void,
@@ -397,17 +400,17 @@ const validateProofCoordinatorDirectory = Effect.fn("Yeet.validateProofCoordinat
  *
  * @internal
  * @param directory - Existing directory to validate without creating a lock file.
- * @param effectiveUserIdOverride - Optional effective UID used by security-focused tests.
+ * @param effectiveUserIdOverride - Optional effective UID state used by security-focused tests.
  * @returns An Effect that fails when the directory is unsafe for coordination.
  * @category testing
  * @since 0.0.0
  */
 export const validateProofCoordinatorDirectoryForTesting = Effect.fn(
   "Yeet.validateProofCoordinatorDirectoryForTesting"
-)(function* (directory: string, effectiveUserIdOverride?: number) {
+)(function* (directory: string, effectiveUserIdOverride?: O.Option<number>) {
   yield* validateProofCoordinatorDirectory(
     directory,
-    pipe(O.fromUndefinedOr(effectiveUserIdOverride), O.orElse(currentEffectiveUserId))
+    pipe(O.fromUndefinedOr(effectiveUserIdOverride), O.getOrElse(currentEffectiveUserId))
   );
 });
 

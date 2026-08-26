@@ -2618,7 +2618,7 @@ describe("yeet publish scope helpers", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
-  it("rejects symlinked and over-permissive proof coordinator directories", () =>
+  it("accepts symlinked ancestors and rejects unsafe proof coordinator directories", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
@@ -2626,6 +2626,7 @@ describe("yeet publish scope helpers", () => {
           const path = yield* Path.Path;
           const target = path.join(tmpDir, "target");
           const symlink = path.join(tmpDir, "symlink");
+          const nestedCoordinator = path.join(symlink, "coordinator");
           const overPermissive = path.join(tmpDir, "over-permissive");
 
           yield* fs.makeDirectory(target, { mode: 0o700 });
@@ -2633,16 +2634,21 @@ describe("yeet publish scope helpers", () => {
           const symlinkRefusal = yield* validateProofCoordinatorDirectoryForTesting(symlink).pipe(Effect.flip);
           expect(symlinkRefusal.message).toContain("is a symbolic link");
 
+          yield* fs.makeDirectory(nestedCoordinator, { mode: 0o700 });
+          yield* validateProofCoordinatorDirectoryForTesting(nestedCoordinator);
+
           const targetInfo = yield* fs.stat(target);
           const ownerRefusal = yield* validateProofCoordinatorDirectoryForTesting(
             target,
-            O.getOrThrow(targetInfo.uid) + 1
+            O.some(O.getOrThrow(targetInfo.uid) + 1)
           ).pipe(Effect.flip);
           expect(ownerRefusal.message).toContain("expected effective uid");
 
           yield* fs.makeDirectory(overPermissive, { mode: 0o700 });
           yield* fs.chmod(overPermissive, 0o755);
-          const modeRefusal = yield* validateProofCoordinatorDirectoryForTesting(overPermissive).pipe(Effect.flip);
+          const modeRefusal = yield* validateProofCoordinatorDirectoryForTesting(overPermissive, O.none()).pipe(
+            Effect.flip
+          );
           expect(modeRefusal.message).toContain("has mode 755; expected 0700");
         })
       )
