@@ -46,8 +46,8 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   disposable version of the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`), working
   title "LeJeune Knowledge Desk," composing beep bricks, deployed to the tailnet only, and
   running a fixed 30-minute scenario over the public site corpus plus synthetic Office records.
-  Align completed with Benjamin. Next: should we graduate this exploration to a `goals/` packet
-  and build the lab within the five-day appetite?
+  Align completed with Benjamin (17 decisions ratified). Next: shape review of the brief;
+  graduation follows decompose.
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
   (digest-named global protocol type + projections + journal-audited
