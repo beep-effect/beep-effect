@@ -6,7 +6,7 @@
     "issues": [],
     "packet": "packet-control-plane-core",
     "resumeStage": "P1",
-    "revision": 3,
+    "revision": 4,
     "riskTierOverride": {
       "actor": "operator",
       "at": "2026-08-17T19:57:46.844Z",
@@ -14,17 +14,17 @@
       "tier": "standard"
     },
     "root": "goals",
-    "status": "active",
+    "status": "completed-retained",
     "tip": {
-      "id": "4e844bca346947cef93244e45e2353b1b7a7a6d3fc691613075a876fd00e2344",
-      "seq": 3
+      "id": "bb7957b96c7114a057aba8957229b0650e28bf6f2fc74004e310334f51a865a8",
+      "seq": 4
     }
   },
   "projectorVersion": 2,
   "schemaVersion": "packet-trace/v1",
   "sourceTip": {
-    "id": "4e844bca346947cef93244e45e2353b1b7a7a6d3fc691613075a876fd00e2344",
-    "seq": 3
+    "id": "bb7957b96c7114a057aba8957229b0650e28bf6f2fc74004e310334f51a865a8",
+    "seq": 4
   },
   "timeline": [
     {
@@ -60,6 +60,17 @@
       },
       "id": "4e844bca346947cef93244e45e2353b1b7a7a6d3fc691613075a876fd00e2344",
       "seq": 3
+    },
+    {
+      "actor": "operator",
+      "at": "2026-08-26T20:28:42.193Z",
+      "body": {
+        "previous": "active",
+        "status": "completed-retained",
+        "type": "status-set"
+      },
+      "id": "bb7957b96c7114a057aba8957229b0650e28bf6f2fc74004e310334f51a865a8",
+      "seq": 4
     }
   ]
 }

@@ -3,13 +3,13 @@
   "initiative": {
     "id": "packet-control-plane-core",
     "title": "Packet Control-Plane Core",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-17",
-    "updated": "2026-08-17",
+    "updated": "2026-08-26",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/packet-control-plane-core",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Single colocated packet-core in the Goals CLI: versioned CAS events, deterministic fold, derived lifecycle, guarded writers \u2014 self-hosted in advisory mode.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -62,17 +62,17 @@
     {
       "id": "P3",
       "name": "Remaining core rungs (risk tier, trace projection, fork repair)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

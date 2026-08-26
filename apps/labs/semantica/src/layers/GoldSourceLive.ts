@@ -5,17 +5,19 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GOLD_SUBSETS } from "@/canary/Gold";
 import { contentDigest } from "@/schema/Digest";
+import { Origin } from "@/schema/Document";
 import { GoldUnavailable } from "@/schema/Errors";
-import { GoldFile, GoldRef } from "@/schema/Gold";
+import { CurrentGoldDocumentText, GoldFile, GoldFileEncoded, GoldRef } from "@/schema/Gold";
 import { ModelIdentity } from "@/schema/Model";
 import { GoldSource } from "@/services/GoldSource";
 import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
+import type { LedgerDocumentSnapshot } from "@/schema/Ledger";
 
-const GoldFileJson = S.fromJsonString(GoldFile);
+const GoldFileJson = S.fromJsonString(GoldFileEncoded);
 const GoldRefJson = S.fromJsonString(GoldRef);
-const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileValue) => `${file.paperId}:${file.subset}`);
-const modelIdentityEquivalence = S.toEquivalence(ModelIdentity);
+const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileEncoded) => `${file.paperId}:${file.subset}`);
+const modelIdentityEquivalence = S.toEquivalence(S.toEncoded(ModelIdentity));
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
 
 const unavailable = (reason: GoldUnavailable["reason"], message: string): GoldUnavailable =>
@@ -61,8 +63,47 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
     return file;
   });
 
+  const hydrateCoveredFile = Effect.fn("GoldSource.hydrateCoveredFile")(function* (
+    file: GoldFileEncoded,
+    documents: ReadonlyArray<LedgerDocumentSnapshot>
+  ) {
+    const empty =
+      (file.subset === "structure" && A.isReadonlyArrayEmpty(file.labels)) ||
+      (file.subset === "entity" && A.isReadonlyArrayEmpty(file.labels)) ||
+      (file.subset === "relation" && A.isReadonlyArrayEmpty(file.labels));
+    if (empty) {
+      return yield* S.decodeEffect(GoldFile)(file).pipe(
+        Effect.provideService(CurrentGoldDocumentText, ""),
+        Effect.mapError(() => unavailable("read-failed", "An empty gold-v1 file failed decoded-shape validation."))
+      );
+    }
+    const document = yield* A.findFirst(documents, (candidate) =>
+      Origin.match(candidate.document.origin, {
+        Fixture: () => false,
+        W1Paper: (origin) => Str.Equivalence(origin.paperId, file.paperId),
+      })
+    ).pipe(
+      Effect.fromOption,
+      Effect.mapError(() =>
+        unavailable("source-unavailable", "A selected gold-v1 file has no matching ledger document snapshot.")
+      )
+    );
+    const canonical = yield* document.canonical.pipe(
+      Effect.fromOption,
+      Effect.mapError(() =>
+        unavailable("source-unavailable", "A selected gold-v1 file has no canonical ledger document text.")
+      )
+    );
+    return yield* S.decodeEffect(GoldFile)(file).pipe(
+      Effect.provideService(CurrentGoldDocumentText, canonical.text),
+      Effect.mapError(() =>
+        unavailable("digest-failed", "A gold-v1 label digest does not match its canonical document slice.")
+      )
+    );
+  });
+
   return GoldSource.of({
-    load: Effect.fn("GoldSource.load")(function* (paperIds) {
+    load: Effect.fn("GoldSource.load")(function* (paperIds, documents) {
       const reference = yield* readReference();
       const jobs = A.flatMap(GOLD_SUBSETS, (subset) =>
         A.map(reference.subsets[subset], (paperId) => Tuple.make(paperId, subset))
@@ -71,7 +112,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
         yield* Effect.forEach(jobs, ([paperId, subset]) => readCoveredFile(paperId, subset), { concurrency: 4 }),
         goldFileOrder
       );
-      const digest = yield* contentDigest(S.Array(GoldFile))(files).pipe(
+      const digest = yield* contentDigest(S.Array(GoldFileEncoded))(files).pipe(
         Effect.provideService(Crypto.Crypto, crypto),
         Effect.mapError(() => unavailable("digest-failed", "The covered gold-v1 files could not be hashed."))
       );
@@ -84,7 +125,11 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
           "The gold-v1 reference digest or proposer does not match its covered label files."
         );
       }
-      return A.filter(files, (file) => A.contains(paperIds, file.paperId));
+      return yield* Effect.forEach(
+        A.filter(files, (file) => A.contains(paperIds, file.paperId)),
+        (file) => hydrateCoveredFile(file, documents),
+        { concurrency: 4 }
+      );
     }),
   });
 });

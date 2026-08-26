@@ -1,0 +1,38 @@
+{
+  "version": "gold/v1",
+  "paperId": "0a8de1437753",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 0,
+      "endChar": 72,
+      "quoteSha256": "c05cd977e1811878311645e56b72836c547f992f6b9141e0fc00233a5a105100",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 372,
+      "endChar": 1879,
+      "quoteSha256": "b06c0f1927cadb770910248e135c98ffbd5e497a5ada0c97d570d2946fbcd92a",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1981,
+      "endChar": 1996,
+      "quoteSha256": "6e62ee82e3df2a7dfcaba91e18eab2a77c9c7f7b4a5dceb49528346078b636d2",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

@@ -239,3 +239,34 @@ ratifies.
   inside the packet). Separately, zsh aborted `grep -r --include=*.ts` with `no matches found`
   because the unquoted glob is expanded by the shell. Prevention: always use absolute paths in
   tool calls; quote `--include='*.ts'`; both are the same class as the `nullglob` receipt above.
+
+- **2026-08-26 — First live gold-proposal run surfaced four defects local tests could not see.**
+  (1) The repo `.env` names the key `AI_XAI_API_KEY` but `@beep/xai`'s `XAi.layer` reads
+  `XAI_API_KEY`, so the driver failed with an opaque `reason: "config"` (its status-less
+  config-miss error names no missing key). (2) `PinnedModelId` accepted no real xAI id: the live
+  `/v1/models` list has `grok-4.6/4.5/4.3` — versioned, never dated — and the configured default
+  `grok-4` no longer exists upstream; every JSDoc example used an invented `grok-4-20260826`.
+  (3) `@beep/openai-compat` sent `tool_choice: "none"` on tool-less requests; xAI answers HTTP
+  400 `invalid-argument` where OpenAI tolerates it, and the driver's error mapping discarded the
+  response body that named the problem. (4) Bun 1.4.0's `fetch` aborts at ~300 s even when the
+  caller passes a longer `AbortSignal`, killing non-streaming grok-4.6 generations over full
+  papers. Evidence: `feat/semantica-gold-v1` commits 331a3ea304 and ee142cf081; a scratchpad
+  logging proxy on `XAI_API_URL` recovered the 400 body and timed the abort at 301.5 s.
+  Prevention: drivers should surface provider error bodies and name the missing config key;
+  model-id pin grammars must be validated against the provider's live model list, not invented
+  id shapes; any first live-provider lane deserves one cheap end-to-end probe call before the
+  full run.
+
+- **2026-08-26 — The first four live gold proposals were silently near-worthless: the model
+  miscounts character offsets.** grok-4.6 copies evidence quotes verbatim but reports wrong
+  `start` offsets, so the `TextAnchor` width check plus canonicalizer verification rejected
+  almost every label (0/1/1/2 accepted across the four finished papers) — roughly an hour of
+  hosted reasoning bought four nearly empty gold files, and nothing in the run output flagged
+  it. Evidence: commit 6d8429efcd; the zero-spend `gold propose --offline` replay of the same
+  cached responses accepts 26/3/3/5 after re-deriving each anchor from the exact quote
+  occurrence nearest the claimed offset (verification still gates; unfound quotes still drop).
+  Prevention: never trust model-reported offsets — treat the verbatim quote as the anchor's
+  source of truth and re-derive positions locally; make acceptance-rate collapse loud (a
+  near-zero accepted/proposed ratio on a live run should read as a defect, not a result); keep
+  provider responses in the content-addressed cache so diagnosis and the fixed re-derivation
+  replay for free.

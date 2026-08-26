@@ -474,7 +474,7 @@ const makeEvaluator = Effect.gen(function* () {
       if (!Str.Equivalence(run.id, snapshot.run)) {
         return yield* reportInvalid("The ledger snapshot belongs to a different evaluation run.");
       }
-      const files = yield* goldSource.load(requestedGoldIds(run));
+      const files = yield* goldSource.load(requestedGoldIds(run), snapshot.documents);
       const outcomes = mergeOutcomes(snapshot, suppliedOutcomes);
       const required = HashMap.get(RequiredMetrics, run.stage).pipe(O.getOrElse(() => []));
       const metrics = yield* Effect.forEach(required, (metric) => {

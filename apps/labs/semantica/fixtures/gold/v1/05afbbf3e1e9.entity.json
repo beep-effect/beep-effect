@@ -1,0 +1,131 @@
+{
+  "version": "gold/v1",
+  "paperId": "05afbbf3e1e9",
+  "subset": "entity",
+  "labels": [
+    {
+      "cluster": "Simone Alghisi",
+      "endChar": 101,
+      "entityType": "person",
+      "labelSha256": "3260deff0be73a21a21e4e9517530c4ffc8058acea830854a26b0304cd84a8e8",
+      "quoteSha256": "3260deff0be73a21a21e4e9517530c4ffc8058acea830854a26b0304cd84a8e8",
+      "startChar": 87,
+      "verified": false
+    },
+    {
+      "cluster": "Massimo Rizzoli",
+      "endChar": 121,
+      "entityType": "person",
+      "labelSha256": "cb035e41639921838bf52760541c0672f97de842e69d98ac627021deeef278af",
+      "quoteSha256": "cb035e41639921838bf52760541c0672f97de842e69d98ac627021deeef278af",
+      "startChar": 106,
+      "verified": false
+    },
+    {
+      "cluster": "Gabriel Roccabruna",
+      "endChar": 144,
+      "entityType": "person",
+      "labelSha256": "c455c17d640750987a4544fd465a98984e51b775d237646f6ec58116739f1b15",
+      "quoteSha256": "c455c17d640750987a4544fd465a98984e51b775d237646f6ec58116739f1b15",
+      "startChar": 126,
+      "verified": false
+    },
+    {
+      "cluster": "Seyed Mahed Mousavi",
+      "endChar": 165,
+      "entityType": "person",
+      "labelSha256": "e0819307347ae57346f2824fdbb332eaf9b7ec3acd2d421237de09eb4ca42c5b",
+      "quoteSha256": "e0819307347ae57346f2824fdbb332eaf9b7ec3acd2d421237de09eb4ca42c5b",
+      "startChar": 146,
+      "verified": false
+    },
+    {
+      "cluster": "Giuseppe Riccardi",
+      "endChar": 184,
+      "entityType": "person",
+      "labelSha256": "b9b5c2b16138c13ce3ca1b3a1619ecac5cb490d3a588ce1a3845e4709006a283",
+      "quoteSha256": "b9b5c2b16138c13ce3ca1b3a1619ecac5cb490d3a588ce1a3845e4709006a283",
+      "startChar": 167,
+      "verified": false
+    },
+    {
+      "cluster": "Signals and Interactive Systems Lab",
+      "endChar": 220,
+      "entityType": "research laboratory",
+      "labelSha256": "753924b13f5eb9a22ed685ff040d9d8fbc1d8e163907aac7fd5e36c95e974262",
+      "quoteSha256": "753924b13f5eb9a22ed685ff040d9d8fbc1d8e163907aac7fd5e36c95e974262",
+      "startChar": 185,
+      "verified": false
+    },
+    {
+      "cluster": "University of Trento",
+      "endChar": 242,
+      "entityType": "university",
+      "labelSha256": "dce962e41084affafd10380c8f1c4972ec08ba3a625cae20fe31029d8705a455",
+      "quoteSha256": "dce962e41084affafd10380c8f1c4972ec08ba3a625cae20fe31029d8705a455",
+      "startChar": 222,
+      "verified": false
+    },
+    {
+      "cluster": "LLM",
+      "endChar": 371,
+      "entityType": "model family",
+      "labelSha256": "cc760bd146368600b967e672ab4f1c753d628c851bc5855b37de32afdb2e91b4",
+      "quoteSha256": "cc760bd146368600b967e672ab4f1c753d628c851bc5855b37de32afdb2e91b4",
+      "startChar": 367,
+      "verified": false
+    },
+    {
+      "cluster": "Llama2C",
+      "endChar": 828,
+      "entityType": "language model",
+      "labelSha256": "189e737fd5746c38aba35befac39130096fccbb2a0b5519df85d9aff2e737c5e",
+      "quoteSha256": "189e737fd5746c38aba35befac39130096fccbb2a0b5519df85d9aff2e737c5e",
+      "startChar": 821,
+      "verified": false
+    },
+    {
+      "cluster": "MistralI",
+      "endChar": 841,
+      "entityType": "language model",
+      "labelSha256": "f10099d50bf3b14cdfdf7eac54c768b4ae3e705db5a1b6c8e1dff846b63ffe2f",
+      "quoteSha256": "f10099d50bf3b14cdfdf7eac54c768b4ae3e705db5a1b6c8e1dff846b63ffe2f",
+      "startChar": 833,
+      "verified": false
+    },
+    {
+      "cluster": "fine-tuning",
+      "endChar": 1010,
+      "entityType": "technique",
+      "labelSha256": "242a7e0404079f5f47b55ad8a999d0b6e1be731c2bfaf54b5f010eb93fa81a7d",
+      "quoteSha256": "242a7e0404079f5f47b55ad8a999d0b6e1be731c2bfaf54b5f010eb93fa81a7d",
+      "startChar": 999,
+      "verified": false
+    },
+    {
+      "cluster": "RAG",
+      "endChar": 1204,
+      "entityType": "technique",
+      "labelSha256": "26a354eea7764be4fb15079fde99eea1a1c0479e1c4e5c904076305b348b0f4c",
+      "quoteSha256": "26a354eea7764be4fb15079fde99eea1a1c0479e1c4e5c904076305b348b0f4c",
+      "startChar": 1174,
+      "verified": false
+    },
+    {
+      "cluster": "RAG",
+      "endChar": 1209,
+      "entityType": "technique",
+      "labelSha256": "f77fb5fc13e89e5de286469a9b2fdd328ecd27e1fa0779ae73b189e6c1d7bc7d",
+      "quoteSha256": "f77fb5fc13e89e5de286469a9b2fdd328ecd27e1fa0779ae73b189e6c1d7bc7d",
+      "startChar": 1206,
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

@@ -30,7 +30,7 @@ const utf8Encoder = new TextEncoder();
 const $I = $SemanticaId.create("layers/LanguageModelLive");
 const XAI_MODEL_SETTING = "SEMANTICA_XAI_MODEL" as const;
 const pinnedModelIdPattern =
-  /(?:^claude-(?:opus|sonnet|haiku)-\d+-\d+(?:-\d{8})?$|(?:^|[-_.])20(?:\d{6}|\d{2}-\d{2}-\d{2})(?:$|[-_.])|(?:^|[-_.])v\d+(?:[._-]\d+)*(?:$|[-_.])|@\d+(?:[._-]\d+)*(?:$|[-_.])|:\d{4}(?:[._-]\d+)*(?:$|[-_.]))/u;
+  /(?:^claude-(?:opus|sonnet|haiku)-\d+-\d+(?:-\d{8})?$|^grok-\d+(?:\.\d+)+(?:-[a-z0-9]+)*$|(?:^|[-_.])20(?:\d{6}|\d{2}-\d{2}-\d{2})(?:$|[-_.])|(?:^|[-_.])v\d+(?:[._-]\d+)*(?:$|[-_.])|@\d+(?:[._-]\d+)*(?:$|[-_.])|:\d{4}(?:[._-]\d+)*(?:$|[-_.]))/u;
 const PinnedModelId = S.NonEmptyString.check(
   S.isPattern(pinnedModelIdPattern, {
     identifier: $I`PinnedModelIdCheck`,

@@ -54,9 +54,9 @@ Workflow:
 
 Acceptance:
 
-- [ ] `SPEC.md` acceptance boxes all check.
-- [ ] `bun run beep yeet verify` is green.
-- [ ] Shipped as a PR driven to mergeable via `/yeet`.
+- [x] `SPEC.md` acceptance boxes all check.
+- [x] `bun run beep yeet verify` is green.
+- [x] Shipped as a PR driven to mergeable via `/yeet` (#755/#761/#763/#766, #785, #848).
 
 Stop and report instead of improvising when:
 
