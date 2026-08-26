@@ -6,7 +6,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { hostname, userInfo } from "node:os";
+import { hostname, tmpdir, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Effect, flow, Path, pipe } from "effect";
@@ -131,21 +131,12 @@ export const safeArtifactName: (value: string) => string = flow(
 
 const artifactNameHash = (value: string): string => createHash("sha256").update(value).digest("hex").slice(0, 12);
 
-const effectiveUserId = (): number =>
-  pipe(
-    O.fromUndefinedOr(process.geteuid),
-    O.map((getEffectiveUserId) => getEffectiveUserId()),
-    O.getOrElse(() => userInfo().uid)
-  );
+const effectiveUserId = (): number => userInfo().uid;
 
 const proofCoordinatorRuntimeRoot = Effect.fn("Yeet.proofCoordinatorRuntimeRoot")(function* () {
   const path = yield* Path.Path;
   const configuredRuntimeRoot = yield* configStringOption("XDG_RUNTIME_DIR");
-  return pipe(
-    configuredRuntimeRoot,
-    O.filter(Str.isNonEmpty),
-    O.getOrElse(() => path.join(userInfo().homedir, ".cache"))
-  );
+  return pipe(configuredRuntimeRoot, O.filter(Str.isNonEmpty), O.filter(path.isAbsolute), O.getOrElse(tmpdir));
 });
 
 const proofCoordinatorDirectoryName = (): string =>
@@ -160,8 +151,9 @@ const proofCoordinatorDirectoryName = (): string =>
  * path. Equivalent SCP, SSH, HTTPS, and Git URLs therefore share a lock. The
  * normalized identity is hashed before it reaches the path, so a
  * credential-bearing remote URL never appears in a filename. Lock files live
- * under the effective user's XDG runtime directory, with a user-cache fallback,
- * and the namespace includes opaque machine identity plus the effective UID.
+ * under an absolute XDG runtime directory, with an ephemeral system-temporary
+ * fallback, and the namespace includes opaque machine identity plus the
+ * effective UID.
  *
  * **Example** (Share a coordinator across checkouts)
  *
