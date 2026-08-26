@@ -46,6 +46,19 @@ packet or fold into candidate 3?
 
 ## Trail
 
+- 2026-08-25 (research, post-graduation): AgentO (ESWC 2026) read against
+  the packet system; mapping note landed at
+  `research/2026-08-25-agento-ontology-mapping.md`. Two amendment candidates
+  queued in `MAP.md` for the Session B grill (H: typed `PacketWorkPlan` with
+  rendered launchers, candidate 3; I: JSON-LD projection lane on PROV-O /
+  P-Plan IRIs, candidates 3–4) plus the paper's translate-review-amend-rerun
+  recipe as the fleet campaign's method. Same day: reader/verifier recon of
+  ontoskills, open-ontologies and mykg
+  (`research/2026-08-25-ontology-tooling-recon.md`) queued Amendment J
+  (gate certificates, candidates 2 and 4) and four campaign method notes
+  (probe-shape migration, Violation/Warning tiers, drift classification,
+  fleet-wide lint). Not ratified; no packet opened.
+
 - 2026-08-24 (pre-close review): five-lens adversarial review of the shipped
   first slice grilled with the operator; MAP Amendments D–G recorded
   (tolerant reader + raw-canonical digest, dual-stage genesis + no-backfill

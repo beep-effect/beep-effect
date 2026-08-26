@@ -1,6 +1,37 @@
 # Research — Exploration & Goal Packet System Redesign
 
-## 2026-08-10 (latest) — Packets dashboard lane (lane 7)
+## 2026-08-25 (latest) — AgentO vocabulary mapping
+
+Post-graduation research entry; full note in
+[`research/2026-08-25-agento-ontology-mapping.md`](./research/2026-08-25-agento-ontology-mapping.md).
+
+- AgentO (ESWC 2026, rev 0.2, CC BY 4.0) is a design-time vocabulary layered
+  on PROV-O, P-Plan and BEAM. It declines to model runtime traces, which the
+  packet event chain and the repo's PROV-O port already cover.
+- The goal manifest already holds most of AgentO as untyped JSON and prose.
+  The two gaps: per-phase lane composition (agent kind, model, effort, tools)
+  is recorded nowhere, and `GOAL.md` is hand-authored though fully determined
+  by the rest of the packet. Hence queued Amendment H (typed `PacketWorkPlan`,
+  rendered launchers).
+- RDF earns its place only through the join to the wider knowledge graph,
+  not SPARQL over 214 packets. Hence queued Amendment I (JSON-LD projection
+  lane on PROV-O / P-Plan IRIs, AgentO as a mapping target, D8 untouched).
+- The paper's KG-construction recipe (translate with an "Issues /
+  Assumptions" header, sample-review, amend schema, re-run) is the fleet
+  convention-migration campaign's method, bounded by Amendment E.
+- Recon of three tools
+  ([`research/2026-08-25-ontology-tooling-recon.md`](./research/2026-08-25-ontology-tooling-recon.md)):
+  ontoskills (skill → OWL compiler) contributes Violation/Warning validation
+  tiers and breaking/additive/cosmetic drift diffs; open-ontologies (Rust
+  ontology-governance MCP) contributes the typed gate certificate (queued
+  Amendment J), plans-by-id, evidence-in-artifact and reach reporting; mykg
+  (Markdown → induced-schema graph) contributes the structurally read-only
+  graph boundary and content-addressed re-extraction, and by contrast shows
+  why frontmatter must be ingested deterministically and why `type + name`
+  identity fails across packets. None of the three has a typed per-step
+  agent/model/tool assignment; Amendment H stays novel.
+
+## 2026-08-10 — Packets dashboard lane (lane 7)
 
 Operator capture: a read-only `packets` app answering "what should I do
 next" (pulse, kanban, roadmap, dependency DAG, parallel groups, tabbed

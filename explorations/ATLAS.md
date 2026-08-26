@@ -151,6 +151,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Parked
 
+- [`knowledge-endgame`](./knowledge-endgame/README.md) — parked 2026-08-25 at
+  capture by design: preservation of the four-part knowledge-endgame
+  synthesis (join layer over five laws; practice-as-repo / lint-as-trust;
+  agents as FDEs; clone-and-go distribution) plus the training-data-flywheel
+  coda. Critical path already lives in packet-system-redesign Amendments
+  H/I/J and protocol-as-value. Reopen when H/I/J are ruled, the
+  substrate/instance partition goes live, or the cold-agent eval is wanted.
 - [`project-intelligence`](./project-intelligence/README.md) — parked
   2026-08-13, superseded by the operating loop in
   `goals/nightly-research-routine`; resume when a legal-grade provenance
