@@ -61,16 +61,16 @@ parent MAP's amendment path.
 
 ## Acceptance (the ratified first vertical slice)
 
-- [ ] Packet-core writes and folds one versioned CAS event stream for one
+- [x] Packet-core writes and folds one versioned CAS event stream for one
       packet (this goal's own stream — D9 self-hosting, advisory mode).
-- [ ] Guarded `beep goals` transition preview/write path over that fold.
-- [ ] Minimal read-only `beep explore --check`/doctor result.
-- [ ] A projection reports `furthestStage`, `resumeStage`, current tip, a
+- [x] Guarded `beep goals` transition preview/write path over that fold.
+- [x] Minimal read-only `beep explore --check`/doctor result.
+- [x] A projection reports `furthestStage`, `resumeStage`, current tip, a
       visible fork (two children of one parent), and a stale `sourceTip`.
-- [ ] Proof: golden linear stream, deliberate fork, stale projection.
-- [ ] Explicitly absent: fleet migration, wholesale ATLAS generation,
+- [x] Proof: golden linear stream, deliberate fork, stale projection.
+- [x] Explicitly absent: fleet migration, wholesale ATLAS generation,
       closure receipts, UI.
-- [ ] Shipped as a PR driven to mergeable via `/yeet`.
+- [x] Shipped as a PR driven to mergeable via `/yeet`.
 
 ## Stop conditions
 

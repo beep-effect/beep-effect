@@ -3,10 +3,10 @@
   "exploration": {
     "slug": "packet-system-redesign",
     "title": "Exploration & Goal Packet System Redesign",
-    "status": "graduated",
-    "stage": "graduate",
+    "status": "active",
+    "stage": "decompose",
     "openQuestions": [
-      "Which reopener executes first at decompose once packet-control-plane-core closes: the unchartered fleet convention-migration campaign (goal PLAN P5, rubric `beep explore --check`) or candidate 2 — and does that campaign live as its own goal packet or fold into candidate 3?"
+      "Which reopener executes first at decompose once packet-control-plane-core closes: the unchartered fleet convention-migration campaign (goal PLAN P5, rubric `beep explore --check`) or candidate 2 \u2014 and does that campaign live as its own goal packet or fold into candidate 3?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -15,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-08-10",
-    "updated": "2026-08-25"
+    "updated": "2026-08-26"
   }
 }
