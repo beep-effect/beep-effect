@@ -82,7 +82,7 @@ packet, as required by the exploration graduation contract.
 ### `trustgraph-port-licensing-and-component-donor`
 
 - **Workbench routes, EXTERNAL AND PARTIAL.** The local port has nine routes at
-  `~/YeeBois/dev/trustgraph/ts/packages/workbench/src/App.tsx:28-46`, plus a broad unverified
+  the TrustGraph port workbench `App.tsx` routes (machine-local checkout; see research/04 §G), plus a broad unverified
   Compose stack and 31 documented parity gaps.
 - **Root license and attribution, NET-NEW GATE.** The port remains reference-only until Benjamin
   adds a root MIT or Apache-2.0 license and an attribution record.

@@ -43,3 +43,7 @@ and [`DECISIONS.md`](./DECISIONS.md#proposed-for-benjamins-align-round).
   data boundaries, service-as-software framing, and five-day appetite pending Benjamin's
   confirmation; pre-seeded `BRIEF.md` and `MAP.md`; left 11 proposed questions for his align
   round.
+- 2026-08-26: review closeout — honest-identity TypeScript miner replaced the shell
+  script (17 bot threads answered), fallow ignore for packet `ops/**`, and three
+  machine-local path tokens reworded in CAPTURE/DECISIONS/MAP so the knowledge-refs
+  gate sees no live host paths (CAPTURE content otherwise untouched).

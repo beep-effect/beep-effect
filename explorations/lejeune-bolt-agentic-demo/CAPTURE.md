@@ -33,7 +33,7 @@ runtime (although early), I want a demonstration that knocks their socks off by
 next week. Not beep-effect directly (too early) — maybe a script / pipeline +
 knowledge-graph retrieval demo using data relevant to their domain, deployed to
 my tailnet, and a new `apps/labs` application using a white-labeled /
-beep-graph-branded workbench UI (`~/YeeBois/dev/trustgraph/ts` port branding)
+beep-graph-branded workbench UI (branding from my TrustGraph TypeScript port checkout, kept outside this repo)
 or the semantica app + infra, to demonstrate what is possible.
 
 I've been leaning more **service-as-software** (not SaaS) lately — this is a

@@ -71,7 +71,7 @@ endpoint and a cloud-only runtime are rejected.
 **Question:** What data may the lunch demo use?
 
 **Answer:** Use the public `lejeunebolt.com` corpus from
-`~/data-home/lejeune-bolt-corpus/` plus synthetic Office records. Keep the corpus machine-local
+the machine-local corpus root described in `research/raw/README.md` plus synthetic Office records. Keep the corpus machine-local
 and never commit it. Real Microsoft 365 or PST ingestion belongs to a consented paid pilot
 through `@beep/m365` or `@beep/libpff`.
 
