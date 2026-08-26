@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   FallowReportFinding,
   FallowReportOk,
@@ -117,6 +118,16 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 );
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const attemptUuid = S.decodeUnknownSync(UUID);
+const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
+  `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
+
+const encodeProofLockReapClaim = Effect.fn("test.encodeProofLockReapClaim")(function* (pid: number) {
+  return yield* encodeJson({
+    schemaVersion: "yeet-proof-lock-reap-claim/v1",
+    pid,
+    startedAt: "2026-08-26T00:00:00.000Z",
+  });
+});
 
 const spawnGit = (cwd: string, args: ReadonlyArray<string>) =>
   Effect.sync(() => {
@@ -212,7 +223,16 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
       ({ lockPath }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const coordinatorDirectory = path.dirname(lockPath);
+          const reapPrefix = `${path.basename(lockPath)}.reap-`;
           yield* fs.remove(lockPath, { force: true });
+          const entries = yield* fs.readDirectory(coordinatorDirectory).pipe(Effect.orElseSucceed(A.empty<string>));
+          yield* Effect.forEach(
+            A.filter(entries, Str.startsWith(reapPrefix)),
+            (entry) => fs.remove(path.join(coordinatorDirectory, entry), { force: true }).pipe(Effect.ignore),
+            { discard: true }
+          );
         })
     )
   );
@@ -2561,7 +2581,7 @@ describe("yeet publish scope helpers", () => {
   it("classifies proof lock disposition by readability and owner liveness", () => {
     const state = O.some(
       YeetProofLockStateForTesting.make({
-        schemaVersion: "yeet-proof-lock/v2",
+        schemaVersion: "yeet-proof-lock/v3",
         branch: "feature",
         checkoutRoot: "/repo/checkout-a",
         command: "bun run beep quality github-checks pre-push",
@@ -2570,10 +2590,11 @@ describe("yeet publish scope helpers", () => {
         startedAt: "2026-06-11T00:00:00.000Z",
       })
     );
-    expect(proofLockDispositionForTesting(O.none(), false)).toBe("refuse-unreadable");
-    expect(proofLockDispositionForTesting(O.none(), true)).toBe("refuse-unreadable");
-    expect(proofLockDispositionForTesting(state, true)).toBe("refuse-active");
-    expect(proofLockDispositionForTesting(state, false)).toBe("replace-stale");
+    expect(proofLockDispositionForTesting(O.none(), false, false)).toBe("refuse-unreadable");
+    expect(proofLockDispositionForTesting(O.none(), true, false)).toBe("refuse-unreadable");
+    expect(proofLockDispositionForTesting(state, true, false)).toBe("refuse-active");
+    expect(proofLockDispositionForTesting(state, false, false)).toBe("replace-stale");
+    expect(proofLockDispositionForTesting(O.none(), false, true)).toBe("refuse-legacy");
   });
 
   it("derives one opaque machine-local proof coordinator per repository identity", () =>
@@ -2600,6 +2621,7 @@ describe("yeet publish scope helpers", () => {
           const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
           expect(lease.lockPath).toBe(lockPath);
           expect(yield* fs.exists(lockPath)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
 
           yield* releaseProofLock(lease);
           expect(yield* fs.exists(lockPath)).toBe(false);
@@ -2616,7 +2638,7 @@ describe("yeet publish scope helpers", () => {
           const fs = yield* FileSystem.FileSystem;
           const activeText = yield* encodeJson(
             YeetProofLockStateForTesting.make({
-              schemaVersion: "yeet-proof-lock/v2",
+              schemaVersion: "yeet-proof-lock/v3",
               branch: "feature/active-owner",
               checkoutRoot: "/repo/active-owner",
               command: "bun run beep yeet verify",
@@ -2643,7 +2665,7 @@ describe("yeet publish scope helpers", () => {
           const fs = yield* FileSystem.FileSystem;
           const staleText = yield* encodeJson(
             YeetProofLockStateForTesting.make({
-              schemaVersion: "yeet-proof-lock/v2",
+              schemaVersion: "yeet-proof-lock/v3",
               branch: "feature/stale-owner",
               checkoutRoot: "/repo/stale-owner",
               command: "bun run beep yeet verify",
@@ -2658,8 +2680,160 @@ describe("yeet publish scope helpers", () => {
           expect(lease.lockPath).toBe(lockPath);
           const replacementText = yield* fs.readFileString(lockPath);
           expect(replacementText).not.toBe(`${staleText}\n`);
+          expect(replacementText).toContain('"schemaVersion":"yeet-proof-lock/v3"');
           expect(replacementText).toContain(`"pid":${process.pid}`);
           expect(replacementText).toContain(`"branch":"${tempContext.branch}"`);
+        })
+      )
+    ));
+
+  it("recovers a dead-owner observation claim and reclaims the stale v3 lock", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const replacementText = "replacement-from-dead-claim-recovery\n";
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, deadClaimText);
+
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, replacementText)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toBe(replacementText);
+          expect(yield* fs.exists(claimPath)).toBe(false);
+        })
+      )
+    ));
+
+  it("refuses a live-owner observation claim and leaves the stale v3 lock untouched", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const liveClaimText = `${yield* encodeProofLockReapClaim(process.pid)}\n`;
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, liveClaimText);
+
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "replacement\n")).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
+          expect(yield* fs.readFileString(claimPath)).toBe(liveClaimText);
+        })
+      )
+    ));
+
+  it("fails closed with the manual-remediation path for an unreadable observation claim", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, "not-json\n");
+
+          const refusal = yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "replacement\n").pipe(
+            Effect.flip
+          );
+          expect(refusal.message).toContain("unreadable proof-lock reclamation claim");
+          expect(refusal.message).toContain(claimPath);
+          expect(refusal.message).toContain("Remove");
+          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
+          expect(yield* fs.readFileString(claimPath)).toBe("not-json\n");
+        })
+      )
+    ));
+
+  it("allows exactly one of two concurrent dead-claim recoverers to replace the stale lock", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`);
+
+          const outcomes = yield* Effect.all(
+            [
+              tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-a\n"),
+              tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-b\n"),
+            ],
+            { concurrency: "unbounded" }
+          );
+
+          expect(A.filter(outcomes, (outcome) => outcome)).toHaveLength(1);
+          expect(A.contains(["winner-a\n", "winner-b\n"], yield* fs.readFileString(lockPath))).toBe(true);
+          expect(yield* fs.exists(claimPath)).toBe(false);
+        })
+      )
+    ));
+
+  it("refuses a dead-owner v2 legacy lock without changing its bytes", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const legacyText = `${yield* encodeJson({
+            schemaVersion: "yeet-proof-lock/v2",
+            branch: "feature/legacy-owner",
+            checkoutRoot: "/repo/legacy-owner",
+            command: "bun run beep yeet verify",
+            pid: 2_147_483_647,
+            proofTier: "full",
+            startedAt: "2026-08-25T00:00:00.000Z",
+          })}\n`;
+          yield* fs.writeFileString(lockPath, legacyText);
+
+          const refusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+
+          expect(refusal.message).toContain("legacy v2 full-proof coordinator");
+          expect(refusal.message).toContain(lockPath);
+          expect(refusal.message).toContain("will not reclaim it automatically");
+          expect(refusal.message).toContain("confirming every sibling checkout is idle");
+          expect(yield* fs.readFileString(lockPath)).toBe(legacyText);
         })
       )
     ));
@@ -2672,7 +2846,7 @@ describe("yeet publish scope helpers", () => {
           const path = yield* Path.Path;
           const staleText = `${yield* encodeJson(
             YeetProofLockStateForTesting.make({
-              schemaVersion: "yeet-proof-lock/v2",
+              schemaVersion: "yeet-proof-lock/v3",
               branch: "feature/stale-owner",
               checkoutRoot: "/repo/stale-owner",
               command: "bun run beep yeet verify",
@@ -2683,7 +2857,7 @@ describe("yeet publish scope helpers", () => {
           )}\n`;
           const winnerText = `${yield* encodeJson(
             YeetProofLockStateForTesting.make({
-              schemaVersion: "yeet-proof-lock/v2",
+              schemaVersion: "yeet-proof-lock/v3",
               branch: "feature/winner",
               checkoutRoot: "/repo/winner",
               command: "bun run beep yeet verify",
@@ -2694,7 +2868,7 @@ describe("yeet publish scope helpers", () => {
           )}\n`;
           const loserText = `${yield* encodeJson(
             YeetProofLockStateForTesting.make({
-              schemaVersion: "yeet-proof-lock/v2",
+              schemaVersion: "yeet-proof-lock/v3",
               branch: "feature/loser",
               checkoutRoot: "/repo/loser",
               command: "bun run beep yeet verify",
@@ -2725,7 +2899,7 @@ describe("yeet publish scope helpers", () => {
           const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
           const foreignText = `${yield* encodeJson(
             YeetProofLockStateForTesting.make({
-              schemaVersion: "yeet-proof-lock/v2",
+              schemaVersion: "yeet-proof-lock/v3",
               branch: "feature/foreign-owner",
               checkoutRoot: "/repo/foreign-owner",
               command: "bun run beep yeet verify",
