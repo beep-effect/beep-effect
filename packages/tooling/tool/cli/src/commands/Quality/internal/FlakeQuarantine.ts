@@ -33,6 +33,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { pipe } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -373,15 +374,53 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
   );
 };
 
+const TURBO_CONCURRENCY_FLAG = "--concurrency";
+const SERIAL_TURBO_CONCURRENCY_ARG = "--concurrency=1";
+
+const isDirectTurboRun = (step: QualityTaskStep): boolean =>
+  step.command === "bunx" &&
+  A.get(step.args, 0).pipe(O.contains("turbo")) &&
+  A.get(step.args, 1).pipe(O.contains("run"));
+
+const isNestedCiLane = (step: QualityTaskStep): boolean =>
+  step.command === "bun" &&
+  A.get(step.args, 0).pipe(O.contains("run")) &&
+  A.get(step.args, 1).pipe(O.contains("beep")) &&
+  A.get(step.args, 2).pipe(O.contains("ci")) &&
+  A.get(step.args, 3).pipe(O.contains("lane"));
+
+const withoutTurboConcurrencyArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.filter(
+    args,
+    (arg, index) =>
+      !Eq.equals(arg, TURBO_CONCURRENCY_FLAG) &&
+      !Str.startsWith(`${TURBO_CONCURRENCY_FLAG}=`)(arg) &&
+      !A.get(args, index - 1).pipe(O.contains(TURBO_CONCURRENCY_FLAG))
+  );
+
+const serialTurboRerunArgs = (step: QualityTaskStep, trailingOptions: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const args = withoutTurboConcurrencyArgs(step.args);
+  if (isNestedCiLane(step)) {
+    return [...args, ...trailingOptions];
+  }
+  const options = [SERIAL_TURBO_CONCURRENCY_ARG, ...trailingOptions];
+  return isDirectTurboRun(step) || A.contains(args, "--") ? [...args, ...options] : [...args, "--", ...options];
+};
+
 /**
  * Build the standalone rerun step for one quarantined Turbo task.
  *
  * **Details**
  *
- * Appends an explicit package filter and preserves the lane's environment
- * verbatim. Direct `bunx turbo run` commands and nested `bun run beep ci lane`
- * commands receive the filter as an option; other Bun scripts receive it after
- * `--`. Preserving an inherited
+ * Pins direct Turbo and root-script commands to concurrency one, appends an
+ * explicit package filter, and preserves the lane's environment verbatim.
+ * Direct `bunx turbo run` commands receive the options directly, while other
+ * Bun scripts receive them after `--`. Nested `bun run beep ci lane` commands
+ * accept the package filter but retain the selected lane's owned concurrency
+ * policy; passing a Turbo-only concurrency flag to the outer CLI would be
+ * rejected before its inner step starts. Serial execution removes the checker
+ * scheduling pressure that produced the no-location TS2589 before the rerun is
+ * used as environmental attribution. Preserving an inherited
  * `TURBO_FORCE=true` is deliberate: under a forced sweep an older successful
  * cache entry can exist at the failed task's unchanged hash, and a cache-reading
  * rerun would replay it without invoking the compiler — a vacuous green.
@@ -408,39 +447,31 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
 export const standaloneQuarantineRerunStep: {
   (task: FlakeQuarantineTask): (step: QualityTaskStep) => QualityTaskStep;
   (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep;
-} = dual(2, (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep => {
-  const directTurboRun =
-    step.command === "bunx" &&
-    A.get(step.args, 0).pipe(O.contains("turbo")) &&
-    A.get(step.args, 1).pipe(O.contains("run"));
-  const nestedBeepCiLane =
-    step.command === "bun" &&
-    A.get(step.args, 0).pipe(O.contains("run")) &&
-    A.get(step.args, 1).pipe(O.contains("beep")) &&
-    A.get(step.args, 2).pipe(O.contains("ci")) &&
-    A.get(step.args, 3).pipe(O.contains("lane"));
-  return QualityTaskStep.make({
-    label: `${step.label}:flake-rerun:${task.packageName}`,
-    command: step.command,
-    args:
-      directTurboRun || nestedBeepCiLane
-        ? [...step.args, `--filter=${task.packageName}`]
-        : [...step.args, "--", `--filter=${task.packageName}`],
-    cwd: step.cwd,
-    ...optionalProp("env", O.fromUndefinedOr(step.env)),
-    ...optionalProp("useLocalEnv", O.fromUndefinedOr(step.useLocalEnv)),
-  });
-});
+} = dual(
+  2,
+  (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep =>
+    QualityTaskStep.make({
+      label: `${step.label}:flake-rerun:${task.packageName}`,
+      command: step.command,
+      args: serialTurboRerunArgs(step, [`--filter=${task.packageName}`]),
+      cwd: step.cwd,
+      ...optionalProp("env", O.fromUndefinedOr(step.env)),
+      ...optionalProp("useLocalEnv", O.fromUndefinedOr(step.useLocalEnv)),
+    })
+);
 
 /**
  * Build the full lane rerun step that arbitrates a quarantine attempt.
  *
  * **Details**
  *
- * Reruns the identical lane with the quarantine policy stripped (no recursive
- * quarantine) and `TURBO_FORCE` removed so tasks proven green in the failed
- * run replay from the cache that run wrote, while tasks Turbo skipped after
- * the flake actually execute.
+ * Reruns direct Turbo and root-script lanes with Turbo concurrency pinned to
+ * one, the quarantine policy stripped (no recursive quarantine), and
+ * `TURBO_FORCE` removed. A nested CI lane retains its internally owned
+ * concurrency policy. Tasks proven green in the failed run replay from that
+ * run's cache, while tasks Turbo skipped after the flake execute under the
+ * lane's bounded policy. This keeps the recovery proof bounded without
+ * reintroducing the concurrent compiler pressure that caused the flake.
  *
  * **Example** (Build lane rerun step)
  *
@@ -460,7 +491,7 @@ export const laneQuarantineRerunStep = (step: QualityTaskStep): QualityTaskStep 
   QualityTaskStep.make({
     label: `${step.label}:flake-lane-rerun`,
     command: step.command,
-    args: step.args,
+    args: serialTurboRerunArgs(step, A.empty()),
     cwd: step.cwd,
     env: { ...(step.env ?? {}), TURBO_FORCE: undefined },
     ...optionalProp("useLocalEnv", O.fromUndefinedOr(step.useLocalEnv)),

@@ -3,14 +3,14 @@
   "initiative": {
     "id": "lexical-playground-capability-atlas",
     "title": "Lexical Playground Capability Atlas",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-04",
-    "updated": "2026-08-24",
+    "updated": "2026-08-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lexical-playground-capability-atlas",
-  "lifecycle": "active",
-  "statusNote": "P0 complete on 2026-08-24: the entry gate and activation-path gate are closed; P1 implementation is next.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Completed 2026-08-25: the atlas is versioned and reconciled (12 user-approved waivers), @beep/editor ships the schema-backed capability contract and resolver, Storybook and the synthetic editor-proof desktop panel prove the minimal and document-proof profiles, and the recorded browser QA loop closed on round 4 with requiredCount 0; the closeout PR carries the reflection and the Goal B handoff.",
   "mission": "Version the complete Lexical Playground capability atlas and prove the minimal schema-backed editor profile resolver in Storybook and a synthetic Professional Desktop dock panel.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -91,22 +91,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

@@ -11,6 +11,7 @@ import {
   SerializedEditorState,
 } from "@beep/lexical-schema/Lexical.model";
 import { Effect, Result } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const isSerializedEditorState = S.is(SerializedEditorState);
@@ -96,3 +97,26 @@ export const decodeEditorStateForRuntimeResult = (
  */
 export const decodeEditorStateForRuntime = (input: unknown): Effect.Effect<SerializedEditorState, LexicalDecodeError> =>
   Effect.fromResult(decodeEditorStateForRuntimeResult(input));
+
+/**
+ * Admits an optional schema-decoded initial state for a live editor mount:
+ * `None` when the state is absent or the strict runtime decoder rejects it,
+ * so a composer can fall back to the read-only wire viewer instead of
+ * mounting an empty editor.
+ *
+ * **Example** (Absent state stays None)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { runtimeInitialStateOption } from "@beep/editor/runtime"
+ *
+ * console.log(O.isNone(runtimeInitialStateOption(undefined))) // true
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const runtimeInitialStateOption = (
+  initialState: SerializedEditorState | undefined
+): O.Option<SerializedEditorState> =>
+  O.flatMap(O.fromUndefinedOr(initialState), (state) => Result.getSuccess(decodeEditorStateForRuntimeResult(state)));

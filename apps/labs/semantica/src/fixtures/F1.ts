@@ -6,6 +6,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ByteDrift, ByteExpectation, verifyByteExpectations } from "@/corpus/ByteWitness";
+import { DegradedKind } from "@/schema/Degraded";
+import { MediaType } from "@/schema/MediaType";
 
 const $I = $SemanticaId.create("fixtures/F1");
 
@@ -44,6 +46,16 @@ export const F1FixtureId = S.String.check(
 /**
  * Decoded value accepted by {@link F1FixtureId}.
  *
+ * **Example** (Annotate a fixture id)
+ *
+ * ```ts
+ * import { F1FixtureId } from "@/fixtures/F1"
+ * import type { F1FixtureId as FixtureId } from "@/fixtures/F1"
+ *
+ * const id: FixtureId = F1FixtureId.make("md-structure")
+ * console.log(id) // "md-structure"
+ * ```
+ *
  * @see {@link F1FixtureId} for validation and branding.
  * @category models
  * @since 0.0.0
@@ -81,14 +93,19 @@ export const isF1FixtureId = S.is(F1FixtureId);
  * @category schemas
  * @since 0.0.0
  */
-export const FixtureMediaType = LiteralKit(["text/markdown", "text/html", "application/pdf"]).annotate(
-  $I.annote("FixtureMediaType", {
-    description: "Markdown, HTML, and born-digital PDF media types exercised by F1.",
-  })
-);
+export const FixtureMediaType = MediaType;
 
 /**
  * Decoded literal accepted by {@link FixtureMediaType}.
+ *
+ * **Example** (Annotate a fixture media type)
+ *
+ * ```ts
+ * import type { FixtureMediaType } from "@/fixtures/F1"
+ *
+ * const mediaType: FixtureMediaType = "text/html"
+ * console.log(mediaType) // "text/html"
+ * ```
  *
  * @see {@link FixtureMediaType} for literal helpers and validation.
  * @category models
@@ -119,6 +136,15 @@ export const FixtureExpectation = LiteralKit(["parses", "degraded"]).annotate(
 /**
  * Decoded literal accepted by {@link FixtureExpectation}.
  *
+ * **Example** (Annotate a fixture expectation)
+ *
+ * ```ts
+ * import type { FixtureExpectation } from "@/fixtures/F1"
+ *
+ * const expectation: FixtureExpectation = "degraded"
+ * console.log(expectation) // "degraded"
+ * ```
+ *
  * @see {@link FixtureExpectation} for literal helpers and validation.
  * @category models
  * @since 0.0.0
@@ -139,14 +165,25 @@ export type FixtureExpectation = typeof FixtureExpectation.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FixtureDegradedKind = LiteralKit(["invalid-utf8", "truncated", "malformed-structure"]).annotate(
+export const FixtureDegradedKind = LiteralKit(
+  DegradedKind.pickOptions(["invalid-utf8", "truncated", "extraction-failed"])
+).annotate(
   $I.annote("FixtureDegradedKind", {
-    description: "Invalid UTF-8, truncation, or malformed structure declared by a degraded F1 fixture.",
+    description: "Invalid UTF-8, truncation, or extraction failure declared by a degraded F1 fixture.",
   })
 );
 
 /**
  * Decoded literal accepted by {@link FixtureDegradedKind}.
+ *
+ * **Example** (Annotate a fixture degradation)
+ *
+ * ```ts
+ * import type { FixtureDegradedKind } from "@/fixtures/F1"
+ *
+ * const kind: FixtureDegradedKind = "extraction-failed"
+ * console.log(kind) // "extraction-failed"
+ * ```
  *
  * @see {@link FixtureDegradedKind} for literal helpers and validation.
  * @category models
@@ -346,6 +383,15 @@ export const F1Diff = F1DriftKind.toTaggedUnion("kind")({
 /**
  * Runtime type for {@link F1Diff}.
  *
+ * **Example** (Inspect an F1 diff type)
+ *
+ * ```ts
+ * import type { F1Diff } from "@/fixtures/F1"
+ *
+ * const inspect = (diff: F1Diff) => diff.kind
+ * console.log(typeof inspect) // "function"
+ * ```
+ *
  * @see {@link F1Diff} for constructors and discriminator-aware helpers.
  * @category models
  * @since 0.0.0
@@ -417,6 +463,15 @@ export class F1Drift extends S.TaggedError<F1Drift>($I`F1Drift`)(
 
 /**
  * Service shape for loading and verifying the committed F1 index.
+ *
+ * **Example** (Inspect the catalog load type)
+ *
+ * ```ts
+ * import type { F1CatalogShape } from "@/fixtures/F1"
+ *
+ * const inspect = (catalog: F1CatalogShape) => catalog.load
+ * console.log(typeof inspect) // "function"
+ * ```
  *
  * @category services
  * @since 0.0.0

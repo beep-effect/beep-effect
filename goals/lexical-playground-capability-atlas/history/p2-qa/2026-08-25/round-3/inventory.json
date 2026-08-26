@@ -1,0 +1,56 @@
+{
+  "findings": [
+    {
+      "evidence": [
+        {
+          "eventIds": [691, 716, 718, 719, 720],
+          "kind": "screenshot",
+          "path": "narrow-viewport-and-touch--after-touch.png"
+        }
+      ],
+      "fix": "At the narrow breakpoint, replace the fixed three-column upper dock with a single active pane plus tabs or a drawer, and let pane messages wrap within padded responsive containers.",
+      "id": "R3-01",
+      "lens": "overflow",
+      "repro": "Resize to 480x800, open Editor proof, close the canonical JSON drawer, select editor content, and tap Bold; inspect the Explorer, Graph, and Inspector panes in the resulting steady state.",
+      "severity": "P1",
+      "title": "Narrow layout compresses the three desktop panes until their body text is clipped"
+    },
+    {
+      "evidence": [
+        {
+          "eventIds": [401, 620, 621],
+          "frameRange": [50, 50],
+          "kind": "frame",
+          "path": "frames/marker-w0_00050.png"
+        }
+      ],
+      "fix": "Add a persistent high-contrast :focus-visible outline or inset ring to the contenteditable root so keyboard users can identify the focused editing surface.",
+      "id": "R3-02",
+      "lens": "focus-ring",
+      "repro": "Select Document proof and press Tab through the import controls and all toolbar commands until focus enters the editor; inspect the frame immediately after focus-in seq 620.",
+      "severity": "P1",
+      "title": "Keyboard focus entering the editor has no visible focus indication"
+    },
+    {
+      "evidence": [
+        {
+          "eventIds": [620, 621],
+          "frameRange": [50, 50],
+          "kind": "frame",
+          "path": "frames/marker-w0_00050.png"
+        }
+      ],
+      "fix": "Keep mode and import controls outside the editor scroller, or apply the full sticky-header height as scroll padding and use an opaque toolbar background so underlying controls cannot remain partially visible.",
+      "id": "R3-03",
+      "lens": "floating-chrome",
+      "repro": "Tab through every Document proof control into the editor; when the final focus event scrolls the panel, observe the two green import buttons reduced to clipped slivers between the tab strip and command toolbar.",
+      "severity": "P1",
+      "title": "Focus-driven scrolling leaves the import controls partially exposed beneath sticky toolbar chrome"
+    }
+  ],
+  "judge": { "effort": "high", "model": "gpt-5.6-sol" },
+  "requiredCount": 3,
+  "round": 3,
+  "schemaVersion": "qa-inventory/v1",
+  "sessionRef": "session.json"
+}

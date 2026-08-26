@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Normalize live/source evidence into stable atlas entries; close the remaining user-visible activation-path evidence gaps; lock the minimal descriptor contract. | The entry gate and activation-path gate are both closed, with compatibility gaps explicit and descriptor fields justified by evidence. |
-| P1 Implement | pending | Add the `@beep/editor` schemas/resolver/command projection, compatibility defaults, Storybook profiles, and synthetic dock panel. | All implementation acceptance criteria and focused tests pass without new document semantics or product persistence. |
-| P2 Verify | pending | Run package/app proof and the recorded browser QA loop across keyboard, pointer, responsive/touch, and accessibility scenarios. | Targeted proof and full `bun run beep yeet verify` are green; QA inventory has zero required findings. |
-| P3 Yeet: PR to mergeable | pending | Publish intentionally through Yeet and close exact-head hosted checks and review threads. | PR is mergeable with required hosted checks and reviews green. |
-| P4 Close | pending | Record final evidence, reflection, packet lifecycle, and Goal B handoff. | Closeout reflection validates; atlas/profile handoff is durable; packet and index are updated in the final PR. |
+| P1 Implement | complete | Add the `@beep/editor` schemas/resolver/command projection, compatibility defaults, Storybook profiles, and synthetic dock panel. | All implementation acceptance criteria and focused tests pass without new document semantics or product persistence. |
+| P2 Verify | complete | Run package/app proof and the recorded browser QA loop across keyboard, pointer, responsive/touch, and accessibility scenarios. | Targeted proof and full `bun run beep yeet verify` are green; QA inventory has zero required findings. |
+| P3 Yeet: PR to mergeable | complete | Publish intentionally through Yeet and close exact-head hosted checks and review threads. | PR is mergeable with required hosted checks and reviews green. |
+| P4 Close | complete | Record final evidence, reflection, packet lifecycle, and Goal B handoff. | Closeout reflection validates; atlas/profile handoff is durable; packet and index are updated in the final PR. |
 
 ## P0 Research Checklist
 
@@ -37,6 +37,9 @@ Status: `active`
 - [x] Stop for user direction if any feature needs a new product/security decision.
 
 ## P1 Implementation Checklist
+
+Completed 2026-08-25 (design: `research/P1-CAPABILITY-CONTRACT.md`; lane reports:
+`history/p1-implement/2026-08-25/`).
 
 1. Introduce named schemas and derived types for capability IDs, descriptors,
    profiles, commands/bindings, dispositions, and typed resolution errors.
@@ -97,6 +100,18 @@ Status: `active`
   effective rich-text nodes, 29 settings, 73 top-level registrations, 23
   Markdown transformers, 32 observed keybindings, 11 document actions, and 17
   screenshots. The exercise harness has been hermetic since PR #793.
+- 2026-08-25: P1 is complete (`research/P1-CAPABILITY-CONTRACT.md`; two
+  Codex lanes reported under `history/p1-implement/2026-08-25/`). The
+  catalog covers the 48 capabilities `@beep/editor` can register today; the
+  strict atlas reconciliation test pins ids, dependencies, commands, chords,
+  and `beep-md` compatibility to the atlas. P2 recorded QA: rounds 0-2 fixed
+  a silent empty-editor fallback, a collapsing editor region, slash labels,
+  a dev overlay, and harness cadence; round 3 was judged with three P1
+  findings (focus ring, sticky controls, narrow pane text) fixed at the
+  source; round 4 is `CAPTURE-GREEN` with `requiredCount: 0`
+  (`history/p2-qa/2026-08-25/ROUNDS.md`). The three-column upper dock at
+  480 px is pre-existing shell layout outside this goal; the narrow scenario
+  exercises the panel with its group maximized.
 - Preserve unrelated worktree changes and inspect current state before edits.
 - Use live source/barrel discovery; do not use the retired export catalog.
 - Keep `SPEC.md` normative. Record new user decisions in the source

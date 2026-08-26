@@ -1,6 +1,5 @@
 # @beep/editor
 
-
 React editor kit on Lexical + `@lexical/react` for schema-first rich text: a
 read-only viewer and composer primitives over the
 `@beep/lexical-schema` v1 vocabulary, reusing the `@beep/ui` editor substrate
@@ -121,6 +120,50 @@ import { YouTubeEmbed } from "@beep/editor/youtube-embed";
 ```
 
 Stories live in `stories/` and render through the `apps/storybook` host.
+
+## Capability profiles
+
+`@beep/editor/capability` is the schema-backed contract ratified by the
+`lexical-playground-capability-atlas` goal.
+
+- **Ownership.** `@beep/editor` owns `CapabilityDescriptor`s, the
+  `editorCapabilityCatalog`, and `resolveEditorProfile`; applications and
+  slices own their product `EditorProfile`s. `referenceProfiles.minimal` and
+  `referenceProfiles.documentProof` are proof fixtures shared by Storybook and
+  the Professional Desktop `editor-proof` panel, not product modes.
+- **Composition.** A host resolves once —
+  `resolveEditorProfile(editorCapabilityCatalog, profile)` returns a
+  `Result` whose failure is a typed `ProfileResolutionError` (unknown id,
+  missing dependency, dependency cycle, conflict, development-only capability
+  in a production profile, incompatible registration, unknown override
+  command, keybinding collision) — and mounts the success through
+  `CapabilityComposer`. Toolbars, the slash picker, shortcut help, and the
+  keybinding plugin are projections of that one resolved command registry;
+  nothing registers a command twice.
+- **Read-only fallback (D3).** Every catalog node stays registered whatever
+  the profile enables, so content authored under a broader profile remains
+  readable when its authoring capability is absent; only the controls,
+  transformers, and chords go away, and guarded chords are swallowed so a
+  disabled format can never re-enter the document from a native shortcut.
+  Initial state the runtime decoder rejects renders through
+  `EditorWireViewer` instead of an empty editor.
+- **Mount immutability (D5).** The resolved profile and the initial state are
+  fixed for the life of a mount. Reconfiguration is a remount transaction:
+  project the latest state with `editorStateToDocument`, rebuild it with
+  `documentToEditorState`, and mount again under a new React `key`.
+- **Diagnostics (D9).** Descriptors with disposition `development-only`
+  resolve only inside a `kind: "development-reference"` profile.
+- **Compatibility.** `compatibilityProfile` reproduces the historical
+  `EditorComposer` stack (History/List/CheckList/Link/Markdown with
+  `TRANSFORMERS`) and leaves Lexical-native shortcuts in control because it
+  omits `extension.shortcut-help`; `editorNodes` derives from the same
+  catalog in the same order. `ChatComposer` is unchanged.
+- **Goal B.** Later goals extend the surface by adding descriptors under
+  their atlas ids (dependencies, commands, chords, and the `beep-md`
+  compatibility row copied from
+  `goals/lexical-playground-capability-atlas/research/capability-atlas.json`)
+  and keeping `test/capability-catalog.test.ts`, the strict atlas
+  reconciliation, green.
 
 ## Development
 
