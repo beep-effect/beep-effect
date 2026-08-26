@@ -73,6 +73,29 @@ const finding = (slug: string, kind: GoalDoctorFindingKind, message: string, key
 /**
  * Build the stable finding key for one fork from its parent digest.
  *
+ * **Example** (Key two forks that share a parent sequence)
+ *
+ * ```ts
+ * import { packetForkFindingKey } from "@beep/repo-cli/commands/Explore/Check"
+ * import { PacketForkVerdict } from "@beep/repo-cli/test/Goals"
+ *
+ * const left = PacketForkVerdict.make({ parent: "a".repeat(64), parentSeq: 2, children: [] })
+ * const right = PacketForkVerdict.make({ parent: "b".repeat(64), parentSeq: 2, children: [] })
+ *
+ * console.log(packetForkFindingKey("demo", left) === packetForkFindingKey("demo", right)) // false
+ * ```
+ *
+ * **Example** (Key a genesis fork that has no parent)
+ *
+ * ```ts
+ * import { packetForkFindingKey } from "@beep/repo-cli/commands/Explore/Check"
+ * import { PacketForkVerdict } from "@beep/repo-cli/test/Goals"
+ *
+ * const genesis = PacketForkVerdict.make({ parentSeq: 0, children: [] })
+ *
+ * console.log(packetForkFindingKey("demo", genesis)) // "demo packet-stream-fork genesis"
+ * ```
+ *
  * @param slug - Packet slug carrying the fork.
  * @param fork - Fork verdict whose parent digest identifies the fork.
  * @returns A goals-doctor finding key that does not collide with another fork at the same sequence.

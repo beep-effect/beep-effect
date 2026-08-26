@@ -256,6 +256,152 @@ describe("set-status guarded stream writer", () => {
   );
 
   it(
+    "regenerates a stale trace while skipping the redundant status event",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("skip-stale-trace-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-stale-trace-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const tracePath = "goals/skip-stale-trace-demo/ops/trace.json";
+            const freshTrace = yield* fs.readFileString(tracePath);
+            const beforeFiles = yield* listEventFiles("skip-stale-trace-demo");
+            // Model the interrupted writer: the event landed, the projection never did.
+            yield* fs.remove(tracePath);
+
+            const writer = yield* PacketTransitionWriter;
+            const plan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator: PacketStreamLocator.make({
+                  packet: "skip-stale-trace-demo",
+                  root: "goals",
+                  packetPath: "goals/skip-stale-trace-demo",
+                }),
+                status: "paused",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            expect(plan.disposition).toBe("skipped");
+
+            const outcome = yield* writer.commit(plan);
+            expect(outcome.disposition).toBe("skipped");
+            expect(outcome.appended).toBe(0);
+            expect(outcome.traceWritten).toBe(true);
+            expect(yield* fs.readFileString(tracePath)).toBe(freshTrace);
+            expect(yield* listEventFiles("skip-stale-trace-demo")).toStrictEqual(beforeFiles);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "refuses a skipped plan whose stream moved between plan and commit",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeStreamPacket("skip-cas-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-cas-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const locator = PacketStreamLocator.make({
+              packet: "skip-cas-demo",
+              root: "goals",
+              packetPath: "goals/skip-cas-demo",
+            });
+            const writer = yield* PacketTransitionWriter;
+            const stalePlan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator,
+                status: "paused",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            expect(stalePlan.disposition).toBe("skipped");
+
+            // A concurrent writer advances the stream after the skipped plan was sealed.
+            const concurrent = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator,
+                status: "active",
+                previousStatus: "paused",
+                actor: "other",
+                at: "2026-08-17T11:00:00.000Z",
+              })
+            );
+            expect(concurrent.disposition).toBe("append");
+            expect((yield* writer.commit(concurrent)).appended).toBe(1);
+
+            const refused = yield* Effect.exit(writer.commit(stalePlan));
+            expect(Exit.isFailure(refused)).toBe(true);
+            if (Exit.isFailure(refused)) {
+              expect(String(Cause.squash(refused.cause))).toContain("stream moved between plan and commit");
+            }
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "previews a skipped transition without planning an event or a trace write",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("skip-preview-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-preview-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const beforeFiles = yield* listEventFiles("skip-preview-demo");
+            const beforeTrace = yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json");
+
+            const previewed = yield* Effect.exit(
+              runGoalsCommand(["set-status", "skip-preview-demo", "paused", "--preview"])
+            );
+            expect(Exit.isSuccess(previewed)).toBe(true);
+            expect(yield* listEventFiles("skip-preview-demo")).toStrictEqual(beforeFiles);
+            expect(yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json")).toBe(beforeTrace);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "reports a skipped write through the set-status command surface",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("skip-write-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const beforeFiles = yield* listEventFiles("skip-write-demo");
+            const repeated = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
+            expect(Exit.isSuccess(repeated)).toBe(true);
+
+            expect(yield* listEventFiles("skip-write-demo")).toStrictEqual(beforeFiles);
+            const manifest = yield* fs.readFileString("goals/skip-write-demo/ops/manifest.json");
+            expect(manifest).toContain("paused");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
     "fails invalid writer actors during request decode",
     () =>
       Effect.runPromise(

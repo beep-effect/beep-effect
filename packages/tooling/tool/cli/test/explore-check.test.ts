@@ -186,6 +186,47 @@ describe("explore --check", () => {
             const forkB = PacketForkVerdict.make({ parent: parentB, parentSeq: 1, children: [] });
             expect(packetForkFindingKey("twinned", forkA)).toBe(`twinned packet-stream-fork ${parentA}`);
             expect(packetForkFindingKey("twinned", forkB)).toBe(`twinned packet-stream-fork ${parentB}`);
+            // A parentless genesis fork keys off the sentinel instead of an absent digest.
+            const genesisFork = PacketForkVerdict.make({ parentSeq: 0, children: [] });
+            expect(packetForkFindingKey("twinned", genesisFork)).toBe("twinned packet-stream-fork genesis");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "stays silent on an unparseable manifest and skips non-packet directory entries",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const genesis = PacketEvent.make({
+              schemaVersion: "packet-event/v1",
+              packet: "unparseable",
+              root: "goals",
+              seq: 1,
+              expectedRevision: 0,
+              at: "2026-08-17T00:00:00.000Z",
+              actor: "test",
+              body: { type: "packet-created", status: "active" },
+            });
+            yield* writeEvent("goals/unparseable", genesis);
+            // Present but not JSON: the drift check has nothing to compare against and must not guess.
+            yield* writeProjectFile("goals/unparseable/ops/manifest.json", "{ not json\n");
+            // Valid JSON that is not a trace projection: reported as stale, distinct from
+            // the not-JSON-at-all case, and never decoded on a guess.
+            yield* writeProjectFile("goals/unparseable/ops/trace.json", '{"not":"a trace"}\n');
+            // The template, dot-directories, and non-slug entries are skipped by the scan filter.
+            yield* writeProjectFile("goals/_template/README.md", "# template\n");
+            yield* writeProjectFile("goals/.hidden/README.md", "# hidden\n");
+            yield* writeProjectFile("goals/Not A Slug/README.md", "# not a slug\n");
+
+            const exit = yield* Effect.exit(runExploreCommand(["--check"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
+            const output = yield* consoleText();
+            expect(output).toContain("does not decode as PacketTraceProjection");
+            expect(output).not.toContain("packet-status-drift");
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

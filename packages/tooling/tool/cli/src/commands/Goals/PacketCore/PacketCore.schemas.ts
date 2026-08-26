@@ -774,6 +774,16 @@ export type PacketEventBody = typeof PacketEventBody.Type;
 /**
  * ISO-8601 timestamp recorded on packet events and writer requests.
  *
+ * **Example** (Reject a timestamp that is not ISO-8601)
+ *
+ * ```ts
+ * import { PacketEventTimestamp } from "@beep/repo-cli/test/Goals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PacketEventTimestamp)("2026-08-17T10:00:00.000Z")) // true
+ * console.log(S.is(PacketEventTimestamp)("2026-08-17")) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -792,6 +802,16 @@ export const PacketEventTimestamp = S.String.check(
 
 /**
  * Non-empty actor recorded on packet events and writer requests.
+ *
+ * **Example** (Reject an empty actor)
+ *
+ * ```ts
+ * import { PacketEventActor } from "@beep/repo-cli/test/Goals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PacketEventActor)("operator")) // true
+ * console.log(S.is(PacketEventActor)("")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
