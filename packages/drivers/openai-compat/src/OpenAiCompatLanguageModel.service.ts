@@ -657,7 +657,7 @@ const makeRequest = Effect.fn("OpenAiCompatLanguageModel.makeRequest")(function*
         ? O.some<Readonly<Record<string, unknown>>>({ include_usage: true })
         : O.none<Readonly<Record<string, unknown>>>(),
       temperature: config.temperature,
-      tool_choice: prepareToolChoice(toolNameMapper, options.toolChoice),
+      tool_choice: O.isSome(tools) ? prepareToolChoice(toolNameMapper, options.toolChoice) : O.none(),
       tools,
       top_p: config.topP,
       user: config.user,

@@ -273,6 +273,8 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       expect(captured).toHaveLength(1);
       expect(captured[0]?.model).toBe("compat-model");
       expect(captured[0]?.messages).toEqual([{ content: [{ text: "hello", type: "text" }], role: "user" }]);
+      expect(Object.hasOwn(captured[0] ?? {}, "tools")).toBe(false);
+      expect(Object.hasOwn(captured[0] ?? {}, "tool_choice")).toBe(false);
     })
   );
 
