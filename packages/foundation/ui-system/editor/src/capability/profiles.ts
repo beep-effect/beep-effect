@@ -22,10 +22,10 @@ const decodeProfile = S.decodeUnknownResult(EditorProfile);
  *
  * **Example** (Inspect the compatibility profile)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect the compatibility profile"
  * import { compatibilityProfile } from "@beep/editor/capability/profiles"
  *
- * console.log(compatibilityProfile.kind) // "production"
+ * compatibilityProfile.kind // => "production"
  * ```
  *
  * @category configuration

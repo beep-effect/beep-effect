@@ -14,11 +14,11 @@ const $I = $DockId.create("AnchoredBox");
  *
  * **Example** (Make TopLeft coordinates)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make TopLeft coordinates"
  * import { TopLeft } from "@beep/dock"
  *
  * const anchor = TopLeft.make({ left: 24, top: 16 })
- * console.log(anchor._tag) // "TopLeft"
+ * anchor._tag // => "TopLeft"
  * ```
  *
  * @category value-objects
@@ -35,11 +35,11 @@ export class TopLeft extends S.TaggedClass<TopLeft>($I`TopLeft`)(
  *
  * **Example** (Make TopRight coordinates)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make TopRight coordinates"
  * import { TopRight } from "@beep/dock"
  *
  * const anchor = TopRight.make({ right: 24, top: 16 })
- * console.log(anchor.right) // 24
+ * anchor.right // => 24
  * ```
  *
  * @category value-objects
@@ -56,11 +56,11 @@ export class TopRight extends S.TaggedClass<TopRight>($I`TopRight`)(
  *
  * **Example** (Make BottomLeft coordinates)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make BottomLeft coordinates"
  * import { BottomLeft } from "@beep/dock"
  *
  * const anchor = BottomLeft.make({ bottom: 12, left: 20 })
- * console.log(anchor.bottom) // 12
+ * anchor.bottom // => 12
  * ```
  *
  * @category value-objects
@@ -77,11 +77,11 @@ export class BottomLeft extends S.TaggedClass<BottomLeft>($I`BottomLeft`)(
  *
  * **Example** (Make BottomRight coordinates)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make BottomRight coordinates"
  * import { BottomRight } from "@beep/dock"
  *
  * const anchor = BottomRight.make({ bottom: 12, right: 20 })
- * console.log(anchor._tag) // "BottomRight"
+ * anchor._tag // => "BottomRight"
  * ```
  *
  * @category value-objects
@@ -98,11 +98,11 @@ export class BottomRight extends S.TaggedClass<BottomRight>($I`BottomRight`)(
  *
  * **Example** (Make width and height)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make width and height"
  * import { AnchoredSize } from "@beep/dock"
  *
  * const size = AnchoredSize.make({ width: 640, height: 480 })
- * console.log(size.width) // 640
+ * size.width // => 640
  * ```
  *
  * @category value-objects
@@ -118,11 +118,11 @@ export class AnchoredSize extends S.Class<AnchoredSize>($I`AnchoredSize`)(
  *
  * **Example** (Make top-left sized box)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make top-left sized box"
  * import { TopLeftAnchoredBox } from "@beep/dock"
  *
  * const box = TopLeftAnchoredBox.make({ left: 20, top: 12, width: 640, height: 480 })
- * console.log(box._tag) // "TopLeft"
+ * box._tag // => "TopLeft"
  * ```
  *
  * @category value-objects
@@ -142,11 +142,11 @@ export class TopLeftAnchoredBox extends AnchoredSize.extend<TopLeftAnchoredBox>(
  *
  * **Example** (Make top-right sized box)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make top-right sized box"
  * import { TopRightAnchoredBox } from "@beep/dock"
  *
  * const box = TopRightAnchoredBox.make({ right: 20, top: 12, width: 640, height: 480 })
- * console.log(box.right) // 20
+ * box.right // => 20
  * ```
  *
  * @category value-objects
@@ -166,11 +166,11 @@ export class TopRightAnchoredBox extends AnchoredSize.extend<TopRightAnchoredBox
  *
  * **Example** (Make bottom-right sized box)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make bottom-right sized box"
  * import { BottomRightAnchoredBox } from "@beep/dock"
  *
  * const box = BottomRightAnchoredBox.make({ bottom: 12, right: 20, width: 640, height: 480 })
- * console.log(box.bottom) // 12
+ * box.bottom // => 12
  * ```
  *
  * @category value-objects
@@ -190,11 +190,11 @@ export class BottomRightAnchoredBox extends AnchoredSize.extend<BottomRightAncho
  *
  * **Example** (Make bottom-left sized box)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make bottom-left sized box"
  * import { BottomLeftAnchoredBox } from "@beep/dock"
  *
  * const box = BottomLeftAnchoredBox.make({ bottom: 12, left: 20, width: 640, height: 480 })
- * console.log(box.left) // 20
+ * box.left // => 20
  * ```
  *
  * @category value-objects
@@ -214,7 +214,7 @@ export class BottomLeftAnchoredBox extends AnchoredSize.extend<BottomLeftAnchore
  *
  * **Example** (Decode untagged top-left box)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode untagged top-left box"
  * import { AnchoredBox } from "@beep/dock"
  * import * as S from "effect/Schema"
  *
@@ -224,7 +224,7 @@ export class BottomLeftAnchoredBox extends AnchoredSize.extend<BottomLeftAnchore
  *   width: 640,
  *   height: 480
  * })
- * console.log(box._tag) // "TopLeft"
+ * box._tag // => "TopLeft"
  * ```
  *
  * @category value-objects
@@ -244,7 +244,7 @@ export const AnchoredBox = S.Union([
  *
  * **Example** (Type a top-left box)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type a top-left box"
  * import { AnchoredBox, TopLeftAnchoredBox } from "@beep/dock"
  *
  * const box: AnchoredBox = TopLeftAnchoredBox.make({
@@ -253,7 +253,7 @@ export const AnchoredBox = S.Union([
  *   width: 640,
  *   height: 480
  * })
- * console.log(box._tag) // "TopLeft"
+ * box._tag // => "TopLeft"
  * ```
  *
  * @category value-objects
@@ -265,7 +265,7 @@ export type AnchoredBox = typeof AnchoredBox.Type;
  *
  * **Example** (Declare encoded TopLeft shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Declare encoded TopLeft shape"
  * import type { AnchoredBox } from "@beep/dock"
  *
  * const encoded: AnchoredBox.Encoded = {
@@ -275,7 +275,7 @@ export type AnchoredBox = typeof AnchoredBox.Type;
  *   width: 640,
  *   height: 480
  * }
- * console.log(encoded._tag) // "TopLeft"
+ * encoded._tag // => "TopLeft"
  * ```
  *
  * @category value-objects
@@ -287,7 +287,7 @@ export declare namespace AnchoredBox {
    *
    * **Example** (Declare encoded BottomRight shape)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Declare encoded BottomRight shape"
    * import type { AnchoredBox } from "@beep/dock"
    *
    * const encoded: AnchoredBox.Encoded = {
@@ -297,7 +297,7 @@ export declare namespace AnchoredBox {
    *   width: 640,
    *   height: 480
    * }
-   * console.log(encoded.width) // 640
+   * encoded.width // => 640
    * ```
    *
    * @category value-objects

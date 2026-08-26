@@ -856,10 +856,10 @@ export interface SendHandlerBox {
  *
  * **Example** (Calling unbound sentinel)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Calling unbound sentinel"
  * import { unboundSend } from "@beep/editor/chat/atoms"
  *
- * console.log(unboundSend()) // undefined
+ * unboundSend() // => undefined
  * ```
  *
  * @category constants

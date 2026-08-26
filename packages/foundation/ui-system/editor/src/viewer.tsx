@@ -127,14 +127,14 @@ const encodeOnce = (state: SerializedEditorState.Type): { readonly decorated: st
  *
  * **Example** (Build props with className)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build props with className"
  * import type { EditorViewerProps } from "@beep/editor/viewer"
  *
  * const withProse = (state: EditorViewerProps["state"]): EditorViewerProps => ({
  *   state,
  *   className: "prose",
  * })
- * console.log(typeof withProse) // "function"
+ * typeof withProse // => "function"
  * ```
  *
  * @category models
@@ -152,13 +152,13 @@ export interface EditorViewerProps {
  *
  * **Example** (Minimal result-only props)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Minimal result-only props"
  * import type { EditorCompatibilityViewerProps } from "@beep/editor/viewer"
  *
  * const withoutExtraClasses = (
  *   result: EditorCompatibilityViewerProps["result"]
  * ): EditorCompatibilityViewerProps => ({ result })
- * console.log(typeof withoutExtraClasses) // "function"
+ * typeof withoutExtraClasses // => "function"
  * ```
  *
  * @category models
@@ -176,7 +176,7 @@ export interface EditorCompatibilityViewerProps {
  *
  * **Example** (Props with wire input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Props with wire input"
  * import type { EditorWireViewerProps } from "@beep/editor/viewer"
  *
  * const props: EditorWireViewerProps = {
@@ -190,7 +190,7 @@ export interface EditorCompatibilityViewerProps {
  *     }
  *   },
  * }
- * console.log(typeof props.input) // "object"
+ * typeof props.input // => "object"
  * ```
  *
  * @category models

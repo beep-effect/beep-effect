@@ -33,11 +33,11 @@ const unsafeDiagramMessage = "Diagram output did not satisfy the desktop safety 
  *
  * **Example** (Make mermaid render error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make mermaid render error"
  * import { MermaidRenderError } from "@beep/editor/mermaid-view"
  *
  * const error = MermaidRenderError.make({ message: "Unable to render diagram." })
- * console.log(error._tag) // "MermaidRenderError"
+ * error._tag // => "MermaidRenderError"
  * ```
  *
  * @category errors

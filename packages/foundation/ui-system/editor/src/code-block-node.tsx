@@ -41,7 +41,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *
  * **Example** (Make typescript code payload)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make typescript code payload"
  * import { SerializedCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * const payload = SerializedCodeBlockNode.make({
@@ -51,7 +51,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *   language: "typescript",
  * })
  *
- * console.log(payload.language) // "typescript"
+ * payload.language // => "typescript"
  * ```
  *
  * @category models

@@ -220,10 +220,10 @@ const MENU_VIEWPORT_GAP_PX = 4;
  *
  * **Example** (True when caret near bottom)
  *
- * ```ts
+ * ```ts import.meta.vitest name="True when caret near bottom"
  * import { shouldOpenUpward } from "@beep/editor/chat/typeahead"
  *
- * console.log(shouldOpenUpward({ caretTop: 700, caretBottom: 720, viewportHeight: 800 })) // true
+ * shouldOpenUpward({ caretTop: 700, caretBottom: 720, viewportHeight: 800 }) // => true
  * ```
  *
  * @category utilities
@@ -248,7 +248,7 @@ export const shouldOpenUpward = ({
  *
  * **Example** (Clamped position above caret)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Clamped position above caret"
  * import { typeaheadMenuPosition } from "@beep/editor/chat/typeahead"
  *
  * const position = typeaheadMenuPosition({
@@ -256,7 +256,7 @@ export const shouldOpenUpward = ({
  *   viewportHeight: 800,
  *   viewportWidth: 1280
  * })
- * console.log(position.bottom) // 104
+ * position.bottom // => 104
  * ```
  *
  * @category utilities

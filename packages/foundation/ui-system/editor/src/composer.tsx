@@ -42,10 +42,10 @@ const resolvedCompatibilityProfile = Result.getOrThrow(
  *
  * **Example** (Import markdown transformers)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Import markdown transformers"
  * import { markdownTransformers } from "@beep/editor/composer"
  *
- * console.log(markdownTransformers.length > 0) // true
+ * markdownTransformers.length > 0 // => true
  * ```
  *
  * @category configuration
@@ -58,11 +58,11 @@ export const markdownTransformers = TRANSFORMERS;
  *
  * **Example** (Type EditorComposer props)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type EditorComposer props"
  * import type { EditorComposerProps } from "@beep/editor/composer"
  *
  * const props: EditorComposerProps = { placeholder: "Draft response" }
- * console.log(props.placeholder) // "Draft response"
+ * props.placeholder // => "Draft response"
  * ```
  *
  * @category models
@@ -90,7 +90,7 @@ export interface EditorComposerProps {
  *
  * **Example** (Type wire composer props)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type wire composer props"
  * import type { EditorWireComposerProps } from "@beep/editor/composer"
  *
  * const props: EditorWireComposerProps = {
@@ -104,7 +104,7 @@ export interface EditorComposerProps {
  *     }
  *   },
  * }
- * console.log(typeof props.input) // "object"
+ * typeof props.input // => "object"
  * ```
  *
  * @category models
