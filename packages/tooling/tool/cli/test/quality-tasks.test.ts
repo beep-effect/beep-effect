@@ -44,6 +44,8 @@ import {
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
+  FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
+  FlakeQuarantineArtifactJson,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneSpec,
@@ -4069,6 +4071,65 @@ describe("quality task adapter", () => {
           expect(errorText).toContain("[beep-cli] test:stream: failed 1 step(s)");
           expect(errorText).toContain("[beep-cli]   test:first: exit 7");
           expect(errorText).toContain("[beep-cli]     command: bun -e process.exit(7)");
+        })
+      )
+    ));
+
+  it("quarantines distinct TS2589 tasks exposed by resumed lane runs", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const statePath = path.join(process.cwd(), "quarantine-wave.txt");
+          const source = A.join(
+            [
+              'const statePath = "quarantine-wave.txt";',
+              "const stateFile = Bun.file(statePath);",
+              "const invocation = (await stateFile.exists()) ? Number(await stateFile.text()) : 0;",
+              "await Bun.write(statePath, String(invocation + 1));",
+              'const filter = process.argv.find((arg) => arg.startsWith("--filter="));',
+              "const failTs2589 = (packageName) => {",
+              "  console.error(`${packageName}:build: error TS2589: Type instantiation is excessively deep and possibly infinite.`);",
+              "  console.error(`Failed:    ${packageName}#build`);",
+              "  process.exit(2);",
+              "};",
+              'if (invocation === 0 && filter === undefined) failTs2589("@beep/xai");',
+              'if (invocation === 1 && filter === "--filter=@beep/xai") process.exit(0);',
+              'if (invocation === 2 && filter === undefined) failTs2589("@beep/ui");',
+              'if (invocation === 3 && filter === "--filter=@beep/ui") process.exit(0);',
+              "if (invocation === 4 && filter === undefined) process.exit(0);",
+              "process.exit(9);",
+            ],
+            "\n"
+          );
+          const step = QualityTaskStep.make({
+            label: "test:quarantine-waves",
+            command: "bun",
+            args: ["-e", source],
+            cwd: process.cwd(),
+            flakeQuarantine: "ts2589-no-location",
+          });
+
+          yield* runQualityTaskStreamingStepGroupForTesting("test:stream", [step]);
+
+          const artifactText = yield* fs.readFileString(
+            path.join(process.cwd(), FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH)
+          );
+          const artifact = yield* FlakeQuarantineArtifactJson.decode(artifactText);
+          expect(A.map(artifact.incidents, (incident) => incident.taskId)).toEqual([
+            "@beep/xai#build",
+            "@beep/ui#build",
+          ]);
+          expect(yield* fs.readFileString(statePath)).toBe("5");
+
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(logText).toContain(
+            "[flake-quarantine] test:quarantine-waves: lane rerun failed with exit 2; checking for another quarantinable task"
+          );
+          expect(logText).toContain(
+            "[flake-quarantine] test:quarantine-waves: quarantined 2 environment-only TS2589 flake incident(s); lane rerun green"
+          );
         })
       )
     ));

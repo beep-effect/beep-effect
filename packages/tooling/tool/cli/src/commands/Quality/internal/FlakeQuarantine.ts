@@ -22,7 +22,8 @@
  *   also disqualifies),
  * - Turbo's `Failed:` footer names at least one task, every failed task is
  *   attributed to a no-location TS2589 line, and at most
- *   {@link MAX_QUARANTINED_TASKS_PER_LANE} tasks failed,
+ *   {@link MAX_QUARANTINED_TASKS_PER_LANE} distinct tasks are quarantined
+ *   across the original failure and resumed lane failures,
  * - the captured output was not truncated (enforced by the caller, which has
  *   the truncation flag).
  *
@@ -71,8 +72,10 @@ export const FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH = ".beep/yeet/flake-quarant
  *
  * **Details**
  *
- * The established flake class strikes one near-ceiling package per lane; a
- * larger failed set is not that class and stays a hard failure.
+ * The established flake class can strike near-ceiling packages in sequence as
+ * Turbo resumes a cold graph. The runner accepts at most this many distinct
+ * tasks across the original failure and resumed lane failures. A larger set
+ * stays a hard failure.
  *
  * **Example** (Log max quarantined tasks)
  *
@@ -466,12 +469,11 @@ export const standaloneQuarantineRerunStep: {
  * **Details**
  *
  * Reruns direct Turbo and root-script lanes with Turbo concurrency pinned to
- * one, the quarantine policy stripped (no recursive quarantine), and
- * `TURBO_FORCE` removed. A nested CI lane retains its internally owned
- * concurrency policy. Tasks proven green in the failed run replay from that
- * run's cache, while tasks Turbo skipped after the flake execute under the
- * lane's bounded policy. This keeps the recovery proof bounded without
- * reintroducing the concurrent compiler pressure that caused the flake.
+ * one, the quarantine policy stripped, and `TURBO_FORCE` removed. The caller
+ * inspects a failed rerun and may start another bounded quarantine wave. A
+ * nested CI lane retains its internally owned concurrency policy. Tasks proven
+ * green in the failed run replay from that run's cache, while tasks Turbo
+ * skipped after the flake execute under the lane's bounded policy.
  *
  * **Example** (Build lane rerun step)
  *
