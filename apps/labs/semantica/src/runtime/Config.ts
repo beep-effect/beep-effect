@@ -49,7 +49,7 @@ class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
  *
  * `SEMANTICA_CORPUS_ROOT` is optional so the shell can start in a typed degraded
  * mode. `SEMANTICA_PROVIDER_CACHE_DIR` defaults to the repository-local cache
- * directory, `SEMANTICA_XAI_MODEL` defaults to `grok-4`, and
+ * directory, `SEMANTICA_XAI_MODEL` defaults to `grok-4.6`, and
  * `SEMANTICA_OFFLINE` selects explicit `replay` mode when true.
  *
  * **Example** (Read runtime configuration)
@@ -71,7 +71,7 @@ const labConfig = Config.all({
   corpusRoot: Config.option(Config.nonEmptyString("SEMANTICA_CORPUS_ROOT")),
   extractorModel: Config.nonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault("claude-sonnet-4-5-20250929")),
   goldDirectory: Config.nonEmptyString("SEMANTICA_GOLD_DIR").pipe(Config.withDefault("fixtures/gold/v1")),
-  goldModel: Config.nonEmptyString("SEMANTICA_XAI_MODEL").pipe(Config.withDefault("grok-4")),
+  goldModel: Config.nonEmptyString("SEMANTICA_XAI_MODEL").pipe(Config.withDefault("grok-4.6")),
   ledgerRoot: Config.nonEmptyString("SEMANTICA_LEDGER_ROOT").pipe(Config.withDefault(".beep/semantica/ledger")),
   offline: Config.boolean("SEMANTICA_OFFLINE").pipe(Config.withDefault(false)),
   providerCacheDirectory: Config.nonEmptyString("SEMANTICA_PROVIDER_CACHE_DIR").pipe(

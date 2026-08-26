@@ -34,7 +34,7 @@ describe("Semantica runtime layer", () => {
         expect(config.corpusRoot).toEqual(O.some("/fixtures/w1"));
         expect(config.extractorModel).toBe("claude-sonnet-4-5-20250929");
         expect(config.goldDirectory).toBe("fixtures/gold/v1");
-        expect(config.goldModel).toBe("grok-4");
+        expect(config.goldModel).toBe("grok-4.6");
         expect(config.ledgerRoot).toBe(".beep/semantica/ledger");
         expect(config.mode).toBe("replay");
         expect(config.offline).toBe(true);
@@ -48,7 +48,7 @@ describe("Semantica runtime layer", () => {
         const config = yield* provideScopedLayer(runtimeFromEnv({}))(LabConfig);
 
         expect(config.corpusRoot).toEqual(O.none());
-        expect(config.goldModel).toBe("grok-4");
+        expect(config.goldModel).toBe("grok-4.6");
         expect(config.mode).toBe("live");
         expect(config.offline).toBe(false);
         expect(config.providerCacheDirectory).toBe(".beep/semantica/provider-cache");

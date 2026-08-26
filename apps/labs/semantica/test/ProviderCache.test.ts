@@ -706,7 +706,7 @@ describe("C0 provider cache and language-model boundary", () => {
       })
     ));
 
-  it.each(["grok-test-20260826", "grok-build-v2", "grok-build@3", "grok-build:2026"])(
+  it.each(["grok-test-20260826", "grok-build-v2", "grok-build@3", "grok-build:2026", "grok-4.6"])(
     "retains an explicit model revision verbatim for %s",
     (modelId) =>
       Effect.runPromise(
