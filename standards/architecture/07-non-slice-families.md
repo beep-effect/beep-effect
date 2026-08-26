@@ -40,8 +40,8 @@ Route in this order:
 2. External engines, SDKs, services, frameworks, and browser platform wrappers
    go to `drivers`.
 3. Repo operations, generators, policy packs, and automation go to `tooling`.
-4. Product-agnostic UI primitives, themes, tokens, hooks, and composition
-   helpers go to `foundation/ui-system`.
+4. Product-agnostic UI primitives, themes, tokens, hooks, composition
+   helpers, and repo brand identity go to `foundation/ui-system`.
 5. Only remaining repo-owned, domain-agnostic technical services may go to
    `foundation/capability`.
 
@@ -198,6 +198,20 @@ This keeps the mental model clean:
 - slice UI owns product screens and workflows
 - shared kernel owns cross-slice product language
 - `foundation/ui-system` owns product-agnostic UI primitives
+
+### Brand Identity Is A Design-System Role
+
+Repo brand identity (marks, palettes, type stacks, favicons, wordmarks) is not
+product-domain language: no slice owns it, and putting it in `shared/*` would
+make every slice depend on a logo. It is a design-system role, so it routes to
+`foundation/ui-system` as its own package, `@beep/brand`, rather than into
+`@beep/ui`. Keeping the two apart lets an app that carries a different identity
+(`apps/oip-web`) consume `@beep/ui` without inheriting beep colors, and lets a
+demo take the mark and palette without the component library's dependency
+weight. The dependency direction is `@beep/ui -> @beep/brand`, never the
+reverse. Brand tokens are schema-decoded data; the stylesheet and SVG assets
+are generated from them and proven current by a parity test. The `assets/`
+anchor holds those generated files and their rasterised icon set.
 
 `ui-system` is a side branch of foundation. It may depend on
 `foundation/primitive` and `foundation/modeling`, but it does not depend on

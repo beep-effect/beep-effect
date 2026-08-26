@@ -518,11 +518,15 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const first = "graph TD\nFirst-->Paint";
       const second = "graph TD\nSecond-->Paint";
-      const view = render(<MermaidView renderKey="multi-first" source={first} />);
+      const view = render(
+        <div>
+          <MermaidView renderKey="multi-first" source={first} />
+        </div>
+      );
       yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(first)).toBe(true)));
-      const firstRender = getPendingRender(first);
 
       yield* Effect.sync(() => {
+        const firstRender = getPendingRender(first);
         act(() =>
           firstRender.resolve({
             svg: mermaidSvg(
@@ -532,18 +536,20 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           })
         );
       });
-      yield* Effect.promise(() => waitFor(() => expect(view.container.querySelector("[data-multi-diagram='first']"))));
+      yield* Effect.promise(() =>
+        waitFor(() => expect(view.container.querySelector("[data-multi-diagram='first']")).toBeInTheDocument())
+      );
 
       view.rerender(
-        <>
+        <div>
           <MermaidView renderKey="multi-first" source={first} />
           <MermaidView renderKey="multi-second" source={second} />
-        </>
+        </div>
       );
       yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(second)).toBe(true)));
-      const secondRender = getPendingRender(second);
 
       yield* Effect.sync(() => {
+        const secondRender = getPendingRender(second);
         act(() =>
           secondRender.resolve({
             svg: mermaidSvg(
@@ -560,6 +566,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       const paths = view.container.querySelectorAll("[data-multi-diagram]");
       const firstTarget = paths[0]?.getAttribute("fill");
       const secondTarget = paths[1]?.getAttribute("fill");
+      expect(mermaidStub.render).toHaveBeenCalledTimes(2);
       expect(firstTarget).toContain("-fragment-");
       expect(secondTarget).toContain("-fragment-");
       expect(firstTarget).not.toBe(secondTarget);
