@@ -3,10 +3,8 @@
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { ConfigProvider, Crypto, Effect, Encoding, Exit, Layer } from "effect";
+import { ConfigProvider, Crypto, Effect, Encoding, Equal, Exit, FileSystem, HashSet, Layer, Path } from "effect";
 import * as A from "effect/Array";
-import * as FileSystem from "effect/FileSystem";
-import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
@@ -18,9 +16,12 @@ import { CorpusManifest, CorpusPaperId, ManifestDrift } from "@/corpus/Manifest"
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 import {
   F1Catalog,
+  F1CatalogLive,
   F1Diff,
   F1Drift,
+  F1Fixture,
   F1FixtureId,
+  F1Index,
   F1IndexDecodeFailed,
   FixtureMediaType,
   isF1FixtureId,
@@ -30,6 +31,7 @@ import { generateF1Pdfs } from "../scripts/generate-f1-pdfs";
 
 const ManifestFromJsonString = S.fromJsonString(CorpusManifest);
 const ManifestToJsonString = S.fromJsonString(CorpusManifest, { space: 2 });
+const F1IndexFromJsonString = S.fromJsonString(F1Index);
 
 const runtimeFromEnv = (env: Record<string, string>) =>
   RuntimeLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
@@ -71,6 +73,7 @@ describe("W1 corpus manifest", () => {
           const duplicateRows = A.make(first, first, ...tail);
 
           expect(decoded).toEqual(manifest);
+          expect(A.length(encoded.rows)).toBe(25);
           expect(
             yield* rejectsManifest({
               ...encoded,
@@ -83,6 +86,15 @@ describe("W1 corpus manifest", () => {
               ...encoded,
               rows: duplicateRows,
               corpusHash: digestRows(duplicateRows),
+            })
+          ).toBe(true);
+          expect(
+            yield* rejectsManifest({
+              ...encoded,
+              selection: {
+                ...encoded.selection,
+                onDisk: 24,
+              },
             })
           ).toBe(true);
           expect(
@@ -170,6 +182,95 @@ describe("F1 fixtures", () => {
     expect(drift._tag).toBe("F1Drift");
     expect(decodeFailure._tag).toBe("F1IndexDecodeFailed");
   });
+
+  it("rejects paths outside the direct F1 documents root in fixtures and indexes", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const source = yield* fs.readFileString("fixtures/f1/index.json");
+          const index = yield* S.decodeEffect(F1IndexFromJsonString)(source);
+          const encoded = yield* S.encodeEffect(F1Index)(index);
+          const first = A.getUnsafe(encoded.fixtures, 0);
+          const tail = A.drop(encoded.fixtures, 1);
+          const invalidRelativePaths = A.make(
+            "/documents/md-structure.md",
+            "documents/..",
+            "documents/../md-structure.md",
+            "documents/md\\structure.md",
+            "documents/nested/md-structure.md"
+          );
+
+          yield* Effect.forEach(
+            invalidRelativePaths,
+            Effect.fnUntraced(function* (relativePath) {
+              const invalidFixture = { ...first, relativePath };
+              const fixtureRejected = yield* S.decodeEffect(F1Fixture)(invalidFixture).pipe(
+                Effect.exit,
+                Effect.map(Exit.isFailure)
+              );
+              const indexRejected = yield* S.decodeEffect(F1Index)({
+                ...encoded,
+                fixtures: A.make(invalidFixture, ...tail),
+              }).pipe(Effect.exit, Effect.map(Exit.isFailure));
+
+              expect(fixtureRejected).toBe(true);
+              expect(indexRejected).toBe(true);
+            })
+          );
+        })
+      )
+    ));
+
+  it("preserves every fixture id when duplicate relative paths drift", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const source = yield* fs.readFileString("fixtures/f1/index.json");
+          const index = yield* S.decodeEffect(F1IndexFromJsonString)(source);
+          const encoded = yield* S.encodeEffect(F1Index)(index);
+          const first = A.getUnsafe(encoded.fixtures, 0);
+          const second = A.getUnsafe(encoded.fixtures, 1);
+          const duplicatePathFixtures = A.make(
+            first,
+            { ...second, relativePath: first.relativePath },
+            ...A.drop(encoded.fixtures, 2)
+          );
+          const duplicatePathIndex = yield* S.decodeEffect(F1Index)({
+            ...encoded,
+            fixtures: duplicatePathFixtures,
+          });
+          const duplicatePathSource = yield* S.encodeEffect(F1IndexFromJsonString)(duplicatePathIndex);
+          const testFileSystem = FileSystem.makeNoop({
+            readFileString: () => Effect.succeed(duplicatePathSource),
+          });
+          const catalogLayer = F1CatalogLive.pipe(
+            Layer.provide(
+              Layer.merge(Layer.succeed(FileSystem.FileSystem, testFileSystem), Layer.succeed(Path.Path, path))
+            )
+          );
+          const drift = yield* provideScopedLayer(catalogLayer)(
+            F1Catalog.pipe(
+              Effect.flatMap((catalog) => catalog.load),
+              Effect.flip
+            )
+          );
+
+          expect(drift).toBeInstanceOf(F1Drift);
+          if (drift._tag === "F1Drift") {
+            const collidingDiffs = A.filter(drift.diffs, (diff) =>
+              Str.Equivalence(diff.relativePath, first.relativePath)
+            );
+            const collidingIds = HashSet.fromIterable(A.map(collidingDiffs, (diff) => diff.id));
+
+            expect(A.length(collidingDiffs)).toBe(2);
+            expect(Equal.equals(collidingIds, HashSet.make(first.id, second.id))).toBe(true);
+          }
+        })
+      )
+    ));
 
   it("decodes the committed index and verifies every fixture hash and byte length", () =>
     Effect.runPromise(

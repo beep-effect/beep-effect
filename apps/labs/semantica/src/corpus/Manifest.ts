@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Encoding, Equal, HashSet, Order, Tuple } from "effect";
+import { Encoding, Equal, HashSet, Number as N, Order, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -123,6 +123,26 @@ export class CorpusManifestRow extends S.Class<CorpusManifestRow>($I`CorpusManif
   })
 ) {}
 
+const CorpusManifestSelectionFields = S.Struct({
+  rule: S.Literal("first-25-by-id"),
+  take: S.Literal(25),
+  onDisk: NonNegativeInt,
+});
+
+const CorpusManifestSelectionDefinition = CorpusManifestSelectionFields.check(
+  S.makeFilter(
+    (selection: typeof CorpusManifestSelectionFields.Type) =>
+      N.isGreaterThanOrEqualTo(selection.onDisk, selection.take),
+    {
+      identifier: $I`CorpusManifestSelectionSourceCensus`,
+      title: "Corpus manifest source census",
+      description:
+        "Requires the source PDF census to contain at least as many papers as the committed selection takes.",
+      message: "Corpus manifest selection.onDisk must be greater than or equal to selection.take.",
+    }
+  )
+);
+
 /**
  * Selection receipt that records how the committed W1 rows were chosen.
  *
@@ -144,11 +164,7 @@ export class CorpusManifestRow extends S.Class<CorpusManifestRow>($I`CorpusManif
  * @since 0.0.0
  */
 export class CorpusManifestSelection extends S.Class<CorpusManifestSelection>($I`CorpusManifestSelection`)(
-  {
-    rule: S.Literal("first-25-by-id"),
-    take: S.Literal(25),
-    onDisk: NonNegativeInt,
-  },
+  CorpusManifestSelectionDefinition,
   $I.annote("CorpusManifestSelection", {
     description: "Deterministic first-25 selection rule and source PDF count used to define W1.",
   })

@@ -4,7 +4,7 @@ Date: 2026-08-25. Branch: `feat/semantica-p1-fixtures` (after the mint, PR #819)
 
 W1 is defined by the committed manifest only (B3): the first 25 of the 76
 on-disk academia-corpus PDFs by corpus-id sort, one row per paper with id,
-sha256, and byte length. The PDFs themselves are never committed. No Oppold
+sha256, and byte length. The PDFs themselves are never committed. No private-corpus
 reference anywhere (D14).
 
 ## W1 manifest
@@ -47,6 +47,7 @@ dates; the lab test regenerates them twice into temp dirs and asserts the
 committed sha256s. `F1Catalog.load` verifies every byte length and digest at
 the boundary.
 
-`gold/v1` (PLAN P1 step 8) is deferred to the first C0 slice PR: it needs a
-hosted proposer of a different provider family than the extractor plus the
-spot-check pass, both decided with the C0 extractor choice.
+`gold/v1` (PLAN P1 step 8) rides its own gold-proposer PR before the first C0
+slice: the gold ids are frozen from the manifest order (first 10 / 5 / 3), the
+proposer is a hosted model of a different provider family than the extractor,
+and the spot-check pass only annotates (research/c0-design.md, D-C0-9).

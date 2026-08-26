@@ -10,6 +10,7 @@ import { ByteDrift, ByteExpectation, verifyByteExpectations } from "@/corpus/Byt
 const $I = $SemanticaId.create("fixtures/F1");
 
 const fixtureIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const f1FixtureRelativePathPattern = /^documents\/(?!\.{1,2}$)[^/\\]+$/u;
 
 /**
  * Branded kebab-case identifier for one synthetic F1 document.
@@ -153,9 +154,22 @@ export const FixtureDegradedKind = LiteralKit(["invalid-utf8", "truncated", "mal
  */
 export type FixtureDegradedKind = typeof FixtureDegradedKind.Type;
 
+const F1FixtureRelativePath = S.String.check(
+  S.isPattern(f1FixtureRelativePathPattern, {
+    identifier: $I`F1FixtureRelativePathPattern`,
+    title: "F1 fixture relative path",
+    description: "A path to one file exactly one directory level beneath the F1 documents root.",
+    message: "F1 fixture relativePath must match documents/<file> without traversal or backslashes.",
+  })
+).pipe(
+  $I.annoteSchema("F1FixtureRelativePath", {
+    description: "Safe relative path to one file directly beneath the F1 documents root.",
+  })
+);
+
 const F1FixtureFields = S.Struct({
   id: F1FixtureId,
-  relativePath: S.NonEmptyString,
+  relativePath: F1FixtureRelativePath,
   mediaType: FixtureMediaType,
   expectation: FixtureExpectation,
   degradedKind: S.OptionFromNullOr(FixtureDegradedKind),
@@ -473,23 +487,20 @@ const makeF1Catalog = Effect.gen(function* () {
       )
     );
     const fixtureRoot = path.dirname(F1_INDEX_PATH);
-    const byteDrifts = yield* verifyByteExpectations(
-      fixtureRoot,
-      A.map(index.fixtures, (fixture) =>
-        ByteExpectation.make({
-          relativePath: fixture.relativePath,
-          sha256: fixture.sha256,
-          bytes: fixture.bytes,
-        })
-      )
-    ).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.provideService(Path.Path, path));
-    const findFixture = (relativePath: string) =>
-      Effect.fromOption(
-        A.findFirst(index.fixtures, (fixture) => Str.Equivalence(fixture.relativePath, relativePath))
-      ).pipe(Effect.orDie);
-    const diffs = yield* Effect.forEach(byteDrifts, (drift) =>
-      findFixture(drift.relativePath).pipe(Effect.map((fixture) => toF1Diff(fixture, drift)))
-    );
+    const verifyFixture = Effect.fn("F1Catalog.verifyFixture")(function* (fixture: F1Fixture) {
+      const byteDrifts = yield* verifyByteExpectations(
+        fixtureRoot,
+        A.make(
+          ByteExpectation.make({
+            relativePath: fixture.relativePath,
+            sha256: fixture.sha256,
+            bytes: fixture.bytes,
+          })
+        )
+      ).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.provideService(Path.Path, path));
+      return A.map(byteDrifts, (drift) => toF1Diff(fixture, drift));
+    });
+    const diffs = yield* Effect.forEach(index.fixtures, verifyFixture, { concurrency: 4 }).pipe(Effect.map(A.flatten));
     if (A.isReadonlyArrayNonEmpty(diffs)) {
       return yield* F1Drift.make({
         message: "F1 fixture drift detected.",

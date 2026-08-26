@@ -52,7 +52,8 @@ Use this command for execution-capable sessions:
 
 P1 Scaffold, step 2 landed F1 (nine synthetic specimens) and the W1 manifest
 (`corpusHash` in [`history/p1-w1-manifest.md`](./history/p1-w1-manifest.md));
-`gold/v1` rides the first C0 slice PR. Step 1 is done: the lab
+`gold/v1` rides its own gold-proposer PR before the first C0 slice (ids frozen from the
+manifest order, D-C0-9). Step 1 is done: the lab
 was minted at [`apps/labs/semantica`](../../apps/labs/semantica/README.md)
 with `--app-kind tauri --lab`, the one local `cargo check` is recorded, `src-tauri`
 is frozen through C2 (S4), and the headless entry (server/main.ts) plus the
