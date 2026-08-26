@@ -27,11 +27,11 @@ const NoOpenValueBase = LiteralKit([defaultValue]);
  *
  * **Example** (Validate noopen header value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate noopen header value"
  * import * as S from "effect/Schema"
  * import { NoOpenValue } from "@beep/schema/NoOpen"
  *
- * console.log(S.is(NoOpenValue)("noopen")) // true
+ * S.is(NoOpenValue)("noopen") // => true
  * ```
  *
  * @category schemas

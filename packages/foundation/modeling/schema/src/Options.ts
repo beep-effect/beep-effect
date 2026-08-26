@@ -39,7 +39,7 @@ import * as S from "effect/Schema";
  *
  * **Example** (Decode optional nullish key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode optional nullish key"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OptionFromOptionalNullishKey } from "@beep/schema"
@@ -54,14 +54,14 @@ import * as S from "effect/Schema";
  * const nullish = decode({ nickname: null })
  * const present = decode({ nickname: "beep" })
  *
- * console.log(O.isNone(missing.nickname)) // true
- * console.log(O.isNone(nullish.nickname)) // true
- * console.log(O.getOrUndefined(present.nickname)) // "beep"
+ * O.isNone(missing.nickname) // => true
+ * O.isNone(nullish.nickname) // => true
+ * O.getOrUndefined(present.nickname) // => "beep"
  * ```
  *
  * **Example** (Encode None as null)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode None as null"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OptionFromOptionalNullishKey } from "@beep/schema"
@@ -75,8 +75,8 @@ import * as S from "effect/Schema";
  * const encodedNone = encode({ homepage: O.none() })
  * const encodedSome = encode({ homepage: O.some(new URL("https://example.com")) })
  *
- * console.log(encodedNone) // { homepage: null }
- * console.log(encodedSome) // { homepage: "https://example.com/" }
+ * encodedNone // => { homepage: null }
+ * encodedSome // => { homepage: "https://example.com/" }
  * ```
  *
  * @typeParam Schema - Schema used when the key is present with a non-nullish value.

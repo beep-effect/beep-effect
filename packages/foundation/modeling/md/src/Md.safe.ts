@@ -42,14 +42,14 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *
  * **Example** (Use DocumentSafetyPathSegment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use DocumentSafetyPathSegment"
  * import { DocumentSafetyPathSegment } from "@beep/md/Md.safe"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(DocumentSafetyPathSegment)(2)
  * if (Result.isSuccess(decoded)) {
- *   console.log(decoded.success) // 2
+ *   decoded.success // => 2
  * }
  * ```
  *
@@ -68,11 +68,11 @@ export const DocumentSafetyPathSegment = S.Union([S.String, S.Int.check(S.isGrea
  *
  * **Example** (Use DocumentSafetyPathSegment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use DocumentSafetyPathSegment"
  * import type { DocumentSafetyPathSegment } from "@beep/md/Md.safe"
  *
  * const segment: DocumentSafetyPathSegment = "children"
- * console.log(segment) // "children"
+ * segment // => "children"
  * ```
  *
  * @category models
@@ -85,11 +85,11 @@ export type DocumentSafetyPathSegment = typeof DocumentSafetyPathSegment.Type;
  *
  * **Example** (Use RawNodeSafetyViolation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use RawNodeSafetyViolation"
  * import { RawNodeSafetyViolation } from "@beep/md/Md.safe"
  *
  * const issue = RawNodeSafetyViolation.make({ path: ["children", 0], nodeTag: "rawHtml" })
- * console.log(issue._tag) // "RawNode"
+ * issue._tag // => "RawNode"
  * ```
  *
  * @category errors
@@ -186,7 +186,7 @@ export type UrlNodeTag = typeof UrlNodeTag.Type;
  *
  * **Example** (Use UrlSafetyViolation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use UrlSafetyViolation"
  * import { UrlSafetyViolation } from "@beep/md/Md.safe"
  *
  * const issue = UrlSafetyViolation.make({
@@ -195,7 +195,7 @@ export type UrlNodeTag = typeof UrlNodeTag.Type;
  *   destination: "http://example.com",
  *   destinationKind: "link",
  * })
- * console.log(issue.destinationKind) // "link"
+ * issue.destinationKind // => "link"
  * ```
  *
  * @category errors
@@ -220,11 +220,11 @@ export class UrlSafetyViolation extends S.TaggedClass<UrlSafetyViolation>($I`Url
  *
  * **Example** (Use ScalarSafetyViolation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use ScalarSafetyViolation"
  * import { ScalarSafetyViolation } from "@beep/md/Md.safe"
  *
  * const issue = ScalarSafetyViolation.make({ path: ["children", 0, "value"] })
- * console.log(issue._tag) // "InvalidScalar"
+ * issue._tag // => "InvalidScalar"
  * ```
  *
  * @category errors
@@ -246,14 +246,14 @@ export class ScalarSafetyViolation extends S.TaggedError<ScalarSafetyViolation>(
  *
  * **Example** (Use DuplicateFootnoteDefinitionSafetyViolation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use DuplicateFootnoteDefinitionSafetyViolation"
  * import { DuplicateFootnoteDefinitionSafetyViolation } from "@beep/md/Md.safe"
  *
  * const issue = DuplicateFootnoteDefinitionSafetyViolation.make({
  *   identifier: "note",
  *   path: ["children", 1, "identifier"],
  * })
- * console.log(issue._tag) // "DuplicateFootnoteDefinition"
+ * issue._tag // => "DuplicateFootnoteDefinition"
  * ```
  *
  * @category errors
@@ -278,12 +278,12 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
  *
  * **Example** (Use DocumentSafetyViolation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use DocumentSafetyViolation"
  * import { DocumentSafetyViolation, RawNodeSafetyViolation } from "@beep/md/Md.safe"
  * import * as S from "effect/Schema"
  *
  * const issue = RawNodeSafetyViolation.make({ path: [], nodeTag: "rawMarkdown" })
- * console.log(S.is(DocumentSafetyViolation)(issue)) // true
+ * S.is(DocumentSafetyViolation)(issue) // => true
  * ```
  *
  * @category errors
@@ -305,12 +305,12 @@ export const DocumentSafetyViolation = S.Union([
  *
  * **Example** (Use DocumentSafetyViolation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use DocumentSafetyViolation"
  * import { RawNodeSafetyViolation } from "@beep/md/Md.safe"
  * import type { DocumentSafetyViolation } from "@beep/md/Md.safe"
  *
  * const issue: DocumentSafetyViolation = RawNodeSafetyViolation.make({ path: [], nodeTag: "rawHtml" })
- * console.log(issue._tag) // "RawNode"
+ * issue._tag // => "RawNode"
  * ```
  *
  * @category errors
@@ -598,11 +598,11 @@ export const documentSafetyIssues = (document: Document): ReadonlyArray<Document
  *
  * **Example** (Use inlineSafetyIssuesAtRoot)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use inlineSafetyIssuesAtRoot"
  * import { Md } from "@beep/md"
  * import { inlineSafetyIssuesAtRoot } from "@beep/md/Md.safe"
  *
- * console.log(inlineSafetyIssuesAtRoot(Md.a("http://example.com", "link")).length) // 1
+ * inlineSafetyIssuesAtRoot(Md.a("http://example.com", "link")).length // => 1
  * ```
  *
  * @category validation
@@ -635,13 +635,13 @@ const SafeDocumentCheck = S.makeFilter<Document>(
  *
  * **Example** (Use SafeInline)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use SafeInline"
  * import { SafeInline } from "@beep/md/Md.safe"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(SafeInline)({ _tag: "text", value: "Hello" })
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category validation
@@ -661,7 +661,7 @@ export const SafeInline = Inline.pipe(
  *
  * **Example** (Use SafeInline)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use SafeInline"
  * import { SafeInline } from "@beep/md/Md.safe"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -669,7 +669,7 @@ export const SafeInline = Inline.pipe(
  * const value: SafeInline = Result.getOrThrow(
  *   S.decodeUnknownResult(SafeInline)({ _tag: "text", value: "Hello" })
  * )
- * console.log(value._tag) // "text"
+ * value._tag // => "text"
  * ```
  *
  * @category models
@@ -683,13 +683,13 @@ export type SafeInline = typeof SafeInline.Type;
  *
  * **Example** (Use SafeDocument)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use SafeDocument"
  * import { SafeDocument } from "@beep/md/Md.safe"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(SafeDocument)({ _tag: "document", children: [] })
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category validation
@@ -709,7 +709,7 @@ export const SafeDocument = Document.pipe(
  *
  * **Example** (Use SafeDocument)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use SafeDocument"
  * import { SafeDocument } from "@beep/md/Md.safe"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -717,7 +717,7 @@ export const SafeDocument = Document.pipe(
  * const value: SafeDocument = Result.getOrThrow(
  *   S.decodeUnknownResult(SafeDocument)({ _tag: "document", children: [] })
  * )
- * console.log(value.children.length) // 0
+ * value.children.length // => 0
  * ```
  *
  * @category models
@@ -730,12 +730,12 @@ export type SafeDocument = typeof SafeDocument.Type;
  *
  * **Example** (Use decodeSafeDocument)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use decodeSafeDocument"
  * import { decodeSafeDocument } from "@beep/md/Md.safe"
  * import { Result } from "effect"
  *
  * const result = decodeSafeDocument({ _tag: "document", children: [] })
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category validation
@@ -751,12 +751,12 @@ export const decodeSafeDocument: {
  *
  * **Example** (Use decodeSafeDocumentEffect)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use decodeSafeDocumentEffect"
  * import { decodeSafeDocumentEffect } from "@beep/md/Md.safe"
  * import { Effect } from "effect"
  *
  * const document = Effect.runSync(decodeSafeDocumentEffect({ _tag: "document", children: [] }))
- * console.log(document.children.length) // 0
+ * document.children.length // => 0
  * ```
  *
  * @category validation
@@ -772,10 +772,10 @@ export const decodeSafeDocumentEffect: {
  *
  * **Example** (Use decodeSafeDocumentUnsafe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use decodeSafeDocumentUnsafe"
  * import { decodeSafeDocumentUnsafe } from "@beep/md/Md.safe"
  *
- * console.log(decodeSafeDocumentUnsafe({ _tag: "document", children: [] })._tag) // "document"
+ * decodeSafeDocumentUnsafe({ _tag: "document", children: [] })._tag // => "document"
  * ```
  *
  * @category decoding
@@ -789,12 +789,12 @@ export const decodeSafeDocumentUnsafe = (input: unknown): SafeDocument =>
  *
  * **Example** (Use refineSafeDocument)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Use refineSafeDocument"
  * import { Md } from "@beep/md"
  * import { refineSafeDocument } from "@beep/md/Md.safe"
  * import { Result } from "effect"
  *
- * console.log(Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")])))) // true
+ * Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")]))) // => true
  * ```
  *
  * @category validation

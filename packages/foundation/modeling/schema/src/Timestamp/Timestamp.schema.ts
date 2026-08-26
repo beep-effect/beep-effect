@@ -124,14 +124,14 @@ export type EpochMillis = typeof EpochMillis.Type;
  *
  * **Example** (Normalize fractional ISO string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize fractional ISO string"
  * import * as S from "effect/Schema"
  * import { ToIsoStr } from "@beep/schema/Timestamp"
  *
  * const decode = S.decodeUnknownSync(ToIsoStr)
  *
  * const iso = decode("2024-01-01T00:00:00.123Z")
- * console.log(iso) // "2024-01-01T00:00:00Z"
+ * iso // => "2024-01-01T00:00:00Z"
  * ```
  *
  * @category constructors
@@ -224,13 +224,13 @@ export declare namespace ToIsoStr {
  *
  * **Example** (Compare timestamps with isBefore)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare timestamps with isBefore"
  * import { EpochMillis, Timestamp, isBefore, now } from "@beep/schema/Timestamp"
  *
  * const a = now()
  * const b = Timestamp.make({ epochMillis: EpochMillis.make(0) })
  *
- * console.log(isBefore(b, a)) // true
+ * isBefore(b, a) // => true
  * ```
  *
  * @category constructors

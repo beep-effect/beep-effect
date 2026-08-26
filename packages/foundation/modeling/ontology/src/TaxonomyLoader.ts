@@ -25,11 +25,11 @@ const $I = $OntologyId.create("TaxonomyLoader");
  *
  * **Example** (Reject path traversal)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject path traversal"
  * import { VendorSlicePath } from "@beep/ontology/TaxonomyLoader"
  * import * as S from "effect/Schema"
  *
- * console.log(S.decodeUnknownResult(VendorSlicePath)("../secrets.jsonld")._tag) // "Failure"
+ * S.decodeUnknownResult(VendorSlicePath)("../secrets.jsonld")._tag // => "Failure"
  * ```
  *
  * @category schemas
@@ -53,9 +53,9 @@ export const VendorSlicePath = S.NonEmptyString.check(
  *
  * **Example** (Check VETTED predicate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check VETTED predicate"
  * import { VendorLoadStatus } from "@beep/ontology/TaxonomyLoader"
- * console.log(VendorLoadStatus.is.VETTED("VETTED")) // true
+ * VendorLoadStatus.is.VETTED("VETTED") // => true
  * ```
  *
  * @category schemas

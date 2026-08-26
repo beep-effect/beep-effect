@@ -41,7 +41,7 @@ const adapterMetadata = (canonicalName: string, overview: string) =>
  *
  * **Example** (Decode text-quote selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode text-quote selector"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTextQuoteSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -49,7 +49,7 @@ const adapterMetadata = (canonicalName: string, overview: string) =>
  *   type: "TextQuoteSelector",
  *   exact: "quoted text"
  * })
- * console.log(selector.exact) // "quoted text"
+ * selector.exact // => "quoted text"
  * ```
  *
  * @category models
@@ -78,7 +78,7 @@ export class WebAnnotationTextQuoteSelector extends S.Class<WebAnnotationTextQuo
  *
  * **Example** (Decode text-position selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode text-position selector"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTextPositionSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -87,7 +87,7 @@ export class WebAnnotationTextQuoteSelector extends S.Class<WebAnnotationTextQuo
  *   start: 10,
  *   end: 21
  * })
- * console.log(selector.start) // 10
+ * selector.start // => 10
  * ```
  *
  * @category models
@@ -115,7 +115,7 @@ export class WebAnnotationTextPositionSelector extends S.Class<WebAnnotationText
  *
  * **Example** (Decode fragment selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode fragment selector"
  * import * as S from "effect/Schema"
  * import { WebAnnotationFragmentSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -123,7 +123,7 @@ export class WebAnnotationTextPositionSelector extends S.Class<WebAnnotationText
  *   type: "FragmentSelector",
  *   value: "section-1"
  * })
- * console.log(selector.value) // "section-1"
+ * selector.value // => "section-1"
  * ```
  *
  * @category models
@@ -148,7 +148,7 @@ export class WebAnnotationFragmentSelector extends S.Class<WebAnnotationFragment
  *
  * **Example** (Decode selector union)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode selector union"
  * import * as S from "effect/Schema"
  * import { WebAnnotationSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -157,7 +157,7 @@ export class WebAnnotationFragmentSelector extends S.Class<WebAnnotationFragment
  *   start: 0,
  *   end: 5
  * })
- * console.log(selector.type) // "TextPositionSelector"
+ * selector.type // => "TextPositionSelector"
  * ```
  *
  * @category models
@@ -196,7 +196,7 @@ export type WebAnnotationSelector = typeof WebAnnotationSelector.Type;
  *
  * **Example** (Decode annotation target)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode annotation target"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTarget } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -204,7 +204,7 @@ export type WebAnnotationSelector = typeof WebAnnotationSelector.Type;
  *   source: "https://example.org/document",
  *   selector: { type: "FragmentSelector", value: "section-1" }
  * })
- * console.log(target.selector.type) // "FragmentSelector"
+ * target.selector.type // => "FragmentSelector"
  * ```
  *
  * @category models
@@ -226,7 +226,7 @@ export class WebAnnotationTarget extends S.Class<WebAnnotationTarget>($I`WebAnno
  *
  * **Example** (Decode web annotation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode web annotation"
  * import * as S from "effect/Schema"
  * import { WebAnnotation } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -239,7 +239,7 @@ export class WebAnnotationTarget extends S.Class<WebAnnotationTarget>($I`WebAnno
  *     selector: { type: "TextQuoteSelector", exact: "quoted text" }
  *   }
  * })
- * console.log(annotation.type) // "Annotation"
+ * annotation.type // => "Annotation"
  * ```
  *
  * @category models
@@ -331,7 +331,7 @@ const webAnnotationSelectorEncodedToEvidenceSelectorEncoded = (
  *
  * **Example** (Decode evidence to selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode evidence to selector"
  * import * as S from "effect/Schema"
  * import { WebAnnotationSelectorFromEvidenceSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -339,7 +339,7 @@ const webAnnotationSelectorEncodedToEvidenceSelectorEncoded = (
  *   kind: "text-quote",
  *   exact: "quoted text"
  * })
- * console.log(selector.type) // "TextQuoteSelector"
+ * selector.type // => "TextQuoteSelector"
  * ```
  *
  * @category models
@@ -382,7 +382,7 @@ export type WebAnnotationSelectorFromEvidenceSelector = typeof WebAnnotationSele
  *
  * **Example** (Map evidence to selector)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map evidence to selector"
  * import * as S from "effect/Schema"
  * import { evidenceSelectorToWebAnnotationSelector } from "@beep/rdf/Adapters/WebAnnotation"
  * import { TextQuoteSelector } from "@beep/rdf/Evidence"
@@ -392,7 +392,7 @@ export type WebAnnotationSelectorFromEvidenceSelector = typeof WebAnnotationSele
  *   exact: "quoted text"
  * })
  * const selector = evidenceSelectorToWebAnnotationSelector(evidenceSelector)
- * console.log(selector.type) // "TextQuoteSelector"
+ * selector.type // => "TextQuoteSelector"
  * ```
  *
  * @param selector - Evidence selector.
@@ -408,7 +408,7 @@ export const evidenceSelectorToWebAnnotationSelector = (selector: EvidenceSelect
  *
  * **Example** (Map selector to evidence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map selector to evidence"
  * import * as S from "effect/Schema"
  * import {
  *   WebAnnotationTextPositionSelector,
@@ -421,7 +421,7 @@ export const evidenceSelectorToWebAnnotationSelector = (selector: EvidenceSelect
  *   end: 5
  * })
  * const selector = webAnnotationSelectorToEvidenceSelector(annotationSelector)
- * console.log(selector.kind) // "text-position"
+ * selector.kind // => "text-position"
  * ```
  *
  * @param selector - Web Annotation selector DTO.
@@ -466,7 +466,7 @@ const webAnnotationTargetEncodedToEvidenceTargetEncoded = (
  *
  * **Example** (Decode evidence to target)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode evidence to target"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTargetFromEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -474,7 +474,7 @@ const webAnnotationTargetEncodedToEvidenceTargetEncoded = (
  *   source: "https://example.org/document",
  *   selector: { kind: "fragment", value: "section-1" }
  * })
- * console.log(target.selector.type) // "FragmentSelector"
+ * target.selector.type // => "FragmentSelector"
  * ```
  *
  * @category models
@@ -549,7 +549,7 @@ const webAnnotationEncodedToEvidenceAnchorEncoded = (
  *
  * **Example** (Decode evidence to annotation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode evidence to annotation"
  * import * as S from "effect/Schema"
  * import { WebAnnotationFromEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -560,7 +560,7 @@ const webAnnotationEncodedToEvidenceAnchorEncoded = (
  *     selector: { kind: "fragment", value: "section-1" }
  *   }
  * })
- * console.log(annotation.type) // "Annotation"
+ * annotation.type // => "Annotation"
  * ```
  *
  * @category models
@@ -603,7 +603,7 @@ export type WebAnnotationFromEvidenceAnchor = typeof WebAnnotationFromEvidenceAn
  *
  * **Example** (Map evidence to target)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map evidence to target"
  * import * as S from "effect/Schema"
  * import { evidenceTargetToWebAnnotationTarget } from "@beep/rdf/Adapters/WebAnnotation"
  * import { EvidenceTarget } from "@beep/rdf/Evidence"
@@ -613,7 +613,7 @@ export type WebAnnotationFromEvidenceAnchor = typeof WebAnnotationFromEvidenceAn
  *   selector: { kind: "fragment", value: "section-1" }
  * })
  * const target = evidenceTargetToWebAnnotationTarget(evidenceTarget)
- * console.log(target.selector.type) // "FragmentSelector"
+ * target.selector.type // => "FragmentSelector"
  * ```
  *
  * @param target - Evidence target.
@@ -629,7 +629,7 @@ export const evidenceTargetToWebAnnotationTarget = (target: EvidenceTarget): Web
  *
  * **Example** (Map target to evidence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map target to evidence"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTarget, webAnnotationTargetToEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -638,7 +638,7 @@ export const evidenceTargetToWebAnnotationTarget = (target: EvidenceTarget): Web
  *   selector: { type: "FragmentSelector", value: "section-1" }
  * })
  * const target = webAnnotationTargetToEvidenceTarget(annotationTarget)
- * console.log(target.selector.kind) // "fragment"
+ * target.selector.kind // => "fragment"
  * ```
  *
  * @param target - Web Annotation target DTO.
@@ -654,7 +654,7 @@ export const webAnnotationTargetToEvidenceTarget = (target: WebAnnotationTarget)
  *
  * **Example** (Map evidence to annotation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map evidence to annotation"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { evidenceAnchorToWebAnnotation } from "@beep/rdf/Adapters/WebAnnotation"
@@ -669,7 +669,7 @@ export const webAnnotationTargetToEvidenceTarget = (target: WebAnnotationTarget)
  *   }
  * })
  * const annotation = evidenceAnchorToWebAnnotation(anchor)
- * console.log(O.getOrUndefined(annotation.bodyValue)) // "supports the claim"
+ * O.getOrUndefined(annotation.bodyValue) // => "supports the claim"
  * ```
  *
  * @param anchor - Evidence anchor.
@@ -685,7 +685,7 @@ export const evidenceAnchorToWebAnnotation = (anchor: EvidenceAnchor): WebAnnota
  *
  * **Example** (Map annotation to evidence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map annotation to evidence"
  * import * as S from "effect/Schema"
  * import { WebAnnotation, webAnnotationToEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -698,7 +698,7 @@ export const evidenceAnchorToWebAnnotation = (anchor: EvidenceAnchor): WebAnnota
  *   }
  * })
  * const anchor = webAnnotationToEvidenceAnchor(annotation)
- * console.log(anchor.target.selector.kind) // "fragment"
+ * anchor.target.selector.kind // => "fragment"
  * ```
  *
  * @param annotation - Web Annotation DTO.

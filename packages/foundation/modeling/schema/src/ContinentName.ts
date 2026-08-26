@@ -11,12 +11,12 @@ import { ContinentName as ContinentNameSchema } from "./ContinentCode.ts";
  *
  * **Example** (Decode continent display name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode continent display name"
  * import * as S from "effect/Schema"
  * import { ContinentName } from "@beep/schema/ContinentName"
  *
  * const name = S.decodeUnknownSync(ContinentName)("Americas")
- * console.log(name) // "Americas"
+ * name // => "Americas"
  * ```
  *
  * @category schemas

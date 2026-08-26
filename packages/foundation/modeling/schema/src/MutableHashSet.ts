@@ -119,12 +119,12 @@ export interface MutableHashSet<Value extends S.Top>
  *
  * **Example** (Guards MutableHashSet values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guards MutableHashSet values"
  * import { MutableHashSet } from "effect"
  * import { isMutableHashSet } from "@beep/schema/MutableHashSet"
  *
- * console.log(isMutableHashSet(MutableHashSet.empty())) // true
- * console.log(isMutableHashSet(new Set())) // false
+ * isMutableHashSet(MutableHashSet.empty()) // => true
+ * isMutableHashSet(new Set()) // => false
  * ```
  *
  * @param value - Unknown input to test.

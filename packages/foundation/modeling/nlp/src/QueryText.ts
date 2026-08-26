@@ -22,11 +22,11 @@ const firstCapture = (pattern: RegExp, input: string): O.Option<string> =>
  *
  * **Example** (Collapse question whitespace)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Collapse question whitespace"
  * import * as QueryText from "@beep/nlp/QueryText"
  *
  * const normalized = QueryText.normalizeQuestion("  hello   world  ")
- * console.log(normalized) // "hello world"
+ * normalized // => "hello world"
  * ```
  *
  * @category normalization
@@ -45,11 +45,11 @@ export const normalizeQuestion: (input: string) => string = flow(Str.trim, Str.r
  *
  * **Example** (Strip phrase quotes and spaces)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Strip phrase quotes and spaces"
  * import * as QueryText from "@beep/nlp/QueryText"
  *
  * const normalized = QueryText.normalizePhrase('"hello / world"')
- * console.log(normalized) // "hello/world"
+ * normalized // => "hello/world"
  * ```
  *
  * @category normalization
@@ -68,12 +68,12 @@ export const normalizePhrase: (input: string) => string = flow(
  *
  * **Example** (Extract first backtick value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Extract first backtick value"
  * import * as O from "effect/Option"
  * import * as QueryText from "@beep/nlp/QueryText"
  *
  * const result = QueryText.extractBacktickValue("What is `Effect.gen`?")
- * console.log(O.getOrElse(result, () => "none")) // "Effect.gen"
+ * O.getOrElse(result, () => "none") // => "Effect.gen"
  * ```
  *
  * @category parsing

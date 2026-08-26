@@ -61,13 +61,13 @@ export const HttpStatus5XX = MappedLiteralKit([
  *
  * **Example** (Decode 5XX encoded name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode 5XX encoded name"
  * import * as S from "effect/Schema"
  * import { HttpStatus5XX } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatus5XX.Encoded = "InternalServerError"
  * const status = S.decodeUnknownSync(HttpStatus5XX)(encoded)
- * console.log(status) // 500
+ * status // => 500
  * ```
  *
  * @category validation

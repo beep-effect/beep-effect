@@ -815,7 +815,7 @@ export const replaceAllWith: {
 /**
  * Re-export of all helpers from `effect/String`.
  *
- * **Example** (Call `trimThunk`)
+ * **Example** (Call a re-exported helper)
  *
  * ```ts
  * import { Str } from "@beep/utils"

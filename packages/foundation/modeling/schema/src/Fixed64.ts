@@ -42,13 +42,13 @@ const Fixed64BigInt = S.BigInt.check(Fixed64Range);
  *
  * **Example** (Decode fixed64 from string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode fixed64 from string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Fixed64 } from "@beep/schema/Fixed64"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Fixed64)("18446744073709551615"))
- * console.log(value.toString()) // "18446744073709551615"
+ * value.toString() // => "18446744073709551615"
  * ```
  *
  * @invariant Values are bigints from 0 through 18446744073709551615.
@@ -71,7 +71,7 @@ export const Fixed64 = ProtobufInt64Input.pipe(S.decodeTo(Fixed64BigInt, decodeP
  *
  * **Example** (Narrow Fixed64 with is)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow Fixed64 with is"
  * import * as S from "effect/Schema"
  * import { Fixed64 } from "@beep/schema/Fixed64"
  * import type { Fixed64 as Fixed64Value } from "@beep/schema/Fixed64"
@@ -79,7 +79,7 @@ export const Fixed64 = ProtobufInt64Input.pipe(S.decodeTo(Fixed64BigInt, decodeP
  * const input: unknown = BigInt(64)
  * if (S.is(Fixed64)(input)) {
  *   const value: Fixed64Value = input
- *   console.log(value.toString()) // "64"
+ *   value.toString() // => "64"
  * }
  * ```
  *

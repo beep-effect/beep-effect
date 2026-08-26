@@ -14,12 +14,12 @@ const $I = $SchemaId.create("BufferEncoding");
  *
  * **Example** (Decode utf8 encoding)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode utf8 encoding"
  * import * as S from "effect/Schema"
  * import { BuffEncoding } from "@beep/schema/BufferEncoding"
  *
  * const encoding = S.decodeUnknownSync(BuffEncoding)("utf8")
- * console.log(encoding) // "utf8"
+ * encoding // => "utf8"
  * ```
  *
  * @category validation

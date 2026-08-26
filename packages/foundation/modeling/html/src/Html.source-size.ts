@@ -817,12 +817,12 @@ const inspectSourceSizeEntries = (
  *
  * **Example** (Accept a media-condition sizes list)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept a media-condition sizes list"
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"
  *
  * const result = inspectSourceSizeList("(max-width: 30em) 100vw, 50vw")
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category validation

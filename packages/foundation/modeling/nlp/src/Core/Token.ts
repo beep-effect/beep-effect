@@ -25,11 +25,11 @@ const $I = $NlpId.create("Core/Token");
  *
  * **Example** (Accept branded token index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accept branded token index"
  * import type { TokenIndex } from "@beep/nlp/Core/Token"
  *
  * const next = (index: TokenIndex): number => index + 1
- * console.log(typeof next) // "function"
+ * typeof next // => "function"
  * ```
  *
  * @category models
@@ -42,11 +42,11 @@ export type TokenIndex = Brand.Branded<NonNegativeInt, "TokenIndex">;
  *
  * **Example** (Reject negative token index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject negative token index"
  * import { isTokenIndex } from "@beep/nlp/Core/Token"
  *
- * console.log(isTokenIndex(0)) // true
- * console.log(isTokenIndex(-1)) // false
+ * isTokenIndex(0) // => true
+ * isTokenIndex(-1) // => false
  * ```
  *
  * @category validation
@@ -59,11 +59,11 @@ export const isTokenIndex = (u: unknown): u is TokenIndex => TokenIndex.is(u);
  *
  * **Example** (Construct zero token index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct zero token index"
  * import { tokenIndex } from "@beep/nlp/Core/Token"
  *
  * const first = tokenIndex(0)
- * console.log(first) // 0
+ * first // => 0
  * ```
  *
  * @category validation
@@ -76,11 +76,11 @@ export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>
  *
  * **Example** (Make schema token index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make schema token index"
  * import { TokenIndex } from "@beep/nlp/Core/Token"
  *
  * const index = TokenIndex.make(2)
- * console.log(index) // 2
+ * index // => 2
  * ```
  *
  * @category validation
@@ -103,11 +103,11 @@ export const TokenIndex = NonNegativeInt.pipe(
  *
  * **Example** (Compute half-open span length)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compute half-open span length"
  * import type { CharPosition } from "@beep/nlp/Core/Token"
  *
  * const spanLength = (start: CharPosition, end: CharPosition): number => end - start
- * console.log(typeof spanLength) // "function"
+ * typeof spanLength // => "function"
  * ```
  *
  * @category models
@@ -120,11 +120,11 @@ export type CharPosition = Brand.Branded<NonNegativeInt, "CharPosition">;
  *
  * **Example** (Reject negative char offset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reject negative char offset"
  * import { isCharPosition } from "@beep/nlp/Core/Token"
  *
- * console.log(isCharPosition(12)) // true
- * console.log(isCharPosition(-1)) // false
+ * isCharPosition(12) // => true
+ * isCharPosition(-1) // => false
  * ```
  *
  * @category validation
@@ -137,11 +137,11 @@ export const isCharPosition = (u: unknown): u is CharPosition => CharPosition.is
  *
  * **Example** (Construct character offset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct character offset"
  * import { charPosition } from "@beep/nlp/Core/Token"
  *
  * const offset = charPosition(4)
- * console.log(offset) // 4
+ * offset // => 4
  * ```
  *
  * @category validation
@@ -156,11 +156,11 @@ export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPos
  *
  * **Example** (Make schema char position)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make schema char position"
  * import { CharPosition } from "@beep/nlp/Core/Token"
  *
  * const offset = CharPosition.make(7)
- * console.log(offset) // 7
+ * offset // => 7
  * ```
  *
  * @category validation
@@ -185,7 +185,7 @@ export const CharPosition = NonNegativeInt.pipe(
  *
  * **Example** (Create token check position)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create token check position"
  * import * as O from "effect/Option"
  * import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token"
  *
@@ -210,7 +210,7 @@ export const CharPosition = NonNegativeInt.pipe(
  *   precedingSpaces: O.none(),
  *   tags: []
  * })
- * console.log(Token.containsPosition(token, 3)) // true
+ * Token.containsPosition(token, 3) // => true
  * ```
  *
  * @category models

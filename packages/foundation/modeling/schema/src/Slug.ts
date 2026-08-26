@@ -4,7 +4,7 @@
  *
  * **Example** (Decode a URL slug)
  *
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema";
  * import { Slug } from "@beep/schema/Slug";
  *
@@ -71,14 +71,14 @@ const SlugChecks = S.makeFilterGroup(
  *
  * **Example** (Decode kebab-case slug)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode kebab-case slug"
  * import * as S from "effect/Schema"
  * import { Slug } from "@beep/schema/Slug"
  *
  * const decode = S.decodeUnknownSync(Slug)
  *
  * const slug = decode("my-post-2")
- * console.log(slug) // "my-post-2"
+ * slug // => "my-post-2"
  * ```
  *
  * @category constructors

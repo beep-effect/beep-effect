@@ -18,7 +18,7 @@
  *
  * **Example** (Import composable operation builders)
  *
- * ```typescript
+ * ```ts
  * import { Composable } from "@beep/nlp/Operations"
  *
  * console.log(typeof Composable.makeOperation)

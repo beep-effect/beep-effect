@@ -76,11 +76,11 @@ const AppendFileSyncEncoding = S.Literals([
  *
  * **Example** (Make append options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make append options"
  * import { AppendFileSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = AppendFileSyncOptions.make({ encoding: "utf8", flag: "a" })
- * console.log(options.flag)
+ * options.flag // => "a"
  * ```
  *
  * @category models
@@ -109,11 +109,11 @@ export class AppendFileSyncOptions extends S.Class<AppendFileSyncOptions>($I`App
  *
  * **Example** (Make recursive force options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make recursive force options"
  * import { RmSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = RmSyncOptions.make({ recursive: true, force: true })
- * console.log(options)
+ * options.force // => true
  * ```
  *
  * @category models
@@ -139,11 +139,11 @@ export class RmSyncOptions extends S.Class<RmSyncOptions>($I`RmSyncOptions`)(
  *
  * **Example** (Make withFileTypes options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make withFileTypes options"
  * import { ReaddirSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = ReaddirSyncOptions.make({ withFileTypes: true })
- * console.log(options.withFileTypes)
+ * options.withFileTypes // => true
  * ```
  *
  * @category models
@@ -487,7 +487,7 @@ export const statSync = (path: string): Effect.Effect<FileSystem.File.Info, Plat
  *
  * **Example** (Wait for ready file)
  *
- * ```typescript
+ * ```ts
  * import { Effect } from "effect"
  * import { makeWaitForFile } from "@beep/utils/FileSystem"
  *

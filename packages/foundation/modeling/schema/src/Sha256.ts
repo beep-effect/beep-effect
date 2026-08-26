@@ -48,14 +48,14 @@ const computeSha256Hex = Effect.fn("computeSha256Hex")(function* (
  *
  * **Example** (Decode empty SHA-256 digest)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode empty SHA-256 digest"
  * import * as S from "effect/Schema"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = S.decodeUnknownSync(Sha256Hex)(
  *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(digest.length) // 64
+ * digest.length // => 64
  * ```
  *
  * @category validation
@@ -77,14 +77,14 @@ export const Sha256Hex = S.String.check(Sha256HexChecks)
  *
  * **Example** (Annotate decoded SHA-256 type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate decoded SHA-256 type"
  * import * as S from "effect/Schema"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const hash: Sha256Hex = S.decodeUnknownSync(Sha256Hex)(
  *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
- * console.log(hash.length) // 64
+ * hash.length // => 64
  * ```
  *
  * @category models

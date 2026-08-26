@@ -19,12 +19,12 @@ import { Email as InternalEmail, EmailString as InternalEmailString } from "./in
  *
  * **Example** (Normalize email address strings)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize email address strings"
  * import * as S from "effect/Schema"
  * import { EmailString } from "@beep/schema"
  *
  * const email = S.decodeUnknownSync(EmailString)("Admin@Example.COM")
- * console.log(email) // "admin@example.com"
+ * email // => "admin@example.com"
  * ```
  *
  * @category constructors
@@ -61,7 +61,7 @@ export type EmailString = typeof EmailString.Type;
  *
  * **Example** (Decode redacted email addresses)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode redacted email addresses"
  * import * as S from "effect/Schema"
  * import { Email } from "@beep/schema"
  *

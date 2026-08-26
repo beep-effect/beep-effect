@@ -31,7 +31,7 @@ const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
  *
  * **Example** (Spreading fields into schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Spreading fields into schema"
  * import * as S from "effect/Schema"
  * import {
  *   TextAnchorFields,
@@ -39,7 +39,7 @@ const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
  * } from "@beep/provenance/TextAnchor"
  *
  * const Span = S.Struct({ ...TextAnchorFields }).check(TextAnchorWidthCheck)
- * console.log(Object.keys(Span.fields)) // ["startChar", "endChar", "quote"]
+ * Object.keys(Span.fields) // => ["startChar", "endChar", "quote"]
  * ```
  *
  * @category models
@@ -74,12 +74,12 @@ const hasConsistentTextAnchorWidth = (anchor: {
  *
  * **Example** (Checking flattened anchor schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Checking flattened anchor schema"
  * import * as S from "effect/Schema"
  * import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnchor"
  *
  * const FlatAnchor = S.Struct(TextAnchorFields).check(TextAnchorWidthCheck)
- * console.log(S.is(FlatAnchor)({ startChar: 0, endChar: 4, quote: "fact" })) // true
+ * S.is(FlatAnchor)({ startChar: 0, endChar: 4, quote: "fact" }) // => true
  * ```
  *
  * @category validation
@@ -102,13 +102,13 @@ export const TextAnchorWidthCheck = S.makeFilter(hasConsistentTextAnchorWidth, {
  *
  * **Example** (Surrogate pair boundary checks)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Surrogate pair boundary checks"
  * import { isUtf16Boundary } from "@beep/provenance/TextAnchor"
  *
  * const sourceText = "A😀B"
- * console.log(isUtf16Boundary(sourceText, 1)) // true
- * console.log(isUtf16Boundary(sourceText, 2)) // false
- * console.log(isUtf16Boundary(sourceText, 3)) // true
+ * isUtf16Boundary(sourceText, 1) // => true
+ * isUtf16Boundary(sourceText, 2) // => false
+ * isUtf16Boundary(sourceText, 3) // => true
  * ```
  *
  * @category validation
@@ -170,10 +170,10 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
    *
    * **Example** (Checking well-ordered range)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Checking well-ordered range"
    * import { TextAnchor } from "@beep/provenance/TextAnchor"
    *
-   * console.log(TextAnchor.isWellOrdered({ startChar: 0, endChar: 14 })) // true
+   * TextAnchor.isWellOrdered({ startChar: 0, endChar: 14 }) // => true
    * ```
    *
    * @category validation
@@ -188,10 +188,10 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
    *
    * **Example** (Checking internal consistency)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Checking internal consistency"
    * import { TextAnchor } from "@beep/provenance/TextAnchor"
    *
-   * console.log(TextAnchor.isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" })) // true
+   * TextAnchor.isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" }) // => true
    * ```
    *
    * @category validation
@@ -208,11 +208,11 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
  *
  * **Example** (Valid and inverted ranges)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Valid and inverted ranges"
  * import { isWellOrdered } from "@beep/provenance/TextAnchor"
  *
- * console.log(isWellOrdered({ startChar: 0, endChar: 14 })) // true
- * console.log(isWellOrdered({ startChar: 9, endChar: 2 })) // false
+ * isWellOrdered({ startChar: 0, endChar: 14 }) // => true
+ * isWellOrdered({ startChar: 9, endChar: 2 }) // => false
  * ```
  *
  * @category validation
@@ -225,10 +225,10 @@ export const isWellOrdered = TextAnchor.isWellOrdered;
  *
  * **Example** (Matching width and quote)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Matching width and quote"
  * import { isInternallyConsistent } from "@beep/provenance/TextAnchor"
  *
- * console.log(isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" })) // true
+ * isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" }) // => true
  * ```
  *
  * @category validation

@@ -25,11 +25,11 @@ export { OWL_NAMESPACE, OWL_TERMS } from "./generated/Owl.terms.ts";
  *
  * **Example** (Inspect Class NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect Class NamedNode"
  * import { OWL_CLASS } from "@beep/rdf/Vocab/Owl"
  *
- * console.log(OWL_CLASS.value) // "http://www.w3.org/2002/07/owl#Class"
- * console.log(OWL_CLASS.termType) // "NamedNode"
+ * OWL_CLASS.value // => "http://www.w3.org/2002/07/owl#Class"
+ * OWL_CLASS.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -42,11 +42,11 @@ export const OWL_CLASS = makeNamedNode(`${OWL_NAMESPACE}Class`);
  *
  * **Example** (Inspect ObjectProperty NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect ObjectProperty NamedNode"
  * import { OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl"
  *
- * console.log(OWL_OBJECT_PROPERTY.value) // "http://www.w3.org/2002/07/owl#ObjectProperty"
- * console.log(OWL_OBJECT_PROPERTY.termType) // "NamedNode"
+ * OWL_OBJECT_PROPERTY.value // => "http://www.w3.org/2002/07/owl#ObjectProperty"
+ * OWL_OBJECT_PROPERTY.termType // => "NamedNode"
  * ```
  *
  * @category constants
@@ -59,11 +59,11 @@ export const OWL_OBJECT_PROPERTY = makeNamedNode(`${OWL_NAMESPACE}ObjectProperty
  *
  * **Example** (Inspect DatatypeProperty NamedNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect DatatypeProperty NamedNode"
  * import { OWL_DATATYPE_PROPERTY } from "@beep/rdf/Vocab/Owl"
  *
- * console.log(OWL_DATATYPE_PROPERTY.value) // "http://www.w3.org/2002/07/owl#DatatypeProperty"
- * console.log(OWL_DATATYPE_PROPERTY.termType) // "NamedNode"
+ * OWL_DATATYPE_PROPERTY.value // => "http://www.w3.org/2002/07/owl#DatatypeProperty"
+ * OWL_DATATYPE_PROPERTY.termType // => "NamedNode"
  * ```
  *
  * @category constants

@@ -10,10 +10,10 @@
  *
  * **Example** (Compare values with equals)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare values with equals"
  * import {Eq} from "@beep/utils"
  *
- * console.log(Eq.equals(1, 1)) // true
+ * Eq.equals(1, 1) // => true
  * ```
  *
  * @category utilities

@@ -47,13 +47,13 @@ const ProtobufNumber = S.declare<number>(P.isNumber, {
  *
  * **Example** (Decode protobuf float value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode protobuf float value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Float } from "@beep/schema/Float"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Float)(0.5))
- * console.log(value) // 0.5
+ * value // => 0.5
  * ```
  *
  * @invariant Values are finite numbers in the IEEE-754 binary32 range or protobuf-valid IEEE-754 special values.
@@ -82,7 +82,7 @@ export const Float = ProtobufNumber.annotate({
  *
  * **Example** (Narrow Float with is)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow Float with is"
  * import * as S from "effect/Schema"
  * import { Float } from "@beep/schema/Float"
  * import type { Float as FloatValue } from "@beep/schema/Float"
@@ -90,7 +90,7 @@ export const Float = ProtobufNumber.annotate({
  * const input: unknown = 1.25
  * if (S.is(Float)(input)) {
  *   const value: FloatValue = input
- *   console.log(value) // 1.25
+ *   value // => 1.25
  * }
  * ```
  *

@@ -542,7 +542,7 @@ export type StringKeyEntries<T> = Array<StringKeyEntry<T>>;
  *
  * **Example** (Type-safe string key entries)
  *
- * ```typescript
+ * ```ts
  * import * as Struct from "@beep/utils/Struct"
  *
  * const c = Symbol("c")

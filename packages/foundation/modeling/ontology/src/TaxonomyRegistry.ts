@@ -141,13 +141,13 @@ const pathFor = (input: LibrarianInput, concept: TaxonomyConcept, rootSegment: s
  *
  * **Example** (Run loop returning Effect)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Run loop returning Effect"
  * import { Effect } from "effect"
  * import { IRIReference } from "@beep/rdf"
  * import { SemanticFoundationSeed } from "@beep/ontology/SemanticFoundation.seed"
  * import { LibrarianInput, runLibrarianLoop } from "@beep/ontology/TaxonomyRegistry"
  * const result = runLibrarianLoop(SemanticFoundationSeed, LibrarianInput.make({ client: "acme", conceptIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/concept/correspondence"), documentClass: "received", fileName: "mail.eml", matter: "aurora" }))
- * console.log(Effect.isEffect(result)) // true
+ * Effect.isEffect(result) // => true
  * ```
  *
  * @category workflows

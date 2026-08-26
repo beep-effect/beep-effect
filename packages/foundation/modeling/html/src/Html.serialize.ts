@@ -121,7 +121,7 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
  *
  * **Example** (Check SafeHtml provenance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check SafeHtml provenance"
  * import { conform, enforceSafeHtml, Fragment, SafeHtml, serializeSafe } from "@beep/html"
  * import { Effect } from "effect"
  *
@@ -131,8 +131,8 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
  *     Effect.flatMap(serializeSafe)
  *   )
  * )
- * console.log(SafeHtml.is(html)) // true
- * console.log(SafeHtml.is({ ...html })) // false
+ * SafeHtml.is(html) // => true
+ * SafeHtml.is({ ...html }) // => false
  * ```
  *
  * @category schemas
@@ -150,7 +150,7 @@ export const SafeHtml = S.declare(SafeHtmlValue.is).pipe(
  *
  * **Example** (Producing SafeHtml value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Producing SafeHtml value"
  * import {
  *   conform,
  *   enforceSafeHtml,
@@ -167,7 +167,7 @@ export const SafeHtml = S.declare(SafeHtmlValue.is).pipe(
  *     Effect.flatMap(serializeSafe)
  *   )
  * )
- * console.log(safeHtmlValue(html)) // ""
+ * safeHtmlValue(html) // => ""
  * ```
  *
  * @category models
@@ -180,10 +180,10 @@ export type SafeHtml = typeof SafeHtml.Type;
  *
  * **Example** (Checking serialize rule)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Checking serialize rule"
  * import { HtmlSerializeRule } from "@beep/html/Html.serialize"
  *
- * console.log(HtmlSerializeRule.is.rawTextEndTag("rawTextEndTag")) // true
+ * HtmlSerializeRule.is.rawTextEndTag("rawTextEndTag") // => true
  * ```
  *
  * @category models
@@ -208,7 +208,7 @@ export const HtmlSerializeRule = LiteralKit([
  *
  * **Example** (Decoding serialize rule)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding serialize rule"
  * import { HtmlSerializeRule } from "@beep/html/Html.serialize"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -216,7 +216,7 @@ export const HtmlSerializeRule = LiteralKit([
  * const decoded = S.decodeUnknownResult(HtmlSerializeRule)("rawTextEndTag")
  * if (Result.isSuccess(decoded)) {
  *   const rule: HtmlSerializeRule = decoded.success
- *   console.log(rule) // "rawTextEndTag"
+ *   rule // => "rawTextEndTag"
  * }
  * ```
  *
@@ -230,7 +230,7 @@ export type HtmlSerializeRule = typeof HtmlSerializeRule.Type;
  *
  * **Example** (Constructing serialize error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Constructing serialize error"
  * import { HtmlSerializeError } from "@beep/html/Html.serialize"
  *
  * const error = HtmlSerializeError.make({
@@ -238,7 +238,7 @@ export type HtmlSerializeRule = typeof HtmlSerializeRule.Type;
  *   rule: "invalidNode",
  *   message: "Invalid node"
  * })
- * console.log(error._tag) // "HtmlSerializeError"
+ * error._tag // => "HtmlSerializeError"
  * ```
  *
  * @category errors
@@ -591,12 +591,12 @@ const serializeRoot = Effect.fn("Html.serializeRoot")(function* (root: HtmlRoot.
  *
  * **Example** (Serializing empty fragment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Serializing empty fragment"
  * import { Fragment, serialize, untrustedHtmlValue } from "@beep/html"
  * import { Effect } from "effect"
  *
  * const html = Effect.runSync(serialize(Fragment.make({ children: [] })))
- * console.log(untrustedHtmlValue(html)) // ""
+ * untrustedHtmlValue(html) // => ""
  * ```
  *
  * @effects Fails with {@link HtmlSerializeError} when the modeled root
@@ -615,14 +615,14 @@ export const serialize: (root: HtmlRoot.Type) => Effect.Effect<UntrustedHtml, Ht
  *
  * **Example** (Serializing conformance proof)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Serializing conformance proof"
  * import { conform, Fragment, serializeConformant, untrustedHtmlValue } from "@beep/html"
  * import { Effect } from "effect"
  *
  * const html = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(serializeConformant))
  * )
- * console.log(untrustedHtmlValue(html)) // ""
+ * untrustedHtmlValue(html) // => ""
  * ```
  *
  * @effects Reads the module-issued conformance proof and fails with
@@ -656,7 +656,7 @@ const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type,
  *
  * **Example** (Issuing opaque SafeHtml)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Issuing opaque SafeHtml"
  * import {
  *   conform,
  *   enforceSafeHtml,
@@ -672,7 +672,7 @@ const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type,
  *     Effect.flatMap(serializeSafe)
  *   )
  * )
- * console.log(safeHtmlValue(html)) // ""
+ * safeHtmlValue(html) // => ""
  * ```
  *
  * @effects Revalidates conformance and safe-output policy before
@@ -692,12 +692,12 @@ export const serializeSafe: (value: SafeHtmlAst) => Effect.Effect<SafeHtml, Html
  *
  * **Example** (Extracting untrusted string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Extracting untrusted string"
  * import { Fragment, serialize, untrustedHtmlValue } from "@beep/html"
  * import { Effect } from "effect"
  *
  * const html = Effect.runSync(serialize(Fragment.make({ children: [] })))
- * console.log(untrustedHtmlValue(html)) // ""
+ * untrustedHtmlValue(html) // => ""
  * ```
  *
  * @category getters
@@ -715,7 +715,7 @@ export const untrustedHtmlValue: (value: UntrustedHtml) => string = identity;
  *
  * **Example** (Extracting safe HTML string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Extracting safe HTML string"
  * import {
  *   conform,
  *   enforceSafeHtml,
@@ -731,7 +731,7 @@ export const untrustedHtmlValue: (value: UntrustedHtml) => string = identity;
  *     Effect.flatMap(serializeSafe)
  *   )
  * )
- * console.log(safeHtmlValue(html)) // ""
+ * safeHtmlValue(html) // => ""
  * ```
  *
  * @category getters

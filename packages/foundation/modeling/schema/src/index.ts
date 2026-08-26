@@ -13,11 +13,11 @@ export * from "./Number.ts";
  *
  * **Example** (Read package version)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read package version"
  * import { VERSION } from "@beep/schema"
  *
  * const schemaPackageVersion: typeof VERSION = VERSION
- * console.log(schemaPackageVersion.startsWith("0.")) // true
+ * schemaPackageVersion.startsWith("0.") // => true
  * ```
  *
  * @category configuration
@@ -344,13 +344,13 @@ export * from "./PascalStr.ts";
  *
  * **Example** (Decode port from string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode port from string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { PortFromString } from "@beep/schema"
  *
  * const port = await Effect.runPromise(S.decodeUnknownEffect(PortFromString)("443"))
- * console.log(port) // 443
+ * port // => 443
  * ```
  *
  * @category validation
@@ -387,7 +387,7 @@ export * from "./RegExp.ts";
  *
  * **Example** (Decode safe object value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode safe object value"
  * import { SafeObject } from "@beep/schema"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -395,7 +395,7 @@ export * from "./RegExp.ts";
  * const value = await Effect.runPromise(
  *   S.decodeUnknownEffect(SafeObject)({ enabled: true })
  * )
- * console.log(value.enabled) // true
+ * value.enabled // => true
  * ```
  *
  * @category validation

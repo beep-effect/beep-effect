@@ -48,6 +48,7 @@ export const toIdentityAccessorName = (packageName: string): string => `$${Str.p
 export const typedIdentityExportBlock = (packageName: string): string => {
   const accessorName = toIdentityAccessorName(packageName);
   const exampleName = Str.pascalCase(packageName);
+  const fence = "\u0060\u0060\u0060";
   return Text.joinLines([
     "",
     "/**",
@@ -55,12 +56,12 @@ export const typedIdentityExportBlock = (packageName: string): string => {
     " *",
     " * **Example** (Make package ID)",
     " *",
-    " * ```ts",
+    ` * ${fence}ts import.meta.vitest name="Make package ID"`,
     ` * import { ${accessorName} } from "@beep/identity"`,
     " *",
     ` * const id = ${accessorName}.make("${exampleName}")`,
     " * void id",
-    " * ```",
+    ` * ${fence}`,
     " *",
     " * @category configuration",
     " * @since 0.0.0",

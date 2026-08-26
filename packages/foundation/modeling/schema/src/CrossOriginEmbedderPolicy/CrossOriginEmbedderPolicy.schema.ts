@@ -28,11 +28,11 @@ const CoepValueBase = LiteralKit(["unsafe-none", "require-corp", "credentialless
  *
  * **Example** (Validate require-corp value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate require-corp value"
  * import * as S from "effect/Schema"
  * import { CoepValue } from "@beep/schema/CrossOriginEmbedderPolicy"
  *
- * console.log(S.is(CoepValue)("require-corp")) // true
+ * S.is(CoepValue)("require-corp") // => true
  * ```
  *
  * @category schemas

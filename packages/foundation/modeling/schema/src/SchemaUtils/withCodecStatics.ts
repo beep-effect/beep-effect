@@ -71,16 +71,16 @@ export interface CodecStatics<Sch extends S.Top> {
  *
  * **Example** (Attaching statics via pipe)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attaching statics via pipe"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { withCodecStatics } from "@beep/schema/SchemaUtils/withCodecStatics"
  *
  * const Slug = S.NonEmptyString.pipe(withCodecStatics)
  *
- * console.log(Slug.is("post")) // true
- * console.log(O.isNone(Slug.decodeOption(""))) // true
- * console.log(Slug.fromUnknown("post")) // "post"
+ * Slug.is("post") // => true
+ * O.isNone(Slug.decodeOption("")) // => true
+ * Slug.fromUnknown("post") // => "post"
  * ```
  *
  * @typeParam Sch - Schema receiving the codec statics.

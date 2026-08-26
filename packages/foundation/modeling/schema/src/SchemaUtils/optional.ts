@@ -25,7 +25,7 @@ const $I = $SchemaId.create("SchemaUtils/optional");
  *
  * **Example** (Optional key decoding to undefined)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Optional key decoding to undefined"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { optional } from "@beep/schema/SchemaUtils/optional"
@@ -35,7 +35,7 @@ const $I = $SchemaId.create("SchemaUtils/optional");
  * })
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(Patch)({}))
- * console.log(decoded.file) // undefined
+ * decoded.file // => undefined
  * ```
  *
  * @typeParam TSchema - Schema used when the optional key is present.

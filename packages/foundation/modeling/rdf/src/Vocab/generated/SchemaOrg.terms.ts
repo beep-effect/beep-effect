@@ -12,10 +12,10 @@
  *
  * **Example** (Read the Schema.org namespace IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the Schema.org namespace IRI"
  * import { SCHEMA_ORG_NAMESPACE } from "@beep/rdf/Vocab/generated/SchemaOrg.terms"
  *
- * console.log(SCHEMA_ORG_NAMESPACE.length > 0) // true
+ * SCHEMA_ORG_NAMESPACE.length > 0 // => true
  * ```
  *
  * @category constants
@@ -28,10 +28,10 @@ export const SCHEMA_ORG_NAMESPACE = "https://schema.org/" as const;
  *
  * **Example** (Read the Schema.org term inventory)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the Schema.org term inventory"
  * import { SCHEMA_ORG_TERMS } from "@beep/rdf/Vocab/generated/SchemaOrg.terms"
  *
- * console.log(SCHEMA_ORG_TERMS.length > 0) // true
+ * SCHEMA_ORG_TERMS.length > 0 // => true
  * ```
  *
  * @category constants

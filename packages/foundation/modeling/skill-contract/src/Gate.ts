@@ -26,11 +26,11 @@ type GateIdLiterals = readonly [string, ...ReadonlyArray<string>];
  *
  * **Example** (Construct a gate identifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a gate identifier"
  * import { GateId } from "@beep/skill-contract"
  *
  * const id = GateId.make("artifact-exists")
- * console.log(id) // "artifact-exists"
+ * id // => "artifact-exists"
  * ```
  *
  * @category identifiers
@@ -89,10 +89,10 @@ export const makeGateId = <const Ids extends GateIdLiterals>(ids: LiteralKitSche
  *
  * **Example** (Inspect severity options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect severity options"
  * import { GateSeverity } from "@beep/skill-contract"
  *
- * console.log(GateSeverity.Options) // ["blocking", "advisory"]
+ * GateSeverity.Options // => ["blocking", "advisory"]
  * ```
  *
  * @category schemas
@@ -117,10 +117,10 @@ export type GateSeverity = typeof GateSeverity.Type;
  *
  * **Example** (Inspect applicability kinds)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect applicability kinds"
  * import { GateApplicabilityKind } from "@beep/skill-contract"
  *
- * console.log(GateApplicabilityKind.Options) // ["always", "conditional"]
+ * GateApplicabilityKind.Options // => ["always", "conditional"]
  * ```
  *
  * @category schemas
@@ -145,10 +145,10 @@ export type GateApplicabilityKind = typeof GateApplicabilityKind.Type;
  *
  * **Example** (Construct unconditional applicability)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct unconditional applicability"
  * import { AlwaysGateApplicability } from "@beep/skill-contract"
  *
- * console.log(AlwaysGateApplicability.make({}).kind) // "always"
+ * AlwaysGateApplicability.make({}).kind // => "always"
  * ```
  *
  * @category models
@@ -173,13 +173,13 @@ export class AlwaysGateApplicability extends S.Class<AlwaysGateApplicability>($I
  *
  * **Example** (Construct conditional applicability)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct conditional applicability"
  * import { ConditionalGateApplicability, SchemaReference, SchemaReferenceId } from "@beep/skill-contract"
  *
  * const applicability = ConditionalGateApplicability.make({
  *   condition: SchemaReference.make({ schemaId: SchemaReferenceId.make("qa.condition/v1") })
  * })
- * console.log(applicability.kind) // "conditional"
+ * applicability.kind // => "conditional"
  * ```
  *
  * @category models
@@ -365,10 +365,10 @@ const UniqueGateIdsCheck = S.makeFilter(
  *
  * **Example** (Construct a gate registry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a gate registry"
  * import { GateRegistry } from "@beep/skill-contract"
  *
- * console.log(GateRegistry.make({ declarations: [] }).declarations.length) // 0
+ * GateRegistry.make({ declarations: [] }).declarations.length // => 0
  * ```
  *
  * @category models
@@ -386,10 +386,10 @@ export class GateRegistry extends S.Class<GateRegistry>($I`GateRegistry`)(
  *
  * **Example** (Inspect gate outcomes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect gate outcomes"
  * import { GateOutcome } from "@beep/skill-contract"
  *
- * console.log(GateOutcome.Options) // ["allowed", "denied"]
+ * GateOutcome.Options // => ["allowed", "denied"]
  * ```
  *
  * @category schemas
@@ -500,7 +500,7 @@ const gateVerdictImpl = <const Identifier extends string, AllowedDetail extends 
  *
  * **Example** (Construct an allowed verdict)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct an allowed verdict"
  * import { GateId, GateVerdict } from "@beep/skill-contract"
  * import { ISOStr } from "@beep/schema/Timestamp"
  * import * as S from "effect/Schema"
@@ -517,7 +517,7 @@ const gateVerdictImpl = <const Identifier extends string, AllowedDetail extends 
  *     reason: "Every artifact exists."
  *   }
  * })
- * console.log(verdict.verdict) // "allowed"
+ * verdict.verdict // => "allowed"
  * ```
  *
  * @param identifier - Distinct identity for this parameterized verdict schema.
