@@ -77,6 +77,23 @@ describe("capability runtime", { concurrent: false }, () => {
   );
 
   it.effect(
+    "projects canonical ARIA shortcuts and labeled titles onto toolbar buttons",
+    Effect.fnUntraced(function* () {
+      render(
+        <CapabilityComposer
+          profile={referenceProfiles.documentProof}
+          catalog={editorCapabilityCatalog}
+          platform="windows-linux"
+        />
+      );
+      const bold = screen.getByRole("button", { name: "Bold" });
+      expect(bold).toHaveAttribute("aria-keyshortcuts", "Control+B");
+      expect(bold.getAttribute("title")).toContain("Ctrl+B");
+      yield* Effect.void;
+    })
+  );
+
+  it.effect(
     "renders a resolution alert without mounting an editor",
     Effect.fnUntraced(function* () {
       const invalid = EditorProfile.make({
