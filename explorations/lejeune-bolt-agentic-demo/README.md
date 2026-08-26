@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `shape`
+Stage: `decompose`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -16,15 +16,14 @@ foundations, then offer a measured service-as-software pilot.
 
 ## Next Open Question
 
-Does [`BRIEF.md`](./BRIEF.md) hold as shaped — problem, appetite, sketch, rabbit holes,
-no-gos — or what changes before decompose? Graduation comes after decompose per the pipeline.
+Graduation: create the two promised-now goals/ packets and start day 1 on Benjamin's signal?
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - authoritative stage and open-question frontier.
-2. [`DECISIONS.md`](./DECISIONS.md) - confirmed operator calls and ratified align decisions.
-3. [`BRIEF.md`](./BRIEF.md) - pre-seeded Shape Up pitch, ready for shape review.
-4. [`MAP.md`](./MAP.md) - pre-seeded candidate goals and first vertical slice.
+2. [`DECISIONS.md`](./DECISIONS.md) - ratified operator, align, and shape-review decisions.
+3. [`BRIEF.md`](./BRIEF.md) - ratified Shape Up pitch.
+4. [`MAP.md`](./MAP.md) - completed decompose map and graduation targets.
 5. [`RESEARCH.md`](./RESEARCH.md) - cited synthesis and constraints.
 6. [`research/07-use-case-evaluation.md`](./research/07-use-case-evaluation.md) - ranked cases and
    fixed 30-minute storyline.
@@ -48,3 +47,6 @@ no-gos — or what changes before decompose? Graduation comes after decompose pe
 - 2026-08-26: align round completed with Benjamin; 17 decisions ratified — the six 2026-08-25
   operator pins confirmed plus the eleven align answers — and the browser-lane corpus-refresh
   decision recorded.
+- 2026-08-26: Benjamin's grill session ratified shape review and decompose with seven decisions:
+  one lab package, replay-first demo, walking-skeleton schedule, Cosmos timebox, day-1 provider
+  gate, governance tax plus recorded QA rehearsal, and the graduate-now call.

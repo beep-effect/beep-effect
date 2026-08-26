@@ -4,9 +4,9 @@
     "slug": "lejeune-bolt-agentic-demo",
     "title": "LeJeune Bolt Agentic Demo",
     "status": "active",
-    "stage": "shape",
+    "stage": "decompose",
     "openQuestions": [
-      "Does BRIEF.md hold as shaped (problem, appetite, sketch, rabbit holes, no-gos), or what changes before decompose?"
+      "Graduation: create the two promised-now goals/ packets and start day 1 on Benjamin's signal?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

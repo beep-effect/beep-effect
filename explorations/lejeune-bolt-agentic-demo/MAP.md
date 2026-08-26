@@ -1,10 +1,9 @@
 # LeJeune Knowledge Desk map
 
-**DRAFT — align ratified 2026-08-26; awaiting shape review**
+**RATIFIED 2026-08-26 — shape review passed; decompose complete**
 
-Benjamin closed the align round on 2026-08-26: every entry in
-[`DECISIONS.md`](./DECISIONS.md) is ratified and the manifest stage is `shape`. This map stays
-a draft until the brief passes shape review and decompose begins.
+Benjamin passed shape review and completed decompose on 2026-08-26. Graduation of the two
+promised-now packets is next; build starts on Benjamin's signal.
 
 ## Candidate goal packets
 
@@ -15,9 +14,10 @@ a draft until the brief passes shape review and decompose begins.
 | `lejeune-m365-pilot` | Gated re-entry | Ingest one consented mailbox or PST, adjudicate veteran claims, and measure RFQ review and citation outcomes. | Lunch proof, consent, pilot scope, and retention terms |
 | `trustgraph-port-licensing-and-component-donor` | Gated re-entry | License Benjamin's TypeScript port, record attribution, prove the trimmed workbench, and identify named components safe to donate. | Benjamin's license decision |
 
-The first two packets are the lunch promise. The M365 and TrustGraph packets do not block that
-promise. When either gate fires, reopen this exploration at `decompose` before creating its goal
-packet, as required by the exploration graduation contract.
+The first two packets are the lunch promise, and both deliver into exactly one new workspace
+package: the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`). The M365 and TrustGraph
+packets do not block that promise. When either gate fires, reopen this exploration at
+`decompose` before creating its goal packet, as required by the exploration graduation contract.
 
 ## Capability check
 
@@ -126,25 +126,33 @@ provider unavailable.
 
 | Day | Outcome |
 | --- | --- |
-| 1 | Run the repo package generator, ratify the lab boundary, freeze ontology and fixture scenarios, and create the deterministic bundle skeleton. |
-| 2 | Parse two or three RFQ layouts into exact-span line items; load public standards, projects, synthetic offers, and certificates. |
-| 3 | Implement graph plus full-text retrieval, rule checks, citations, uncertainty, and one temporal expert correction. |
-| 4 | Finish the single branded screen, approve/edit/reject flow, and non-executing quote and PO receipts. |
-| 5 | Add service packaging, `/health`, tailnet Serve, fixed-scenario tests, visual rehearsal, and a completely local fallback. |
+| 1 | Package generator, deterministic bundle skeleton, `@beep/anthropic` live smoke test, and screen scaffold. |
+| 2 | Full 30-minute story on stubs and a half-day `@beep/cosmos` browser timebox. |
+| 3 | Real extraction for two RFQ layouts, rule checks, citations, and uncertainty. |
+| 4 | Veteran correction and temporal rerun, synthetic offers, quote and non-executing PO receipts, and approve/edit/reject records. |
+| 5 | Service packaging, `/health`, tailnet Serve, fixed-scenario tests, recorded rehearsal, and offline fallback proof, with roughly half a day reserved for governance gates. |
 
 This is the Option C schedule from
-[lane 08](./research/08-demo-options.md#five-day-plan-2). Benjamin's proposed two-layout freeze
-may narrow the day-two upper bound from three layouts to two.
+[lane 08](./research/08-demo-options.md#five-day-plan-2). Benjamin's shape review settled the
+day-3 extraction slice at exactly two RFQ layouts.
 
 ### Slice acceptance
 
+- The recorded replay-first golden run is the lunch demo artifact, and every beat is
+  deterministic from the fixed local bundle.
+- One live `@beep/anthropic` extraction call is a day-1 acceptance item. On failure, fall to
+  `openai-compat`, `venice-ai`, or `xai` the same day.
+- `@beep/cosmos` gets a half-day browser timebox on day 2. If the demo graph does not render in
+  the browser inside the box, the lunch ships table and source with no renegotiation and no
+  static-image stand-in.
+- The day-5 rehearsal is recorded through `bun run beep qa` and proves the offline fallback.
 - The exact 30-minute sequence completes from the fixed local bundle.
 - Each extracted line, rule answer, supplier-offer cell, and reused correction opens its source
   or exact span.
 - Every lunch offer is marked `SYNTHETIC` and dated.
 - Approve/edit/reject creates an internal record. Quote send and PO submission remain impossible.
 - `/health`, the MagicDNS HTTPS endpoint, and the named-user tailnet boundary are proven.
-- The graph has a table-and-source fallback; provider failure has a fixed-output fallback.
+- Provider failure has a fixed-output fallback.
 - The app and mutable demo corpus carry the proposed 2026-09-30 disposition date.
 
 ## Open risks inherited from the brief
