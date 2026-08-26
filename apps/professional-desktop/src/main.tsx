@@ -11,8 +11,10 @@ import { ProfessionalAtomProvider } from "./runtime/ProfessionalAtomProvider.tsx
 import { RendererObservabilityConfig } from "./runtime/RendererObservabilityConfig.ts";
 import { WorkbenchThemeProvider } from "./theme/WorkbenchThemeProvider.tsx";
 
-// biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
-if (import.meta.env.DEV) {
+// react-grab is a dev-only element picker; `VITE_REACT_GRAB=0` keeps its
+// pointer-capturing overlay out of recorded browser-QA runs.
+// biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV and VITE_* on import.meta.env.
+if (import.meta.env.DEV && import.meta.env.VITE_REACT_GRAB !== "0") {
   void import("react-grab");
 }
 
