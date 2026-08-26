@@ -145,11 +145,6 @@ export * from "./Email.ts";
  * @since 0.0.0
  * @category validation
  */
-export * as File from "./File/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * as FileDiff from "./FileDiff.schema.ts";
 /**
  * @since 0.0.0
@@ -171,6 +166,11 @@ export * from "./FileName.ts";
  * @category validation
  */
 export * from "./FilePath/index.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * as FileTypeChecker from "./FileTypeChecker/index.ts";
 /**
  * @since 0.0.0
  * @category validation

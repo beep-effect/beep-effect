@@ -1,19 +1,41 @@
 /**
- * File type detection and validation declarations.
+ * Internal image entries for the file-type catalog.
  *
- * @packageDocumentation
+ * @internal
  * @since 0.0.0
  */
 
-import type { FileInfo } from "../types/index.ts";
+import { makeCatalogFileTypeInfo } from "./FileTypeChecker.catalog-constructor.ts";
+import type { FileTypeInfo } from "./FileTypeChecker.schema.ts";
+
+type ImageFileType =
+  | "avif"
+  | "bmp"
+  | "bpg"
+  | "cr2"
+  | "exr"
+  | "gif"
+  | "heic"
+  | "ico"
+  | "jpeg"
+  | "pbm"
+  | "pgm"
+  | "png"
+  | "ppm"
+  | "psd"
+  | "tiff"
+  | "webp";
+type ImageCatalog = { readonly [K in ImageFileType]: FileTypeInfo & { readonly extension: K } };
 
 /**
- * Image files information with their unique signatures
- * @category models
+ * Internal image metadata keyed by canonical extension.
+ *
+ * @internal
+ * @category constants
  * @since 0.0.0
  */
-export class ImageTypes {
-  static AVIF: FileInfo = {
+export const imageCatalog: ImageCatalog = {
+  avif: makeCatalogFileTypeInfo({
     extension: "avif",
     mimeType: "image/avif",
     description: "Alliance for Open Media (AOMedia) Video 1 (AV1) Image File",
@@ -22,9 +44,9 @@ export class ImageTypes {
         sequence: [0x00, 0x00, 0x00],
       },
     ],
-  };
+  }),
 
-  static BMP: FileInfo = {
+  bmp: makeCatalogFileTypeInfo({
     extension: "bmp",
     mimeType: "image/bmp",
     description: "A bitmap format used mostly in Windows",
@@ -34,9 +56,9 @@ export class ImageTypes {
         compatibleExtensions: ["dib"],
       },
     ],
-  };
+  }),
 
-  static BPG: FileInfo = {
+  bpg: makeCatalogFileTypeInfo({
     extension: "bpg",
     mimeType: "image/bpg",
     description: "Better Portable Graphics image format",
@@ -45,9 +67,9 @@ export class ImageTypes {
         sequence: [0x42, 0x50, 0x47, 0xfb],
       },
     ],
-  };
+  }),
 
-  static CR2: FileInfo = {
+  cr2: makeCatalogFileTypeInfo({
     extension: "cr2",
     mimeType: "image/x-canon-cr2",
     description: "Canon digital camera RAW file",
@@ -56,9 +78,9 @@ export class ImageTypes {
         sequence: [0x49, 0x49, 0x2a, 0x00, 0x10, 0x00, 0x00, 0x00, 0x43, 0x52],
       },
     ],
-  };
+  }),
 
-  static EXR: FileInfo = {
+  exr: makeCatalogFileTypeInfo({
     extension: "exr",
     mimeType: "image/x-exr",
     description: "OpenEXR bitmap image format",
@@ -67,9 +89,9 @@ export class ImageTypes {
         sequence: [0x76, 0x2f, 0x31, 0x01],
       },
     ],
-  };
+  }),
 
-  static GIF: FileInfo = {
+  gif: makeCatalogFileTypeInfo({
     extension: "gif",
     mimeType: "image/gif",
     description: "Image file encoded in the Graphics Interchange Format (GIF)",
@@ -81,9 +103,9 @@ export class ImageTypes {
         sequence: [0x47, 0x49, 0x46, 0x38, 0x39, 0x61],
       },
     ],
-  };
+  }),
 
-  static HEIC: FileInfo = {
+  heic: makeCatalogFileTypeInfo({
     extension: "heic",
     mimeType: "image/heic",
     description: "A variant of the HEIF (High Efficiency Image Format) that store images on the latest Apple devices.",
@@ -93,13 +115,17 @@ export class ImageTypes {
         offset: 4,
       },
       {
+        sequence: [0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x76, 0x63],
+        offset: 4,
+      },
+      {
         sequence: [0x66, 0x74, 0x79, 0x70, 0x6d],
         offset: 4,
       },
     ],
-  };
+  }),
 
-  static ICO: FileInfo = {
+  ico: makeCatalogFileTypeInfo({
     extension: "ico",
     mimeType: "image/x-icon",
     description: "Computer icon encoded in ICO file format",
@@ -109,9 +135,9 @@ export class ImageTypes {
         compatibleExtensions: ["spl"],
       },
     ],
-  };
+  }),
 
-  static JPEG: FileInfo = {
+  jpeg: makeCatalogFileTypeInfo({
     extension: "jpeg",
     mimeType: "image/jpeg",
     description: "JPEG (Joint Photographic Experts Group) is a widely used lossy image compression format.",
@@ -155,9 +181,9 @@ export class ImageTypes {
         compatibleExtensions: ["jpe"],
       },
     ],
-  };
+  }),
 
-  static PBM: FileInfo = {
+  pbm: makeCatalogFileTypeInfo({
     extension: "pbm",
     mimeType: "image/x-portable-bitmap",
     description:
@@ -172,9 +198,9 @@ export class ImageTypes {
         description: "Portable bitmap binary",
       },
     ],
-  };
+  }),
 
-  static PGM: FileInfo = {
+  pgm: makeCatalogFileTypeInfo({
     extension: "pgm",
     mimeType: "image/x-portable-graymap",
     description:
@@ -189,9 +215,9 @@ export class ImageTypes {
         description: "Portable Gray Map binary",
       },
     ],
-  };
+  }),
 
-  static PNG: FileInfo = {
+  png: makeCatalogFileTypeInfo({
     extension: "png",
     mimeType: "image/png",
     description:
@@ -201,9 +227,9 @@ export class ImageTypes {
         sequence: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
       },
     ],
-  };
+  }),
 
-  static PPM: FileInfo = {
+  ppm: makeCatalogFileTypeInfo({
     extension: "ppm",
     mimeType: "image/x-portable-pixmap",
     description: "PPM (Portable Pixmap) is a simple color image format in the Portable Network Graphics (PNG) suite.",
@@ -217,9 +243,9 @@ export class ImageTypes {
         description: "Portable Pixmap binary",
       },
     ],
-  };
+  }),
 
-  static PSD: FileInfo = {
+  psd: makeCatalogFileTypeInfo({
     extension: "psd",
     mimeType: "image/vnd.adobe.photoshop",
     description: "PSD (Photoshop Document) is an Adobe Photoshop image file format",
@@ -228,9 +254,9 @@ export class ImageTypes {
         sequence: [0x38, 0x42, 0x50, 0x53],
       },
     ],
-  };
+  }),
 
-  static TIFF: FileInfo = {
+  tiff: makeCatalogFileTypeInfo({
     extension: "tiff",
     mimeType: "image/tiff",
     description: "TIFF is a raster image format used for high-quality scanning, publishing, and photography",
@@ -254,9 +280,9 @@ export class ImageTypes {
         description: "BigTIFF files. Tagged Image File Format files > 4 GB",
       },
     ],
-  };
+  }),
 
-  static WEBP: FileInfo = {
+  webp: makeCatalogFileTypeInfo({
     extension: "webp",
     mimeType: "image/webp",
     description: "A modern image format that provides superior lossless and lossy compression for images on the web",
@@ -266,5 +292,5 @@ export class ImageTypes {
         skippedBytes: [4, 5, 6, 7],
       },
     ],
-  };
-}
+  }),
+};

@@ -1,19 +1,25 @@
 /**
- * File type detection and validation declarations.
+ * Internal audio entries for the file-type catalog.
  *
- * @packageDocumentation
+ * @internal
  * @since 0.0.0
  */
 
-import type { FileInfo } from "../types/index.ts";
+import { makeCatalogFileTypeInfo } from "./FileTypeChecker.catalog-constructor.ts";
+import type { FileTypeInfo } from "./FileTypeChecker.schema.ts";
+
+type AudioFileType = "aac" | "amr" | "flac" | "m4a" | "mp3" | "wav";
+type AudioCatalog = { readonly [K in AudioFileType]: FileTypeInfo & { readonly extension: K } };
 
 /**
- * Audio files information with their unique signatures
- * @category models
+ * Internal audio metadata keyed by canonical extension.
+ *
+ * @internal
+ * @category constants
  * @since 0.0.0
  */
-export class AudioTypes {
-  static AAC: FileInfo = {
+export const audioCatalog: AudioCatalog = {
+  aac: makeCatalogFileTypeInfo({
     extension: "aac",
     mimeType: "audio/aac",
     description: "Advanced Audio Coding (AAC) is an audio coding standard for lossy digital audio compression",
@@ -27,9 +33,9 @@ export class AudioTypes {
         description: "MPEG-2 Advanced Audio Coding (AAC) Low Complexity (LC) audio file",
       },
     ],
-  };
+  }),
 
-  static AMR: FileInfo = {
+  amr: makeCatalogFileTypeInfo({
     extension: "amr",
     mimeType: "audio/amr",
     description:
@@ -39,9 +45,9 @@ export class AudioTypes {
         sequence: [0x23, 0x21, 0x41, 0x4d, 0x52],
       },
     ],
-  };
+  }),
 
-  static FLAC: FileInfo = {
+  flac: makeCatalogFileTypeInfo({
     extension: "flac",
     mimeType: "audio/x-flac",
     description: "Free Lossless Audio Codec file",
@@ -50,9 +56,9 @@ export class AudioTypes {
         sequence: [0x66, 0x4c, 0x61, 0x43, 0x00, 0x00, 0x00, 0x22],
       },
     ],
-  };
+  }),
 
-  static M4A: FileInfo = {
+  m4a: makeCatalogFileTypeInfo({
     extension: "m4a",
     mimeType: "audio/x-m4a",
     description: "Apple Lossless Audio Codec file",
@@ -63,9 +69,9 @@ export class AudioTypes {
         compatibleExtensions: ["aac"],
       },
     ],
-  };
+  }),
 
-  static MP3: FileInfo = {
+  mp3: makeCatalogFileTypeInfo({
     extension: "mp3",
     mimeType: "audio/mpeg",
     description:
@@ -91,9 +97,9 @@ export class AudioTypes {
         description: "MP3 file with an ID3v2 container",
       },
     ],
-  };
+  }),
 
-  static WAV: FileInfo = {
+  wav: makeCatalogFileTypeInfo({
     extension: "wav",
     mimeType: "audio/wav",
     description: "Waveform Audio File Format",
@@ -103,5 +109,5 @@ export class AudioTypes {
         skippedBytes: [4, 5, 6, 7],
       },
     ],
-  };
-}
+  }),
+};

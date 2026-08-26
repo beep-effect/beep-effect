@@ -1,19 +1,25 @@
 /**
- * File type detection and validation declarations.
+ * Internal video entries for the file-type catalog.
  *
- * @packageDocumentation
+ * @internal
  * @since 0.0.0
  */
 
-import type { FileInfo } from "../types/index.ts";
+import { makeCatalogFileTypeInfo } from "./FileTypeChecker.catalog-constructor.ts";
+import type { FileTypeInfo } from "./FileTypeChecker.schema.ts";
+
+type VideoFileType = "avi" | "flv" | "m4v" | "mkv" | "mov" | "mp4" | "ogg" | "swf" | "webm";
+type VideoCatalog = { readonly [K in VideoFileType]: FileTypeInfo & { readonly extension: K } };
 
 /**
- * Video files information with their unique signatures
- * @category models
+ * Internal video metadata keyed by canonical extension.
+ *
+ * @internal
+ * @category constants
  * @since 0.0.0
  */
-export class VideoTypes {
-  static AVI: FileInfo = {
+export const videoCatalog: VideoCatalog = {
+  avi: makeCatalogFileTypeInfo({
     extension: "avi",
     mimeType: "video/x-msvideo",
     description: "Audio Video Interleave video format",
@@ -23,9 +29,9 @@ export class VideoTypes {
         skippedBytes: [4, 5, 6, 7],
       },
     ],
-  };
+  }),
 
-  static FLV: FileInfo = {
+  flv: makeCatalogFileTypeInfo({
     extension: "flv",
     mimeType: "video/x-flv",
     description: "Flash Video file",
@@ -40,9 +46,9 @@ export class VideoTypes {
         compatibleExtensions: ["mp4", "m4v"],
       },
     ],
-  };
+  }),
 
-  static M4V: FileInfo = {
+  m4v: makeCatalogFileTypeInfo({
     extension: "m4v",
     mimeType: "video/x-m4v",
     description: "Apple's video container format, very similar to MP4",
@@ -60,9 +66,9 @@ export class VideoTypes {
         compatibleExtensions: ["mp4", "flv"],
       },
     ],
-  };
+  }),
 
-  static MKV: FileInfo = {
+  mkv: makeCatalogFileTypeInfo({
     extension: "mkv",
     mimeType: "video/x-matroska",
     description:
@@ -74,9 +80,9 @@ export class VideoTypes {
         compatibleExtensions: ["webm", "mka", "mks", "mk3d"],
       },
     ],
-  };
+  }),
 
-  static MOV: FileInfo = {
+  mov: makeCatalogFileTypeInfo({
     extension: "mov",
     mimeType: "video/quicktime",
     description: "QuickTime movie file",
@@ -90,9 +96,9 @@ export class VideoTypes {
         offset: 4,
       },
     ],
-  };
+  }),
 
-  static MP4: FileInfo = {
+  mp4: makeCatalogFileTypeInfo({
     extension: "mp4",
     mimeType: "video/mp4",
     description:
@@ -115,9 +121,9 @@ export class VideoTypes {
         compatibleExtensions: ["m4v", "flv"],
       },
     ],
-  };
+  }),
 
-  static OGG: FileInfo = {
+  ogg: makeCatalogFileTypeInfo({
     extension: "ogg",
     mimeType: "video/ogg",
     description: "Ogg Vorbis Codec compressed Multimedia file",
@@ -127,9 +133,9 @@ export class VideoTypes {
         compatibleExtensions: ["oga", "ogv", "ogx"],
       },
     ],
-  };
+  }),
 
-  static SWF: FileInfo = {
+  swf: makeCatalogFileTypeInfo({
     extension: "swf",
     mimeType: "application/x-shockwave-flash",
     description:
@@ -148,9 +154,9 @@ export class VideoTypes {
         description: "Macromedia Shockwave Flash player file (uncompressed)",
       },
     ],
-  };
+  }),
 
-  static WEBM: FileInfo = {
+  webm: makeCatalogFileTypeInfo({
     extension: "webm",
     mimeType: "video/webm",
     description:
@@ -162,5 +168,5 @@ export class VideoTypes {
         compatibleExtensions: ["mkv"],
       },
     ],
-  };
-}
+  }),
+};

@@ -1,19 +1,25 @@
 /**
- * File type detection and validation declarations.
+ * Internal archive entries for the file-type catalog.
  *
- * @packageDocumentation
+ * @internal
  * @since 0.0.0
  */
 
-import type { FileInfo } from "../types/index.ts";
+import { makeCatalogFileTypeInfo } from "./FileTypeChecker.catalog-constructor.ts";
+import type { FileTypeInfo } from "./FileTypeChecker.schema.ts";
+
+type CompressedFileType = "7z" | "lzh" | "rar" | "zip";
+type CompressedCatalog = { readonly [K in CompressedFileType]: FileTypeInfo & { readonly extension: K } };
 
 /**
- * Compressed files information with their unique signatures
- * @category models
+ * Internal archive metadata keyed by canonical extension.
+ *
+ * @internal
+ * @category constants
  * @since 0.0.0
  */
-export class CompressedTypes {
-  static _7Z: FileInfo = {
+export const compressedCatalog: CompressedCatalog = {
+  "7z": makeCatalogFileTypeInfo({
     extension: "7z",
     mimeType: "application/x-7z-compressed",
     description: "7-Zip compressed file",
@@ -22,9 +28,9 @@ export class CompressedTypes {
         sequence: [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c],
       },
     ],
-  };
+  }),
 
-  static LZH: FileInfo = {
+  lzh: makeCatalogFileTypeInfo({
     extension: "lzh",
     mimeType: "application/x-lzh-compressed",
     description: "Compressed file using Lempel-Ziv and Haruyasu (LZH) compression algorithm",
@@ -40,9 +46,9 @@ export class CompressedTypes {
         compatibleExtensions: ["lha"],
       },
     ],
-  };
+  }),
 
-  static RAR: FileInfo = {
+  rar: makeCatalogFileTypeInfo({
     extension: "rar",
     mimeType: "application/x-rar-compressed",
     description: "Roshal ARchive compressed archive file",
@@ -56,9 +62,9 @@ export class CompressedTypes {
         description: "Compressed archive v1.50 onwards",
       },
     ],
-  };
+  }),
 
-  static ZIP: FileInfo = {
+  zip: makeCatalogFileTypeInfo({
     extension: "zip",
     mimeType: "application/zip",
     description: "Compressed archive file",
@@ -158,5 +164,5 @@ export class CompressedTypes {
         ],
       },
     ],
-  };
-}
+  }),
+};

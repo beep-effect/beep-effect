@@ -1783,7 +1783,10 @@
   ],
   "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
   "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"],
-  "@beep/schema/File": [
-    "./packages/foundation/modeling/schema/src/File/index.ts"
+  "@beep/schema/ArrayBuffer": [
+    "./packages/foundation/modeling/schema/src/ArrayBuffer.ts"
+  ],
+  "@beep/schema/FileTypeChecker": [
+    "./packages/foundation/modeling/schema/src/FileTypeChecker/index.ts"
   ]
 }
