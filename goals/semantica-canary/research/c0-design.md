@@ -139,10 +139,14 @@ resolution in lab code).
 - Parser degradation: `md-invalid-utf8` → `invalid-utf8`, `html-truncated` → `truncated`,
   `pdf-truncated` → `extraction-failed` (declared from the specimen's construction — the file is cut
   before its xref, so PDF.js cannot open it; doc-text's `extraction` reason maps to it). The
-  `DocTextError.reason` → `DegradedKind` mapping is fixed in the Parser Layer
-  (`empty-text-layer` → `empty-text-layer`, `extraction` → `extraction-failed`, `input-limit` →
-  `input-limit`); an observed kind that differs from the declared one is a failed assertion, never a
-  reason to edit the index.
+  `DegradedKind` mapping is fixed in the Parser Layer and keyed on the doc-text reason the
+  normalized `FileProcessingOperationError` carries in its cause (`empty-text-layer` →
+  `empty-text-layer`, `extraction` → `extraction-failed`, `input-limit` → `input-limit`); the
+  engine boundary folds those reasons into `file-extraction-failed`, so if the translation drops
+  the original reason the lab adds it to that translation in `@beep/doc-text` as cleanup-on-touch
+  (O1) before the slice — the lab never classifies by message text (**open item O-5**). An
+  observed kind that differs from the declared one is a failed assertion, never a reason to edit
+  the index.
 - Hosted lane in CI: only F1 is replayable there — its recorded `ProviderCache` entries are
   committed under `fixtures/provider-cache/` and the CI test runs `canary c0 --offline` over F1
   alone with `ReplayLanguageModelLive` (no keys, no W1 bytes; B3/D14 keep the papers out of the
@@ -158,5 +162,7 @@ resolution in lab code).
 - **O-2** Pattern-lane targets: the Wink custom-entity patterns used for persons/orgs/methods (pinned
   into `ModelIdentity.artifactHash` for the `wink` family).
 - **O-3** Ledger DDL v1 and the `LedgerSnapshot` read model (kept minimal: what `Evaluator` needs).
+- **O-5** Confirm whether `FileProcessingOperationError` preserves the `DocTextError.reason`; if not, the
+  cleanup-on-touch translation change lands in `@beep/doc-text` (its own PR, O1) before the slice.
 - **O-4** Hosted request budget for the slice (one LangExtract call per chunk vs per document) — start
   per document, chunks carried as `RawTextChunk`s; measure in `EvalRunTelemetry`.
