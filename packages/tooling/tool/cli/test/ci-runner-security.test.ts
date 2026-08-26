@@ -76,4 +76,93 @@ describe("CI runner security", () => {
       assert.notInclude(workflowText, "'local:rw,remote:r'");
     }, provideScopedLayer(NodeServices.layer))
   );
+
+  it.effect(
+    "keeps pull request Docgen cache access restore-only",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
+      const workflow = parseDocument(workflowText);
+
+      assert.lengthOf(workflow.errors, 0);
+      assert.strictEqual(workflow.getIn(["jobs", "verify", "env", "TURBO_API"]), PUSH_GUARDED_TURBO_API);
+      assert.strictEqual(workflow.getIn(["jobs", "verify", "env", "TURBO_TOKEN"]), PUSH_GUARDED_TURBO_TOKEN);
+      assert.strictEqual(workflow.getIn(["jobs", "verify", "env", "TURBO_TEAM"]), PUSH_GUARDED_TURBO_TEAM);
+      assert.strictEqual(workflow.getIn(["jobs", "verify", "env", "TURBO_CACHE"]), PUSH_GUARDED_TURBO_CACHE);
+      assert.strictEqual(
+        workflow.getIn(["jobs", "verify", "env", "BEEP_DOCGEN_CONCURRENCY"]),
+        "${{ matrix.docgen_concurrency || 3 }}"
+      );
+      assert.strictEqual(
+        workflow.getIn(["jobs", "verify", "strategy", "matrix", "include", 4, "docgen_concurrency"]),
+        6
+      );
+      const restorePath = ["jobs", "verify", "steps", 5] as const;
+      const savePath = ["jobs", "verify", "steps", 8] as const;
+
+      assert.strictEqual(workflow.getIn([...restorePath, "name"]), "Restore main Docgen Turbo cache");
+      assert.include(workflow.getIn([...restorePath, "if"]), "github.event_name == 'pull_request'");
+      assert.strictEqual(
+        workflow.getIn([...restorePath, "uses"]),
+        "actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830"
+      );
+      assert.strictEqual(workflow.getIn([...restorePath, "with", "path"]), ".turbo/cache");
+      assert.strictEqual(
+        workflow.getIn([...restorePath, "with", "key"]),
+        "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}"
+      );
+      assert.strictEqual(
+        Str.trim(String(workflow.getIn([...restorePath, "with", "restore-keys"]))),
+        "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-"
+      );
+
+      assert.strictEqual(workflow.getIn([...savePath, "name"]), "Save main Docgen Turbo cache");
+      assert.include(workflow.getIn([...savePath, "if"]), "github.event_name == 'push'");
+      assert.strictEqual(
+        workflow.getIn([...savePath, "uses"]),
+        "actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830"
+      );
+      assert.strictEqual(workflow.getIn([...savePath, "with", "path"]), ".turbo/cache");
+      assert.strictEqual(
+        workflow.getIn([...savePath, "with", "key"]),
+        "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}"
+      );
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "forces full Doctest runs for lane tooling changes and scans TypeScript React hosts",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
+
+      assert.include(workflowText, "doctest_mode=full");
+      assert.include(workflowText, "^vitest\\.docs\\.ts$");
+      assert.include(workflowText, "^vitest\\.shared\\.ts$");
+      assert.include(workflowText, "^package\\.json$");
+      assert.include(workflowText, "^bun\\.lock$");
+      assert.include(workflowText, "^\\.github/workflows/heavy\\.yml$");
+      assert.include(workflowText, "^packages/tooling/tool/cli/src/commands/Docgen/");
+      assert.include(workflowText, "^packages/tooling/tool/cli/src/internal/jsdoc/");
+      assert.include(workflowText, "^packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$");
+      assert.include(workflowText, "packages/**/src/**/*.tsx");
+      assert.include(workflowText, "apps/**/src/**/*.tsx");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "keeps the root Doctest script in one-shot mode",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const packageJson = yield* fs.readFileString(path.join(repoRoot, "package.json"));
+
+      assert.include(packageJson, '"doctest": "vitest run --config vitest.docs.ts"');
+    }, provideScopedLayer(NodeServices.layer))
+  );
 });

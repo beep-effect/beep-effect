@@ -139,23 +139,15 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          docgen_mode=none
-
-          if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            docgen_mode=affected
+          if [[ "${{ matrix.id }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
             if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
               git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
             fi
-
             changed_files="$(git diff --name-only "${base_ref}...HEAD")"
-
-            if [[ -z "$changed_files" ]]; then
+            # Root dependency resolution changes the resolved generator or formatter, so these files are drift inputs.
+            if ! grep -Eq '(^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\.json|spec/|scripts/|src/_generated/)|^packages/tooling/library/codegen-kit/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^packages/_internal/db-admin/drizzle/|^apps/professional-desktop/(package\.json|scripts/sync-migration-bundle\.ts|src/runtime/Migrations\.gen\.ts)$|^(package\.json|bun\.lock)$)' <<< "$changed_files"; then
               should_run=false
-            elif ! grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)' <<< "$changed_files"; then
-              should_run=false
-            elif grep -Eq '(^packages/tooling/tool/docgen/|^packages/tooling/tool/cli/src/commands/Docgen/|^(\.bun-version|bun\.lock|package\.json|turbo\.json|tsconfig(\..*)?\.json)$)' <<< "$changed_files"; then
-              docgen_mode=full
             fi
           fi
 
@@ -174,7 +166,6 @@ jobs:
           fi
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-          echo "docgen_mode=$docgen_mode" >> "$GITHUB_OUTPUT"
 
       - name: Free runner disk for verification lanes
         # Destructive image cleanup runs on ephemeral hosted images (GitHub-
@@ -260,13 +251,6 @@ jobs:
                 run_lane ci lane repo-sanity
               fi
               ;;
-            docgen)
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                run_lane ci lane docgen --mode "${{ steps.lane-gate.outputs.docgen_mode }}" --base "origin/${GITHUB_BASE_REF:-main}" --head HEAD
-              else
-                run_lane ci lane docgen --mode full
-              fi
-              ;;
             labs)
               # No --affected: the lane's positive labs filter must not union
               # with an affected selector (lab-apps-lifecycle P2, row 10).
@@ -282,10 +266,6 @@ jobs:
           else
             bun run beep ci append-turbo-summary
           fi
-
-      - name: Append Turbo summary (docgen affected)
-        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.docgen_mode == 'affected' && always()
-        run: bun run beep ci append-turbo-summary
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'

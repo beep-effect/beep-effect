@@ -15,6 +15,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { writeArtifact } from "../../../internal/artifacts/index.ts";
+import { jsdocOwnersByStart, ownJSDocNodeName, rawJSDocSpans } from "../../../internal/jsdoc/JSDocSections.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
@@ -26,9 +27,8 @@ import {
 import { jsdocMigrateExtractCodec } from "./JSDocMigrateData.ts";
 import { jsdocMigrateBlockStats } from "./JSDocMigrateRewrite.ts";
 import { hasGeneratedFileHeader, isPackageSourceFile, jsdocGitErrorAdapter } from "./JSDocRatchet.ts";
-import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
+import { tagsFromComment } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { SourceFile } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocMigrateExtract");
 
@@ -91,61 +91,6 @@ export type JSDocMigrateScannedBlock = typeof JSDocMigrateScannedBlock.Type;
 export const jsdocMigrateSourceHash = (blockText: string): string =>
   `sha256:${createHash("sha256").update(blockText).digest("hex")}`;
 
-type RawSpan = { readonly start: number; readonly end: number; readonly text: string };
-
-const rawBlockSpans = (sourceText: string): ReadonlyArray<RawSpan> => {
-  const spans: Array<RawSpan> = [];
-  let cursor = 0;
-  for (const text of jsdocCommentsFromSource(sourceText)) {
-    const start = sourceText.indexOf(text, cursor);
-    if (start === -1) {
-      break;
-    }
-    A.appendInPlace(spans, { start, end: start + text.length, text });
-    cursor = start + text.length;
-  }
-  return spans;
-};
-
-// fallow-ignore-next-line complexity -- exhaustive ts-morph node-kind dispatch; each guard is one line and a lookup table cannot preserve the type narrowing getName() needs
-const ownName = (node: Node): string | undefined => {
-  if (Node.isVariableStatement(node)) {
-    return node.getDeclarations()[0]?.getName();
-  }
-  if (Node.isConstructorDeclaration(node)) {
-    return "constructor";
-  }
-  if (Node.isExportAssignment(node)) {
-    return "<default>";
-  }
-  if (Node.isModuleDeclaration(node)) {
-    return node.getName();
-  }
-  if (
-    Node.isVariableDeclaration(node) ||
-    Node.isBindingElement(node) ||
-    Node.isEnumMember(node) ||
-    Node.isMethodDeclaration(node) ||
-    Node.isMethodSignature(node) ||
-    Node.isPropertyDeclaration(node) ||
-    Node.isPropertySignature(node) ||
-    Node.isGetAccessorDeclaration(node) ||
-    Node.isSetAccessorDeclaration(node)
-  ) {
-    return node.getName();
-  }
-  if (
-    Node.isFunctionDeclaration(node) ||
-    Node.isClassDeclaration(node) ||
-    Node.isInterfaceDeclaration(node) ||
-    Node.isTypeAliasDeclaration(node) ||
-    Node.isEnumDeclaration(node)
-  ) {
-    return node.getName() ?? "<default>";
-  }
-  return undefined;
-};
-
 const containerName = (node: Node): string | undefined =>
   Node.isClassDeclaration(node) ||
   Node.isInterfaceDeclaration(node) ||
@@ -156,7 +101,7 @@ const containerName = (node: Node): string | undefined =>
     : undefined;
 
 const qualifiedSymbol = (owner: Node): string => {
-  const base = ownName(owner) ?? "<anonymous>";
+  const base = O.getOrElse(ownJSDocNodeName(owner), () => "<anonymous>");
   const ancestors: Array<string> = [];
   let current = owner.getParent();
   while (current !== undefined && !Node.isSourceFile(current)) {
@@ -186,37 +131,6 @@ const blockKindOf = (owner: Node): JSDocMigrateBlockKind => {
   return "value";
 };
 
-const recordJsDocOwner = (node: Node, owners: MutableHashMap.MutableHashMap<number, Node>): void => {
-  if (!Node.isJSDocable(node)) {
-    return;
-  }
-  for (const doc of node.getJsDocs()) {
-    if (!MutableHashMap.has(owners, doc.getStart())) {
-      MutableHashMap.set(owners, doc.getStart(), node);
-    }
-  }
-};
-
-const recordBindingElementOwner = (node: Node, owners: MutableHashMap.MutableHashMap<number, Node>): void => {
-  if (!Node.isBindingElement(node)) {
-    return;
-  }
-  for (const range of node.getLeadingCommentRanges()) {
-    if (Str.startsWith("/**")(range.getText()) && !MutableHashMap.has(owners, range.getPos())) {
-      MutableHashMap.set(owners, range.getPos(), node);
-    }
-  }
-};
-
-const docOwnersByStart = (sourceFile: SourceFile): MutableHashMap.MutableHashMap<number, Node> => {
-  const owners = MutableHashMap.empty<number, Node>();
-  sourceFile.forEachDescendant((node) => {
-    recordJsDocOwner(node, owners);
-    recordBindingElementOwner(node, owners);
-  });
-  return owners;
-};
-
 const fileoverviewPreamblePattern = /^(?:#![^\n]*\n)?\s*$/;
 
 const indentBefore = (sourceText: string, start: number): string => {
@@ -233,13 +147,13 @@ const isAffectedBlock = (blockText: string): boolean => {
 };
 
 const scanBlocks = (filePath: string, sourceText: string): ReadonlyArray<JSDocMigrateScannedBlock> => {
-  const spans = rawBlockSpans(sourceText);
+  const spans = rawJSDocSpans(sourceText);
   if (spans.length === 0) {
     return [];
   }
   const project = createInMemoryTsMorphProject();
   const sourceFile = project.createSourceFile(filePath, sourceText, { overwrite: true });
-  const owners = docOwnersByStart(sourceFile);
+  const owners = jsdocOwnersByStart(sourceFile);
   const fileoverviewStart =
     spans[0] !== undefined && fileoverviewPreamblePattern.test(Str.slice(0, spans[0].start)(sourceText))
       ? spans[0].start
@@ -247,7 +161,9 @@ const scanBlocks = (filePath: string, sourceText: string): ReadonlyArray<JSDocMi
 
   const bound = A.map(
     spans,
-    (span): { readonly span: RawSpan; readonly symbol: string; readonly kind: JSDocMigrateBlockKind } => {
+    (
+      span
+    ): { readonly span: (typeof spans)[number]; readonly symbol: string; readonly kind: JSDocMigrateBlockKind } => {
       const owner = MutableHashMap.get(owners, span.start);
       if (O.isSome(owner)) {
         const node = owner.value;

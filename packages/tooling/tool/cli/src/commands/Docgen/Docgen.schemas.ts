@@ -117,7 +117,6 @@ export class DocgenConfigDocument extends S.Class<DocgenConfigDocument>($I`Docge
     enforceExamples: S.optionalKey(S.Boolean),
     enforceVersion: S.optionalKey(S.Boolean),
     tscExecutable: S.optionalKey(S.String),
-    runExamples: S.optionalKey(S.Boolean),
     include: S.String.pipe(S.Array, S.optionalKey),
     exclude: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
     parseCompilerOptions: S.optionalKey(S.Union([S.String, DocgenJsonObject])),

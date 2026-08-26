@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "lab-manifest/v1",
+  "purpose": "Semantica port canary: headless Document→KG→eval chain over F1 + W1",
+  "created": "2026-08-25",
+  "disposition": "active"
+}

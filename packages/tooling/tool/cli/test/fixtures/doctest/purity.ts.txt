@@ -1,0 +1,16 @@
+/**
+ * **Example** (Pure runner)
+ *
+ * ```ts
+ * Effect.runSync(Effect.succeed(1))
+ * ```
+ */
+
+/**
+ * **Example** (Type only)
+ *
+ * ```typescript
+ * import type { Effect } from "effect"
+ * type Value = Effect<number>
+ * ```
+ */

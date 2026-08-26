@@ -6,7 +6,7 @@ Status: complete. The cutover landed at the workflow and group layers; the
 controller's organization registration first failed closed on a missing
 installation permission and rolled back, then redeployed after the permission
 was accepted. Admission proofs 1 through 4 are recorded below; proof 5 (the
-JIT replay red team) belongs to P4.
+JIT replay red team) passed in P4 on 2026-08-25.
 
 This record covers the ruleset context renames, the two-PR reusable-workflow
 cutover, the organization runner-group restriction, the controller deployment,
@@ -181,7 +181,7 @@ and was not exercised.
 | 2. Registration reports the group; absence or rejection leaves the runner offline without fallback | pass | Positive half: both probe candidates registered in group 4 and nowhere else (`17:48:17Z`, `17:48:47Z`). Absent-group half: "Absent-group probe" above (`18:08:45Z` to `18:16:22Z`). The permission `403` incident is retained as a third fail-closed record. |
 | 3. A pull-request heavy job reaches a group runner through `heavy.yml@main` | pass | #810 run `32880339636`: `referenced_workflows` resolved `heavy.yml@main` to `refs/heads/main`; all five `Heavy / ...` jobs started on group-4 runners between `17:51:25Z` and `17:53:25Z`. The `main` probe run `32880023142` completed `success` on a group-4 runner. |
 | 4. A fleet-labelled dispatch outside the allowlist stays queued with no runner | pass | Run `32880025557`, job `97906985074`: queued `17:48:13Z` to `17:53:33Z` with no runner or group while an idle group runner was online; cancelled at `17:53:35Z`. |
-| 5. `REDTEAM_JIT_REPLAY=1` red team | transferred to P4 | Not run in P3. |
+| 5. `REDTEAM_JIT_REPLAY=1` red team | pass in P4 | Run `32893112867` on 2026-08-25 at `20:03Z`: `GATE M_JIT_REPLAY: PASS`, replay rejected with `A session for this runner already exists.` See [`P4-EVIDENCE.md`](./P4-EVIDENCE.md). |
 
 ## Pull-request evidence
 

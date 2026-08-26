@@ -4,14 +4,14 @@
     "id": "runner-trust-boundary",
     "packetId": "goal-packet/v1:86891349f7fd4e9fa0ae81212a26c855c198a4603f12a600201abe32200547e6",
     "title": "Runner Trust Boundary",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-24",
     "updated": "2026-08-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/runner-trust-boundary",
-  "lifecycle": "active",
-  "statusNote": "P0 was ratified and P1 plus P2 completed on 2026-08-24 with closure-ready evidence retained. All four P1/P2 findings remain open through the P5 merge gate. P3 Admission defense in depth completed on 2026-08-25: heavy lanes route through heavy.yml@main, organization group beep-ec2-heavy is restricted to the four protected default-branch workflows, the controller registers runners only in that group after the installation permission was accepted and the controller redeployed, and the admission probes passed (a pull-request heavy job reached a group runner; a non-allowlisted fleet-labelled dispatch stayed queued with no runner). P4 owns the JIT replay probe, which is implemented but not yet run.",
+  "lifecycle": "completed-retained",
+  "statusNote": "P0 ratified and P1 plus P2 completed on 2026-08-24; P3 and P4 completed on 2026-08-25. Heavy lanes stay on EC2 through heavy.yml@main and organization group beep-ec2-heavy; the fleet is a non-privileged runner class (no usable ambient credentials, sealed digest-verified image, one job per VM). The final-head red team (run 32893112867) passed Gates A through M including concurrent JIT replay rejection, AMI_PIN, live METADATA_DISABLED, scoped deregistration, and EC2 teardown. All remediation PRs are merged, the six exact Codex IDs are closed as Already fixed with the ledger in ops/closures.json, and the closeout reflection is retained. Exceptions in SPEC.md: E1 post-release JIT replay untested (open security residual, ci-fleet-endgame), E2 four IDs closed 2026-08-24 before the P4 re-proof by operator authority. Residuals: stale serving image after lockfile changes (ci-fleet-endgame), inert pre-cutover repository registrations, and the by-construction JIT argv residue bounded by the one-job VM.",
   "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -38,6 +38,8 @@
     "goals/runner-trust-boundary/research/P2-EVIDENCE.md",
     "goals/runner-trust-boundary/research/P3-DESIGN.md",
     "goals/runner-trust-boundary/research/P3-EVIDENCE.md",
+    "goals/runner-trust-boundary/research/P4-EVIDENCE.md",
+    "goals/runner-trust-boundary/ops/closures.json",
     "goals/runner-trust-boundary/research/OPPORTUNITIES.md",
     "goals/runner-trust-boundary/research/SOURCES.md",
     "goals/codex-security-findings-2026-08-10/ops/triage.json",
@@ -56,6 +58,7 @@
     "research/P2-EVIDENCE.md",
     "research/P3-DESIGN.md",
     "research/P3-EVIDENCE.md",
+    "research/P4-EVIDENCE.md",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md"
   ],
@@ -94,22 +97,22 @@
     {
       "id": "P4",
       "name": "Boundary verification",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Yeet publish, review, and merge gate",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Dashboard closure",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -118,6 +121,7 @@
     "bun run beep goals index --check",
     "bun run beep goals doctor",
     "bun run beep lint reflection-artifacts",
+    "jq . goals/runner-trust-boundary/ops/closures.json > /dev/null",
     "git diff --check -- goals/runner-trust-boundary goals/INDEX.md"
   ],
   "stopConditions": [

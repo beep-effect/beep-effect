@@ -27,6 +27,10 @@ in-repo process machinery.
 | MrLesk/Backlog.md, antopolskiy/kanban-md, zerowand01/markplane, chr15m/kanban-todo | (unverified) | reference-only | markdown-native board family; dual-writer anti-pattern evidence (lane 7) |
 | xyflow/xyflow, dagrejs/dagre, remarkjs/react-markdown | MIT | port-with-attribution (as deps) | v2 dashboard stack candidates (lane 7) |
 | humanlayer/humanlayer | Apache-2.0 | reference-only | create_plan/research command shapes; FIC workflow |
+| MareaSW/ontoskills (local clone `~/YeeBois/dev/ontoskills` @ f15690a, 2026-05-05) | MIT | reference-only | Violation/Warning SHACL tiers with forward refs as warnings; breaking/additive/cosmetic drift diff with affected-set queries; fleet-wide linter separate from per-node shapes ([`2026-08-25-ontology-tooling-recon.md`](./2026-08-25-ontology-tooling-recon.md)) |
+| fabio-rovai/open-ontologies (local clone `~/YeeBois/dev/open-ontologies` @ 339db9a, 2026-08-25) | MIT | reference-only | typed gate certificate shape (Amendment J); plans persisted with owner/id; evidence inside the promoted artifact; validators report reach; probe-actual-shape migrations (same note) |
+| SenolIsci/mykg (local clone `~/YeeBois/dev/mykg` @ 5ab1c1b, 2026-08-19) | MIT | reference-only | structurally read-only graph layer; content-addressed shards + `--append`; response-hardening ladder; locked base schema; contrast cases for frontmatter discard, `type+name` identity, path-only provenance (same note) |
+| AgentO (w3id.org/agentic-ai/onto, rev 0.2) | CC BY 4.0 | reference-only | design-time agent/task/tool/workflow vocabulary layered on PROV-O, P-Plan, BEAM; four-part prompt split; mapping targets for the JSON-LD projection lane (Amendment I); the Sect. 4 translate-review-amend-rerun migration method ([`2026-08-25-agento-ontology-mapping.md`](./2026-08-25-agento-ontology-mapping.md)) |
 
 ## 3. External research sources
 
@@ -47,6 +51,14 @@ Carried inside the two imported documents (each claim is cited inline there):
   — workflow comparison + vendored-skill drift audit against
   https://www.aihero.dev/skills (scraped 2026-08-10) and the local
   mattpocock/skills clone @ 84fdeff.
+- [`2026-08-25-agento-ontology-mapping.md`](./2026-08-25-agento-ontology-mapping.md)
+  — Ekelhart, Kurniawan, Ekaputra, Kiesling, "AgentO: An Ontology for
+  Modeling Agentic AI Systems", ESWC 2026, LNCS 16550, pp. 298–320
+  (doi:10.1007/978-3-032-25159-6_16); ontology Turtle fetched 2026-08-25
+  from https://sepses.ifs.tuwien.ac.at/onto/ontology.ttl.
+- [`2026-08-25-ontology-tooling-recon.md`](./2026-08-25-ontology-tooling-recon.md)
+  — reader + refuting-verifier lanes over the three local clones above;
+  operator spot check of the verifiers' "missed" items.
 - Grok lane reports (all six completed 2026-08-10, each with URLs, dated
   x.com citations, and contrarian evidence): `grok/reports/1-spec-driven-dev.md`,
   `2-agent-plan-gates.md`, `3-event-sourced-control.md`,

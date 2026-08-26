@@ -4,10 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Fibered } from "@beep/identity/Fibered";
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { ArrayOfStrings } from "@beep/schema";
-import { Effect, Result, SchemaGetter } from "effect";
+import { Effect, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 /* cspell:ignore Derivability derivability */
 import { ApplicableTo } from "./ApplicableTo.model.ts";
@@ -22,6 +25,9 @@ import type { TagName } from "./TagValue.model.ts";
 const $I = $RepoUtilsId.create("JSDoc/models/JSDocTagDefinition.model");
 
 const defaultIsDeprecated = (): boolean => false;
+
+const singletonRecord = <Key extends string, Value>(key: Key, value: Value): Readonly<Record<Key, Value>> =>
+  R.set(R.empty<Key, Value>(), key, value);
 
 /**
  * Complete metadata for a single JSDoc/TSDoc tag.
@@ -271,11 +277,14 @@ export const make: {
   <const Tag extends TagName, const Def extends typeof JSDocTagDefinition.Encoded>(
     _tag: Tag,
     meta: Omit<JSDocTagDefinition.Instance<Tag, Def>, "_tag">
-  ) => {
-    const def = Result.getOrThrow(S.decodeResult(JSDocTagDefinition)({ _tag, ...meta }));
-    return JSDocTagDefinition.mapFields((_) => ({
-      _tag: S.tag(_tag),
-      value: TagValue.cases[_tag],
-    })).annotate({ jsDocTagMetadata: def });
-  }
+  ) =>
+    Fibered.make({
+      base: S.Literals([_tag]),
+      fibers: singletonRecord(_tag, TagValue.cases[_tag]),
+      section: {
+        schema: JSDocTagDefinition,
+        values: singletonRecord(_tag, { _tag, ...meta }),
+      },
+      annotationKey: "jsDocTagMetadata",
+    }).member(_tag)
 );

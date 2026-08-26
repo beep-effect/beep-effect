@@ -1,6 +1,6 @@
 {
   "$schema": "../../../packages/tooling/tool/docgen/schema.json",
-  "exclude": ["src/internal/**/*.ts"],
+  "exclude": ["src/_generated/**/*.ts", "src/internal/**/*.ts"],
   "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/govinfo/src/",
   "examplesCompilerOptions": {
     "noEmit": true,

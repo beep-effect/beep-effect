@@ -126,6 +126,12 @@
         ]
       },
       {
+        "name": "@beep/codegen-kit",
+        "patterns": [
+          "packages/tooling/library/codegen-kit/src/**"
+        ]
+      },
+      {
         "name": "@beep/colors",
         "patterns": [
           "packages/foundation/capability/colors/src/**"
@@ -660,6 +666,12 @@
         ]
       },
       {
+        "name": "@beep/semantica",
+        "patterns": [
+          "apps/labs/semantica/src/**"
+        ]
+      },
+      {
         "name": "@beep/shacl",
         "patterns": [
           "packages/drivers/shacl/src/**"
@@ -803,6 +815,7 @@
         "from": "@beep/acp",
         "allow": [
           "@beep/acp",
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils",
@@ -810,6 +823,7 @@
         ],
         "allowTypeOnly": [
           "@beep/acp",
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils",
@@ -1198,6 +1212,21 @@
         ]
       },
       {
+        "from": "@beep/codegen-kit",
+        "allow": [
+          "@beep/codegen-kit",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/codegen-kit",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/colors",
         "allow": [
           "@beep/colors",
@@ -1459,6 +1488,7 @@
         "from": "@beep/ecfr",
         "allow": [
           "@beep/api-transport",
+          "@beep/codegen-kit",
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
@@ -1467,6 +1497,7 @@
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
+          "@beep/codegen-kit",
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
@@ -1798,6 +1829,7 @@
         "from": "@beep/govinfo",
         "allow": [
           "@beep/api-transport",
+          "@beep/codegen-kit",
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
@@ -1806,6 +1838,7 @@
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
+          "@beep/codegen-kit",
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
@@ -2960,12 +2993,14 @@
       {
         "from": "@beep/runpod",
         "allow": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
@@ -3084,6 +3119,19 @@
           "@beep/semantic-web",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/semantica",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/semantica"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/semantica"
         ]
       },
       {

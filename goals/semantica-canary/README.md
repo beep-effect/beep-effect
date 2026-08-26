@@ -50,19 +50,23 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-P1 Scaffold, step 1: the lab mint on its own PR (labs doctrine; #742
-precedent, M5). Run
-`bun run beep create-package semantica --type app --app-kind tauri --lab --description "Semantica port canary: headless Document→KG→eval chain over F1 + W1"`,
-run one local `cargo check`, freeze `src-tauri`, and hand-write the headless
-entry (server/main.ts) plus the runtime layer (src/runtime/Layer.ts) per
-Professional Desktop's split (S4). F1 fixtures and the W1 manifest follow in
-the same phase. C0 starts only after the mint PR is mergeable.
+P1 Scaffold, step 2 landed F1 (nine synthetic specimens) and the W1 manifest
+(`corpusHash` in [`history/p1-w1-manifest.md`](./history/p1-w1-manifest.md));
+`gold/v1` rides its own gold-proposer PR before the first C0 slice (ids frozen from the
+manifest order, D-C0-9). Step 1 is done: the lab
+was minted at [`apps/labs/semantica`](../../apps/labs/semantica/README.md)
+with `--app-kind tauri --lab`, the one local `cargo check` is recorded, `src-tauri`
+is frozen through C2 (S4), and the headless entry (server/main.ts) plus the
+runtime layer (src/runtime/Layer.ts) are hand-written per Professional
+Desktop's split. C0 starts only after the mint PR is mergeable.
 
 ## Latest evidence
 
-Not started. The graduation ceremony (docs-only PR B, M5) is the only artifact:
-MAP v1.0 ratified, exploration flipped `graduated`, this packet scaffolded.
-Stage evidence (EvalReports, replay diffs, crash-identity logs) lands under
+[`history/p1-cargo-check.md`](./history/p1-cargo-check.md) — the one local
+`cargo check` (2026-08-25, exit 0, 268 crates, 0 warnings, cargo/rustc 1.96.0).
+The `canary c0|c1|c2 [--offline]` entry exists and fails with a typed
+`StageNotImplemented` error until each stage lands. Stage evidence
+(EvalReports, replay diffs, crash-identity logs) lands under
 [`history/`](./history/) as each stage runs.
 
 ## Notes

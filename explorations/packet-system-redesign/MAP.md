@@ -91,6 +91,81 @@ machinery and bounds stream opt-in.
   `ops/events/`. Candidate 3 owns only the fleet-scale repair *flow* (bulk
   repair, advisory-to-blocking ratchet), never the applier itself.
 
+## Queued amendment candidates (2026-08-25)
+
+Proposed, not ratified. Queued for the Session B grill that charters the
+fleet convention-migration campaign; they enter the amendment record above
+only if the operator ratifies them there. Three amendments are queued: H and
+I draw their mapping evidence from
+[`research/2026-08-25-agento-ontology-mapping.md`](./research/2026-08-25-agento-ontology-mapping.md)
+(AgentO, ESWC 2026, CC BY 4.0, reference-only), and J draws its certificate
+shape from
+[`research/2026-08-25-ontology-tooling-recon.md`](./research/2026-08-25-ontology-tooling-recon.md)
+(open-ontologies `Certificate` disposition). All three land inside existing
+candidates; none opens a packet.
+
+- **Amendment H (candidate 3) — typed `PacketWorkPlan`, rendered
+  launchers.** The manifest gains a schema-first work plan: each phase step
+  binds a responsible agent (kind, model, effort), the tools/skills it may
+  use, its constraints (today's `stopConditions[]`), the resources it
+  requires (today's `currentSourceOfTruth[]` / `researchReports[]`), and the
+  human approver. `GOAL.md` becomes a read-only projection rendered from the
+  work plan under a four-part prompt contract (instruction / context / input
+  data / output indicator); the `targetChars`/`maxChars` budget moves from a
+  hand-authoring rule to a render check. Motivation: which model at which
+  effort ran which phase with which tools is the packet fact most often
+  re-derived from session memory; the launcher is the one packet artifact
+  that is authored by hand yet fully determined by the others. Precedent:
+  the skill-contract kernel's typed `SkillContract` (#813). Adds
+  `PacketWorkPlan`, `WorkPlanStep`, `ResponsibleAgent`, `LauncherRender` to
+  candidate 3's significant-symbol ledger, so ratification must amend that
+  ledger explicitly.
+- **Amendment I (candidates 3 and 4) — JSON-LD projection lane.** One more
+  read-only projection off the existing fold emits the packet graph with
+  IRIs anchored on PROV-O (`prov:Agent`, `prov:Plan`, `prov:Activity`,
+  `prov:Association`) and P-Plan (`pplan:Plan`, `pplan:Step`), carried as
+  `SemanticSchemaMetadata` annotations on the manifest and event schemas and
+  mapped (`rdfs:subClassOf` / `owl:equivalentClass`) to AgentO terms where
+  the concepts coincide. Candidate 4's evidence receipts reuse the same IRIs
+  on the runtime side (PROV `Activity` / `Generation`), where AgentO models
+  nothing. D8 is untouched: Markdown packets plus the event chain remain the
+  sole system of record; the graph is derived and disposable. The lane is
+  justified by the join to the rest of the knowledge graph (research-report
+  provenance, evidence spans, ontology packages), not by SPARQL over 214
+  packets on its own, and it must show one such join in its acceptance.
+- **Amendment J (candidates 2 and 4) — gate certificates.** Every packet
+  gate (design approval, readiness, evidence closure, projection validation)
+  emits a typed certificate rather than a boolean: a verdict from a closed
+  vocabulary (`pass` / `reject` / `abstain`), `assumptions[]` naming every
+  check that was skipped or degraded and why, the digests of the inputs the
+  verdict was computed over, a rationale listing the rules that fired, and
+  reach (what was and was not examined; a gate that skipped any check
+  reports `conforms: null`, never `pass`). Approval and work-plan
+  applications reference the certificate by id; an unknown id is an error,
+  never a fallback to latest. Source: open-ontologies `Certificate`
+  (`src/civex.rs`) and reach reporting (`src/shacl.rs`, `src/temporal.rs`),
+  see
+  [`research/2026-08-25-ontology-tooling-recon.md`](./research/2026-08-25-ontology-tooling-recon.md).
+  Adds `GateCertificate`, `GateVerdict`, `GateAssumption`, `GateReach` to
+  the candidate-2 ledger and makes candidate 4's `EvidenceReceipt` carry
+  one.
+- **Campaign method notes (not amendments).** The fleet
+  convention-migration campaign adopts: (a) the AgentO paper's Sect. 4
+  recipe — translate each non-v2 manifest with a mandatory "Issues /
+  Assumptions" header, hand-review a stratified sample, extend the v2
+  schema from the recurring issues, re-run and diff; (b) probe-actual-shape
+  migration — the translator inspects which fields a manifest has rather
+  than trusting a declared version, and the fixtures include real
+  half-migrated packets (open-ontologies `src/state.rs`); (c) a
+  Violation / Warning severity split in which references to not-yet-migrated
+  packets warn rather than fail, so packets land in any order (ontoskills
+  SHACL shapes); (d) a diff report that classifies each change as breaking /
+  additive / cosmetic and names the affected packets (ontoskills
+  `core/src/differ.py`); (e) a fleet-wide lint pass (cycles, duplicate
+  slugs, unreachable packets) separate from per-packet shape checks. Under
+  Amendment E the translation of a completed-retained packet yields a
+  genesis event plus a translation report, never synthesized history.
+
 ## Candidate Goal Packets
 
 | Order | Proposed slug | Mission | Dependencies | Live capability composition |

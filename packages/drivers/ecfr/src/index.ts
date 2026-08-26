@@ -5,12 +5,12 @@
  */
 
 /**
- * Generated eCFR value models and operation descriptors.
+ * Generated eCFR response models and HttpApi contract.
  *
  * @since 0.0.0
  * @category models
  */
-export * from "./_generated/Ecfr.generated.ts";
+export * from "./_generated/Ecfr.gen.ts";
 /**
  * Runtime configuration models and constants.
  *
@@ -31,7 +31,22 @@ export * from "./Ecfr.errors.ts";
  * @since 0.0.0
  * @category services
  */
-export * from "./Ecfr.service.ts";
+export {
+  Ecfr,
+  EcfrCorrectionsParams,
+  EcfrDatedTitleParams,
+  EcfrSearchParams,
+  EcfrTitleParams,
+  EcfrVersionerParams,
+  EcfrVersionsParams,
+} from "./Ecfr.service.ts";
+/**
+ * Type-level contracts exposed by the eCFR service.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type { EcfrShape, SearchResult } from "./Ecfr.service.ts";
 
 /**
  * Package version.

@@ -188,11 +188,12 @@ const generatedComposers = $I.compose(
   "epistemic-client",
   "epistemic-ui",
   "effect-drizzle",
-  "skill-contract"
+  "skill-contract",
+  "codegen-kit"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
-const generatedLabComposers = $I.compose("trustgraph-workbench");
+const generatedLabComposers = $I.compose("semantica", "trustgraph-workbench");
 // GENERATED LAB COMPOSERS END
 
 const composers = {
@@ -202,6 +203,23 @@ const composers = {
 };
 
 // GENERATED LAB EXPORTS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
+
+/**
+ * Identity composer for `@beep/semantica`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts
+ * import { $SemanticaId } from "@beep/identity"
+ *
+ * const id = $SemanticaId.make("Semantica")
+ * void id
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = composers.$SemanticaId;
 
 /**
  * Identity composer for `@beep/trustgraph-workbench`.
@@ -2461,3 +2479,20 @@ export const $EffectDrizzleId: Identity.IdentityComposer<"@beep/effect-drizzle">
  * @since 0.0.0
  */
 export const $SkillContractId: Identity.IdentityComposer<"@beep/skill-contract"> = composers.$SkillContractId;
+
+/**
+ * Identity composer for `@beep/codegen-kit`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts
+ * import { $CodegenKitId } from "@beep/identity"
+ *
+ * const id = $CodegenKitId.make("CodegenKit")
+ * void id
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $CodegenKitId: Identity.IdentityComposer<"@beep/codegen-kit"> = composers.$CodegenKitId;

@@ -1,10 +1,5 @@
 {
   "$schema": "../../../packages/tooling/tool/docgen/schema.json",
-  "entryPoints": ["src/index.ts"],
-  "out": "docs",
-  "excludePrivate": true,
-  "excludeInternal": true,
-  "includeVersion": true,
   "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/cosmos/src/",
   "examplesCompilerOptions": {
     "noEmit": true,
