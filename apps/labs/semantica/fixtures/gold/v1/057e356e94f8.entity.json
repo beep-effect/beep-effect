@@ -4,192 +4,192 @@
   "subset": "entity",
   "labels": [
     {
-      "label": "Workshop on Cognitive Modeling and Computational Linguistics",
-      "entityType": "workshop",
       "cluster": "cmcl2020",
-      "startChar": 19,
       "endChar": 79,
-      "quote": "Workshop on Cognitive Modeling and Computational Linguistics",
+      "entityType": "workshop",
+      "labelSha256": "50b2166abade50b925968f6b877bd51431f22af358a0415ca53ad09a9d7d7636",
+      "quoteSha256": "50b2166abade50b925968f6b877bd51431f22af358a0415ca53ad09a9d7d7636",
+      "startChar": 19,
       "verified": false
     },
     {
-      "label": "Online Event",
-      "entityType": "venue",
       "cluster": "online_event",
-      "startChar": 93,
       "endChar": 105,
-      "quote": "Online Event",
+      "entityType": "venue",
+      "labelSha256": "60c98b22c6f105b78bad7e537c994866aab6f8b58b709971ec3021bc3af7e8f6",
+      "quoteSha256": "60c98b22c6f105b78bad7e537c994866aab6f8b58b709971ec3021bc3af7e8f6",
+      "startChar": 93,
       "verified": false
     },
     {
-      "label": "November 19, 2020",
-      "entityType": "date",
       "cluster": "event_date",
-      "startChar": 107,
       "endChar": 124,
-      "quote": "November 19, 2020",
+      "entityType": "date",
+      "labelSha256": "ccd2892c54be2baf29c21b47c884ceff61ff8665a4849aa2cbe46a109d8cccdd",
+      "quoteSha256": "ccd2892c54be2baf29c21b47c884ceff61ff8665a4849aa2cbe46a109d8cccdd",
+      "startChar": 107,
       "verified": false
     },
     {
-      "label": "Association for Computational Linguistics",
-      "entityType": "organization",
       "cluster": "acl",
-      "startChar": 133,
       "endChar": 174,
-      "quote": "Association for Computational Linguistics",
-      "verified": false
-    },
-    {
-      "label": "Yiding Hao",
-      "entityType": "person",
-      "cluster": "yiding_hao",
-      "startChar": 334,
-      "endChar": 344,
-      "quote": "Yiding Hao",
-      "verified": false
-    },
-    {
-      "label": "Simon Mendelsohn",
-      "entityType": "person",
-      "cluster": "simon_mendelsohn",
-      "startChar": 346,
-      "endChar": 362,
-      "quote": "Simon Mendelsohn",
-      "verified": false
-    },
-    {
-      "label": "Rachel Sterneck",
-      "entityType": "person",
-      "cluster": "rachel_sterneck",
-      "startChar": 364,
-      "endChar": 379,
-      "quote": "Rachel Sterneck",
-      "verified": false
-    },
-    {
-      "label": "Randi Martinez",
-      "entityType": "person",
-      "cluster": "randi_martinez",
-      "startChar": 381,
-      "endChar": 395,
-      "quote": "Randi Martinez",
-      "verified": false
-    },
-    {
-      "label": "Robert Frank",
-      "entityType": "person",
-      "cluster": "robert_frank",
-      "startChar": 401,
-      "endChar": 413,
-      "quote": "Robert Frank",
-      "verified": false
-    },
-    {
-      "label": "Yale University",
       "entityType": "organization",
+      "labelSha256": "4c5d1c6af70696eed3e96fb5104ea6785173571dfc0e124381182380ddf5a1ba",
+      "quoteSha256": "4c5d1c6af70696eed3e96fb5104ea6785173571dfc0e124381182380ddf5a1ba",
+      "startChar": 133,
+      "verified": false
+    },
+    {
+      "cluster": "yiding_hao",
+      "endChar": 344,
+      "entityType": "person",
+      "labelSha256": "aaaee418e5e56bb20112b7b96ebf5d0a77931ba1feefd34cea857220eb7058ab",
+      "quoteSha256": "aaaee418e5e56bb20112b7b96ebf5d0a77931ba1feefd34cea857220eb7058ab",
+      "startChar": 334,
+      "verified": false
+    },
+    {
+      "cluster": "simon_mendelsohn",
+      "endChar": 362,
+      "entityType": "person",
+      "labelSha256": "37760175f43de1ba4fb3a9bacec517b468832a3d9878a131e2e46792688763b4",
+      "quoteSha256": "37760175f43de1ba4fb3a9bacec517b468832a3d9878a131e2e46792688763b4",
+      "startChar": 346,
+      "verified": false
+    },
+    {
+      "cluster": "rachel_sterneck",
+      "endChar": 379,
+      "entityType": "person",
+      "labelSha256": "22dbf5e1501de9d3c3fbe01e248114d855ccda6c86e1405242d61155bce46eb5",
+      "quoteSha256": "22dbf5e1501de9d3c3fbe01e248114d855ccda6c86e1405242d61155bce46eb5",
+      "startChar": 364,
+      "verified": false
+    },
+    {
+      "cluster": "randi_martinez",
+      "endChar": 395,
+      "entityType": "person",
+      "labelSha256": "24c9670c7a7626bdabbe767ddd7f6261760646a72e1a06cb9a8fda1154d6dde1",
+      "quoteSha256": "24c9670c7a7626bdabbe767ddd7f6261760646a72e1a06cb9a8fda1154d6dde1",
+      "startChar": 381,
+      "verified": false
+    },
+    {
+      "cluster": "robert_frank",
+      "endChar": 413,
+      "entityType": "person",
+      "labelSha256": "4e4bbaca4d4af81a1465b7d43460e4ee567561f4c4c998e9ead9dc71b810908f",
+      "quoteSha256": "4e4bbaca4d4af81a1465b7d43460e4ee567561f4c4c998e9ead9dc71b810908f",
+      "startChar": 401,
+      "verified": false
+    },
+    {
       "cluster": "yale_university",
-      "startChar": 414,
       "endChar": 429,
-      "quote": "Yale University",
+      "entityType": "organization",
+      "labelSha256": "3628a4875ffee7d994e61ed6ae5b5269a9b9cc7162e7c46ee063b7be2a4c3199",
+      "quoteSha256": "3628a4875ffee7d994e61ed6ae5b5269a9b9cc7162e7c46ee063b7be2a4c3199",
+      "startChar": 414,
       "verified": false
     },
     {
-      "label": "New Haven",
-      "entityType": "location",
       "cluster": "new_haven",
-      "startChar": 431,
       "endChar": 440,
-      "quote": "New Haven",
+      "entityType": "location",
+      "labelSha256": "11b14d7c507b9a9e9d4f71d47de3669755dc28e867527376c963083fa2316949",
+      "quoteSha256": "11b14d7c507b9a9e9d4f71d47de3669755dc28e867527376c963083fa2316949",
+      "startChar": 431,
       "verified": false
     },
     {
-      "label": "CT",
-      "entityType": "location",
       "cluster": "connecticut",
-      "startChar": 442,
       "endChar": 444,
-      "quote": "CT",
-      "verified": false
-    },
-    {
-      "label": "USA",
       "entityType": "location",
+      "labelSha256": "15cbe5f066da796145940479d571424695e3077a1de270cb04972942d5b16260",
+      "quoteSha256": "15cbe5f066da796145940479d571424695e3077a1de270cb04972942d5b16260",
+      "startChar": 442,
+      "verified": false
+    },
+    {
       "cluster": "usa",
-      "startChar": 446,
       "endChar": 449,
-      "quote": "USA",
+      "entityType": "location",
+      "labelSha256": "aa5ab35a9174c2062b7f7697b33fafe5ce404cf5fecf6bfbbf0dc96ba0d90046",
+      "quoteSha256": "aa5ab35a9174c2062b7f7697b33fafe5ce404cf5fecf6bfbbf0dc96ba0d90046",
+      "startChar": 446,
       "verified": false
     },
     {
-      "label": "surprisal theory",
-      "entityType": "theory",
       "cluster": "surprisal_theory",
-      "startChar": 588,
       "endChar": 604,
-      "quote": "surprisal theory",
+      "entityType": "theory",
+      "labelSha256": "195a5b7aca637d6268e0cb0ba432b17a0dcd522ada1a91d24b2017aedf714c8d",
+      "quoteSha256": "195a5b7aca637d6268e0cb0ba432b17a0dcd522ada1a91d24b2017aedf714c8d",
+      "startChar": 588,
       "verified": false
     },
     {
-      "label": "Hale",
-      "entityType": "person",
       "cluster": "john_hale",
-      "startChar": 606,
       "endChar": 610,
-      "quote": "Hale",
+      "entityType": "person",
+      "labelSha256": "f1ba4520c571cffe11c03c2c7b1eee650de1f3890e184686a21fb60a6457446d",
+      "quoteSha256": "f1ba4520c571cffe11c03c2c7b1eee650de1f3890e184686a21fb60a6457446d",
+      "startChar": 606,
       "verified": false
     },
     {
-      "label": "Levy",
-      "entityType": "person",
       "cluster": "roger_levy",
-      "startChar": 618,
       "endChar": 622,
-      "quote": "Levy",
+      "entityType": "person",
+      "labelSha256": "b317cb1966f1bfa26b153e0c3553a3b2a812e497c0bf6aadf4547859c1047db8",
+      "quoteSha256": "b317cb1966f1bfa26b153e0c3553a3b2a812e497c0bf6aadf4547859c1047db8",
+      "startChar": 618,
       "verified": false
     },
     {
-      "label": "Goodkind and Bicknell",
-      "entityType": "person",
       "cluster": "goodkind_bicknell",
-      "startChar": 753,
       "endChar": 774,
-      "quote": "Goodkind and Bicknell",
-      "verified": false
-    },
-    {
-      "label": "Goodkind and Bicknell’s",
       "entityType": "person",
+      "labelSha256": "7e485c64904c70832657990f1313f8c442b8e0aedd4cdc06e4974217deda1c76",
+      "quoteSha256": "7e485c64904c70832657990f1313f8c442b8e0aedd4cdc06e4974217deda1c76",
+      "startChar": 753,
+      "verified": false
+    },
+    {
       "cluster": "goodkind_bicknell",
-      "startChar": 892,
       "endChar": 915,
-      "quote": "Goodkind and Bicknell’s",
+      "entityType": "person",
+      "labelSha256": "0636817bb59bf8021e8d333ab885a329d472ba86af1938a3b987beef1cb42dce",
+      "quoteSha256": "0636817bb59bf8021e8d333ab885a329d472ba86af1938a3b987beef1cb42dce",
+      "startChar": 892,
       "verified": false
     },
     {
-      "label": "Transformers",
-      "entityType": "model_architecture",
       "cluster": "transformer",
-      "startChar": 1054,
       "endChar": 1066,
-      "quote": "Transformers",
+      "entityType": "model_architecture",
+      "labelSha256": "033549df9ef8f5e60d3c781cd3e7c2ace0103f77b6dcc26e1848ad620a7f42fe",
+      "quoteSha256": "033549df9ef8f5e60d3c781cd3e7c2ace0103f77b6dcc26e1848ad620a7f42fe",
+      "startChar": 1054,
       "verified": false
     },
     {
-      "label": "predictability norm correlation",
-      "entityType": "metric",
       "cluster": "pnc",
-      "startChar": 1170,
       "endChar": 1201,
-      "quote": "predictability norm correlation",
+      "entityType": "metric",
+      "labelSha256": "74001c6daf2547fd8f7ff0c8f6ccfaeaa2c15730d50b19880da3f2918cc4fa5b",
+      "quoteSha256": "74001c6daf2547fd8f7ff0c8f6ccfaeaa2c15730d50b19880da3f2918cc4fa5b",
+      "startChar": 1170,
       "verified": false
     },
     {
-      "label": "Cloze",
-      "entityType": "method",
       "cluster": "cloze_procedure",
-      "startChar": 1211,
       "endChar": 1216,
-      "quote": "Cloze",
+      "entityType": "method",
+      "labelSha256": "de503889179e58db22ce77ba362279fceeefd2354bcca3ff6159888186776531",
+      "quoteSha256": "de503889179e58db22ce77ba362279fceeefd2354bcca3ff6159888186776531",
+      "startChar": 1211,
       "verified": false
     }
   ],

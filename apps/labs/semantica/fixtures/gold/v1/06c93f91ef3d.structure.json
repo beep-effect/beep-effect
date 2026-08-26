@@ -8,7 +8,7 @@
       "depth": 0,
       "startChar": 0,
       "endChar": 115,
-      "quote": "PromptAid: Prompt Exploration, Perturbation, Testing and Iteration using\nVisual Analytics for Large Language Models",
+      "quoteSha256": "4d36c4da39e0d514d291e31ae4ea9d75ab34f9192b7c3be4b800d248ecbdac6d",
       "verified": false
     },
     {
@@ -16,7 +16,7 @@
       "depth": 0,
       "startChar": 937,
       "endChar": 945,
-      "quote": "ABSTRACT",
+      "quoteSha256": "3d1626989d3e923485561f1e5bdeaa583842a399edaf8cb6df59dbc6f17848f8",
       "verified": false
     },
     {
@@ -24,7 +24,7 @@
       "depth": 1,
       "startChar": 2918,
       "endChar": 2932,
-      "quote": "1 INTRODUCTION",
+      "quoteSha256": "4cc3c3176f106b51fc572482a6ecf5b7e93d39f6bd6d1bc5ef0d1bf18e757d08",
       "verified": false
     }
   ],

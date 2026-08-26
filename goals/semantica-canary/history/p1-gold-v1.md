@@ -18,9 +18,19 @@ label is written; unverifiable quotes drop.
 | Proposer | `xai` / `grok-4.6`, `taskType: "gold-proposal"` |
 | Prompt artifact hash | `1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e` |
 | Jobs | 18 (10 structure, 5 entity, 3 relation), sequential |
-| Anchors accepted | 371/379 (`fraction` 0.978891820580475) |
-| `gold.json` digest | `515c85b356cc837bc34edb088f2a9c17147e6e5fd7b3135103dd8a4dd25f855b` |
+| Anchors accepted | 378/379 (108/108 structure, 257/258 entity, 13/13 relation) |
+| `gold.json` digest | `e94228ce6ce3bf4e597ed282164e4392340548f43f5132c5f803dd6ee52439bc` |
 | `spotCheckedFraction` | 0 — pending the operator spot-check annotation pass |
+
+The committed artifact is corpus-local: encoded labels carry offsets plus
+SHA-256 digests of the exact document slices (quote, entity surface, relation
+subject/object) and never verbatim W1 text. Hydration re-slices the canonical
+document text at the anchors, verifies each digest, and fails typed on
+mismatch. Anchoring is exact-at-claimed-offset first, then nearest exact
+occurrence within a 2,000-character drift window, then whitespace/hyphenation-
+fold recovery within the same window (the stored span is always the exact
+document slice); labels with no verifiable match drop — the one remaining
+drop is a single entity proposal with no recoverable source span.
 
 Structure ids: `057e356e94f8`, `05afbbf3e1e9`, `06c93f91ef3d`, `06df406f321e`,
 `08e376be5ed2`, `0a4ab229f341`, `0a8de1437753`, `0d06c1a2189a`, `0f75da2dbb9f`,
@@ -40,3 +50,16 @@ three (D-C0-9).
   raised acceptance from near-zero to 97.9%.
 - The proposer never sees extractor output; the extractor never sees gold
   (D-C0-1 family separation held end to end).
+
+## Queued for the spot-check annotation pass
+
+Review surfaced two label-semantics items the annotation pass adjudicates
+(label content is proposer-owned; the operator pass, not hand edits, corrects
+semantics and raises `spotCheckedFraction`):
+
+- The relation gold for the first structure paper includes a
+  `published in proceedings of` label whose object is a date rather than a
+  venue — semantically inverted; drop or correct during annotation.
+- Abstract structure labels are inconsistent across papers: some span only
+  the `Abstract` heading, others the full abstract body. Pick one convention
+  during annotation so structure F1 is not split across conventions.

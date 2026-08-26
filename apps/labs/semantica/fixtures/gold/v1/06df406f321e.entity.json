@@ -4,1479 +4,1479 @@
   "subset": "entity",
   "labels": [
     {
-      "label": "RECIIS",
-      "entityType": "journal",
       "cluster": "RECIIS",
-      "startChar": 2,
       "endChar": 8,
-      "quote": "RECIIS",
+      "entityType": "journal",
+      "labelSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "quoteSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "startChar": 2,
       "verified": false
     },
     {
-      "label": "Rio de Janeiro",
-      "entityType": "city",
       "cluster": "Rio de Janeiro",
-      "startChar": 47,
       "endChar": 61,
-      "quote": "Rio de Janeiro",
+      "entityType": "city",
+      "labelSha256": "a188a64fb6b392833db7697673b3cc5df6d8409935e71588a3591218e0fd5e61",
+      "quoteSha256": "a188a64fb6b392833db7697673b3cc5df6d8409935e71588a3591218e0fd5e61",
+      "startChar": 47,
       "verified": false
     },
     {
-      "label": "2009",
-      "entityType": "year",
       "cluster": "2009",
-      "startChar": 86,
       "endChar": 90,
-      "quote": "2009",
+      "entityType": "year",
+      "labelSha256": "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec",
+      "quoteSha256": "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec",
+      "startChar": 86,
       "verified": false
     },
     {
-      "label": "www.reciis.cict.fiocruz.br",
-      "entityType": "url",
       "cluster": "RECIIS website",
-      "startChar": 102,
       "endChar": 128,
-      "quote": "www.reciis.cict.fiocruz.br",
+      "entityType": "url",
+      "labelSha256": "bd9ce502f21d118f3ca7ea5c5bd0c4795c16a42295a71d012f09631ba91c55a0",
+      "quoteSha256": "bd9ce502f21d118f3ca7ea5c5bd0c4795c16a42295a71d012f09631ba91c55a0",
+      "startChar": 102,
       "verified": false
     },
     {
-      "label": "ISSN 1981-6278",
-      "entityType": "identifier",
       "cluster": "RECIIS ISSN",
-      "startChar": 130,
       "endChar": 144,
-      "quote": "ISSN 1981-6278",
+      "entityType": "identifier",
+      "labelSha256": "1864397e92dd8b5114dac263e4daa03c620cd62a34bb21198a6c191ac8f672d8",
+      "quoteSha256": "1864397e92dd8b5114dac263e4daa03c620cd62a34bb21198a6c191ac8f672d8",
+      "startChar": 130,
       "verified": false
     },
     {
-      "label": "Ontologias, Web semântica e saúde",
-      "entityType": "title",
       "cluster": "editorial title",
-      "startChar": 145,
       "endChar": 178,
-      "quote": "Ontologias, Web semântica e saúde",
+      "entityType": "title",
+      "labelSha256": "8572eda619a757c43cc98aa951c5b9e4c0ee04e8791ab3ef02559938beacc06f",
+      "quoteSha256": "8572eda619a757c43cc98aa951c5b9e4c0ee04e8791ab3ef02559938beacc06f",
+      "startChar": 145,
       "verified": false
     },
     {
-      "label": "Web semântica",
-      "entityType": "technology",
       "cluster": "Semantic Web",
-      "startChar": 157,
       "endChar": 170,
-      "quote": "Web semântica",
+      "entityType": "technology",
+      "labelSha256": "25af09ebf248f704b8ef4b1e4b639bd5e2523dcfab25733b861052b19c6baa6c",
+      "quoteSha256": "25af09ebf248f704b8ef4b1e4b639bd5e2523dcfab25733b861052b19c6baa6c",
+      "startChar": 157,
       "verified": false
     },
     {
-      "label": "10.3395/reciis.v3i1.238pt",
-      "entityType": "doi",
       "cluster": "editorial DOI",
-      "startChar": 184,
       "endChar": 209,
-      "quote": "10.3395/reciis.v3i1.238pt",
+      "entityType": "doi",
+      "labelSha256": "bde020fdbd11c9c19408832111f714bea3cfb5dab94e6a351189c7d2e0634e14",
+      "quoteSha256": "bde020fdbd11c9c19408832111f714bea3cfb5dab94e6a351189c7d2e0634e14",
+      "startChar": 184,
       "verified": false
     },
     {
-      "label": "Frederico Freitas",
-      "entityType": "person",
       "cluster": "Frederico Freitas",
-      "startChar": 210,
       "endChar": 227,
-      "quote": "Frederico Freitas",
+      "entityType": "person",
+      "labelSha256": "d1ee14b531bfd6c39349f4ff12bd5e554c0bff88567773067ef1a6b5cb308f3a",
+      "quoteSha256": "d1ee14b531bfd6c39349f4ff12bd5e554c0bff88567773067ef1a6b5cb308f3a",
+      "startChar": 210,
       "verified": false
     },
     {
-      "label": "Centro de Informática",
-      "entityType": "organization",
       "cluster": "CIn UFPE",
-      "startChar": 228,
       "endChar": 249,
-      "quote": "Centro de Informática",
+      "entityType": "organization",
+      "labelSha256": "b1d64c1dd3197950d57aa7b6e7ed6ebf4239496ac59485801bb95eae6d64fbe2",
+      "quoteSha256": "b1d64c1dd3197950d57aa7b6e7ed6ebf4239496ac59485801bb95eae6d64fbe2",
+      "startChar": 228,
       "verified": false
     },
     {
-      "label": "Universidade Federal de\nPernambuco",
-      "entityType": "university",
       "cluster": "UFPE",
-      "startChar": 251,
       "endChar": 285,
-      "quote": "Universidade Federal de\nPernambuco",
+      "entityType": "university",
+      "labelSha256": "58fda594080cd8f34bc0cb21ef3e77b14c7389abf23aa361087c60cb255f05e1",
+      "quoteSha256": "58fda594080cd8f34bc0cb21ef3e77b14c7389abf23aa361087c60cb255f05e1",
+      "startChar": 251,
       "verified": false
     },
     {
-      "label": "Recife",
-      "entityType": "city",
       "cluster": "Recife",
-      "startChar": 287,
       "endChar": 293,
-      "quote": "Recife",
+      "entityType": "city",
+      "labelSha256": "0384bff73f7cfcc0955185ef3e18a7f47977c0df94ad2f52e46af1fadae88690",
+      "quoteSha256": "0384bff73f7cfcc0955185ef3e18a7f47977c0df94ad2f52e46af1fadae88690",
+      "startChar": 287,
       "verified": false
     },
     {
-      "label": "Brasil",
-      "entityType": "country",
       "cluster": "Brasil",
-      "startChar": 295,
       "endChar": 301,
-      "quote": "Brasil",
+      "entityType": "country",
+      "labelSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "quoteSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "startChar": 295,
       "verified": false
     },
     {
-      "label": "fred@cin.ufpe.br",
-      "entityType": "email",
       "cluster": "Frederico Freitas",
-      "startChar": 302,
       "endChar": 318,
-      "quote": "fred@cin.ufpe.br",
-      "verified": false
-    },
-    {
-      "label": "Ontologia",
-      "entityType": "concept",
-      "cluster": "Ontology term",
-      "startChar": 431,
-      "endChar": 440,
-      "quote": "Ontologia",
-      "verified": false
-    },
-    {
-      "label": "Ontologia",
-      "entityType": "concept",
-      "cluster": "Ontology term",
-      "startChar": 644,
-      "endChar": 653,
-      "quote": "Ontologia",
-      "verified": false
-    },
-    {
-      "label": "Tim Bernes-\nLee",
-      "entityType": "person",
-      "cluster": "Tim Berners-Lee",
-      "startChar": 909,
-      "endChar": 924,
-      "quote": "Tim Bernes-\nLee",
-      "verified": false
-    },
-    {
-      "label": "internet",
-      "entityType": "technology",
-      "cluster": "Internet",
-      "startChar": 986,
-      "endChar": 994,
-      "quote": "internet",
-      "verified": false
-    },
-    {
-      "label": "Web semântica",
-      "entityType": "technology",
-      "cluster": "Semantic Web",
-      "startChar": 1064,
-      "endChar": 1077,
-      "quote": "Web semântica",
-      "verified": false
-    },
-    {
-      "label": "Academia",
-      "entityType": "domain",
-      "cluster": "Academia domain",
-      "startChar": 1960,
-      "endChar": 1968,
-      "quote": "Academia",
-      "verified": false
-    },
-    {
-      "label": "Web semântica",
-      "entityType": "technology",
-      "cluster": "Semantic Web",
-      "startChar": 2964,
-      "endChar": 2977,
-      "quote": "Web semântica",
-      "verified": false
-    },
-    {
-      "label": "Stefan Schulz",
-      "entityType": "person",
-      "cluster": "Stefan Schulz",
-      "startChar": 3372,
-      "endChar": 3385,
-      "quote": "Stefan Schulz",
-      "verified": false
-    },
-    {
-      "label": "Instituto de Biometria\nMédica e Informática da\nMedicina",
-      "entityType": "organization",
-      "cluster": "IMBI Freiburg",
-      "startChar": 3386,
-      "endChar": 3441,
-      "quote": "Instituto de Biometria\nMédica e Informática da\nMedicina",
-      "verified": false
-    },
-    {
-      "label": "Centro Médico\nUniversitário de Freiburg",
-      "entityType": "organization",
-      "cluster": "University Medical Center Freiburg",
-      "startChar": 3443,
-      "endChar": 3482,
-      "quote": "Centro Médico\nUniversitário de Freiburg",
-      "verified": false
-    },
-    {
-      "label": "Freiburg",
-      "entityType": "city",
-      "cluster": "Freiburg",
-      "startChar": 3484,
-      "endChar": 3492,
-      "quote": "Freiburg",
-      "verified": false
-    },
-    {
-      "label": "Alemanha",
-      "entityType": "country",
-      "cluster": "Alemanha",
-      "startChar": 3494,
-      "endChar": 3502,
-      "quote": "Alemanha",
-      "verified": false
-    },
-    {
-      "label": "stschulz@uni-freiburg.de",
       "entityType": "email",
-      "cluster": "Stefan Schulz",
-      "startChar": 3503,
-      "endChar": 3527,
-      "quote": "stschulz@uni-freiburg.de",
+      "labelSha256": "57149847f149cf99d09df34f6dac2b827241f200c4c03400ab4eea08f84315b4",
+      "quoteSha256": "57149847f149cf99d09df34f6dac2b827241f200c4c03400ab4eea08f84315b4",
+      "startChar": 302,
       "verified": false
     },
     {
-      "label": "RECIIS",
-      "entityType": "journal",
-      "cluster": "RECIIS",
-      "startChar": 3529,
-      "endChar": 3535,
-      "quote": "RECIIS",
+      "cluster": "Ontology term",
+      "endChar": 440,
+      "entityType": "concept",
+      "labelSha256": "cb83375d611be1bf8a1ec7e5857d8ae3a600550ae1e0fb493479a842324d4c70",
+      "quoteSha256": "cb83375d611be1bf8a1ec7e5857d8ae3a600550ae1e0fb493479a842324d4c70",
+      "startChar": 431,
       "verified": false
     },
     {
-      "label": "Rio de Janeiro",
-      "entityType": "city",
-      "cluster": "Rio de Janeiro",
-      "startChar": 3574,
-      "endChar": 3588,
-      "quote": "Rio de Janeiro",
+      "cluster": "Ontology term",
+      "endChar": 653,
+      "entityType": "concept",
+      "labelSha256": "cb83375d611be1bf8a1ec7e5857d8ae3a600550ae1e0fb493479a842324d4c70",
+      "quoteSha256": "cb83375d611be1bf8a1ec7e5857d8ae3a600550ae1e0fb493479a842324d4c70",
+      "startChar": 644,
       "verified": false
     },
     {
-      "label": "2009",
-      "entityType": "year",
-      "cluster": "2009",
-      "startChar": 3613,
-      "endChar": 3617,
-      "quote": "2009",
+      "cluster": "Tim Berners-Lee",
+      "endChar": 924,
+      "entityType": "person",
+      "labelSha256": "95856b1b650b4dc0341cb0d9aca70d43492e36c8593abb5e4d36a1d83f3adc9b",
+      "quoteSha256": "95856b1b650b4dc0341cb0d9aca70d43492e36c8593abb5e4d36a1d83f3adc9b",
+      "startChar": 909,
       "verified": false
     },
     {
-      "label": "Estados Unidos",
-      "entityType": "country",
-      "cluster": "United States",
-      "startChar": 3804,
-      "endChar": 3818,
-      "quote": "Estados Unidos",
-      "verified": false
-    },
-    {
-      "label": "Departamento\nde Informática Médica da Universidade de Stanford",
-      "entityType": "organization",
-      "cluster": "Stanford Medical Informatics",
-      "startChar": 3822,
-      "endChar": 3884,
-      "quote": "Departamento\nde Informática Médica da Universidade de Stanford",
-      "verified": false
-    },
-    {
-      "label": "Universidade de Stanford",
-      "entityType": "university",
-      "cluster": "Stanford University",
-      "startChar": 3860,
-      "endChar": 3884,
-      "quote": "Universidade de Stanford",
-      "verified": false
-    },
-    {
-      "label": "Stanford",
-      "entityType": "university",
-      "cluster": "Stanford University",
-      "startChar": 3876,
-      "endChar": 3884,
-      "quote": "Stanford",
-      "verified": false
-    },
-    {
-      "label": "Protégé",
-      "entityType": "software",
-      "cluster": "Protégé",
-      "startChar": 3933,
-      "endChar": 3940,
-      "quote": "Protégé",
-      "verified": false
-    },
-    {
-      "label": "Centro Na-\ncional de Pesquisas em Ontologias Biomédicas",
-      "entityType": "organization",
-      "cluster": "NCBO",
-      "startChar": 3983,
-      "endChar": 4038,
-      "quote": "Centro Na-\ncional de Pesquisas em Ontologias Biomédicas",
-      "verified": false
-    },
-    {
-      "label": "National\nCenter for Biomedical Ontologies",
-      "entityType": "organization",
-      "cluster": "NCBO",
-      "startChar": 4040,
-      "endChar": 4081,
-      "quote": "National\nCenter for Biomedical Ontologies",
-      "verified": false
-    },
-    {
-      "label": "Stanford",
-      "entityType": "university",
-      "cluster": "Stanford University",
-      "startChar": 4139,
-      "endChar": 4147,
-      "quote": "Stanford",
-      "verified": false
-    },
-    {
-      "label": "Victoria",
-      "entityType": "university",
-      "cluster": "University of Victoria",
-      "startChar": 4149,
-      "endChar": 4157,
-      "quote": "Victoria",
-      "verified": false
-    },
-    {
-      "label": "Buffalo",
-      "entityType": "university",
-      "cluster": "University at Buffalo",
-      "startChar": 4160,
-      "endChar": 4167,
-      "quote": "Buffalo",
-      "verified": false
-    },
-    {
-      "label": "Mayo Clinic",
-      "entityType": "organization",
-      "cluster": "Mayo Clinic",
-      "startChar": 4177,
-      "endChar": 4188,
-      "quote": "Mayo Clinic",
-      "verified": false
-    },
-    {
-      "label": "Rochester",
-      "entityType": "city",
-      "cluster": "Rochester",
-      "startChar": 4193,
-      "endChar": 4202,
-      "quote": "Rochester",
-      "verified": false
-    },
-    {
-      "label": "Europa",
-      "entityType": "region",
-      "cluster": "Europe",
-      "startChar": 4207,
-      "endChar": 4213,
-      "quote": "Europa",
-      "verified": false
-    },
-    {
-      "label": "Grupo de Pesquisa em Ontologias em Medicina\ne Ciências Biológicas",
-      "entityType": "organization",
-      "cluster": "Leipzig ontology group",
-      "startChar": 4225,
-      "endChar": 4290,
-      "quote": "Grupo de Pesquisa em Ontologias em Medicina\ne Ciências Biológicas",
-      "verified": false
-    },
-    {
-      "label": "Instituto de Informática Médi-\nca, Estatística e Epidemiologia",
-      "entityType": "organization",
-      "cluster": "IMISE Leipzig",
-      "startChar": 4294,
-      "endChar": 4356,
-      "quote": "Instituto de Informática Médi-\nca, Estatística e Epidemiologia",
-      "verified": false
-    },
-    {
-      "label": "Leipzig",
-      "entityType": "city",
-      "cluster": "Leipzig",
-      "startChar": 4361,
-      "endChar": 4368,
-      "quote": "Leipzig",
-      "verified": false
-    },
-    {
-      "label": "Grupo\nde Pesquisa em Informática Médica",
-      "entityType": "organization",
-      "cluster": "Freiburg Medical Informatics Group",
-      "startChar": 4374,
-      "endChar": 4413,
-      "quote": "Grupo\nde Pesquisa em Informática Médica",
-      "verified": false
-    },
-    {
-      "label": "Centro Médico\nUniversitário de Freiburg",
-      "entityType": "organization",
-      "cluster": "University Medical Center Freiburg",
-      "startChar": 4417,
-      "endChar": 4456,
-      "quote": "Centro Médico\nUniversitário de Freiburg",
-      "verified": false
-    },
-    {
-      "label": "Alemanha",
-      "entityType": "country",
-      "cluster": "Alemanha",
-      "startChar": 4467,
-      "endChar": 4475,
-      "quote": "Alemanha",
-      "verified": false
-    },
-    {
-      "label": "Grupo\nem Informática Biológica e Saúde",
-      "entityType": "organization",
-      "cluster": "Manchester bio-health informatics",
-      "startChar": 4481,
-      "endChar": 4519,
-      "quote": "Grupo\nem Informática Biológica e Saúde",
-      "verified": false
-    },
-    {
-      "label": "Universidade de\nManchester",
-      "entityType": "university",
-      "cluster": "University of Manchester",
-      "startChar": 4524,
-      "endChar": 4550,
-      "quote": "Universidade de\nManchester",
-      "verified": false
-    },
-    {
-      "label": "Inglaterra",
-      "entityType": "country",
-      "cluster": "England",
-      "startChar": 4555,
-      "endChar": 4565,
-      "quote": "Inglaterra",
-      "verified": false
-    },
-    {
-      "label": "Web Semântica",
+      "cluster": "Internet",
+      "endChar": 994,
       "entityType": "technology",
+      "labelSha256": "3b0fe0d342e9fa16a5c68dbba33f2e63c024f72a9d4c1ce1028570101d5229ff",
+      "quoteSha256": "3b0fe0d342e9fa16a5c68dbba33f2e63c024f72a9d4c1ce1028570101d5229ff",
+      "startChar": 986,
+      "verified": false
+    },
+    {
       "cluster": "Semantic Web",
-      "startChar": 4630,
-      "endChar": 4643,
-      "quote": "Web Semântica",
-      "verified": false
-    },
-    {
-      "label": "RECIIS",
-      "entityType": "journal",
-      "cluster": "RECIIS",
-      "startChar": 5230,
-      "endChar": 5236,
-      "quote": "RECIIS",
-      "verified": false
-    },
-    {
-      "label": "Brasil",
-      "entityType": "country",
-      "cluster": "Brasil",
-      "startChar": 6027,
-      "endChar": 6033,
-      "quote": "Brasil",
-      "verified": false
-    },
-    {
-      "label": "CID",
-      "entityType": "terminology",
-      "cluster": "ICD",
-      "startChar": 6568,
-      "endChar": 6571,
-      "quote": "CID",
-      "verified": false
-    },
-    {
-      "label": "Classificação\nInternacional de Doenças",
-      "entityType": "terminology",
-      "cluster": "ICD",
-      "startChar": 6573,
-      "endChar": 6611,
-      "quote": "Classificação\nInternacional de Doenças",
-      "verified": false
-    },
-    {
-      "label": "SNOMED CT",
-      "entityType": "terminology",
-      "cluster": "SNOMED CT",
-      "startChar": 6614,
-      "endChar": 6623,
-      "quote": "SNOMED CT",
-      "verified": false
-    },
-    {
-      "label": "MeSH",
-      "entityType": "terminology",
-      "cluster": "MeSH",
-      "startChar": 6682,
-      "endChar": 6686,
-      "quote": "MeSH",
-      "verified": false
-    },
-    {
-      "label": "Descritores de Saúde",
-      "entityType": "terminology",
-      "cluster": "MeSH",
-      "startChar": 6688,
-      "endChar": 6708,
-      "quote": "Descritores de Saúde",
-      "verified": false
-    },
-    {
-      "label": "openGalen",
-      "entityType": "ontology",
-      "cluster": "OpenGALEN",
-      "startChar": 6711,
-      "endChar": 6720,
-      "quote": "openGalen",
-      "verified": false
-    },
-    {
-      "label": "FMA",
-      "entityType": "ontology",
-      "cluster": "FMA",
-      "startChar": 6800,
-      "endChar": 6803,
-      "quote": "FMA",
-      "verified": false
-    },
-    {
-      "label": "Modelo Fundacional de Anatomia",
-      "entityType": "ontology",
-      "cluster": "FMA",
-      "startChar": 6805,
-      "endChar": 6835,
-      "quote": "Modelo Fundacional de Anatomia",
-      "verified": false
-    },
-    {
-      "label": "UMLS",
-      "entityType": "terminology",
-      "cluster": "UMLS",
-      "startChar": 6862,
-      "endChar": 6866,
-      "quote": "UMLS",
-      "verified": false
-    },
-    {
-      "label": "Sistema Unificado de\nLinguagem Médica",
-      "entityType": "terminology",
-      "cluster": "UMLS",
-      "startChar": 6868,
-      "endChar": 6905,
-      "quote": "Sistema Unificado de\nLinguagem Médica",
-      "verified": false
-    },
-    {
-      "label": "OBO Foundry",
-      "entityType": "organization",
-      "cluster": "OBO Foundry",
-      "startChar": 6910,
-      "endChar": 6921,
-      "quote": "OBO Foundry",
-      "verified": false
-    },
-    {
-      "label": "Fundação de\nOntologias Biomédicas Aberta",
-      "entityType": "organization",
-      "cluster": "OBO Foundry",
-      "startChar": 6923,
-      "endChar": 6963,
-      "quote": "Fundação de\nOntologias Biomédicas Aberta",
-      "verified": false
-    },
-    {
-      "label": "Ontologia\nGênica",
-      "entityType": "ontology",
-      "cluster": "Gene Ontology",
-      "startChar": 6979,
-      "endChar": 6995,
-      "quote": "Ontologia\nGênica",
-      "verified": false
-    },
-    {
-      "label": "GO",
-      "entityType": "ontology",
-      "cluster": "Gene Ontology",
-      "startChar": 6997,
-      "endChar": 6999,
-      "quote": "GO",
-      "verified": false
-    },
-    {
-      "label": "Bases ontológicas e conceituais para um\nmodelo do conhecimento científico em artigos biomédi-\ncos",
-      "entityType": "title",
-      "cluster": "article 2 title",
-      "startChar": 7026,
-      "endChar": 7123,
-      "quote": "Bases ontológicas e conceituais para um\nmodelo do conhecimento científico em artigos biomédi-\ncos",
-      "verified": false
-    },
-    {
-      "label": "Carlos Marcondes",
-      "entityType": "person",
-      "cluster": "Carlos Marcondes",
-      "startChar": 7138,
-      "endChar": 7154,
-      "quote": "Carlos Marcondes",
-      "verified": false
-    },
-    {
-      "label": "Medicina",
-      "entityType": "field",
-      "cluster": "Medicine",
-      "startChar": 7228,
-      "endChar": 7236,
-      "quote": "Medicina",
-      "verified": false
-    },
-    {
-      "label": "Metodologia Científica",
-      "entityType": "field",
-      "cluster": "Scientific Methodology",
-      "startChar": 7577,
-      "endChar": 7599,
-      "quote": "Metodologia Científica",
-      "verified": false
-    },
-    {
-      "label": "Filosofia da Ciência",
-      "entityType": "field",
-      "cluster": "Philosophy of Science",
-      "startChar": 7602,
-      "endChar": 7622,
-      "quote": "Filosofia da Ciência",
-      "verified": false
-    },
-    {
-      "label": "Vantagens e limitações de ontologias\nformais no domínio biomédico",
-      "entityType": "title",
-      "cluster": "article 3 title",
-      "startChar": 7882,
-      "endChar": 7947,
-      "quote": "Vantagens e limitações de ontologias\nformais no domínio biomédico",
-      "verified": false
-    },
-    {
-      "label": "Stefan\nSchulz",
-      "entityType": "person",
-      "cluster": "Stefan Schulz",
-      "startChar": 7964,
-      "endChar": 7977,
-      "quote": "Stefan\nSchulz",
-      "verified": false
-    },
-    {
-      "label": "Barry Smith",
-      "entityType": "person",
-      "cluster": "Barry Smith",
-      "startChar": 8008,
-      "endChar": 8019,
-      "quote": "Barry Smith",
-      "verified": false
-    },
-    {
-      "label": "Fundação OBO",
-      "entityType": "organization",
-      "cluster": "OBO Foundry",
-      "startChar": 8179,
-      "endChar": 8191,
-      "quote": "Fundação OBO",
-      "verified": false
-    },
-    {
-      "label": "Consórcio\nda Web",
-      "entityType": "organization",
-      "cluster": "W3C",
-      "startChar": 8731,
-      "endChar": 8747,
-      "quote": "Consórcio\nda Web",
-      "verified": false
-    },
-    {
-      "label": "W3C",
-      "entityType": "organization",
-      "cluster": "W3C",
-      "startChar": 8749,
-      "endChar": 8752,
-      "quote": "W3C",
-      "verified": false
-    },
-    {
-      "label": "Uma análise ontológica do\neletrocardiograma",
-      "entityType": "title",
-      "cluster": "article 4 title",
-      "startChar": 9292,
-      "endChar": 9335,
-      "quote": "Uma análise ontológica do\neletrocardiograma",
-      "verified": false
-    },
-    {
-      "label": "Bernardo Gonçalves",
-      "entityType": "person",
-      "cluster": "Bernardo Gonçalves",
-      "startChar": 9341,
-      "endChar": 9359,
-      "quote": "Bernardo Gonçalves",
-      "verified": false
-    },
-    {
-      "label": "OBO",
-      "entityType": "ontology",
-      "cluster": "OBO Foundry",
-      "startChar": 9681,
-      "endChar": 9684,
-      "quote": "OBO",
-      "verified": false
-    },
-    {
-      "label": "FMA",
-      "entityType": "ontology",
-      "cluster": "FMA",
-      "startChar": 9689,
-      "endChar": 9692,
-      "quote": "FMA",
-      "verified": false
-    },
-    {
-      "label": "UFO",
-      "entityType": "ontology",
-      "cluster": "UFO",
-      "startChar": 9751,
-      "endChar": 9754,
-      "quote": "UFO",
-      "verified": false
-    },
-    {
-      "label": "Ontologia Fundacional Unificada",
-      "entityType": "ontology",
-      "cluster": "UFO",
-      "startChar": 9756,
-      "endChar": 9787,
-      "quote": "Ontologia Fundacional Unificada",
-      "verified": false
-    },
-    {
-      "label": "RECIIS",
-      "entityType": "journal",
-      "cluster": "RECIIS",
-      "startChar": 9916,
-      "endChar": 9922,
-      "quote": "RECIIS",
-      "verified": false
-    },
-    {
-      "label": "Rio de Janeiro",
-      "entityType": "city",
-      "cluster": "Rio de Janeiro",
-      "startChar": 9961,
-      "endChar": 9975,
-      "quote": "Rio de Janeiro",
-      "verified": false
-    },
-    {
-      "label": "2009",
-      "entityType": "year",
-      "cluster": "2009",
-      "startChar": 10000,
-      "endChar": 10004,
-      "quote": "2009",
-      "verified": false
-    },
-    {
-      "label": "ECG",
-      "entityType": "ontology",
-      "cluster": "ECG ontology",
-      "startChar": 10326,
-      "endChar": 10329,
-      "quote": "ECG",
-      "verified": false
-    },
-    {
-      "label": "Aspectos metodológicos no reuso de ontologias:\num estudo a partir das anotações genômicas no domínio\ndos tripanosomatídeos",
-      "entityType": "title",
-      "cluster": "article 5 title",
-      "startChar": 10791,
-      "endChar": 10913,
-      "quote": "Aspectos metodológicos no reuso de ontologias:\num estudo a partir das anotações genômicas no domínio\ndos tripanosomatídeos",
-      "verified": false
-    },
-    {
-      "label": "Maria Luiza Campos",
-      "entityType": "person",
-      "cluster": "Maria Luiza Campos",
-      "startChar": 10919,
-      "endChar": 10937,
-      "quote": "Maria Luiza Campos",
-      "verified": false
-    },
-    {
-      "label": "Extração automática de\ntermos compostos para construção de ontologias: um\nexperimento na área da saúde",
-      "entityType": "title",
-      "cluster": "article 6 title",
-      "startChar": 11471,
-      "endChar": 11573,
-      "quote": "Extração automática de\ntermos compostos para construção de ontologias: um\nexperimento na área da saúde",
-      "verified": false
-    },
-    {
-      "label": "Lucelene Lopes",
-      "entityType": "person",
-      "cluster": "Lucelene Lopes",
-      "startChar": 11594,
-      "endChar": 11608,
-      "quote": "Lucelene Lopes",
-      "verified": false
-    },
-    {
-      "label": "Renata Vieira",
-      "entityType": "person",
-      "cluster": "Renata Vieira",
-      "startChar": 11611,
-      "endChar": 11624,
-      "quote": "Renata Vieira",
-      "verified": false
-    },
-    {
-      "label": "Inteligência\nArtificial",
-      "entityType": "field",
-      "cluster": "Artificial Intelligence",
-      "startChar": 11842,
-      "endChar": 11865,
-      "quote": "Inteligência\nArtificial",
-      "verified": false
-    },
-    {
-      "label": "Processamento de Lingua-\ngem Natural",
-      "entityType": "field",
-      "cluster": "NLP",
-      "startChar": 11882,
-      "endChar": 11918,
-      "quote": "Processamento de Lingua-\ngem Natural",
-      "verified": false
-    },
-    {
-      "label": "pediatria",
-      "entityType": "field",
-      "cluster": "Pediatrics",
-      "startChar": 12391,
-      "endChar": 12400,
-      "quote": "pediatria",
-      "verified": false
-    },
-    {
-      "label": "Guilherme Ataíde",
-      "entityType": "person",
-      "cluster": "Guilherme Ataíde",
-      "startChar": 12713,
-      "endChar": 12729,
-      "quote": "Guilherme Ataíde",
-      "verified": false
-    },
-    {
-      "label": "Werner Ceusters",
-      "entityType": "person",
-      "cluster": "Werner Ceusters",
-      "startChar": 12731,
-      "endChar": 12746,
-      "quote": "Werner Ceusters",
-      "verified": false
-    },
-    {
-      "label": "Ro-\nnald Cornet",
-      "entityType": "person",
-      "cluster": "Ronald Cornet",
-      "startChar": 12748,
-      "endChar": 12763,
-      "quote": "Ro-\nnald Cornet",
-      "verified": false
-    },
-    {
-      "label": "Marcos Galindo",
-      "entityType": "person",
-      "cluster": "Marcos Galindo",
-      "startChar": 12765,
-      "endChar": 12779,
-      "quote": "Marcos Galindo",
-      "verified": false
-    },
-    {
-      "label": "Rosario Girardi",
-      "entityType": "person",
-      "cluster": "Rosario Girardi",
-      "startChar": 12781,
-      "endChar": 12796,
-      "quote": "Rosario Girardi",
-      "verified": false
-    },
-    {
-      "label": "Giancarlo\nGuizzardi",
-      "entityType": "person",
-      "cluster": "Giancarlo Guizzardi",
-      "startChar": 12798,
-      "endChar": 12817,
-      "quote": "Giancarlo\nGuizzardi",
-      "verified": false
-    },
-    {
-      "label": "Robert Hoehndorf",
-      "entityType": "person",
-      "cluster": "Robert Hoehndorf",
-      "startChar": 12819,
-      "endChar": 12835,
-      "quote": "Robert Hoehndorf",
-      "verified": false
-    },
-    {
-      "label": "César Tacla",
-      "entityType": "person",
-      "cluster": "César Tacla",
-      "startChar": 12838,
-      "endChar": 12849,
-      "quote": "César Tacla",
-      "verified": false
-    },
-    {
-      "label": "RECIIS",
-      "entityType": "journal",
-      "cluster": "RECIIS",
-      "startChar": 13066,
-      "endChar": 13072,
-      "quote": "RECIIS",
-      "verified": false
-    },
-    {
-      "label": "Carlos\nSaldanha Machado",
-      "entityType": "person",
-      "cluster": "Carlos Saldanha Machado",
-      "startChar": 13074,
-      "endChar": 13097,
-      "quote": "Carlos\nSaldanha Machado",
-      "verified": false
-    },
-    {
-      "label": "Josué Laguardia",
-      "entityType": "person",
-      "cluster": "Josué Laguardia",
-      "startChar": 13100,
-      "endChar": 13115,
-      "quote": "Josué Laguardia",
-      "verified": false
-    },
-    {
-      "label": "Fred Freitas",
-      "entityType": "person",
-      "cluster": "Frederico Freitas",
-      "startChar": 13400,
-      "endChar": 13412,
-      "quote": "Fred Freitas",
-      "verified": false
-    },
-    {
-      "label": "Universidade de Santa Catarina",
-      "entityType": "university",
-      "cluster": "UFSC",
-      "startChar": 13424,
-      "endChar": 13454,
-      "quote": "Universidade de Santa Catarina",
-      "verified": false
-    },
-    {
-      "label": "Brasil",
-      "entityType": "country",
-      "cluster": "Brasil",
-      "startChar": 13456,
-      "endChar": 13462,
-      "quote": "Brasil",
-      "verified": false
-    },
-    {
-      "label": "Centro de Informática",
-      "entityType": "organization",
-      "cluster": "CIn UFPE",
-      "startChar": 13491,
-      "endChar": 13512,
-      "quote": "Centro de Informática",
-      "verified": false
-    },
-    {
-      "label": "Universidade Federal de Pernambuco",
-      "entityType": "university",
-      "cluster": "UFPE",
-      "startChar": 13516,
-      "endChar": 13552,
-      "quote": "Univer-\nsidade Federal de Pernambuco",
-      "verified": false
-    },
-    {
-      "label": "Brasil",
-      "entityType": "country",
-      "cluster": "Brasil",
-      "startChar": 13554,
-      "endChar": 13560,
-      "quote": "Brasil",
-      "verified": false
-    },
-    {
-      "label": "CIn/UFPE",
-      "entityType": "organization",
-      "cluster": "CIn UFPE",
-      "startChar": 13562,
-      "endChar": 13570,
-      "quote": "CIn/UFPE",
-      "verified": false
-    },
-    {
-      "label": "Departamento de\nInformática da Universidade de Karlsruhe",
-      "entityType": "organization",
-      "cluster": "Karlsruhe Informatics",
-      "startChar": 13612,
-      "endChar": 13668,
-      "quote": "Departamento de\nInformática da Universidade de Karlsruhe",
-      "verified": false
-    },
-    {
-      "label": "Universidade de Karlsruhe",
-      "entityType": "university",
-      "cluster": "University of Karlsruhe",
-      "startChar": 13643,
-      "endChar": 13668,
-      "quote": "Universidade de Karlsruhe",
-      "verified": false
-    },
-    {
-      "label": "Brasil-Alemanha",
-      "entityType": "project",
-      "cluster": "Brazil-Germany project",
-      "startChar": 13697,
-      "endChar": 13712,
-      "quote": "Brasil-Alemanha",
-      "verified": false
-    },
-    {
-      "label": "A semantic approach\nto data retrieval",
-      "entityType": "title",
-      "cluster": "semantic data retrieval project",
-      "startChar": 13714,
-      "endChar": 13751,
-      "quote": "A semantic approach\nto data retrieval",
-      "verified": false
-    },
-    {
-      "label": "IJCAI",
-      "entityType": "conference",
-      "cluster": "IJCAI",
-      "startChar": 13870,
-      "endChar": 13875,
-      "quote": "IJCAI",
-      "verified": false
-    },
-    {
-      "label": "ACM",
-      "entityType": "organization",
-      "cluster": "ACM",
-      "startChar": 13903,
-      "endChar": 13906,
-      "quote": "ACM",
-      "verified": false
-    },
-    {
-      "label": "Association on Computer Machinery",
-      "entityType": "organization",
-      "cluster": "ACM",
-      "startChar": 13908,
-      "endChar": 13941,
-      "quote": "Association on Computer Machinery",
-      "verified": false
-    },
-    {
-      "label": "IEEE",
-      "entityType": "organization",
-      "cluster": "IEEE",
-      "startChar": 13950,
-      "endChar": 13954,
-      "quote": "IEEE",
-      "verified": false
-    },
-    {
-      "label": "Institute of Electrical and Electronical Engineering",
-      "entityType": "organization",
-      "cluster": "IEEE",
-      "startChar": 13956,
-      "endChar": 14008,
-      "quote": "Institute of Electrical and Electronical Engineering",
-      "verified": false
-    },
-    {
-      "label": "WONTO",
-      "entityType": "workshop",
-      "cluster": "WONTO",
-      "startChar": 14052,
-      "endChar": 14057,
-      "quote": "WONTO",
-      "verified": false
-    },
-    {
-      "label": "Workshop on Ontologies and their Applications",
-      "entityType": "workshop",
-      "cluster": "WONTO",
-      "startChar": 14059,
-      "endChar": 14104,
-      "quote": "Workshop on Ontologies and their Applications",
-      "verified": false
-    },
-    {
-      "label": "Seminário de Ontologias e Suas Aplicações",
-      "entityType": "workshop",
-      "cluster": "WONTO",
-      "startChar": 14105,
-      "endChar": 14146,
-      "quote": "Seminário de Ontologias e Suas Aplicações",
-      "verified": false
-    },
-    {
-      "label": "Brasil",
-      "entityType": "country",
-      "cluster": "Brasil",
-      "startChar": 14152,
-      "endChar": 14158,
-      "quote": "Brasil",
-      "verified": false
-    },
-    {
-      "label": "BA-\nOSW",
-      "entityType": "workshop",
-      "cluster": "BAOSW",
-      "startChar": 14164,
-      "endChar": 14171,
-      "quote": "BA-\nOSW",
-      "verified": false
-    },
-    {
-      "label": "Building Applications with Ontologies for the Semantic Web",
-      "entityType": "workshop",
-      "cluster": "BAOSW",
-      "startChar": 14173,
-      "endChar": 14231,
-      "quote": "Building Applications with Ontologies for the Semantic Web",
-      "verified": false
-    },
-    {
-      "label": "Semantic Web",
+      "endChar": 1077,
       "entityType": "technology",
+      "labelSha256": "25af09ebf248f704b8ef4b1e4b639bd5e2523dcfab25733b861052b19c6baa6c",
+      "quoteSha256": "25af09ebf248f704b8ef4b1e4b639bd5e2523dcfab25733b861052b19c6baa6c",
+      "startChar": 1064,
+      "verified": false
+    },
+    {
+      "cluster": "Academia domain",
+      "endChar": 1968,
+      "entityType": "domain",
+      "labelSha256": "cc89baf2d5ca2de76cbfa5411ee5211b67ff52ce9a119eb168b1864fc9123d39",
+      "quoteSha256": "cc89baf2d5ca2de76cbfa5411ee5211b67ff52ce9a119eb168b1864fc9123d39",
+      "startChar": 1960,
+      "verified": false
+    },
+    {
       "cluster": "Semantic Web",
-      "startChar": 14219,
-      "endChar": 14231,
-      "quote": "Semantic Web",
+      "endChar": 2977,
+      "entityType": "technology",
+      "labelSha256": "25af09ebf248f704b8ef4b1e4b639bd5e2523dcfab25733b861052b19c6baa6c",
+      "quoteSha256": "25af09ebf248f704b8ef4b1e4b639bd5e2523dcfab25733b861052b19c6baa6c",
+      "startChar": 2964,
       "verified": false
     },
     {
-      "label": "Portugal",
-      "entityType": "country",
-      "cluster": "Portugal",
-      "startChar": 14297,
-      "endChar": 14305,
-      "quote": "Portugal",
-      "verified": false
-    },
-    {
-      "label": "JBCS",
-      "entityType": "journal",
-      "cluster": "JBCS",
-      "startChar": 14363,
-      "endChar": 14367,
-      "quote": "JBCS",
-      "verified": false
-    },
-    {
-      "label": "Journal of\nBrazilian Computer Society",
-      "entityType": "journal",
-      "cluster": "JBCS",
-      "startChar": 14369,
-      "endChar": 14406,
-      "quote": "Journal of\nBrazilian Computer Society",
-      "verified": false
-    },
-    {
-      "label": "JUCS",
-      "entityType": "journal",
-      "cluster": "JUCS",
-      "startChar": 14413,
-      "endChar": 14417,
-      "quote": "JUCS",
-      "verified": false
-    },
-    {
-      "label": "Journal of Universal Computer Science",
-      "entityType": "journal",
-      "cluster": "JUCS",
-      "startChar": 14419,
-      "endChar": 14456,
-      "quote": "Journal of Universal Computer Science",
-      "verified": false
-    },
-    {
-      "label": "Universidade de Paul Cesanne",
-      "entityType": "university",
-      "cluster": "Université Paul Cézanne",
-      "startChar": 14487,
-      "endChar": 14515,
-      "quote": "Universidade de Paul Cesanne",
-      "verified": false
-    },
-    {
-      "label": "Paul Cesanne",
-      "entityType": "person",
-      "cluster": "Paul Cézanne",
-      "startChar": 14503,
-      "endChar": 14515,
-      "quote": "Paul Cesanne",
-      "verified": false
-    },
-    {
-      "label": "Marselha",
-      "entityType": "city",
-      "cluster": "Marseille",
-      "startChar": 14519,
-      "endChar": 14527,
-      "quote": "Marselha",
-      "verified": false
-    },
-    {
-      "label": "INRIA",
-      "entityType": "organization",
-      "cluster": "INRIA",
-      "startChar": 14531,
-      "endChar": 14536,
-      "quote": "INRIA",
-      "verified": false
-    },
-    {
-      "label": "Montbonnot",
-      "entityType": "city",
-      "cluster": "Montbonnot",
-      "startChar": 14538,
-      "endChar": 14548,
-      "quote": "Montbonnot",
-      "verified": false
-    },
-    {
-      "label": "França",
-      "entityType": "country",
-      "cluster": "France",
-      "startChar": 14553,
-      "endChar": 14559,
-      "quote": "França",
-      "verified": false
-    },
-    {
-      "label": "Karlsruhe",
-      "entityType": "university",
-      "cluster": "University of Karlsruhe",
-      "startChar": 14583,
-      "endChar": 14592,
-      "quote": "Karlsruhe",
-      "verified": false
-    },
-    {
-      "label": "Freiburg",
-      "entityType": "university",
-      "cluster": "University of Freiburg",
-      "startChar": 14594,
-      "endChar": 14602,
-      "quote": "Freiburg",
-      "verified": false
-    },
-    {
-      "label": "Mannheim",
-      "entityType": "university",
-      "cluster": "University of Mannheim",
-      "startChar": 14605,
-      "endChar": 14613,
-      "quote": "Mannheim",
-      "verified": false
-    },
-    {
-      "label": "Alemanha",
-      "entityType": "country",
-      "cluster": "Alemanha",
-      "startChar": 14618,
-      "endChar": 14626,
-      "quote": "Alemanha",
-      "verified": false
-    },
-    {
-      "label": "RECIIS",
-      "entityType": "journal",
-      "cluster": "RECIIS",
-      "startChar": 14761,
-      "endChar": 14767,
-      "quote": "RECIIS",
-      "verified": false
-    },
-    {
-      "label": "Rio de Janeiro",
-      "entityType": "city",
-      "cluster": "Rio de Janeiro",
-      "startChar": 14806,
-      "endChar": 14820,
-      "quote": "Rio de Janeiro",
-      "verified": false
-    },
-    {
-      "label": "2009",
-      "entityType": "year",
-      "cluster": "2009",
-      "startChar": 14845,
-      "endChar": 14849,
-      "quote": "2009",
-      "verified": false
-    },
-    {
-      "label": "Stefan Schulz",
-      "entityType": "person",
       "cluster": "Stefan Schulz",
-      "startChar": 14850,
-      "endChar": 14863,
-      "quote": "Stefan Schulz",
+      "endChar": 3385,
+      "entityType": "person",
+      "labelSha256": "de023e91a51b445537e57a20e0e04b5fbc4813548ae5c64061ca9c3d2a8ae0ad",
+      "quoteSha256": "de023e91a51b445537e57a20e0e04b5fbc4813548ae5c64061ca9c3d2a8ae0ad",
+      "startChar": 3372,
       "verified": false
     },
     {
-      "label": "Heidelberg University",
-      "entityType": "university",
-      "cluster": "Heidelberg University",
-      "startChar": 14891,
-      "endChar": 14912,
-      "quote": "Heidelberg University",
-      "verified": false
-    },
-    {
-      "label": "Alemanha",
-      "entityType": "country",
-      "cluster": "Alemanha",
-      "startChar": 14914,
-      "endChar": 14922,
-      "quote": "Alemanha",
-      "verified": false
-    },
-    {
-      "label": "Instituto\nde Biometria Médica e Informática da Medicina do Centro Médico Universitário Freiburg",
-      "entityType": "organization",
       "cluster": "IMBI Freiburg",
-      "startChar": 14962,
-      "endChar": 15057,
-      "quote": "Instituto\nde Biometria Médica e Informática da Medicina do Centro Médico Universitário Freiburg",
+      "endChar": 3441,
+      "entityType": "organization",
+      "labelSha256": "11ce4890d353209ec59bc3bab035898556d842cad7fc27e41c4dd73ca5eca365",
+      "quoteSha256": "11ce4890d353209ec59bc3bab035898556d842cad7fc27e41c4dd73ca5eca365",
+      "startChar": 3386,
       "verified": false
     },
     {
-      "label": "Freiburg",
-      "entityType": "city",
+      "cluster": "University Medical Center Freiburg",
+      "endChar": 3482,
+      "entityType": "organization",
+      "labelSha256": "86f7a46753330a0a201c9ad37e50234894e4ff8ed86878c4aa0e3f088ba1591a",
+      "quoteSha256": "86f7a46753330a0a201c9ad37e50234894e4ff8ed86878c4aa0e3f088ba1591a",
+      "startChar": 3443,
+      "verified": false
+    },
+    {
       "cluster": "Freiburg",
-      "startChar": 15049,
-      "endChar": 15057,
-      "quote": "Freiburg",
-      "verified": false
-    },
-    {
-      "label": "Grupo\nde Pesquisas em Informática na Medicina",
-      "entityType": "organization",
-      "cluster": "Freiburg Medical Informatics Group",
-      "startChar": 15073,
-      "endChar": 15118,
-      "quote": "Grupo\nde Pesquisas em Informática na Medicina",
-      "verified": false
-    },
-    {
-      "label": "São Luís",
+      "endChar": 3492,
       "entityType": "city",
-      "cluster": "São Luís",
-      "startChar": 15609,
-      "endChar": 15617,
-      "quote": "São Luís",
+      "labelSha256": "0995df44144104553d014c45e125343ed50136c111f4e1d3752285fd71603355",
+      "quoteSha256": "0995df44144104553d014c45e125343ed50136c111f4e1d3752285fd71603355",
+      "startChar": 3484,
       "verified": false
     },
     {
-      "label": "Brasil",
+      "cluster": "Alemanha",
+      "endChar": 3502,
       "entityType": "country",
-      "cluster": "Brasil",
-      "startChar": 15619,
-      "endChar": 15625,
-      "quote": "Brasil",
+      "labelSha256": "212b93a4ce977a01455c743c89396ea73c437fd4252f66cba36ddd71004467ff",
+      "quoteSha256": "212b93a4ce977a01455c743c89396ea73c437fd4252f66cba36ddd71004467ff",
+      "startChar": 3494,
       "verified": false
     },
     {
-      "label": "Universidade de Freiburg",
-      "entityType": "university",
-      "cluster": "University of Freiburg",
-      "startChar": 15699,
-      "endChar": 15723,
-      "quote": "Universidade de Freiburg",
-      "verified": false
-    },
-    {
-      "label": "União Européia",
-      "entityType": "organization",
-      "cluster": "European Union",
-      "startChar": 16037,
-      "endChar": 16051,
-      "quote": "União Européia",
-      "verified": false
-    },
-    {
-      "label": "Stefan Schulz",
-      "entityType": "person",
       "cluster": "Stefan Schulz",
-      "startChar": 16053,
-      "endChar": 16066,
-      "quote": "Stefan Schulz",
+      "endChar": 3527,
+      "entityType": "email",
+      "labelSha256": "9f7b0e24f7c095914c6887e81dd6e099f68f5cb000b1d4ac0c903abff48214cc",
+      "quoteSha256": "9f7b0e24f7c095914c6887e81dd6e099f68f5cb000b1d4ac0c903abff48214cc",
+      "startChar": 3503,
       "verified": false
     },
     {
-      "label": "2001",
+      "cluster": "RECIIS",
+      "endChar": 3535,
+      "entityType": "journal",
+      "labelSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "quoteSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "startChar": 3529,
+      "verified": false
+    },
+    {
+      "cluster": "Rio de Janeiro",
+      "endChar": 3588,
+      "entityType": "city",
+      "labelSha256": "a188a64fb6b392833db7697673b3cc5df6d8409935e71588a3591218e0fd5e61",
+      "quoteSha256": "a188a64fb6b392833db7697673b3cc5df6d8409935e71588a3591218e0fd5e61",
+      "startChar": 3574,
+      "verified": false
+    },
+    {
+      "cluster": "2009",
+      "endChar": 3617,
       "entityType": "year",
+      "labelSha256": "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec",
+      "quoteSha256": "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec",
+      "startChar": 3613,
+      "verified": false
+    },
+    {
+      "cluster": "United States",
+      "endChar": 3818,
+      "entityType": "country",
+      "labelSha256": "20d1a5eb0b1a7bc0405a45d21b7b81d1e262b81bdff7f5f87712035893a0455c",
+      "quoteSha256": "20d1a5eb0b1a7bc0405a45d21b7b81d1e262b81bdff7f5f87712035893a0455c",
+      "startChar": 3804,
+      "verified": false
+    },
+    {
+      "cluster": "Stanford Medical Informatics",
+      "endChar": 3884,
+      "entityType": "organization",
+      "labelSha256": "4ba637d95184b55b42515276cbcf7b153d021dedf05ef4999b10bd657774e075",
+      "quoteSha256": "4ba637d95184b55b42515276cbcf7b153d021dedf05ef4999b10bd657774e075",
+      "startChar": 3822,
+      "verified": false
+    },
+    {
+      "cluster": "Stanford University",
+      "endChar": 3884,
+      "entityType": "university",
+      "labelSha256": "dc5f775803825494d86c3dfa8cb6c28491fe3780744a5d80d32d933168e55eba",
+      "quoteSha256": "dc5f775803825494d86c3dfa8cb6c28491fe3780744a5d80d32d933168e55eba",
+      "startChar": 3860,
+      "verified": false
+    },
+    {
+      "cluster": "Stanford University",
+      "endChar": 3884,
+      "entityType": "university",
+      "labelSha256": "bf90d29a5ccb2df544441fe986ac53325b6cb8de08a88ad83790bdb41f8c28c3",
+      "quoteSha256": "bf90d29a5ccb2df544441fe986ac53325b6cb8de08a88ad83790bdb41f8c28c3",
+      "startChar": 3876,
+      "verified": false
+    },
+    {
+      "cluster": "Protégé",
+      "endChar": 3940,
+      "entityType": "software",
+      "labelSha256": "bdd17f34ae3c69493854cb8c02a17cd9ff34a5dbfc2a3e19786e0e05e4fc5350",
+      "quoteSha256": "bdd17f34ae3c69493854cb8c02a17cd9ff34a5dbfc2a3e19786e0e05e4fc5350",
+      "startChar": 3933,
+      "verified": false
+    },
+    {
+      "cluster": "NCBO",
+      "endChar": 4038,
+      "entityType": "organization",
+      "labelSha256": "4f92d4fdf7fc89c659cdcb9956818ea566a6a68b896468c852e727b1719d6900",
+      "quoteSha256": "4f92d4fdf7fc89c659cdcb9956818ea566a6a68b896468c852e727b1719d6900",
+      "startChar": 3983,
+      "verified": false
+    },
+    {
+      "cluster": "NCBO",
+      "endChar": 4081,
+      "entityType": "organization",
+      "labelSha256": "3f7acba8d3d191897d65c6665e49f793ff9bcf2244573fe51c14ebe2b16a3368",
+      "quoteSha256": "3f7acba8d3d191897d65c6665e49f793ff9bcf2244573fe51c14ebe2b16a3368",
+      "startChar": 4040,
+      "verified": false
+    },
+    {
+      "cluster": "Stanford University",
+      "endChar": 4147,
+      "entityType": "university",
+      "labelSha256": "bf90d29a5ccb2df544441fe986ac53325b6cb8de08a88ad83790bdb41f8c28c3",
+      "quoteSha256": "bf90d29a5ccb2df544441fe986ac53325b6cb8de08a88ad83790bdb41f8c28c3",
+      "startChar": 4139,
+      "verified": false
+    },
+    {
+      "cluster": "University of Victoria",
+      "endChar": 4157,
+      "entityType": "university",
+      "labelSha256": "c7a11e9a55de2b146e3b2d75e9112ee6af4e5b439658e725e6afca92e93bf0bd",
+      "quoteSha256": "c7a11e9a55de2b146e3b2d75e9112ee6af4e5b439658e725e6afca92e93bf0bd",
+      "startChar": 4149,
+      "verified": false
+    },
+    {
+      "cluster": "University at Buffalo",
+      "endChar": 4167,
+      "entityType": "university",
+      "labelSha256": "00b173025fb682629fd8ea6b75e3f6b3f8673827022a27345ed4dad15ac812bd",
+      "quoteSha256": "00b173025fb682629fd8ea6b75e3f6b3f8673827022a27345ed4dad15ac812bd",
+      "startChar": 4160,
+      "verified": false
+    },
+    {
+      "cluster": "Mayo Clinic",
+      "endChar": 4188,
+      "entityType": "organization",
+      "labelSha256": "9213d87374636c10e1edc34704c6486a990015d683d8be30b5678854a14b51fc",
+      "quoteSha256": "9213d87374636c10e1edc34704c6486a990015d683d8be30b5678854a14b51fc",
+      "startChar": 4177,
+      "verified": false
+    },
+    {
+      "cluster": "Rochester",
+      "endChar": 4202,
+      "entityType": "city",
+      "labelSha256": "c79292671583ac8aaad6e3c4ec1294a220588119305dbbd3cdaa63a7ae8b72a1",
+      "quoteSha256": "c79292671583ac8aaad6e3c4ec1294a220588119305dbbd3cdaa63a7ae8b72a1",
+      "startChar": 4193,
+      "verified": false
+    },
+    {
+      "cluster": "Europe",
+      "endChar": 4213,
+      "entityType": "region",
+      "labelSha256": "fc30e2a579cdb971eb042715c73406cd96935bf3de3562d4800576d10fb61c80",
+      "quoteSha256": "fc30e2a579cdb971eb042715c73406cd96935bf3de3562d4800576d10fb61c80",
+      "startChar": 4207,
+      "verified": false
+    },
+    {
+      "cluster": "Leipzig ontology group",
+      "endChar": 4290,
+      "entityType": "organization",
+      "labelSha256": "78abf4505cb528e97e31fbaff353d403ff6aae7c7d6a5e28280f3826e629dd1d",
+      "quoteSha256": "78abf4505cb528e97e31fbaff353d403ff6aae7c7d6a5e28280f3826e629dd1d",
+      "startChar": 4225,
+      "verified": false
+    },
+    {
+      "cluster": "IMISE Leipzig",
+      "endChar": 4356,
+      "entityType": "organization",
+      "labelSha256": "b8bf16e47b65a8e373445521c3f4ee4b892bb870761910f7d351b866cc01fdc3",
+      "quoteSha256": "b8bf16e47b65a8e373445521c3f4ee4b892bb870761910f7d351b866cc01fdc3",
+      "startChar": 4294,
+      "verified": false
+    },
+    {
+      "cluster": "Leipzig",
+      "endChar": 4368,
+      "entityType": "city",
+      "labelSha256": "2318776eed9ae62ec1c5640ebc0c673cc72274c5af8f484ecbb416a198fcaaa9",
+      "quoteSha256": "2318776eed9ae62ec1c5640ebc0c673cc72274c5af8f484ecbb416a198fcaaa9",
+      "startChar": 4361,
+      "verified": false
+    },
+    {
+      "cluster": "Freiburg Medical Informatics Group",
+      "endChar": 4413,
+      "entityType": "organization",
+      "labelSha256": "e68fe0daa1d432182475563f122b19d894f4a8cba4554f684415509f46db77dc",
+      "quoteSha256": "e68fe0daa1d432182475563f122b19d894f4a8cba4554f684415509f46db77dc",
+      "startChar": 4374,
+      "verified": false
+    },
+    {
+      "cluster": "University Medical Center Freiburg",
+      "endChar": 4456,
+      "entityType": "organization",
+      "labelSha256": "86f7a46753330a0a201c9ad37e50234894e4ff8ed86878c4aa0e3f088ba1591a",
+      "quoteSha256": "86f7a46753330a0a201c9ad37e50234894e4ff8ed86878c4aa0e3f088ba1591a",
+      "startChar": 4417,
+      "verified": false
+    },
+    {
+      "cluster": "Alemanha",
+      "endChar": 4475,
+      "entityType": "country",
+      "labelSha256": "212b93a4ce977a01455c743c89396ea73c437fd4252f66cba36ddd71004467ff",
+      "quoteSha256": "212b93a4ce977a01455c743c89396ea73c437fd4252f66cba36ddd71004467ff",
+      "startChar": 4467,
+      "verified": false
+    },
+    {
+      "cluster": "Manchester bio-health informatics",
+      "endChar": 4519,
+      "entityType": "organization",
+      "labelSha256": "0f6c69ea301756e22830e4be8ffe659f69aaf17767754cabdfaa4a173f3ba6a6",
+      "quoteSha256": "0f6c69ea301756e22830e4be8ffe659f69aaf17767754cabdfaa4a173f3ba6a6",
+      "startChar": 4481,
+      "verified": false
+    },
+    {
+      "cluster": "University of Manchester",
+      "endChar": 4550,
+      "entityType": "university",
+      "labelSha256": "71c0a1684020c269c476631111d08eceffb4901f15a5c8f7f1a33f984b29a65b",
+      "quoteSha256": "71c0a1684020c269c476631111d08eceffb4901f15a5c8f7f1a33f984b29a65b",
+      "startChar": 4524,
+      "verified": false
+    },
+    {
+      "cluster": "England",
+      "endChar": 4565,
+      "entityType": "country",
+      "labelSha256": "9503ec9797944aacafdc6bfc2432957259b58a4e7dae0dabb9a3b38ec5017f05",
+      "quoteSha256": "9503ec9797944aacafdc6bfc2432957259b58a4e7dae0dabb9a3b38ec5017f05",
+      "startChar": 4555,
+      "verified": false
+    },
+    {
+      "cluster": "Semantic Web",
+      "endChar": 4643,
+      "entityType": "technology",
+      "labelSha256": "1ee7621318d00bb29069d15ac02d0ed846275e33836103f1c211b972f66483ea",
+      "quoteSha256": "1ee7621318d00bb29069d15ac02d0ed846275e33836103f1c211b972f66483ea",
+      "startChar": 4630,
+      "verified": false
+    },
+    {
+      "cluster": "RECIIS",
+      "endChar": 5236,
+      "entityType": "journal",
+      "labelSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "quoteSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "startChar": 5230,
+      "verified": false
+    },
+    {
+      "cluster": "Brasil",
+      "endChar": 6033,
+      "entityType": "country",
+      "labelSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "quoteSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "startChar": 6027,
+      "verified": false
+    },
+    {
+      "cluster": "ICD",
+      "endChar": 6571,
+      "entityType": "terminology",
+      "labelSha256": "6b632decb6d981b627b92f783382df8a1c1376faa8f846f96b3c861569940301",
+      "quoteSha256": "6b632decb6d981b627b92f783382df8a1c1376faa8f846f96b3c861569940301",
+      "startChar": 6568,
+      "verified": false
+    },
+    {
+      "cluster": "ICD",
+      "endChar": 6611,
+      "entityType": "terminology",
+      "labelSha256": "f051c72c48ed561a427b9924926f0d132645138ad7260e78727c3aefd01d4d43",
+      "quoteSha256": "f051c72c48ed561a427b9924926f0d132645138ad7260e78727c3aefd01d4d43",
+      "startChar": 6573,
+      "verified": false
+    },
+    {
+      "cluster": "SNOMED CT",
+      "endChar": 6623,
+      "entityType": "terminology",
+      "labelSha256": "b815a4e5daf8d8926cd369510e6db429b83e72f7019a3d25905c5ec49e85acb8",
+      "quoteSha256": "b815a4e5daf8d8926cd369510e6db429b83e72f7019a3d25905c5ec49e85acb8",
+      "startChar": 6614,
+      "verified": false
+    },
+    {
+      "cluster": "MeSH",
+      "endChar": 6686,
+      "entityType": "terminology",
+      "labelSha256": "298770c8e4902d574839ac67ffd4764db2e2964d50681b756d406f1ac09afee9",
+      "quoteSha256": "298770c8e4902d574839ac67ffd4764db2e2964d50681b756d406f1ac09afee9",
+      "startChar": 6682,
+      "verified": false
+    },
+    {
+      "cluster": "MeSH",
+      "endChar": 6708,
+      "entityType": "terminology",
+      "labelSha256": "ce6ef6379ca8a0dc85cadfe8cd49b2230b2a35ba215c5a5a46b0056b2ebafbdb",
+      "quoteSha256": "ce6ef6379ca8a0dc85cadfe8cd49b2230b2a35ba215c5a5a46b0056b2ebafbdb",
+      "startChar": 6688,
+      "verified": false
+    },
+    {
+      "cluster": "OpenGALEN",
+      "endChar": 6720,
+      "entityType": "ontology",
+      "labelSha256": "1b81a736f0050e3f82330599b17fd9c61ba3ecd851ba47980380f2d8112dc3da",
+      "quoteSha256": "1b81a736f0050e3f82330599b17fd9c61ba3ecd851ba47980380f2d8112dc3da",
+      "startChar": 6711,
+      "verified": false
+    },
+    {
+      "cluster": "FMA",
+      "endChar": 6803,
+      "entityType": "ontology",
+      "labelSha256": "234a6096a7abf3e25c5b3f9697cd6cc08e208b4d5c1e75fdf965dde4c0ba675f",
+      "quoteSha256": "234a6096a7abf3e25c5b3f9697cd6cc08e208b4d5c1e75fdf965dde4c0ba675f",
+      "startChar": 6800,
+      "verified": false
+    },
+    {
+      "cluster": "FMA",
+      "endChar": 6835,
+      "entityType": "ontology",
+      "labelSha256": "3f725d6ad904053673e4bd9a6ed4bb3161b124e0bd386515b883fb2424fcbb65",
+      "quoteSha256": "3f725d6ad904053673e4bd9a6ed4bb3161b124e0bd386515b883fb2424fcbb65",
+      "startChar": 6805,
+      "verified": false
+    },
+    {
+      "cluster": "UMLS",
+      "endChar": 6866,
+      "entityType": "terminology",
+      "labelSha256": "a9ac1fa0d4063397aa9a32e8eaaf4ade47f951d97f0af953c815ea3038f81dad",
+      "quoteSha256": "a9ac1fa0d4063397aa9a32e8eaaf4ade47f951d97f0af953c815ea3038f81dad",
+      "startChar": 6862,
+      "verified": false
+    },
+    {
+      "cluster": "UMLS",
+      "endChar": 6905,
+      "entityType": "terminology",
+      "labelSha256": "f6aeca74566f05f903fe710769e6abfd1e8df64f4729bc368fc790a22260e788",
+      "quoteSha256": "f6aeca74566f05f903fe710769e6abfd1e8df64f4729bc368fc790a22260e788",
+      "startChar": 6868,
+      "verified": false
+    },
+    {
+      "cluster": "OBO Foundry",
+      "endChar": 6921,
+      "entityType": "organization",
+      "labelSha256": "3d4eb7c3722fbd0f983dc1a12b3966906ef06e7a117d6838d6397ff95fbb3d41",
+      "quoteSha256": "3d4eb7c3722fbd0f983dc1a12b3966906ef06e7a117d6838d6397ff95fbb3d41",
+      "startChar": 6910,
+      "verified": false
+    },
+    {
+      "cluster": "OBO Foundry",
+      "endChar": 6963,
+      "entityType": "organization",
+      "labelSha256": "1f9a442f66b42a53c53bf308f2ad3cf42c72ad4d46c439d039d951da161da604",
+      "quoteSha256": "1f9a442f66b42a53c53bf308f2ad3cf42c72ad4d46c439d039d951da161da604",
+      "startChar": 6923,
+      "verified": false
+    },
+    {
+      "cluster": "Gene Ontology",
+      "endChar": 6995,
+      "entityType": "ontology",
+      "labelSha256": "4c4a15e22ae4c00a3d76856e4d672fc445fa38e75d08dea6fafef77dde97f9a3",
+      "quoteSha256": "4c4a15e22ae4c00a3d76856e4d672fc445fa38e75d08dea6fafef77dde97f9a3",
+      "startChar": 6979,
+      "verified": false
+    },
+    {
+      "cluster": "Gene Ontology",
+      "endChar": 6999,
+      "entityType": "ontology",
+      "labelSha256": "a0f949497a74dde0c63a35cd9ab147012ffa007b019557ea5cecb9a243d0c5de",
+      "quoteSha256": "a0f949497a74dde0c63a35cd9ab147012ffa007b019557ea5cecb9a243d0c5de",
+      "startChar": 6997,
+      "verified": false
+    },
+    {
+      "cluster": "article 2 title",
+      "endChar": 7123,
+      "entityType": "title",
+      "labelSha256": "ff6279fbd7ed259965f312b369b1963ec596348728241189b200be672bb319f3",
+      "quoteSha256": "ff6279fbd7ed259965f312b369b1963ec596348728241189b200be672bb319f3",
+      "startChar": 7026,
+      "verified": false
+    },
+    {
+      "cluster": "Carlos Marcondes",
+      "endChar": 7154,
+      "entityType": "person",
+      "labelSha256": "d022801ae532b1263f42f7d804665649c7d15025d8e72356d2f1fdba9482eef1",
+      "quoteSha256": "d022801ae532b1263f42f7d804665649c7d15025d8e72356d2f1fdba9482eef1",
+      "startChar": 7138,
+      "verified": false
+    },
+    {
+      "cluster": "Medicine",
+      "endChar": 7236,
+      "entityType": "field",
+      "labelSha256": "8fbc5d4e3562e20b8473ecb8745bf173bb978125f7c505e7c02665b3c01b82cc",
+      "quoteSha256": "8fbc5d4e3562e20b8473ecb8745bf173bb978125f7c505e7c02665b3c01b82cc",
+      "startChar": 7228,
+      "verified": false
+    },
+    {
+      "cluster": "Scientific Methodology",
+      "endChar": 7599,
+      "entityType": "field",
+      "labelSha256": "d49091a0e4f6d4b28f077e3c8009b3f3c71e6f0285af8aaf43ff07fa6f6851bd",
+      "quoteSha256": "d49091a0e4f6d4b28f077e3c8009b3f3c71e6f0285af8aaf43ff07fa6f6851bd",
+      "startChar": 7577,
+      "verified": false
+    },
+    {
+      "cluster": "Philosophy of Science",
+      "endChar": 7622,
+      "entityType": "field",
+      "labelSha256": "603875dae1ecc5faa81ce545839fc95e3cd41eed0a6e4e90038333ccfa01fec8",
+      "quoteSha256": "603875dae1ecc5faa81ce545839fc95e3cd41eed0a6e4e90038333ccfa01fec8",
+      "startChar": 7602,
+      "verified": false
+    },
+    {
+      "cluster": "article 3 title",
+      "endChar": 7947,
+      "entityType": "title",
+      "labelSha256": "4c7f27bf40f24f9be2201eeae255a7110793c77786a97cc18d011631339b7f9c",
+      "quoteSha256": "4c7f27bf40f24f9be2201eeae255a7110793c77786a97cc18d011631339b7f9c",
+      "startChar": 7882,
+      "verified": false
+    },
+    {
+      "cluster": "Stefan Schulz",
+      "endChar": 7977,
+      "entityType": "person",
+      "labelSha256": "bfb6bca0ebc944a3d92b07b4902d1720030de0d6d0788ae4b2aa7eb04995f485",
+      "quoteSha256": "bfb6bca0ebc944a3d92b07b4902d1720030de0d6d0788ae4b2aa7eb04995f485",
+      "startChar": 7964,
+      "verified": false
+    },
+    {
+      "cluster": "Barry Smith",
+      "endChar": 8019,
+      "entityType": "person",
+      "labelSha256": "0d4ac43f60a4c4c1f78064b1d325d23c1646a6cef57704871bd105ff234e8f3c",
+      "quoteSha256": "0d4ac43f60a4c4c1f78064b1d325d23c1646a6cef57704871bd105ff234e8f3c",
+      "startChar": 8008,
+      "verified": false
+    },
+    {
+      "cluster": "OBO Foundry",
+      "endChar": 8191,
+      "entityType": "organization",
+      "labelSha256": "2888f3b3f2b1800b60606ff1228793aa1309c755cfe9ae86fb401b7e4ac06d4c",
+      "quoteSha256": "2888f3b3f2b1800b60606ff1228793aa1309c755cfe9ae86fb401b7e4ac06d4c",
+      "startChar": 8179,
+      "verified": false
+    },
+    {
+      "cluster": "W3C",
+      "endChar": 8747,
+      "entityType": "organization",
+      "labelSha256": "88fc60153b6f24af5c92cc8f7e5d7b06352a50bc262530b2d82e56a1d13a1708",
+      "quoteSha256": "88fc60153b6f24af5c92cc8f7e5d7b06352a50bc262530b2d82e56a1d13a1708",
+      "startChar": 8731,
+      "verified": false
+    },
+    {
+      "cluster": "W3C",
+      "endChar": 8752,
+      "entityType": "organization",
+      "labelSha256": "777ae8e1fd6d241119cd248017f858924a01ee77712588dab6659d10ddb17843",
+      "quoteSha256": "777ae8e1fd6d241119cd248017f858924a01ee77712588dab6659d10ddb17843",
+      "startChar": 8749,
+      "verified": false
+    },
+    {
+      "cluster": "article 4 title",
+      "endChar": 9335,
+      "entityType": "title",
+      "labelSha256": "95f42ceaca2e0b3509c7802834dad9dacd30e46881ec95e45a2861f33987ad1c",
+      "quoteSha256": "95f42ceaca2e0b3509c7802834dad9dacd30e46881ec95e45a2861f33987ad1c",
+      "startChar": 9292,
+      "verified": false
+    },
+    {
+      "cluster": "Bernardo Gonçalves",
+      "endChar": 9359,
+      "entityType": "person",
+      "labelSha256": "4ab95a7f1e180037fc15ab33d025873dfccdf8c5c104351e8b6843c29d1c3531",
+      "quoteSha256": "4ab95a7f1e180037fc15ab33d025873dfccdf8c5c104351e8b6843c29d1c3531",
+      "startChar": 9341,
+      "verified": false
+    },
+    {
+      "cluster": "OBO Foundry",
+      "endChar": 9684,
+      "entityType": "ontology",
+      "labelSha256": "1ba917a37525edf326bf9fa8ddfc1c9d157f6c5de8dc7c7009cf8b721a5bceee",
+      "quoteSha256": "1ba917a37525edf326bf9fa8ddfc1c9d157f6c5de8dc7c7009cf8b721a5bceee",
+      "startChar": 9681,
+      "verified": false
+    },
+    {
+      "cluster": "FMA",
+      "endChar": 9692,
+      "entityType": "ontology",
+      "labelSha256": "234a6096a7abf3e25c5b3f9697cd6cc08e208b4d5c1e75fdf965dde4c0ba675f",
+      "quoteSha256": "234a6096a7abf3e25c5b3f9697cd6cc08e208b4d5c1e75fdf965dde4c0ba675f",
+      "startChar": 9689,
+      "verified": false
+    },
+    {
+      "cluster": "UFO",
+      "endChar": 9754,
+      "entityType": "ontology",
+      "labelSha256": "6afa04e2580544b27502a2bbaeb9f2ef29069d9292e86b6b3b7ede240bab6171",
+      "quoteSha256": "6afa04e2580544b27502a2bbaeb9f2ef29069d9292e86b6b3b7ede240bab6171",
+      "startChar": 9751,
+      "verified": false
+    },
+    {
+      "cluster": "UFO",
+      "endChar": 9787,
+      "entityType": "ontology",
+      "labelSha256": "28e312c6afd27828c7a7039e2a3194d2fdc3580d65023255084f754a57eccbe2",
+      "quoteSha256": "28e312c6afd27828c7a7039e2a3194d2fdc3580d65023255084f754a57eccbe2",
+      "startChar": 9756,
+      "verified": false
+    },
+    {
+      "cluster": "RECIIS",
+      "endChar": 9922,
+      "entityType": "journal",
+      "labelSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "quoteSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "startChar": 9916,
+      "verified": false
+    },
+    {
+      "cluster": "Rio de Janeiro",
+      "endChar": 9975,
+      "entityType": "city",
+      "labelSha256": "a188a64fb6b392833db7697673b3cc5df6d8409935e71588a3591218e0fd5e61",
+      "quoteSha256": "a188a64fb6b392833db7697673b3cc5df6d8409935e71588a3591218e0fd5e61",
+      "startChar": 9961,
+      "verified": false
+    },
+    {
+      "cluster": "2009",
+      "endChar": 10004,
+      "entityType": "year",
+      "labelSha256": "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec",
+      "quoteSha256": "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec",
+      "startChar": 10000,
+      "verified": false
+    },
+    {
+      "cluster": "ECG ontology",
+      "endChar": 10329,
+      "entityType": "ontology",
+      "labelSha256": "d29b41bef4298877034432845f655ab16f28af305ec676a7b610db7206bb7fdf",
+      "quoteSha256": "d29b41bef4298877034432845f655ab16f28af305ec676a7b610db7206bb7fdf",
+      "startChar": 10326,
+      "verified": false
+    },
+    {
+      "cluster": "article 5 title",
+      "endChar": 10913,
+      "entityType": "title",
+      "labelSha256": "68ebd9343285cf08f00c5819c515b19b78a77f49dcbe45860dd35fadc09903fa",
+      "quoteSha256": "68ebd9343285cf08f00c5819c515b19b78a77f49dcbe45860dd35fadc09903fa",
+      "startChar": 10791,
+      "verified": false
+    },
+    {
+      "cluster": "Maria Luiza Campos",
+      "endChar": 10937,
+      "entityType": "person",
+      "labelSha256": "c8852ba67e34bccfee4832160c389665c933ee8c44e7ceca3528b532f49b62a7",
+      "quoteSha256": "c8852ba67e34bccfee4832160c389665c933ee8c44e7ceca3528b532f49b62a7",
+      "startChar": 10919,
+      "verified": false
+    },
+    {
+      "cluster": "article 6 title",
+      "endChar": 11573,
+      "entityType": "title",
+      "labelSha256": "9d15e2859478d0699a8fe7b2085efc2694188e66328e4dc4866bfadc99d1907d",
+      "quoteSha256": "9d15e2859478d0699a8fe7b2085efc2694188e66328e4dc4866bfadc99d1907d",
+      "startChar": 11471,
+      "verified": false
+    },
+    {
+      "cluster": "Lucelene Lopes",
+      "endChar": 11608,
+      "entityType": "person",
+      "labelSha256": "c33107c430e162a2066729c10ed2e7db04a5283e408801e992eb2388513333bf",
+      "quoteSha256": "c33107c430e162a2066729c10ed2e7db04a5283e408801e992eb2388513333bf",
+      "startChar": 11594,
+      "verified": false
+    },
+    {
+      "cluster": "Renata Vieira",
+      "endChar": 11624,
+      "entityType": "person",
+      "labelSha256": "2623e68237c90b796c24e1672284871eb30cc5831f45a0e5faca36db7d33afb0",
+      "quoteSha256": "2623e68237c90b796c24e1672284871eb30cc5831f45a0e5faca36db7d33afb0",
+      "startChar": 11611,
+      "verified": false
+    },
+    {
+      "cluster": "Artificial Intelligence",
+      "endChar": 11865,
+      "entityType": "field",
+      "labelSha256": "c49d6e9b31ee9c5ed8d78472d9464983ac11c8c757425203dc60a0fe1a334782",
+      "quoteSha256": "c49d6e9b31ee9c5ed8d78472d9464983ac11c8c757425203dc60a0fe1a334782",
+      "startChar": 11842,
+      "verified": false
+    },
+    {
+      "cluster": "NLP",
+      "endChar": 11918,
+      "entityType": "field",
+      "labelSha256": "afb6c82b25f6a19257b1198f3a20fbc7eb8cbd07685e25401c768123494f2485",
+      "quoteSha256": "afb6c82b25f6a19257b1198f3a20fbc7eb8cbd07685e25401c768123494f2485",
+      "startChar": 11882,
+      "verified": false
+    },
+    {
+      "cluster": "Pediatrics",
+      "endChar": 12400,
+      "entityType": "field",
+      "labelSha256": "de9a00e95868cf602fb455e1f2eaa230984d5c70150f12b67c878038bede0551",
+      "quoteSha256": "de9a00e95868cf602fb455e1f2eaa230984d5c70150f12b67c878038bede0551",
+      "startChar": 12391,
+      "verified": false
+    },
+    {
+      "cluster": "Guilherme Ataíde",
+      "endChar": 12729,
+      "entityType": "person",
+      "labelSha256": "985c6a5668c8f3a6936fbcf24d55999ed243027b34b709ee43057516445cda3e",
+      "quoteSha256": "985c6a5668c8f3a6936fbcf24d55999ed243027b34b709ee43057516445cda3e",
+      "startChar": 12713,
+      "verified": false
+    },
+    {
+      "cluster": "Werner Ceusters",
+      "endChar": 12746,
+      "entityType": "person",
+      "labelSha256": "3cd865e3a4ba7b6c8dda8c1c5cdb508f7e6ed4e7578746de554f8e644a39afb4",
+      "quoteSha256": "3cd865e3a4ba7b6c8dda8c1c5cdb508f7e6ed4e7578746de554f8e644a39afb4",
+      "startChar": 12731,
+      "verified": false
+    },
+    {
+      "cluster": "Ronald Cornet",
+      "endChar": 12763,
+      "entityType": "person",
+      "labelSha256": "cd300601b587211f91242fb6c949eac56763b95b589a383dd9d1fdd2eff6868d",
+      "quoteSha256": "cd300601b587211f91242fb6c949eac56763b95b589a383dd9d1fdd2eff6868d",
+      "startChar": 12748,
+      "verified": false
+    },
+    {
+      "cluster": "Marcos Galindo",
+      "endChar": 12779,
+      "entityType": "person",
+      "labelSha256": "eaec88a2b02d43d66e35a740276125a50975477ac73e87fd808778867609f195",
+      "quoteSha256": "eaec88a2b02d43d66e35a740276125a50975477ac73e87fd808778867609f195",
+      "startChar": 12765,
+      "verified": false
+    },
+    {
+      "cluster": "Rosario Girardi",
+      "endChar": 12796,
+      "entityType": "person",
+      "labelSha256": "3e93a1c71b2e8e8d12b97c85f9121e798c1675e5f794cfb263bf579318c4aa30",
+      "quoteSha256": "3e93a1c71b2e8e8d12b97c85f9121e798c1675e5f794cfb263bf579318c4aa30",
+      "startChar": 12781,
+      "verified": false
+    },
+    {
+      "cluster": "Giancarlo Guizzardi",
+      "endChar": 12817,
+      "entityType": "person",
+      "labelSha256": "5cdba5f34010ef8bc6d4571c30f12cc676915dc21dc1abedd3ad8051d73472a9",
+      "quoteSha256": "5cdba5f34010ef8bc6d4571c30f12cc676915dc21dc1abedd3ad8051d73472a9",
+      "startChar": 12798,
+      "verified": false
+    },
+    {
+      "cluster": "Robert Hoehndorf",
+      "endChar": 12835,
+      "entityType": "person",
+      "labelSha256": "db969879323323d393a294ddc35a80675ad6d44ab01ed21b97e3565e0b472359",
+      "quoteSha256": "db969879323323d393a294ddc35a80675ad6d44ab01ed21b97e3565e0b472359",
+      "startChar": 12819,
+      "verified": false
+    },
+    {
+      "cluster": "César Tacla",
+      "endChar": 12849,
+      "entityType": "person",
+      "labelSha256": "07bf330a56670e35d40ff709da796911db102edfc63711cb670ca697c07582bc",
+      "quoteSha256": "07bf330a56670e35d40ff709da796911db102edfc63711cb670ca697c07582bc",
+      "startChar": 12838,
+      "verified": false
+    },
+    {
+      "cluster": "RECIIS",
+      "endChar": 13072,
+      "entityType": "journal",
+      "labelSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "quoteSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "startChar": 13066,
+      "verified": false
+    },
+    {
+      "cluster": "Carlos Saldanha Machado",
+      "endChar": 13097,
+      "entityType": "person",
+      "labelSha256": "7f7b36c238e47804dd26ee8c0b0707d947fd9a82445a7c2fc083c7a9ebf2ba95",
+      "quoteSha256": "7f7b36c238e47804dd26ee8c0b0707d947fd9a82445a7c2fc083c7a9ebf2ba95",
+      "startChar": 13074,
+      "verified": false
+    },
+    {
+      "cluster": "Josué Laguardia",
+      "endChar": 13115,
+      "entityType": "person",
+      "labelSha256": "ee5f7735b5297343f48e946c3745d2b49983e8d3b7cc23994d7e97b35b2e003c",
+      "quoteSha256": "ee5f7735b5297343f48e946c3745d2b49983e8d3b7cc23994d7e97b35b2e003c",
+      "startChar": 13100,
+      "verified": false
+    },
+    {
+      "cluster": "Frederico Freitas",
+      "endChar": 13412,
+      "entityType": "person",
+      "labelSha256": "e657bd8ff3933c471d4fc2af8ab2f2f93b47a90fd077a7f0da853410c9962956",
+      "quoteSha256": "e657bd8ff3933c471d4fc2af8ab2f2f93b47a90fd077a7f0da853410c9962956",
+      "startChar": 13400,
+      "verified": false
+    },
+    {
+      "cluster": "UFSC",
+      "endChar": 13454,
+      "entityType": "university",
+      "labelSha256": "8cff8cbdff6b8e0a35e2fd7d80ec4a8b8054f4436452b7cd5947bf25e011b59c",
+      "quoteSha256": "8cff8cbdff6b8e0a35e2fd7d80ec4a8b8054f4436452b7cd5947bf25e011b59c",
+      "startChar": 13424,
+      "verified": false
+    },
+    {
+      "cluster": "Brasil",
+      "endChar": 13462,
+      "entityType": "country",
+      "labelSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "quoteSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "startChar": 13456,
+      "verified": false
+    },
+    {
+      "cluster": "CIn UFPE",
+      "endChar": 13512,
+      "entityType": "organization",
+      "labelSha256": "b1d64c1dd3197950d57aa7b6e7ed6ebf4239496ac59485801bb95eae6d64fbe2",
+      "quoteSha256": "b1d64c1dd3197950d57aa7b6e7ed6ebf4239496ac59485801bb95eae6d64fbe2",
+      "startChar": 13491,
+      "verified": false
+    },
+    {
+      "cluster": "UFPE",
+      "endChar": 13552,
+      "entityType": "university",
+      "labelSha256": "1d936b0748f2bcec06067b756c90ae4bd8d2c5400eca9188d57bd077952f8dc0",
+      "quoteSha256": "1d936b0748f2bcec06067b756c90ae4bd8d2c5400eca9188d57bd077952f8dc0",
+      "startChar": 13516,
+      "verified": false
+    },
+    {
+      "cluster": "Brasil",
+      "endChar": 13560,
+      "entityType": "country",
+      "labelSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "quoteSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "startChar": 13554,
+      "verified": false
+    },
+    {
+      "cluster": "CIn UFPE",
+      "endChar": 13570,
+      "entityType": "organization",
+      "labelSha256": "ffe9fc9eabbbd81c223330112fc854e392bf875eabdd3bcbaeb6712c091b8bd0",
+      "quoteSha256": "ffe9fc9eabbbd81c223330112fc854e392bf875eabdd3bcbaeb6712c091b8bd0",
+      "startChar": 13562,
+      "verified": false
+    },
+    {
+      "cluster": "Karlsruhe Informatics",
+      "endChar": 13668,
+      "entityType": "organization",
+      "labelSha256": "e428bd69bf8f191d9c7c1847dbeb0787231af5bb83f0d51d5faf29da0ad6b351",
+      "quoteSha256": "e428bd69bf8f191d9c7c1847dbeb0787231af5bb83f0d51d5faf29da0ad6b351",
+      "startChar": 13612,
+      "verified": false
+    },
+    {
+      "cluster": "University of Karlsruhe",
+      "endChar": 13668,
+      "entityType": "university",
+      "labelSha256": "8c8e344ecc1de83b89e8c022284259b0ae04381e50a43780a03a2a6b3230a198",
+      "quoteSha256": "8c8e344ecc1de83b89e8c022284259b0ae04381e50a43780a03a2a6b3230a198",
+      "startChar": 13643,
+      "verified": false
+    },
+    {
+      "cluster": "Brazil-Germany project",
+      "endChar": 13712,
+      "entityType": "project",
+      "labelSha256": "2dc7e6af4a86c935435ee90b224e048faeab5cedaadd138bbf1ca589a369ceb4",
+      "quoteSha256": "2dc7e6af4a86c935435ee90b224e048faeab5cedaadd138bbf1ca589a369ceb4",
+      "startChar": 13697,
+      "verified": false
+    },
+    {
+      "cluster": "semantic data retrieval project",
+      "endChar": 13751,
+      "entityType": "title",
+      "labelSha256": "b16b8e9dfbaf4287849474e07413f84c363388e8d77723ccf3286548e3e61d98",
+      "quoteSha256": "b16b8e9dfbaf4287849474e07413f84c363388e8d77723ccf3286548e3e61d98",
+      "startChar": 13714,
+      "verified": false
+    },
+    {
+      "cluster": "IJCAI",
+      "endChar": 13875,
+      "entityType": "conference",
+      "labelSha256": "68cb0e57e4394a620ebe866eb73c53d538b91624f2bab14628961990e27aa379",
+      "quoteSha256": "68cb0e57e4394a620ebe866eb73c53d538b91624f2bab14628961990e27aa379",
+      "startChar": 13870,
+      "verified": false
+    },
+    {
+      "cluster": "ACM",
+      "endChar": 13906,
+      "entityType": "organization",
+      "labelSha256": "fa1cffa11622ca4018a0d0e6acf625841a0b14abeb2d9f0b7acfa0d5c541cbc8",
+      "quoteSha256": "fa1cffa11622ca4018a0d0e6acf625841a0b14abeb2d9f0b7acfa0d5c541cbc8",
+      "startChar": 13903,
+      "verified": false
+    },
+    {
+      "cluster": "ACM",
+      "endChar": 13941,
+      "entityType": "organization",
+      "labelSha256": "e23ea4d3b3abc0d499fe583b93fb86099633b6166a54c109c70251220b91b92d",
+      "quoteSha256": "e23ea4d3b3abc0d499fe583b93fb86099633b6166a54c109c70251220b91b92d",
+      "startChar": 13908,
+      "verified": false
+    },
+    {
+      "cluster": "IEEE",
+      "endChar": 13954,
+      "entityType": "organization",
+      "labelSha256": "6e57cd6c3ede448d29b334103597a112ccc1b29e11e7cc0d169214326784fe3c",
+      "quoteSha256": "6e57cd6c3ede448d29b334103597a112ccc1b29e11e7cc0d169214326784fe3c",
+      "startChar": 13950,
+      "verified": false
+    },
+    {
+      "cluster": "IEEE",
+      "endChar": 14008,
+      "entityType": "organization",
+      "labelSha256": "effb18dfab879224ab73d4e258ca55e0d5abaa4796675ed80b94ed23ea7c2407",
+      "quoteSha256": "effb18dfab879224ab73d4e258ca55e0d5abaa4796675ed80b94ed23ea7c2407",
+      "startChar": 13956,
+      "verified": false
+    },
+    {
+      "cluster": "WONTO",
+      "endChar": 14057,
+      "entityType": "workshop",
+      "labelSha256": "b3f3f6efcc33cf65811350a3d1e4c731b2545913966ccbc03b34a56ac7232036",
+      "quoteSha256": "b3f3f6efcc33cf65811350a3d1e4c731b2545913966ccbc03b34a56ac7232036",
+      "startChar": 14052,
+      "verified": false
+    },
+    {
+      "cluster": "WONTO",
+      "endChar": 14104,
+      "entityType": "workshop",
+      "labelSha256": "3e4b853ba0700d6e33f54bacc594685025c4e521934298202b1ba286eba8613b",
+      "quoteSha256": "3e4b853ba0700d6e33f54bacc594685025c4e521934298202b1ba286eba8613b",
+      "startChar": 14059,
+      "verified": false
+    },
+    {
+      "cluster": "WONTO",
+      "endChar": 14146,
+      "entityType": "workshop",
+      "labelSha256": "bf2a77e18609049ca92cf4d32d480189f29ebaa5641c8e35209e4cc62f38ae62",
+      "quoteSha256": "bf2a77e18609049ca92cf4d32d480189f29ebaa5641c8e35209e4cc62f38ae62",
+      "startChar": 14105,
+      "verified": false
+    },
+    {
+      "cluster": "Brasil",
+      "endChar": 14158,
+      "entityType": "country",
+      "labelSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "quoteSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "startChar": 14152,
+      "verified": false
+    },
+    {
+      "cluster": "BAOSW",
+      "endChar": 14171,
+      "entityType": "workshop",
+      "labelSha256": "159cb7167dd4e2a4211a7da0c480afca70e9869dc2ef13a650e2870ab97d9160",
+      "quoteSha256": "159cb7167dd4e2a4211a7da0c480afca70e9869dc2ef13a650e2870ab97d9160",
+      "startChar": 14164,
+      "verified": false
+    },
+    {
+      "cluster": "BAOSW",
+      "endChar": 14231,
+      "entityType": "workshop",
+      "labelSha256": "fa6ba5bce64788a73d0797e186dd1df949879398fbdcec8ba803fa0c6d80f40a",
+      "quoteSha256": "fa6ba5bce64788a73d0797e186dd1df949879398fbdcec8ba803fa0c6d80f40a",
+      "startChar": 14173,
+      "verified": false
+    },
+    {
+      "cluster": "Semantic Web",
+      "endChar": 14231,
+      "entityType": "technology",
+      "labelSha256": "8ab2d982854547d459dd1b8f23d025bf367986abf2942014e784fa62a2384797",
+      "quoteSha256": "8ab2d982854547d459dd1b8f23d025bf367986abf2942014e784fa62a2384797",
+      "startChar": 14219,
+      "verified": false
+    },
+    {
+      "cluster": "Portugal",
+      "endChar": 14305,
+      "entityType": "country",
+      "labelSha256": "4c7de2c3da6dc0ae8f9d13b107718a913859359bd30166d077c867577953865d",
+      "quoteSha256": "4c7de2c3da6dc0ae8f9d13b107718a913859359bd30166d077c867577953865d",
+      "startChar": 14297,
+      "verified": false
+    },
+    {
+      "cluster": "JBCS",
+      "endChar": 14367,
+      "entityType": "journal",
+      "labelSha256": "7718b4486a46fa520e5c4903a89bbfc8596a6158ec6a4438159490fb22ed76d1",
+      "quoteSha256": "7718b4486a46fa520e5c4903a89bbfc8596a6158ec6a4438159490fb22ed76d1",
+      "startChar": 14363,
+      "verified": false
+    },
+    {
+      "cluster": "JBCS",
+      "endChar": 14406,
+      "entityType": "journal",
+      "labelSha256": "7c44fc1cc1b8ff4742d3537a35159769ef6ee57369a33a1f0913c3495c571f72",
+      "quoteSha256": "7c44fc1cc1b8ff4742d3537a35159769ef6ee57369a33a1f0913c3495c571f72",
+      "startChar": 14369,
+      "verified": false
+    },
+    {
+      "cluster": "JUCS",
+      "endChar": 14417,
+      "entityType": "journal",
+      "labelSha256": "cee61cee6188442ec53e9acd85062573897df9c6a1d568acd825d87aa6aac82d",
+      "quoteSha256": "cee61cee6188442ec53e9acd85062573897df9c6a1d568acd825d87aa6aac82d",
+      "startChar": 14413,
+      "verified": false
+    },
+    {
+      "cluster": "JUCS",
+      "endChar": 14456,
+      "entityType": "journal",
+      "labelSha256": "0ae0946dbf877925025c693bfeb445fa277d99cff17136fcaf5efa6b5abd879e",
+      "quoteSha256": "0ae0946dbf877925025c693bfeb445fa277d99cff17136fcaf5efa6b5abd879e",
+      "startChar": 14419,
+      "verified": false
+    },
+    {
+      "cluster": "Université Paul Cézanne",
+      "endChar": 14515,
+      "entityType": "university",
+      "labelSha256": "55a31c25133ebebf50b968263462a79643dcdbfee1144b2211f3e6ed5fc21a4e",
+      "quoteSha256": "55a31c25133ebebf50b968263462a79643dcdbfee1144b2211f3e6ed5fc21a4e",
+      "startChar": 14487,
+      "verified": false
+    },
+    {
+      "cluster": "Paul Cézanne",
+      "endChar": 14515,
+      "entityType": "person",
+      "labelSha256": "d8c24d1c0e7fba736ac99c8515d15fe7185e060318f4a25283700c4e2c3a9400",
+      "quoteSha256": "d8c24d1c0e7fba736ac99c8515d15fe7185e060318f4a25283700c4e2c3a9400",
+      "startChar": 14503,
+      "verified": false
+    },
+    {
+      "cluster": "Marseille",
+      "endChar": 14527,
+      "entityType": "city",
+      "labelSha256": "a0f6bd6b87ebb50f6d1ed742442019fe6cefe02a860b5d0ebd387ff11d29eaed",
+      "quoteSha256": "a0f6bd6b87ebb50f6d1ed742442019fe6cefe02a860b5d0ebd387ff11d29eaed",
+      "startChar": 14519,
+      "verified": false
+    },
+    {
+      "cluster": "INRIA",
+      "endChar": 14536,
+      "entityType": "organization",
+      "labelSha256": "54a7cf741ce597d1e1297a6388b20f5f033dd423329508b5079b251f3fe3acea",
+      "quoteSha256": "54a7cf741ce597d1e1297a6388b20f5f033dd423329508b5079b251f3fe3acea",
+      "startChar": 14531,
+      "verified": false
+    },
+    {
+      "cluster": "Montbonnot",
+      "endChar": 14548,
+      "entityType": "city",
+      "labelSha256": "50ef74571aac10ee04effa19d4691daf0cbaafb369cdfeec672860c5c7f7f6e3",
+      "quoteSha256": "50ef74571aac10ee04effa19d4691daf0cbaafb369cdfeec672860c5c7f7f6e3",
+      "startChar": 14538,
+      "verified": false
+    },
+    {
+      "cluster": "France",
+      "endChar": 14559,
+      "entityType": "country",
+      "labelSha256": "07a9e9afb9660ee76490c0db2282e868e61ff3e7bb61bef299337c8dc7e8b8f3",
+      "quoteSha256": "07a9e9afb9660ee76490c0db2282e868e61ff3e7bb61bef299337c8dc7e8b8f3",
+      "startChar": 14553,
+      "verified": false
+    },
+    {
+      "cluster": "University of Karlsruhe",
+      "endChar": 14592,
+      "entityType": "university",
+      "labelSha256": "f54f81405b9f63b0172b1598fe540c605e07ebd776ae11eb1637dfce9b883f8f",
+      "quoteSha256": "f54f81405b9f63b0172b1598fe540c605e07ebd776ae11eb1637dfce9b883f8f",
+      "startChar": 14583,
+      "verified": false
+    },
+    {
+      "cluster": "University of Freiburg",
+      "endChar": 14602,
+      "entityType": "university",
+      "labelSha256": "0995df44144104553d014c45e125343ed50136c111f4e1d3752285fd71603355",
+      "quoteSha256": "0995df44144104553d014c45e125343ed50136c111f4e1d3752285fd71603355",
+      "startChar": 14594,
+      "verified": false
+    },
+    {
+      "cluster": "University of Mannheim",
+      "endChar": 14613,
+      "entityType": "university",
+      "labelSha256": "30282aca9a04d3f718b75241e77d696623664abffb8751256024f17fb9ae9f21",
+      "quoteSha256": "30282aca9a04d3f718b75241e77d696623664abffb8751256024f17fb9ae9f21",
+      "startChar": 14605,
+      "verified": false
+    },
+    {
+      "cluster": "Alemanha",
+      "endChar": 14626,
+      "entityType": "country",
+      "labelSha256": "212b93a4ce977a01455c743c89396ea73c437fd4252f66cba36ddd71004467ff",
+      "quoteSha256": "212b93a4ce977a01455c743c89396ea73c437fd4252f66cba36ddd71004467ff",
+      "startChar": 14618,
+      "verified": false
+    },
+    {
+      "cluster": "RECIIS",
+      "endChar": 14767,
+      "entityType": "journal",
+      "labelSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "quoteSha256": "7aefbe3441ba500df5b20472ec1b12cf4de8eb1e43ad679fab8755b9a59fcbed",
+      "startChar": 14761,
+      "verified": false
+    },
+    {
+      "cluster": "Rio de Janeiro",
+      "endChar": 14820,
+      "entityType": "city",
+      "labelSha256": "a188a64fb6b392833db7697673b3cc5df6d8409935e71588a3591218e0fd5e61",
+      "quoteSha256": "a188a64fb6b392833db7697673b3cc5df6d8409935e71588a3591218e0fd5e61",
+      "startChar": 14806,
+      "verified": false
+    },
+    {
+      "cluster": "2009",
+      "endChar": 14849,
+      "entityType": "year",
+      "labelSha256": "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec",
+      "quoteSha256": "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec",
+      "startChar": 14845,
+      "verified": false
+    },
+    {
+      "cluster": "Stefan Schulz",
+      "endChar": 14863,
+      "entityType": "person",
+      "labelSha256": "de023e91a51b445537e57a20e0e04b5fbc4813548ae5c64061ca9c3d2a8ae0ad",
+      "quoteSha256": "de023e91a51b445537e57a20e0e04b5fbc4813548ae5c64061ca9c3d2a8ae0ad",
+      "startChar": 14850,
+      "verified": false
+    },
+    {
+      "cluster": "Heidelberg University",
+      "endChar": 14912,
+      "entityType": "university",
+      "labelSha256": "12f22c8ef61a01b9de861f09c1138981789e366630e81fecf8f11daad469ba07",
+      "quoteSha256": "12f22c8ef61a01b9de861f09c1138981789e366630e81fecf8f11daad469ba07",
+      "startChar": 14891,
+      "verified": false
+    },
+    {
+      "cluster": "Alemanha",
+      "endChar": 14922,
+      "entityType": "country",
+      "labelSha256": "212b93a4ce977a01455c743c89396ea73c437fd4252f66cba36ddd71004467ff",
+      "quoteSha256": "212b93a4ce977a01455c743c89396ea73c437fd4252f66cba36ddd71004467ff",
+      "startChar": 14914,
+      "verified": false
+    },
+    {
+      "cluster": "IMBI Freiburg",
+      "endChar": 15057,
+      "entityType": "organization",
+      "labelSha256": "eacbe4176b3d05238623dc8fa89b183b70daf6ab67ec55fd96b1b6d0e81f272a",
+      "quoteSha256": "eacbe4176b3d05238623dc8fa89b183b70daf6ab67ec55fd96b1b6d0e81f272a",
+      "startChar": 14962,
+      "verified": false
+    },
+    {
+      "cluster": "Freiburg",
+      "endChar": 15057,
+      "entityType": "city",
+      "labelSha256": "0995df44144104553d014c45e125343ed50136c111f4e1d3752285fd71603355",
+      "quoteSha256": "0995df44144104553d014c45e125343ed50136c111f4e1d3752285fd71603355",
+      "startChar": 15049,
+      "verified": false
+    },
+    {
+      "cluster": "Freiburg Medical Informatics Group",
+      "endChar": 15118,
+      "entityType": "organization",
+      "labelSha256": "0f02ed9dd825cdd986a0fa3c6eb7614b5519eb1178a03a40b33686d4349afcd8",
+      "quoteSha256": "0f02ed9dd825cdd986a0fa3c6eb7614b5519eb1178a03a40b33686d4349afcd8",
+      "startChar": 15073,
+      "verified": false
+    },
+    {
+      "cluster": "São Luís",
+      "endChar": 15617,
+      "entityType": "city",
+      "labelSha256": "596e5276fb7f990fd0eb42abf59f5c449cb55a59128b8a6a8b19744d920364c6",
+      "quoteSha256": "596e5276fb7f990fd0eb42abf59f5c449cb55a59128b8a6a8b19744d920364c6",
+      "startChar": 15609,
+      "verified": false
+    },
+    {
+      "cluster": "Brasil",
+      "endChar": 15625,
+      "entityType": "country",
+      "labelSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "quoteSha256": "6641c5a7ff9f56ef2baceefb41d9906583b9816a7b3e9c4c23773646be584caf",
+      "startChar": 15619,
+      "verified": false
+    },
+    {
+      "cluster": "University of Freiburg",
+      "endChar": 15723,
+      "entityType": "university",
+      "labelSha256": "6581394ccc63de71f715a2688e6e385425ffe878acb0baee4aeeab681e83cddd",
+      "quoteSha256": "6581394ccc63de71f715a2688e6e385425ffe878acb0baee4aeeab681e83cddd",
+      "startChar": 15699,
+      "verified": false
+    },
+    {
+      "cluster": "European Union",
+      "endChar": 16051,
+      "entityType": "organization",
+      "labelSha256": "f23e3b50cfdc97e37e7f40e8a9f6962a3923572b1978b2677fc0fc4f9697aee9",
+      "quoteSha256": "f23e3b50cfdc97e37e7f40e8a9f6962a3923572b1978b2677fc0fc4f9697aee9",
+      "startChar": 16037,
+      "verified": false
+    },
+    {
+      "cluster": "Stefan Schulz",
+      "endChar": 16066,
+      "entityType": "person",
+      "labelSha256": "de023e91a51b445537e57a20e0e04b5fbc4813548ae5c64061ca9c3d2a8ae0ad",
+      "quoteSha256": "de023e91a51b445537e57a20e0e04b5fbc4813548ae5c64061ca9c3d2a8ae0ad",
+      "startChar": 16053,
+      "verified": false
+    },
+    {
       "cluster": "2001",
-      "startChar": 16269,
       "endChar": 16273,
-      "quote": "2001",
+      "entityType": "year",
+      "labelSha256": "85d6385b945c0d602103db39b0b654b2af93b5127938e26a959c123f0789b948",
+      "quoteSha256": "85d6385b945c0d602103db39b0b654b2af93b5127938e26a959c123f0789b948",
+      "startChar": 16269,
       "verified": false
     },
     {
-      "label": "Pontifícia Universidade Católica do Paraná",
-      "entityType": "university",
       "cluster": "PUC-PR",
-      "startChar": 16305,
       "endChar": 16347,
-      "quote": "Pontifícia Universidade Católica do Paraná",
+      "entityType": "university",
+      "labelSha256": "da726e600952f7c5520f8ad6eb1393d9762e6a0848c25e924881f1cec5f6d9ad",
+      "quoteSha256": "da726e600952f7c5520f8ad6eb1393d9762e6a0848c25e924881f1cec5f6d9ad",
+      "startChar": 16305,
       "verified": false
     },
     {
-      "label": "PUC-PR",
-      "entityType": "university",
       "cluster": "PUC-PR",
-      "startChar": 16349,
       "endChar": 16355,
-      "quote": "PUC-PR",
+      "entityType": "university",
+      "labelSha256": "3d98c6bd915ef15317259a3bace08164969ae5b268c24e80287155eebe8a1e09",
+      "quoteSha256": "3d98c6bd915ef15317259a3bace08164969ae5b268c24e80287155eebe8a1e09",
+      "startChar": 16349,
       "verified": false
     }
   ],

@@ -8,7 +8,7 @@
       "depth": 0,
       "startChar": 91,
       "endChar": 100,
-      "quote": "Editorial",
+      "quoteSha256": "5ad6a405f686225dd432f0463257b835962e54111f7764edc2400eeeea23c32b",
       "verified": false
     },
     {
@@ -16,7 +16,7 @@
       "depth": 0,
       "startChar": 145,
       "endChar": 178,
-      "quote": "Ontologias, Web semântica e saúde",
+      "quoteSha256": "8572eda619a757c43cc98aa951c5b9e4c0ee04e8791ab3ef02559938beacc06f",
       "verified": false
     },
     {
@@ -24,7 +24,7 @@
       "depth": 1,
       "startChar": 13382,
       "endChar": 13399,
-      "quote": "Sobre os editores",
+      "quoteSha256": "f7a2cc260cd71fc2831b6be8a843b3a2172d64ff32c7a739471f3dd70b57e565",
       "verified": false
     },
     {
@@ -32,7 +32,7 @@
       "depth": 2,
       "startChar": 13400,
       "endChar": 13412,
-      "quote": "Fred Freitas",
+      "quoteSha256": "e657bd8ff3933c471d4fc2af8ab2f2f93b47a90fd077a7f0da853410c9962956",
       "verified": false
     },
     {
@@ -40,7 +40,7 @@
       "depth": 2,
       "startChar": 14850,
       "endChar": 14863,
-      "quote": "Stefan Schulz",
+      "quoteSha256": "de023e91a51b445537e57a20e0e04b5fbc4813548ae5c64061ca9c3d2a8ae0ad",
       "verified": false
     }
   ],

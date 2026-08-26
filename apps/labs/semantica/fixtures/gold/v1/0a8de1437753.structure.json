@@ -8,7 +8,7 @@
       "depth": 0,
       "startChar": 0,
       "endChar": 72,
-      "quote": "Uncertainty Management in the Construction\nof Knowledge Graphs: a Survey",
+      "quoteSha256": "c05cd977e1811878311645e56b72836c547f992f6b9141e0fc00233a5a105100",
       "verified": false
     },
     {
@@ -16,7 +16,7 @@
       "depth": 0,
       "startChar": 372,
       "endChar": 1879,
-      "quote": "Abstract. Knowledge Graphs (KGs) are a major asset for companies thanks to their great flexibility in data representation and\ntheir numerous applications, e.g., vocabulary sharing, Q/A or recommendation systems. To build a KG it is a common practice\nto rely on automatic methods for extracting knowledge from various heterogeneous sources. But in a noisy and uncertain world,\nknowledge may not be reliable and conflicts between data sources may occur. Integrating unreliable data would directly impact\nthe use of the KG, therefore such conflicts must be resolved. This could be done manually by selecting the best data to integrate.\nThis first approach is highly accurate, but costly and time-consuming. That is why recent efforts focus on automatic approaches,\nwhich represents a challenging task since it requires handling the uncertainty of extracted knowledge throughout its integration\ninto the KG. We survey state-of-the-art approaches in this direction and present constructions of both open and enterprise KGs\nand how their quality is maintained. We then describe different knowledge extraction methods, introducing additional uncertainty.\nWe also discuss downstream tasks after knowledge acquisition, including KG completion using embedding models, knowledge\nalignment, and knowledge fusion in order to address the problem of knowledge uncertainty in KG construction. We conclude\nwith a discussion on the remaining challenges and perspectives when constructing a KG taking into account uncertainty.",
+      "quoteSha256": "b06c0f1927cadb770910248e135c98ffbd5e497a5ada0c97d570d2946fbcd92a",
       "verified": false
     },
     {
@@ -24,7 +24,7 @@
       "depth": 1,
       "startChar": 1981,
       "endChar": 1996,
-      "quote": "1. Introduction",
+      "quoteSha256": "6e62ee82e3df2a7dfcaba91e18eab2a77c9c7f7b4a5dceb49528346078b636d2",
       "verified": false
     }
   ],

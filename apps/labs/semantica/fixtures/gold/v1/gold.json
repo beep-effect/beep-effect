@@ -1,6 +1,6 @@
 {
   "version": "gold/v1",
-  "digest": "515c85b356cc837bc34edb088f2a9c17147e6e5fd7b3135103dd8a4dd25f855b",
+  "digest": "e94228ce6ce3bf4e597ed282164e4392340548f43f5132c5f803dd6ee52439bc",
   "proposer": {
     "provider": "xai",
     "name": "grok-4.6",

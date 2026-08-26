@@ -8,7 +8,7 @@
       "depth": 0,
       "startChar": 0,
       "endChar": 55,
-      "quote": "Finding Fault: Detecting Issues in a Versioned Ontology",
+      "quoteSha256": "8f6c5badffc4cbc9507f974461dbc75eceb91f5237b2c919d07bb46ab6d138e7",
       "verified": false
     },
     {
@@ -16,7 +16,7 @@
       "depth": 0,
       "startChar": 209,
       "endChar": 1377,
-      "quote": "Abstract. Understanding ontology evolution is becoming an active topic of in-\nterest for ontology engineers, e.g., there exist large collaboratively-developed on-\ntologies but, unlike in software engineering, comparatively little is understood\nabout the dynamics of historical changes, especially at a fine level of granularity.\nOnly recently has there been a systematic analysis of changes across ontology\nversions, but still at a coarse-grained level. The National Cancer Institute (NCI)\nThesaurus (NCIt) is a large, collaboratively-developed ontology, used for various\nWeb and research-related purposes, e.g., as a medical research controlled vocab-\nulary. The NCI has published ten years worth of monthly versions of the NCIt\nas Web Ontology Language (OWL) documents, and has also published reports\non the content of, development methodology for, and applications of the NCIt.\nIn this paper, we carry out a fine-grained analysis of asserted axiom dynamics\nthroughout the evolution of the NCIt from 2003 to 2012. From this, we are able\nto identify axiomatic editing patterns that suggest significant regression editing\nevents in the development history of the NCIt.",
+      "quoteSha256": "8fa507aa641d89c94eec541f161785d3bbbf3b3f5c0438a670a1d507f8877b22",
       "verified": false
     },
     {
@@ -24,7 +24,7 @@
       "depth": 1,
       "startChar": 1378,
       "endChar": 1392,
-      "quote": "1 Introduction",
+      "quoteSha256": "c9234967b670c32478644b4236ec8fd2f351225696cacbcd0fad1f1838b95170",
       "verified": false
     },
     {
@@ -32,7 +32,7 @@
       "depth": 1,
       "startChar": 2217,
       "endChar": 2232,
-      "quote": "2 Preliminaries",
+      "quoteSha256": "707932bc5cb8be2bda8de0ee55086325204708862342710c72289dd31a99910e",
       "verified": false
     },
     {
@@ -40,7 +40,7 @@
       "depth": 1,
       "startChar": 3480,
       "endChar": 3504,
-      "quote": "3 Conceptual Foundations",
+      "quoteSha256": "78cf941cf91df3789a614185e81cfd5dd1fefbb5c1a02e66a561de0fdf5d1a66",
       "verified": false
     },
     {
@@ -48,7 +48,7 @@
       "depth": 1,
       "startChar": 12518,
       "endChar": 12541,
-      "quote": "4 Methods and Materials",
+      "quoteSha256": "533d36f01bd7215dc269e779492989a88e6e289db72a7261536abd25775125bd",
       "verified": false
     },
     {
@@ -56,7 +56,7 @@
       "depth": 1,
       "startChar": 15966,
       "endChar": 15975,
-      "quote": "5 Results",
+      "quoteSha256": "936b66b6125a421d8eb66aa408a57c203fa9418ca2fd2a8766b090c2b43bef0e",
       "verified": false
     },
     {
@@ -64,7 +64,7 @@
       "depth": 2,
       "startChar": 15976,
       "endChar": 15999,
-      "quote": "5.1 Test Area Selection",
+      "quoteSha256": "9a13e120d61a80d346f3f386a90b5f80685f60c7f76f4abc5ceeb04bb5351b69",
       "verified": false
     },
     {
@@ -72,7 +72,7 @@
       "depth": 2,
       "startChar": 21762,
       "endChar": 21790,
-      "quote": "5.2 Fault Detection Analysis",
+      "quoteSha256": "c12301732da76b4c5db8599c10be63d09fea74ca975dfa4bf353dc7d821559e8",
       "verified": false
     },
     {
@@ -80,7 +80,7 @@
       "depth": 1,
       "startChar": 26053,
       "endChar": 26065,
-      "quote": "6 Discussion",
+      "quoteSha256": "b1b033d480eeefd0eb13c01928f7aea4351422222816892e6b4d5375a3174e0b",
       "verified": false
     },
     {
@@ -88,7 +88,7 @@
       "depth": 1,
       "startChar": 31132,
       "endChar": 31145,
-      "quote": "7 Limitations",
+      "quoteSha256": "8aea59c18215b655f5537ee9abe02eab71164926e6f1a02fa0617be48c84dfba",
       "verified": false
     },
     {
@@ -96,7 +96,7 @@
       "depth": 1,
       "startChar": 32796,
       "endChar": 32808,
-      "quote": "8 Conclusion",
+      "quoteSha256": "57cf5cd97bc68a0b5b414f3a4bd37ce6fdc6aef7551eed33330a511604e5684a",
       "verified": false
     },
     {
@@ -104,7 +104,7 @@
       "depth": 1,
       "startChar": 34089,
       "endChar": 34099,
-      "quote": "References",
+      "quoteSha256": "69824d3b0e70ca6aaa0da1613b65fd914c442bf1f7ad1bb22bcdfbdfe1a05e39",
       "verified": false
     },
     {
@@ -112,7 +112,7 @@
       "depth": 0,
       "startChar": 34100,
       "endChar": 34221,
-      "quote": "1. Gonc¸alves, R.S., Parsia, B., Sattler, U.: Analysing the evolution of the NCI thesaurus. In:\nProc. of CBMS 2011 (2011)",
+      "quoteSha256": "91a3ac931783cd79e601f75be9cbcd4d6d496c126ede8f1af24334d50186e6da",
       "verified": false
     },
     {
@@ -120,7 +120,7 @@
       "depth": 0,
       "startChar": 34222,
       "endChar": 34369,
-      "quote": "2. Gonc¸alves, R.S., Parsia, B., Sattler, U.: Analysing multiple versions of an ontology: A study\nof the NCI Thesaurus. In: Proc. of DL 2011 (2011)",
+      "quoteSha256": "f59504742be737d0f0d77147dec047d9637550c8490105486e74dc178bf93d7c",
       "verified": false
     },
     {
@@ -128,7 +128,7 @@
       "depth": 0,
       "startChar": 34370,
       "endChar": 34519,
-      "quote": "3. Cuenca Grau, B., Horrocks, I., Motik, B., Parsia, B., Patel-Schneider, P.F., Sattler, U.: OWL\n2: The next step for OWL. J. of Web Semantics (2008)",
+      "quoteSha256": "b7f9d646c109b47b05813fe7bbe5bd32d59e8b8830c7c1818e4cd8a15d352602",
       "verified": false
     },
     {
@@ -136,7 +136,7 @@
       "depth": 0,
       "startChar": 34520,
       "endChar": 34652,
-      "quote": "4. Gonc¸alves, R.S., Parsia, B., Sattler, U.: Categorising logical differences between OWL\nontologies. In: Proc. of CIKM 2011 (2011)",
+      "quoteSha256": "5e49adc2502eebf02f4145537acb55f037e9a4bf0f83d00a3c6f8b48fd2c653d",
       "verified": false
     },
     {
@@ -144,7 +144,7 @@
       "depth": 0,
       "startChar": 34653,
       "endChar": 34874,
-      "quote": "5. de Coronado, S., Haber, M.W., Sioutos, N., Tuttle, M.S., Wright, L.W.: NCI Thesaurus: Us-\ning science-based terminology to integrate cancer research results. Studies in Health Tech-\nnology and Informatics 107(1) (2004)",
+      "quoteSha256": "5c42e95382f5b023b62784385941740f3e3f2bd2d36b060f7048be14f9eab79a",
       "verified": false
     },
     {
@@ -152,7 +152,7 @@
       "depth": 0,
       "startChar": 34875,
       "endChar": 35058,
-      "quote": "6. Hartel, F.W., de Coronado, S., Dionne, R., Fragoso, G., Golbeck, J.: Modeling a description\nlogic vocabulary for cancer research. J. of Biomedical Informatics 38(2), 114–129 (2005)",
+      "quoteSha256": "74052b4f1829db3e976bac52bbdfd9b1d20336fa223f6636b99464b472df0dc1",
       "verified": false
     },
     {
@@ -160,7 +160,7 @@
       "depth": 0,
       "startChar": 35059,
       "endChar": 35169,
-      "quote": "7. Thomas, N.: NCI Thesaurus - Apelon TDE Editing Procedures and Style Guide. National\nCancer Institute (2007)",
+      "quoteSha256": "c7f246e803b8c8fcd2ab7ec685ed8e63f8ad3733f2cae7cdf279b75710bb69ff",
       "verified": false
     },
     {
@@ -168,7 +168,7 @@
       "depth": 0,
       "startChar": 35170,
       "endChar": 35374,
-      "quote": "8. Noy, N.F., de Coronado, S., Solbrig, H., Fragoso, G., Hartel, F.W., Musen, M.A.: Represent-\ning the NCI Thesaurus in OWL: Modeling tools help modeling languages. Applied Ontol-\nogy 3(3), 173–190 (2008)",
+      "quoteSha256": "ef077578a1c2dae8db0b340d0244711a6e1e0eb458de6239e15161935cd19215",
       "verified": false
     },
     {
@@ -176,7 +176,7 @@
       "depth": 0,
       "startChar": 35375,
       "endChar": 35496,
-      "quote": "9. Horridge, M., Bechhofer, S.: The OWL API: A Java API for working with OWL 2 ontologies.\nIn: Proc. of OWLED 2009 (2009)",
+      "quoteSha256": "f0f19e843e26831d047c0fcfc385762f36912964a59eac9a8a94f26953bf00ab",
       "verified": false
     },
     {
@@ -184,7 +184,7 @@
       "depth": 0,
       "startChar": 35497,
       "endChar": 35641,
-      "quote": "10. Sirin, E., Parsia, B., Cuenca Grau, B., Kalyanpur, A., Katz, Y.: Pellet: A practical OWL-DL\nreasoner. J. of Web Semantics 5(2), 51–53 (2007)",
+      "quoteSha256": "f0550ba8c69b4683db08f520d515afa6435e6d1d2de4d34e85dabc26ff20e085",
       "verified": false
     },
     {
@@ -192,7 +192,7 @@
       "depth": 0,
       "startChar": 35642,
       "endChar": 35881,
-      "quote": "11. de Coronado, S., Wright, L.W., Fragoso, G., Haber, M.W., Hahn-Dantona, E.A., Hartel, F.W.,\nQuan, S.L., Safran, T., Thomas, N., Whiteman, L.: The NCI Thesaurus quality assurance life\ncycle. Journal of Biomedical Informatics 42(3) (2009)",
+      "quoteSha256": "c0ab649c7f972aec46e97f476cf2c2512df3588aad34f03cd100c6a2b994f839",
       "verified": false
     }
   ],

@@ -8,7 +8,7 @@
       "depth": 0,
       "startChar": 0,
       "endChar": 86,
-      "quote": "Should We Fine-Tune or RAG?\nEvaluating Different Techniques to Adapt LLMs for Dialogue",
+      "quoteSha256": "18de33c63d150846f88fa7360ea5fa143ee096547174c502408cef50fc6a08f0",
       "verified": false
     },
     {
@@ -16,7 +16,7 @@
       "depth": 0,
       "startChar": 307,
       "endChar": 315,
-      "quote": "Abstract",
+      "quoteSha256": "d21b4a64a2d8656a0fdf7ab2e89a49164ac504686cfa2a3d442e87c209286330",
       "verified": false
     },
     {
@@ -24,7 +24,7 @@
       "depth": 1,
       "startChar": 1721,
       "endChar": 1735,
-      "quote": "1 Introduction",
+      "quoteSha256": "c9234967b670c32478644b4236ec8fd2f351225696cacbcd0fad1f1838b95170",
       "verified": false
     }
   ],

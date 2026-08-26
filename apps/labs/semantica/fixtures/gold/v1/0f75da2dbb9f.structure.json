@@ -8,7 +8,7 @@
       "depth": 0,
       "startChar": 0,
       "endChar": 52,
-      "quote": "Challenges and Applications of Large Language Models",
+      "quoteSha256": "7844f0e9d918c8ebddb9babf9de2f17af6e41b83df0703e5965674adde6d7690",
       "verified": false
     },
     {
@@ -16,7 +16,7 @@
       "depth": 0,
       "startChar": 315,
       "endChar": 323,
-      "quote": "Abstract",
+      "quoteSha256": "d21b4a64a2d8656a0fdf7ab2e89a49164ac504686cfa2a3d442e87c209286330",
       "verified": false
     },
     {
@@ -24,7 +24,7 @@
       "depth": 0,
       "startChar": 771,
       "endChar": 779,
-      "quote": "Contents",
+      "quoteSha256": "437aea62a5bd6ad4762e494c81b88532809a231477c82bdecf6fd6636908b7ab",
       "verified": false
     }
   ],
