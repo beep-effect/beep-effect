@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
@@ -14,6 +14,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { commandTextForStep } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
@@ -87,6 +88,16 @@ class YeetProofLockState extends S.Class<YeetProofLockState>($I`YeetProofLockSta
   },
   $I.annote("YeetProofLockState", {
     description: "Machine-local repository coordinator metadata for heavyweight Yeet proof scheduling.",
+  })
+) {}
+
+class YeetProofLockLease extends S.Class<YeetProofLockLease>($I`YeetProofLockLease`)(
+  {
+    lockPath: S.String,
+    lockText: S.String,
+  },
+  $I.annote("YeetProofLockLease", {
+    description: "Exact proof-lock generation owned by one heavyweight Yeet proof scope.",
   })
 ) {}
 
@@ -387,6 +398,80 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
   );
 });
 
+const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
+  `${lockPath}.reap-${hashText(observedText)}.claim`;
+
+const proofLockReapPath = (lockPath: string): string => `${lockPath}.reap-${process.pid}-${randomUUID()}`;
+
+// A rename is atomic, but it does not by itself bind a delayed contender to the
+// lock generation it previously read. The per-observation exclusive claim
+// serializes contenders that read the same generation; re-reading under that
+// claim ensures the shared path still contains those exact bytes before rename.
+const tryMoveObservedProofLock = Effect.fn("Yeet.tryMoveObservedProofLock")(function* (
+  lockPath: string,
+  observedText: string
+): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const claimPath = proofLockReapClaimPath(lockPath, observedText);
+  if (!(yield* tryClaimProofLockExclusive(claimPath, `${process.pid}\n`))) {
+    return false;
+  }
+
+  return yield* Effect.gen(function* () {
+    const currentText = yield* fs
+      .readFileString(lockPath)
+      .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    if (O.isNone(currentText) || !Str.Equivalence(currentText.value, observedText)) {
+      return false;
+    }
+
+    const reapPath = proofLockReapPath(lockPath);
+    const renamed = yield* fs.rename(lockPath, reapPath).pipe(
+      Effect.as(true),
+      Effect.catchTag("PlatformError", (error) =>
+        error.reason._tag === "NotFound"
+          ? Effect.succeed(false)
+          : Effect.fail(YeetCommandError.new(`Failed to atomically reap Yeet proof lock at ${lockPath}.`)(error))
+      )
+    );
+    if (!renamed) {
+      return false;
+    }
+
+    yield* fs.remove(reapPath).pipe(Effect.ignore);
+    return true;
+  }).pipe(Effect.ensuring(fs.remove(claimPath).pipe(Effect.ignore)));
+});
+
+const tryReclaimStaleProofLock = Effect.fn("Yeet.tryReclaimStaleProofLock")(function* (
+  lockPath: string,
+  observedText: string,
+  replacementText: string
+): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+  if (!(yield* tryMoveObservedProofLock(lockPath, observedText))) {
+    return false;
+  }
+  return yield* tryClaimProofLockExclusive(lockPath, replacementText);
+});
+
+/**
+ * Attempt to replace the exact stale proof-lock generation observed by a contender.
+ *
+ * **Example** (Reject a changed lock generation)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { tryReclaimStaleProofLockForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * const attempted = tryReclaimStaleProofLockForTesting("/tmp/proof.lock", "stale", "replacement")
+ * console.log(Effect.isEffect(attempted)) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const tryReclaimStaleProofLockForTesting = tryReclaimStaleProofLock;
+
 /**
  * Atomically acquire the full-proof lock for heavyweight Yeet verification.
  *
@@ -418,12 +503,12 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
  *   scope: "repo"
  * })
  *
- * const acquired = acquireFullProofLock(context, [step]).pipe(Effect.map((path) => path.endsWith(".lock")))
+ * const acquired = acquireFullProofLock(context, [step]).pipe(Effect.map((lease) => lease.lockPath.endsWith(".lock")))
  * ```
  *
  * @param context - Repo context whose origin identifies sibling checkouts.
  * @param proofSteps - Full-proof steps used to record the owner command.
- * @returns The lock path when this process successfully owns the lock.
+ * @returns The exact lock generation owned by this process.
  * @category resource-management
  * @since 0.0.0
  */
@@ -431,7 +516,7 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
 ): Effect.fn.Return<
-  string,
+  YeetProofLockLease,
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
@@ -451,13 +536,14 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
   });
   const lockText = `${yield* renderJson(lockState)}\n`;
+  const lease = YeetProofLockLease.make({ lockPath, lockText });
 
   if (yield* tryClaimProofLockExclusive(lockPath, lockText)) {
-    return lockPath;
+    return lease;
   }
 
-  const existingText = yield* fs.readFileString(lockPath).pipe(Effect.orElseSucceed(() => ""));
-  const existingState = yield* decodeProofLockState(existingText).pipe(
+  let existingText = yield* fs.readFileString(lockPath).pipe(Effect.orElseSucceed(() => ""));
+  let existingState = yield* decodeProofLockState(existingText).pipe(
     Effect.map(O.some),
     Effect.orElseSucceed(O.none<YeetProofLockState>)
   );
@@ -471,14 +557,22 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
 
   if (proofLockDisposition(existingState, ownerAlive) === "replace-stale" && O.isSome(existingState)) {
     yield* Console.error(
-      `[yeet] removing stale full-proof lock (pid ${existingState.value.pid} is not running, started ${existingState.value.startedAt})`
+      `[yeet] reaping stale full-proof lock (pid ${existingState.value.pid} is not running, started ${existingState.value.startedAt})`
     );
-    yield* fs.remove(lockPath).pipe(Effect.ignore);
-    // Re-claim atomically; if another contender won the race after we removed
-    // the stale lock, fail closed rather than overwrite an active lock.
-    if (yield* tryClaimProofLockExclusive(lockPath, lockText)) {
-      return lockPath;
+    if (yield* tryReclaimStaleProofLock(lockPath, existingText, lockText)) {
+      return lease;
     }
+    // A competing reaper may have atomically moved the stale generation. Claim
+    // only if the shared path is still absent; otherwise refresh owner details
+    // below and fail closed against the generation now present.
+    if (yield* tryClaimProofLockExclusive(lockPath, lockText)) {
+      return lease;
+    }
+    existingText = yield* fs.readFileString(lockPath).pipe(Effect.orElseSucceed(() => ""));
+    existingState = yield* decodeProofLockState(existingText).pipe(
+      Effect.map(O.some),
+      Effect.orElseSucceed(O.none<YeetProofLockState>)
+    );
   }
 
   const ownerDetail = pipe(
@@ -505,17 +599,17 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
  * import { Effect } from "effect"
  * import { releaseProofLock } from "@beep/repo-cli/test/Yeet"
  *
- * const released = releaseProofLock(".beep/yeet/runs/example/quality-lock").pipe(Effect.as("released"))
+ * const release = Effect.succeed(releaseProofLock)
+ * console.log(Effect.isEffect(release)) // true
  * ```
  *
- * @param lockPath - Path returned by {@link acquireFullProofLock}.
- * @returns An Effect that ignores missing lock files during cleanup.
+ * @param lease - Exact lock generation returned by {@link acquireFullProofLock}.
+ * @returns An Effect that removes only the generation owned by the lease.
  * @category resource-management
  * @since 0.0.0
  */
-export const releaseProofLock = Effect.fn("releaseProofLock")(function* (lockPath: string) {
-  const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(lockPath).pipe(Effect.ignore);
+export const releaseProofLock = Effect.fn("releaseProofLock")(function* (lease: YeetProofLockLease) {
+  yield* tryMoveObservedProofLock(lease.lockPath, lease.lockText).pipe(Effect.ignore);
 });
 
 /**

@@ -72,6 +72,7 @@ import {
   TurboPlanSnapshot,
   TurboPlanTask,
   TurboWorkspacePackage,
+  tryReclaimStaleProofLockForTesting,
   validateMonitorGuards,
   validatePublishBranchForTesting,
   validatePublishCommitMessageForTesting,
@@ -199,15 +200,20 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
   withTrackedFileRepo((repo) =>
     Effect.acquireUseRelease(
       Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repositoryIdentity = `https://example.test/${path.basename(repo.tmpDir)}.git`;
         yield* runGit(repo.tmpDir, ["remote", "add", "origin", repositoryIdentity]);
         const lockPath = yield* proofLockPathForContext(repo.tempContext);
-        yield* releaseProofLock(lockPath);
+        yield* fs.remove(lockPath, { force: true });
         return { ...repo, lockPath } as const;
       }),
       use,
-      ({ lockPath }) => releaseProofLock(lockPath)
+      ({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.remove(lockPath, { force: true });
+        })
     )
   );
 
@@ -2591,12 +2597,13 @@ describe("yeet publish scope helpers", () => {
           const fs = yield* FileSystem.FileSystem;
 
           expect(yield* fs.exists(lockPath)).toBe(false);
-          expect(yield* acquireFullProofLock(tempContext, [prePushStep])).toBe(lockPath);
+          const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
+          expect(lease.lockPath).toBe(lockPath);
           expect(yield* fs.exists(lockPath)).toBe(true);
 
-          yield* releaseProofLock(lockPath);
+          yield* releaseProofLock(lease);
           expect(yield* fs.exists(lockPath)).toBe(false);
-          yield* releaseProofLock(lockPath);
+          yield* releaseProofLock(lease);
           expect(yield* fs.exists(lockPath)).toBe(false);
         })
       )
@@ -2647,11 +2654,91 @@ describe("yeet publish scope helpers", () => {
           );
           yield* fs.writeFileString(lockPath, `${staleText}\n`);
 
-          expect(yield* acquireFullProofLock(tempContext, [prePushStep])).toBe(lockPath);
+          const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
+          expect(lease.lockPath).toBe(lockPath);
           const replacementText = yield* fs.readFileString(lockPath);
           expect(replacementText).not.toBe(`${staleText}\n`);
           expect(replacementText).toContain(`"pid":${process.pid}`);
           expect(replacementText).toContain(`"branch":"${tempContext.branch}"`);
+        })
+      )
+    ));
+
+  it("does not let a delayed stale contender reap the winner's fresh lock", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v2",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const winnerText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v2",
+              branch: "feature/winner",
+              checkoutRoot: "/repo/winner",
+              command: "bun run beep yeet verify",
+              pid: process.pid,
+              proofTier: "full",
+              startedAt: "2026-08-26T00:00:00.000Z",
+            })
+          )}\n`;
+          const loserText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v2",
+              branch: "feature/loser",
+              checkoutRoot: "/repo/loser",
+              command: "bun run beep yeet verify",
+              pid: process.pid,
+              proofTier: "full",
+              startedAt: "2026-08-26T00:00:01.000Z",
+            })
+          )}\n`;
+          yield* fs.writeFileString(lockPath, staleText);
+
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, winnerText)).toBe(true);
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, loserText)).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
+
+          const refusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+          expect(refusal.message).toContain("Owner checkout /repo/winner on feature/winner");
+          const coordinatorEntries = yield* fs.readDirectory(path.dirname(lockPath));
+          expect(A.filter(coordinatorEntries, Str.includes(".reap-"))).toEqual([]);
+        })
+      )
+    ));
+
+  it("does not release a foreign lock generation", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
+          const foreignText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v2",
+              branch: "feature/foreign-owner",
+              checkoutRoot: "/repo/foreign-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-26T00:00:02.000Z",
+            })
+          )}\n`;
+          yield* fs.writeFileString(lockPath, foreignText);
+
+          yield* releaseProofLock(lease);
+
+          expect(yield* fs.readFileString(lockPath)).toBe(foreignText);
         })
       )
     ));

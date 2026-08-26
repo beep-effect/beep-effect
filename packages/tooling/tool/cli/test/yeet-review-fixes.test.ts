@@ -4,7 +4,6 @@ import {
   proofLockPathForContext,
   RepoPlanStep,
   RepoRunContext,
-  releaseProofLock,
   runProofPhaseForTesting,
   runWithFullProofCoordinatorForTesting,
 } from "@beep/repo-cli/test/Yeet";
@@ -68,6 +67,7 @@ const withProofCoordinatorRepo = <Success, Error, Requirements>(
 ) =>
   withTempDirectory((tmpDir) =>
     Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       yield* runGit(tmpDir, ["init"]);
       yield* runGit(tmpDir, [
@@ -78,9 +78,12 @@ const withProofCoordinatorRepo = <Success, Error, Requirements>(
       ]);
       const context = contextAt(tmpDir);
       const lockPath = yield* proofLockPathForContext(context);
-      yield* releaseProofLock(lockPath);
+      yield* fs.remove(lockPath, { force: true });
       return yield* Effect.acquireUseRelease(Effect.succeed({ context, lockPath }), use, ({ lockPath: acquiredPath }) =>
-        releaseProofLock(acquiredPath)
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.remove(acquiredPath, { force: true });
+        })
       );
     })
   );
