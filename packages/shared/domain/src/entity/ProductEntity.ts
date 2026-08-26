@@ -12,6 +12,7 @@
 
 import * as EntityKit from "./EntityKit.ts";
 import * as OrgEntity from "./OrgEntity.ts";
+import type * as Pg from "@beep/effect-drizzle/pg";
 
 /**
  * The product tier kit. Shares the org tier's default columns; the product
@@ -97,7 +98,7 @@ export const Entity = EntityKit.productEntityFactory(kit);
  * @category constructors
  * @since 0.0.0
  */
-export const pg = kit.pg;
+export const pg: Pg.PgToolkit = kit.pg;
 
 /**
  * Table-extras namespace for multi-column indexes and checks.
@@ -105,4 +106,4 @@ export const pg = kit.pg;
  * @category constructors
  * @since 0.0.0
  */
-export const Table = kit.Table;
+export const Table: typeof Pg.Table = kit.Table;

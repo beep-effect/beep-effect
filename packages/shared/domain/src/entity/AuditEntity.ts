@@ -7,6 +7,7 @@
 
 import * as BaseEntity from "./BaseEntity.ts";
 import { entityFactory, withAudit } from "./EntityKit.ts";
+import type * as Pg from "@beep/effect-drizzle/pg";
 
 /**
  * The audit tier kit: base columns plus principals, source, and schema version.
@@ -54,7 +55,7 @@ export const Entity = entityFactory(kit);
  * @category constructors
  * @since 0.0.0
  */
-export const pg = kit.pg;
+export const pg: Pg.PgToolkit = kit.pg;
 
 /**
  * Table-extras namespace for multi-column indexes and checks.
@@ -62,4 +63,4 @@ export const pg = kit.pg;
  * @category constructors
  * @since 0.0.0
  */
-export const Table = kit.Table;
+export const Table: typeof Pg.Table = kit.Table;

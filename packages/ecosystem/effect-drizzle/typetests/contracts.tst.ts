@@ -135,13 +135,12 @@ it("exports declaration-portable metadata and PostgreSQL column carriers", () =>
 });
 
 it("infers dialect kits and their invariant fields", () => {
-  const kit = make({
-    dialect: "pg",
-    defaultColumns: (columns) => ({
+  const kit = make("pg", (columns) => ({
+    defaultColumns: {
       createdAt: EffectModel.DateTimeInsert.pipe(columns.timestamp()),
       rowVersion: Int.pipe(columns.integer(), columns.default(1), columns.version()),
-    }),
-  });
+    },
+  }));
   class Account extends kit.Entity<Account>("Account")({
     id: Int.pipe(kit.pg.integer(), kit.pg.identity("always"), kit.pg.primaryKey()),
     name: String,
@@ -170,14 +169,13 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
     searchName: String.pipe(pg.text(), pg.generated(sql<string>`lower(name)`)),
   }) {}
   const migratedUserTable = pg.toPgTable(MigratedUser);
-  const kit = make({
-    dialect: "pg",
-    defaultColumns: (columns) => ({
+  const kit = make("pg", (columns) => ({
+    defaultColumns: {
       rowVersion: Int.pipe(columns.integer(), columns.default(1), columns.version()),
       updatedAt: EffectModel.DateTimeUpdate.pipe(columns.timestamp()),
       createdAt: EffectModel.DateTimeInsert.pipe(columns.timestamp()),
-    }),
-  });
+    },
+  }));
   class Account extends kit.Entity<Account>("Account")({
     id: UserId.pipe(kit.pg.integer(), kit.pg.identity("always"), kit.pg.primaryKey()),
     name: String,
@@ -299,12 +297,11 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
 });
 
 it("preserves migrated SQLite fixture compile contracts", () => {
-  const sqliteKit = make({
-    dialect: "sqlite",
-    defaultColumns: (columns) => ({
+  const sqliteKit = make("sqlite", (columns) => ({
+    defaultColumns: {
       createdAt: EffectModel.DateTimeInsert.pipe(columns.text()),
-    }),
-  });
+    },
+  }));
   class SqliteUser extends sqliteKit.Entity<SqliteUser>("SqliteUser")({
     id: Int.pipe(sqliteKit.sqlite.integer(), sqliteKit.sqlite.autoIncrement()),
     name: String,
@@ -315,12 +312,11 @@ it("preserves migrated SQLite fixture compile contracts", () => {
   }) {}
   const sqliteUserTable = sqliteKit.toSqliteTable(SqliteUser);
   const sqlitePlainPrimaryTable = sqliteKit.toSqliteTable(SqlitePlainPrimary);
-  const pgKit = make({
-    dialect: "pg",
-    defaultColumns: (columns) => ({
+  const pgKit = make("pg", (columns) => ({
+    defaultColumns: {
       createdAt: EffectModel.DateTimeInsert.pipe(columns.timestamp()),
-    }),
-  });
+    },
+  }));
   class PgUser extends pgKit.Entity<PgUser>("PgUser")({ id: Int.pipe(pgKit.pg.integer()), name: String }) {}
 
   type MigratedSqliteContracts = ExpectAll<{
@@ -423,7 +419,7 @@ it("pins public SQL-name and table-extra diagnostics", () => {
     "Table.check name must be a lowercase SQL identifier"
   );
   expect(Model("Bad Model")).type.toRaiseError("Model identifier derives an invalid PostgreSQL table name");
-  expect(make({ dialect: "pg", defaultColumns: () => ({ "bad key": String }) })).type.toRaiseError(
+  expect(make("pg", () => ({ defaultColumns: { "bad key": String } }))).type.toRaiseError(
     "model field derives an invalid PostgreSQL column name"
   );
   expect(pg.Table.compositeUnique("duplicate_composite", [pgColumns.one, pgColumns.one])).type.toRaiseError(
@@ -463,7 +459,7 @@ it("pins public SQL-name and table-extra diagnostics", () => {
     "Table.check name must be a lowercase SQL identifier"
   );
   expect(sqlite.Model("Bad Model")).type.toRaiseError("Model identifier derives an invalid SQLite table name");
-  expect(make({ dialect: "sqlite", defaultColumns: () => ({ "bad key": String }) })).type.toRaiseError(
+  expect(make("sqlite", () => ({ defaultColumns: { "bad key": String } }))).type.toRaiseError(
     "model field derives an invalid SQLite column name"
   );
 });
