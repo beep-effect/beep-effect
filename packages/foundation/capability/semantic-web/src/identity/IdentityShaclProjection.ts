@@ -6,17 +6,17 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { makeLiteral, makeNamedNode } from "@beep/rdf/Rdf";
+import { makeLiteral, NamedNode } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
-import { Effect, pipe } from "effect";
+import { Effect, HashSet, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ShaclNodeShape, ShaclPropertyShape } from "../services/shacl-validation.ts";
-import { IdentityFiberPathError } from "./IdentityRdfBinding.ts";
+import { IdentityEntryIriError, IdentityFiberPathError } from "./IdentityRdfBinding.ts";
 import type { IdentityEntry } from "@beep/identity";
 import type { IdentityRdfBinding } from "./IdentityRdfBinding.ts";
 
@@ -24,7 +24,58 @@ const $I = $SemanticWebId.create("identity/IdentityShaclProjection");
 
 type IdentityShapeProjector = (
   entries: ReadonlyArray<IdentityEntry>
-) => Effect.Effect<ReadonlyArray<ShaclNodeShape>, IdentityFiberPathError>;
+) => Effect.Effect<ReadonlyArray<ShaclNodeShape>, IdentityEntryIriError | IdentityFiberPathError>;
+
+const duplicateRequiredFiber = (requiredFibers: ReadonlyArray<string>): O.Option<string> => {
+  let seen = HashSet.empty<string>();
+
+  for (const fiber of requiredFibers) {
+    if (HashSet.has(seen, fiber)) {
+      return O.some(fiber);
+    }
+    seen = HashSet.add(seen, fiber);
+  }
+
+  return O.none();
+};
+
+const IdentityRequiredFibersDistinct = S.makeFilter<ReadonlyArray<string>>(
+  (requiredFibers) =>
+    pipe(
+      duplicateRequiredFiber(requiredFibers),
+      O.match({
+        onNone: () => true,
+        onSome: (duplicate) => `Required identity fiber '${duplicate}' appears more than once.`,
+      })
+    ),
+  {
+    identifier: $I`IdentityRequiredFibersDistinct`,
+    title: "Distinct Required Identity Fibers",
+    description: "Requires every named identity fiber in a SHACL projection policy to be unique.",
+    message: "Required identity fibers must be unique.",
+  }
+);
+
+const RequiredIdentityFibers = S.Array(S.String).pipe(S.check(IdentityRequiredFibersDistinct));
+
+const decodeEntrySubject = Effect.fn("IdentityShaclProjection.decodeEntrySubject")(function* (entry: IdentityEntry) {
+  return yield* S.decodeEffect(NamedNode)({ termType: "NamedNode", value: entry.iri }).pipe(
+    Effect.mapError(() => IdentityEntryIriError.make({ identity: entry.identity, iri: entry.iri }))
+  );
+});
+
+const addressPropertyShapes = (path: NamedNode, value: string): ReadonlyArray<ShaclPropertyShape> => [
+  ShaclPropertyShape.make({
+    path,
+    minCount: O.some(NonNegativeInt.make(1)),
+    maxCount: O.some(NonNegativeInt.make(1)),
+  }),
+  ShaclPropertyShape.make({
+    path,
+    minCount: O.some(NonNegativeInt.make(1)),
+    hasValue: O.some(makeLiteral(value, XSD_STRING.value)),
+  }),
+];
 
 /**
  * Data policy selecting the identity fibers required by projected SHACL shapes.
@@ -42,7 +93,7 @@ type IdentityShapeProjector = (
  * @since 0.0.0
  */
 export class IdentityShapePolicy extends S.Class<IdentityShapePolicy>($I`IdentityShapePolicy`)(
-  { requiredFibers: S.Array(S.String) },
+  { requiredFibers: RequiredIdentityFibers },
   $I.annote("IdentityShapePolicy", {
     description: "Named identity fibers that every projected node shape requires.",
   })
@@ -53,9 +104,9 @@ export class IdentityShapePolicy extends S.Class<IdentityShapePolicy>($I`Identit
  *
  * **Details**
  *
- * Identifier and CURIE properties require exactly one matching literal. Each
- * policy fiber contributes one `minCount: 1` property using its explicit
- * predicate binding.
+ * Identifier and CURIE properties each use one cardinality shape and one
+ * expected-value shape. Each policy fiber contributes one `minCount: 1`
+ * property using its explicit predicate binding.
  *
  * **Example** (Project no identity entries)
  *
@@ -86,47 +137,35 @@ export const projectShapes: {
   2,
   (binding: IdentityRdfBinding, policy: IdentityShapePolicy): IdentityShapeProjector =>
     Effect.fn("IdentityShaclProjection.projectShapes")(function* (entries) {
-      return yield* Effect.forEach(entries, (entry) =>
-        Effect.forEach(policy.requiredFibers, (fiber) =>
-          pipe(
-            R.get(binding.fiberPaths, fiber),
-            O.match({
-              onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
-              onSome: (path) =>
-                Effect.succeed(
-                  ShaclPropertyShape.make({
-                    path,
-                    minCount: O.some(NonNegativeInt.make(1)),
-                  })
-                ),
-            })
-          )
-        ).pipe(
-          Effect.map((fiberProperties) =>
-            ShaclNodeShape.make({
-              targetNode: O.some(makeNamedNode(entry.iri)),
-              properties: pipe(
-                fiberProperties,
-                A.prepend(
-                  ShaclPropertyShape.make({
-                    path: binding.curiePath,
-                    minCount: O.some(NonNegativeInt.make(1)),
-                    maxCount: O.some(NonNegativeInt.make(1)),
-                    hasValue: O.some(makeLiteral(entry.curie, XSD_STRING.value)),
-                  })
-                ),
-                A.prepend(
-                  ShaclPropertyShape.make({
-                    path: binding.identifierPath,
-                    minCount: O.some(NonNegativeInt.make(1)),
-                    maxCount: O.some(NonNegativeInt.make(1)),
-                    hasValue: O.some(makeLiteral(entry.identity, XSD_STRING.value)),
-                  })
-                )
-              ),
-            })
-          )
-        )
+      return yield* Effect.forEach(
+        entries,
+        Effect.fnUntraced(function* (entry) {
+          const targetNode = yield* decodeEntrySubject(entry);
+          const fiberProperties = yield* Effect.forEach(policy.requiredFibers, (fiber) =>
+            pipe(
+              R.get(binding.fiberPaths, fiber),
+              O.match({
+                onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
+                onSome: (path) =>
+                  Effect.succeed(
+                    ShaclPropertyShape.make({
+                      path,
+                      minCount: O.some(NonNegativeInt.make(1)),
+                    })
+                  ),
+              })
+            )
+          );
+
+          return ShaclNodeShape.make({
+            targetNode: O.some(targetNode),
+            properties: pipe(
+              addressPropertyShapes(binding.identifierPath, entry.identity),
+              A.appendAll(addressPropertyShapes(binding.curiePath, entry.curie)),
+              A.appendAll(fiberProperties)
+            ),
+          });
+        })
       );
     })
 );

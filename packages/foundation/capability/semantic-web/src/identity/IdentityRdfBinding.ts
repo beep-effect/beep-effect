@@ -9,9 +9,8 @@ import { IdentityEntry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { Effect, pipe, Tuple } from "effect";
+import { Effect, HashMap, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -147,6 +146,32 @@ export class IdentityFiberPathError extends S.TaggedError<IdentityFiberPathError
 ) {}
 
 /**
+ * Failure returned when an identity entry IRI cannot be decoded as an RDF named node.
+ *
+ * **Example** (Inspect an invalid entry IRI)
+ *
+ * ```ts
+ * import { IdentityEntryIriError } from "@beep/semantic-web"
+ *
+ * const error = IdentityEntryIriError.make({
+ *   identity: "@beep/example/Invalid",
+ *   iri: "not an iri"
+ * })
+ * console.log(error.iri) // "not an iri"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class IdentityEntryIriError extends S.TaggedError<IdentityEntryIriError>($I`IdentityEntryIriError`)(
+  "IdentityEntryIriError",
+  { identity: S.String, iri: S.String },
+  $I.annoteError<IdentityEntryIriError>("IdentityEntryIriError", {
+    description: "An identity entry IRI cannot be decoded as an RDF named node.",
+  })
+) {}
+
+/**
  * Failure returned when an RDF subject cannot be decoded as one exact identity entry.
  *
  * **Example** (Describe an invalid identity subject)
@@ -173,6 +198,12 @@ export class IdentityDatasetDecodeError extends S.TaggedError<IdentityDatasetDec
     description: "An RDF subject cannot be decoded as one exact identity registry entry.",
   })
 ) {}
+
+const decodeEntrySubject = Effect.fn("IdentityRdfBinding.decodeEntrySubject")(function* (entry: IdentityEntry) {
+  return yield* S.decodeEffect(NamedNode)({ termType: "NamedNode", value: entry.iri }).pipe(
+    Effect.mapError(() => IdentityEntryIriError.make({ identity: entry.identity, iri: entry.iri }))
+  );
+});
 
 const literalAt = Effect.fn("IdentityRdfBinding.literalAt")(function* (
   subject: string,
@@ -315,7 +346,8 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
  * **Details**
  *
  * Every entry IRI becomes its named-node subject. Identity, CURIE, and fiber
- * values are emitted as `xsd:string` literals; missing fiber predicates fail.
+ * values are emitted as `xsd:string` literals. Invalid entry IRIs and missing
+ * fiber predicates fail in the typed error channel.
  *
  * **Example** (Encode an empty registry dataset)
  *
@@ -332,29 +364,32 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
  */
 export const entriesToDataset = (binding: IdentityRdfBinding) =>
   Effect.fn("IdentityRdfBinding.entriesToDataset")(function* (entries: ReadonlyArray<IdentityEntry>) {
-    const encoded = yield* Effect.forEach(entries, (entry) => {
-      const subject = makeNamedNode(entry.iri);
+    const encoded = yield* Effect.forEach(
+      entries,
+      Effect.fnUntraced(function* (entry) {
+        const subject = yield* decodeEntrySubject(entry);
 
-      return Effect.forEach(R.toEntries(entry.fibers), ([fiber, value]) =>
-        pipe(
-          R.get(binding.fiberPaths, fiber),
-          O.match({
-            onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
-            onSome: (path) => Effect.succeed(makeQuad(subject, path, makeLiteral(value, XSD_STRING.value))),
-          })
-        )
-      ).pipe(
-        Effect.map((fiberQuads) =>
+        return yield* Effect.forEach(R.toEntries(entry.fibers), ([fiber, value]) =>
           pipe(
-            [
-              makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value)),
-              makeQuad(subject, binding.curiePath, makeLiteral(entry.curie, XSD_STRING.value)),
-            ],
-            A.appendAll(fiberQuads)
+            R.get(binding.fiberPaths, fiber),
+            O.match({
+              onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
+              onSome: (path) => Effect.succeed(makeQuad(subject, path, makeLiteral(value, XSD_STRING.value))),
+            })
           )
-        )
-      );
-    });
+        ).pipe(
+          Effect.map((fiberQuads) =>
+            pipe(
+              [
+                makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value)),
+                makeQuad(subject, binding.curiePath, makeLiteral(entry.curie, XSD_STRING.value)),
+              ],
+              A.appendAll(fiberQuads)
+            )
+          )
+        );
+      })
+    );
 
     return makeDataset(A.flatten(encoded));
   });

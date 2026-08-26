@@ -1,10 +1,11 @@
 import { IdentityEntry, IdentityRegistry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
-import { makeNamedNode } from "@beep/rdf/Rdf";
+import { makeNamedNode, NamedNode } from "@beep/rdf/Rdf";
 import {
   DefaultIdentityRdfBinding,
   datasetToEntries,
   entriesToDataset,
+  IdentityEntryIriError,
   IdentityFiberPathError,
   IdentityRdfBinding,
   IdentityShapePolicy,
@@ -20,6 +21,7 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -51,6 +53,8 @@ const collidingBindingInput = {
   curiePath: DefaultIdentityRdfBinding.identifierPath,
   fiberPaths: { label: labelPath },
 };
+const duplicatePolicyInput = { requiredFibers: ["label", "label"] };
+const sameNamedNode = S.toEquivalence(NamedNode);
 
 const bindingPredicateValues = (value: IdentityRdfBinding): ReadonlyArray<string> =>
   pipe(
@@ -60,7 +64,7 @@ const bindingPredicateValues = (value: IdentityRdfBinding): ReadonlyArray<string
     A.prepend(value.identifierPath.value)
   );
 
-const expectBindingMakeToFail = (run: () => unknown, messagePart: string): void => {
+const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
   const formatIssue = SchemaIssue.makeFormatterDefault();
   try {
     run();
@@ -74,6 +78,16 @@ const expectBindingMakeToFail = (run: () => unknown, messagePart: string): void 
   expect.unreachable("expected binding construction to throw");
 };
 
+const expectIdentityEntryIriError = (error: unknown, identity: string, iri: string): void => {
+  const isIdentityEntryIriError = S.is(IdentityEntryIriError);
+
+  assert.isTrue(isIdentityEntryIriError(error));
+  if (isIdentityEntryIriError(error)) {
+    assert.strictEqual(error.identity, identity);
+    assert.strictEqual(error.iri, iri);
+  }
+};
+
 const provideScopedLayer =
   <ROut, E2, RIn>(provided: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -81,17 +95,33 @@ const provideScopedLayer =
 
 describe("identity RDF binding", () => {
   it("rejects predicate collisions during construction and decoding", () => {
-    expectBindingMakeToFail(
+    expectSchemaMakeToFail(
       () => IdentityRdfBinding.make(collidingBindingInput),
       "identifierPath and curiePath collide at RDF predicate"
     );
 
-    const decoded = S.decodeUnknownResult(IdentityRdfBinding)(collidingBindingInput);
+    const decoded = S.decodeResult(IdentityRdfBinding)(collidingBindingInput);
     assert.isTrue(Result.isFailure(decoded));
     if (Result.isFailure(decoded)) {
       assert.include(
         SchemaIssue.makeFormatterDefault()(decoded.failure.issue),
         "identifierPath and curiePath collide at RDF predicate"
+      );
+    }
+  });
+
+  it("rejects duplicate required fibers during construction and decoding", () => {
+    expectSchemaMakeToFail(
+      () => IdentityShapePolicy.make(duplicatePolicyInput),
+      "Required identity fiber 'label' appears more than once."
+    );
+
+    const decoded = S.decodeResult(IdentityShapePolicy)(duplicatePolicyInput);
+    assert.isTrue(Result.isFailure(decoded));
+    if (Result.isFailure(decoded)) {
+      assert.include(
+        SchemaIssue.makeFormatterDefault()(decoded.failure.issue),
+        "Required identity fiber 'label' appears more than once."
       );
     }
   });
@@ -102,6 +132,18 @@ describe("identity RDF binding", () => {
         const predicates = bindingPredicateValues(generated);
 
         assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
+      }),
+      { numRuns: 40 }
+    );
+  });
+
+  it("derives only unique required-fiber policies", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(IdentityShapePolicy)(fc), (generated) => {
+        assert.strictEqual(
+          HashSet.size(HashSet.fromIterable(generated.requiredFibers)),
+          A.length(generated.requiredFibers)
+        );
       }),
       { numRuns: 40 }
     );
@@ -144,10 +186,36 @@ describe("identity RDF binding", () => {
         IdentityShapePolicy.make({ requiredFibers: ["label"] })
       )([entry]).pipe(Effect.flip);
 
-      assert.isTrue(S.is(IdentityFiberPathError)(encodingError));
-      assert.strictEqual(encodingError.fiber, "label");
-      assert.isTrue(S.is(IdentityFiberPathError)(projectionError));
-      assert.strictEqual(projectionError.fiber, "label");
+      const isFiberPathError = S.is(IdentityFiberPathError);
+      assert.isTrue(isFiberPathError(encodingError));
+      if (isFiberPathError(encodingError)) {
+        assert.strictEqual(encodingError.fiber, "label");
+      }
+      assert.isTrue(isFiberPathError(projectionError));
+      if (isFiberPathError(projectionError)) {
+        assert.strictEqual(projectionError.fiber, "label");
+      }
+    })
+  );
+
+  it.effect(
+    "fails encoding and projection with a typed error for an invalid entry IRI",
+    Effect.fnUntraced(function* () {
+      const invalidIri = "not an iri";
+      const invalidEntry = IdentityEntry.make({
+        identity: "@beep/semantic-web/InvalidIriEntry",
+        iri: invalidIri,
+        curie: "beep:semantic-web/InvalidIriEntry",
+        fibers: {},
+      });
+      const encodingError = yield* entriesToDataset(binding)([invalidEntry]).pipe(Effect.flip);
+      const projectionError = yield* projectShapes(
+        binding,
+        IdentityShapePolicy.make({ requiredFibers: [] })
+      )([invalidEntry]).pipe(Effect.flip);
+
+      expectIdentityEntryIriError(encodingError, invalidEntry.identity, invalidIri);
+      expectIdentityEntryIriError(projectionError, invalidEntry.identity, invalidIri);
     })
   );
 
@@ -201,8 +269,28 @@ describe("identity RDF binding", () => {
       assert.isTrue(result.conforms);
       assert.deepStrictEqual(yield* Ref.get(receivedShapes), shapes);
       assert.deepStrictEqual(request.shapes, shapes);
-      assert.strictEqual(request.shapes[0]?.targetNode._tag, "Some");
-      assert.strictEqual(request.shapes[0]?.properties.length, 4);
+      const shape = request.shapes[0];
+      assert.isDefined(shape);
+      assert.strictEqual(shape.targetNode._tag, "Some");
+      assert.strictEqual(shape.properties.length, 6);
+
+      const addressProperties = pipe(
+        shape.properties,
+        A.filter(
+          (property) =>
+            sameNamedNode(property.path, binding.identifierPath) || sameNamedNode(property.path, binding.curiePath)
+        )
+      );
+      assert.lengthOf(addressProperties, 4);
+      assert.isTrue(A.every(addressProperties, (property) => O.isSome(property.minCount)));
+      assert.lengthOf(
+        A.filter(addressProperties, (property) => O.isSome(property.maxCount) && O.isNone(property.hasValue)),
+        2
+      );
+      assert.lengthOf(
+        A.filter(addressProperties, (property) => O.isNone(property.maxCount) && O.isSome(property.hasValue)),
+        2
+      );
     })
   );
 });

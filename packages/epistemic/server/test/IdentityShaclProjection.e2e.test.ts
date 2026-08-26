@@ -1,7 +1,8 @@
 import { BoundedShaclValidationServiceLive } from "@beep/epistemic-server/ShaclValidation";
 import { IdentityEntry } from "@beep/identity";
 import { $EpistemicServerId } from "@beep/identity/packages";
-import { makeDataset, makeNamedNode, NamedNode } from "@beep/rdf/Rdf";
+import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode } from "@beep/rdf/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import {
   DefaultIdentityRdfBinding,
   entriesToDataset,
@@ -39,6 +40,35 @@ describe("identity SHACL projection end to end", () => {
 
         assert.isTrue(conforming.conforms);
         assert.lengthOf(conforming.violations, 0);
+
+        const withExtraIdentifier = makeDataset(
+          pipe(
+            dataset.quads,
+            A.append(
+              makeQuad(
+                makeNamedNode(entry.iri),
+                binding.identifierPath,
+                makeLiteral("@beep/epistemic-server/UnexpectedIdentity", XSD_STRING.value)
+              )
+            )
+          )
+        );
+        const extraIdentifierFailing = yield* service.validate(
+          ShaclValidationRequest.make({ dataset: withExtraIdentifier, shapes })
+        );
+        const identifierViolation = pipe(
+          extraIdentifierFailing.violations,
+          A.findFirst((violation) => sameNamedNode(violation.path, binding.identifierPath))
+        );
+
+        assert.isFalse(extraIdentifierFailing.conforms);
+        O.match(identifierViolation, {
+          onNone: () => assert.fail("Expected a violation on the identifier path for an extra literal."),
+          onSome: (violation) => {
+            assert.strictEqual(violation.severity, "violation");
+            assert.strictEqual(violation.path.value, binding.identifierPath.value);
+          },
+        });
 
         const withoutRequiredFiber = makeDataset(
           pipe(

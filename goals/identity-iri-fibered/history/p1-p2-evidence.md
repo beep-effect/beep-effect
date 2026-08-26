@@ -99,4 +99,18 @@ tree, then `yeet publish --reuse-verified` and `yeet monitor` to merge-ready
   uses `A.match` (empty / exactly-one / duplicate arms), removing an unreachable
   `O.none` arm that no test could cover. Scoped ratchet:
   `bun run coverage -- --filter=@beep/identity --filter=@beep/semantic-web` → ok.
+- Second Greptile round (P1 address cardinality vs `hasValue` under the bounded
+  validator; P2 malformed `IdentityEntry.iri` defected via `makeNamedNode`; P2
+  duplicate `requiredFibers`) → two property shapes per address (cardinality +
+  value), `IdentityEntryIriError` from `S.decodeEffect(NamedNode)` at the codec
+  and projection boundaries, uniqueness check on `requiredFibers`
+  (`history/p3-review-fixes-2-report.md`).
+- Hosted `Heavy / Check` (TS377112 in a test → `S.decodeResult`; a test reading
+  `.fiber` on the widened error union → narrowed with `S.is`), `Heavy / Lint
+  Policy` (`laws effect-imports --write`: `HashMap`/`HashSet` from the root
+  `effect` import), and `Heavy / Docgen` — inherited from #820's
+  `packages/tooling/tool/docgen/src/index.ts` `Version` export missing
+  `@category`; fixed on touch with `@category configuration` and a
+  `@beep/repo-docgen` changeset line. Local proofs after: `quality test-tsgo` 0,
+  `docgen:local --full` 0, `laws effect-imports --check` 0, changeset gate ok.
 
