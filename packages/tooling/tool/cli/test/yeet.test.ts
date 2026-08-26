@@ -2556,7 +2556,7 @@ describe("yeet publish scope helpers", () => {
         expect(other).not.toBe(first);
         expect(first).not.toContain("github.com");
         expect(first).toMatch(/beep-yeet-proof-locks\/[a-f0-9]{12}\.lock$/u);
-      }).pipe(Effect.provide(NodePath.layer))
+      }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
   it("plans closeout write actions only for known thread ids with a paired body", () => {
