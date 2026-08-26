@@ -14,6 +14,7 @@ import {
   index as drizzleIndex,
   primaryKey as drizzlePrimaryKey,
   unique as drizzleUnique,
+  uniqueIndex as drizzleUniqueIndex,
   SQLiteDialect,
 } from "drizzle-orm/sqlite-core";
 import { isArray } from "effect/Array";
@@ -122,6 +123,11 @@ type NodeDefinition = {
     readonly columns: NonEmptyColumns;
     readonly where: SQL<boolean> | undefined;
   };
+  uniqueIndex: {
+    readonly name: string;
+    readonly columns: NonEmptyColumns;
+    readonly where: SQL<boolean> | undefined;
+  };
   check: { readonly name: string; readonly expression: SQL<boolean> };
   unsafeCheckSql: { readonly name: string; readonly sql: string };
 };
@@ -153,6 +159,7 @@ type NodeDefinition = {
  *   compositePrimaryKey: () => "primary",
  *   compositeUnique: () => "unique",
  *   index: () => "index",
+ *   uniqueIndex: () => "unique-index",
  *   unsafeCheckSql: () => "unsafe"
  * }) // => "unsafe"
  * ```
@@ -213,6 +220,28 @@ export type CompositePrimaryKey = Extract<Node, { readonly _tag: "compositePrima
  * @since 0.0.0
  */
 export type Index = Extract<Node, { readonly _tag: "index" }>;
+
+/**
+ * Describes a named unique index over one or more SQLite columns.
+ *
+ * **Example** (Construct a unique index node)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { Table } from "@beep/effect-drizzle/sqlite"
+ *
+ * const extras: Table.Callback<{ publicId: typeof String }> = (columns) => [
+ *   Table.uniqueIndex("account_public_id_unique_idx", [columns.publicId])
+ * ]
+ *
+ * console.log(extras)
+ * ```
+ *
+ * @see {@link uniqueIndex} for the concise constructor.
+ * @category models
+ * @since 0.0.0
+ */
+export type UniqueIndex = Extract<Node, { readonly _tag: "uniqueIndex" }>;
 
 /**
  * Describes a check backed by typed Drizzle SQL.
@@ -304,9 +333,13 @@ export const isNode = (value: unknown): value is Node =>
         ? hasColumns(value, 1) &&
           hasProperty(value, "where") &&
           (value.where === undefined || isDrizzleEntity(value.where, SQL))
-        : Nodes.$is("check")(value)
-          ? hasProperty(value, "expression") && isDrizzleEntity(value.expression, SQL)
-          : Nodes.$is("unsafeCheckSql")(value) && hasProperty(value, "sql") && isString(value.sql));
+        : Nodes.$is("uniqueIndex")(value)
+          ? hasColumns(value, 1) &&
+            hasProperty(value, "where") &&
+            (value.where === undefined || isDrizzleEntity(value.where, SQL))
+          : Nodes.$is("check")(value)
+            ? hasProperty(value, "expression") && isDrizzleEntity(value.expression, SQL)
+            : Nodes.$is("unsafeCheckSql")(value) && hasProperty(value, "sql") && isString(value.sql));
 
 /**
  * Constructors, guard, and exhaustive matcher for SQLite table-extra nodes.
@@ -429,6 +462,36 @@ export const index = <const Name extends string, const Columns extends NonEmptyC
   columns: Columns & ValidateDistinctColumns<Columns>,
   options?: { readonly where?: SQL<boolean> }
 ): Index => Nodes.index({ name: validateName(name), columns, where: options?.where });
+
+/**
+ * Constructs a named unique index over one or more SQLite columns.
+ *
+ * **When to use**
+ *
+ * Use when DDL compatibility requires a unique index rather than a table-level
+ * unique constraint.
+ *
+ * **Example** (Define a public-id unique index)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { Table } from "@beep/effect-drizzle/sqlite"
+ *
+ * const extras: Table.Callback<{ publicId: typeof String }> = (columns) => [
+ *   Table.uniqueIndex("account_public_id_unique_idx", [columns.publicId])
+ * ]
+ *
+ * console.log(extras)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const uniqueIndex = <const Name extends string, const Columns extends NonEmptyColumns>(
+  name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">,
+  columns: Columns & ValidateDistinctColumns<Columns>,
+  options?: { readonly where?: SQL<boolean> }
+): UniqueIndex => Nodes.uniqueIndex({ name: validateName(name), columns, where: options?.where });
 /**
  * Constructs a typed SQLite check in data-first or data-last form.
  *
@@ -491,6 +554,20 @@ export const unsafeCheckSql = <const Name extends string>(
   name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">,
   value: string
 ): UnsafeCheckSql => Nodes.unsafeCheckSql({ name: validateName(name), sql: value });
+
+const emitUniqueIndex = (node: UniqueIndex): SQLiteTableExtraConfigValue => {
+  const builder = drizzleUniqueIndex(node.name).on(...node.columns);
+  return match(fromUndefinedOr(node.where), {
+    onNone: () => builder,
+    onSome: (where) => {
+      Meta.assertNoSqlParameters(
+        sqliteDialect.sqlToQuery(where).params,
+        `SQLite partial-index predicate '${node.name}'`
+      );
+      return builder.where(where);
+    },
+  });
+};
 
 const emitIndex = (node: Index): SQLiteTableExtraConfigValue => {
   const builder = drizzleIndex(node.name).on(...node.columns);
@@ -565,5 +642,6 @@ export const emit = (node: Node): SQLiteTableExtraConfigValue =>
     compositePrimaryKey: (current) => drizzlePrimaryKey({ name: current.name, columns: [...current.columns] }),
     compositeUnique: (current) => drizzleUnique(current.name).on(...current.columns),
     index: emitIndex,
+    uniqueIndex: emitUniqueIndex,
     unsafeCheckSql: (current) => drizzleCheck(current.name, sql.raw(current.sql)),
   });

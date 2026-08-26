@@ -14,7 +14,7 @@ import { DmsProvider } from "../../values/Sync/index.ts";
 import { SyncCursorStatus } from "./SyncCursor.values.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncCursor/SyncCursor.model");
-const SyncCursorEntity = ProductEntity.make(SyncCursorId);
+const pg = ProductEntity.pg;
 
 /**
  * Durable remote-event stream cursor enabling drift detection to survive app restarts.
@@ -51,37 +51,32 @@ const SyncCursorEntity = ProductEntity.make(SyncCursorId);
  * @category entities
  * @since 0.0.0
  */
-export class SyncCursor extends SyncCursorEntity.Entity<SyncCursor>(SyncCursorEntity.tableName)(
+export class SyncCursor extends ProductEntity.Entity<SyncCursor>()(SyncCursorId)(
   {
     lastError: S.NonEmptyString.pipe(S.OptionFromNullOr)
       .annotateKey({
         description: "Most recent stream-read failure message; none while the cursor is healthy.",
       })
-      .pipe(SyncCursorEntity.pg.text(), SyncCursorEntity.pg.columnName("last_error")),
+      .pipe(pg.text(), pg.columnName("last_error")),
     lastEventId: S.NonEmptyString.pipe(S.OptionFromNullOr)
       .annotateKey({
         description: "Identifier of the last remote event processed; none before the first event.",
       })
-      .pipe(SyncCursorEntity.pg.text(), SyncCursorEntity.pg.columnName("last_event_id")),
+      .pipe(pg.text(), pg.columnName("last_event_id")),
     provider: DmsProvider.annotateKey({
       description: "DMS provider whose event stream this cursor tracks.",
-    }).pipe(SyncCursorEntity.pg.text()),
+    }).pipe(pg.text()),
     status: SyncCursorStatus.annotateKey({
       description: "Health status of the cursor.",
-    }).pipe(SyncCursorEntity.pg.text()),
+    }).pipe(pg.text()),
     streamPosition: S.NonEmptyString.annotateKey({
       description: "Opaque provider stream position to resume reading from.",
-    }).pipe(SyncCursorEntity.pg.text(), SyncCursorEntity.pg.columnName("stream_position")),
+    }).pipe(pg.text(), pg.columnName("stream_position")),
     workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
       description: "Workspace whose mirror this cursor watches for remote drift.",
-    }).pipe(SyncCursorEntity.pg.integer(), SyncCursorEntity.pg.columnName("workspace_id")),
-    ...SyncCursorEntity.identityFields,
+    }).pipe(pg.integer(), pg.columnName("workspace_id"), pg.index()),
   },
   $I.annote("SyncCursor", {
     description: "Durable remote-event stream cursor enabling drift detection to survive app restarts.",
-  }),
-  (columns) => [
-    SyncCursorEntity.Table.index("documents_sync_cursor_workspace_id_btree_idx", [columns.workspaceId]),
-    ...SyncCursorEntity.entityExtras(columns),
-  ]
+  })
 ) {}

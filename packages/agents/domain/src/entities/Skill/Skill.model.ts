@@ -10,7 +10,7 @@ import * as Agents from "@beep/shared-domain/identity/Agents";
 import { SkillFixtureKey, SkillName } from "../Fixture.values.ts";
 
 const $I = $AgentsDomainId.create("entities/Skill/Skill.model");
-const SkillEntity = ProductEntity.make(Agents.SkillId);
+const pg = ProductEntity.pg;
 
 /**
  * Persisted skill record referenced by fixture-backed agents.
@@ -26,14 +26,12 @@ const SkillEntity = ProductEntity.make(Agents.SkillId);
  * @category entities
  * @since 0.0.0
  */
-export class Skill extends SkillEntity.Entity<Skill>(SkillEntity.tableName)(
+export class Skill extends ProductEntity.Entity<Skill>()(Agents.SkillId)(
   {
-    fixtureKey: SkillFixtureKey.pipe(SkillEntity.pg.text(), SkillEntity.pg.columnName("fixture_key")),
-    name: SkillName.pipe(SkillEntity.pg.text()),
-    ...SkillEntity.identityFields,
+    fixtureKey: SkillFixtureKey.pipe(pg.text(), pg.columnName("fixture_key")),
+    name: SkillName.pipe(pg.text()),
   },
   $I.annote("Skill", {
     description: "Persisted skill record referenced by fixture-backed agents.",
-  }),
-  SkillEntity.entityExtras
+  })
 ) {}

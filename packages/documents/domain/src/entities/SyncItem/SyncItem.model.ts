@@ -16,7 +16,7 @@ import { DmsProvider, RemoteItemId, SyncItemKind, VaultRelPath } from "../../val
 import { SyncItemState } from "./SyncItem.values.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncItem/SyncItem.model");
-const SyncItemEntity = ProductEntity.make(SyncItemId);
+const pg = ProductEntity.pg;
 
 /**
  * Durable sync-tracking row for one workspace-vault item mirrored one-way to a DMS provider.
@@ -61,62 +61,58 @@ const SyncItemEntity = ProductEntity.make(SyncItemId);
  * @category entities
  * @since 0.0.0
  */
-export class SyncItem extends SyncItemEntity.Entity<SyncItem>(SyncItemEntity.tableName)(
+export class SyncItem extends ProductEntity.Entity<SyncItem>()(SyncItemId)(
   {
     contentDigest: DocumentContentDigest.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Digest of the local bytes last observed for this item; none for folders." })
-      .pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("content_digest")),
+      .pipe(pg.text(), pg.columnName("content_digest")),
     contentSizeBytes: NonNegativeInt.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Size in bytes of the local content last observed; none for folders." })
-      .pipe(SyncItemEntity.pg.integer(), SyncItemEntity.pg.columnName("content_size_bytes")),
+      .pipe(pg.integer(), pg.columnName("content_size_bytes")),
     itemKind: SyncItemKind.annotateKey({
       description: "Whether the mirrored vault item is a file or a folder.",
-    }).pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("item_kind")),
+    }).pipe(pg.text(), pg.columnName("item_kind")),
     lastError: S.NonEmptyString.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Most recent push failure message; none when the item is healthy." })
-      .pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("last_error")),
+      .pipe(pg.text(), pg.columnName("last_error")),
     lastPushedDigest: DocumentContentDigest.pipe(S.OptionFromNullOr)
       .annotateKey({
         description: "Digest of the content most recently pushed to the provider; none before first push.",
       })
-      .pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("last_pushed_digest")),
+      .pipe(pg.text(), pg.columnName("last_pushed_digest")),
     lastPushedGeneration: NonNegativeInt.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Local generation counter captured by the most recent successful push." })
-      .pipe(SyncItemEntity.pg.integer(), SyncItemEntity.pg.columnName("last_pushed_generation")),
+      .pipe(pg.integer(), pg.columnName("last_pushed_generation")),
     localGeneration: NonNegativeInt.annotateKey({
       description: "Monotonic counter incremented per observed local change.",
-    }).pipe(SyncItemEntity.pg.integer(), SyncItemEntity.pg.columnName("local_generation")),
+    }).pipe(pg.integer(), pg.columnName("local_generation")),
     localRelPath: VaultRelPath.annotateKey({
       description: "Vault-root-relative path of the mirrored local item.",
-    }).pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("local_rel_path")),
+    }).pipe(
+      pg.text(),
+      pg.columnName("local_rel_path"),
+      pg.index({ name: "documents_sync_item_local_rel_path_lookup_idx" })
+    ),
     provider: DmsProvider.annotateKey({
       description: "DMS provider receiving the one-way mirror for this item.",
-    }).pipe(SyncItemEntity.pg.text()),
+    }).pipe(pg.text()),
     remoteId: RemoteItemId.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Provider item identifier assigned by the DMS; none before first push." })
-      .pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("remote_id")),
+      .pipe(pg.text(), pg.columnName("remote_id"), pg.index({ name: "documents_sync_item_remote_id_lookup_idx" })),
     remoteName: S.NonEmptyString.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Item name last observed on the provider side; none before first push." })
-      .pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("remote_name")),
+      .pipe(pg.text(), pg.columnName("remote_name")),
     remoteParentId: RemoteItemId.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Provider identifier of the remote parent folder; none before first push." })
-      .pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("remote_parent_id")),
+      .pipe(pg.text(), pg.columnName("remote_parent_id")),
     syncState: SyncItemState.annotateKey({
       description: "Reconciliation state of the mirrored item.",
-    }).pipe(SyncItemEntity.pg.text(), SyncItemEntity.pg.columnName("sync_state")),
+    }).pipe(pg.text(), pg.columnName("sync_state"), pg.index({ name: "documents_sync_item_sync_state_lookup_idx" })),
     workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
       description: "Workspace whose vault owns the mirrored item.",
-    }).pipe(SyncItemEntity.pg.integer(), SyncItemEntity.pg.columnName("workspace_id")),
-    ...SyncItemEntity.identityFields,
+    }).pipe(pg.integer(), pg.columnName("workspace_id"), pg.index()),
   },
   $I.annote("SyncItem", {
     description: "Durable sync-tracking row for one workspace-vault item mirrored one-way to a DMS provider.",
-  }),
-  (columns) => [
-    SyncItemEntity.Table.index("documents_sync_item_local_rel_path_lookup_idx", [columns.localRelPath]),
-    SyncItemEntity.Table.index("documents_sync_item_remote_id_lookup_idx", [columns.remoteId]),
-    SyncItemEntity.Table.index("documents_sync_item_sync_state_lookup_idx", [columns.syncState]),
-    SyncItemEntity.Table.index("documents_sync_item_workspace_id_btree_idx", [columns.workspaceId]),
-    ...SyncItemEntity.entityExtras(columns),
-  ]
+  })
 ) {}

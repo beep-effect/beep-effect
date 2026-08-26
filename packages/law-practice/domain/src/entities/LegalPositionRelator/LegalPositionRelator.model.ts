@@ -16,7 +16,7 @@ import { SourceNormRef } from "../../values/SourceNormRef/index.ts";
 import { LegalPositionGrounding } from "./LegalPositionRelator.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/LegalPositionRelator/LegalPositionRelator.model");
-const LegalPositionRelatorEntity = ProductEntity.make(LawPractice.LegalPositionRelatorId);
+const pg = ProductEntity.pg;
 
 /**
  * One stored advantage-side legal relation between two roles.
@@ -71,38 +71,36 @@ const LegalPositionRelatorEntity = ProductEntity.make(LawPractice.LegalPositionR
  * @category entities
  * @since 0.0.0
  */
-export class LegalPositionRelator extends LegalPositionRelatorEntity.Entity<LegalPositionRelator>(
-  LegalPositionRelatorEntity.tableName
+export class LegalPositionRelator extends ProductEntity.Entity<LegalPositionRelator>()(
+  LawPractice.LegalPositionRelatorId
 )(
   {
     assertingInterpreter: Principal.annotateKey({
       description: "Principal whose attributed reading this relation is recorded under.",
-    }).pipe(LegalPositionRelatorEntity.pg.jsonb(), LegalPositionRelatorEntity.pg.columnName("asserting_interpreter")),
+    }).pipe(pg.jsonb(), pg.columnName("asserting_interpreter")),
     bearer: LegalRole.annotateKey({
       description: "Role holding the advantage-side position.",
-    }).pipe(LegalPositionRelatorEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     content: LegalActContent.annotateKey({
       description: "Act the position is about, carrying the polarity the opposite derivation negates.",
-    }).pipe(LegalPositionRelatorEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     counterparty: LegalRole.annotateKey({
       description: "Role the position is held against, whose correlative view is derived and never stored.",
-    }).pipe(LegalPositionRelatorEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     grounding: LegalPositionGrounding.annotateKey({
       description: "Exercise lineage this relation rests on, recorded as a lineage rather than one event.",
-    }).pipe(LegalPositionRelatorEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     positionKind: AdvantagePositionKind.annotateKey({
       description: "Stored position kind, canonicalised to the advantage side so the stored form is unique.",
-    }).pipe(LegalPositionRelatorEntity.pg.text(), LegalPositionRelatorEntity.pg.columnName("position_kind")),
+    }).pipe(pg.text(), pg.columnName("position_kind")),
     scope: LegalScopeContext.annotateKey({
       description: "The five recorded axes this relation is held to apply within.",
-    }).pipe(LegalPositionRelatorEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     sourceNorm: SourceNormRef.annotateKey({
       description: "Opaque reference to the norm this relation is recorded as resting on.",
-    }).pipe(LegalPositionRelatorEntity.pg.jsonb(), LegalPositionRelatorEntity.pg.columnName("source_norm")),
-    ...LegalPositionRelatorEntity.identityFields,
+    }).pipe(pg.jsonb(), pg.columnName("source_norm")),
   },
   $I.annote("LegalPositionRelator", {
     description: "One stored advantage-side legal relation from which every other view of it is derived.",
-  }),
-  LegalPositionRelatorEntity.entityExtras
+  })
 ) {}

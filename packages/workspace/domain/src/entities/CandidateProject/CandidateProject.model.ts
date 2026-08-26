@@ -12,7 +12,7 @@ import { CandidateLifecycle } from "@beep/workspace-domain/values";
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceDomainId.create("entities/CandidateProject/CandidateProject.model");
-const CandidateProjectEntity = ProductEntity.make(Workspace.CandidateProjectId);
+const pg = ProductEntity.pg;
 
 /**
  * Candidate project proposed by an agent.
@@ -28,21 +28,19 @@ const CandidateProjectEntity = ProductEntity.make(Workspace.CandidateProjectId);
  * @category models
  * @since 0.0.0
  */
-export class CandidateProject extends CandidateProjectEntity.Entity<CandidateProject>(CandidateProjectEntity.tableName)(
+export class CandidateProject extends ProductEntity.Entity<CandidateProject>()(Workspace.CandidateProjectId)(
   {
     fixtureKey: S.NonEmptyString.annotateKey({
       description: "Stable fixture key for the candidate project.",
-    }).pipe(CandidateProjectEntity.pg.text(), CandidateProjectEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     lifecycle: CandidateLifecycle.annotateKey({
       description: "Lifecycle state for the candidate project.",
-    }).pipe(CandidateProjectEntity.pg.text()),
+    }).pipe(pg.text()),
     snapshot: UnknownRecord.annotateKey({
       description: "Opaque runtime proof snapshot for the candidate project.",
-    }).pipe(CandidateProjectEntity.pg.jsonb()),
-    ...CandidateProjectEntity.identityFields,
+    }).pipe(pg.jsonb()),
   },
   $I.annote("CandidateProject", {
     description: "Candidate project proposed by an agent.",
-  }),
-  CandidateProjectEntity.entityExtras
+  })
 ) {}

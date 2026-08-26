@@ -86,7 +86,7 @@ const toolkit: SqliteToolkit = { ...Sqlite, default: Sqlite.default_, Table };
  */
 export interface SqliteKitConfig<Defaults extends FieldsInput> {
   readonly defaultColumns: Defaults & ValidateFields<Defaults>;
-  readonly defaultExtras?: Table.Callback<NoInfer<Defaults>> | undefined;
+  readonly defaultExtras?: Table.Callback<FieldsInput> | undefined;
 }
 
 type AnyFields = Readonly<Record<string, Field.Input>>;
@@ -185,7 +185,7 @@ export type SqliteEntityFactory<Defaults extends FieldsInput> = <
     ValidateDerivedSqlName<Identifier, "kit Entity identifier derives an invalid SQLite table name">
 ) => <const Own extends FieldsInput>(
   ownFields: Own & SqliteValidateCollision<Defaults, Own> & SqliteValidateMergedFields<Defaults, Own>,
-  annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>
+  annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, NoInfer<Own>>>
 ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, Merged<Defaults, Own>>;
 
 /**
@@ -207,7 +207,7 @@ export type SqliteEntityFactory<Defaults extends FieldsInput> = <
  */
 export interface SqliteKitExtension<Defaults extends FieldsInput, More extends FieldsInput> {
   readonly columns: More & SqliteValidateCollision<Defaults, More> & SqliteValidateMergedFields<Defaults, More>;
-  readonly extras?: Table.Callback<Merged<Defaults, NoInfer<More>>> | undefined;
+  readonly extras?: Table.Callback<FieldsInput> | undefined;
 }
 
 /**

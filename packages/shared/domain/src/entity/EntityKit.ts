@@ -262,7 +262,7 @@ export type TierEntityFactory<Defaults extends FieldsInput, WithPublicId extends
     Pg.ValidateCollision<Defaults & IdentityColumnsOf<Id, WithPublicId>, Own> &
     Pg.ValidateMergedFields<Defaults & IdentityColumnsOf<Id, WithPublicId>, Own>,
   annotations?: Annotations.Annotations,
-  extras?: Pg.Table.Callback<Defaults & IdentityColumnsOf<Id, WithPublicId> & Own>
+  extras?: Pg.Table.Callback<Defaults & IdentityColumnsOf<Id, WithPublicId> & NoInfer<Own>>
 ) => [Self] extends [never]
   ? MissingSelfGeneric
   : ModelClass<Self, Defaults & IdentityColumnsOf<Id, WithPublicId> & Own>;

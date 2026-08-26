@@ -87,7 +87,7 @@ const toolkit: PgToolkit = { ...Pg, default: Pg.default_, Table };
  */
 export interface PgKitConfig<Defaults extends FieldsInput> {
   readonly defaultColumns: Defaults & ValidateFields<Defaults>;
-  readonly defaultExtras?: Table.Callback<NoInfer<Defaults>> | undefined;
+  readonly defaultExtras?: Table.Callback<FieldsInput> | undefined;
 }
 
 type AnyFields = Readonly<Record<string, Field.Input>>;
@@ -197,8 +197,8 @@ export type EntityFactory<Defaults extends FieldsInput> = <Self = never, const I
     ValidateDerivedSqlName<Identifier, "kit Entity identifier derives an invalid PostgreSQL table name">
 ) => <const Own extends FieldsInput>(
   ownFields: Own & ValidateCollision<Defaults, Own> & ValidateMergedFields<Defaults, Own>,
-  annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
-  extras?: Table.Callback<Merged<Defaults, Own>>
+  annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, NoInfer<Own>>>,
+  extras?: Table.Callback<Merged<Defaults, NoInfer<Own>>>
 ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, Merged<Defaults, Own>>;
 
 /**
@@ -226,7 +226,7 @@ export type EntityFactory<Defaults extends FieldsInput> = <Self = never, const I
  */
 export interface PgKitExtension<Defaults extends FieldsInput, More extends FieldsInput> {
   readonly columns: More & ValidateCollision<Defaults, More> & ValidateMergedFields<Defaults, More>;
-  readonly extras?: Table.Callback<Merged<Defaults, NoInfer<More>>> | undefined;
+  readonly extras?: Table.Callback<FieldsInput> | undefined;
 }
 
 /**
