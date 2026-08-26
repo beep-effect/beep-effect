@@ -69,6 +69,15 @@ ratifies.
 
 ## Friction receipts
 
+- **2026-08-26 — PR B lock refresh still requires registry access despite an existing lock and install.**
+  `bun install --lockfile-only --ignore-scripts` first failed with `EROFS accessing temporary
+  directory`; explicit task-local `BUN_TMPDIR` and `BUN_INSTALL` paths under `/tmp` passed that
+  point, but the lock-only run then failed on `DNSResolveFailed downloading package manifest` for
+  already-installed catalog packages. The new workspace edges compile and all lab tests run from
+  the existing install, but Bun cannot regenerate the workspace lock stanza in this managed
+  sandbox. Prevention: make lock-only installs resolve catalog metadata from the existing lock and
+  cache, or provide managed sessions a writable populated Bun cache with registry access.
+
 - **2026-08-25 — C0 schema verification reproduced two managed-sandbox Bun failures.** `bun install`
   failed immediately with `EROFS accessing temporary directory`; setting `BUN_TMPDIR=/tmp` did
   not change the result, so the lockfile could not be refreshed. The exact app proof then reached

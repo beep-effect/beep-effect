@@ -30,6 +30,15 @@
   },
   "references": [
     {
+      "path": "../../../packages/drivers/anthropic/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/doc-text/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/xai/tsconfig.json"
+    },
+    {
       "path": "../../../packages/epistemic/domain/tsconfig.json"
     },
     {
