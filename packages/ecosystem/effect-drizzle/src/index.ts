@@ -63,9 +63,15 @@ export type {
   EntityFactory,
   PgKit,
   PgKitConfig,
+  PgKitExtension,
+  PgToolkit,
   SqliteEntityFactory,
   SqliteKit,
   SqliteKitConfig,
+  SqliteKitExtension,
+  SqliteToolkit,
+  ValidateCollision,
+  ValidateMergedFields,
 } from "./kit.ts";
 /** Shared model inference types exposed by the root entrypoint.
  * @category type-level

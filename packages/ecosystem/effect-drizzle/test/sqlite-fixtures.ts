@@ -49,18 +49,17 @@ const PlainString = String.annotate({
   identifier: "@beep/effect-drizzle/test/SqlitePlainString",
 });
 
-export const sqliteKit = make({
-  dialect: "sqlite",
-  defaultColumns: (sqlite) => ({
+export const sqliteKit = make("sqlite", (sqlite) => ({
+  defaultColumns: {
     createdAt: EffectModel.DateTimeInsert.pipe(sqlite.text()),
     updatedAt: EffectModel.DateTimeUpdate.pipe(sqlite.text()),
     rowVersion: Int.pipe(sqlite.integer(), sqlite.default(1), sqlite.version()),
-  }),
+  },
   defaultExtras: (columns) => [
     // SQLite has no `using` index surface; checks and partial indexes are direct extras.
     SqliteTable.check(sql<boolean>`${columns.rowVersion} > 0`, "sqlite_row_version_positive"),
   ],
-});
+}));
 
 const { Entity: SqliteEntity, Model: SqliteModel, sqlite } = sqliteKit;
 
@@ -113,14 +112,13 @@ export const sqliteNativeUserRepository = makeSqlRepository(SqliteUser, {
   idColumn: "id",
 });
 
-const pgSymmetryKit = make({
-  dialect: "pg",
-  defaultColumns: (pg) => ({
+const pgSymmetryKit = make("pg", (pg) => ({
+  defaultColumns: {
     createdAt: EffectModel.DateTimeInsert.pipe(pg.timestamp()),
     updatedAt: EffectModel.DateTimeUpdate.pipe(pg.timestamp()),
     rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
-  }),
-});
+  },
+}));
 const { pg } = pgSymmetryKit;
 
 export const _pgSpecInSqlite = () => {

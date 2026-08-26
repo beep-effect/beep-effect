@@ -31,11 +31,11 @@ import { snakeCase } from "../internal/case.ts";
 import { withStatics } from "../internal/statics.ts";
 import * as PgColumn from "./Column.ts";
 import * as Derive from "./derive.ts";
+import * as TableExtras from "./extras.ts";
 import type { Annotations, Struct as StructSchema, Top } from "effect/Schema";
 import type { AnyModel as CoreAnyModel } from "../core/model.ts";
 import type { ValidateDerivedSqlName, ValidateSqlName } from "../core/names.ts";
 import type { Variant } from "../core/variant.ts";
-import type * as TableExtras from "./extras.ts";
 
 // Re-export the owning shared variant helpers for the public model surface.
 /** Shared variant helpers exposed by the PostgreSQL model surface.
@@ -710,9 +710,40 @@ export function makeModelClass(
     });
   }
 
+  const harvested = Object.entries(state.columns).flatMap(
+    ([key, meta]): ReadonlyArray<readonly [string, Meta.IndexIntent, string]> => {
+      if (meta.indexed === false) return [];
+      const intent = meta.indexed;
+      const physical = getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key));
+      const name = getOrElse(
+        fromUndefinedOr(intent.name),
+        () => `${tableName}_${physical}_${intent.unique ? "unique_idx" : "btree_idx"}`
+      );
+      return [[key, intent, name]];
+    }
+  );
+  if (harvested.length > 0) {
+    assertUniqueSqlNames(
+      harvested.map(([key, , name]): readonly [string, string] => [key, name]),
+      "pg",
+      "PostgreSQL colocated index name"
+    );
+  }
+  const composedExtras: TableExtras.Callback<FieldsInput> | undefined =
+    harvested.length === 0
+      ? extras
+      : (columns) => [
+          ...harvested.map(([key, intent, name]) =>
+            intent.unique ? TableExtras.uniqueIndex(name, [columns[key]]) : TableExtras.index(name, [columns[key]])
+          ),
+          ...match(fromUndefinedOr(extras), {
+            onNone: () => [],
+            onSome: (callback) => callback(columns),
+          }),
+        ];
   const Base = V.Class<object>(identifier)(state.schemaFields, annotations);
   return withStatics(Base, () => ({
-    sql: { tableName, fields, columns: state.columns, extras },
+    sql: { tableName, fields, columns: state.columns, extras: composedExtras },
   }));
 }
 

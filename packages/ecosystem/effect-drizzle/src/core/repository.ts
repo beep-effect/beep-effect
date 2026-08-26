@@ -9,6 +9,7 @@
 
 import { findFirst, some as someArray } from "effect/Array";
 import { catchTag, fail as failEffect, gen, withSpan } from "effect/Effect";
+import { dual } from "effect/Function";
 import { getOrElse, isSome, map } from "effect/Option";
 import { isTagged } from "effect/Predicate";
 import { filter, get, isEmptyReadonlyRecord } from "effect/Record";
@@ -351,69 +352,86 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
  * @category factories
  * @since 0.0.0
  */
-export const makeRepository = <const M extends RepositoryModel, const Id extends IdKey<M>>(
-  model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
-  options: {
+export const makeRepository: {
+  <const M extends RepositoryModel, const Id extends IdKey<M>>(
+    model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
+    options: {
+      readonly spanPrefix: string;
+      readonly idColumn: Id;
+    }
+  ): Effect<Repository<M, Id>, never, SqlClient>;
+  <const M extends RepositoryModel, const Id extends IdKey<M>>(options: {
     readonly spanPrefix: string;
     readonly idColumn: Id;
-  }
-): Effect<Repository<M, Id>, never, SqlClient> => {
-  const idColumn: string = options.idColumn;
-  validateRepositoryModel(model, idColumn);
-  return gen(function* () {
-    const sql = yield* SqlClient;
-    const base = yield* makeSqlRepository<M, Id>(model, {
-      tableName: model.sql.tableName,
-      spanPrefix: options.spanPrefix,
-      idColumn: options.idColumn,
-    });
-    const versionColumn = findVersionColumn(model);
-    const updateSchema = findOne<M["update"], M, SqlError, never>({
-      Request: model.update,
-      Result: model,
-      execute: (request) => {
-        const record = requireRecord(request, model.sql.tableName);
-        const id = requireValue(record, idColumn, model.sql.tableName);
-        const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
-        const authorFields = filter(record, (_value, key) => key !== idColumn && key !== versionColumn);
-        const versionSet = sql`${sql(versionColumn)} = ${expectedVersion} + 1`;
-        const set = isEmptyReadonlyRecord(authorFields) ? versionSet : sql`${sql.update(authorFields)}, ${versionSet}`;
-        return sql`
+  }): (model: M & ValidateVersionModel<M> & ValidateColumnNames<M>) => Effect<Repository<M, Id>, never, SqlClient>;
+} = dual(
+  2,
+  <const M extends RepositoryModel, const Id extends IdKey<M>>(
+    model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
+    options: {
+      readonly spanPrefix: string;
+      readonly idColumn: Id;
+    }
+  ): Effect<Repository<M, Id>, never, SqlClient> => {
+    const idColumn: string = options.idColumn;
+    validateRepositoryModel(model, idColumn);
+    return gen(function* () {
+      const sql = yield* SqlClient;
+      const base = yield* makeSqlRepository<M, Id>(model, {
+        tableName: model.sql.tableName,
+        spanPrefix: options.spanPrefix,
+        idColumn: options.idColumn,
+      });
+      const versionColumn = findVersionColumn(model);
+      const updateSchema = findOne<M["update"], M, SqlError, never>({
+        Request: model.update,
+        Result: model,
+        execute: (request) => {
+          const record = requireRecord(request, model.sql.tableName);
+          const id = requireValue(record, idColumn, model.sql.tableName);
+          const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
+          const authorFields = filter(record, (_value, key) => key !== idColumn && key !== versionColumn);
+          const versionSet = sql`${sql(versionColumn)} = ${expectedVersion} + 1`;
+          const set = isEmptyReadonlyRecord(authorFields)
+            ? versionSet
+            : sql`${sql.update(authorFields)}, ${versionSet}`;
+          return sql`
           update ${sql(model.sql.tableName)}
           set ${set}
           where ${sql(idColumn)} = ${id}
             and ${sql(versionColumn)} = ${expectedVersion}
           returning *
         `;
-      },
-    });
-    const update = (request: M["update"]["Type"]) => {
-      const record = requireRecord(request, model.sql.tableName);
-      const id = requireValue(record, idColumn, model.sql.tableName);
-      const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
-      return updateSchema(request).pipe(
-        catchTag("NoSuchElementError", () =>
-          failEffect(
-            VersionConflictError.make({
-              table: model.sql.tableName,
-              id,
-              expectedVersion,
-            })
+        },
+      });
+      const update = (request: M["update"]["Type"]) => {
+        const record = requireRecord(request, model.sql.tableName);
+        const id = requireValue(record, idColumn, model.sql.tableName);
+        const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
+        return updateSchema(request).pipe(
+          catchTag("NoSuchElementError", () =>
+            failEffect(
+              VersionConflictError.make({
+                table: model.sql.tableName,
+                id,
+                expectedVersion,
+              })
+            )
+          ),
+          withSpan(
+            `${options.spanPrefix}.updateOptimistic`,
+            { attributes: { id, expectedVersion } },
+            { captureStackTrace: false }
           )
-        ),
-        withSpan(
-          `${options.spanPrefix}.updateOptimistic`,
-          { attributes: { id, expectedVersion } },
-          { captureStackTrace: false }
-        )
-      );
-    };
-    return {
-      insert: base.insert,
-      insertVoid: base.insertVoid,
-      findById: base.findById,
-      delete: base.delete,
-      update,
-    };
-  });
-};
+        );
+      };
+      return {
+        insert: base.insert,
+        insertVoid: base.insertVoid,
+        findById: base.findById,
+        delete: base.delete,
+        update,
+      };
+    });
+  }
+);

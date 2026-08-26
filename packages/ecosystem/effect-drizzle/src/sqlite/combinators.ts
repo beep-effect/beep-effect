@@ -447,6 +447,82 @@ export const unique =
   <I extends Field.Input>(input: I): Field.Patched<I, { readonly unique: true }> =>
     Field.patch(input, { unique: true });
 
+/**
+ * Colocate a single-column index with the field it indexes.
+ *
+ * **When to use**
+ *
+ * Use for single-column indexes so the intent lives on the column instead of
+ * a table-extras callback; keep the callback for multi-column indexes.
+ *
+ * **Details**
+ *
+ * Model construction harvests the intent into an ordinary index node named
+ * `{table}_{column}_btree_idx` (respecting `columnName` overrides), before any
+ * kit or model extras callback runs. Pass `name` to pin a legacy index name
+ * the derivation cannot reproduce.
+ *
+ * **Example** (Colocate an index on a column)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { index, text } from "@beep/effect-drizzle/sqlite"
+ *
+ * const field = String.pipe(text(), index())
+ * field.meta.indexed // => { name: undefined, unique: false }
+ * ```
+ *
+ * @see {@link uniqueIndex} for the unique-index form.
+ * @category combinators
+ * @since 0.0.0
+ */
+export const index =
+  (options?: { readonly name?: string }) =>
+  <I extends Field.Input>(
+    input: I
+  ): Field.Patched<I, { readonly indexed: { readonly name: string | undefined; readonly unique: false } }> => {
+    if (options?.name !== undefined) assertSqlName(options.name, "sqlite", "SQLite index name");
+    return Field.patch(input, { indexed: { name: options?.name, unique: false } });
+  };
+
+/**
+ * Colocate a single-column unique index with the field it constrains.
+ *
+ * **When to use**
+ *
+ * Use when DDL compatibility requires a named unique index rather than the
+ * inline `unique()` column constraint, and the index covers one column.
+ *
+ * **Details**
+ *
+ * Model construction harvests the intent into a unique-index node named
+ * `{table}_{column}_unique_idx` (respecting `columnName` overrides). Pass
+ * `name` to pin a legacy index name the derivation cannot reproduce.
+ *
+ * **Example** (Colocate a unique index on a column)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { text, uniqueIndex } from "@beep/effect-drizzle/sqlite"
+ *
+ * const field = String.pipe(text(), uniqueIndex())
+ * field.meta.indexed // => { name: undefined, unique: true }
+ * ```
+ *
+ * @see {@link index} for the non-unique form.
+ * @see {@link unique} for the inline unique column constraint.
+ * @category combinators
+ * @since 0.0.0
+ */
+export const uniqueIndex =
+  (options?: { readonly name?: string }) =>
+  <I extends Field.Input>(
+    input: I
+  ): Field.Patched<I, { readonly indexed: { readonly name: string | undefined; readonly unique: true } }> => {
+    if (options?.name !== undefined) assertSqlName(options.name, "sqlite", "SQLite index name");
+    return Field.patch(input, { indexed: { name: options?.name, unique: true } });
+  };
+
 type ValidateRowidKey<I extends Field.Input> =
   Field.MetaFrom<I>["column"] extends SqliteColumn.Integer<"number">
     ? unknown

@@ -53,18 +53,17 @@ const RecordSource = Literals(["web", "api"]).annotate({
   description: "Creation source stored in a field-derived PostgreSQL enum.",
 });
 
-const auditKit = make({
-  dialect: "pg",
-  defaultColumns: (pg) => ({
+const auditKit = make("pg", (pg) => ({
+  defaultColumns: {
     createdAt: EffectModel.DateTimeInsert.pipe(pg.timestamp()),
     updatedAt: EffectModel.DateTimeUpdate.pipe(pg.timestamp()),
     rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
-  }),
+  },
   defaultExtras: (columns) => {
     const name: string = `${getTableName(getColumnTable(columns.rowVersion))}_row_version_positive`;
     return [Table.check(sql<boolean>`${columns.rowVersion} > 0`, name)];
   },
-});
+}));
 
 export class AuditedRecord extends auditKit.Entity<AuditedRecord>("AuditedRecord")(
   {
