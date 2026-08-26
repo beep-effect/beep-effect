@@ -120,8 +120,10 @@ resolution in lab code).
    `Degraded`; either way `Ledger.appendDocument` records the document, its outcome, its canonical
    text and chunks (when parsed) and the `Ingested`/`Parsed`/`Chunked` events in one transaction.
 3. For each parsed document: `Extractor.Hosted` and `Extractor.Pattern` → two `ExtractOutcome`s,
-   each appended through `Ledger.appendBatch` with its `Extracted`/`Asserted` events (a degraded
-   outcome appends an `Extracted{ degraded }` event and no claims).
+   each appended through `Ledger.appendBatch` with its `Extracted`/`Asserted` events. A degraded
+   outcome persists as its own ledger row with no claims and NO fabricated `Extracted` event —
+   `EventBody.Extracted` requires a real batch id and model identity, and the schema is
+   authoritative (amended 2026-08-26 after PR C hit the conflict).
 4. `Evaluator.score` → `EvalReport` written to `<out>/eval-report.json` and `EvalRunTelemetry` to
    `<out>/eval-telemetry.json`; stdout prints `reportDigest`.
 5. `--offline`: identical flow over an empty replay ledger (`<ledgerRoot>/<runId>/replay`) with

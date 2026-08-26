@@ -7,11 +7,20 @@ import { GOLD_SUBSETS, proposeGold } from "@/canary/Gold";
 import { CorpusManifest, ManifestWriteFailed } from "@/corpus/Manifest";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 import { GOLD_PROMPT_ARTIFACT_HASH } from "@/gold/Prompts";
-import { XAiGoldModelIdentityLive, XAiGoldProviderLive } from "@/layers/LanguageModelLive";
+import { LanguageModelRuntimeLive, XAiGoldModelIdentityLive, XAiGoldProviderLive } from "@/layers/LanguageModelLive";
 import { LabConfig } from "@/runtime/Config";
-import { LanguageModelRuntimeLive } from "@/runtime/Layer";
 import { CanaryStage } from "@/schema/Eval";
+import { CanaryC0 } from "@/services/CanaryC0";
 import type * as O from "effect/Option";
+import type {
+  AnchorRejected,
+  C0ExecutionFailed,
+  DocumentUnavailable,
+  GoldUnavailable,
+  LedgerFailed,
+  ModelRevisionUnpinned,
+  ReportInvalid,
+} from "@/schema/Errors";
 import type { GoldFile } from "@/schema/Gold";
 
 export { CanaryStage } from "@/schema/Eval";
@@ -30,6 +39,7 @@ const $I = $SemanticaId.create("canary/Command");
  * const options = CanaryOptions.make({
  *   manifest: "fixtures/w1.manifest.json",
  *   offline: true,
+ *   out: O.none(),
  *   paper: O.some("paper-001")
  * })
  * console.log(options.offline) // true
@@ -42,6 +52,7 @@ export class CanaryOptions extends S.Class<CanaryOptions>($I`CanaryOptions`)(
   {
     manifest: S.NonEmptyString,
     offline: S.Boolean,
+    out: S.OptionFromNullOr(S.NonEmptyString),
     paper: S.OptionFromNullOr(S.NonEmptyString),
   },
   $I.annote("CanaryOptions", {
@@ -64,6 +75,7 @@ export class CanaryOptions extends S.Class<CanaryOptions>($I`CanaryOptions`)(
  *   options: CanaryOptions.make({
  *     manifest: "fixtures/w1.manifest.json",
  *     offline: true,
+ *     out: O.none(),
  *     paper: O.none()
  *   })
  * })
@@ -97,6 +109,10 @@ const paper = Flag.string("paper").pipe(
   Flag.optional,
   Flag.withDescription("Restrict the stage to one W1 paper id from the manifest.")
 );
+const outputDirectory = Flag.path("out").pipe(
+  Flag.optional,
+  Flag.withDescription("Output directory for eval-report.json and eval-telemetry.json.")
+);
 
 const stageDescriptions: Record<CanaryStage, string> = {
   c0: "C0 spine: parse, CanonicalText, chunk, extract, ledger, EvalReport over F1 + W1.",
@@ -104,7 +120,7 @@ const stageDescriptions: Record<CanaryStage, string> = {
   c2: "C2 reasoning: rho-df closure against the EYE oracle, crash injection, Tier-L bars.",
 };
 
-const CanaryFlags = { manifest: stageManifest, offline, paper };
+const CanaryFlags = { manifest: stageManifest, offline, out: outputDirectory, paper };
 
 const failStage = Effect.fn("SemanticaCanary.failStage")(function* (stage: CanaryStage, options: CanaryOptions) {
   return yield* StageNotImplemented.make({
@@ -114,8 +130,29 @@ const failStage = Effect.fn("SemanticaCanary.failStage")(function* (stage: Canar
   });
 });
 
+type CanaryStageFailure =
+  | AnchorRejected
+  | C0ExecutionFailed
+  | DocumentUnavailable
+  | GoldUnavailable
+  | LedgerFailed
+  | ModelRevisionUnpinned
+  | ReportInvalid
+  | StageNotImplemented;
+
+const runStage = (stage: CanaryStage, options: CanaryOptions): Effect.Effect<void, CanaryStageFailure, CanaryC0> =>
+  CanaryStage.$match(stage, {
+    c0: () =>
+      CanaryC0.pipe(
+        Effect.flatMap((service) => service.run(options)),
+        Effect.asVoid
+      ),
+    c1: () => failStage(stage, options),
+    c2: () => failStage(stage, options),
+  });
+
 const makeStageCommand = (stage: CanaryStage) =>
-  Command.make(stage, CanaryFlags, (options) => failStage(stage, CanaryOptions.make(options))).pipe(
+  Command.make(stage, CanaryFlags, (options) => runStage(stage, CanaryOptions.make(options))).pipe(
     Command.withDescription(stageDescriptions[stage])
   );
 
@@ -235,8 +272,8 @@ const GoldCommand = Command.make("gold").pipe(
  *
  * **Details**
  *
- * P1 exposes the final command shape while each stage fails with
- * {@link StageNotImplemented}. Stage services replace that failure in P2 and later.
+ * C0 runs the parse, extraction, ledger, and evaluation workflow. C1 and C2
+ * retain the typed {@link StageNotImplemented} boundary.
  *
  * **Example** (Create a programmatic runner)
  *

@@ -145,6 +145,27 @@ const ProvenanceEventFields = S.Struct({
   body: EventBody,
 });
 
+type ProvenanceEventIdSource = typeof ProvenanceEventPreimage.Type;
+
+/**
+ * Builds the content-addressed id for one timestamp-free provenance event.
+ *
+ * **Example** (Inspect the constructor)
+ *
+ * ```ts
+ * import { makeProvenanceEventId } from "@/schema/Provenance"
+ *
+ * console.log(typeof makeProvenanceEventId) // "function"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeProvenanceEventId = (
+  event: ProvenanceEventIdSource
+): Result.Result<ProvenanceEventId, S.SchemaError> =>
+  Result.map(contentDigestSync(ProvenanceEventPreimage)(event), ProvenanceEventId.make);
+
 const ProvenanceEventIdCheck = S.makeFilter(
   (event: typeof ProvenanceEventFields.Type) =>
     contentDigestSync(ProvenanceEventPreimage)({ prev: event.prev, body: event.body }).pipe(

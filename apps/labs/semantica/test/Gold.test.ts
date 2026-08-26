@@ -29,6 +29,7 @@ import { GoldFile, GoldRef } from "@/schema/Gold";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 import { ParseOutcome } from "@/schema/Text";
+import { CanaryC0 } from "@/services/CanaryC0";
 import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
 import { ProviderCache } from "@/services/ProviderCache";
@@ -43,14 +44,18 @@ const provideScopedLayer =
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
+const unusedCanaryC0 = CanaryC0.of({
+  run: Effect.fn("CanaryC0.unused")(() => Effect.die(new Error("C0 is not used by gold command tests."))),
+});
+
 const sourceText = "Café relates to Beta.";
 const sourceBytes = new TextEncoder().encode(sourceText);
 const sourceDigest = sha256TextSync(sourceText);
 const proposer = ModelIdentity.make({
   artifactHash: GOLD_PROMPT_ARTIFACT_HASH,
-  name: "stub-gold-2026-08-26",
+  name: "stub-gold-20260826",
   provider: "xai",
-  revision: "stub-gold-2026-08-26",
+  revision: "stub-gold-20260826",
   taskType: "gold-proposal",
 });
 
@@ -134,7 +139,10 @@ const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
     LabConfig,
     LabConfig.of({
       corpusRoot: O.none(),
-      goldModel: "stub-gold-2026-08-26",
+      extractorModel: "stub-extractor-20260826",
+      goldDirectory: "fixtures/gold/v1",
+      goldModel: "stub-gold-20260826",
+      ledgerRoot: ".beep/semantica/ledger",
       mode: "replay",
       offline: true,
       providerCacheDirectory: ".beep/semantica/provider-cache",
@@ -373,7 +381,10 @@ describe("C0 gold proposer", () => {
             version: "0.0.0",
           });
           const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
-            runCanary(["gold", "propose", "--offline", "--paper", paperId, "--subset", "entity"]).pipe(Effect.flip)
+            runCanary(["gold", "propose", "--offline", "--paper", paperId, "--subset", "entity"]).pipe(
+              Effect.provideService(CanaryC0, unusedCanaryC0),
+              Effect.flip
+            )
           );
 
           expect(error).toBeInstanceOf(GoldUnavailable);

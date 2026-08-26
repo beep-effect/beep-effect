@@ -129,6 +129,25 @@ const EvalRunFields = S.Struct({
 
 type EvalRunFields = typeof EvalRunFields.Type;
 
+type EvalRunIdSource = typeof EvalRunBody.Type;
+
+/**
+ * Builds the replay-stable id for an evaluation run body.
+ *
+ * **Example** (Inspect the constructor)
+ *
+ * ```ts
+ * import { makeRunId } from "@/schema/Eval"
+ *
+ * console.log(typeof makeRunId) // "function"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeRunId = (run: EvalRunIdSource): Result.Result<RunId, S.SchemaError> =>
+  Result.map(contentDigestSync(EvalRunBody)(run), RunId.make);
+
 const EvalRunChecks = S.makeFilterGroup([
   S.makeFilter((run: EvalRunFields) => !Str.Equivalence(run.gold.proposer.provider, run.extractor.provider), {
     identifier: $I`EvalRunIndependentProviders`,

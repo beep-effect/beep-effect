@@ -76,6 +76,22 @@ ratifies.
   though the lab exports documented services and layers. Prevention: expose a stable root
   dead-code check script and initialize docgen when a workspace first adds public source exports.
 
+- **2026-08-26 — The design's degraded-extraction event had no lawful schema body.** PR C hit a
+  direct conflict: `c0-design.md` §5 said a degraded extraction "appends an `Extracted{ degraded }`
+  event", but the binding `EventBody.Extracted` schema requires a batch id and model identity that
+  `ExtractOutcome.Degraded` does not carry. Disposition: the schema stayed authoritative — the
+  ledger persists the degraded outcome row without fabricating an empty batch or a new provenance
+  node; the design doc now records this. Prevention: when a design doc and a merged schema
+  disagree, the schema wins and the doc gets amended in the same PR, never the reverse.
+
+- **2026-08-26 — Bun-side validation still cannot complete in the Codex sandbox.** `bunx --bun
+  vitest run` idles at the startup banner until interrupted, and `bun install --frozen-lockfile
+  --offline` fails first on an unrelated `@pulumi/gharunners` postinstall and then on registry DNS
+  even with `--ignore-scripts`. Disposition: Node-vitest fallback for tests; the workspace importer
+  synchronized by hand from existing lock entries and re-verified by the orchestrator's `bun
+  install`. Prevention: a lockfile-validation mode that neither runs unrelated lifecycle scripts
+  nor contacts the registry.
+
 - **2026-08-26 — PR B lock refresh still requires registry access despite an existing lock and install.**
   `bun install --lockfile-only --ignore-scripts` first failed with `EROFS accessing temporary
   directory`; explicit task-local `BUN_TMPDIR` and `BUN_INSTALL` paths under `/tmp` passed that
