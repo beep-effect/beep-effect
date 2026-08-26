@@ -4111,7 +4111,7 @@ describe("quality task adapter", () => {
             flakeQuarantine: "ts2589-no-location",
           });
 
-          yield* runQualityTaskStreamingStepGroupForTesting("test:stream", [step]);
+          yield* withEnvVarEffect("CI", "false", runQualityTaskStreamingStepGroupForTesting("test:stream", [step]));
 
           const artifactText = yield* fs.readFileString(
             path.join(process.cwd(), FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH)
@@ -4168,7 +4168,11 @@ describe("quality task adapter", () => {
             flakeQuarantine: "ts2589-no-location",
           });
 
-          const exit = yield* Effect.exit(runQualityTaskStreamingStepGroupForTesting("test:stream", [step]));
+          const exit = yield* withEnvVarEffect(
+            "CI",
+            "false",
+            Effect.exit(runQualityTaskStreamingStepGroupForTesting("test:stream", [step]))
+          );
 
           expect(Exit.isFailure(exit)).toBe(true);
           expect(yield* fs.readFileString(statePath)).toBe("3");
