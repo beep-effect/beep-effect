@@ -12,8 +12,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
+import { decodePackageJsonEffect, findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
@@ -1279,27 +1280,61 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
     )
   );
   const orderedWorkspaces = A.sort(workspaces, byDoctestWorkspaceDirLengthDescending);
-  const deletedPackageDirs = pipe(changedPaths, A.filter(Str.endsWith("/package.json")), A.map(path.dirname));
-  const changedPackageNames = HashSet.fromIterable(
-    A.flatMap(changedPaths, (file) => {
-      const directOwner = A.findFirst(orderedWorkspaces, ([, packageDir]) => isDoctestPackageInput(packageDir, file));
-      const deletedPackageOwner = pipe(
-        orderedWorkspaces,
-        A.findFirst(([, packageDir]) => Str.startsWith(`${packageDir}/`)(file)),
-        O.filter(() =>
-          A.some(
-            deletedPackageDirs,
-            (deletedPackageDir) =>
-              file === `${deletedPackageDir}/package.json` || Str.startsWith(`${deletedPackageDir}/`)(file)
+  const changedManifestPaths = A.filter(changedPaths, Str.endsWith("/package.json"));
+  const deletedPackageDirs = A.map(changedManifestPaths, path.dirname);
+  const deletedManifestPaths = A.filter(
+    changedManifestPaths,
+    (manifestPath) => !A.contains(manifestPaths, manifestPath)
+  );
+  const deletedPackageNames = yield* Effect.forEach(deletedManifestPaths, (manifestPath) =>
+    runCaptured({
+      command: "git",
+      args: ["show", `${base}:${manifestPath}`],
+      cwd: repoRoot,
+      source: "stdout",
+    }).pipe(
+      CiCommandError.mapError(`Failed to read deleted Doctest workspace manifest ${manifestPath}.`),
+      Effect.flatMap((baseManifestResult) => {
+        if (baseManifestResult.exitCode !== 0) {
+          return Console.log(
+            `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (git show exited ${baseManifestResult.exitCode})`
+          ).pipe(Effect.as(O.none<string>()));
+        }
+        return Unknown.decodeUnknownEffectFromJsonString(baseManifestResult.output).pipe(
+          Effect.flatMap(decodePackageJsonEffect),
+          Effect.map((manifest) => O.some(manifest.name)),
+          Effect.catch(() =>
+            Console.log(
+              `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (base content did not decode)`
+            ).pipe(Effect.as(O.none<string>()))
           )
-        )
-      );
-      return pipe(
-        directOwner,
-        O.orElse(() => deletedPackageOwner),
-        O.match({ onNone: A.empty<string>, onSome: ([name]) => [name] })
-      );
-    })
+        );
+      })
+    )
+  ).pipe(Effect.map(A.getSomes));
+  const changedPackageNames = HashSet.fromIterable(
+    A.appendAll(
+      A.flatMap(changedPaths, (file) => {
+        const directOwner = A.findFirst(orderedWorkspaces, ([, packageDir]) => isDoctestPackageInput(packageDir, file));
+        const deletedPackageOwner = pipe(
+          orderedWorkspaces,
+          A.findFirst(([, packageDir]) => Str.startsWith(`${packageDir}/`)(file)),
+          O.filter(() =>
+            A.some(
+              deletedPackageDirs,
+              (deletedPackageDir) =>
+                file === `${deletedPackageDir}/package.json` || Str.startsWith(`${deletedPackageDir}/`)(file)
+            )
+          )
+        );
+        return pipe(
+          directOwner,
+          O.orElse(() => deletedPackageOwner),
+          O.match({ onNone: A.empty<string>, onSome: ([name]) => [name] })
+        );
+      }),
+      deletedPackageNames
+    )
   );
   const affectedPackageNames = expandDoctestDependents(changedPackageNames, workspaces);
   const affectedPackageDirs = pipe(

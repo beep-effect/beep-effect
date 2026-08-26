@@ -36,11 +36,38 @@ const commandHandle = (output = "", exitCode = 0) =>
     unref: Effect.succeed(Effect.void),
   });
 
+const gitStubResult = (
+  command: ChildProcess.StandardCommand,
+  changedFiles: ReadonlyArray<string>,
+  sources: ReadonlyArray<readonly [string, string]>,
+  gitShowResults: ReadonlyArray<readonly [string, string, number?]>,
+  lsFilesExitCode: number
+): readonly [output: string, exitCode: number] => {
+  if (command.command !== "git") return ["", 0] as const;
+  if (command.args[0] === "diff") return [A.join(changedFiles, "\n"), 0] as const;
+  const trackedListing = A.join(
+    A.map(sources, ([file]) => file),
+    "\n"
+  );
+  if (command.args[0] === "ls-files") return [trackedListing, lsFilesExitCode] as const;
+  if (command.args[0] === "show") {
+    return O.match(
+      A.findFirst(gitShowResults, ([revisionPath]) => command.args[1] === revisionPath),
+      {
+        onNone: () => ["", 0] as const,
+        onSome: ([, content, code]) => [content, code ?? 0] as const,
+      }
+    );
+  }
+  return [trackedListing, 0] as const;
+};
+
 const doctestCiLayer = (
   changedFiles: ReadonlyArray<string>,
   sources: ReadonlyArray<readonly [string, string]>,
   spawned: Array<string>,
-  lsFilesExitCode = 0
+  lsFilesExitCode = 0,
+  gitShowResults: ReadonlyArray<readonly [revisionPath: string, content: string, exitCode?: number]> = A.empty()
 ) => {
   const fileSystemLayer = FileSystem.layerNoop({
     exists: (file) =>
@@ -69,18 +96,8 @@ const doctestCiLayer = (
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("the CI lane test never spawns a piped command");
       }
-      const rendered = A.join([command.command, ...command.args], " ");
-      spawned.push(rendered);
-      const output =
-        command.command === "git"
-          ? command.args[0] === "diff"
-            ? A.join(changedFiles, "\n")
-            : A.join(
-                A.map(sources, ([file]) => file),
-                "\n"
-              )
-          : "";
-      const exitCode = command.command === "git" && command.args[0] === "ls-files" ? lsFilesExitCode : 0;
+      spawned.push(A.join([command.command, ...command.args], " "));
+      const [output, exitCode] = gitStubResult(command, changedFiles, sources, gitShowResults, lsFilesExitCode);
       return Effect.succeed(commandHandle(output, exitCode));
     })
   );
@@ -808,6 +825,67 @@ layer(
       );
       expect(lastOf(deletedNestedPackageDoctestCommands)).not.toContain("packages/c/src/marked.ts");
       expect(lastOf(deletedNestedPackageDoctestCommands)).not.toContain("packages/a/nested/");
+      expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
+        "[ci] doctest: skipped deleted workspace manifest packages/a/nested/package.json (base content did not decode)"
+      );
+    })
+  );
+});
+
+const deletedWorkspaceDoctestCommands = A.empty<string>();
+const survivingDeletedWorkspaceSources: ReadonlyArray<readonly [string, string]> = [
+  ["packages/b/package.json", '{"name":"@beep/b","dependencies":{"@beep/x":"workspace:*"}}'],
+  ["packages/b/src/marked.tsx", "const markedB = import.meta.vitest;"],
+  ["packages/c/package.json", '{"name":"@beep/c"}'],
+  ["packages/c/src/marked.ts", "const markedC = import.meta.vitest;"],
+];
+
+layer(
+  doctestCiLayer(
+    ["packages/x/package.json", "packages/x/src/helper.ts"],
+    survivingDeletedWorkspaceSources,
+    deletedWorkspaceDoctestCommands,
+    0,
+    [["origin/main:packages/x/package.json", '{"name":"@beep/x"}']]
+  )
+)("deleted workspace Doctest CI lane", (it) => {
+  it.effect("expands surviving dependents from the deleted workspace base manifest", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+      expect(deletedWorkspaceDoctestCommands).toHaveLength(4);
+      expect(deletedWorkspaceDoctestCommands[2]).toBe("git show origin/main:packages/x/package.json");
+      expect(lastOf(deletedWorkspaceDoctestCommands)).toContain(
+        "bunx vitest run --config vitest.docs.ts packages/b/src/marked.tsx"
+      );
+      expect(lastOf(deletedWorkspaceDoctestCommands)).not.toContain("packages/c/src/marked.ts");
+      expect(lastOf(deletedWorkspaceDoctestCommands)).not.toContain("packages/x/");
+    })
+  );
+});
+
+const unreadableDeletedWorkspaceDoctestCommands = A.empty<string>();
+
+layer(
+  doctestCiLayer(
+    ["packages/x/package.json", "packages/x/src/helper.ts", "packages/c/src/marked.ts"],
+    survivingDeletedWorkspaceSources,
+    unreadableDeletedWorkspaceDoctestCommands,
+    0,
+    [["origin/main:packages/x/package.json", "", 128]]
+  )
+)("unreadable deleted workspace Doctest CI lane", (it) => {
+  it.effect("continues direct attributable work when the deleted base manifest cannot be read", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+
+      expect(lastOf(unreadableDeletedWorkspaceDoctestCommands)).toContain(
+        "bunx vitest run --config vitest.docs.ts packages/c/src/marked.ts"
+      );
+      expect(lastOf(unreadableDeletedWorkspaceDoctestCommands)).not.toContain("packages/b/src/marked.tsx");
+      expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
+        "[ci] doctest: skipped deleted workspace manifest packages/x/package.json (git show exited 128)"
+      );
     })
   );
 });

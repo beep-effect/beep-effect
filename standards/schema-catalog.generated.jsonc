@@ -21,14 +21,6 @@
     },
     {
       "file": "apps/labs/semantica/src/canary/Command.ts",
-      "symbol": "CanaryStage",
-      "kind": "literal-kit",
-      "owner": "@beep/semantica",
-      "identity": "CanaryStage",
-      "description": "Headless Semantica canary stages available through the lab command."
-    },
-    {
-      "file": "apps/labs/semantica/src/canary/Command.ts",
       "symbol": "StageNotImplemented",
       "kind": "tagged-error",
       "owner": "@beep/semantica",
@@ -154,7 +146,7 @@
       "kind": "literal-kit",
       "owner": "@beep/semantica",
       "identity": "FixtureDegradedKind",
-      "description": "Invalid UTF-8, truncation, or malformed structure declared by a degraded F1 fixture."
+      "description": "Invalid UTF-8, truncation, or extraction failure declared by a degraded F1 fixture."
     },
     {
       "file": "apps/labs/semantica/src/fixtures/F1.ts",
@@ -165,12 +157,452 @@
       "description": "Expected successful parse or declared typed degradation for an F1 fixture."
     },
     {
-      "file": "apps/labs/semantica/src/fixtures/F1.ts",
-      "symbol": "FixtureMediaType",
+      "file": "apps/labs/semantica/src/schema/Degraded.ts",
+      "symbol": "DegradedKind",
       "kind": "literal-kit",
       "owner": "@beep/semantica",
-      "identity": "FixtureMediaType",
-      "description": "Markdown, HTML, and born-digital PDF media types exercised by F1."
+      "identity": "DegradedKind",
+      "description": "Exhaustive typed parse and extraction degradation kinds admitted by C0."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Document.ts",
+      "symbol": "FixtureDeclaration",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "FixtureDeclaration",
+      "description": "Fixture parse expectation and optional declared degradation copied into source provenance."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Document.ts",
+      "symbol": "Origin",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "Origin",
+      "description": "Tagged source origin for a W1 paper or synthetic F1 fixture."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Document.ts",
+      "symbol": "SourceDocument",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "SourceDocument",
+      "description": "Full byte identity, media type, origin, size, and ingest event for one source document."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "AnchorRejected",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "AnchorRejected"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "DocumentUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "DocumentUnavailable"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "GoldUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "GoldUnavailable"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "LedgerFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "LedgerFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "ParserFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ParserFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "ProviderCacheCorrupt",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ProviderCacheCorrupt"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "ProviderUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ProviderUnavailable"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "ReportInvalid",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ReportInvalid"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "CanaryStage",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "CanaryStage",
+      "description": "Headless Semantica canary stages available through the lab command."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "DocumentOutcome",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "DocumentOutcome",
+      "description": "Per-document accounting for parsing, both extraction lanes, claims, anchors, and provider cache keys."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "EvalReport",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvalReport",
+      "description": "Content-addressed evaluation report with exact stage metrics and derived degradation accounting."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "EvalRun",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvalRun",
+      "description": "Replay-stable evaluation inputs with independent gold and hosted-extraction provider families."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "EvalSelection",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvalSelection",
+      "description": "Unique W1 paper ids and non-empty F1 fixture ids selected for one evaluation run."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "MetricName",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "MetricName",
+      "description": "Structure span, entity span, REBEL-style triple, pairwise, and B-Cubed correctness metrics used by C0 (structure-span-f1 is lab-local; the rest are the #574 names the law table adopts)."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "MetricScore",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "MetricScore",
+      "description": "Unit-interval metric value with subset, lane, support count, and explicit support status."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "MetricStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "MetricStatus",
+      "description": "Computed score or explicit unsupported-capability status."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "MetricSubset",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "MetricSubset",
+      "description": "Structure, entity, relation, or all-document evaluation subset."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "RequiredMetric",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "RequiredMetric",
+      "description": "Required evaluation coordinate composed of metric name, gold subset, and extraction lane."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ClaimBody",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "ClaimBody",
+      "description": "Exhaustive anchored entity, relation, and structure evidence bodies."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ConflictBasis",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ConflictBasis",
+      "description": "Same-anchor label disagreement or same-endpoint predicate disagreement."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ConflictWitness",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ConflictWitness",
+      "description": "Content-addressed record that keeps two conflicting evidence claims as separate nodes."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "DegradedClaim",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "DegradedClaim",
+      "description": "Typed chunk-scoped extraction degradation that never silently becomes a claim."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "EvidenceBatch",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvidenceBatch",
+      "description": "Coherent extraction batch with unique claims and explicit unsupported-capability declarations."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "EvidenceClaim",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvidenceClaim",
+      "description": "Grounded claim with model, method, confidence, cache provenance, and verified anchor receipt."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ExtractOutcome",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "ExtractOutcome",
+      "description": "Extraction result preserving either a validated batch or a typed degraded state."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ExtractionLane",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ExtractionLane",
+      "description": "Hosted LangExtract and local Wink extraction lanes."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ExtractionMethod",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ExtractionMethod",
+      "description": "Pinned hosted LangExtract and local Wink extraction methods."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "LossDeclaration",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "LossDeclaration",
+      "description": "Relation or structure capability absent from an extraction lane by design."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "StructureRole",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "StructureRole",
+      "description": "Title, abstract, section, and reference roles in a paper's structure."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldEntityLabel",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldEntityLabel",
+      "description": "Entity surface label and type grounded to canonical paper text with a spot-check marker."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldRef",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldRef",
+      "description": "Content-addressed gold-v1 reference with spot-check coverage and an independent proposer model."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldRelationLabel",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldRelationLabel",
+      "description": "Relation predicate and endpoint surfaces grounded to canonical paper text with a spot-check marker."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldStructureLabel",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldStructureLabel",
+      "description": "Paper structural role and depth grounded to canonical text with a spot-check marker."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldSubset",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldSubset",
+      "description": "Unique, exact-sized gold paper ids satisfying relation proper-subset entity proper-subset structure."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "BatchId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "BatchId",
+      "description": "Full SHA-256 identity of one extraction batch."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "ChunkId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "ChunkId",
+      "description": "Full SHA-256 identity of one document-scoped canonical-text chunk."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "ClaimId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "ClaimId",
+      "description": "Full SHA-256 identity of one grounded evidence claim."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "DocumentId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "DocumentId",
+      "description": "Full SHA-256 identity of one source document's exact bytes."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "ProvenanceEventId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "ProvenanceEventId",
+      "description": "Full SHA-256 identity of one append-only provenance event."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "RunId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "RunId",
+      "description": "Full SHA-256 identity of one replay-stable evaluation run."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/MediaType.ts",
+      "symbol": "MediaType",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "MediaType",
+      "description": "Markdown, HTML, and born-digital PDF media types accepted by the C0 parser."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Model.ts",
+      "symbol": "ModelIdentity",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ModelIdentity",
+      "description": "Pinned provider family, model name, revision, prompt artifact hash, and task role."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Model.ts",
+      "symbol": "ProviderFamily",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ProviderFamily",
+      "description": "Anthropic and xAI hosted providers plus the local Wink pattern provider."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Model.ts",
+      "symbol": "TaskType",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "TaskType",
+      "description": "Extraction and gold-proposal roles that distinguish otherwise identical models."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Provenance.ts",
+      "symbol": "EventBody",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "EventBody",
+      "description": "Exhaustive timestamp-free C0 provenance event bodies."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Provenance.ts",
+      "symbol": "ProvenanceEvent",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ProvenanceEvent",
+      "description": "Replay-stable provenance event whose id hashes only its predecessor and typed body."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/ProviderCache.ts",
+      "symbol": "ProviderCacheEntry",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ProviderCacheEntry",
+      "description": "Write-once provider response whose key and exact text digest are both verified."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/ProviderCache.ts",
+      "symbol": "ProviderCacheKey",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ProviderCacheKey",
+      "description": "Versioned provider model, request kind, and exact input digest used as a cache key preimage."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/ProviderCache.ts",
+      "symbol": "RequestKind",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "RequestKind",
+      "description": "Provider request kinds supported by the C0 content-addressed cache."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Telemetry.ts",
+      "symbol": "EvalRunTelemetry",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvalRunTelemetry",
+      "description": "Live-or-replay timing and byte measurements kept outside every replay-stable digest preimage."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Text.ts",
+      "symbol": "Chunk",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "Chunk",
+      "description": "Document-scoped chunk whose exact text anchor has a persisted verification receipt."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Text.ts",
+      "symbol": "ChunkKind",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ChunkKind",
+      "description": "Heading, paragraph, and sentence units emitted by the C0 chunker."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Text.ts",
+      "symbol": "ParseOutcome",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "ParseOutcome",
+      "description": "Parser outcome preserving either raw text or a typed degraded state."
     },
     {
       "file": "apps/oip-web/src/app/api/contact/ContactRouteResponse.ts",
