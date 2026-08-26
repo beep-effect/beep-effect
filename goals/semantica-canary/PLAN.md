@@ -64,7 +64,9 @@ First vertical slice first
 C0 on F1 + one G-relation W1 paper, then the same over all three G-relation
 papers.
 
-1. Define the lab-local schemas before any service: `SourceDocument`,
+1. Design first: [`research/c0-design.md`](./research/c0-design.md) (D-C0-1..10,
+   schema table, contracts, Layers, proof plan, open items O-1..O-4).
+   Define the lab-local schemas before any service: `SourceDocument`,
    `Chunk`, `EvidenceBatch`/`EvidenceClaim`/`ConflictWitness`,
    `ProvenanceEvent`, `ModelIdentity`, the `ProviderCache` key, `EvalRun`
    (with the S2 refinement), `EvalReport` with its `reportDigest` (sha256 over
