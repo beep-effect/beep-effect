@@ -44,6 +44,7 @@ import {
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
+  GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneSpec,
   GithubCheckLaneWaveSpec,
@@ -77,6 +78,7 @@ import {
   reviewFixDocgenLocalArgsForTesting,
   rootLintPolicyStepsForTesting,
   rootQualityStepsForTesting,
+  runGithubChecks,
   runQualityTask,
   runQualityTaskStepGroupForTesting,
   runQualityTaskStreamingStepGroupForTesting,
@@ -111,13 +113,26 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Cause, ConfigProvider, Effect, Exit, FileSystem, Inspectable, Layer, Order, Path, pipe } from "effect";
+import {
+  Cause,
+  ConfigProvider,
+  Effect,
+  Exit,
+  FileSystem,
+  Inspectable,
+  Layer,
+  Order,
+  Path,
+  pipe,
+  Sink,
+  Stream,
+} from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
@@ -352,6 +367,46 @@ const githubCheckTestLane = (id: string, wave: GithubCheckLaneWave, source: stri
     step: bunScriptStep(id, source),
     wave,
   });
+
+const commandOutputEncoder = new TextEncoder();
+
+const qualityCommandHandle = (output: string, exitCode: number) =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.make(commandOutputEncoder.encode(output)),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: Stream.make(commandOutputEncoder.encode(output)),
+    unref: Effect.succeed(Effect.void),
+  });
+
+const cheapGatesSpawnerLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (ChildProcess.isStandardCommand(command)) {
+        const commandText = A.join([command.command, ...command.args], " ");
+        A.appendInPlace(spawned, commandText);
+        const output = A.contains(command.args, "--is-shallow-repository")
+          ? "false"
+          : A.contains(command.args, "--show-current")
+            ? "feature/cheap-gates"
+            : "";
+        const exitCode = A.contains(failedCommands, commandText) ? 1 : 0;
+        return Effect.succeed(qualityCommandHandle(output, exitCode));
+      }
+
+      return Effect.die("the cheap-gates test never spawns a piped command");
+    })
+  );
+
+const cheapGatesTestLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
+  Layer.mergeAll(FileSystemLayer, TestConsole.layer, cheapGatesSpawnerLayer(spawned, failedCommands));
 
 type FallowFeatureMatrixRowTuple = readonly [
   featureFamily: "audit" | "dead-code" | "health",
@@ -858,6 +913,67 @@ describe("quality task adapter", () => {
         provideScopedLayer(PlatformLayer)
       )
     ));
+
+  it("runs every cheap gate through the collected runner when all lanes pass", () => {
+    const spawned: Array<string> = [];
+    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+
+    return Effect.runPromise(
+      withEnvVarEffect("GITHUB_EVENT_NAME", "pull_request", runGithubChecks("cheap-gates")).pipe(
+        Effect.tap(() =>
+          Effect.gen(function* () {
+            const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+            expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
+            expect(logText).toContain('"failurePolicy":"collect-all"');
+            expect(logText).toContain('"status":"passed"');
+            expect(spawned).toHaveLength(A.length(cheapGateLanes) + 4);
+          })
+        ),
+        provideScopedLayer(cheapGatesTestLayer(spawned, A.empty()))
+      )
+    );
+  });
+
+  it("collects multiple failures through the cheap-gates runner without stopping later lanes", () => {
+    const spawned: Array<string> = [];
+    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+    const failedCommands = [
+      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "cheap-gates:config-sync")], " "),
+      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "cheap-gates:effect-imports")], " "),
+    ];
+    const lastLane = O.getOrThrow(A.last(cheapGateLanes));
+    const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
+
+    return Effect.runPromise(
+      withEnvVarEffect(
+        "GITHUB_EVENT_NAME",
+        "pull_request",
+        Effect.gen(function* () {
+          const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
+
+          expect(Exit.isFailure(exit)).toBe(true);
+          if (Exit.isFailure(exit)) {
+            const failure = Cause.squash(exit.cause);
+            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+            if (isQualityTaskGroupFailed(failure)) {
+              expect(A.map(failure.failures, (step) => step.label)).toEqual([
+                "cheap-gates:config-sync",
+                "cheap-gates:effect-imports",
+              ]);
+            }
+          }
+
+          expect(spawned).toContain(lastCommand);
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
+          expect(logText).toContain('"failurePolicy":"collect-all"');
+          expect(logText).toContain('"id":"cheap-gates:config-sync","stage":"repo-sanity","status":"failed"');
+          expect(logText).toContain('"id":"cheap-gates:effect-imports","stage":"repo-quality","status":"failed"');
+          expect(logText).toContain('"status":"passed"');
+        })
+      ).pipe(provideScopedLayer(cheapGatesTestLayer(spawned, failedCommands)))
+    );
+  });
 
   it("accepts the current packet state with audit and dead-code as promoted pre-push lanes", () => {
     const matrix = fallowFeatureMatrix([

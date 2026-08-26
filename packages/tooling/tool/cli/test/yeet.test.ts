@@ -6,6 +6,7 @@ import {
   GITHUB_CHECK_RUN_REPORT_PREFIX,
 } from "@beep/repo-cli/test/Quality";
 import {
+  acquireFullProofLock,
   appendYeetAttemptJournalEvent,
   assessBaseFreshnessForTesting,
   attemptJournalPath,
@@ -46,6 +47,7 @@ import {
   prePushShaMismatchesForTesting,
   proofCoordinatorLockPath,
   proofLockDispositionForTesting,
+  proofLockPathForContext,
   publishPathsOutsideIntentForTesting,
   publishRestagePathsForTesting,
   publishUpstreamMismatchWarningForTesting,
@@ -54,6 +56,7 @@ import {
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
+  releaseProofLock,
   renderPackageQualityPacketMarkdown,
   renderYeetMonitorComment,
   renderYeetStatusSummary,
@@ -184,6 +187,28 @@ const withTrackedFileRepo = <Result, Error, Requirements>(
       const repo = yield* initTrackedFileRepo(tmpDir);
       return yield* use({ ...repo, tmpDir });
     })
+  );
+
+type TempProofCoordinatorRepo = TempTrackedFileRepo & {
+  readonly lockPath: string;
+};
+
+const withProofCoordinatorRepo = <Result, Error, Requirements>(
+  use: (repo: TempProofCoordinatorRepo) => Effect.Effect<Result, Error, Requirements>
+) =>
+  withTrackedFileRepo((repo) =>
+    Effect.acquireUseRelease(
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const repositoryIdentity = `https://example.test/${path.basename(repo.tmpDir)}.git`;
+        yield* runGit(repo.tmpDir, ["remote", "add", "origin", repositoryIdentity]);
+        const lockPath = yield* proofLockPathForContext(repo.tempContext);
+        yield* releaseProofLock(lockPath);
+        return { ...repo, lockPath } as const;
+      }),
+      use,
+      ({ lockPath }) => releaseProofLock(lockPath)
+    )
   );
 
 const turboTask = (
@@ -2557,6 +2582,94 @@ describe("yeet publish scope helpers", () => {
         expect(first).not.toContain("github.com");
         expect(first).toMatch(/beep-yeet-proof-locks\/[a-f0-9]{12}\.lock$/u);
       }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("acquires an absent proof coordinator and releases present and missing locks", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+
+          expect(yield* fs.exists(lockPath)).toBe(false);
+          expect(yield* acquireFullProofLock(tempContext, [prePushStep])).toBe(lockPath);
+          expect(yield* fs.exists(lockPath)).toBe(true);
+
+          yield* releaseProofLock(lockPath);
+          expect(yield* fs.exists(lockPath)).toBe(false);
+          yield* releaseProofLock(lockPath);
+          expect(yield* fs.exists(lockPath)).toBe(false);
+        })
+      )
+    ));
+
+  it("refuses an active proof coordinator and preserves its owner metadata", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const activeText = yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v2",
+              branch: "feature/active-owner",
+              checkoutRoot: "/repo/active-owner",
+              command: "bun run beep yeet verify",
+              pid: process.pid,
+              proofTier: "full",
+              startedAt: "2026-08-26T00:00:00.000Z",
+            })
+          );
+          yield* fs.writeFileString(lockPath, `${activeText}\n`);
+
+          const refusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+
+          expect(refusal.message).toContain("Another Yeet full proof for this repository is active.");
+          expect(refusal.message).toContain("Owner checkout /repo/active-owner on feature/active-owner");
+          expect(yield* fs.readFileString(lockPath)).toBe(`${activeText}\n`);
+        })
+      )
+    ));
+
+  it("replaces a stale proof coordinator and records the new owner", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v2",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          );
+          yield* fs.writeFileString(lockPath, `${staleText}\n`);
+
+          expect(yield* acquireFullProofLock(tempContext, [prePushStep])).toBe(lockPath);
+          const replacementText = yield* fs.readFileString(lockPath);
+          expect(replacementText).not.toBe(`${staleText}\n`);
+          expect(replacementText).toContain(`"pid":${process.pid}`);
+          expect(replacementText).toContain(`"branch":"${tempContext.branch}"`);
+        })
+      )
+    ));
+
+  it("refuses a corrupt proof coordinator without deleting it", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.writeFileString(lockPath, "not-json\n");
+
+          const refusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+
+          expect(refusal.message).toContain("Another Yeet full proof for this repository is active.");
+          expect(refusal.message).not.toContain("Owner checkout");
+          expect(yield* fs.readFileString(lockPath)).toBe("not-json\n");
+        })
+      )
     ));
 
   it("plans closeout write actions only for known thread ids with a paired body", () => {
