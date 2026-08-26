@@ -26,11 +26,12 @@ const $I = $SemanticaId.create("services/DocumentSource");
 export class DocumentSelection extends S.Class<DocumentSelection>($I`DocumentSelection`)(
   {
     fixtures: F1Index,
+    includeW1: S.Boolean,
     manifest: CorpusManifest,
     paper: S.OptionFromNullOr(CorpusPaperId),
   },
   $I.annote("DocumentSelection", {
-    description: "Verified W1 manifest, F1 index, and optional W1 paper selection.",
+    description: "Verified manifest, F1 index, W1 inclusion, and optional W1 paper selection.",
   })
 ) {}
 

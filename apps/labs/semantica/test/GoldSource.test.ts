@@ -92,21 +92,47 @@ describe("C0 gold source", () => {
     );
   });
 
-  it("loads selected files after verifying the complete gold reference", () =>
+  it("loads selected files and omits unreferenced subsets after verifying the complete gold reference", () =>
     Effect.runPromise(
       provideScopedLayer(BunServices.layer)(
         Effect.scoped(
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-source-" });
-            yield* writeGoldFixture(directory);
+            const files = yield* writeGoldFixture(directory);
+            const paperIds = [A.getUnsafe(goldPapers, 0), A.getUnsafe(goldPapers, 9)];
 
             const loaded = yield* GoldSource.pipe(
-              Effect.flatMap((source) => source.load([A.getUnsafe(goldPapers, 0)])),
+              Effect.flatMap((source) => source.load(paperIds)),
               provideScopedLayer(GoldSourceLive(directory))
             );
 
-            expect(loaded).toHaveLength(3);
+            expect(loaded).toEqual(A.filter(files, (file) => A.contains(paperIds, file.paperId)));
+          })
+        )
+      )
+    ));
+
+  it("returns GoldUnavailable for a malformed covered file", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-malformed-" });
+            yield* writeGoldFixture(directory);
+            const paperId = A.getUnsafe(goldPapers, 0);
+            yield* fs.writeFileString(path.join(directory, `${paperId}.entity.json`), "not-json");
+
+            const error = yield* GoldSource.pipe(
+              Effect.flatMap((source) => source.load([paperId])),
+              provideScopedLayer(GoldSourceLive(directory)),
+              Effect.flip
+            );
+
+            expect(error).toBeInstanceOf(GoldUnavailable);
+            expect(error.reason).toBe("read-failed");
           })
         )
       )

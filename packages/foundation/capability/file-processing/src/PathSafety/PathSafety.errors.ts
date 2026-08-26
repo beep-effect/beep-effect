@@ -47,11 +47,11 @@ export const PathSafetyViolationReason = LiteralKit([
  *
  * **Example** (Check escapes-root reason type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check escapes-root reason type"
  * import { PathSafetyViolationReason } from "@beep/file-processing/PathSafety"
  *
  * const reason: PathSafetyViolationReason = "escapes-root"
- * console.log(PathSafetyViolationReason.is["escapes-root"](reason)) // true
+ * PathSafetyViolationReason.is["escapes-root"](reason) // => true
  * ```
  *
  * @category errors
@@ -69,7 +69,7 @@ export type PathSafetyViolationReason = typeof PathSafetyViolationReason.Type;
  *
  * **Example** (Create escapesRoot error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create escapesRoot error"
  * import { PathSafetyError } from "@beep/file-processing/PathSafety"
  *
  * const error = PathSafetyError.escapesRoot({
@@ -77,7 +77,7 @@ export type PathSafetyViolationReason = typeof PathSafetyViolationReason.Type;
  *   candidate: "../etc/passwd",
  *   resolved: "/etc/passwd"
  * })
- * console.log(error.reason) // "escapes-root"
+ * error.reason // => "escapes-root"
  * ```
  *
  * @category errors

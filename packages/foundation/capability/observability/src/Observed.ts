@@ -8,14 +8,14 @@
  *
  * **Example** (Decode ObservedCause from fail)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode ObservedCause from fail"
  * import { Cause } from "effect"
  * import * as S from "effect/Schema"
  * import { ObservedCause } from "@beep/observability"
  *
  * const decodeCause = S.decodeUnknownSync(ObservedCause)
  * const observed = decodeCause(Cause.fail(new Error("boom")))
- * console.log(Cause.pretty(observed).includes("boom")) // true
+ * Cause.pretty(observed).includes("boom") // => true
  * ```
  *
  * @packageDocumentation
@@ -32,13 +32,13 @@ const $I = $ObservabilityId.create("Observed");
  *
  * **Example** (Decode message-only error)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode message-only error"
  * import * as S from "effect/Schema"
  * import { ObservedError } from "@beep/observability"
  *
  * const decode = S.decodeUnknownSync(ObservedError)
- * const err = decode({ message: "boom" })
- * console.log(err.message) // "boom"
+ * const err = decode(new Error("boom"))
+ * err.message // => "boom"
  * ```
  *
  * @category models
@@ -72,13 +72,13 @@ export type ObservedError = typeof ObservedError.Type;
  *
  * **Example** (Decode error preserving stack)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode error preserving stack"
  * import * as S from "effect/Schema"
  * import { ObservedErrorWithStack } from "@beep/observability"
  *
  * const decode = S.decodeUnknownSync(ObservedErrorWithStack)
  * const err = decode(new Error("boom"))
- * console.log(err.message) // "boom"
+ * err.message // => "boom"
  * ```
  *
  * @category models
@@ -192,7 +192,7 @@ export type ObservedDefectWithStack = typeof ObservedDefectWithStack.Type;
  *
  * **Example** (Decode Cause failure reasons)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode Cause failure reasons"
  * import { Cause } from "effect"
  * import * as A from "effect/Array"
  * import * as S from "effect/Schema"
@@ -200,7 +200,7 @@ export type ObservedDefectWithStack = typeof ObservedDefectWithStack.Type;
  *
  * const decodeReason = S.decodeUnknownSync(ObservedCauseReason)
  * const decoded = A.map(Cause.fail(new Error("boom")).reasons, (reason) => decodeReason(reason))
- * console.log(decoded.length) // 1
+ * decoded.length // => 1
  * ```
  *
  * @category models
@@ -234,13 +234,13 @@ export type ObservedCauseReason = typeof ObservedCauseReason.Type;
  *
  * **Example** (Decode full Effect cause)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode full Effect cause"
  * import { Cause } from "effect"
  * import * as S from "effect/Schema"
  * import { ObservedCause } from "@beep/observability"
  *
  * const observed = S.decodeUnknownSync(ObservedCause)(Cause.fail(new Error("boom")))
- * console.log(Cause.pretty(observed).includes("boom")) // true
+ * Cause.pretty(observed).includes("boom") // => true
  * ```
  *
  * @category models
@@ -275,13 +275,13 @@ export type ObservedCause = typeof ObservedCause.Type;
  *
  * **Example** (Decode failed Exit value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode failed Exit value"
  * import { Exit } from "effect"
  * import * as S from "effect/Schema"
  * import { ObservedExit } from "@beep/observability"
  *
  * const observed = S.decodeUnknownSync(ObservedExit)(Exit.fail(new Error("boom")))
- * console.log(observed._tag) // "Failure"
+ * observed._tag // => "Failure"
  * ```
  *
  * @category models

@@ -279,7 +279,7 @@ const annotateHttpApiOutcome = Effect.fn("annotateHttpApiOutcome")(function* (
  *
  * **Example** (Descriptor from HttpApi metadata)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Descriptor from HttpApi metadata"
  * import * as S from "effect/Schema"
  * import { makeHttpApiTelemetryDescriptor } from "@beep/observability/server"
  * import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
@@ -289,7 +289,7 @@ const annotateHttpApiOutcome = Effect.fn("annotateHttpApiOutcome")(function* (
  *   success: S.Struct({ id: S.String }).pipe(HttpApiSchema.status(201))
  * })
  * const descriptor = makeHttpApiTelemetryDescriptor("TodoApi", group, endpoint)
- * console.log(descriptor.successStatus) // 201
+ * descriptor.successStatus // => 201
  * ```
  *
  * @category observability
@@ -603,7 +603,7 @@ export const layerHttpApiTelemetryMiddleware = (
  *
  * **Example** (Observe handler with annotations)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Observe handler with annotations"
  * import { Effect } from "effect"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -625,7 +625,7 @@ export const layerHttpApiTelemetryMiddleware = (
  * const metrics = makeHttpApiMetrics("todox_api")
  * const handler = Effect.succeed({ status: 200 })
  * const observed = observeHttpApiHandler(handler, { descriptor, metrics })
- * console.log(Effect.runSync(observed).status) // 200
+ * Effect.runSync(observed).status // => 200
  * ```
  *
  * @category observability

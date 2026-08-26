@@ -13,10 +13,10 @@ import { NonNegativeInt } from "@beep/schema/Int";
  *
  * **Example** (Log the default threshold)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the default threshold"
  * import { DEFAULT_FUZZY_THRESHOLD } from "@beep/langextract/Alignment"
  *
- * console.log(DEFAULT_FUZZY_THRESHOLD) // 0.82
+ * DEFAULT_FUZZY_THRESHOLD // => 0.82
  * ```
  *
  * @category constants
@@ -37,10 +37,10 @@ export const DEFAULT_FUZZY_THRESHOLD = UnitInterval.make(0.82);
  *
  * **Example** (Log the fuzzy source bound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the fuzzy source bound"
  * import { MAX_FUZZY_SOURCE_LENGTH } from "@beep/langextract/Alignment"
  *
- * console.log(MAX_FUZZY_SOURCE_LENGTH) // 100000
+ * MAX_FUZZY_SOURCE_LENGTH // => 100000
  * ```
  *
  * @category constants
@@ -58,10 +58,10 @@ export const MAX_FUZZY_SOURCE_LENGTH = 100_000;
  *
  * **Example** (Log the fuzzy query bound)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the fuzzy query bound"
  * import { MAX_FUZZY_QUERY_LENGTH } from "@beep/langextract/Alignment"
  *
- * console.log(MAX_FUZZY_QUERY_LENGTH) // 4096
+ * MAX_FUZZY_QUERY_LENGTH // => 4096
  * ```
  *
  * @category constants
@@ -80,10 +80,10 @@ export const MAX_FUZZY_QUERY_LENGTH = 4_096;
  *
  * **Example** (Log the default extraction cap)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log the default extraction cap"
  * import { DEFAULT_MAX_EXTRACTIONS } from "@beep/langextract/Alignment"
  *
- * console.log(DEFAULT_MAX_EXTRACTIONS) // 256
+ * DEFAULT_MAX_EXTRACTIONS // => 256
  * ```
  *
  * @category constants

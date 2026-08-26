@@ -18,10 +18,10 @@ const $I = $FileProcessingId.create("Strategy");
  *
  * **Example** (Check process option included)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check process option included"
  * import { FileProcessingOperationKind } from "@beep/file-processing/Strategy"
  *
- * console.log(FileProcessingOperationKind.Options.includes("process")) // true
+ * FileProcessingOperationKind.Options.includes("process") // => true
  * ```
  *
  * @category schemas
@@ -38,11 +38,11 @@ export const FileProcessingOperationKind = LiteralKit(["detect", "extract", "exp
  *
  * **Example** (Type process kind guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type process kind guard"
  * import { FileProcessingOperationKind } from "@beep/file-processing/Strategy"
  *
  * const kind: FileProcessingOperationKind = "process"
- * console.log(FileProcessingOperationKind.is.process(kind)) // true
+ * FileProcessingOperationKind.is.process(kind) // => true
  * ```
  *
  * @category models
@@ -55,10 +55,10 @@ export type FileProcessingOperationKind = typeof FileProcessingOperationKind.Typ
  *
  * **Example** (Check tika option included)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check tika option included"
  * import { FileProcessingEngineFamily } from "@beep/file-processing/Strategy"
  *
- * console.log(FileProcessingEngineFamily.Options.includes("tika")) // true
+ * FileProcessingEngineFamily.Options.includes("tika") // => true
  * ```
  *
  * @category schemas
@@ -75,11 +75,11 @@ export const FileProcessingEngineFamily = LiteralKit(["auto", "tika", "libpff", 
  *
  * **Example** (Type tika engine guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type tika engine guard"
  * import { FileProcessingEngineFamily } from "@beep/file-processing/Strategy"
  *
  * const engine: FileProcessingEngineFamily = "tika"
- * console.log(FileProcessingEngineFamily.is.tika(engine)) // true
+ * FileProcessingEngineFamily.is.tika(engine) // => true
  * ```
  *
  * @category models
@@ -92,10 +92,10 @@ export type FileProcessingEngineFamily = typeof FileProcessingEngineFamily.Type;
  *
  * **Example** (Check pdf-text-layer option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check pdf-text-layer option"
  * import { FileFormatFamily } from "@beep/file-processing/Strategy"
  *
- * console.log(FileFormatFamily.Options.includes("pdf-text-layer")) // true
+ * FileFormatFamily.Options.includes("pdf-text-layer") // => true
  * ```
  *
  * @category schemas
@@ -147,11 +147,11 @@ export const FileFormatFamily = LiteralKit([
  *
  * **Example** (Type format family guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type format family guard"
  * import { FileFormatFamily } from "@beep/file-processing/Strategy"
  *
  * const format: FileFormatFamily = "pdf-text-layer"
- * console.log(FileFormatFamily.is["pdf-text-layer"](format)) // true
+ * FileFormatFamily.is["pdf-text-layer"](format) // => true
  * ```
  *
  * @category models
@@ -164,10 +164,10 @@ export type FileFormatFamily = typeof FileFormatFamily.Type;
  *
  * **Example** (Check export-children option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check export-children option"
  * import { FileProcessingCapability } from "@beep/file-processing/Strategy"
  *
- * console.log(FileProcessingCapability.Options.includes("export-children")) // true
+ * FileProcessingCapability.Options.includes("export-children") // => true
  * ```
  *
  * @category schemas
@@ -189,11 +189,11 @@ export const FileProcessingCapability = LiteralKit([
  *
  * **Example** (Type capability guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type capability guard"
  * import { FileProcessingCapability } from "@beep/file-processing/Strategy"
  *
  * const capability: FileProcessingCapability = "export-children"
- * console.log(FileProcessingCapability.is["export-children"](capability)) // true
+ * FileProcessingCapability.is["export-children"](capability) // => true
  * ```
  *
  * @category models
@@ -206,10 +206,10 @@ export type FileProcessingCapability = typeof FileProcessingCapability.Type;
  *
  * **Example** (Check deferred disposition option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check deferred disposition option"
  * import { FileProcessingSupportDisposition } from "@beep/file-processing/Strategy"
  *
- * console.log(FileProcessingSupportDisposition.Options.includes("deferred")) // true
+ * FileProcessingSupportDisposition.Options.includes("deferred") // => true
  * ```
  *
  * @category schemas
@@ -226,11 +226,11 @@ export const FileProcessingSupportDisposition = LiteralKit(["supported", "deferr
  *
  * **Example** (Type deferred disposition guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type deferred disposition guard"
  * import { FileProcessingSupportDisposition } from "@beep/file-processing/Strategy"
  *
  * const disposition: FileProcessingSupportDisposition = "deferred"
- * console.log(FileProcessingSupportDisposition.is.deferred(disposition)) // true
+ * FileProcessingSupportDisposition.is.deferred(disposition) // => true
  * ```
  *
  * @category models
@@ -243,10 +243,10 @@ export type FileProcessingSupportDisposition = typeof FileProcessingSupportDispo
  *
  * **Example** (Check skip reason option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check skip reason option"
  * import { FileProcessingSkipReason } from "@beep/file-processing/Strategy"
  *
- * console.log(FileProcessingSkipReason.Options.includes("operation-not-required")) // true
+ * FileProcessingSkipReason.Options.includes("operation-not-required") // => true
  * ```
  *
  * @category schemas
@@ -272,11 +272,11 @@ export const FileProcessingSkipReason = LiteralKit([
  *
  * **Example** (Type skip reason guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type skip reason guard"
  * import { FileProcessingSkipReason } from "@beep/file-processing/Strategy"
  *
  * const reason: FileProcessingSkipReason = "operation-not-required"
- * console.log(FileProcessingSkipReason.is["operation-not-required"](reason)) // true
+ * FileProcessingSkipReason.is["operation-not-required"](reason) // => true
  * ```
  *
  * @category models
@@ -313,7 +313,7 @@ export class StrategyPreference extends S.Class<StrategyPreference>($I`StrategyP
  *
  * **Example** (Make supported selected strategy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make supported selected strategy"
  * import { SupportedSelectedStrategy } from "@beep/file-processing/Strategy"
  *
  * const strategy = SupportedSelectedStrategy.make({
@@ -323,7 +323,7 @@ export class StrategyPreference extends S.Class<StrategyPreference>($I`StrategyP
  *   operationKind: "extract"
  * })
  *
- * console.log(strategy.disposition) // "supported"
+ * strategy.disposition // => "supported"
  * ```
  *
  * @category models
@@ -346,7 +346,7 @@ export class SupportedSelectedStrategy extends S.Class<SupportedSelectedStrategy
  *
  * **Example** (Make deferred selected strategy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make deferred selected strategy"
  * import { DeferredSelectedStrategy } from "@beep/file-processing/Strategy"
  *
  * const strategy = DeferredSelectedStrategy.make({
@@ -357,7 +357,7 @@ export class SupportedSelectedStrategy extends S.Class<SupportedSelectedStrategy
  *   skipReason: "engine-unavailable"
  * })
  *
- * console.log(strategy.skipReason) // "engine-unavailable"
+ * strategy.skipReason // => "engine-unavailable"
  * ```
  *
  * @category models
@@ -381,7 +381,7 @@ export class DeferredSelectedStrategy extends S.Class<DeferredSelectedStrategy>(
  *
  * **Example** (Make unsupported selected strategy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make unsupported selected strategy"
  * import { UnsupportedSelectedStrategy } from "@beep/file-processing/Strategy"
  *
  * const strategy = UnsupportedSelectedStrategy.make({
@@ -392,7 +392,7 @@ export class DeferredSelectedStrategy extends S.Class<DeferredSelectedStrategy>(
  *   skipReason: "format-out-of-scope"
  * })
  *
- * console.log(strategy.format) // "xls"
+ * strategy.format // => "xls"
  * ```
  *
  * @category models
@@ -452,7 +452,7 @@ export const SelectedStrategy = S.Union([
  *
  * **Example** (Typed decode selected strategy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed decode selected strategy"
  * import { SelectedStrategy } from "@beep/file-processing/Strategy"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -468,7 +468,7 @@ export const SelectedStrategy = S.Union([
  *   return strategy.disposition
  * })
  *
- * Effect.runPromise(program).then(console.log) // "deferred"
+ * await Effect.runPromise(program) // => "deferred"
  * ```
  *
  * @category models
@@ -481,7 +481,7 @@ export type SelectedStrategy = typeof SelectedStrategy.Type;
  *
  * **Example** (Make engine descriptor)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make engine descriptor"
  * import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy"
  *
  * const descriptor = FileProcessingEngineDescriptor.make({
@@ -492,7 +492,7 @@ export type SelectedStrategy = typeof SelectedStrategy.Type;
  *   version: "2.9.0"
  * })
  *
- * console.log(descriptor.supportedFormats.includes("docx")) // true
+ * descriptor.supportedFormats.includes("docx") // => true
  * ```
  *
  * @category models
@@ -536,11 +536,11 @@ export class FileProcessingEngineDescriptor extends S.Class<FileProcessingEngine
  *
  * **Example** (Classify known unknown extensions)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Classify known unknown extensions"
  * import { classifyFormatFromExtension } from "@beep/file-processing/Strategy"
  *
- * console.log(classifyFormatFromExtension("docx")) // "docx"
- * console.log(classifyFormatFromExtension("zip")) // "unknown"
+ * classifyFormatFromExtension("docx") // => "docx"
+ * classifyFormatFromExtension("zip") // => "unknown"
  * ```
  *
  * @category utilities

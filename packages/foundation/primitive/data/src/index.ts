@@ -14,7 +14,7 @@
  *
  * **Example** (Ethereum network ticker)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Ethereum network ticker"
  * import { Blockchain } from "@beep/data"
  *
  * console.assert(Blockchain.Networks.Ethereum.ticker === "ETH")
@@ -29,7 +29,7 @@ export * as Blockchain from "./Blockchain.ts";
  *
  * **Example** (ISO month value lookup)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="ISO month value lookup"
  * import { Calendar } from "@beep/data"
  *
  * console.assert(Calendar.MonthISOValues[0] === "01")
@@ -44,7 +44,7 @@ export * as Calendar from "./Calendar.ts";
  *
  * **Example** (USD currency name lookup)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="USD currency name lookup"
  * import { CurrencyCodes } from "@beep/data"
  *
  * console.assert(CurrencyCodes.CurrencyCodeDataByCode.USD.currency === "US Dollar")
@@ -59,7 +59,7 @@ export * as CurrencyCodes from "./CurrencyCodes.ts";
  *
  * **Example** (Find copy keyboard shortcut)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find copy keyboard shortcut"
  * import { KeyboardShortcuts } from "@beep/data"
  *
  * const hasCopyShortcut = KeyboardShortcuts.KeyboardShortcutDataValues.some(
@@ -78,7 +78,7 @@ export * as KeyboardShortcuts from "./KeyboardShortcuts.ts";
  *
  * **Example** (Lookup JSON MIME type)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Lookup JSON MIME type"
  * import { MimeTypesData } from "@beep/data"
  *
  * console.assert(MimeTypesData.lookup("asset.json") === "application/json")
@@ -93,7 +93,7 @@ export * as MimeTypesData from "./MimeTypes.ts";
  *
  * **Example** (US territory name lookup)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="US territory name lookup"
  * import { Territories } from "@beep/data"
  *
  * console.assert(Territories.TerritoryDataByCode.US.name === "United States")
@@ -108,7 +108,7 @@ export * as Territories from "./Territories.ts";
  *
  * **Example** (UTC timezone name lookup)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="UTC timezone name lookup"
  * import { Timezones } from "@beep/data"
  *
  * console.assert(Timezones.TimezoneDataByName.UTC.name === "UTC")

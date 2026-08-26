@@ -207,10 +207,10 @@ const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets =
  *
  * **Example** (Normalize locator candidate text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Normalize locator candidate text"
  * import { normalizeTextLocator } from "@beep/langextract/VerifiedSpan"
  *
- * console.log(normalizeTextLocator("“ofﬁce”\nrecord")) // "\"office\" record"
+ * normalizeTextLocator("“ofﬁce”\nrecord") // => "\"office\" record"
  * ```
  *
  * @category normalization

@@ -12,7 +12,7 @@ import * as internal from "./generated/cldr-territories.ts";
  *
  * **Example** (Lookup US territory entry)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Lookup US territory entry"
  * import { TerritoryDataByCode, type TerritoryData } from "@beep/data/Territories"
  *
  * const unitedStates: TerritoryData = TerritoryDataByCode.US
@@ -29,7 +29,7 @@ export type TerritoryData = (typeof internal.TerritoryDataValues)[number];
  *
  * **Example** (Assign US territory code)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign US territory code"
  * import type { TerritoryCode } from "@beep/data/Territories"
  *
  * const code: TerritoryCode = "US"
@@ -46,7 +46,7 @@ export type TerritoryCode = TerritoryData["code"];
  *
  * **Example** (Assign United States name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign United States name"
  * import type { TerritoryName } from "@beep/data/Territories"
  *
  * const name: TerritoryName = "United States"
@@ -63,7 +63,7 @@ export type TerritoryName = TerritoryData["name"];
  *
  * **Example** (Lookup Americas continent entry)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Lookup Americas continent entry"
  * import { ContinentDataByCode, type ContinentData } from "@beep/data/Territories"
  *
  * const americas: ContinentData = ContinentDataByCode["019"]
@@ -80,7 +80,7 @@ export type ContinentData = (typeof internal.ContinentDataValues)[number];
  *
  * **Example** (Assign Americas continent code)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign Americas continent code"
  * import type { ContinentCode } from "@beep/data/Territories"
  *
  * const code: ContinentCode = "019"
@@ -97,7 +97,7 @@ export type ContinentCode = ContinentData["code"];
  *
  * **Example** (Assign Americas continent name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign Americas continent name"
  * import type { ContinentName } from "@beep/data/Territories"
  *
  * const name: ContinentName = "Americas"
@@ -114,7 +114,7 @@ export type ContinentName = ContinentData["name"];
  *
  * **Example** (Check territory release tag)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check territory release tag"
  * import { TerritoryDataMetadata } from "@beep/data/Territories"
  *
  * console.assert(TerritoryDataMetadata.releaseTag === "48.2.0")
@@ -130,7 +130,7 @@ export const TerritoryDataMetadata: typeof internal.TerritoryDataMetadata = inte
  *
  * **Example** (Assert CLDR release tag)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assert CLDR release tag"
  * import { TerritoryDataReleaseTag } from "@beep/data/Territories"
  *
  * console.assert(TerritoryDataReleaseTag === "48.2.0")
@@ -146,7 +146,7 @@ export const TerritoryDataReleaseTag: typeof internal.TerritoryDataReleaseTag = 
  *
  * **Example** (Find US in territory list)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find US in territory list"
  * import { TerritoryDataValues } from "@beep/data/Territories"
  *
  * const unitedStates = TerritoryDataValues.find((entry) => entry.code === "US")
@@ -163,7 +163,7 @@ export const TerritoryDataValues: typeof internal.TerritoryDataValues = internal
  *
  * **Example** (Access US by territory code)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Access US by territory code"
  * import { TerritoryDataByCode } from "@beep/data/Territories"
  *
  * console.assert(TerritoryDataByCode.US.name === "United States")
@@ -179,7 +179,7 @@ export const TerritoryDataByCode: typeof internal.TerritoryDataByCode = internal
  *
  * **Example** (Check US code is included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check US code is included"
  * import { TerritoryCodeValues } from "@beep/data/Territories"
  *
  * console.assert(TerritoryCodeValues.includes("US"))
@@ -195,7 +195,7 @@ export const TerritoryCodeValues: typeof internal.TerritoryCodeValues = internal
  *
  * **Example** (Map US code to name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Map US code to name"
  * import { TerritoryDataNameByCode } from "@beep/data/Territories"
  *
  * console.assert(TerritoryDataNameByCode.US === "United States")
@@ -211,7 +211,7 @@ export const TerritoryDataNameByCode: typeof internal.TerritoryDataNameByCode = 
  *
  * **Example** (Find US code-name pair)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find US code-name pair"
  * import { TerritoryDataCodeNamePairs } from "@beep/data/Territories"
  *
  * const unitedStates = TerritoryDataCodeNamePairs.find(([code]) => code === "US")
@@ -229,7 +229,7 @@ export const TerritoryDataCodeNamePairs: typeof internal.TerritoryDataCodeNamePa
  *
  * **Example** (Find Americas in continent list)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find Americas in continent list"
  * import { ContinentDataValues } from "@beep/data/Territories"
  *
  * const americas = ContinentDataValues.find((entry) => entry.code === "019")
@@ -246,7 +246,7 @@ export const ContinentDataValues: typeof internal.ContinentDataValues = internal
  *
  * **Example** (Access Americas by region code)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Access Americas by region code"
  * import { ContinentDataByCode } from "@beep/data/Territories"
  *
  * console.assert(ContinentDataByCode["019"].name === "Americas")
@@ -262,7 +262,7 @@ export const ContinentDataByCode: typeof internal.ContinentDataByCode = internal
  *
  * **Example** (Check 019 code is included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check 019 code is included"
  * import { ContinentCodeValues } from "@beep/data/Territories"
  *
  * console.assert(ContinentCodeValues.includes("019"))
@@ -278,7 +278,7 @@ export const ContinentCodeValues: typeof internal.ContinentCodeValues = internal
  *
  * **Example** (Map 019 code to name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Map 019 code to name"
  * import { ContinentDataNameByCode } from "@beep/data/Territories"
  *
  * console.assert(ContinentDataNameByCode["019"] === "Americas")
@@ -294,7 +294,7 @@ export const ContinentDataNameByCode: typeof internal.ContinentDataNameByCode = 
  *
  * **Example** (Find Americas code-name pair)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find Americas code-name pair"
  * import { ContinentDataCodeNamePairs } from "@beep/data/Territories"
  *
  * const americas = ContinentDataCodeNamePairs.find(([code]) => code === "019")

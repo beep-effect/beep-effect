@@ -46,7 +46,7 @@ class WordCountSuccess extends S.Class<WordCountSuccess>($I`WordCountSuccess`)(
  *
  * **Example** (Decode WordCount parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode WordCount parameters"
  * import * as S from "effect/Schema"
  * import { WordCount } from "@beep/nlp-processing/Tools/WordCount"
  *

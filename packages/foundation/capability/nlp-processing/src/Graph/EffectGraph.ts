@@ -44,11 +44,11 @@ const $I = $NlpProcessingId.create("Graph/EffectGraph");
  *
  * **Example** (Making a branded NodeId)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Making a branded NodeId"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const nodeId = NodeId.make("node-example")
- * console.log(nodeId.startsWith("node-")) // true
+ * nodeId.startsWith("node-") // => true
  * ```
  *
  * @category models
@@ -84,12 +84,12 @@ export type NodeId = typeof NodeId.Type;
  *
  * **Example** (Generating a fresh NodeId)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Generating a fresh NodeId"
  * import { Effect } from "effect"
  * import { generateNodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(generateNodeId, (id) => id.startsWith("node-"))
- * console.log(Effect.runSync(program)) // true
+ * Effect.runSync(program) // => true
  * ```
  *
  * @effects Reads the Effect `Clock` and random service to include timestamp and entropy in the generated id.
@@ -107,11 +107,11 @@ export const generateNodeId: Effect.Effect<NodeId> = Effect.gen(function* () {
  *
  * **Example** (Creating NodeNotFoundError)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Creating NodeNotFoundError"
  * import { NodeId, NodeNotFoundError } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const error = NodeNotFoundError.make({ nodeId: NodeId.make("node-missing") })
- * console.log(error._tag) // "NodeNotFoundError"
+ * error._tag // => "NodeNotFoundError"
  * ```
  *
  * @category errors
@@ -132,7 +132,7 @@ export class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>($I`NodeN
  *
  * **Example** (Building NodeMetadata values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Building NodeMetadata values"
  * import { NonNegativeInt } from "@beep/schema"
  * import { NodeMetadata } from "@beep/nlp-processing/Graph/EffectGraph"
  * import * as O from "effect/Option"
@@ -143,7 +143,7 @@ export class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>($I`NodeN
  *   timestamp: 0
  * })
  *
- * console.log(metadata.depth) // 0
+ * metadata.depth // => 0
  * ```
  *
  * @category models
@@ -194,11 +194,11 @@ export interface GraphNode<A> {
  *
  * **Example** (Making a GraphEdge)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Making a GraphEdge"
  * import { GraphEdge } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const edge = GraphEdge.make({ relation: "child" })
- * console.log(edge.relation) // "child"
+ * edge.relation // => "child"
  * ```
  *
  * @category models
@@ -249,12 +249,12 @@ export interface EffectGraph<A> {
  *
  * **Example** (Creating node with makeNode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Creating node with makeNode"
  * import { Effect } from "effect"
  * import { makeNode } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const node = Effect.runSync(makeNode("hello"))
- * console.log(node.data) // "hello"
+ * node.data // => "hello"
  * ```
  *
  * @category constructors
@@ -315,12 +315,12 @@ export const empty = <A>(): EffectGraph<A> => ({
  *
  * **Example** (Creating a singleton graph)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Creating a singleton graph"
  * import { Effect } from "effect"
  * import { singleton, size } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const graph = Effect.runSync(singleton("root"))
- * console.log(size(graph)) // 1
+ * size(graph) // => 1
  * ```
  *
  * @effects Generates a root node via `makeNode`, which reads the Effect `Clock` and random service for metadata and id fields.
@@ -417,7 +417,7 @@ export const addNode: {
  *
  * **Example** (Looking up node by id)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Looking up node by id"
  * import { Effect } from "effect"
  * import { getNode, getRoots, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  * import * as O from "effect/Option"
@@ -427,7 +427,7 @@ export const addNode: {
  *   return O.isSome(getNode(graph, root.id))
  * })
  *
- * console.log(Effect.runSync(program)) // true
+ * Effect.runSync(program) // => true
  * ```
  *
  * @category getters
@@ -447,7 +447,7 @@ export const getNode: {
  *
  * **Example** (Reading direct child nodes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reading direct child nodes"
  * import { Effect } from "effect"
  * import { getChildren, getRoots, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  *
@@ -456,7 +456,7 @@ export const getNode: {
  *   return getChildren(graph, root.id).length
  * })
  *
- * console.log(Effect.runSync(program)) // 0
+ * Effect.runSync(program) // => 0
  * ```
  *
  * @category getters
@@ -480,12 +480,12 @@ export const getChildren: {
  *
  * **Example** (Getting root nodes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Getting root nodes"
  * import { Effect } from "effect"
  * import { getRoots, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(singleton("root"), (graph) => getRoots(graph).length)
- * console.log(Effect.runSync(program)) // 1
+ * Effect.runSync(program) // => 1
  * ```
  *
  * @category getters
@@ -652,7 +652,7 @@ export const ana: {
  *
  * **Example** (Mapping node payload values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Mapping node payload values"
  * import { Effect } from "effect"
  * import { map, singleton, toArray } from "@beep/nlp-processing/Graph/EffectGraph"
  *
@@ -660,7 +660,7 @@ export const ana: {
  *   toArray(map(graph, (text) => text.length))[0].data
  * )
  *
- * console.log(Effect.runSync(program)) // 4
+ * Effect.runSync(program) // => 4
  * ```
  *
  * @category mapping
@@ -709,12 +709,12 @@ export const map: {
  *
  * **Example** (Collecting nodes as array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Collecting nodes as array"
  * import { Effect } from "effect"
  * import { singleton, toArray } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(singleton("root"), (graph) => toArray(graph).length)
- * console.log(Effect.runSync(program)) // 1
+ * Effect.runSync(program) // => 1
  * ```
  *
  * @category getters
@@ -749,12 +749,12 @@ export const size = <A>(graph: EffectGraph<A>): number => Graph.nodeCount(graph.
  *
  * **Example** (Rendering graph as tree)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rendering graph as tree"
  * import { Effect } from "effect"
  * import { show, singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  *
  * const program = Effect.map(singleton("root"), show((text) => text))
- * console.log(Effect.runSync(program)) // "[root] root"
+ * Effect.runSync(program) // => "[root] root"
  * ```
  *
  * @category formatting

@@ -36,7 +36,7 @@ class AnalyzeParameters extends S.Class<AnalyzeParameters>($I`AnalyzeParameters`
  *
  * **Example** (Decode parameters schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { Analyze } from "@beep/nlp-processing/Tools/Analyze"
  *

@@ -15,7 +15,7 @@ const $I = $ObservabilityId.create("web/Config");
  *
  * **Example** (Creating browser observability config)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Creating browser observability config"
  * import { WebObservabilityConfig } from "@beep/observability/web"
  *
  * const config = WebObservabilityConfig.make({
@@ -26,7 +26,7 @@ const $I = $ObservabilityId.create("web/Config");
  *   resourceAttributes: {},
  * })
  *
- * console.log(config.serviceName) // "todox-web"
+ * config.serviceName // => "todox-web"
  * ```
  *
  * @category models
@@ -50,7 +50,7 @@ export class WebObservabilityConfig extends S.Class<WebObservabilityConfig>($I`W
  *
  * **Example** (Converting config to resource)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Converting config to resource"
  * import { WebObservabilityConfig, toWebResource } from "@beep/observability/web"
  *
  * const config = WebObservabilityConfig.make({
@@ -62,7 +62,7 @@ export class WebObservabilityConfig extends S.Class<WebObservabilityConfig>($I`W
  * })
  *
  * const resource = toWebResource(config)
- * console.log(resource.serviceName) // "todox-web"
+ * resource.serviceName // => "todox-web"
  * ```
  *
  * @category observability

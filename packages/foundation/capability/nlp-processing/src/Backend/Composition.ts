@@ -89,7 +89,7 @@ const cachedGet = <A, E, R>(
  *
  * **Example** (Primary secondary fallback composition)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Primary secondary fallback composition"
  * import { Effect } from "effect"
  * import { withFallback } from "@beep/nlp-processing/Backend/Composition"
  * import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -118,7 +118,7 @@ const cachedGet = <A, E, R>(
  *   extractRelations: () => Effect.succeed([])
  * }
  * const secondary: NLPBackendShape = { ...primary, name: "secondary", tokenize: (text) => Effect.succeed([text]) }
- * console.log(withFallback(primary, secondary).name) // "primary+secondary"
+ * withFallback(primary, secondary).name // => "primary+secondary"
  * ```
  *
  * @category combinators
@@ -202,13 +202,13 @@ export const withFallback: {
  *
  * **Example** (Caching options capacity TTL)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Caching options capacity TTL"
  * import { Duration } from "effect"
  * import { PosInt } from "@beep/schema"
  * import type { CachingOptions } from "@beep/nlp-processing/Backend/Composition"
  *
  * const options: CachingOptions = { capacity: PosInt.make(64), timeToLive: Duration.minutes(5) }
- * console.log(options.capacity) // 64
+ * options.capacity // => 64
  * ```
  *
  * @category models
@@ -235,7 +235,7 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  *
  * **Example** (Memoized backend tokenize cache)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Memoized backend tokenize cache"
  * import { Effect } from "effect"
  * import { PosInt } from "@beep/schema"
  * import { withCaching } from "@beep/nlp-processing/Backend/Composition"
@@ -265,7 +265,7 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  * const program = Effect.flatMap(withCaching(backend, { capacity: PosInt.make(16) }), (cached) =>
  *   cached.tokenize("typed effects")
  * )
- * Effect.runPromise(program).then(console.log) // ["typed", "effects"]
+ * await Effect.runPromise(program) // => ["typed", "effects"]
  * ```
  *
  * @effects Allocates per-operation `effect/Cache` instances when the wrapper

@@ -22,7 +22,7 @@ import * as internal from "./generated/iso4217.ts";
  *
  * **Example** (USD currency entry lookup)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="USD currency entry lookup"
  * import { CurrencyCodeDataByCode, type CurrencyCodeData } from "@beep/data/CurrencyCodes"
  *
  * const usd: CurrencyCodeData = CurrencyCodeDataByCode.USD
@@ -39,7 +39,7 @@ export type CurrencyCodeData = (typeof internal.CurrencyCodeDataValues)[number];
  *
  * **Example** (Assign USD and EUR codes)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign USD and EUR codes"
  * import type { CurrencyCode } from "@beep/data/CurrencyCodes"
  *
  * const usd: CurrencyCode = "USD"
@@ -57,7 +57,7 @@ export type CurrencyCode = CurrencyCodeData["code"];
  *
  * **Example** (Access dataset source metadata)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Access dataset source metadata"
  * import { CurrencyCodeDataMetadata } from "@beep/data/CurrencyCodes"
  * import type { CurrencyCodeDataMetadata as CurrencyCodeDataMetadataShape } from "@beep/data/CurrencyCodes"
  *
@@ -87,7 +87,7 @@ export type CurrencyCodeDataMetadata = typeof internal.CurrencyCodeDataMetadata;
  *
  * **Example** (Find USD in currency array)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find USD in currency array"
  * import { CurrencyCodeDataValues } from "@beep/data/CurrencyCodes"
  *
  * const usd = CurrencyCodeDataValues.find((entry) => entry.code === "USD")
@@ -104,7 +104,7 @@ export const CurrencyCodeDataValues: typeof internal.CurrencyCodeDataValues = in
  *
  * **Example** (Check published date value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check published date value"
  * import { CurrencyCodeDataMetadata } from "@beep/data/CurrencyCodes"
  *
  * console.assert(CurrencyCodeDataMetadata.published === "2026-01-01")
@@ -120,7 +120,7 @@ export const CurrencyCodeDataMetadata: typeof internal.CurrencyCodeDataMetadata 
  *
  * **Example** (Assert published date string)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assert published date string"
  * import { CurrencyCodeDataPublished } from "@beep/data/CurrencyCodes"
  *
  * console.assert(CurrencyCodeDataPublished === "2026-01-01")
@@ -136,7 +136,7 @@ export const CurrencyCodeDataPublished: typeof internal.CurrencyCodeDataPublishe
  *
  * **Example** (Verify source URL path)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Verify source URL path"
  * import { CurrencyCodeDataSourceUrl } from "@beep/data/CurrencyCodes"
  *
  * console.assert(CurrencyCodeDataSourceUrl.includes("list-one.xml"))
@@ -152,7 +152,7 @@ export const CurrencyCodeDataSourceUrl: typeof internal.CurrencyCodeDataSourceUr
  *
  * **Example** (Check SHA-256 digest length)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check SHA-256 digest length"
  * import { CurrencyCodeDataSourceSha256 } from "@beep/data/CurrencyCodes"
  *
  * console.assert(CurrencyCodeDataSourceSha256.length === 64)
@@ -169,7 +169,7 @@ export const CurrencyCodeDataSourceSha256: typeof internal.CurrencyCodeDataSourc
  *
  * **Example** (Lookup EUR decimal digits)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Lookup EUR decimal digits"
  * import { CurrencyCodeDataByCode } from "@beep/data/CurrencyCodes"
  *
  * console.assert(CurrencyCodeDataByCode.EUR.digits === 2)
@@ -185,7 +185,7 @@ export const CurrencyCodeDataByCode: typeof internal.CurrencyCodeDataByCode = in
  *
  * **Example** (Check USD code is included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check USD code is included"
  * import { CurrencyCodeDataCodeValues } from "@beep/data/CurrencyCodes"
  *
  * console.assert(CurrencyCodeDataCodeValues.includes("USD"))
@@ -202,7 +202,7 @@ export const CurrencyCodeDataCodeValues: typeof internal.CurrencyCodeDataCodeVal
  *
  * **Example** (Lookup USD currency name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Lookup USD currency name"
  * import { CurrencyCodeDataNameByCode } from "@beep/data/CurrencyCodes"
  *
  * console.assert(CurrencyCodeDataNameByCode.USD === "US Dollar")
@@ -219,7 +219,7 @@ export const CurrencyCodeDataNameByCode: typeof internal.CurrencyCodeDataNameByC
  *
  * **Example** (Find USD code-name pair)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find USD code-name pair"
  * import { CurrencyCodeDataCodeNamePairs } from "@beep/data/CurrencyCodes"
  *
  * const usd = CurrencyCodeDataCodeNamePairs.find(([code]) => code === "USD")

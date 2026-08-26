@@ -100,11 +100,11 @@ export const makeOperation: {
  *
  * **Example** (Build a pure splitting operation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a pure splitting operation"
  * import { pureOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const split = pureOperation("split", (text: string) => text.split(" "))
- * console.log(split.name) // "split"
+ * split.name // => "split"
  * ```
  *
  * @category constructors
@@ -182,7 +182,7 @@ export const identityOperation = <A>(): TextOperation<A, A> =>
  *
  * **Example** (Compose operations)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compose operations"
  * import { composeOperations, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const trimThenLength = composeOperations(
@@ -190,7 +190,7 @@ export const identityOperation = <A>(): TextOperation<A, A> =>
  *   mapOperation("length", (text: string) => text.length)
  * )
  *
- * console.log(trimThenLength.name) // "trim -> length"
+ * trimThenLength.name // => "trim -> length"
  * ```
  *
  * @category combinators
@@ -284,7 +284,7 @@ const getLeafNodes = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> =>
  *
  * **Example** (Execute an operation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Execute an operation"
  * import { Effect } from "effect"
  * import { singleton, size } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { executeOperation, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
@@ -294,7 +294,7 @@ const getLeafNodes = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> =>
  *   executeOperation(mapOperation("length", (text: string) => text.length))
  * )
  *
- * console.log(size(Effect.runSync(program))) // 2
+ * size(Effect.runSync(program)) // => 2
  * ```
  *
  * @category combinators
@@ -328,7 +328,7 @@ export const executeOperation: {
  *
  * **Example** (Execute operations)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Execute operations"
  * import { Effect } from "effect"
  * import { singleton, size } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { executeOperations, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
@@ -338,7 +338,7 @@ export const executeOperation: {
  *   mapOperation("length", (value: unknown) => String(value).length)
  * ])
  *
- * console.log(size(Effect.runSync(program))) // 2
+ * size(Effect.runSync(program)) // => 2
  * ```
  *
  * @category combinators
@@ -459,11 +459,11 @@ export const makeAdjunction: {
  *
  * **Example** (Map text to its length)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map text to its length"
  * import { mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = mapOperation("length", (text: string) => text.length)
- * console.log(operation.name) // "length"
+ * operation.name // => "length"
  * ```
  *
  * @category combinators
@@ -479,11 +479,11 @@ export const mapOperation: {
  *
  * **Example** (Filter an operation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Filter an operation"
  * import { filterOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = filterOperation("non-empty", (text: string) => text.length > 0)
- * console.log(operation.name) // "non-empty"
+ * operation.name // => "non-empty"
  * ```
  *
  * @category combinators
@@ -503,11 +503,11 @@ export const filterOperation: {
  *
  * **Example** (Expand text into words)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Expand text into words"
  * import { flatMapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = flatMapOperation("words", (text: string) => text.split(" "))
- * console.log(operation.name) // "words"
+ * operation.name // => "words"
  * ```
  *
  * @category combinators
@@ -523,12 +523,12 @@ export const flatMapOperation: {
  *
  * **Example** (Collect a data)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Collect a data"
  * import { Effect } from "effect"
  * import { singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { collectData } from "@beep/nlp-processing/Graph/TypeClass"
  *
- * console.log(collectData(Effect.runSync(singleton("root")))) // ["root"]
+ * collectData(Effect.runSync(singleton("root"))) // => ["root"]
  * ```
  *
  * @category getters
@@ -541,12 +541,12 @@ export const collectData = <A>(graph: EffectGraph<A>): ReadonlyArray<A> => A.map
  *
  * **Example** (Measure a singleton graph's depth)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Measure a singleton graph's depth"
  * import { Effect } from "effect"
  * import { singleton } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { depth } from "@beep/nlp-processing/Graph/TypeClass"
  *
- * console.log(depth(Effect.runSync(singleton("root")))) // 0
+ * depth(Effect.runSync(singleton("root"))) // => 0
  * ```
  *
  * @category getters
@@ -628,11 +628,11 @@ const makeEffectfulMapBody =
  *
  * **Example** (Compose a map onto an operation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compose a map onto an operation"
  * import { map, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = map(mapOperation("trim", (text: string) => text.trim()), (text) => text.length)
- * console.log(operation.name) // "trim |> map"
+ * operation.name // => "trim |> map"
  * ```
  *
  * @category mapping
@@ -659,7 +659,7 @@ export const map: {
  *
  * **Example** (Sequence an effectful step)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Sequence an effectful step"
  * import { Effect } from "effect"
  * import { flatMap, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -668,7 +668,7 @@ export const map: {
  *   (text) => Effect.succeed(text.length)
  * )
  *
- * console.log(operation.name) // "trim |> flatMap"
+ * operation.name // => "trim |> flatMap"
  * ```
  *
  * @category mapping
@@ -685,14 +685,14 @@ export const flatMap: EffectfulMapOperationSignature = dual(2, makeEffectfulMapB
  *
  * **Example** (Apply lifted functions to values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Apply lifted functions to values"
  * import { ap, mapOperation, pureOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const functions = pureOperation("fn", () => [(text: string) => text.length])
  * const values = mapOperation("trim", (text: string) => text.trim())
  * const operation = ap(functions, values)
  *
- * console.log(operation.name) // "ap(fn, trim)"
+ * operation.name // => "ap(fn, trim)"
  * ```
  *
  * @category combinators
@@ -759,7 +759,7 @@ export const pure = <A, B>(value: B): TextOperation<A, B> =>
  *
  * **Example** (Chain two operations)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Chain two operations"
  * import { chain, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = chain(
@@ -767,7 +767,7 @@ export const pure = <A, B>(value: B): TextOperation<A, B> =>
  *   (text) => mapOperation("length", () => text.length)
  * )
  *
- * console.log(operation.name) // "trim >>= chain"
+ * operation.name // => "trim >>= chain"
  * ```
  *
  * @category combinators
@@ -805,7 +805,7 @@ export const chain: {
  *
  * **Example** (Flatten a nested operation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Flatten a nested operation"
  * import { flatten, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = flatten(
@@ -813,7 +813,7 @@ export const chain: {
  *   (text) => mapOperation("length", () => text.length)
  * )
  *
- * console.log(operation.name) // "trim >>= chain"
+ * operation.name // => "trim >>= chain"
  * ```
  *
  * @category combinators
@@ -844,7 +844,7 @@ export const flatten: {
  *
  * **Example** (Fall back to an alternative operation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Fall back to an alternative operation"
  * import { alt, mapOperation } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = alt(
@@ -852,7 +852,7 @@ export const flatten: {
  *   mapOperation("upper", (text: string) => text.toUpperCase())
  * )
  *
- * console.log(operation.name) // "alt(lower, upper)"
+ * operation.name // => "alt(lower, upper)"
  * ```
  *
  * @category combinators
@@ -909,7 +909,7 @@ export const empty = <A, B>(): TextOperation<A, B> =>
  *
  * **Example** (Traverse with an effectful step)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Traverse with an effectful step"
  * import { Effect } from "effect"
  * import { mapOperation, traverse } from "@beep/nlp-processing/Graph/TypeClass"
  *
@@ -918,7 +918,7 @@ export const empty = <A, B>(): TextOperation<A, B> =>
  *   (text) => Effect.succeed(text.length)
  * )
  *
- * console.log(operation.name) // "trim |> traverse"
+ * operation.name // => "trim |> traverse"
  * ```
  *
  * @category combinators
@@ -935,11 +935,11 @@ export const traverse: EffectfulMapOperationSignature = dual(2, makeEffectfulMap
  *
  * **Example** (Replicate an operation twice)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Replicate an operation twice"
  * import { mapOperation, replicate } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = replicate(mapOperation("length", (text: string) => text.length), 2)
- * console.log(operation.name) // "replicate(length, 2)"
+ * operation.name // => "replicate(length, 2)"
  * ```
  *
  * @category combinators
@@ -969,7 +969,7 @@ export const replicate: {
  *
  * **Example** (Run an operation under a predicate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Run an operation under a predicate"
  * import { mapOperation, when } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = when(
@@ -977,7 +977,7 @@ export const replicate: {
  *   mapOperation("length", (text: string) => text.length)
  * )
  *
- * console.log(operation.name) // "when(length)"
+ * operation.name // => "when(length)"
  * ```
  *
  * @category combinators
@@ -999,7 +999,7 @@ export const when: {
  *
  * **Example** (Skip an operation under a predicate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Skip an operation under a predicate"
  * import { mapOperation, unless } from "@beep/nlp-processing/Graph/TypeClass"
  *
  * const operation = unless(
@@ -1007,7 +1007,7 @@ export const when: {
  *   mapOperation("length", (text: string) => text.length)
  * )
  *
- * console.log(operation.name) // "when(length)"
+ * operation.name // => "when(length)"
  * ```
  *
  * @category combinators

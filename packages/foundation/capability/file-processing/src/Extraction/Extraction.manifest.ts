@@ -31,7 +31,7 @@ type JsonEncodeEffect<Input> = {
  *
  * **Example** (Make succeeded source record)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make succeeded source record"
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SucceededSourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { NonNegativeInt } from "@beep/schema"
@@ -59,7 +59,7 @@ type JsonEncodeEffect<Input> = {
  *   }).status
  * })
  *
- * Effect.runPromise(program).then(console.log) // "succeeded"
+ * await Effect.runPromise(program) // => "succeeded"
  * ```
  *
  * @category models
@@ -89,7 +89,7 @@ export class SucceededSourceProcessingRecord extends S.Class<SucceededSourceProc
  *
  * **Example** (Make skipped source record)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make skipped source record"
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SkippedSourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { NonNegativeInt } from "@beep/schema"
@@ -116,7 +116,7 @@ export class SucceededSourceProcessingRecord extends S.Class<SucceededSourceProc
  *   }).skipReason
  * })
  *
- * Effect.runPromise(program).then(console.log) // "format-out-of-scope"
+ * await Effect.runPromise(program) // => "format-out-of-scope"
  * ```
  *
  * @category models
@@ -146,7 +146,7 @@ export class SkippedSourceProcessingRecord extends S.Class<SkippedSourceProcessi
  *
  * **Example** (Make failed source record)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make failed source record"
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { FailedSourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { NonNegativeInt } from "@beep/schema"
@@ -171,7 +171,7 @@ export class SkippedSourceProcessingRecord extends S.Class<SkippedSourceProcessi
  *   }).status
  * })
  *
- * Effect.runPromise(program).then(console.log) // "failed"
+ * await Effect.runPromise(program) // => "failed"
  * ```
  *
  * @category models
@@ -248,7 +248,7 @@ export const SourceProcessingRecord = S.Union([
  *
  * **Example** (Type source processing record)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type source processing record"
  * import { SourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -266,7 +266,7 @@ export const SourceProcessingRecord = S.Union([
  *   return record.status
  * })
  *
- * Effect.runPromise(program).then(console.log) // "succeeded"
+ * await Effect.runPromise(program) // => "succeeded"
  * ```
  *
  * @category models
@@ -279,14 +279,14 @@ export type SourceProcessingRecord = typeof SourceProcessingRecord.Type;
  *
  * **Example** (Decode failure reason value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode failure reason value"
  * import { FileProcessingFailureReason } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(FileProcessingFailureReason)("format-out-of-scope")
  *
- * Effect.runPromise(program).then(console.log) // "format-out-of-scope"
+ * await Effect.runPromise(program) // => "format-out-of-scope"
  * ```
  *
  * @category schemas
@@ -304,7 +304,7 @@ export const FileProcessingFailureReason = S.Union([FileProcessingOperationError
  *
  * **Example** (Type failure reason value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type failure reason value"
  * import { FileProcessingFailureReason } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -316,7 +316,7 @@ export const FileProcessingFailureReason = S.Union([FileProcessingOperationError
  *   return reason
  * })
  *
- * Effect.runPromise(program).then(console.log) // "format-out-of-scope"
+ * await Effect.runPromise(program) // => "format-out-of-scope"
  * ```
  *
  * @category models
@@ -373,7 +373,7 @@ export class SkippedFileProcessingFailureRecord extends S.Class<SkippedFileProce
  *
  * **Example** (Make failed failure record)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make failed failure record"
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { FailedFileProcessingFailureRecord } from "@beep/file-processing/Extraction"
  * import { PosixPath } from "@beep/schema/PosixPath"
@@ -396,7 +396,7 @@ export class SkippedFileProcessingFailureRecord extends S.Class<SkippedFileProce
  *   }).reason
  * })
  *
- * Effect.runPromise(program).then(console.log) // "unsupported-file-format"
+ * await Effect.runPromise(program) // => "unsupported-file-format"
  * ```
  *
  * @category models
@@ -465,7 +465,7 @@ export const FileProcessingFailureRecord = S.Union([
  *
  * **Example** (Type failure record)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type failure record"
  * import { FileProcessingFailureRecord } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -483,7 +483,7 @@ export const FileProcessingFailureRecord = S.Union([
  *   return record.status
  * })
  *
- * Effect.runPromise(program).then(console.log) // "failed"
+ * await Effect.runPromise(program) // => "failed"
  * ```
  *
  * @category models

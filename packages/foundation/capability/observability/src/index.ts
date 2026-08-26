@@ -8,7 +8,7 @@
  *
  * **Example** (Classify cause with logger)
  *
- * ```typescript
+ * ```ts
  * import { Cause, Effect } from "effect"
  * import { classifyCause, layerConsoleLogger } from "@beep/observability"
  *
@@ -30,11 +30,11 @@
  *
  * **Example** (Import package version)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Import package version"
  * import { VERSION } from "@beep/observability"
  *
  * const version: string = VERSION
- * console.log(version) // "0.0.3"
+ * version // => "0.0.3"
  * ```
  *
  * @category configuration
