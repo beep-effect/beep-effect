@@ -54,7 +54,11 @@ export class FenceLocation extends S.Class<FenceLocation>($I`FenceLocation`)(
  * @category models
  * @since 0.0.0
  */
-export const FenceLanguage = LiteralKit(["ts", "typescript", "tsx"]);
+export const FenceLanguage = LiteralKit(["ts", "typescript", "tsx"]).pipe(
+  $I.annoteSchema("FenceLanguage", {
+    description: "Fence info-string languages the doctest analyzer recognises.",
+  })
+);
 
 /**
  * TypeScript fence language accepted by {@link FenceLanguage}.
@@ -118,7 +122,11 @@ export const ImpurityReason = LiteralKit([
   "external-package-import",
   "relative-import",
   "jsx-react",
-]);
+]).pipe(
+  $I.annoteSchema("ImpurityReason", {
+    description: "Stable reasons a fence is rejected by the purity classifier.",
+  })
+);
 
 /**
  * Stable rejection reason decoded by {@link ImpurityReason}.
@@ -314,7 +322,11 @@ export const DoctestFindingKind = LiteralKit([
   "missing-example-title",
   "unnameable-example-title",
   "marker-metadata-drift",
-]);
+]).pipe(
+  $I.annoteSchema("DoctestFindingKind", {
+    description: "Kinds of findings the doctest analyzer and verifier report.",
+  })
+);
 
 /**
  * Finding identifier decoded by {@link DoctestFindingKind}.

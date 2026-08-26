@@ -730,8 +730,8 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
  *
  * **When to use**
  *
- * Use in focused tests and after affected-file resolution to prove the hosted
- * lane's final argv without performing Git I/O.
+ * Use to prove the hosted lane's final argv in focused tests and after
+ * affected-file resolution, without performing Git I/O.
  *
  * **Example** (Build the full Doctest step)
  *
