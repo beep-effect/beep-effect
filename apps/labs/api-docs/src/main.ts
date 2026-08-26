@@ -1,0 +1,19 @@
+import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
+import * as BunRuntime from "@effect/platform-bun/BunRuntime";
+import { Config, Effect, Layer } from "effect";
+import { HttpRouter } from "effect/unstable/http";
+import { ApiLive } from "./runtime/Layer.ts";
+
+// Portless injects PORT for api-docs.labs.beep.localhost; the 8787 fallback
+// keeps the PORTLESS=0 diagnostic bypass usable.
+const main = Effect.fnUntraced(function* () {
+  const port = yield* Config.port("PORT").pipe(Config.withDefault(8787));
+  // `return yield*` keeps a definitive generator exit point: `Layer.launch`
+  // never succeeds, and the effect-LSP requires the explicit return for
+  // narrowing (TS377006 missingReturnYieldStar).
+  return yield* Layer.launch(
+    HttpRouter.serve(ApiLive).pipe(Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port })))
+  );
+});
+
+BunRuntime.runMain(main());

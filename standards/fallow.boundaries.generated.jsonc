@@ -60,6 +60,12 @@
         ]
       },
       {
+        "name": "@beep/api-docs",
+        "patterns": [
+          "apps/labs/api-docs/src/**"
+        ]
+      },
+      {
         "name": "@beep/api-transport",
         "patterns": [
           "packages/foundation/capability/api-transport/src/**"
@@ -1008,6 +1014,33 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/api-docs",
+        "allow": [
+          "@beep/api-docs",
+          "@beep/codegen-kit",
+          "@beep/ecfr",
+          "@beep/govinfo",
+          "@beep/identity",
+          "@beep/pacer",
+          "@beep/qa-capture",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/api-docs",
+          "@beep/codegen-kit",
+          "@beep/ecfr",
+          "@beep/govinfo",
+          "@beep/identity",
+          "@beep/pacer",
+          "@beep/qa-capture",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {

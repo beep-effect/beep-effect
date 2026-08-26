@@ -125,7 +125,7 @@ const findTagEnd = (html: string, start: number): Result.Result<number, "truncat
         quote = Str.empty;
         return O.none<number>();
       }),
-      Match.when({ inQuote: true }, () => O.none<number>()),
+      Match.when({ inQuote: true }, O.none<number>),
       Match.when({ opensDoubleQuote: true }, () => {
         quote = '"';
         return O.none<number>();
@@ -135,7 +135,7 @@ const findTagEnd = (html: string, start: number): Result.Result<number, "truncat
         return O.none<number>();
       }),
       Match.when({ closesTag: true }, () => O.some(end)),
-      Match.orElse(() => O.none<number>())
+      Match.orElse(O.none<number>)
     );
     if (O.isSome(match)) {
       return Result.succeed(match.value);

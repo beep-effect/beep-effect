@@ -608,7 +608,7 @@ const declarationName = (statement: ts.Statement): O.Option<string> =>
     Match.when(ts.isInterfaceDeclaration, namedStatementName),
     Match.when(ts.isTypeAliasDeclaration, namedStatementName),
     Match.when(ts.isVariableStatement, variableStatementName),
-    Match.orElse(() => O.none<string>())
+    Match.orElse(O.none<string>)
   );
 
 const isExported = (statement: ts.Statement): boolean =>

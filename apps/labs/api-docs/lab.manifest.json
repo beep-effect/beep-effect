@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "lab-manifest/v1",
+  "purpose": "Lab app hosting Scalar docs UIs for every HttpApi contract and committed OpenAPI spec in the repo",
+  "created": "2026-08-26",
+  "disposition": "active"
+}

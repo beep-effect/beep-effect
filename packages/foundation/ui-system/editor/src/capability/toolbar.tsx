@@ -40,7 +40,9 @@ export function CapabilityToolbar({
     Match.when("format.italic", () => O.some(selection.italic)),
     Match.when("format.strikethrough", () => O.some(selection.strikethrough)),
     Match.when("format.inline-code", () => O.some(selection.code)),
-    Match.orElse((): O.Option<boolean> => O.none())
+    // Bare `O.none` leaves its generic unresolved under docgen's tsc, widening
+    // the match to Option<unknown>; the closed thunk keeps Option<boolean>.
+    Match.orElse(() => O.none())
   );
   return (
     <div role="toolbar" aria-label="Editing commands" className="flex shrink-0 flex-wrap gap-1 border-b p-2">

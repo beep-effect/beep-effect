@@ -1,6 +1,5 @@
 {
   "permissions": {
-    "defaultMode": "default",
     "allow": [
       "Bash(rg:*)",
       "Bash(fd:*)",
@@ -69,7 +68,8 @@
       "Edit(**/.github/workflows/**)",
       "Edit(**/docs/_internal/**)",
       "Edit(**/.claude/settings.json)"
-    ]
+    ],
+    "defaultMode": "default"
   },
   "enabledMcpjsonServers": ["basic-memory", "codegraph"],
   "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
@@ -177,7 +177,7 @@
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false,
     "serena@claude-plugins-official": false,
-    "compound-engineering@compound-engineering-plugin": true
+    "compound-engineering@compound-engineering-plugin": false
   },
   "extraKnownMarketplaces": {
     "compound-engineering-plugin": {

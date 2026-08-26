@@ -222,6 +222,19 @@ const getArrowReplacement = (arrowFunction: ArrowFunction): O.Option<string> => 
     return O.none();
   }
 
+  // The helpers this rule collapses (`O.none`, `A.empty`, `O.some`, `A.make`)
+  // are GENERIC: a bare reference relies on higher-order inference to bind the
+  // type parameter, which fails in positions like `Match.orElse(O.none)` or
+  // `Match.when(P.isString, O.some)` — silently under docgen's tsc (widening
+  // to unknown), loudly under tsgo at the use site. The lambda form binds the
+  // generic at its call site, so it is the safe default. Only collapse calls
+  // that pin the type argument explicitly (`() => O.none<string>()` ->
+  // `O.none<string>`), which stays type-identical as an instantiation
+  // expression.
+  if (body.getTypeArguments().length === 0) {
+    return O.none();
+  }
+
   if (arrowFunction.getParameters().length === 0) {
     return getZeroArgHelperReference(body);
   }

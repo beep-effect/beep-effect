@@ -1096,6 +1096,7 @@
   "@beep/govinfo": ["./packages/drivers/govinfo/src/index.ts"],
   "@beep/govinfo/*": ["./packages/drivers/govinfo/src/*"],
   "@beep/ecfr": ["./packages/drivers/ecfr/src/index.ts"],
+  "@beep/ecfr/contract": ["./packages/drivers/ecfr/src/contract.ts"],
   "@beep/nlp-processing": [
     "./packages/foundation/capability/nlp-processing/src/index.ts"
   ],
