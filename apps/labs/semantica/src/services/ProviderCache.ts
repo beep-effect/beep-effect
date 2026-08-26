@@ -21,6 +21,15 @@ interface ProviderCacheShape {
 /**
  * App-local write-once provider cache boundary.
  *
+ * **Example** (Read the cache service)
+ *
+ * ```ts
+ * import { ProviderCache } from "@/services/ProviderCache"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(ProviderCache)) // true
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */

@@ -13,6 +13,15 @@ const $I = $SemanticaId.create("services/LanguageModel");
  * provider without also selecting the exact cache namespace for its model,
  * prompt artifact, and task.
  *
+ * **Example** (Read the active identity service)
+ *
+ * ```ts
+ * import { ActiveModelIdentity } from "@/services/LanguageModel"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(ActiveModelIdentity)) // true
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */

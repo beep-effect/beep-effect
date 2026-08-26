@@ -1,10 +1,35 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { VerifiedTextAnchorError } from "@beep/provenance";
-import { Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 import { DegradedKind } from "@/schema/Degraded";
 
 const $I = $SemanticaId.create("schema/Errors");
+
+const GoldUnavailableReason = LiteralKit([
+  "invalid-selection",
+  "manifest-invalid",
+  "source-unavailable",
+  "parse-degraded",
+  "provider-failed",
+  "model-output-invalid",
+  "write-failed",
+  "read-failed",
+  "job-mismatch",
+  "mixed-proposer",
+  "digest-failed",
+  "encoding-failed",
+]).annotate(
+  $I.annote("GoldUnavailableReason", {
+    description: "Stable reason codes for failures in the gold-proposal workflow.",
+  })
+);
+
+const ModelRevisionPinSetting = LiteralKit(["AI_ANTHROPIC_MODEL", "SEMANTICA_XAI_MODEL"]).annotate(
+  $I.annote("ModelRevisionPinSetting", {
+    description: "Configuration boundaries that must name an explicitly versioned hosted model.",
+  })
+);
 
 /**
  * Reports that a requested source document cannot be listed or read.
@@ -156,8 +181,11 @@ export class LedgerFailed extends S.TaggedError<LedgerFailed>($I`LedgerFailed`)(
  * ```ts
  * import { GoldUnavailable } from "@/schema/Errors"
  *
- * const error = GoldUnavailable.make({ message: "Gold labels are unavailable." })
- * console.log(error._tag) // "GoldUnavailable"
+ * const error = GoldUnavailable.make({
+ *   message: "Gold labels use multiple proposers.",
+ *   reason: "mixed-proposer"
+ * })
+ * console.log(error.reason) // "mixed-proposer"
  * ```
  *
  * @category errors
@@ -165,9 +193,36 @@ export class LedgerFailed extends S.TaggedError<LedgerFailed>($I`LedgerFailed`)(
  */
 export class GoldUnavailable extends S.TaggedError<GoldUnavailable>($I`GoldUnavailable`)(
   "GoldUnavailable",
-  { message: S.NonEmptyString },
+  { message: S.NonEmptyString, reason: GoldUnavailableReason },
   $I.annoteError<GoldUnavailable>("GoldUnavailable", {
-    description: "Expected missing, undecodable, or digest-invalid gold-v1 label failure.",
+    description: "Expected gold-v1 workflow failure carrying a stable machine-readable reason.",
+  })
+) {}
+
+/**
+ * Refuses a hosted model identity whose configured id does not pin a revision.
+ *
+ * **Example** (Name the setting to pin)
+ *
+ * ```ts
+ * import { ModelRevisionUnpinned } from "@/schema/Errors"
+ *
+ * const error = ModelRevisionUnpinned.make({
+ *   message: "Configure an explicitly versioned model id.",
+ *   model: "grok-4",
+ *   setting: "SEMANTICA_XAI_MODEL"
+ * })
+ * console.log(error.setting) // "SEMANTICA_XAI_MODEL"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ModelRevisionUnpinned extends S.TaggedError<ModelRevisionUnpinned>($I`ModelRevisionUnpinned`)(
+  "ModelRevisionUnpinned",
+  { message: S.NonEmptyString, model: S.NonEmptyString, setting: ModelRevisionPinSetting },
+  $I.annoteError<ModelRevisionUnpinned>("ModelRevisionUnpinned", {
+    description: "Expected refusal when a live hosted model id does not expose an immutable revision.",
   })
 ) {}
 

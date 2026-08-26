@@ -13,7 +13,7 @@ import * as Str from "effect/String";
  * references are also decoded. Unknown named references remain byte-for-byte
  * text.
  *
- * @category constants
+ * @category encoding
  * @since 0.0.0
  */
 const HTML5_NAMED_ENTITIES: Readonly<Record<string, string>> = {
@@ -171,6 +171,51 @@ const parseTag = (html: string, start: number): Result.Result<ParsedTag, "trunca
     })
   );
 
+const isTagNameBoundary = (character: string): boolean =>
+  Str.isEmpty(character) ||
+  isWhitespace(character) ||
+  Str.Equivalence(character, "/") ||
+  Str.Equivalence(character, ">");
+
+const startsWithRawTag = (html: string, index: number, name: string, closing: boolean): boolean => {
+  const prefix = closing ? `</${name}` : `<${name}`;
+  const candidate = Str.toLowerCase(Str.slice(index, index + Str.length(prefix))(html));
+  return Str.Equivalence(candidate, prefix) && isTagNameBoundary(charAt(html, index + Str.length(prefix)));
+};
+
+const findNextRawTextTag = (
+  html: string,
+  start: number,
+  name: string
+): Result.Result<O.Option<ParsedTag>, "truncated"> => {
+  const size = Str.length(html);
+  let index = start;
+  while (index < size) {
+    if (startsWithRawTag(html, index, name, true) || startsWithRawTag(html, index, name, false)) {
+      return parseTag(html, index).pipe(Result.map(O.some));
+    }
+    index += 1;
+  }
+  return Result.succeed(O.none());
+};
+
+const consumeRawTextElement = (html: string, start: number, name: string): Result.Result<number, "truncated"> => {
+  let depth = 1;
+  let index = start;
+  while (N.isGreaterThan(depth, 0)) {
+    const next = findNextRawTextTag(html, index, name);
+    if (Result.isFailure(next)) {
+      return Result.fail(next.failure);
+    }
+    if (O.isNone(next.success)) {
+      return truncated();
+    }
+    depth += next.success.value.closing ? -1 : 1;
+    index = next.success.value.end + 1;
+  }
+  return Result.succeed(index);
+};
+
 const numericEntity = (body: string): O.Option<string> => {
   if (!Str.startsWith("#")(body)) {
     return O.none();
@@ -194,26 +239,14 @@ const decodeEntityAt = (html: string, start: number): O.Option<readonly [string,
     )
   );
 
-const appendTagBoundary = (output: string, hiddenElement: O.Option<string>, tag: ParsedTag): string =>
+const appendTagBoundary = (output: string, tag: ParsedTag): string =>
   Match.value({
     block: R.has(BLOCK_ELEMENTS, tag.name),
-    hidden: O.isSome(hiddenElement),
     opensHidden: !tag.closing && R.has(HIDDEN_ELEMENTS, tag.name),
   }).pipe(
-    Match.when({ hidden: true }, () => output),
     Match.when({ opensHidden: true }, () => output),
     Match.when({ block: true }, () => Str.concat(output, "\n")),
     Match.orElse(() => output)
-  );
-
-const updateHiddenElement = (hiddenElement: O.Option<string>, tag: ParsedTag): O.Option<string> =>
-  Match.value({
-    closesHidden: tag.closing && hiddenElement.pipe(O.exists((hiddenName) => Str.Equivalence(tag.name, hiddenName))),
-    opensHidden: O.isNone(hiddenElement) && !tag.closing && R.has(HIDDEN_ELEMENTS, tag.name),
-  }).pipe(
-    Match.when({ closesHidden: true }, () => O.none<string>()),
-    Match.when({ opensHidden: true }, () => O.some(tag.name)),
-    Match.orElse(() => hiddenElement)
   );
 
 /**
@@ -226,12 +259,21 @@ const updateHiddenElement = (hiddenElement: O.Option<string>, tag: ParsedTag): O
  * not collapse source whitespace. EOF inside a tag, quoted attribute, or HTML
  * comment returns `truncated`.
  *
- * @category parsing
+ * **Example** (Drop script text)
+ *
+ * ```ts
+ * import { extractHtmlText } from "@/parse/Html"
+ * import * as Result from "effect/Result"
+ *
+ * const extracted = extractHtmlText("<script>if (a < b) {}</script><p>visible</p>")
+ * console.log(Result.getOrElse(extracted, () => "failed")) // "\nvisible\n"
+ * ```
+ *
+ * @category encoding
  * @since 0.0.0
  */
 export const extractHtmlText = (html: string): Result.Result<string, "truncated"> => {
   const size = Str.length(html);
-  let hiddenElement = O.none<string>();
   let output: string = Str.empty;
   let index = 0;
 
@@ -239,9 +281,8 @@ export const extractHtmlText = (html: string): Result.Result<string, "truncated"
     const character = charAt(html, index);
     const step = Match.value({
       comment: Str.startsWith("<!--", index)(html),
-      entity: O.isNone(hiddenElement) && Str.Equivalence(character, "&"),
+      entity: Str.Equivalence(character, "&"),
       tag: Str.Equivalence(character, "<"),
-      visible: O.isNone(hiddenElement),
     }).pipe(
       Match.when({ comment: true }, () =>
         findFrom(html, "-->", index + 4).pipe(
@@ -256,10 +297,17 @@ export const extractHtmlText = (html: string): Result.Result<string, "truncated"
       ),
       Match.when({ tag: true }, () =>
         parseTag(html, index).pipe(
-          Result.map((tag) => {
-            output = appendTagBoundary(output, hiddenElement, tag);
-            hiddenElement = updateHiddenElement(hiddenElement, tag);
+          Result.flatMap((tag) => {
+            output = appendTagBoundary(output, tag);
             index = tag.end + 1;
+            if (!tag.closing && R.has(HIDDEN_ELEMENTS, tag.name)) {
+              return consumeRawTextElement(html, index, tag.name).pipe(
+                Result.map((nextIndex) => {
+                  index = nextIndex;
+                })
+              );
+            }
+            return Result.succeed(undefined);
           })
         )
       ),
@@ -279,12 +327,8 @@ export const extractHtmlText = (html: string): Result.Result<string, "truncated"
           )
         )
       ),
-      Match.when({ visible: true }, () => {
-        output = Str.concat(output, character);
-        index += 1;
-        return Result.succeed(undefined);
-      }),
       Match.orElse(() => {
+        output = Str.concat(output, character);
         index += 1;
         return Result.succeed(undefined);
       })

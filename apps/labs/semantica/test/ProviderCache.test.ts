@@ -1,7 +1,8 @@
 // @vitest-environment node
 
+import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { ConfigProvider, Effect, FileSystem, Layer, Ref, Result, Stream } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
@@ -9,13 +10,15 @@ import * as Response from "effect/unstable/ai/Response";
 import { describe, expect, it } from "vitest";
 import {
   ActiveModelIdentityLive,
+  AnthropicExtractionLanguageModelLive,
   CachingLanguageModelLive,
   ReplayLanguageModelLive,
   replayGenerateText,
+  XAiGoldModelIdentityLive,
 } from "@/layers/LanguageModelLive";
 import { RuntimeLayer } from "@/runtime/Layer";
 import { contentDigest, sha256TextSync } from "@/schema/Digest";
-import { ProviderCacheCorrupt, ProviderUnavailable } from "@/schema/Errors";
+import { ModelRevisionUnpinned, ProviderCacheCorrupt, ProviderUnavailable } from "@/schema/Errors";
 import { ModelIdentity } from "@/schema/Model";
 import { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
@@ -30,7 +33,7 @@ const model = ModelIdentity.make({
   artifactHash: sha256TextSync("provider-cache-test-artifact"),
   name: "stub-2026-08-26",
   provider: "xai",
-  revision: "2026-08-26",
+  revision: "stub-2026-08-26",
   taskType: "gold-proposal",
 });
 
@@ -54,6 +57,14 @@ const makeStubLanguageModel = (calls: Ref.Ref<number>) =>
     })
   );
 
+const noOpProviderCache = Layer.succeed(
+  ProviderCache,
+  ProviderCache.of({
+    lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeed(O.none())),
+    store: Effect.fn("ProviderCache.store")(() => Effect.void),
+  })
+);
+
 describe("C0 provider cache and language-model boundary", () => {
   it("is write-once, caches misses, replays hits, and keeps offline misses typed", () =>
     Effect.runPromise(
@@ -61,6 +72,7 @@ describe("C0 provider cache and language-model boundary", () => {
         Effect.scoped(
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
             const cacheDirectory = yield* fs.makeTempDirectoryScoped({
               prefix: "semantica-provider-cache-",
             });
@@ -97,6 +109,35 @@ describe("C0 provider cache and language-model boundary", () => {
                 });
                 const conflictError = yield* cache.store(conflict).pipe(Effect.flip);
                 expect(conflictError).toBeInstanceOf(ProviderCacheCorrupt);
+
+                const identicalRaceKey = makeKey("concurrent identical write-once");
+                const identicalRaceCacheKey = yield* contentDigest(ProviderCacheKey)(identicalRaceKey);
+                const identicalRaceEntry = ProviderCacheEntry.make({
+                  cacheKey: identicalRaceCacheKey,
+                  key: identicalRaceKey,
+                  response: "same",
+                  responseDigest: sha256TextSync("same"),
+                });
+                const identicalRaceResults = yield* Effect.all(
+                  A.map([cache.store(identicalRaceEntry), cache.store(identicalRaceEntry)], Effect.result),
+                  { concurrency: "unbounded" }
+                );
+                expect(A.filter(identicalRaceResults, Result.isSuccess)).toHaveLength(2);
+
+                const orphanKey = makeKey("orphaned lock");
+                const orphanCacheKey = yield* contentDigest(ProviderCacheKey)(orphanKey);
+                const orphanEntry = ProviderCacheEntry.make({
+                  cacheKey: orphanCacheKey,
+                  key: orphanKey,
+                  response: "recovered",
+                  responseDigest: sha256TextSync("recovered"),
+                });
+                const orphanLock = path.join(cacheDirectory, `${orphanCacheKey}.json.lock`);
+                yield* fs.makeDirectory(orphanLock);
+                yield* fs.utimes(orphanLock, 0, 0);
+                yield* cache.store(orphanEntry);
+                expect(yield* cache.lookup(orphanKey)).toEqual(O.some(orphanEntry));
+                expect(yield* fs.exists(orphanLock)).toBe(false);
 
                 const raceKey = makeKey("concurrent write-once");
                 const raceCacheKey = yield* contentDigest(ProviderCacheKey)(raceKey);
@@ -154,5 +195,82 @@ describe("C0 provider cache and language-model boundary", () => {
           })
         )
       )
+    ));
+
+  it.each([
+    [{ AI_ANTHROPIC_API_KEY: "test-key", AI_ANTHROPIC_MODEL: "claude-test-20260826" }, "claude-test-20260826"],
+    [{ AI_ANTHROPIC_API_KEY: "test-key" }, ANTHROPIC_DEFAULT_MODEL],
+  ] as const)("acquires the Anthropic extraction layer with model identity %s", (env, expectedModel) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const layer = AnthropicExtractionLanguageModelLive(model.artifactHash).pipe(
+          Layer.provide(BunServices.layer),
+          Layer.provide(noOpProviderCache),
+          Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env })))
+        );
+        const identity = yield* provideScopedLayer(layer)(ActiveModelIdentity);
+
+        expect(identity.name).toBe(expectedModel);
+        expect(identity.revision).toBe(expectedModel);
+        expect(identity.provider).toBe("anthropic");
+        expect(identity.taskType).toBe("extraction");
+      })
+    )
+  );
+
+  it("refuses unversioned xAI proposal identities with the pinning setting", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const error = yield* provideScopedLayer(
+          XAiGoldModelIdentityLive({ artifactHash: model.artifactHash, model: "grok-4" })
+        )(ActiveModelIdentity).pipe(Effect.flip);
+
+        expect(error).toBeInstanceOf(ModelRevisionUnpinned);
+        expect(error).toMatchObject({
+          _tag: "ModelRevisionUnpinned",
+          model: "grok-4",
+          setting: "SEMANTICA_XAI_MODEL",
+        });
+      })
+    ));
+
+  it.each(["grok-test-20260826", "grok-build-v2", "grok-build@3", "grok-build:2026"])(
+    "retains an explicit model revision verbatim for %s",
+    (modelId) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const identity = yield* provideScopedLayer(
+            XAiGoldModelIdentityLive({ artifactHash: model.artifactHash, model: modelId })
+          )(ActiveModelIdentity);
+
+          expect(identity.name).toBe(modelId);
+          expect(identity.revision).toBe(modelId);
+        })
+      )
+  );
+
+  it("refuses an unversioned Anthropic override with AI_ANTHROPIC_MODEL", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const layer = AnthropicExtractionLanguageModelLive(model.artifactHash).pipe(
+          Layer.provide(BunServices.layer),
+          Layer.provide(noOpProviderCache),
+          Layer.provide(
+            ConfigProvider.layer(
+              ConfigProvider.fromEnv({
+                env: { AI_ANTHROPIC_API_KEY: "test-key", AI_ANTHROPIC_MODEL: "claude-latest" },
+              })
+            )
+          )
+        );
+        const error = yield* provideScopedLayer(layer)(ActiveModelIdentity).pipe(Effect.flip);
+
+        expect(error).toBeInstanceOf(ModelRevisionUnpinned);
+        expect(error).toMatchObject({
+          _tag: "ModelRevisionUnpinned",
+          model: "claude-latest",
+          setting: "AI_ANTHROPIC_MODEL",
+        });
+      })
     ));
 });

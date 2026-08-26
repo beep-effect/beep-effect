@@ -25,6 +25,17 @@ const unavailable = (message: string): DocumentUnavailable => DocumentUnavailabl
  * Loads the manifest and fixture catalog through their existing integrity
  * checks before constructing a document selection.
  *
+ * **Example** (Build a selection-loading effect)
+ *
+ * ```ts
+ * import { loadDocumentSelection } from "@/layers/DocumentSourceLive"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const selection = loadDocumentSelection("fixtures/w1.manifest.json", O.none())
+ * console.log(Effect.isEffect(selection)) // true
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -193,6 +204,15 @@ const makeDocumentSource = Effect.gen(function* () {
 
 /**
  * Filesystem-backed source service for verified W1 and F1 documents.
+ *
+ * **Example** (Inspect the document-source layer)
+ *
+ * ```ts
+ * import { DocumentSourceLive } from "@/layers/DocumentSourceLive"
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(DocumentSourceLive)) // true
+ * ```
  *
  * @category layers
  * @since 0.0.0

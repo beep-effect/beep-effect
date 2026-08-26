@@ -43,79 +43,42 @@ const provideScopedLayer =
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const sourceText = "Alpha relates to Beta.";
+const sourceText = "Café relates to Beta.";
 const sourceBytes = new TextEncoder().encode(sourceText);
 const sourceDigest = sha256TextSync(sourceText);
 const proposer = ModelIdentity.make({
   artifactHash: GOLD_PROMPT_ARTIFACT_HASH,
   name: "stub-gold-2026-08-26",
   provider: "xai",
-  revision: "2026-08-26",
+  revision: "stub-gold-2026-08-26",
   taskType: "gold-proposal",
 });
 
 const proposalForPrompt = (prompt: string): string => {
   if (Str.includes("\nSUBSET=entity\nSOURCE_TEXT_BEGIN")(prompt)) {
-    return JSON.stringify({
-      labels: [
-        {
-          endChar: 5,
-          entityType: "concept",
-          label: "Alpha",
-          quote: "Alpha",
-          startChar: 0,
-        },
-        {
-          endChar: 5,
-          entityType: "fabricated",
-          label: "Ghost",
-          quote: "Ghost",
-          startChar: 0,
-        },
-      ],
-    });
+    return '{"labels":[{"endChar":4,"entityType":"concept","label":"Coffee concept","quote":"Café","startChar":0},{"endChar":20,"entityType":"concept","label":"Beta","quote":"Beta","startChar":16},{"endChar":4,"entityType":"fabricated","label":"Ghost","quote":"Ghost","startChar":0}]}';
   }
   if (Str.includes("\nSUBSET=relation\nSOURCE_TEXT_BEGIN")(prompt)) {
-    return JSON.stringify({
-      labels: [
-        {
-          endChar: 21,
-          object: "Beta",
-          predicate: "relates-to",
-          quote: "Alpha relates to Beta",
-          startChar: 0,
-          subject: "Alpha",
-        },
-      ],
-    });
+    return '{"labels":[{"endChar":20,"object":"Beta","predicate":"relates-to","quote":"Café relates to Beta","startChar":0,"subject":"Café"},{"endChar":20,"object":"Beta","predicate":"fabricated","quote":"Café relates to Beta","startChar":0,"subject":"Ghost"}]}';
   }
-  return JSON.stringify({
-    labels: [
-      {
-        depth: 0,
-        endChar: 5,
-        quote: "Alpha",
-        role: "title",
-        startChar: 0,
-      },
-    ],
-  });
+  return '{"labels":[{"depth":0,"endChar":4,"quote":"Café","role":"title","startChar":0}]}';
 };
 
-const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index, paperId: CorpusPaperId) => {
+const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
   const documentId = DocumentId.make(sourceDigest);
-  const document = SourceDocument.make({
-    acquired: ProvenanceEventId.make(sourceDigest),
-    bytes: NonNegativeInt.make(sourceBytes.byteLength),
-    id: documentId,
-    mediaType: "text/markdown",
-    origin: Origin.cases.W1Paper.make({
-      corpusId: manifest.corpusId,
-      paperId,
-      relativePath: `${paperId}.pdf`,
-    }),
-    sha256: sourceDigest,
-  });
+  const documentFor = (paperId: CorpusPaperId) =>
+    SourceDocument.make({
+      acquired: ProvenanceEventId.make(sourceDigest),
+      bytes: NonNegativeInt.make(sourceBytes.byteLength),
+      id: documentId,
+      mediaType: "text/markdown",
+      origin: Origin.cases.W1Paper.make({
+        corpusId: manifest.corpusId,
+        paperId,
+        relativePath: `${paperId}.pdf`,
+      }),
+      sha256: sourceDigest,
+    });
   const manifestBuilder = Layer.succeed(
     CorpusManifestBuilder,
     CorpusManifestBuilder.of({
@@ -127,7 +90,9 @@ const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index, paperId:
   const documentSource = Layer.succeed(
     DocumentSource,
     DocumentSource.of({
-      list: Effect.fn("DocumentSource.list")(() => Effect.succeed([document])),
+      list: Effect.fn("DocumentSource.list")((selection) =>
+        Effect.succeed(O.match(selection.paper, { onNone: () => [], onSome: (paperId) => [documentFor(paperId)] }))
+      ),
       read: Effect.fn("DocumentSource.read")(() => Effect.succeed(sourceBytes)),
     })
   );
@@ -199,7 +164,7 @@ describe("C0 gold proposer", () => {
     );
   });
 
-  it("writes schema-valid files and drops unanchored labels", () =>
+  it("writes partial labels, drops invalid anchors and relation endpoints, and defers gold.json", () =>
     Effect.runPromise(
       provideScopedLayer(BunServices.layer)(
         Effect.scoped(
@@ -216,7 +181,7 @@ describe("C0 gold proposer", () => {
             const outputDirectory = yield* fs.makeTempDirectoryScoped({
               prefix: "semantica-gold-",
             });
-            const result = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures, paperId))(
+            const result = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
               proposeGold({
                 manifestPath: "stub.manifest.json",
                 outputDirectory,
@@ -225,10 +190,14 @@ describe("C0 gold proposer", () => {
               })
             );
 
-            expect(result.total).toBe(4);
-            expect(result.accepted).toBe(3);
-            expect(result.fraction).toBe(0.75);
+            expect(result.total).toBe(6);
+            expect(result.accepted).toBe(4);
+            expect(result.fraction).toBe(4 / 6);
             expect(A.length(result.files)).toBe(3);
+            expect(result.reference.status).toBe("not-written");
+            if (result.reference.status === "not-written") {
+              expect(result.reference.missingJobs).toHaveLength(15);
+            }
             expect(
               A.every(result.files, (file) => {
                 for (const label of file.labels) {
@@ -246,12 +215,100 @@ describe("C0 gold proposer", () => {
                 .pipe(Effect.flatMap(S.decodeEffect(GoldFileJson)))
             );
             const entityFile = A.findFirst(decodedFiles, (file) => file.subset === "entity");
-            expect(O.map(entityFile, (file) => A.length(file.labels))).toEqual(O.some(1));
+            expect(O.map(entityFile, (file) => A.length(file.labels))).toEqual(O.some(2));
+            const relationFile = A.findFirst(decodedFiles, (file) => file.subset === "relation");
+            expect(O.map(relationFile, (file) => A.length(file.labels))).toEqual(O.some(1));
+            expect(yield* fs.exists(path.join(outputDirectory, "gold.json"))).toBe(false);
+          })
+        )
+      )
+    ));
 
+  it("writes gold.json only after all eighteen stub jobs form one coherent proposer set", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const manifest = yield* fs
+              .readFileString("fixtures/w1.manifest.json")
+              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
+            const fixtures = yield* fs
+              .readFileString("fixtures/f1/index.json")
+              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+            const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-complete-" });
+            const result = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
+              proposeGold({
+                manifestPath: "stub.manifest.json",
+                outputDirectory,
+                paper: O.none(),
+                subset: O.none(),
+              })
+            );
+
+            expect(result.files).toHaveLength(18);
+            expect(result.total).toBe(31);
+            expect(result.accepted).toBe(23);
+            expect(result.reference.status).toBe("written");
             const reference = yield* fs
               .readFileString(path.join(outputDirectory, "gold.json"))
               .pipe(Effect.flatMap(S.decodeEffect(GoldRefJson)));
+            expect(reference.proposer).toEqual(proposer);
             expect(reference.spotCheckedFraction).toBe(0);
+          })
+        )
+      )
+    ));
+
+  it("fails with mixed-proposer when one complete-set file is stale", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const manifest = yield* fs
+              .readFileString("fixtures/w1.manifest.json")
+              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
+            const fixtures = yield* fs
+              .readFileString("fixtures/f1/index.json")
+              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+            const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-mixed-" });
+            const layer = makeGoldTestLayer(manifest, fixtures);
+            yield* provideScopedLayer(layer)(
+              proposeGold({
+                manifestPath: "stub.manifest.json",
+                outputDirectory,
+                paper: O.none(),
+                subset: O.none(),
+              })
+            );
+
+            const stalePaper = A.getUnsafe(manifest.rows, 9).id;
+            const stalePath = path.join(outputDirectory, `${stalePaper}.structure.json`);
+            const staleFile = yield* fs.readFileString(stalePath).pipe(Effect.flatMap(S.decodeEffect(GoldFileJson)));
+            const staleProposer = ModelIdentity.make({
+              ...proposer,
+              name: "stale-gold-20260825",
+              revision: "stale-gold-20260825",
+            });
+            const staleValue = yield* S.decodeEffect(GoldFile)({ ...staleFile, proposer: staleProposer });
+            const staleJson = yield* S.encodeEffect(GoldFileJson)(staleValue);
+            yield* fs.writeFileString(stalePath, `${staleJson}\n`);
+
+            const selectedPaper = A.getUnsafe(manifest.rows, 0).id;
+            const error = yield* provideScopedLayer(layer)(
+              proposeGold({
+                manifestPath: "stub.manifest.json",
+                outputDirectory,
+                paper: O.some(selectedPaper),
+                subset: O.none(),
+              })
+            ).pipe(Effect.flip);
+
+            expect(error).toBeInstanceOf(GoldUnavailable);
+            expect(error.reason).toBe("mixed-proposer");
           })
         )
       )
@@ -273,13 +330,14 @@ describe("C0 gold proposer", () => {
             renderErrors: false,
             version: "0.0.0",
           });
-          const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures, paperId))(
+          const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
             runCanary(["gold", "propose", "--offline", "--paper", paperId, "--subset", "entity"]).pipe(Effect.flip)
           );
 
           expect(error).toBeInstanceOf(GoldUnavailable);
           if (error._tag === "GoldUnavailable") {
             expect(error.message).toBe("Choose either --paper or --subset, not both.");
+            expect(error.reason).toBe("invalid-selection");
           }
         })
       )

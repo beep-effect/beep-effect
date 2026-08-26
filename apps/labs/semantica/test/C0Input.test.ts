@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text";
 import { TextAnchor } from "@beep/provenance";
 import { NonNegativeInt } from "@beep/schema";
 import { ConfigProvider, Effect, Layer, Number as N } from "effect";
@@ -59,6 +60,24 @@ describe("C0 HTML extractor", () => {
     });
   });
 
+  it("treats script bodies containing less-than signs as opaque raw text", () => {
+    expect(extractHtmlText("<script>if (a < b) {}</script><p>visible</p>")).toMatchObject({
+      _tag: "Success",
+      success: "\nvisible\n",
+    });
+  });
+
+  it("keeps nested hidden elements hidden until their matching outer close", () => {
+    const html =
+      "<head>outer<head>inner</head>still hidden</head>" +
+      "<script>outer<script>inner</script>still hidden</script>" +
+      "<style>outer<style>inner</style>still hidden</style><p>visible</p>";
+    expect(extractHtmlText(html)).toMatchObject({
+      _tag: "Success",
+      success: "\nvisible\n",
+    });
+  });
+
   it.each(['<p title="unfinished', "<p title='unfinished", "<!-- unfinished", "<section"])(
     "reports truncated for EOF inside markup: %s",
     (html) => {
@@ -78,11 +97,50 @@ describe("C0 F1 input services", () => {
       Layer.isLayer(
         XAiGoldLanguageModelLive({
           artifactHash: GOLD_PROMPT_ARTIFACT_HASH,
-          model: "grok-4",
+          model: "grok-4-20260826",
         })
       )
     ).toBe(true);
   });
+
+  it("acquires ParserRetryLive and preserves both F1 PDF outcomes", () =>
+    Effect.runPromise(
+      provideScopedLayer(runtime)(
+        Effect.gen(function* () {
+          const catalog = yield* F1Catalog;
+          const source = yield* DocumentSource;
+          const retryParser = yield* provideScopedLayer(ParserRetryLive)(Parser);
+          const index = yield* catalog.load;
+          const twoColumn = A.getUnsafe(
+            A.filter(index.fixtures, (fixture) => Str.Equivalence(fixture.id, "pdf-two-column")),
+            0
+          );
+          const truncated = A.getUnsafe(
+            A.filter(index.fixtures, (fixture) => Str.Equivalence(fixture.id, "pdf-truncated")),
+            0
+          );
+
+          const twoColumnDocument = fixtureDocument(twoColumn);
+          const twoColumnOutcome = yield* source
+            .read(twoColumnDocument)
+            .pipe(Effect.flatMap((bytes) => retryParser.parse(twoColumnDocument, bytes)));
+          expect(twoColumnOutcome.outcome).toBe("Parsed");
+          if (twoColumnOutcome.outcome === "Parsed") {
+            expect(Str.isNonEmpty(Str.trim(twoColumnOutcome.text))).toBe(true);
+            expect(twoColumnOutcome.extractor.name).toBe("unpdf-raw");
+          }
+
+          const truncatedDocument = fixtureDocument(truncated);
+          const truncatedOutcome = yield* source
+            .read(truncatedDocument)
+            .pipe(Effect.flatMap((bytes) => retryParser.parse(truncatedDocument, bytes)));
+          expect(truncatedOutcome.outcome).toBe("Degraded");
+          if (truncatedOutcome.outcome === "Degraded") {
+            expect(O.some(truncatedOutcome.kind)).toEqual(truncated.degradedKind);
+          }
+        })
+      )
+    ));
 
   it("matches all nine declared parse outcomes and verifies every parsed anchor", () =>
     Effect.runPromise(
@@ -114,6 +172,9 @@ describe("C0 F1 input services", () => {
                 return yield* Effect.die(new Error(`Expected ${fixture.id} to parse, got ${outcome.kind}.`));
               }
               const canonical = yield* canonicalizer.identify(document, outcome);
+              if (Str.Equivalence(fixture.mediaType, "application/pdf")) {
+                expect(outcome.extractor.version).toBe(DOC_TEXT_ENGINE_VERSION);
+              }
               const width = N.min(20, Str.length(canonical.text));
               const quote = Str.slice(0, width)(canonical.text);
               expect(Str.isNonEmpty(quote)).toBe(true);

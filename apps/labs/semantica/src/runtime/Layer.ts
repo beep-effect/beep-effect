@@ -25,6 +25,20 @@ const LoggingLive = Logger.layer([Logger.withConsoleError(Logger.formatLogFmt)],
  * The result is intentionally not acquired by {@link RuntimeLayer}; provider
  * acquisition remains lazy so manifest-only commands never require API keys.
  *
+ * **Example** (Select a runtime model layer)
+ *
+ * ```ts
+ * import { LanguageModelRuntimeLive } from "@/runtime/Layer"
+ * import { Effect, Layer, Stream } from "effect"
+ * import * as LanguageModel from "effect/unstable/ai/LanguageModel"
+ *
+ * const live = Layer.effect(LanguageModel.LanguageModel, LanguageModel.make({
+ *   generateText: () => Effect.never,
+ *   streamText: () => Stream.empty
+ * }))
+ * console.log(Layer.isLayer(LanguageModelRuntimeLive(live))) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -39,6 +53,14 @@ export const LanguageModelRuntimeLive = <E, R>(live: Layer.Layer<LanguageModel.L
       )
     )
   );
+
+const InfrastructureLive = Layer.mergeAll(BunServices.layer, LabConfigLive, LoggingLive);
+
+const P1ServicesLive = Layer.merge(CorpusManifestBuilderLive, F1CatalogLive).pipe(Layer.provide(InfrastructureLive));
+
+const C0InputServicesLive = Layer.mergeAll(CanonicalizerLive, DocumentSourceLive, ParserLive, ProviderCacheLive).pipe(
+  Layer.provide(InfrastructureLive)
+);
 
 /**
  * Bun runtime services, environment-decoded lab configuration, C0 input
@@ -56,12 +78,4 @@ export const LanguageModelRuntimeLive = <E, R>(live: Layer.Layer<LanguageModel.L
  * @category layers
  * @since 0.0.0
  */
-const InfrastructureLive = Layer.mergeAll(BunServices.layer, LabConfigLive, LoggingLive);
-
-const P1ServicesLive = Layer.merge(CorpusManifestBuilderLive, F1CatalogLive).pipe(Layer.provide(InfrastructureLive));
-
-const C0InputServicesLive = Layer.mergeAll(CanonicalizerLive, DocumentSourceLive, ParserLive, ProviderCacheLive).pipe(
-  Layer.provide(InfrastructureLive)
-);
-
 export const RuntimeLayer = Layer.mergeAll(InfrastructureLive, P1ServicesLive, C0InputServicesLive);

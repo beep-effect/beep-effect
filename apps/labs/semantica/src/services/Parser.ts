@@ -19,6 +19,15 @@ interface ParserShape {
 /**
  * App-local parser contract shared by the primary and breaker Layers.
  *
+ * **Example** (Read the parser service)
+ *
+ * ```ts
+ * import { Parser } from "@/services/Parser"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Parser)) // true
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */

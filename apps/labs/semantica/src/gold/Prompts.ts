@@ -10,7 +10,7 @@ import type { GoldFile } from "@/schema/Gold";
  * The response is a single JSON object with a `labels` array. Every label uses
  * exact UTF-16 half-open offsets and the exact source slice as `quote`.
  *
- * @category prompts
+ * @category configuration
  * @since 0.0.0
  */
 const GOLD_PROMPT_TEMPLATE = `semantica-gold/v1
@@ -39,7 +39,7 @@ For SUBSET=relation, each label is:
  * C0 uses the xAI adapter defaults, so the explicit option object is empty and
  * still participates in the artifact hash.
  *
- * @category prompts
+ * @category configuration
  * @since 0.0.0
  */
 const GOLD_PROPOSER_OPTIONS = {};
@@ -47,7 +47,16 @@ const GOLD_PROPOSER_OPTIONS = {};
 /**
  * Stable hash of the pinned gold prompt template and provider options.
  *
- * @category prompts
+ * **Example** (Inspect the artifact digest width)
+ *
+ * ```ts
+ * import { GOLD_PROMPT_ARTIFACT_HASH } from "@/gold/Prompts"
+ * import * as Str from "effect/String"
+ *
+ * console.log(Str.length(GOLD_PROMPT_ARTIFACT_HASH)) // 64
+ * ```
+ *
+ * @category configuration
  * @since 0.0.0
  */
 export const GOLD_PROMPT_ARTIFACT_HASH = sha256TextSync(
@@ -57,7 +66,17 @@ export const GOLD_PROMPT_ARTIFACT_HASH = sha256TextSync(
 /**
  * Renders one paper/subset request for the independent proposer.
  *
- * @category prompts
+ * **Example** (Render an entity request)
+ *
+ * ```ts
+ * import { makeGoldPrompt } from "@/gold/Prompts"
+ * import * as Str from "effect/String"
+ *
+ * const prompt = makeGoldPrompt({ paperId: "paper-20260826", subset: "entity", text: "Alpha" })
+ * console.log(Str.includes("SUBSET=entity")(prompt)) // true
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
  */
 export const makeGoldPrompt = (input: {

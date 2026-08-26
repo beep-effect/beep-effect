@@ -1,4 +1,4 @@
-import { DocTextFileProcessingEngine } from "@beep/doc-text";
+import { DOC_TEXT_ENGINE_VERSION, DocTextFileProcessingEngine } from "@beep/doc-text";
 import {
   ArtifactId,
   ArtifactLocator,
@@ -31,7 +31,7 @@ import type { ParseOutcome as ParseOutcomeValue } from "@/schema/Text";
 const extractors = {
   html: SourceTextExtractor.make({ name: "semantica-html", version: SEMANTICA_VERSION }),
   markdown: SourceTextExtractor.make({ name: "semantica-md", version: SEMANTICA_VERSION }),
-  pdf: SourceTextExtractor.make({ name: "doc-text", version: SEMANTICA_VERSION }),
+  pdf: SourceTextExtractor.make({ name: "doc-text", version: DOC_TEXT_ENGINE_VERSION }),
   retryPdf: SourceTextExtractor.make({ name: "unpdf-raw", version: SEMANTICA_VERSION }),
 };
 
@@ -195,6 +195,15 @@ const makeParser = (pdf: (document: SourceDocument, bytes: Uint8Array) => Effect
  * Primary parser Layer backed by doc-text, strict UTF-8, and the local HTML
  * extractor.
  *
+ * **Example** (Inspect the primary parser layer)
+ *
+ * ```ts
+ * import { ParserLive } from "@/layers/ParserLive"
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(ParserLive)) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -202,6 +211,15 @@ export const ParserLive = Layer.succeed(Parser, makeParser(parsePdf));
 
 /**
  * Breaker-only PDF parser using unpdf with normalization disabled per page.
+ *
+ * **Example** (Inspect the breaker parser layer)
+ *
+ * ```ts
+ * import { ParserRetryLive } from "@/layers/ParserLive"
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(ParserRetryLive)) // true
+ * ```
  *
  * @category layers
  * @since 0.0.0

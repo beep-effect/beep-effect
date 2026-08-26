@@ -61,6 +61,15 @@ const makeCanonicalizer = Effect.gen(function* () {
 /**
  * Canonicalizer implementation using the shared provenance verifier.
  *
+ * **Example** (Inspect the canonicalizer layer)
+ *
+ * ```ts
+ * import { CanonicalizerLive } from "@/layers/CanonicalizerLive"
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(CanonicalizerLive)) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */

@@ -12,6 +12,14 @@ const $I = $SemanticaId.create("services/DocumentSource");
 /**
  * Verified W1 and F1 inputs used to select source documents.
  *
+ * **Example** (Inspect the optional paper field)
+ *
+ * ```ts
+ * import { DocumentSelection } from "@/services/DocumentSource"
+ *
+ * console.log(DocumentSelection.fields.paper !== undefined) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -39,6 +47,15 @@ interface DocumentSourceShape {
 
 /**
  * App-local content-addressed source document service.
+ *
+ * **Example** (Read the source service)
+ *
+ * ```ts
+ * import { DocumentSource } from "@/services/DocumentSource"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(DocumentSource)) // true
+ * ```
  *
  * @category services
  * @since 0.0.0

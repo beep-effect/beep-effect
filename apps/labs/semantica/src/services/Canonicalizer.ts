@@ -28,6 +28,15 @@ interface CanonicalizerShape {
 /**
  * App-local canonical text boundary.
  *
+ * **Example** (Read the canonicalizer service)
+ *
+ * ```ts
+ * import { Canonicalizer } from "@/services/Canonicalizer"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Canonicalizer)) // true
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */

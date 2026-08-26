@@ -9,6 +9,14 @@ const $I = $SemanticaId.create("runtime/Config");
 /**
  * Provider execution modes supported by the lab runtime.
  *
+ * **Example** (Check replay mode)
+ *
+ * ```ts
+ * import { RuntimeMode } from "@/runtime/Config"
+ *
+ * console.log(RuntimeMode.is.replay("replay")) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
