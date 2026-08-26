@@ -297,21 +297,25 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
         success: S.String,
       });
       yield* languageModel.generateText({
+        disableToolCallResolution: true,
         prompt: "weather",
         toolChoice: "auto",
         toolkit: Toolkit.make(WeatherTool),
       });
       yield* languageModel.generateText({
+        disableToolCallResolution: true,
         prompt: "weather",
         toolChoice: { tool: "weather" },
         toolkit: Toolkit.make(WeatherTool),
       });
       yield* languageModel.generateText({
+        disableToolCallResolution: true,
         prompt: "weather",
         toolChoice: { mode: "required", oneOf: ["weather"] },
         toolkit: Toolkit.make(WeatherTool),
       });
       yield* languageModel.generateText({
+        disableToolCallResolution: true,
         prompt: "weather",
         toolChoice: { mode: "auto", oneOf: ["weather"] },
         toolkit: Toolkit.make(WeatherTool),
