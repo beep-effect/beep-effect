@@ -26,6 +26,7 @@ const $I = $RepoCliId.create("internal/repo-run/RepoRun.proofs");
  * @since 0.0.0
  */
 export const GITHUB_CHECK_MODE_VALUES = [
+  "cheap-gates",
   "quality",
   "review-fix",
   "repo-sanity",
@@ -70,7 +71,7 @@ export type GithubCheckMode = typeof GithubCheckMode.Type;
  * @category models
  * @since 0.0.0
  */
-export const RepoProofSurface = LiteralKit(["quality", "review-fix", "pre-push"]).pipe(
+export const RepoProofSurface = LiteralKit(["cheap-gates", "quality", "review-fix", "pre-push"]).pipe(
   $I.annoteSchema("RepoProofSurface", {
     description: "Named repository proof surface backed by a GitHub checks mode.",
   })
@@ -128,6 +129,13 @@ export class RepoProofStepDefinition extends S.Class<RepoProofStepDefinition>($I
  */
 export const repoProofStepDefinition = (surface: RepoProofSurface): RepoProofStepDefinition =>
   RepoProofSurface.$match(surface, {
+    "cheap-gates": () =>
+      RepoProofStepDefinition.make({
+        surface,
+        id: "full:00-cheap-gates",
+        label: "full:cheap-gates",
+        args: ["quality", "github-checks", "cheap-gates", "--collect-all"],
+      }),
     quality: () =>
       RepoProofStepDefinition.make({
         surface,
