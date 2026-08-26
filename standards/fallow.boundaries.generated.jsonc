@@ -3124,20 +3124,26 @@
       {
         "from": "@beep/semantica",
         "allow": [
+          "@beep/anthropic",
+          "@beep/doc-text",
           "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/provenance",
           "@beep/schema",
-          "@beep/semantica"
+          "@beep/semantica",
+          "@beep/xai"
         ],
         "allowTypeOnly": [
+          "@beep/anthropic",
+          "@beep/doc-text",
           "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/provenance",
           "@beep/schema",
-          "@beep/semantica"
+          "@beep/semantica",
+          "@beep/xai"
         ]
       },
       {

@@ -1,12 +1,36 @@
 import { $SemanticaId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { Config, Context, Layer } from "effect";
+import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
 
 const $I = $SemanticaId.create("runtime/Config");
 
+/**
+ * Provider execution modes supported by the lab runtime.
+ *
+ * **Example** (Check replay mode)
+ *
+ * ```ts
+ * import { RuntimeMode } from "@/runtime/Config"
+ *
+ * console.log(RuntimeMode.is.replay("replay")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RuntimeMode = LiteralKit(["live", "replay"]).pipe(
+  $I.annoteSchema("RuntimeMode", {
+    description: "Explicit live-provider or cache-only runtime selection.",
+  })
+);
+
 class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
   {
     corpusRoot: S.OptionFromNullOr(S.NonEmptyString),
+    goldModel: S.NonEmptyString,
+    mode: RuntimeMode,
     offline: S.Boolean,
     providerCacheDirectory: S.NonEmptyString,
   },
@@ -22,7 +46,8 @@ class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
  *
  * `SEMANTICA_CORPUS_ROOT` is optional so the shell can start in a typed degraded
  * mode. `SEMANTICA_PROVIDER_CACHE_DIR` defaults to the repository-local cache
- * directory, and `SEMANTICA_OFFLINE` defaults to `false`.
+ * directory, `SEMANTICA_XAI_MODEL` defaults to `grok-4`, and
+ * `SEMANTICA_OFFLINE` selects explicit `replay` mode when true.
  *
  * **Example** (Read runtime configuration)
  *
@@ -41,11 +66,22 @@ export class LabConfig extends Context.Service<LabConfig, LabConfigValue>()($I`L
 
 const labConfig = Config.all({
   corpusRoot: Config.option(Config.nonEmptyString("SEMANTICA_CORPUS_ROOT")),
+  goldModel: Config.nonEmptyString("SEMANTICA_XAI_MODEL").pipe(Config.withDefault("grok-4")),
   offline: Config.boolean("SEMANTICA_OFFLINE").pipe(Config.withDefault(false)),
   providerCacheDirectory: Config.nonEmptyString("SEMANTICA_PROVIDER_CACHE_DIR").pipe(
     Config.withDefault(".beep/semantica/provider-cache")
   ),
-}).pipe(Config.map((config) => LabConfigValue.make(config)));
+}).pipe(
+  Config.map((config) =>
+    LabConfigValue.make({
+      ...config,
+      mode: Bool.match(config.offline, {
+        onFalse: () => "live" as const,
+        onTrue: () => "replay" as const,
+      }),
+    })
+  )
+);
 
 /**
  * Decodes {@link LabConfig} from the active Effect ConfigProvider.
