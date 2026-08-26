@@ -35,11 +35,11 @@ const $I = $NlpProcessingId.create("Graph/TextGraph");
  *
  * **Example** (Empty graph node count)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Empty graph node count"
  * import { empty, nodeCount, type TextGraph } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph: TextGraph = empty()
- * console.log(nodeCount(graph)) // 0
+ * nodeCount(graph) // => 0
  * ```
  *
  * @category models
@@ -69,11 +69,11 @@ export type MutableTextGraph = Graph.MutableDirectedGraph<TextNode, TextEdge>;
  *
  * **Example** (Make GraphCycleError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make GraphCycleError instance"
  * import { GraphCycleError } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const error = GraphCycleError.make({ parentIndex: 0 })
- * console.log(error._tag) // "GraphCycleError"
+ * error._tag // => "GraphCycleError"
  * ```
  *
  * @category errors
@@ -112,10 +112,10 @@ const makeTextNode = (fields: {
  *
  * **Example** (Empty graph zero nodes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Empty graph zero nodes"
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(nodeCount(empty())) // 0
+ * nodeCount(empty()) // => 0
  * ```
  *
  * @category constructors
@@ -128,12 +128,12 @@ export const empty = (): TextGraph => Graph.directed<TextNode, TextEdge>();
  *
  * **Example** (Create singleton document graph)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create singleton document graph"
  * import { Effect } from "effect"
  * import { nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(nodeCount(graph)) // 1
+ * nodeCount(graph) // => 1
  * ```
  *
  * @effects Builds the root text node through `makeTextNode`, which reads the Effect `Clock` for the node timestamp.
@@ -163,7 +163,7 @@ export const singleton: {
  *
  * **Example** (Document with sentence children)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Document with sentence children"
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
@@ -203,7 +203,7 @@ export const singleton: {
  *   })
  * )
  *
- * console.log(nodeCount(graph)) // 3
+ * nodeCount(graph) // => 3
  * ```
  *
  * @effects Reads the `Tokenization` service to split the document into sentences and reads the Effect `Clock` while creating graph nodes.
@@ -256,7 +256,7 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
  *
  * **Example** (Add child under root)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Add child under root"
  * import { Effect } from "effect"
  * import { addChildren, getRoots, nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  * import { TextNode } from "@beep/nlp/Graph/Schema"
@@ -275,7 +275,7 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
  *   })
  * )
  *
- * console.log(nodeCount(Effect.runSync(program))) // 2
+ * nodeCount(Effect.runSync(program)) // => 2
  * ```
  *
  * @category combinators
@@ -331,7 +331,7 @@ export const addChildren: {
  *
  * **Example** (Tokenize sentence into tokens)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Tokenize sentence into tokens"
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
@@ -380,7 +380,7 @@ export const addChildren: {
  *   })
  * )
  *
- * console.log(nodeCount(graph)) // 3
+ * nodeCount(graph) // => 3
  * ```
  *
  * @effects Reads the `Tokenization` service for sentence tokens and reads the Effect `Clock` while adding token nodes.
@@ -480,14 +480,14 @@ const rebuild = (
  *
  * **Example** (Map nodes to uppercase)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map nodes to uppercase"
  * import { Effect } from "effect"
  * import { mapNodes, singleton, toArray } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
  * const mapped = mapNodes(graph, (node) => ({ ...node, text: node.text.toUpperCase() }))
  *
- * console.log(toArray(mapped)[0]?.text) // "HELLO."
+ * toArray(mapped)[0]?.text // => "HELLO."
  * ```
  *
  * @category mapping
@@ -503,12 +503,12 @@ export const mapNodes: {
  *
  * **Example** (Filter nodes by type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Filter nodes by type"
  * import { Effect } from "effect"
  * import { filterNodes, nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(nodeCount(filterNodes(graph, (node) => node.type === "document"))) // 1
+ * nodeCount(filterNodes(graph, (node) => node.type === "document")) // => 1
  * ```
  *
  * @category filtering
@@ -538,12 +538,12 @@ const isTraversalDataFirst = (args: IArguments): boolean =>
  *
  * **Example** (Depth-first walk values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Depth-first walk values"
  * import { Effect, Graph } from "effect"
  * import { dfs, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(Array.from(Graph.values(dfs(graph))).length) // 1
+ * Array.from(Graph.values(dfs(graph, [0]))).length // => 1
  * ```
  *
  * @category sequencing
@@ -563,12 +563,12 @@ export const dfs: {
  *
  * **Example** (Breadth-first walk values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Breadth-first walk values"
  * import { Effect, Graph } from "effect"
  * import { bfs, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(Array.from(Graph.values(bfs(graph))).length) // 1
+ * Array.from(Graph.values(bfs(graph, [0]))).length // => 1
  * ```
  *
  * @category sequencing
@@ -588,12 +588,12 @@ export const bfs: {
  *
  * **Example** (Topological walk values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Topological walk values"
  * import { Effect, Graph } from "effect"
  * import { singleton, topo } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(Array.from(Graph.values(topo(graph))).length) // 1
+ * Array.from(Graph.values(topo(graph))).length // => 1
  * ```
  *
  * @category sequencing
@@ -606,11 +606,11 @@ export const topo = (graph: TextGraph): Graph.NodeWalker<TextNode> => Graph.topo
  *
  * **Example** (Collect nodes into array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Collect nodes into array"
  * import { Effect } from "effect"
  * import { singleton, toArray } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(toArray(Effect.runSync(singleton("Hello.", "document"))).length) // 1
+ * toArray(Effect.runSync(singleton("Hello.", "document"))).length // => 1
  * ```
  *
  * @category getters
@@ -628,10 +628,10 @@ export const toArray = (graph: TextGraph): ReadonlyArray<TextNode> =>
  *
  * **Example** (Count nodes in empty)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count nodes in empty"
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(nodeCount(empty())) // 0
+ * nodeCount(empty()) // => 0
  * ```
  *
  * @category getters
@@ -644,10 +644,10 @@ export const nodeCount = (graph: TextGraph): number => Graph.nodeCount(graph);
  *
  * **Example** (Count edges in empty)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count edges in empty"
  * import { empty, edgeCount } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(edgeCount(empty())) // 0
+ * edgeCount(empty()) // => 0
  * ```
  *
  * @category getters
@@ -660,12 +660,12 @@ export const edgeCount = (graph: TextGraph): number => Graph.edgeCount(graph);
  *
  * **Example** (Find nodes by document type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Find nodes by document type"
  * import { Effect } from "effect"
  * import { findNodesByType, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(findNodesByType(graph, "document").length) // 1
+ * findNodesByType(graph, "document").length // => 1
  * ```
  *
  * @category getters
@@ -685,11 +685,11 @@ export const findNodesByType: {
  *
  * **Example** (Get roots of singleton)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Get roots of singleton"
  * import { Effect } from "effect"
  * import { getRoots, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(getRoots(Effect.runSync(singleton("Hello.", "document"))).length) // 1
+ * getRoots(Effect.runSync(singleton("Hello.", "document"))).length // => 1
  * ```
  *
  * @category getters
@@ -703,11 +703,11 @@ export const getRoots = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
  *
  * **Example** (Get leaves of singleton)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Get leaves of singleton"
  * import { Effect } from "effect"
  * import { getLeaves, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(getLeaves(Effect.runSync(singleton("Hello.", "document"))).length) // 1
+ * getLeaves(Effect.runSync(singleton("Hello.", "document"))).length // => 1
  * ```
  *
  * @category getters
@@ -721,7 +721,7 @@ export const getLeaves = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
  *
  * **Example** (Children of document root)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Children of document root"
  * import { Effect } from "effect"
  * import { getChildren, getRoots, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  * import * as A from "effect/Array"
@@ -733,7 +733,7 @@ export const getLeaves = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
  *   onSome: (root) => getChildren(graph, root).length
  * })
  *
- * console.log(childCount) // 0
+ * childCount // => 0
  * ```
  *
  * @category getters
@@ -756,10 +756,10 @@ export const getChildren: {
  *
  * **Example** (Export empty to GraphViz)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Export empty to GraphViz"
  * import { empty, toGraphViz } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(toGraphViz(empty()).includes("TextProcessingGraph")) // true
+ * toGraphViz(empty()).includes("TextProcessingGraph") // => true
  * ```
  *
  * @category formatting
@@ -777,10 +777,10 @@ export const toGraphViz = (graph: TextGraph): string =>
  *
  * **Example** (Export empty to Mermaid)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Export empty to Mermaid"
  * import { empty, toMermaid } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(toMermaid(empty()).includes("graph")) // true
+ * toMermaid(empty()) // => "flowchart TB"
  * ```
  *
  * @category formatting
@@ -813,11 +813,11 @@ export const toMermaid = (graph: TextGraph): string =>
  *
  * **Example** (Show singleton tree string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Show singleton tree string"
  * import { Effect } from "effect"
  * import { show, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(show(Effect.runSync(singleton("Hello.", "document")))) // "[node] document: Hello."
+ * show(Effect.runSync(singleton("Hello.", "document"))) // => "[node] document: Hello."
  * ```
  *
  * @category formatting
@@ -847,10 +847,10 @@ export const show = (graph: TextGraph): string => {
  *
  * **Example** (Check empty graph acyclic)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check empty graph acyclic"
  * import { empty, isAcyclic } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(isAcyclic(empty())) // true
+ * isAcyclic(empty()) // => true
  * ```
  *
  * @category utilities
@@ -863,10 +863,10 @@ export const isAcyclic = (graph: TextGraph): boolean => Graph.isAcyclic(graph);
  *
  * **Example** (SCCs of empty graph)
  *
- * ```ts
+ * ```ts import.meta.vitest name="SCCs of empty graph"
  * import { empty, stronglyConnectedComponents } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(stronglyConnectedComponents(empty()).length) // 0
+ * stronglyConnectedComponents(empty()).length // => 0
  * ```
  *
  * @category utilities

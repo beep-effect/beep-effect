@@ -51,12 +51,12 @@ const segmentsOf: (normalized: string) => ReadonlyArray<string> = flow(Str.split
  *
  * **Example** (Compare contained absolute paths)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compare contained absolute paths"
  * import { isPathWithinRoot } from "@beep/file-processing/PathSafety"
  *
- * console.log(isPathWithinRoot("/srv/data", "/srv/data/file.txt")) // true
- * console.log(isPathWithinRoot("/srv/data", "/srv/data-evil")) // false
- * console.log(isPathWithinRoot("/srv/data", "/etc/passwd")) // false
+ * isPathWithinRoot("/srv/data", "/srv/data/file.txt") // => true
+ * isPathWithinRoot("/srv/data", "/srv/data-evil") // => false
+ * isPathWithinRoot("/srv/data", "/etc/passwd") // => false
  * ```
  *
  * @category predicates
@@ -95,15 +95,15 @@ export const isPathWithinRoot: {
  *
  * **Example** (Validate contained resolved path)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate contained resolved path"
  * import { validateResolvedPath } from "@beep/file-processing/PathSafety"
  * import { Result } from "effect"
  *
  * const ok = validateResolvedPath({ root: "/srv/data", candidate: "/srv/data/a.txt" })
- * console.log(Result.isSuccess(ok)) // true
+ * Result.isSuccess(ok) // => true
  *
  * const bad = validateResolvedPath({ root: "/srv/data", candidate: "/etc/passwd" })
- * console.log(Result.isFailure(bad)) // true
+ * Result.isFailure(bad) // => true
  * ```
  *
  * @category validation

@@ -21,7 +21,7 @@ import * as internal from "./internal/data/keyboard-shortcuts.ts";
  *
  * **Example** (Assign macos platform value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign macos platform value"
  * import type { KeyboardShortcutPlatform } from "@beep/data/KeyboardShortcuts"
  *
  * const platform: KeyboardShortcutPlatform = "macos"
@@ -38,7 +38,7 @@ export type KeyboardShortcutPlatform = (typeof internal.KeyboardShortcutPlatform
  *
  * **Example** (Assign app scope value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign app scope value"
  * import type { KeyboardShortcutScope } from "@beep/data/KeyboardShortcuts"
  *
  * const scope: KeyboardShortcutScope = "app"
@@ -55,7 +55,7 @@ export type KeyboardShortcutScope = (typeof internal.KeyboardShortcutScopeValues
  *
  * **Example** (Assign supported status value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign supported status value"
  * import type { KeyboardShortcutRuntimeSupport } from "@beep/data/KeyboardShortcuts"
  *
  * const support: KeyboardShortcutRuntimeSupport = "supported"
@@ -72,7 +72,7 @@ export type KeyboardShortcutRuntimeSupport = (typeof internal.KeyboardShortcutRu
  *
  * **Example** (Assign clipboard category value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign clipboard category value"
  * import type { KeyboardShortcutCategory } from "@beep/data/KeyboardShortcuts"
  *
  * const category: KeyboardShortcutCategory = "clipboard"
@@ -89,7 +89,7 @@ export type KeyboardShortcutCategory = (typeof internal.KeyboardShortcutCategory
  *
  * **Example** (Read first source publisher)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Read first source publisher"
  * import { KeyboardShortcutSourceValues, type KeyboardShortcutSource } from "@beep/data/KeyboardShortcuts"
  *
  * const source = KeyboardShortcutSourceValues[0] satisfies KeyboardShortcutSource
@@ -106,7 +106,7 @@ export type KeyboardShortcutSource = (typeof internal.KeyboardShortcutSourceValu
  *
  * **Example** (Assign Apple source id)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign Apple source id"
  * import type { KeyboardShortcutSourceId } from "@beep/data/KeyboardShortcuts"
  *
  * const sourceId: KeyboardShortcutSourceId = "appleMacKeyboardShortcuts"
@@ -123,7 +123,7 @@ export type KeyboardShortcutSourceId = KeyboardShortcutSource["id"];
  *
  * **Example** (Assign copy command name)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign copy command name"
  * import type { KeyboardShortcutCommandName } from "@beep/data/KeyboardShortcuts"
  *
  * const name: KeyboardShortcutCommandName = "copy"
@@ -140,7 +140,7 @@ export type KeyboardShortcutCommandName = (typeof internal.KeyboardShortcutComma
  *
  * **Example** (Assign Copy command label)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign Copy command label"
  * import type { KeyboardShortcutCommandLabel } from "@beep/data/KeyboardShortcuts"
  *
  * const label: KeyboardShortcutCommandLabel = "Copy"
@@ -157,7 +157,7 @@ export type KeyboardShortcutCommandLabel = (typeof internal.KeyboardShortcutComm
  *
  * **Example** (Find copy chord values)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find copy chord values"
  * import { KeyboardShortcutDataValues, type KeyboardShortcutChordData } from "@beep/data/KeyboardShortcuts"
  *
  * const copy = KeyboardShortcutDataValues.find((shortcut) => shortcut.name === "copy")
@@ -178,7 +178,7 @@ export type KeyboardShortcutChordData = (typeof internal.KeyboardShortcutDataVal
  *
  * **Example** (Assign Meta+C shortcut value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign Meta+C shortcut value"
  * import type { KeyboardShortcutValue } from "@beep/data/KeyboardShortcuts"
  *
  * const shortcut: KeyboardShortcutValue = "Meta+C"
@@ -195,7 +195,7 @@ export type KeyboardShortcutValue = KeyboardShortcutChordData["value"];
  *
  * **Example** (Assign ⌘C display literal)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign ⌘C display literal"
  * import type { KeyboardShortcutDisplay } from "@beep/data/KeyboardShortcuts"
  *
  * const display: KeyboardShortcutDisplay = "⌘C"
@@ -212,7 +212,7 @@ export type KeyboardShortcutDisplay = KeyboardShortcutChordData["display"];
  *
  * **Example** (Assign Cmd+C accelerator)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Assign Cmd+C accelerator"
  * import type { KeyboardShortcutTauriAccelerator } from "@beep/data/KeyboardShortcuts"
  *
  * const accelerator: KeyboardShortcutTauriAccelerator = "Cmd+C"
@@ -232,7 +232,7 @@ export type KeyboardShortcutTauriAccelerator = Extract<
  *
  * **Example** (Type copy shortcut entry)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Type copy shortcut entry"
  * import { KeyboardShortcutDataValues, type KeyboardShortcutData } from "@beep/data/KeyboardShortcuts"
  *
  * const copy = KeyboardShortcutDataValues.find((shortcut) => shortcut.name === "copy")
@@ -258,7 +258,7 @@ export type KeyboardShortcutData = (typeof internal.KeyboardShortcutDataValues)[
  *
  * **Example** (Check macos platform included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check macos platform included"
  * import { KeyboardShortcutPlatformValues } from "@beep/data/KeyboardShortcuts"
  *
  * console.assert(KeyboardShortcutPlatformValues.includes("macos"))
@@ -275,7 +275,7 @@ export const KeyboardShortcutPlatformValues: typeof internal.KeyboardShortcutPla
  *
  * **Example** (Check app scope included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check app scope included"
  * import { KeyboardShortcutScopeValues } from "@beep/data/KeyboardShortcuts"
  *
  * console.assert(KeyboardShortcutScopeValues.includes("app"))
@@ -292,7 +292,7 @@ export const KeyboardShortcutScopeValues: typeof internal.KeyboardShortcutScopeV
  *
  * **Example** (Check supported status included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check supported status included"
  * import { KeyboardShortcutRuntimeSupportValues } from "@beep/data/KeyboardShortcuts"
  *
  * console.assert(KeyboardShortcutRuntimeSupportValues.includes("supported"))
@@ -309,7 +309,7 @@ export const KeyboardShortcutRuntimeSupportValues: typeof internal.KeyboardShort
  *
  * **Example** (Check clipboard category included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check clipboard category included"
  * import { KeyboardShortcutCategoryValues } from "@beep/data/KeyboardShortcuts"
  *
  * console.assert(KeyboardShortcutCategoryValues.includes("clipboard"))
@@ -326,7 +326,7 @@ export const KeyboardShortcutCategoryValues: typeof internal.KeyboardShortcutCat
  *
  * **Example** (Find Apple Support source)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find Apple Support source"
  * import { KeyboardShortcutSourceValues } from "@beep/data/KeyboardShortcuts"
  *
  * const appleSupport = KeyboardShortcutSourceValues.find((source) => source.publisher === "Apple Support")
@@ -344,7 +344,7 @@ export const KeyboardShortcutSourceValues: typeof internal.KeyboardShortcutSourc
  *
  * **Example** (Check copy name included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check copy name included"
  * import { KeyboardShortcutCommandNameValues } from "@beep/data/KeyboardShortcuts"
  *
  * console.assert(KeyboardShortcutCommandNameValues.includes("copy"))
@@ -361,7 +361,7 @@ export const KeyboardShortcutCommandNameValues: typeof internal.KeyboardShortcut
  *
  * **Example** (Check Copy label included)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check Copy label included"
  * import { KeyboardShortcutCommandLabelValues } from "@beep/data/KeyboardShortcuts"
  *
  * console.assert(KeyboardShortcutCommandLabelValues.includes("Copy"))
@@ -378,7 +378,7 @@ export const KeyboardShortcutCommandLabelValues: typeof internal.KeyboardShortcu
  *
  * **Example** (Find macOS copy shortcut)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find macOS copy shortcut"
  * import { MacOSKeyboardShortcutDataValues } from "@beep/data/KeyboardShortcuts"
  *
  * const copy = MacOSKeyboardShortcutDataValues.find((shortcut) => shortcut.name === "copy")
@@ -396,7 +396,7 @@ export const MacOSKeyboardShortcutDataValues: typeof internal.MacOSKeyboardShort
  *
  * **Example** (Find Windows copy shortcut)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find Windows copy shortcut"
  * import { WindowsKeyboardShortcutDataValues } from "@beep/data/KeyboardShortcuts"
  *
  * const copy = WindowsKeyboardShortcutDataValues.find((shortcut) => shortcut.name === "copy")
@@ -414,7 +414,7 @@ export const WindowsKeyboardShortcutDataValues: typeof internal.WindowsKeyboardS
  *
  * **Example** (Find Linux copy shortcut)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find Linux copy shortcut"
  * import { LinuxKeyboardShortcutDataValues } from "@beep/data/KeyboardShortcuts"
  *
  * const copy = LinuxKeyboardShortcutDataValues.find((shortcut) => shortcut.name === "copy")
@@ -432,7 +432,7 @@ export const LinuxKeyboardShortcutDataValues: typeof internal.LinuxKeyboardShort
  *
  * **Example** (Find GNOME activities shortcut)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find GNOME activities shortcut"
  * import { LinuxGnomeKeyboardShortcutDataValues } from "@beep/data/KeyboardShortcuts"
  *
  * const activities = LinuxGnomeKeyboardShortcutDataValues.find((shortcut) => shortcut.name === "activitiesOverview")
@@ -450,7 +450,7 @@ export const LinuxGnomeKeyboardShortcutDataValues: typeof internal.LinuxGnomeKey
  *
  * **Example** (Find KDE showDesktop shortcut)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find KDE showDesktop shortcut"
  * import { LinuxKdePlasmaKeyboardShortcutDataValues } from "@beep/data/KeyboardShortcuts"
  *
  * const showDesktop = LinuxKdePlasmaKeyboardShortcutDataValues.find((shortcut) => shortcut.name === "showDesktop")
@@ -468,7 +468,7 @@ export const LinuxKdePlasmaKeyboardShortcutDataValues: typeof internal.LinuxKdeP
  *
  * **Example** (Find macOS copy display)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Find macOS copy display"
  * import { KeyboardShortcutDataValues } from "@beep/data/KeyboardShortcuts"
  *
  * const copy = KeyboardShortcutDataValues.find((shortcut) => shortcut.name === "copy" && shortcut.platform === "macos")

@@ -63,7 +63,7 @@ class ExtractEntitiesSuccess extends S.Class<ExtractEntitiesSuccess>($I`ExtractE
  *
  * **Example** (Decode ExtractEntities parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode ExtractEntities parameters"
  * import * as S from "effect/Schema"
  * import { ExtractEntities } from "@beep/nlp-processing/Tools/ExtractEntities"
  *

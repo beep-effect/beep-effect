@@ -68,7 +68,7 @@ class TverskySimilaritySuccess extends S.Class<TverskySimilaritySuccess>($I`Tver
  *
  * **Example** (Decode Tversky parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode Tversky parameters"
  * import * as S from "effect/Schema"
  * import { TverskySimilarity } from "@beep/nlp-processing/Tools/TverskySimilarity"
  *

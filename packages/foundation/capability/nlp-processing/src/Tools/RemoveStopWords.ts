@@ -47,7 +47,7 @@ class RemoveStopWordsSuccess extends S.Class<RemoveStopWordsSuccess>($I`RemoveSt
  *
  * **Example** (Decode parameters schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { RemoveStopWords } from "@beep/nlp-processing/Tools/RemoveStopWords"
  *

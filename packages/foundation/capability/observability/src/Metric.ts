@@ -138,13 +138,13 @@ const incrementOutcomeCounter = (outcome: PhaseOutcome, options: ObserveWorkflow
  *
  * **Example** (Map status codes to classes)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Map status codes to classes"
  * import { statusClass } from "@beep/observability"
  *
- * console.log(statusClass(200)) // "2xx"
- * console.log(statusClass(404)) // "4xx"
- * console.log(statusClass(503)) // "5xx"
- * console.log(statusClass(999)) // "unknown"
+ * statusClass(200) // => "2xx"
+ * statusClass(404) // => "4xx"
+ * statusClass(503) // => "5xx"
+ * statusClass(999) // => "unknown"
  * ```
  *
  * @category utilities

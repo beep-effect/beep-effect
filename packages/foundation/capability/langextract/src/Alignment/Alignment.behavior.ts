@@ -34,11 +34,11 @@ const candidateFields = (candidate: ExtractionCandidate) => ({
  *
  * **Example** (Span from a matched slice)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Span from a matched slice"
  * import { spanFromMatch } from "@beep/langextract/Alignment"
  * import { NonNegativeInt } from "@beep/schema"
  *
- * console.log(spanFromMatch([NonNegativeInt.make(4), "Lovelace"]).end) // 12
+ * spanFromMatch([NonNegativeInt.make(4), "Lovelace"]).end // => 12
  * ```
  *
  * @category mapping

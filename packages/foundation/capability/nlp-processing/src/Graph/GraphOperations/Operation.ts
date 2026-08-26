@@ -127,7 +127,7 @@ export const make = <A, B, R = never, E = never>(config: {
  *
  * **Example** (Pure duplicate expansion)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Pure duplicate expansion"
  * import { pure } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const duplicate = pure({
@@ -137,7 +137,7 @@ export const make = <A, B, R = never, E = never>(config: {
  *   f: (text: string) => [text, text]
  * })
  *
- * console.log(duplicate.category) // "expansion"
+ * duplicate.category // => "expansion"
  * ```
  *
  * @category constructors
@@ -166,7 +166,7 @@ export const pure = <A, B>(config: {
  *
  * **Example** (Lowercase transform operation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Lowercase transform operation"
  * import { transform } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const normalize = transform({
@@ -175,7 +175,7 @@ export const pure = <A, B>(config: {
  *   f: (text: string) => text.toLowerCase()
  * })
  *
- * console.log(normalize.category) // "transformation"
+ * normalize.category // => "transformation"
  * ```
  *
  * @category constructors
@@ -204,7 +204,7 @@ export const transform = <A, B>(config: {
  *
  * **Example** (Split words expansion)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Split words expansion"
  * import { expand } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const splitWords = expand({
@@ -213,7 +213,7 @@ export const transform = <A, B>(config: {
  *   f: (text: string) => text.split(/\s+/).filter((token) => token.length > 0)
  * })
  *
- * console.log(splitWords.category) // "expansion"
+ * splitWords.category // => "expansion"
  * ```
  *
  * @category constructors
@@ -236,7 +236,7 @@ export const expand = <A, B>(config: {
  *
  * **Example** (Filter non-empty leaves)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Filter non-empty leaves"
  * import { filter } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const nonEmpty = filter({
@@ -245,7 +245,7 @@ export const expand = <A, B>(config: {
  *   predicate: (text: string) => text.trim().length > 0
  * })
  *
- * console.log(nonEmpty.category) // "filtering"
+ * nonEmpty.category // => "filtering"
  * ```
  *
  * @category constructors
@@ -300,11 +300,11 @@ export const identity = <A>(): GraphOperation<A, A> =>
  *
  * **Example** (Map text to lengths)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map text to lengths"
  * import { map } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const lengths = map((text: string) => text.length)
- * console.log(lengths.category) // "transformation"
+ * lengths.category // => "transformation"
  * ```
  *
  * @category combinators
@@ -318,11 +318,11 @@ export const map = <A, B>(f: (a: A) => B): GraphOperation<A, B> =>
  *
  * **Example** (FlatMap into characters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="FlatMap into characters"
  * import { flatMap } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const characters = flatMap((text: string) => text.split(""))
- * console.log(characters.category) // "expansion"
+ * characters.category // => "expansion"
  * ```
  *
  * @category combinators
@@ -340,11 +340,11 @@ export const flatMap = <A, B>(f: (a: A) => ReadonlyArray<B>): GraphOperation<A, 
  *
  * **Example** (Read mapped operation category)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read mapped operation category"
  * import { getCategory, map } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
  *
  * const category = getCategory(map((text: string) => text.length))
- * console.log(category) // "transformation"
+ * category // => "transformation"
  * ```
  *
  * @category getters

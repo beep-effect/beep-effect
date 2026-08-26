@@ -16,10 +16,10 @@ const $I = $LangExtractId.create("VerifiedSpan");
  *
  * **Example** (Check error reason membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check error reason membership"
  * import { VerifiedSpanErrorReason } from "@beep/langextract/VerifiedSpan"
  *
- * console.log(VerifiedSpanErrorReason.is.ambiguous("ambiguous")) // true
+ * VerifiedSpanErrorReason.is.ambiguous("ambiguous") // => true
  * ```
  *
  * @category errors
@@ -60,10 +60,10 @@ export type VerifiedSpanErrorReason = typeof VerifiedSpanErrorReason.Type;
  *
  * **Example** (Create error from reason)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create error from reason"
  * import { VerifiedSpanError } from "@beep/langextract/VerifiedSpan"
  *
- * console.log(VerifiedSpanError.fromReason("ambiguous").reason) // "ambiguous"
+ * VerifiedSpanError.fromReason("ambiguous").reason // => "ambiguous"
  * ```
  *
  * @category errors

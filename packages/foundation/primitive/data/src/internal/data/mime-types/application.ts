@@ -14,11 +14,10 @@
  *
  * **Example** (Lookup application/json entry)
  *
- * ```typescript
- * import { application } from "@beep/data/mime-types/application"
+ * ```ts import.meta.vitest name="Lookup application/json entry"
+ * import { application } from "@beep/data/MimeTypes"
  *
- * application["application/json"]
- * // { source: "iana", charset: "UTF-8", extensions: ["json", "map"] }
+ * application["application/json"].charset // => "UTF-8"
  * ```
  *
  * @category models

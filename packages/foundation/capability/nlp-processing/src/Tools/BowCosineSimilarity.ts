@@ -55,7 +55,7 @@ class BowCosineSimilaritySuccess extends S.Class<BowCosineSimilaritySuccess>($I`
  *
  * **Example** (Decode parameters schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { BowCosineSimilarity } from "@beep/nlp-processing/Tools/BowCosineSimilarity"
  *

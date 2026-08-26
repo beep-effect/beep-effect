@@ -10,7 +10,7 @@
  *
  * **Example** (Access network ticker values)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Access network ticker values"
  * import { Blockchain } from "@beep/data"
  *
  * const ethTicker = Blockchain.Networks.Ethereum.ticker

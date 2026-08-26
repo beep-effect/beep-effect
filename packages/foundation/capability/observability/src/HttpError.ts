@@ -443,11 +443,11 @@ export class GatewayTimeoutError extends S.TaggedError<GatewayTimeoutError>($I`G
  *
  * **Example** (Make BadRequestError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make BadRequestError helper"
  * import { makeBadRequestError } from "@beep/observability"
  *
  * const error = makeBadRequestError("missing required field 'email'")
- * console.log(error.status) // 400
+ * error.status // => 400
  * ```
  *
  * @category error-handling
@@ -463,11 +463,11 @@ export const makeBadRequestError: StatusErrorConstructor<BadRequestError> = dual
  *
  * **Example** (Make UnauthorizedError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make UnauthorizedError helper"
  * import { makeUnauthorizedError } from "@beep/observability"
  *
  * const error = makeUnauthorizedError("token expired")
- * console.log(error.status) // 401
+ * error.status // => 401
  * ```
  *
  * @category error-handling
@@ -483,11 +483,11 @@ export const makeUnauthorizedError: StatusErrorConstructor<UnauthorizedError> = 
  *
  * **Example** (Make ForbiddenError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make ForbiddenError helper"
  * import { makeForbiddenError } from "@beep/observability"
  *
  * const error = makeForbiddenError("insufficient permissions")
- * console.log(error.status) // 403
+ * error.status // => 403
  * ```
  *
  * @category error-handling
@@ -503,11 +503,11 @@ export const makeForbiddenError: StatusErrorConstructor<ForbiddenError> = dual(
  *
  * **Example** (Make NotFoundError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make NotFoundError helper"
  * import { makeNotFoundError } from "@beep/observability"
  *
  * const error = makeNotFoundError("resource missing")
- * console.log(error.status) // 404
+ * error.status // => 404
  * ```
  *
  * @category error-handling
@@ -523,11 +523,11 @@ export const makeNotFoundError: StatusErrorConstructor<NotFoundError> = dual(
  *
  * **Example** (Make ConflictError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make ConflictError helper"
  * import { makeConflictError } from "@beep/observability"
  *
  * const error = makeConflictError("duplicate key")
- * console.log(error.status) // 409
+ * error.status // => 409
  * ```
  *
  * @category error-handling
@@ -543,11 +543,11 @@ export const makeConflictError: StatusErrorConstructor<ConflictError> = dual(
  *
  * **Example** (Make UnprocessableEntityError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make UnprocessableEntityError helper"
  * import { makeUnprocessableEntityError } from "@beep/observability"
  *
  * const error = makeUnprocessableEntityError("schema mismatch")
- * console.log(error.status) // 422
+ * error.status // => 422
  * ```
  *
  * @category error-handling
@@ -563,11 +563,11 @@ export const makeUnprocessableEntityError: StatusErrorConstructor<UnprocessableE
  *
  * **Example** (Make TooManyRequestsError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make TooManyRequestsError helper"
  * import { makeTooManyRequestsError } from "@beep/observability"
  *
  * const error = makeTooManyRequestsError("rate limit hit")
- * console.log(error.status) // 429
+ * error.status // => 429
  * ```
  *
  * @category error-handling
@@ -583,11 +583,11 @@ export const makeTooManyRequestsError: StatusErrorConstructor<TooManyRequestsErr
  *
  * **Example** (Make InternalServerError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make InternalServerError helper"
  * import { makeInternalServerError } from "@beep/observability"
  *
  * const error = makeInternalServerError("unexpected failure")
- * console.log(error.status) // 500
+ * error.status // => 500
  * ```
  *
  * @category error-handling
@@ -603,11 +603,11 @@ export const makeInternalServerError: StatusErrorConstructor<InternalServerError
  *
  * **Example** (Make BadGatewayError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make BadGatewayError helper"
  * import { makeBadGatewayError } from "@beep/observability"
  *
  * const error = makeBadGatewayError("upstream unreachable")
- * console.log(error.status) // 502
+ * error.status // => 502
  * ```
  *
  * @category error-handling
@@ -623,11 +623,11 @@ export const makeBadGatewayError: StatusErrorConstructor<BadGatewayError> = dual
  *
  * **Example** (Make ServiceUnavailableError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make ServiceUnavailableError helper"
  * import { makeServiceUnavailableError } from "@beep/observability"
  *
  * const error = makeServiceUnavailableError("service down for maintenance")
- * console.log(error.status) // 503
+ * error.status // => 503
  * ```
  *
  * @category error-handling
@@ -643,11 +643,11 @@ export const makeServiceUnavailableError: StatusErrorConstructor<ServiceUnavaila
  *
  * **Example** (Make GatewayTimeoutError helper)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make GatewayTimeoutError helper"
  * import { makeGatewayTimeoutError } from "@beep/observability"
  *
  * const error = makeGatewayTimeoutError("upstream timed out")
- * console.log(error.status) // 504
+ * error.status // => 504
  * ```
  *
  * @category error-handling

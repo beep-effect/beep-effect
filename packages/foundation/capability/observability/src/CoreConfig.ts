@@ -26,7 +26,7 @@ const ObservabilityCoreConfigFields = {
  *
  * **Example** (Creating a core config)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Creating a core config"
  * import { ObservabilityCoreConfig } from "@beep/observability"
  *
  * const config: ObservabilityCoreConfig = {
@@ -36,7 +36,7 @@ const ObservabilityCoreConfigFields = {
  *   minLogLevel: "Info"
  * }
  *
- * console.log(config.serviceName) // "todox-web"
+ * config.serviceName // => "todox-web"
  * ```
  *
  * @category models

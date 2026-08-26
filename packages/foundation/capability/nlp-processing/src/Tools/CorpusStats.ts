@@ -44,7 +44,7 @@ class CorpusStatsParameters extends S.Class<CorpusStatsParameters>($I`CorpusStat
  *
  * **Example** (Decode parameters schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { CorpusStats } from "@beep/nlp-processing/Tools/CorpusStats"
  *

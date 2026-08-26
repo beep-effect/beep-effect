@@ -22,7 +22,7 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Errors");
  *
  * **Example** (Construct ValidationError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct ValidationError instance"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { ValidationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
@@ -32,7 +32,7 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Errors");
  *   errors: ["Node text is empty"]
  * })
  *
- * console.log(error._tag) // "ValidationError"
+ * error._tag // => "ValidationError"
  * ```
  *
  * @category errors
@@ -55,7 +55,7 @@ export class ValidationError extends S.TaggedError<ValidationError>($I`Validatio
  *
  * **Example** (Construct TimeoutError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct TimeoutError instance"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { TimeoutError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
@@ -65,7 +65,7 @@ export class ValidationError extends S.TaggedError<ValidationError>($I`Validatio
  *   timeoutMs: 1_000
  * })
  *
- * console.log(error.timeoutMs) // 1000
+ * error.timeoutMs // => 1000
  * ```
  *
  * @category errors
@@ -94,7 +94,7 @@ export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
  *
  * **Example** (Construct OperationError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct OperationError instance"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { OperationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
@@ -104,7 +104,7 @@ export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
  *   cause: new Error("backend defect")
  * })
  *
- * console.log(error.operationName) // "posTag"
+ * error.operationName // => "posTag"
  * ```
  *
  * @category errors
@@ -127,7 +127,7 @@ export class OperationError extends S.TaggedError<OperationError>($I`OperationEr
  *
  * **Example** (Construct GraphError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct GraphError instance"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { GraphError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
@@ -137,7 +137,7 @@ export class OperationError extends S.TaggedError<OperationError>($I`OperationEr
  *   nodeId: O.some(NodeId.make("node-root"))
  * })
  *
- * console.log(error.message) // "Expected at least one leaf node"
+ * error.message // => "Expected at least one leaf node"
  * ```
  *
  * @category errors
@@ -164,7 +164,7 @@ export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
  *
  * **Example** (Construct StorageError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct StorageError instance"
  * import { StorageError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
  * const error = StorageError.make({
@@ -172,7 +172,7 @@ export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
  *   cause: new Error("cache unavailable")
  * })
  *
- * console.log(error.operation) // "retrieve"
+ * error.operation // => "retrieve"
  * ```
  *
  * @category errors
@@ -194,7 +194,7 @@ export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
  *
  * **Example** (Construct ExecutionError instance)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct ExecutionError instance"
  * import { ExecutionError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
  *
@@ -203,7 +203,7 @@ export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
  *   message: "Storage retrieve failed"
  * })
  *
- * console.log(error.message) // "Storage retrieve failed"
+ * error.message // => "Storage retrieve failed"
  * ```
  *
  * @category errors
@@ -231,13 +231,13 @@ export class ExecutionError extends S.TaggedError<ExecutionError>($I`ExecutionEr
  *
  * **Example** (Check GraphOperationError membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check GraphOperationError membership"
  * import { GraphError, GraphOperationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const error = GraphError.make({ message: "Missing root", nodeId: O.none() })
- * console.log(S.is(GraphOperationError)(error)) // true
+ * S.is(GraphOperationError)(error) // => true
  * ```
  *
  * @category errors
@@ -262,13 +262,13 @@ export const GraphOperationError = S.Union([
  *
  * **Example** (Assign GraphOperationError type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign GraphOperationError type"
  * import type { GraphOperationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import { GraphError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
  *
  * const error: GraphOperationError = GraphError.make({ message: "Missing root", nodeId: O.none() })
- * console.log(error._tag) // "GraphError"
+ * error._tag // => "GraphError"
  * ```
  *
  * @category errors

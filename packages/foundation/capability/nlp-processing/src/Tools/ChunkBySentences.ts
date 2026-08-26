@@ -52,7 +52,7 @@ class ChunkBySentencesSuccess extends S.Class<ChunkBySentencesSuccess>($I`ChunkB
  *
  * **Example** (Decode parameters schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { ChunkBySentences } from "@beep/nlp-processing/Tools/ChunkBySentences"
  *

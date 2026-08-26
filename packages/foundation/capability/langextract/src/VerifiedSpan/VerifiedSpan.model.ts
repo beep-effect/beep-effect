@@ -16,10 +16,10 @@ const $I = $LangExtractId.create("VerifiedSpan");
  *
  * **Example** (Check offset unit membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check offset unit membership"
  * import { TextOffsetUnit } from "@beep/langextract/VerifiedSpan"
  *
- * console.log(TextOffsetUnit.is["utf16-code-unit"]("utf16-code-unit")) // true
+ * TextOffsetUnit.is["utf16-code-unit"]("utf16-code-unit") // => true
  * ```
  *
  * @category schemas
@@ -165,7 +165,7 @@ const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity)
  *
  * **Example** (Create UTF-16 text range)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create UTF-16 text range"
  * import { Utf16TextRange } from "@beep/langextract/VerifiedSpan"
  * import { NonNegativeInt } from "@beep/schema"
  *
@@ -173,7 +173,7 @@ const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity)
  *   startChar: NonNegativeInt.make(1),
  *   endChar: NonNegativeInt.make(3),
  * })
- * console.log(range.endChar) // 3
+ * range.endChar // => 3
  * ```
  *
  * @category models

@@ -53,7 +53,7 @@ const isProfilePhaseDataFirst = (args: IArguments): boolean => args.length >= 2 
  *
  * **Example** (Return completed outcome)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Return completed outcome"
  * import { PhaseOutcome, profilePhase } from "@beep/observability"
  * import { Effect } from "effect"
  *
@@ -61,7 +61,7 @@ const isProfilePhaseDataFirst = (args: IArguments): boolean => args.length >= 2 
  *   phase: "startup"
  * })
  * const outcome = Effect.runSync(program)
- * console.log(outcome) // "completed"
+ * outcome // => "completed"
  * ```
  *
  * @category models
@@ -95,7 +95,7 @@ export type PhaseOutcome = typeof PhaseOutcome.Type;
  *
  * **Example** (Construct a PhaseProfile)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Construct a PhaseProfile"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { PhaseProfile } from "@beep/observability"
@@ -108,8 +108,8 @@ export type PhaseOutcome = typeof PhaseOutcome.Type;
  *   phase: "startup"
  * })
  *
- * console.log(profile.phase) // "startup"
- * console.log(profile.outcome) // "completed"
+ * profile.phase // => "startup"
+ * profile.outcome // => "completed"
  * ```
  *
  * @category models

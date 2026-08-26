@@ -79,11 +79,11 @@ export const MAX_PARALLEL_CONCURRENCY = 64;
  *
  * **Example** (Create parallel execution strategy)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create parallel execution strategy"
  * import { ExecutionStrategy } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const strategy = ExecutionStrategy.Parallel(4)
- * console.log(strategy.concurrency) // 4
+ * strategy.concurrency // => 4
  * ```
  *
  * @category models
@@ -117,11 +117,11 @@ export const ExecutionStrategy = S.TaggedUnion({
  *
  * **Example** (Annotate sequential strategy type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Annotate sequential strategy type"
  * import { ExecutionStrategy } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const strategy: ExecutionStrategy = ExecutionStrategy.Sequential
- * console.log(strategy._tag) // "Sequential"
+ * strategy._tag // => "Sequential"
  * ```
  *
  * @category models
@@ -144,7 +144,7 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
  *
  * **Example** (Combine empty metrics monoid)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Combine empty metrics monoid"
  * import { NonNegativeInt } from "@beep/schema"
  * import { ExecutionMetrics } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -153,7 +153,7 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
  *   ExecutionMetrics.make({ ...ExecutionMetrics.empty(), nodesProcessed: NonNegativeInt.make(2) })
  * )
  *
- * console.log(combined.nodesProcessed) // 2
+ * combined.nodesProcessed // => 2
  * ```
  *
  * @category models
@@ -211,10 +211,10 @@ export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetr
  *
  * **Example** (Check O(n) complexity tag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check O(n) complexity tag"
  * import { Complexity } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
- * console.log(Complexity.is["O(n)"]("O(n)")) // true
+ * Complexity.is["O(n)"]("O(n)") // => true
  * ```
  *
  * @category models
@@ -248,7 +248,7 @@ export type Complexity = typeof Complexity.Type;
  *
  * **Example** (Make constant operation cost)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make constant operation cost"
  * import { Duration } from "effect"
  * import { ConstantOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -259,7 +259,7 @@ export type Complexity = typeof Complexity.Type;
  *   tokenCost: 0
  * })
  *
- * console.log(cost.complexity) // "O(1)"
+ * cost.complexity // => "O(1)"
  * ```
  *
  * @category models
@@ -288,7 +288,7 @@ export class ConstantOperationCost extends S.Class<ConstantOperationCost>($I`Con
  *
  * **Example** (Make linear operation cost)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make linear operation cost"
  * import { Duration } from "effect"
  * import { LinearOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -299,7 +299,7 @@ export class ConstantOperationCost extends S.Class<ConstantOperationCost>($I`Con
  *   tokenCost: 4
  * })
  *
- * console.log(cost.tokenCost) // 4
+ * cost.tokenCost // => 4
  * ```
  *
  * @category models
@@ -328,7 +328,7 @@ export class LinearOperationCost extends S.Class<LinearOperationCost>($I`LinearO
  *
  * **Example** (Make linearithmic operation cost)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make linearithmic operation cost"
  * import { Duration } from "effect"
  * import { LinearithmicOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -339,7 +339,7 @@ export class LinearOperationCost extends S.Class<LinearOperationCost>($I`LinearO
  *   tokenCost: 0
  * })
  *
- * console.log(cost.memoryCost) // 256
+ * cost.memoryCost // => 256
  * ```
  *
  * @category models
@@ -368,7 +368,7 @@ export class LinearithmicOperationCost extends S.Class<LinearithmicOperationCost
  *
  * **Example** (Make quadratic operation cost)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make quadratic operation cost"
  * import { Duration } from "effect"
  * import { QuadraticOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -379,7 +379,7 @@ export class LinearithmicOperationCost extends S.Class<LinearithmicOperationCost
  *   tokenCost: 0
  * })
  *
- * console.log(cost.complexity) // "O(n^2)"
+ * cost.complexity // => "O(n^2)"
  * ```
  *
  * @category models
@@ -414,7 +414,7 @@ export class QuadraticOperationCost extends S.Class<QuadraticOperationCost>($I`Q
  *
  * **Example** (Scale linear cost by leaves)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Scale linear cost by leaves"
  * import { Duration } from "effect"
  * import { OperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -424,7 +424,7 @@ export class QuadraticOperationCost extends S.Class<QuadraticOperationCost>($I`Q
  *   tokenCost: 1
  * })
  *
- * console.log(OperationCost.scale(cost, 3).memoryCost) // 30
+ * OperationCost.scale(cost, 3).memoryCost // => 30
  * ```
  *
  * @category models
@@ -478,7 +478,7 @@ export const OperationCost = Complexity.mapMembers(
  *
  * **Example** (Type constant operation cost)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type constant operation cost"
  * import { Duration } from "effect"
  * import { OperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -488,7 +488,7 @@ export const OperationCost = Complexity.mapMembers(
  *   tokenCost: 0,
  * })
  *
- * console.log(cost.complexity) // "O(1)"
+ * cost.complexity // => "O(1)"
  * ```
  *
  * @category models
@@ -510,7 +510,7 @@ export type OperationCost = typeof OperationCost.Type;
  *
  * **Example** (Attach non-blocking validation warnings)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Attach non-blocking validation warnings"
  * import { ValidationResult } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const result = ValidationResult.withWarnings(
@@ -518,7 +518,7 @@ export type OperationCost = typeof OperationCost.Type;
  *   ["No leaf nodes to process"]
  * )
  *
- * console.log(result.warnings.length) // 1
+ * result.warnings.length // => 1
  * ```
  *
  * @category models
@@ -566,10 +566,10 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
  *
  * **Example** (Check expansion category tag)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check expansion category tag"
  * import { OperationCategory } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
- * console.log(OperationCategory.is.expansion("expansion")) // true
+ * OperationCategory.is.expansion("expansion") // => true
  * ```
  *
  * @category models
@@ -623,11 +623,11 @@ export type OperationCategory = typeof OperationCategory.Type;
  *
  * **Example** (Build parallel execution options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build parallel execution options"
  * import { ExecutionOptions } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const options = ExecutionOptions.parallel(8)
- * console.log(options.strategy._tag) // "Parallel"
+ * options.strategy._tag // => "Parallel"
  * ```
  *
  * @category models
@@ -704,12 +704,12 @@ export type ExecutionId = typeof ExecutionId.Type;
  *
  * **Example** (Generate fresh execution id)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Generate fresh execution id"
  * import { Effect } from "effect"
  * import { generateExecutionId } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const program = Effect.map(generateExecutionId, (id) => id.startsWith("exec-"))
- * console.log(Effect.runSync(program)) // true
+ * Effect.runSync(program) // => true
  * ```
  *
  * @effects Reads the Effect `Clock` and random service to include timestamp and entropy in the generated id.
@@ -763,7 +763,7 @@ export interface OperationResult<B, E> {
  *
  * **Example** (Stamp result with clock time)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Stamp result with clock time"
  * import { Effect } from "effect"
  * import { ExecutionId, ExecutionMetrics, makeOperationResult } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -774,7 +774,7 @@ export interface OperationResult<B, E> {
  *   metrics: ExecutionMetrics.empty()
  * })
  *
- * console.log(Effect.runSync(program).newNodes.length) // 0
+ * Effect.runSync(program).newNodes.length // => 0
  * ```
  *
  * @category constructors
