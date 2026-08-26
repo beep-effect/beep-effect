@@ -67,16 +67,20 @@
       "name": "@beep/semantica",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/anthropic": "workspace:^",
+        "@beep/doc-text": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/provenance": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/xai": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@noble/hashes": "catalog:",
         "effect": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
+        "unpdf": "catalog:",
       },
       "devDependencies": {
         "@tauri-apps/cli": "catalog:",
@@ -96,6 +100,7 @@
       "name": "@beep/trustgraph-workbench",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/brand": "workspace:^",
         "@beep/ui": "workspace:^",
         "react": "catalog:",
         "react-dom": "catalog:",
@@ -1980,6 +1985,38 @@
         "@types/node": "catalog:",
       },
     },
+    "packages/foundation/ui-system/brand": {
+      "name": "@beep/brand",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@fontsource-variable/inter": "catalog:",
+        "@fontsource-variable/jetbrains-mono": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "bun-types": "catalog:",
+        "jsdom": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "vitest": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "^19",
+      },
+      "optionalPeers": [
+        "react",
+      ],
+    },
     "packages/foundation/ui-system/dock": {
       "name": "@beep/dock",
       "version": "0.0.0",
@@ -2878,6 +2915,8 @@
     "@elevenlabs/client": "^1.21.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@lexical/code": "^0.49.0",
     "@lexical/headless": "^0.49.0",
     "@lexical/html": "^0.49.0",
@@ -3205,6 +3244,8 @@
     "@beep/architecture-lab-use-cases": ["@beep/architecture-lab-use-cases@workspace:packages/architecture-lab/use-cases"],
 
     "@beep/box": ["@beep/box@workspace:packages/drivers/box"],
+
+    "@beep/brand": ["@beep/brand@workspace:packages/foundation/ui-system/brand"],
 
     "@beep/chalk": ["@beep/chalk@workspace:packages/foundation/capability/chalk"],
 
@@ -4275,6 +4316,10 @@
     "@floating-ui/react-dom": ["@floating-ui/react-dom@2.1.9", "", { "dependencies": { "@floating-ui/dom": "^1.8.0" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-JDjEFGCpImxDCA7JJKviA0M9+RtmJdj0m/NVU5IMgBK+AmZouAQQ7/+2GLH0GXXY0YMw9oXPB8hKdbPYg5QLYg=="],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.12", "", {}, "sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww=="],
+
+    "@fontsource-variable/inter": ["@fontsource-variable/inter@5.3.0", "", {}, "sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA=="],
+
+    "@fontsource-variable/jetbrains-mono": ["@fontsource-variable/jetbrains-mono@5.3.0", "", {}, "sha512-F32xpS2NsGYoQi2ADSkKTgpJj7ozajsGgDJ8woTnqjmIB+dxDIqImjl4pXZVEExu8UFZ2ndhmX18EBS/hdz3Lw=="],
 
     "@gar/promise-retry": ["@gar/promise-retry@1.0.3", "", {}, "sha512-GmzA9ckNokPypTg10pgpeHNQe7ph+iIKKmhKu3Ob9ANkswreCx7R3cKmY781K8QK3AqVL3xVh9A42JvIAbkkSA=="],
 

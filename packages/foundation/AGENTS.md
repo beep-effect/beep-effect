@@ -11,7 +11,8 @@ apps, but they must not depend on product-specific slice language.
 - `primitive`: leaf type and data substrate.
 - `modeling`: identity, schema, messages, and domain-modeling helpers.
 - `capability`: reusable technical capability packages with runtime behavior.
-- `ui-system`: product-agnostic UI primitives, hooks, themes, and styles.
+- `ui-system`: product-agnostic UI primitives, hooks, themes, styles, and repo
+  brand identity (`@beep/brand`).
 
 ## Rules
 

@@ -32,6 +32,7 @@ import {
   DocumentUnavailable,
   GoldUnavailable,
   LedgerFailed,
+  ModelRevisionUnpinned,
   ParserFailed,
   ProviderCacheCorrupt,
   ProviderUnavailable,
@@ -212,8 +213,8 @@ const chunk = Chunk.make({
 
 const hostedModel = ModelIdentity.make({
   provider: "anthropic",
-  name: "claude",
-  revision: "2026-08-25",
+  name: "claude-test-20260825",
+  revision: "claude-test-20260825",
   artifactHash: sha("8"),
   taskType: "extraction",
 });
@@ -226,8 +227,8 @@ const patternModel = ModelIdentity.make({
 });
 const proposerModel = ModelIdentity.make({
   provider: "xai",
-  name: "grok",
-  revision: "2026-08-25",
+  name: "grok-test-20260825",
+  revision: "grok-test-20260825",
   artifactHash: sha("a"),
   taskType: "gold-proposal",
 });
@@ -725,7 +726,15 @@ describe("C0 schema round trips", () => {
     );
     roundTrip(ProviderCacheCorrupt, ProviderCacheCorrupt.make({ message: "Cache corrupt." }));
     roundTrip(LedgerFailed, LedgerFailed.make({ message: "Ledger failed.", reason: "conflicting-row" }));
-    roundTrip(GoldUnavailable, GoldUnavailable.make({ message: "Gold unavailable." }));
+    roundTrip(GoldUnavailable, GoldUnavailable.make({ message: "Gold unavailable.", reason: "mixed-proposer" }));
+    roundTrip(
+      ModelRevisionUnpinned,
+      ModelRevisionUnpinned.make({
+        message: "Model revision is unpinned.",
+        model: "grok-4",
+        setting: "SEMANTICA_XAI_MODEL",
+      })
+    );
     roundTrip(ReportInvalid, ReportInvalid.make({ message: "Report invalid." }));
   });
 });

@@ -12,7 +12,7 @@ import { Defect } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import DOMPurify from "dompurify";
-import { Cause, Effect, HashSet, Layer, Match, MutableHashMap } from "effect";
+import { Cause, Data, Effect, HashSet, Layer, Match, MutableHashMap } from "effect";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { useId } from "react";
@@ -711,15 +711,18 @@ const renderMermaid = Effect.fnUntraced(function* (renderId: string, source: str
 
 const mermaidRuntime = Atom.runtime(Layer.empty);
 
-// Nested families keep both identities primitive and stable without a React
-// memo: render id isolates concurrent diagrams, source changes select a fresh
-// async atom, and unmounting interrupts obsolete work through the registry.
-const mermaidRenderAtom = Atom.family((renderId: string) =>
-  Atom.family((source: string) =>
-    mermaidRuntime.atom(
-      renderMermaid(renderId, source).pipe(
-        Effect.tapError((failure) => Effect.logError("Unable to render Mermaid diagram", failure.cause ?? failure))
-      )
+class MermaidRenderKey extends Data.Class<{
+  readonly renderId: string;
+  readonly source: string;
+}> {}
+
+// A structural family key keeps the async atom stable across React re-renders.
+// The family retains the atom weakly, so unmounting still interrupts obsolete
+// work through the registry without retaining every rendered source.
+const mermaidRenderAtom = Atom.family(({ renderId, source }: MermaidRenderKey) =>
+  mermaidRuntime.atom(
+    renderMermaid(renderId, source).pipe(
+      Effect.tapError((failure) => Effect.logError("Unable to render Mermaid diagram", failure.cause ?? failure))
     )
   )
 );
@@ -789,7 +792,7 @@ export function MermaidView({
   const renderId = `mermaid-${sanitizeIdPart(reactId)}-${sanitizeIdPart(renderKey)}-${hashString(
     boundedSourceIdentity(source)
   )}`;
-  const state = useAtomValue(mermaidRenderAtom(renderId)(source));
+  const state = useAtomValue(new MermaidRenderKey({ renderId, source }).pipe(mermaidRenderAtom));
 
   return AsyncResult.match(state, {
     onInitial: renderPending,

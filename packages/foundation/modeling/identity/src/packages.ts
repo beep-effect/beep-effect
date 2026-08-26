@@ -189,7 +189,8 @@ const generatedComposers = $I.compose(
   "epistemic-ui",
   "effect-drizzle",
   "skill-contract",
-  "codegen-kit"
+  "codegen-kit",
+  "brand"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2496,3 +2497,20 @@ export const $SkillContractId: Identity.IdentityComposer<"@beep/skill-contract">
  * @since 0.0.0
  */
 export const $CodegenKitId: Identity.IdentityComposer<"@beep/codegen-kit"> = composers.$CodegenKitId;
+
+/**
+ * Identity composer for `@beep/brand`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts
+ * import { $BrandId } from "@beep/identity"
+ *
+ * const id = $BrandId.make("Brand")
+ * void id
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $BrandId: Identity.IdentityComposer<"@beep/brand"> = composers.$BrandId;
