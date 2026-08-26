@@ -11,7 +11,27 @@ const utf8Encoder = new TextEncoder();
 const sha256CanonicalEffect = (value: unknown) =>
   Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(canonicalJson(value)));
 
-const sha256CanonicalSync = (value: unknown): Sha256Hex =>
+/**
+ * Hashes an already encoded JSON-compatible preimage with canonical key order.
+ *
+ * **Gotchas**
+ *
+ * Callers must schema-encode domain values before passing them here. Schema
+ * refinements use this synchronous noble-hashes twin because checks cannot
+ * require the Effect `Crypto` service.
+ *
+ * **Example** (Hash an encoded preimage)
+ *
+ * ```ts
+ * import { sha256CanonicalSync } from "@/schema/Digest"
+ *
+ * console.log(sha256CanonicalSync({ document: "example" }).length) // 64
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const sha256CanonicalSync = (value: unknown): Sha256Hex =>
   Sha256Hex.make(Encoding.encodeHex(sha256(utf8Encoder.encode(canonicalJson(value)))));
 
 type DigestEffect<Type> = Type extends unknown

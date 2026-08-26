@@ -51,14 +51,14 @@ const GoldSubsetChecks = S.makeFilterGroup([
   ),
   S.makeFilter(
     (subsets: GoldSubsetFields) =>
-      N.isLessThanOrEqualTo(A.length(subsets.structure), 10) &&
-      N.isLessThanOrEqualTo(A.length(subsets.entity), 5) &&
-      N.isLessThanOrEqualTo(A.length(subsets.relation), 3),
+      Equal.equals(A.length(subsets.structure), 10) &&
+      Equal.equals(A.length(subsets.entity), 5) &&
+      Equal.equals(A.length(subsets.relation), 3),
     {
-      identifier: $I`GoldSubsetMaximumSizes`,
-      title: "Gold subset maximum sizes",
-      description: "Bounds structure, entity, and relation subsets to ten, five, and three papers respectively.",
-      message: "GoldSubset sizes must not exceed structure=10, entity=5, and relation=3.",
+      identifier: $I`GoldSubsetExactSizes`,
+      title: "Gold subset exact sizes",
+      description: "Requires structure, entity, and relation subsets to contain exactly ten, five, and three papers.",
+      message: "GoldSubset sizes must equal structure=10, entity=5, and relation=3.",
     }
   ),
 ]);
@@ -80,8 +80,7 @@ const GoldSubsetChecks = S.makeFilterGroup([
 export class GoldSubset extends S.Class<GoldSubset>($I`GoldSubset`)(
   GoldSubsetFields.mapFields(identity).check(GoldSubsetChecks),
   $I.annote("GoldSubset", {
-    description:
-      "Unique, size-bounded gold paper ids satisfying relation proper-subset entity proper-subset structure.",
+    description: "Unique, exact-sized gold paper ids satisfying relation proper-subset entity proper-subset structure.",
   })
 ) {}
 

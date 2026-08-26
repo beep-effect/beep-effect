@@ -15,7 +15,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, Encoding, Equal, HashMap, Layer, Option, Result } from "effect";
+import { Effect, Encoding, Equal, HashMap, HashSet, Layer, Option, Order, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -26,7 +26,7 @@ import { CorpusPaperId } from "@/corpus/Manifest";
 import { F1FixtureId, FixtureDegradedKind, FixtureMediaType } from "@/fixtures/F1";
 import { DegradedKind } from "@/schema/Degraded";
 import { contentDigest, contentDigestSync, digestOmitting, digestOmittingSync, sha256TextSync } from "@/schema/Digest";
-import { Origin, SourceDocument } from "@/schema/Document";
+import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
 import {
   AnchorRejected,
   DocumentUnavailable,
@@ -42,6 +42,7 @@ import {
   DocumentOutcome,
   EvalReport,
   EvalRun,
+  EvalSelection,
   MetricName,
   MetricScore,
   MetricStatus,
@@ -50,23 +51,25 @@ import {
   RequiredMetrics,
 } from "@/schema/Eval";
 import {
+  batchIdPreimage,
   ClaimBody,
   ConflictBasis,
   ConflictWitness,
+  claimIdPreimage,
   DegradedClaim,
+  declaredLosses,
   EvidenceBatch,
   EvidenceClaim,
   ExtractionLane,
   ExtractionMethod,
   ExtractOutcome,
   LossDeclaration,
+  makeBatchId,
+  makeClaimId,
   StructureRole,
 } from "@/schema/Evidence";
 import { GoldEntityLabel, GoldFile, GoldRef, GoldRelationLabel, GoldStructureLabel, GoldSubset } from "@/schema/Gold";
 import {
-  BatchId,
-  ChunkId,
-  ClaimId,
   DocumentId,
   isBatchId,
   isChunkId,
@@ -82,7 +85,7 @@ import { ModelIdentity, ProviderFamily, TaskType } from "@/schema/Model";
 import { EventBody, ProvenanceEvent } from "@/schema/Provenance";
 import { ProviderCacheEntry, ProviderCacheKey, RequestKind } from "@/schema/ProviderCache";
 import { EvalRunTelemetry } from "@/schema/Telemetry";
-import { Chunk, ChunkKind, isCanonicalText, ParseOutcome } from "@/schema/Text";
+import { Chunk, ChunkKind, chunkIdPreimage, isCanonicalText, makeChunkId, ParseOutcome } from "@/schema/Text";
 import type { DegradedKind as DegradedKindValue } from "@/schema/Degraded";
 import type { Origin as OriginValue } from "@/schema/Document";
 import type {
@@ -137,16 +140,24 @@ const canonicalDigest = (value: unknown): Sha256Hex =>
   Sha256Hex.make(Encoding.encodeHex(sha256(new TextEncoder().encode(canonicalJson(value)))));
 
 const documentId = DocumentId.make(Str.repeat(64)("1"));
-const chunkId = ChunkId.make(Str.repeat(64)("2"));
-const claimId = ClaimId.make(Str.repeat(64)("3"));
-const secondClaimId = ClaimId.make(Str.repeat(64)("4"));
-const batchId = BatchId.make(Str.repeat(64)("5"));
+const secondDocumentId = DocumentId.make(Str.repeat(64)("2"));
 const acquired = ProvenanceEventId.make(Str.repeat(64)("6"));
 
+const parsingFixtureDeclaration = FixtureDeclaration.make({
+  expectation: "parses",
+  degradedKind: Option.none(),
+});
 const fixtureOrigin = Origin.cases.Fixture.make({
   kind: "Fixture",
   fixtureId: F1FixtureId.make("md-structure"),
   relativePath: "documents/md-structure.md",
+  declared: parsingFixtureDeclaration,
+});
+const secondFixtureOrigin = Origin.cases.Fixture.make({
+  kind: "Fixture",
+  fixtureId: F1FixtureId.make("md-unicode"),
+  relativePath: "documents/md-unicode.md",
+  declared: parsingFixtureDeclaration,
 });
 const w1Origin = Origin.cases.W1Paper.make({
   kind: "W1Paper",
@@ -186,6 +197,10 @@ const otherAnchor = TextAnchor.make({
 const receipt = TextAnchorVerificationReceipt.make({ anchor, source: sourceIdentity });
 const otherReceipt = TextAnchorVerificationReceipt.make({ anchor: otherAnchor, source: sourceIdentity });
 const canonicalText = ResolvedSourceText.make({ identity: sourceIdentity, text: "Effect data" });
+const chunkId = Result.getOrThrow(makeChunkId({ document: documentId, anchor, receipt }));
+const unlistedChunkId = Result.getOrThrow(
+  makeChunkId({ document: documentId, anchor: otherAnchor, receipt: otherReceipt })
+);
 const chunk = Chunk.make({
   id: chunkId,
   document: documentId,
@@ -240,6 +255,32 @@ const entityBody = ClaimBody.cases.Entity.make({
   endChar: anchor.endChar,
   quote: anchor.quote,
 });
+const secondEntityBody = ClaimBody.cases.Entity.make({
+  kind: "Entity",
+  label: "data",
+  entityType: "concept",
+  startChar: otherAnchor.startChar,
+  endChar: otherAnchor.endChar,
+  quote: otherAnchor.quote,
+});
+const claimId = Result.getOrThrow(
+  makeClaimId({
+    document: documentId,
+    chunk: chunkId,
+    body: entityBody,
+    method: "hosted-langextract",
+    model: hostedModel,
+  })
+);
+const secondClaimId = Result.getOrThrow(
+  makeClaimId({
+    document: documentId,
+    chunk: chunkId,
+    body: secondEntityBody,
+    method: "hosted-langextract",
+    model: hostedModel,
+  })
+);
 const relationBody = ClaimBody.cases.Relation.make({
   kind: "Relation",
   predicate: "uses",
@@ -249,6 +290,15 @@ const relationBody = ClaimBody.cases.Relation.make({
   endChar: NonNegativeInt.make(6),
   quote: "Effect",
 });
+const relationClaimId = Result.getOrThrow(
+  makeClaimId({
+    document: documentId,
+    chunk: chunkId,
+    body: relationBody,
+    method: "hosted-langextract",
+    model: hostedModel,
+  })
+);
 const structureBody = ClaimBody.cases.Structure.make({
   kind: "Structure",
   role: "title",
@@ -268,11 +318,36 @@ const evidenceClaim = EvidenceClaim.make({
   cacheKey: Option.some(providerCacheKey),
   receipt,
 });
+const secondEvidenceClaim = EvidenceClaim.make({
+  id: secondClaimId,
+  document: documentId,
+  chunk: chunkId,
+  body: secondEntityBody,
+  confidence: Confidence.make(0.8),
+  method: "hosted-langextract",
+  model: hostedModel,
+  cacheKey: Option.some(providerCacheKey),
+  receipt: otherReceipt,
+});
+const relationClaim = EvidenceClaim.make({
+  id: relationClaimId,
+  document: documentId,
+  chunk: chunkId,
+  body: relationBody,
+  confidence: Confidence.make(0.7),
+  method: "hosted-langextract",
+  model: hostedModel,
+  cacheKey: Option.some(providerCacheKey),
+  receipt,
+});
 const degradedClaim = DegradedClaim.make({
   kind: "relation-unresolved",
   detail: "The relation object did not resolve to an entity claim.",
   chunk: chunkId,
 });
+const batchId = Result.getOrThrow(
+  makeBatchId({ document: documentId, method: "hosted-langextract", model: hostedModel, inputs: [chunkId] })
+);
 const evidenceBatch = EvidenceBatch.make({
   id: batchId,
   document: documentId,
@@ -283,14 +358,44 @@ const evidenceBatch = EvidenceBatch.make({
   degraded: [degradedClaim],
   lossy: [],
 });
+const relationBatch = EvidenceBatch.make({
+  ...evidenceBatch,
+  claims: [evidenceClaim, secondEvidenceClaim, relationClaim],
+  degraded: [],
+});
+const conflictEndpoints = A.sort(Order.String)([claimId, secondClaimId]);
+const conflictLeft = A.getUnsafe(conflictEndpoints, 0);
+const conflictRight = A.getUnsafe(conflictEndpoints, 1);
+const conflictBasis = "same-anchor-different-label" as const;
+const conflictWitness = ConflictWitness.make({
+  id: canonicalDigest({ left: conflictLeft, right: conflictRight, basis: conflictBasis }),
+  left: conflictLeft,
+  right: conflictRight,
+  basis: conflictBasis,
+});
 
-const paper1 = CorpusPaperId.make("000000000001");
-const paper2 = CorpusPaperId.make("000000000002");
-const paper3 = CorpusPaperId.make("000000000003");
+const goldPapers = A.map(
+  [
+    "000000000001",
+    "000000000002",
+    "000000000003",
+    "000000000004",
+    "000000000005",
+    "000000000006",
+    "000000000007",
+    "000000000008",
+    "000000000009",
+    "00000000000a",
+  ],
+  (id) => CorpusPaperId.make(id)
+);
+const paper1 = A.getUnsafe(goldPapers, 0);
+const paper2 = A.getUnsafe(goldPapers, 1);
+const paper3 = A.getUnsafe(goldPapers, 2);
 const goldSubset = GoldSubset.make({
-  structure: [paper1, paper2, paper3],
-  entity: [paper1, paper2],
-  relation: [paper1],
+  structure: goldPapers,
+  entity: A.take(goldPapers, 5),
+  relation: A.take(goldPapers, 3),
 });
 const goldRef = GoldRef.make({
   version: "gold/v1",
@@ -306,6 +411,7 @@ const runBody = {
   gold: goldRef,
   extractor: hostedModel,
   patternLane: patternModel,
+  selection: EvalSelection.make({ w1: [], f1: [fixtureOrigin.fixtureId] }),
 };
 const EvalRunBodySchema = S.Struct({
   stage: CanaryStage,
@@ -314,6 +420,7 @@ const EvalRunBodySchema = S.Struct({
   gold: GoldRef,
   extractor: ModelIdentity,
   patternLane: ModelIdentity,
+  selection: EvalSelection,
 });
 const evalRun = EvalRun.make({
   id: RunId.make(Result.getOrThrow(contentDigestSync(EvalRunBodySchema)(runBody))),
@@ -352,13 +459,18 @@ const metricScores = A.map(requiredC0, (required) =>
   })
 );
 
-const withReportDigest = (body: {
-  readonly schemaVersion: "eval-report/v1";
-  readonly run: EvalRun;
-  readonly documents: readonly [DocumentOutcome, ...Array<DocumentOutcome>];
-  readonly metrics: readonly [MetricScore, ...Array<MetricScore>];
-  readonly unexpectedDegraded: NonNegativeInt;
-}) => ({ ...body, reportDigest: canonicalDigest(body) });
+const EvalReportBodySchema = S.Struct({
+  schemaVersion: S.Literal("eval-report/v1"),
+  run: EvalRun,
+  documents: S.NonEmptyArray(DocumentOutcome),
+  metrics: S.NonEmptyArray(MetricScore),
+  unexpectedDegraded: NonNegativeInt,
+});
+
+const withReportDigest = (body: typeof EvalReportBodySchema.Type) => ({
+  ...Result.getOrThrow(S.encodeResult(EvalReportBodySchema)(body)),
+  reportDigest: Result.getOrThrow(contentDigestSync(EvalReportBodySchema)(body)),
+});
 
 const reportBody = {
   schemaVersion: "eval-report/v1" as const,
@@ -464,15 +576,7 @@ describe("C0 schema round trips", () => {
     roundTrip(EvidenceClaim, evidenceClaim);
     roundTrip(DegradedClaim, degradedClaim);
     roundTrip(EvidenceBatch, evidenceBatch);
-    roundTrip(
-      ConflictWitness,
-      ConflictWitness.make({
-        id: sha("f"),
-        left: claimId,
-        right: secondClaimId,
-        basis: "same-anchor-different-label",
-      })
-    );
+    roundTrip(ConflictWitness, conflictWitness);
     roundTrip(GoldSubset, goldSubset);
     roundTrip(GoldRef, goldRef);
     roundTrip(
@@ -632,9 +736,29 @@ describe("document and text refinements", () => {
     expect(rejects(SourceDocument, { ...sourceDocument, sha256: sha("0") })).toBe(true);
   });
 
-  it("accepts matching chunk receipts and rejects a receipt for another anchor", () => {
+  it("accepts coherent fixture declarations and rejects mismatched degraded-kind presence", () => {
+    expect(S.is(FixtureDeclaration)(parsingFixtureDeclaration)).toBe(true);
+    expect(
+      rejects(FixtureDeclaration, {
+        expectation: "parses",
+        degradedKind: "invalid-utf8",
+      })
+    ).toBe(true);
+  });
+
+  it("builds and verifies chunk content ids from the canonical encoded preimage", () => {
     expect(S.is(Chunk)(chunk)).toBe(true);
+    expect(Result.isSuccess(chunkIdPreimage(chunk))).toBe(true);
+    expect(Result.getOrThrow(makeChunkId(chunk))).toBe(chunk.id);
+    expect(rejects(Chunk, { ...chunk, id: sha("0") })).toBe(true);
+  });
+
+  it("accepts matching chunk receipts and rejects another anchor or source document", () => {
     expect(rejects(Chunk, { ...chunk, receipt: otherReceipt })).toBe(true);
+    const otherSource = SourceTextIdentity.make({ ...sourceIdentity, sourceRef: secondDocumentId });
+    const otherSourceReceipt = TextAnchorVerificationReceipt.make({ anchor, source: otherSource });
+    const otherSourceId = Result.getOrThrow(makeChunkId({ document: documentId, anchor, receipt: otherSourceReceipt }));
+    expect(rejects(Chunk, { ...chunk, id: otherSourceId, receipt: otherSourceReceipt })).toBe(true);
   });
 
   it("accepts each claim-body width and rejects each inconsistent width", () => {
@@ -679,9 +803,112 @@ describe("digest and provider-cache refinements", () => {
 });
 
 describe("evidence refinements", () => {
-  it("accepts a matching claim receipt and rejects a receipt for another anchor", () => {
+  it("builds and verifies claim ids from schema-encoded body and model preimages", () => {
     expect(S.is(EvidenceClaim)(evidenceClaim)).toBe(true);
+    expect(Result.isSuccess(claimIdPreimage(evidenceClaim))).toBe(true);
+    expect(Result.getOrThrow(makeClaimId(evidenceClaim))).toBe(evidenceClaim.id);
+    expect(rejects(EvidenceClaim, { ...evidenceClaim, id: sha("0") })).toBe(true);
+  });
+
+  it("accepts a matching claim receipt and rejects a receipt for another anchor", () => {
     expect(rejects(EvidenceClaim, { ...evidenceClaim, receipt: otherReceipt })).toBe(true);
+  });
+
+  it("builds and verifies batch ids from the ordered input preimage", () => {
+    expect(S.is(EvidenceBatch)(evidenceBatch)).toBe(true);
+    expect(Result.isSuccess(batchIdPreimage(evidenceBatch))).toBe(true);
+    expect(Result.getOrThrow(makeBatchId(evidenceBatch))).toBe(evidenceBatch.id);
+    expect(rejects(EvidenceBatch, { ...evidenceBatch, id: sha("0") })).toBe(true);
+  });
+
+  it("binds every claim and degraded claim chunk to the batch inputs", () => {
+    const unlistedClaimId = Result.getOrThrow(
+      makeClaimId({
+        document: documentId,
+        chunk: unlistedChunkId,
+        body: secondEntityBody,
+        method: "hosted-langextract",
+        model: hostedModel,
+      })
+    );
+    const unlistedClaim = EvidenceClaim.make({
+      ...secondEvidenceClaim,
+      id: unlistedClaimId,
+      chunk: unlistedChunkId,
+    });
+
+    expect(S.is(EvidenceBatch)(evidenceBatch)).toBe(true);
+    expect(rejects(EvidenceBatch, { ...evidenceBatch, claims: [unlistedClaim] })).toBe(true);
+    expect(
+      rejects(EvidenceBatch, {
+        ...evidenceBatch,
+        degraded: [{ ...degradedClaim, chunk: unlistedChunkId }],
+      })
+    ).toBe(true);
+  });
+
+  it("requires every relation endpoint to identify a same-batch entity claim", () => {
+    const externalBody = ClaimBody.cases.Entity.make({
+      ...entityBody,
+      label: "Schema",
+      quote: "Effect",
+    });
+    const externalId = Result.getOrThrow(
+      makeClaimId({
+        document: documentId,
+        chunk: chunkId,
+        body: externalBody,
+        method: "hosted-langextract",
+        model: hostedModel,
+      })
+    );
+    const unresolvedBody = ClaimBody.cases.Relation.make({ ...relationBody, object: externalId });
+    const unresolvedId = Result.getOrThrow(
+      makeClaimId({
+        document: documentId,
+        chunk: chunkId,
+        body: unresolvedBody,
+        method: "hosted-langextract",
+        model: hostedModel,
+      })
+    );
+    const unresolvedRelation = EvidenceClaim.make({ ...relationClaim, id: unresolvedId, body: unresolvedBody });
+
+    expect(S.is(EvidenceBatch)(relationBatch)).toBe(true);
+    expect(
+      rejects(EvidenceBatch, {
+        ...relationBatch,
+        claims: [evidenceClaim, secondEvidenceClaim, unresolvedRelation],
+      })
+    ).toBe(true);
+  });
+
+  it("derives exact order-insensitive loss declarations from the extraction method", () => {
+    const patternLosses = Option.getOrThrow(HashMap.get(declaredLosses, "pattern-wink"));
+    expect(
+      Equal.equals(
+        patternLosses,
+        HashSet.fromIterable<LossDeclarationValue>(["relations-not-supported", "structure-not-supported"])
+      )
+    ).toBe(true);
+
+    const patternBatchId = Result.getOrThrow(
+      makeBatchId({ document: documentId, method: "pattern-wink", model: patternModel, inputs: [chunkId] })
+    );
+    const patternBatch = EvidenceBatch.make({
+      id: patternBatchId,
+      document: documentId,
+      method: "pattern-wink",
+      model: patternModel,
+      inputs: [chunkId],
+      claims: [],
+      degraded: [],
+      lossy: ["structure-not-supported", "relations-not-supported"],
+    });
+
+    expect(S.is(EvidenceBatch)(patternBatch)).toBe(true);
+    expect(rejects(EvidenceBatch, { ...patternBatch, lossy: ["relations-not-supported"] })).toBe(true);
+    expect(rejects(EvidenceBatch, { ...evidenceBatch, lossy: ["relations-not-supported"] })).toBe(true);
   });
 
   it("accepts coherent unique claims and rejects duplicate ids or mismatched batch fields", () => {
@@ -706,6 +933,27 @@ describe("evidence refinements", () => {
       })
     ).toBe(true);
   });
+
+  it("requires conflict witnesses to use distinct ordered endpoints and their canonical digest", () => {
+    expect(S.is(ConflictWitness)(conflictWitness)).toBe(true);
+    expect(
+      rejects(ConflictWitness, {
+        id: canonicalDigest({ left: claimId, right: claimId, basis: conflictBasis }),
+        left: claimId,
+        right: claimId,
+        basis: conflictBasis,
+      })
+    ).toBe(true);
+    expect(
+      rejects(ConflictWitness, {
+        id: canonicalDigest({ left: conflictRight, right: conflictLeft, basis: conflictBasis }),
+        left: conflictRight,
+        right: conflictLeft,
+        basis: conflictBasis,
+      })
+    ).toBe(true);
+    expect(rejects(ConflictWitness, { ...conflictWitness, id: sha("0") })).toBe(true);
+  });
 });
 
 describe("provenance refinements", () => {
@@ -727,39 +975,40 @@ describe("provenance refinements", () => {
 });
 
 describe("gold refinements", () => {
-  it("accepts strict nested subsets and rejects duplicates, non-strict containment, and oversize structure", () => {
+  it("accepts exact 10/5/3 subsets and rejects smaller or larger protocol selections", () => {
     expect(S.is(GoldSubset)(goldSubset)).toBe(true);
     expect(
       rejects(GoldSubset, {
-        structure: [paper1, paper1, paper2],
-        entity: [paper1, paper2],
-        relation: [paper1],
+        structure: A.dropRight(goldPapers, 1),
+        entity: A.take(goldPapers, 5),
+        relation: A.take(goldPapers, 3),
+      })
+    ).toBe(true);
+    const paper11 = CorpusPaperId.make("00000000000b");
+    expect(
+      rejects(GoldSubset, {
+        structure: [...goldPapers, paper11],
+        entity: A.take(goldPapers, 5),
+        relation: A.take(goldPapers, 3),
+      })
+    ).toBe(true);
+  });
+
+  it("rejects duplicate ids and broken strict containment at the exact protocol sizes", () => {
+    const paper4 = A.getUnsafe(goldPapers, 3);
+    const paper11 = CorpusPaperId.make("00000000000b");
+    expect(
+      rejects(GoldSubset, {
+        structure: [...A.dropRight(goldPapers, 1), paper1],
+        entity: A.take(goldPapers, 5),
+        relation: A.take(goldPapers, 3),
       })
     ).toBe(true);
     expect(
       rejects(GoldSubset, {
-        structure: [paper1, paper2],
-        entity: [paper1, paper2],
-        relation: [paper1],
-      })
-    ).toBe(true);
-    expect(
-      rejects(GoldSubset, {
-        structure: [
-          "000000000001",
-          "000000000002",
-          "000000000003",
-          "000000000004",
-          "000000000005",
-          "000000000006",
-          "000000000007",
-          "000000000008",
-          "000000000009",
-          "00000000000a",
-          "00000000000b",
-        ],
-        entity: [paper1, paper2],
-        relation: [paper1],
+        structure: goldPapers,
+        entity: [paper1, paper2, paper3, paper4, paper11],
+        relation: [paper1, paper2, paper3],
       })
     ).toBe(true);
   });
@@ -810,6 +1059,22 @@ describe("evaluation refinements", () => {
     return { id: RunId.make(Result.getOrThrow(contentDigestSync(EvalRunBodySchema)(body))), ...body };
   };
 
+  it("accepts unique run selections and rejects duplicate W1 or F1 identities", () => {
+    expect(S.is(EvalSelection)(runBody.selection)).toBe(true);
+    expect(
+      rejects(EvalSelection, {
+        w1: [paper1, paper1],
+        f1: [fixtureOrigin.fixtureId],
+      })
+    ).toBe(true);
+    expect(
+      rejects(EvalSelection, {
+        w1: [paper1],
+        f1: [fixtureOrigin.fixtureId, fixtureOrigin.fixtureId],
+      })
+    ).toBe(true);
+  });
+
   it("accepts independent extraction and gold providers and rejects every EvalRun invariant", () => {
     expect(S.is(EvalRun)(evalRun)).toBe(true);
     const sameFamilyProposer = ModelIdentity.make({ ...proposerModel, provider: "anthropic" });
@@ -818,6 +1083,12 @@ describe("evaluation refinements", () => {
 
     const wrongTaskExtractor = ModelIdentity.make({ ...hostedModel, provider: "anthropic", taskType: "gold-proposal" });
     expect(rejects(EvalRun, runWith({ extractor: wrongTaskExtractor }))).toBe(true);
+
+    const wrongPatternProvider = ModelIdentity.make({ ...patternModel, provider: "anthropic" });
+    expect(rejects(EvalRun, runWith({ patternLane: wrongPatternProvider }))).toBe(true);
+
+    const wrongPatternTask = ModelIdentity.make({ ...patternModel, taskType: "gold-proposal" });
+    expect(rejects(EvalRun, runWith({ patternLane: wrongPatternTask }))).toBe(true);
     expect(rejects(EvalRun, { ...evalRun, id: RunId.make(Str.repeat(64)("0")) })).toBe(true);
   });
 
@@ -843,6 +1114,117 @@ describe("evaluation refinements", () => {
         support: 0,
       })
     ).toBe(false);
+    expect(
+      rejects(MetricScore, {
+        name: "rebel-end-to-end-triple-f1",
+        subset: "relation",
+        lane: "pattern",
+        status: "unsupported",
+        value: 0.5,
+        support: 1,
+      })
+    ).toBe(true);
+  });
+
+  it("accepts unique exact document coverage and rejects duplicate ids, omissions, and extras", () => {
+    const selection = EvalSelection.make({
+      w1: [],
+      f1: [fixtureOrigin.fixtureId, secondFixtureOrigin.fixtureId],
+    });
+    const run = EvalRun.make(runWith({ selection }));
+    const secondOutcome = DocumentOutcome.make({
+      ...documentOutcome,
+      document: secondDocumentId,
+      origin: secondFixtureOrigin,
+    });
+    const body: typeof EvalReportBodySchema.Type = {
+      ...reportBody,
+      run,
+      documents: [documentOutcome, secondOutcome],
+    };
+
+    expect(rejects(EvalReport, withReportDigest(body))).toBe(false);
+    expect(
+      rejects(
+        EvalReport,
+        withReportDigest({
+          ...body,
+          documents: [documentOutcome, DocumentOutcome.make({ ...secondOutcome, document: documentId })],
+        })
+      )
+    ).toBe(true);
+    expect(rejects(EvalReport, withReportDigest({ ...body, documents: [documentOutcome] }))).toBe(true);
+    expect(rejects(EvalReport, withReportDigest({ ...reportBody, documents: [documentOutcome, secondOutcome] }))).toBe(
+      true
+    );
+  });
+
+  it("derives F1 degradation arithmetic from each document origin declaration", () => {
+    const futureFixtureId = F1FixtureId.make("future-fixture");
+    const futureOrigin = Origin.cases.Fixture.make({
+      kind: "Fixture",
+      fixtureId: futureFixtureId,
+      relativePath: "documents/future-fixture.md",
+      declared: FixtureDeclaration.make({ expectation: "parses", degradedKind: Option.none() }),
+    });
+    const selection = EvalSelection.make({ w1: [], f1: [futureFixtureId] });
+    const run = EvalRun.make(runWith({ selection }));
+    const futureOutcome = DocumentOutcome.make({
+      ...documentOutcome,
+      document: secondDocumentId,
+      origin: futureOrigin,
+    });
+    const body: typeof EvalReportBodySchema.Type = { ...reportBody, run, documents: [futureOutcome] };
+
+    expect(rejects(EvalReport, withReportDigest(body))).toBe(false);
+    expect(
+      rejects(
+        EvalReport,
+        withReportDigest({
+          ...body,
+          documents: [DocumentOutcome.make({ ...futureOutcome, parse: "truncated" })],
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("requires hosted relation claims for every selected relation-gold paper", () => {
+    const selection = EvalSelection.make({ w1: [paper1], f1: [fixtureOrigin.fixtureId] });
+    const run = EvalRun.make(runWith({ selection }));
+    const relationOutcome = DocumentOutcome.make({
+      ...documentOutcome,
+      document: secondDocumentId,
+      origin: w1Origin,
+      claims: {
+        ...documentOutcome.claims,
+        hosted: { ...documentOutcome.claims.hosted, relation: NonNegativeInt.make(1) },
+      },
+    });
+    const body: typeof EvalReportBodySchema.Type = {
+      ...reportBody,
+      run,
+      documents: [relationOutcome, documentOutcome],
+    };
+
+    expect(rejects(EvalReport, withReportDigest(body))).toBe(false);
+    expect(
+      rejects(
+        EvalReport,
+        withReportDigest({
+          ...body,
+          documents: [
+            DocumentOutcome.make({
+              ...relationOutcome,
+              claims: {
+                ...relationOutcome.claims,
+                hosted: { ...relationOutcome.claims.hosted, relation: NonNegativeInt.make(0) },
+              },
+            }),
+            documentOutcome,
+          ],
+        })
+      )
+    ).toBe(true);
   });
 
   it("rejects missing or duplicate metric coordinates", () => {

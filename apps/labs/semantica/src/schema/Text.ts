@@ -1,10 +1,12 @@
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
 import { $SemanticaId } from "@beep/identity/packages";
-import { SourceTextExtractor, TextAnchor, TextAnchorVerificationReceipt } from "@beep/provenance";
+import { SourceTextDigest, SourceTextExtractor, TextAnchor, TextAnchorVerificationReceipt } from "@beep/provenance";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
-import { identity, Tuple } from "effect";
+import { identity, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { DegradedKind } from "@/schema/Degraded";
+import { sha256CanonicalSync } from "@/schema/Digest";
 import { ChunkId, DocumentId } from "@/schema/Ids";
 
 const $I = $SemanticaId.create("schema/Text");
@@ -170,6 +172,54 @@ const ChunkFields = S.Struct({
   receipt: TextAnchorVerificationReceipt,
 });
 
+const ChunkIdPreimage = S.Struct({
+  document: DocumentId,
+  textDigest: SourceTextDigest,
+  startChar: NonNegativeInt,
+  endChar: NonNegativeInt,
+});
+
+type ChunkIdSource = Pick<typeof ChunkFields.Type, "anchor" | "document" | "receipt">;
+
+/**
+ * Schema-encodes the canonical content preimage for a chunk id.
+ *
+ * **Example** (Inspect the preimage builder)
+ *
+ * ```ts
+ * import { chunkIdPreimage } from "@/schema/Text"
+ *
+ * console.log(typeof chunkIdPreimage) // "function"
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const chunkIdPreimage = (chunk: ChunkIdSource): Result.Result<typeof ChunkIdPreimage.Encoded, S.SchemaError> =>
+  S.encodeResult(ChunkIdPreimage)({
+    document: chunk.document,
+    textDigest: chunk.receipt.source.textDigest,
+    startChar: chunk.anchor.startChar,
+    endChar: chunk.anchor.endChar,
+  });
+
+/**
+ * Builds the content-addressed id for a canonical-text chunk.
+ *
+ * **Example** (Inspect the chunk id builder)
+ *
+ * ```ts
+ * import { makeChunkId } from "@/schema/Text"
+ *
+ * console.log(typeof makeChunkId) // "function"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeChunkId = (chunk: ChunkIdSource): Result.Result<ChunkId, S.SchemaError> =>
+  Result.map(chunkIdPreimage(chunk), (preimage) => ChunkId.make(sha256CanonicalSync(preimage)));
+
 const ChunkReceiptCheck = S.makeFilter(
   (chunk: typeof ChunkFields.Type) => S.toEquivalence(TextAnchor)(chunk.anchor, chunk.receipt.anchor),
   {
@@ -179,6 +229,39 @@ const ChunkReceiptCheck = S.makeFilter(
     message: "Chunk receipt.anchor must equal anchor.",
   }
 );
+
+const ChunkReceiptSourceCheck = S.makeFilter(
+  (chunk: typeof ChunkFields.Type) => Str.Equivalence(chunk.receipt.source.sourceRef, chunk.document),
+  {
+    identifier: $I`ChunkReceiptSourceCheck`,
+    title: "Chunk receipt source document",
+    description: "Requires the receipt source identity to name the chunk's document.",
+    message: "Chunk receipt.source.sourceRef must equal document.",
+  }
+);
+
+const ChunkIdentityCheck = S.makeFilter(
+  (chunk: typeof ChunkFields.Type) =>
+    makeChunkId(chunk).pipe(
+      Result.match({
+        onFailure: () => false,
+        onSuccess: (id) => Str.Equivalence(id, chunk.id),
+      })
+    ),
+  {
+    identifier: $I`ChunkIdentityCheck`,
+    title: "Chunk content identity",
+    description: "Requires id to hash the canonical encoded document, text digest, and anchor offsets.",
+    message: "Chunk id must match the canonical chunk preimage digest.",
+  }
+);
+
+const ChunkChecks = S.makeFilterGroup([ChunkReceiptCheck, ChunkReceiptSourceCheck, ChunkIdentityCheck], {
+  identifier: $I`ChunkChecks`,
+  title: "Chunk",
+  description: "Checks the anchor receipt, source-document binding, and canonical content identity of a chunk.",
+  message: "Chunk must have a matching receipt, source document, and content id.",
+});
 
 /**
  * Document-scoped canonical-text chunk with a verified anchor receipt.
@@ -195,7 +278,7 @@ const ChunkReceiptCheck = S.makeFilter(
  * @since 0.0.0
  */
 export class Chunk extends S.Class<Chunk>($I`Chunk`)(
-  ChunkFields.mapFields(identity).check(ChunkReceiptCheck),
+  ChunkFields.mapFields(identity).check(ChunkChecks),
   $I.annote("Chunk", {
     description: "Document-scoped chunk whose exact text anchor has a persisted verification receipt.",
   })
