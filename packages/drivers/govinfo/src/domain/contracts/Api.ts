@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { HttpApi, HttpApiGroup } from "effect/unstable/httpapi";
+import { HttpApi, HttpApiGroup, OpenApi } from "effect/unstable/httpapi";
 import * as Search from "./Search/index.ts";
 
 /**
@@ -43,4 +43,8 @@ export const GovinfoApiGroup = HttpApiGroup.make("govinfo", { topLevel: true }).
  * @category protocols
  * @since 0.0.0
  */
-export const GovinfoApi = HttpApi.make("govinfo").add(GovinfoApiGroup);
+export const GovinfoApi = HttpApi.make("govinfo")
+  .annotate(OpenApi.Title, "GovInfo API (search contract)")
+  .annotate(OpenApi.Version, "2.0")
+  .annotate(OpenApi.Description, "Hand-written subset of the GovInfo API contract covering only document search.")
+  .add(GovinfoApiGroup);

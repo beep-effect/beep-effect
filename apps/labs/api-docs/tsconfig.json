@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.base.json",
+  "include": ["src", "test", "vitest.config.ts", "../../../vitest.shared.ts"],
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "types": ["node"],
+    "allowJs": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "outDir": "dist",
+    "rootDir": "../../.."
+  },
+  "references": [
+    {
+      "path": "../../../packages/drivers/ecfr/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/govinfo/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/pacer/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/library/codegen-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/library/qa-capture/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ]
+}

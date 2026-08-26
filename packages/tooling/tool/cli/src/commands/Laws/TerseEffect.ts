@@ -176,6 +176,18 @@ const getZeroArgHelperReference = (callExpression: CallExpression): O.Option<str
     return O.none();
   }
 
+  // `O.none` / `A.empty` are nullary GENERIC constructors: collapsing a bare
+  // call (`() => O.none()` -> `O.none`) leaves the type parameter unbound
+  // wherever contextual typing cannot reach it (Match.orElse, match handler
+  // objects under docgen's tsc), silently widening Option<A> to
+  // Option<unknown>. tsgo tolerates the widened form, so the damage only
+  // surfaces later in the docgen lane. Only rewrite calls that pin the type
+  // argument explicitly (`() => O.none<string>()` -> `O.none<string>`), which
+  // stays type-identical as an instantiation expression.
+  if (callExpression.getTypeArguments().length === 0) {
+    return O.none();
+  }
+
   const receiverText = expression.getExpression().getText();
   const propertyText = expression.getName();
 

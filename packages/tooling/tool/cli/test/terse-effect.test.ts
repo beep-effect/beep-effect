@@ -187,6 +187,43 @@ describe("terse effect laws", () => {
       ).pipe(provideScopedLayer(NodeTestLayer))
     ));
 
+  it("leaves bare nullary generic constructor thunks alone in check and write modes", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeDefaultTsconfig;
+          const source = A.join(
+            [
+              'import * as A from "effect/Array";',
+              'import * as O from "effect/Option";',
+              "",
+              "export const values = {",
+              "  onNone: () => A.empty<string>(),",
+              "  onEmpty: () => O.none(),",
+              "  onBare: () => A.empty(),",
+              "};",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile(DemoSourcePath, source);
+
+          const checkSummary = yield* runTerseRules(false, true);
+          expect(checkSummary.helpersSimplified).toBe(1);
+          expect(checkSummary.blockingFindings).toEqual([
+            expect.stringMatching(/^packages\/demo\/src\/index\.ts:\d+:\d+ helper-ref$/u),
+          ]);
+
+          const writeSummary = yield* runTerseRules(true, false);
+          const rewritten = yield* readProjectFile(DemoSourcePath);
+          expect(writeSummary.helpersSimplified).toBe(1);
+          expect(rewritten).toContain("onNone: A.empty<string>");
+          expect(rewritten).toContain("onEmpty: () => O.none()");
+          expect(rewritten).toContain("onBare: () => A.empty()");
+        })
+      ).pipe(provideScopedLayer(NodeTestLayer))
+    ));
+
   it("leaves already-terse code unchanged", () =>
     Effect.runPromise(
       withTempWorkingDirectory(

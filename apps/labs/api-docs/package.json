@@ -1,0 +1,47 @@
+{
+  "name": "@beep/api-docs",
+  "version": "0.0.0",
+  "description": "Lab app hosting Scalar docs UIs for every HttpApi contract and committed OpenAPI spec in the repo",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/apps/labs/api-docs",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "apps/labs/api-docs"
+  },
+  "scripts": {
+    "audit": "bun run --if-present beep:audit",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+    "beep:build": "tsgo -p tsconfig.check.json",
+    "beep:check": "tsgo -p tsconfig.check.json",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "codegen": "echo 'no codegen needed'",
+    "dev": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'",
+    "lint": "bun run beep:lint",
+    "lint:fix": "bun run beep:lint:fix",
+    "test": "bun run beep:test"
+  },
+  "dependencies": {
+    "@beep/codegen-kit": "workspace:^",
+    "@beep/ecfr": "workspace:^",
+    "@beep/govinfo": "workspace:^",
+    "@beep/identity": "workspace:^",
+    "@beep/pacer": "workspace:^",
+    "@beep/qa-capture": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@beep/test-utils": "workspace:^",
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

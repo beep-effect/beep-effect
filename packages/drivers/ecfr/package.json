@@ -41,6 +41,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./contract": "./src/contract.ts",
     "./_generated/*": null,
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -60,6 +61,7 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./contract": "./dist/contract.js",
       "./_generated/*": null,
       "./internal/*": null,
       "./package.json": "./package.json"

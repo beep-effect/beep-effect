@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { HttpApiEndpoint, HttpApiSchema } from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiSchema, OpenApi } from "effect/unstable/httpapi";
 import * as Contract from "./Search.contract.ts";
 
 /**
@@ -29,4 +29,4 @@ export const Http = HttpApiEndpoint.post("search", "/search", {
   payload: Contract.Payload,
   error: Contract.Failure,
   success: Contract.Success.pipe(HttpApiSchema.status(200)),
-});
+}).annotate(OpenApi.Summary, "Search GovInfo documents using queries and field operators.");

@@ -11,7 +11,7 @@
 
 import { $QaCaptureId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi";
 import { SequenceNumber } from "./ActionEvent.models.ts";
 import { RoundNumber, SessionId } from "./QaCapture.models.ts";
 
@@ -289,11 +289,36 @@ export type WitnessScriptBody = typeof WitnessScriptBody.Type;
  * @since 0.0.0
  */
 export const QaCollectorApiGroup = HttpApiGroup.make("collector")
-  .add(HttpApiEndpoint.get("health", "/health", { success: CollectorHealth }))
-  .add(HttpApiEndpoint.get("witnessJs", "/witness.js", { success: WitnessScriptBody }))
-  .add(HttpApiEndpoint.post("events", "/events", { payload: NdjsonPayload, success: EventsAccepted }))
-  .add(HttpApiEndpoint.post("mark", "/mark", { payload: MarkRequest, success: MarkAccepted }))
-  .add(HttpApiEndpoint.post("stop", "/stop", { success: StopAccepted }));
+  .add(
+    HttpApiEndpoint.get("health", "/health", { success: CollectorHealth }).annotate(
+      OpenApi.Summary,
+      "Return the collector health snapshot."
+    )
+  )
+  .add(
+    HttpApiEndpoint.get("witnessJs", "/witness.js", { success: WitnessScriptBody }).annotate(
+      OpenApi.Summary,
+      "Serve the witness instrumentation JavaScript."
+    )
+  )
+  .add(
+    HttpApiEndpoint.post("events", "/events", { payload: NdjsonPayload, success: EventsAccepted }).annotate(
+      OpenApi.Summary,
+      "Accept a text/plain NDJSON batch of witness events."
+    )
+  )
+  .add(
+    HttpApiEndpoint.post("mark", "/mark", { payload: MarkRequest, success: MarkAccepted }).annotate(
+      OpenApi.Summary,
+      "Append a semantic marker to the event log."
+    )
+  )
+  .add(
+    HttpApiEndpoint.post("stop", "/stop", { success: StopAccepted }).annotate(
+      OpenApi.Summary,
+      "Request a graceful collector shutdown."
+    )
+  );
 
 /**
  * The witness event collector HttpApi.
@@ -308,4 +333,10 @@ export const QaCollectorApiGroup = HttpApiGroup.make("collector")
  * @category protocols
  * @since 0.0.0
  */
-export const QaCollectorApi = HttpApi.make("QaCollectorApi").add(QaCollectorApiGroup);
+export const QaCollectorApi = HttpApi.make("QaCollectorApi")
+  .annotate(OpenApi.Title, "QA Witness Collector API")
+  .annotate(
+    OpenApi.Description,
+    "Collects witness event batches as text/plain NDJSON without CORS preflights; each line is decoded server-side and rejects are counted without failing the batch."
+  )
+  .add(QaCollectorApiGroup);
