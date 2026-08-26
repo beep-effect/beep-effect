@@ -139,7 +139,7 @@ describe("quarantine rerun steps", () => {
   it("builds the standalone package rerun with the lane environment preserved", () => {
     const rerun = standaloneQuarantineRerunStep(laneStep, task);
     expect(rerun.label).toBe("quality:build:flake-rerun:@beep/box");
-    expect(rerun.args).toEqual(["run", "build", "--", "--filter=@beep/box"]);
+    expect(rerun.args).toEqual(["run", "build", "--", "--concurrency=1", "--filter=@beep/box"]);
     expect(rerun.cwd).toBe("/repo");
     expect(rerun.env).toBeUndefined();
     expect(rerun.flakeQuarantine).toBeUndefined();
@@ -156,7 +156,7 @@ describe("quarantine rerun steps", () => {
     });
     const rerun = standaloneQuarantineRerunStep(directTurboLane, task);
 
-    expect(rerun.args).toEqual(["turbo", "run", "build", "--concurrency=3", "--filter=@beep/box"]);
+    expect(rerun.args).toEqual(["turbo", "run", "build", "--concurrency=1", "--filter=@beep/box"]);
     expect(rerun.useLocalEnv).toBe(true);
   });
 
@@ -180,6 +180,7 @@ describe("quarantine rerun steps", () => {
       "--base",
       "origin/main",
       "--summarize",
+      "--concurrency=1",
       "--filter=@beep/box",
     ]);
     expect(rerun.args).not.toContain("--");
@@ -191,10 +192,10 @@ describe("quarantine rerun steps", () => {
     expect(rerun.env).toEqual({ TURBO_FORCE: "true" });
   });
 
-  it("builds the lane rerun with the policy stripped and TURBO_FORCE removed for cache resume", () => {
+  it("builds a serial lane rerun with the policy stripped and TURBO_FORCE removed for cache resume", () => {
     const rerun = laneQuarantineRerunStep(laneStep);
     expect(rerun.label).toBe("quality:build:flake-lane-rerun");
-    expect(rerun.args).toEqual(["run", "build"]);
+    expect(rerun.args).toEqual(["run", "build", "--", "--concurrency=1"]);
     expect(rerun.env).toEqual({ TURBO_FORCE: undefined });
     expect(rerun.flakeQuarantine).toBeUndefined();
   });
@@ -203,6 +204,18 @@ describe("quarantine rerun steps", () => {
     const rerun = laneQuarantineRerunStep(QualityTaskStep.make({ ...laneStep, useLocalEnv: true }));
 
     expect(rerun.useLocalEnv).toBe(true);
+  });
+
+  it("replaces split-form Turbo concurrency without leaving its value behind", () => {
+    const rerun = laneQuarantineRerunStep(
+      QualityTaskStep.make({
+        ...laneStep,
+        command: "bunx",
+        args: ["turbo", "run", "build", "--concurrency", "8", "--force"],
+      })
+    );
+
+    expect(rerun.args).toEqual(["turbo", "run", "build", "--force", "--concurrency=1"]);
   });
 });
 
