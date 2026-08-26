@@ -24,12 +24,12 @@ const $I = $FileProcessingId.create("SourceText");
  *
  * **Example** (Compute nominal page count)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Compute nominal page count"
  * import { SOURCE_TEXT_PAGE_CODE_UNITS } from "@beep/file-processing/SourceText"
  *
  * const sourceCodeUnits = SOURCE_TEXT_PAGE_CODE_UNITS * 2 + 1
  * const nominalPageCount = Math.ceil(sourceCodeUnits / SOURCE_TEXT_PAGE_CODE_UNITS)
- * console.log(nominalPageCount) // 3
+ * nominalPageCount // => 3
  * ```
  *
  * @category constants
@@ -40,9 +40,9 @@ export const SOURCE_TEXT_PAGE_CODE_UNITS = 65_536;
 /**
  * Stable extractor name for canonical UTF-8 text and Markdown sources.
  *
- * **Example** (Build extractor identity string)
+ * **Example** (Build extractor name identity string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build extractor name identity string"
  * import {
  *   UTF8_SOURCE_TEXT_EXTRACTOR_NAME,
  *   UTF8_SOURCE_TEXT_EXTRACTOR_VERSION
@@ -50,7 +50,7 @@ export const SOURCE_TEXT_PAGE_CODE_UNITS = 65_536;
  *
  * const extractorIdentity =
  *   `${UTF8_SOURCE_TEXT_EXTRACTOR_NAME}@${UTF8_SOURCE_TEXT_EXTRACTOR_VERSION}`
- * console.log(extractorIdentity) // "utf8@1"
+ * extractorIdentity // => "utf8@1"
  * ```
  *
  * @category constants
@@ -61,9 +61,9 @@ export const UTF8_SOURCE_TEXT_EXTRACTOR_NAME = "utf8";
 /**
  * Version of the strict UTF-8 decoding contract used for source text.
  *
- * **Example** (Build extractor identity string)
+ * **Example** (Build extractor version identity string)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build extractor version identity string"
  * import {
  *   UTF8_SOURCE_TEXT_EXTRACTOR_NAME,
  *   UTF8_SOURCE_TEXT_EXTRACTOR_VERSION
@@ -71,7 +71,7 @@ export const UTF8_SOURCE_TEXT_EXTRACTOR_NAME = "utf8";
  *
  * const extractorIdentity =
  *   `${UTF8_SOURCE_TEXT_EXTRACTOR_NAME}@${UTF8_SOURCE_TEXT_EXTRACTOR_VERSION}`
- * console.log(extractorIdentity) // "utf8@1"
+ * extractorIdentity // => "utf8@1"
  * ```
  *
  * @category constants

@@ -9,7 +9,7 @@
  *
  * **Example** (Classify and summarize cause)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Classify and summarize cause"
  * import { Cause } from "effect"
  * import { classifyCause, summarizeCause } from "@beep/observability"
  *
@@ -17,8 +17,8 @@
  * const classification = classifyCause(cause)
  * const summary = summarizeCause(cause)
  *
- * console.log(classification) // "failure"
- * console.log(summary.primaryMessage) // "boom"
+ * classification // => "failure"
+ * summary.primaryMessage // => "boom"
  * ```
  *
  * @packageDocumentation
@@ -42,15 +42,15 @@ const $I = $ObservabilityId.create("CauseDiagnostics");
  *
  * One of `"empty"`, `"failure"`, `"defect"`, `"interrupted"`, or `"mixed"`.
  *
- * **Example** (Classify empty failure defect)
+ * **Example** (Classify causes for schema values)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Classify causes for schema values"
  * import { Cause } from "effect"
  * import { classifyCause } from "@beep/observability"
  *
- * console.log(classifyCause(Cause.empty)) // "empty"
- * console.log(classifyCause(Cause.fail("err"))) // "failure"
- * console.log(classifyCause(Cause.die("bug"))) // "defect"
+ * classifyCause(Cause.empty) // => "empty"
+ * classifyCause(Cause.fail("err")) // => "failure"
+ * classifyCause(Cause.die("bug")) // => "defect"
  * ```
  *
  * @category models
@@ -84,12 +84,12 @@ export type CauseClassification = typeof CauseClassification.Type;
  *
  * **Example** (Read success exit outcome)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Read success exit outcome"
  * import { Exit } from "effect"
  * import { summarizeExit } from "@beep/observability"
  *
  * const outcome = summarizeExit(Exit.succeed("ok")).outcome
- * console.log(outcome) // "success"
+ * outcome // => "success"
  * ```
  *
  * @category models
@@ -123,11 +123,11 @@ export type ExitOutcome = typeof ExitOutcome.Type;
  *
  * **Example** (Make cause fingerprint value)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Make cause fingerprint value"
  * import { CauseFingerprint } from "@beep/observability"
  *
  * const fp = CauseFingerprint.make({ value: "failure:fail:1:error:boom" })
- * console.log(fp.value) // "failure:fail:1:error:boom"
+ * fp.value // => "failure:fail:1:error:boom"
  * ```
  *
  * @category models
@@ -147,15 +147,15 @@ export class CauseFingerprint extends S.Class<CauseFingerprint>($I`CauseFingerpr
  *
  * **Example** (Summarize cause field counts)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Summarize cause field counts"
  * import { Cause } from "effect"
  * import { summarizeCause } from "@beep/observability"
  *
  * const summary = summarizeCause(Cause.fail(new Error("timeout")))
  *
- * console.log(summary.classification) // "failure"
- * console.log(summary.errorCount) // 1
- * console.log(summary.defectCount) // 0
+ * summary.classification // => "failure"
+ * summary.errorCount // => 1
+ * summary.defectCount // => 0
  * ```
  *
  * @category models
@@ -205,18 +205,18 @@ export type CauseSummary = typeof CauseSummary.Type;
 /**
  * Transport-safe summary of an exit with outcome, classification, and fingerprint.
  *
- * **Example** (Summarize success and failure)
+ * **Example** (Build success and failure summaries)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Build success and failure summaries"
  * import { Exit, Cause } from "effect"
  * import { summarizeExit } from "@beep/observability"
  *
  * const success = summarizeExit(Exit.succeed(42))
- * console.log(success.outcome) // "success"
+ * success.outcome // => "success"
  *
  * const failure = summarizeExit(Exit.fail(new Error("oops")))
- * console.log(failure.outcome) // "failure"
- * console.log(failure.classification) // "failure"
+ * failure.outcome // => "failure"
+ * failure.classification // => "failure"
  * ```
  *
  * @category models
@@ -257,14 +257,14 @@ const ObservedExitSummaryTagged = CauseClassification.toTaggedUnion("classificat
  *
  * **Example** (Decode observed exit summary)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Decode observed exit summary"
  * import { Exit } from "effect"
  * import * as S from "effect/Schema"
  * import { ObservedExitSummary, summarizeExit } from "@beep/observability"
  *
  * const summary = summarizeExit(Exit.fail(new Error("boom")))
  * const decoded = S.decodeUnknownSync(ObservedExitSummary)(summary)
- * console.log(decoded.outcome) // "failure"
+ * decoded.outcome // => "failure"
  * ```
  *
  * @category models
@@ -407,15 +407,15 @@ const classifyReasonCounts = flow(
  * Returns `"empty"` for empty causes, `"mixed"` when multiple reason kinds are
  * present, or the single kind (`"failure"`, `"defect"`, `"interrupted"`) otherwise.
  *
- * **Example** (Classify empty failure defect)
+ * **Example** (Classify causes by reason makeup)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Classify causes by reason makeup"
  * import { Cause } from "effect"
  * import { classifyCause } from "@beep/observability"
  *
- * console.log(classifyCause(Cause.empty)) // "empty"
- * console.log(classifyCause(Cause.fail("err"))) // "failure"
- * console.log(classifyCause(Cause.die("bug"))) // "defect"
+ * classifyCause(Cause.empty) // => "empty"
+ * classifyCause(Cause.fail("err")) // => "failure"
+ * classifyCause(Cause.die("bug")) // => "defect"
  * ```
  *
  * @category diagnostics
@@ -433,12 +433,12 @@ export const classifyCause = flow(summarizeReasonCounts, classifyReasonCounts);
  *
  * **Example** (Fingerprint failed cause)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Fingerprint failed cause"
  * import { Cause } from "effect"
  * import { fingerprintCause } from "@beep/observability"
  *
  * const fp = fingerprintCause(Cause.fail(new Error("connection refused")))
- * console.log(fp.value) // "failure:fail:1:error:connection refused"
+ * fp.value // => "failure:fail:1:error:connection refused"
  * ```
  *
  * @category diagnostics
@@ -455,15 +455,15 @@ export const fingerprintCause = (cause: Cause.Cause<unknown>): CauseFingerprint 
  *
  * **Example** (Summarize failed cause fields)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Summarize failed cause fields"
  * import { Cause } from "effect"
  * import { summarizeCause } from "@beep/observability"
  *
  * const summary = summarizeCause(Cause.fail(new Error("timeout")))
  *
- * console.log(summary.classification) // "failure"
- * console.log(summary.errorCount) // 1
- * console.log(summary.primaryMessage) // "timeout"
+ * summary.classification // => "failure"
+ * summary.errorCount // => 1
+ * summary.primaryMessage // => "timeout"
  * ```
  *
  * @category diagnostics
@@ -504,17 +504,17 @@ export const summarizeCause = (cause: Cause.Cause<unknown>): CauseSummary => {
  * For successful exits the outcome is `"success"` with an empty classification.
  * For failed exits the cause is analyzed via {@link summarizeCause}.
  *
- * **Example** (Summarize success and failure)
+ * **Example** (Summarize success and failed exits)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Summarize success and failed exits"
  * import { Exit } from "effect"
  * import { summarizeExit } from "@beep/observability"
  *
  * const ok = summarizeExit(Exit.succeed("done"))
- * console.log(ok.outcome) // "success"
+ * ok.outcome // => "success"
  *
  * const err = summarizeExit(Exit.fail(new Error("oops")))
- * console.log(err.outcome) // "failure"
+ * err.outcome // => "failure"
  * ```
  *
  * @category diagnostics

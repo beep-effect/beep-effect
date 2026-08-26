@@ -319,7 +319,7 @@ export class ApiTransportOptions extends S.Class<ApiTransportOptions>($I`ApiTran
  *
  * **Example** (Read rate-limit from transport)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read rate-limit from transport"
  * import { Effect } from "effect"
  * import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
  * import { ApiAuth, type ApiTransport, makeApiTransport } from "@beep/api-transport"
@@ -359,7 +359,7 @@ export interface ApiTransport {
  *
  * **Example** (Build transport transformClient)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build transport transformClient"
  * import { Effect } from "effect"
  * import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
  * import { ApiAuth, makeApiTransport } from "@beep/api-transport"

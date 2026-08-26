@@ -47,7 +47,7 @@ class TokenizeSuccess extends S.Class<TokenizeSuccess>($I`TokenizeSuccess`)(
  *
  * **Example** (Decode tokenize parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode tokenize parameters"
  * import * as S from "effect/Schema"
  * import { Tokenize } from "@beep/nlp-processing/Tools/Tokenize"
  *

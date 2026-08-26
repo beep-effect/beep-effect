@@ -29,10 +29,10 @@ class TextSpanBase extends S.Class<TextSpanBase>($I`TextSpan`)(
  *
  * **Example** (Check skipped status option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check skipped status option"
  * import { SourceProcessingStatus } from "@beep/file-processing/Extraction"
  *
- * console.log(SourceProcessingStatus.Options.includes("skipped")) // true
+ * SourceProcessingStatus.Options.includes("skipped") // => true
  * ```
  *
  * @category schemas
@@ -49,11 +49,11 @@ export const SourceProcessingStatus = LiteralKit(["succeeded", "skipped", "faile
  *
  * **Example** (Type succeeded status value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type succeeded status value"
  * import { SourceProcessingStatus } from "@beep/file-processing/Extraction"
  *
  * const status: SourceProcessingStatus = "succeeded"
- * console.log(SourceProcessingStatus.is.succeeded(status)) // true
+ * SourceProcessingStatus.is.succeeded(status) // => true
  * ```
  *
  * @category models
@@ -101,12 +101,12 @@ export class TextArtifactReference extends S.Class<TextArtifactReference>($I`Tex
  *
  * **Example** (Make text span value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make text span value"
  * import { TextSpan } from "@beep/file-processing/Extraction"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const span = TextSpan.make({ endOffset: NonNegativeInt.make(5), startOffset: NonNegativeInt.make(0), text: "hello" })
- * console.log(span.text) // "hello"
+ * span.text // => "hello"
  * ```
  *
  * @category models
@@ -126,12 +126,12 @@ export const TextSpan = TextSpanBase.check(
  *
  * **Example** (Type text span value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type text span value"
  * import { TextSpan } from "@beep/file-processing/Extraction"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const span: TextSpan = TextSpan.make({ endOffset: NonNegativeInt.make(5), startOffset: NonNegativeInt.make(0), text: "hello" })
- * console.log(span.text) // "hello"
+ * span.text // => "hello"
  * ```
  *
  * @category models
@@ -224,7 +224,7 @@ export class ArchiveExportResult extends S.Class<ArchiveExportResult>($I`Archive
  *
  * **Example** (Make extracted process result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make extracted process result"
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { ExtractedProcessFileResult, ExtractionResult } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -254,7 +254,7 @@ export class ArchiveExportResult extends S.Class<ArchiveExportResult>($I`Archive
  *   }).resultKind
  * })
  *
- * Effect.runPromise(program).then(console.log) // "extracted"
+ * await Effect.runPromise(program) // => "extracted"
  * ```
  *
  * @category models
@@ -280,7 +280,7 @@ export class ExtractedProcessFileResult extends S.Class<ExtractedProcessFileResu
  *
  * **Example** (Make archive export process result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make archive export process result"
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { ArchiveExportProcessFileResult, ArchiveExportResult } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -308,7 +308,7 @@ export class ExtractedProcessFileResult extends S.Class<ExtractedProcessFileResu
  *   }).resultKind
  * })
  *
- * Effect.runPromise(program).then(console.log) // "archive-exported"
+ * await Effect.runPromise(program) // => "archive-exported"
  * ```
  *
  * @category models
@@ -336,7 +336,7 @@ export class ArchiveExportProcessFileResult extends S.Class<ArchiveExportProcess
  *
  * **Example** (Make skipped process result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make skipped process result"
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { SkippedProcessFileResult } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -358,7 +358,7 @@ export class ArchiveExportProcessFileResult extends S.Class<ArchiveExportProcess
  *   return result.skipReason
  * })
  *
- * Effect.runPromise(program).then(console.log) // "format-out-of-scope"
+ * await Effect.runPromise(program) // => "format-out-of-scope"
  * ```
  *
  * @category models
@@ -428,7 +428,7 @@ export const ProcessFileResult = S.Union([
  *
  * **Example** (Type process file result)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type process file result"
  * import { ProcessFileResult } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -446,7 +446,7 @@ export const ProcessFileResult = S.Union([
  *   return result.resultKind
  * })
  *
- * Effect.runPromise(program).then(console.log) // "skipped"
+ * await Effect.runPromise(program) // => "skipped"
  * ```
  *
  * @category models

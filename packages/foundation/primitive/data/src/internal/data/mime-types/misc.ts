@@ -16,11 +16,10 @@
  *
  * **Example** (Accessing font/woff2 MIME type)
  *
- * ```typescript
- * import { misc } from "@beep/data/mime-types/misc"
+ * ```ts import.meta.vitest name="Accessing font/woff2 MIME type"
+ * import { misc } from "@beep/data/MimeTypes"
  *
- * misc["font/woff2"]
- * // { source: "iana", extensions: ["woff2"] }
+ * misc["font/woff2"].extensions.includes("woff2") // => true
  * ```
  *
  * @category models

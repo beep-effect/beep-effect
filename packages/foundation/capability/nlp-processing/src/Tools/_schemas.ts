@@ -29,10 +29,10 @@ const AiEntitySourceKit = LiteralKit(["builtin", "custom"]).annotate(
  *
  * **Example** (Validating soundex membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validating soundex membership"
  * import { AiPhoneticAlgorithmKit } from "@beep/nlp-processing/Tools/_schemas"
  *
- * console.log(AiPhoneticAlgorithmKit.is.soundex("soundex")) // true
+ * AiPhoneticAlgorithmKit.is.soundex("soundex") // => true
  * ```
  *
  * @category schemas
@@ -73,10 +73,10 @@ const AiEntitySource = AiEntitySourceKit.pipe(
  *
  * **Example** (Validating phonetize membership)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validating phonetize membership"
  * import { AiPhoneticAlgorithm } from "@beep/nlp-processing/Tools/_schemas"
  *
- * console.log(AiPhoneticAlgorithm.is.phonetize("phonetize")) // true
+ * AiPhoneticAlgorithm.is.phonetize("phonetize") // => true
  * ```
  *
  * @category schemas
@@ -99,7 +99,7 @@ export const AiPhoneticAlgorithm = AiPhoneticAlgorithmKit.pipe(
  *
  * **Example** (Decoding an annotated token)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding an annotated token"
  * import * as S from "effect/Schema"
  * import { AiToken } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -149,7 +149,7 @@ export class AiToken extends S.Class<AiToken>($I`AiToken`)(
  *
  * **Example** (Decoding composite analysis)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding composite analysis"
  * import * as S from "effect/Schema"
  * import { AiAnalysis } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -203,7 +203,7 @@ export class AiAnalysis extends S.Class<AiAnalysis>($I`AiAnalysis`)(
  *
  * **Example** (Decoding a sentence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding a sentence"
  * import * as S from "effect/Schema"
  * import { AiSentence } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -244,7 +244,7 @@ export class AiSentence extends S.Class<AiSentence>($I`AiSentence`)(
  *
  * **Example** (Decoding a keyword score)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding a keyword score"
  * import * as S from "effect/Schema"
  * import { AiKeyword } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -279,7 +279,7 @@ export class AiKeyword extends S.Class<AiKeyword>($I`AiKeyword`)(
  *
  * **Example** (Decoding document statistics)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding document statistics"
  * import * as S from "effect/Schema"
  * import { AiDocumentStats } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -318,7 +318,7 @@ export class AiDocumentStats extends S.Class<AiDocumentStats>($I`AiDocumentStats
  *
  * **Example** (Decoding a sentence chunk)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding a sentence chunk"
  * import * as S from "effect/Schema"
  * import { AiSentenceChunk } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -359,7 +359,7 @@ export class AiSentenceChunk extends S.Class<AiSentenceChunk>($I`AiSentenceChunk
  *
  * **Example** (Decoding ranked text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding ranked text"
  * import * as S from "effect/Schema"
  * import { AiRankedText } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -394,7 +394,7 @@ export class AiRankedText extends S.Class<AiRankedText>($I`AiRankedText`)(
  *
  * **Example** (Decoding a named entity)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding a named entity"
  * import * as S from "effect/Schema"
  * import { AiEntity } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -439,7 +439,7 @@ export class AiEntity extends S.Class<AiEntity>($I`AiEntity`)(
  *
  * **Example** (Decoding an n-gram)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding an n-gram"
  * import * as S from "effect/Schema"
  * import { AiNGram } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -474,7 +474,7 @@ export class AiNGram extends S.Class<AiNGram>($I`AiNGram`)(
  *
  * **Example** (Decoding phonetic match)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding phonetic match"
  * import * as S from "effect/Schema"
  * import { AiPhoneticMatch } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -557,7 +557,7 @@ export class AiToolError extends S.Class<AiToolError>($I`AiToolError`)(
  *
  * **Example** (Decoding BM25 configuration)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding BM25 configuration"
  * import * as S from "effect/Schema"
  * import { AiCorpusConfig } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -596,7 +596,7 @@ export class AiCorpusConfig extends S.Class<AiCorpusConfig>($I`AiCorpusConfig`)(
  *
  * **Example** (Decoding corpus summary)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding corpus summary"
  * import * as S from "effect/Schema"
  * import { AiCorpusSummary } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -637,7 +637,7 @@ export class AiCorpusSummary extends S.Class<AiCorpusSummary>($I`AiCorpusSummary
  *
  * **Example** (Decoding ranked document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding ranked document"
  * import * as S from "effect/Schema"
  * import { AiCorpusRankedDocument } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -675,7 +675,7 @@ export class AiCorpusRankedDocument extends S.Class<AiCorpusRankedDocument>($I`A
  *
  * **Example** (Decoding an IDF entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding an IDF entry"
  * import * as S from "effect/Schema"
  * import { AiCorpusIdf } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -710,7 +710,7 @@ export class AiCorpusIdf extends S.Class<AiCorpusIdf>($I`AiCorpusIdf`)(
  *
  * **Example** (Decoding matrix dimensions)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding matrix dimensions"
  * import * as S from "effect/Schema"
  * import { AiCorpusMatrixShape } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -745,7 +745,7 @@ export class AiCorpusMatrixShape extends S.Class<AiCorpusMatrixShape>($I`AiCorpu
  *
  * **Example** (Decoding corpus statistics)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decoding corpus statistics"
  * import * as S from "effect/Schema"
  * import { AiCorpusStats } from "@beep/nlp-processing/Tools/_schemas"
  *

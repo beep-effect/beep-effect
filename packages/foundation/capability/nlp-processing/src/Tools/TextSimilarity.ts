@@ -55,7 +55,7 @@ class TextSimilaritySuccess extends S.Class<TextSimilaritySuccess>($I`TextSimila
  *
  * **Example** (Decode similarity parameters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode similarity parameters"
  * import * as S from "effect/Schema"
  * import { TextSimilarity } from "@beep/nlp-processing/Tools/TextSimilarity"
  *

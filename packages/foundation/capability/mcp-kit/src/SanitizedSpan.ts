@@ -158,7 +158,7 @@ export const sanitizeTracerAttributes: {
  *
  * **Example** (Run under sanitized span)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Run under sanitized span"
  * import { Effect } from "effect"
  * import { withSanitizedToolSpan } from "@beep/mcp-kit"
  *

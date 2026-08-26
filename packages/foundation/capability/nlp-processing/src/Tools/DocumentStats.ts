@@ -36,7 +36,7 @@ class DocumentStatsParameters extends S.Class<DocumentStatsParameters>($I`Docume
  *
  * **Example** (Decode parameters schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { DocumentStats } from "@beep/nlp-processing/Tools/DocumentStats"
  *

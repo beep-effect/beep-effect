@@ -95,14 +95,14 @@ export class AnyOperationResult extends S.Class<AnyOperationResult>($I`AnyOperat
  *
  * **Example** (Create and stringify key)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Create and stringify key"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { ResultKey } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  *
  * const nodeId = NodeId.make("node-example")
  * const key = ResultKey.new("tokenize", nodeId)
  *
- * console.log(ResultKey.toString(key)) // "tokenize:node-example"
+ * ResultKey.toString(key) // => "tokenize:node-example"
  * ```
  *
  * @category models
@@ -163,7 +163,7 @@ export class StoredResult extends S.Class<StoredResult>($I`StoredResult`)(
  *
  * **Example** (Build empty cache stats)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build empty cache stats"
  * import { NonNegativeInt } from "@beep/schema"
  * import { CacheStats } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import * as O from "effect/Option"
@@ -175,7 +175,7 @@ export class StoredResult extends S.Class<StoredResult>($I`StoredResult`)(
  *   newestEntry: O.none()
  * })
  *
- * console.log(emptyStats.size) // 0
+ * emptyStats.size // => 0
  * ```
  *
  * @category models
@@ -344,7 +344,7 @@ const makeResultStore = Effect.gen(function* () {
  *
  * **Example** (Provide live store layer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Provide live store layer"
  * import { Effect } from "effect"
  * import { ResultStoreLive } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import { ResultStore } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
@@ -369,7 +369,7 @@ export const ResultStoreLive: Layer.Layer<ResultStore> = Layer.effect(ResultStor
  *
  * **Example** (Assert empty test store)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assert empty test store"
  * import { Effect } from "effect"
  * import { ResultStoreTest } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import { ResultStore } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"

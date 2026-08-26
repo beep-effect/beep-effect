@@ -10,7 +10,7 @@
  *
  * **Example** (Importing Calendar month values)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Importing Calendar month values"
  * import { Calendar } from "@beep/data/internal"
  *
  * console.assert(Calendar.MonthNameValues[0] === "january")

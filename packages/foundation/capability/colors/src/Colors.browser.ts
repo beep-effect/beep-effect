@@ -27,12 +27,12 @@ const identity: FormatterType = String;
  *
  * **Example** (Browser-safe bold formatting)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Browser-safe bold formatting"
  * import { Colors, createColors } from "@beep/colors"
  *
  * const colors = createColors(false)
  * const rendered = colors.bold("hello")
- * console.log(rendered) // "hello"
+ * rendered // => "hello"
  * ```
  *
  * @category models
@@ -52,10 +52,10 @@ export class Colors extends S.Class<Colors>($I`Colors`)(
  *
  * **Example** (Check isColorSupported type)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check isColorSupported type"
  * import { isColorSupported } from "@beep/colors"
  *
- * console.log(typeof isColorSupported) // "boolean"
+ * typeof isColorSupported // => "boolean"
  * ```
  *
  * @category utilities
@@ -68,10 +68,10 @@ export const isColorSupported = false;
  *
  * **Example** (supportsColor always false)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="supportsColor always false"
  * import { supportsColor } from "@beep/colors"
  *
- * console.log(supportsColor()) // false
+ * supportsColor() // => false
  * ```
  *
  * @returns Always `false` in browser-safe builds.
@@ -153,11 +153,11 @@ export const createColors = (_enabled?: undefined | boolean): Colors =>
  *
  * **Example** (Default green string output)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Default green string output"
  * import colors from "@beep/colors"
  *
  * const rendered = colors.green("ok")
- * console.log(typeof rendered) // "string"
+ * typeof rendered // => "string"
  * ```
  *
  * @category utilities
@@ -170,11 +170,11 @@ const colors = createColors();
  *
  * **Example** (Use String as Formatter)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Use String as Formatter"
  * import { type Formatter } from "@beep/colors"
  *
  * const fmt: Formatter = String
- * console.log(fmt(42)) // "42"
+ * fmt(42) // => "42"
  * ```
  *
  * @category models

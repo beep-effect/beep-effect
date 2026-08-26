@@ -127,11 +127,11 @@ export const DefaultIdentityRdfBinding: IdentityRdfBinding = IdentityRdfBinding.
  *
  * **Example** (Identify an unmapped fiber)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Identify an unmapped fiber"
  * import { IdentityFiberPathError } from "@beep/semantic-web"
  *
  * const error = IdentityFiberPathError.make({ fiber: "label" })
- * console.log(error._tag) // "IdentityFiberPathError"
+ * error._tag // => "IdentityFiberPathError"
  * ```
  *
  * @category errors
@@ -150,14 +150,14 @@ export class IdentityFiberPathError extends S.TaggedError<IdentityFiberPathError
  *
  * **Example** (Inspect an invalid entry IRI)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect an invalid entry IRI"
  * import { IdentityEntryIriError } from "@beep/semantic-web"
  *
  * const error = IdentityEntryIriError.make({
  *   identity: "@beep/example/Invalid",
  *   iri: "not an iri"
  * })
- * console.log(error.iri) // "not an iri"
+ * error.iri // => "not an iri"
  * ```
  *
  * @category errors
@@ -382,12 +382,12 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
  *
  * **Example** (Encode an empty registry dataset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Encode an empty registry dataset"
  * import { DefaultIdentityRdfBinding, entriesToDataset } from "@beep/semantic-web"
  * import { Effect } from "effect"
  *
  * const dataset = await Effect.runPromise(entriesToDataset(DefaultIdentityRdfBinding)([]))
- * console.log(dataset.quads.length) // 0
+ * dataset.quads.length // => 0
  * ```
  *
  * @category encoding
@@ -436,13 +436,13 @@ export const entriesToDataset = (binding: IdentityRdfBinding) =>
  *
  * **Example** (Decode an empty registry dataset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode an empty registry dataset"
  * import { DefaultIdentityRdfBinding, datasetToEntries } from "@beep/semantic-web"
  * import { makeDataset } from "@beep/rdf/Rdf"
  * import { Effect } from "effect"
  *
  * const entries = await Effect.runPromise(datasetToEntries(DefaultIdentityRdfBinding)(makeDataset([])))
- * console.log(entries.length) // 0
+ * entries.length // => 0
  * ```
  *
  * @category decoding

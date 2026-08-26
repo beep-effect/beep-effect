@@ -42,10 +42,10 @@ import type { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode } fro
  *
  * **Example** (Log sentencize category)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log sentencize category"
  * import { sentencize } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(sentencize.category) // "expansion"
+ * sentencize.category // => "expansion"
  * ```
  *
  * @category use-cases
@@ -72,10 +72,10 @@ export const sentencize: Op.GraphOperation<string, string, Backend.NLPBackend, B
  *
  * **Example** (Log tokenize category)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log tokenize category"
  * import { tokenize } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(tokenize.category) // "expansion"
+ * tokenize.category // => "expansion"
  * ```
  *
  * @category use-cases
@@ -103,10 +103,10 @@ export const tokenize: Op.GraphOperation<string, string, Backend.NLPBackend, Bac
  *
  * **Example** (Log posTag name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log posTag name"
  * import { posTag } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(posTag.name) // "posTag"
+ * posTag.name // => "posTag"
  * ```
  *
  * @category use-cases
@@ -133,10 +133,10 @@ export const posTag: Op.GraphOperation<string, POSNode, Backend.NLPBackend, Back
  *
  * **Example** (Log lemmatize name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log lemmatize name"
  * import { lemmatize } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(lemmatize.name) // "lemmatize"
+ * lemmatize.name // => "lemmatize"
  * ```
  *
  * @category use-cases
@@ -162,10 +162,10 @@ export const lemmatize: Op.GraphOperation<string, LemmaNode, Backend.NLPBackend,
  *
  * **Example** (Log extractEntities name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log extractEntities name"
  * import { extractEntities } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(extractEntities.name) // "extractEntities"
+ * extractEntities.name // => "extractEntities"
  * ```
  *
  * @category use-cases
@@ -193,10 +193,10 @@ export const extractEntities: Op.GraphOperation<string, EntityNode, Backend.NLPB
  *
  * **Example** (Log parseDependencies name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log parseDependencies name"
  * import { parseDependencies } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(parseDependencies.name) // "parseDependencies"
+ * parseDependencies.name // => "parseDependencies"
  * ```
  *
  * @category use-cases
@@ -225,10 +225,10 @@ export const parseDependencies: Op.GraphOperation<string, DependencyNode, Backen
  *
  * **Example** (Log extractRelations name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log extractRelations name"
  * import { extractRelations } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(extractRelations.name) // "extractRelations"
+ * extractRelations.name // => "extractRelations"
  * ```
  *
  * @category use-cases
@@ -251,10 +251,10 @@ export const extractRelations: Op.GraphOperation<string, RelationNode, Backend.N
  *
  * **Example** (Log toLowerCase category)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log toLowerCase category"
  * import { toLowerCase } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(toLowerCase.category) // "transformation"
+ * toLowerCase.category // => "transformation"
  * ```
  *
  * @category use-cases
@@ -271,10 +271,10 @@ export const toLowerCase: Op.GraphOperation<string, string> = Op.transform({
  *
  * **Example** (Log toUpperCase category)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log toUpperCase category"
  * import { toUpperCase } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(toUpperCase.category) // "transformation"
+ * toUpperCase.category // => "transformation"
  * ```
  *
  * @category use-cases
@@ -291,10 +291,10 @@ export const toUpperCase: Op.GraphOperation<string, string> = Op.transform({
  *
  * **Example** (Log trim category)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log trim category"
  * import { trim } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(trim.category) // "transformation"
+ * trim.category // => "transformation"
  * ```
  *
  * @category use-cases
@@ -316,10 +316,10 @@ export const trim: Op.GraphOperation<string, string> = Op.transform({
  *
  * **Example** (Log tokenize operation name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log tokenize operation name"
  * import { StandardOperations } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(StandardOperations.tokenize.name) // "tokenize"
+ * StandardOperations.tokenize.name // => "tokenize"
  * ```
  *
  * @category constants
@@ -343,10 +343,10 @@ export const StandardOperations = {
  *
  * **Example** (Check tokenize name listed)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check tokenize name listed"
  * import { getOperationNames } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * console.log(getOperationNames().includes("tokenize")) // true
+ * getOperationNames().includes("tokenize") // => true
  * ```
  *
  * @category constants

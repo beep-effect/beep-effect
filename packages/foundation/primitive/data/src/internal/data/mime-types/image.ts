@@ -14,11 +14,10 @@
  *
  * **Example** (Lookup image/png entry)
  *
- * ```typescript
- * import { image } from "@beep/data/mime-types/image"
+ * ```ts import.meta.vitest name="Lookup image/png entry"
+ * import { image } from "@beep/data/MimeTypes"
  *
- * image["image/png"]
- * // { source: "iana", extensions: ["png"] }
+ * image["image/png"].extensions.includes("png") // => true
  * ```
  *
  * @category models

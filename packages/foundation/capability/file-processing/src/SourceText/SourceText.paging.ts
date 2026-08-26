@@ -90,7 +90,7 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  *
  * **Example** (Load first page)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Load first page"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
  * import { pageSourceText } from "@beep/file-processing/SourceText"
  * import { NonNegativeInt } from "@beep/schema"
@@ -125,7 +125,7 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  *
  * **Example** (Load page for offset)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Load page for offset"
  * import {
  *   pageSourceTextContainingOffset
  * } from "@beep/file-processing/SourceText"

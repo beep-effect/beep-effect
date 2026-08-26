@@ -54,13 +54,13 @@ export type FileProcessingEngineShape = {
  *
  * **Example** (Service method type keys)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Service method type keys"
  * import type { FileProcessingServiceShape } from "@beep/file-processing/Service"
  *
  * type ServiceMethod = keyof FileProcessingServiceShape
  * const method: ServiceMethod = "process"
  *
- * console.log(method) // "process"
+ * method // => "process"
  * ```
  *
  * @category services
@@ -93,7 +93,7 @@ export type FileProcessingServiceShape = {
  *   Effect.provide(BunCrypto.layer)
  * )
  *
- * Effect.runPromise(program).then(console.log) // "function"
+ * await Effect.runPromise(program) // => "function"
  * ```
  *
  * @category services

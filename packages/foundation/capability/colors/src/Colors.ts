@@ -19,13 +19,13 @@
  *
  * **Example** (Disabled color formatters)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Disabled color formatters"
  * import { createColors } from "@beep/colors"
  *
  * const plain = createColors(false)
  * const rendered = plain.red("warning")
  *
- * console.log(rendered) // "warning"
+ * rendered // => "warning"
  * ```
  *
  * @packageDocumentation
@@ -182,13 +182,13 @@ const replaceClose = (text: string, close: string, replace: string, index: numbe
  *
  * **Example** (Format number with cyan)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Format number with cyan"
  * import { createColors, type Formatter } from "@beep/colors"
  *
  * const formatter: Formatter = createColors(true).cyan
  * const rendered = formatter(42)
  *
- * console.log(rendered) // "\u001b[36m42\u001b[39m"
+ * rendered // => "\u001b[36m42\u001b[39m"
  * ```
  *
  * @category models
@@ -235,14 +235,14 @@ const formatter =
  *
  * **Example** (Detect forced color support)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Detect forced color support"
  * import { supportsColor } from "@beep/colors"
  *
  * const enabled = supportsColor({
  *   env: { FORCE_COLOR: "1" },
  * })
  *
- * console.log(enabled) // true
+ * enabled // => true
  * ```
  *
  * @param processLike - The process-like runtime metadata used for color capability detection.
@@ -257,10 +257,10 @@ export const supportsColor = ProcessLike.supportsColor;
  *
  * **Example** (Check runtime color support type)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Check runtime color support type"
  * import { isColorSupported } from "@beep/colors"
  *
- * console.log(typeof isColorSupported) // "boolean"
+ * typeof isColorSupported // => "boolean"
  * ```
  *
  * @category utilities
@@ -278,13 +278,13 @@ export const isColorSupported = supportsColor();
  *
  * **Example** (Verify Colors instance type)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Verify Colors instance type"
  * import { Colors, createColors } from "@beep/colors"
  *
  * const colors = createColors(true)
  * const isColorsInstance = colors instanceof Colors
  *
- * console.log(isColorsInstance) // true
+ * isColorsInstance // => true
  * ```
  *
  * @category models
@@ -325,13 +325,13 @@ export class Colors extends S.Class<Colors>($I`Colors`)(
  *
  * **Example** (Create disabled formatter set)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Create disabled formatter set"
  * import { createColors } from "@beep/colors"
  *
  * const colors = createColors(false)
  * const rendered = colors.bold(colors.red("offline"))
  *
- * console.log(rendered) // "offline"
+ * rendered // => "offline"
  * ```
  *
  * @param enabled - Whether the returned formatter set should emit ANSI escapes.
@@ -397,7 +397,7 @@ export const createColors = (enabled: boolean = isColorSupported): Colors => {
  *
  * **Example** (Use default cyan formatter)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Use default cyan formatter"
  * import colors from "@beep/colors"
  *
  * const rendered = colors.cyan("beep")

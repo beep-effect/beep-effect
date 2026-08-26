@@ -79,11 +79,11 @@ export type LogFormat = typeof LogFormat.Type;
  *
  * **Example** (Forest theme pretty config)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Forest theme pretty config"
  * import { PrettyLoggerConfig } from "@beep/observability"
  *
  * const config = PrettyLoggerConfig.make({ theme: "forest", bannerMode: "off" })
- * console.log(config.theme)// "forest"
+ * config.theme // => "forest"
  * ```
  *
  * @category models
@@ -117,11 +117,11 @@ export type PrettyLogTheme = typeof PrettyLogTheme.Type;
  *
  * **Example** (Startup banner mode config)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Startup banner mode config"
  * import { PrettyLoggerConfig } from "@beep/observability"
  *
  * const config = PrettyLoggerConfig.make({ theme: "ocean", bannerMode: "startup" })
- * console.log(config.bannerMode)// "startup"
+ * config.bannerMode // => "startup"
  * ```
  *
  * @category models
@@ -155,7 +155,7 @@ export type BannerMode = typeof BannerMode.Type;
  *
  * **Example** (Pretty logger theme config)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Pretty logger theme config"
  * import { PrettyLoggerConfig } from "@beep/observability"
  *
  * const config = PrettyLoggerConfig.make({
@@ -163,7 +163,7 @@ export type BannerMode = typeof BannerMode.Type;
  *   bannerMode: "off",
  * })
  *
- * console.log(config.theme)// "forest"
+ * config.theme // => "forest"
  * ```
  *
  * @category models
@@ -184,7 +184,7 @@ export class PrettyLoggerConfig extends S.Class<PrettyLoggerConfig>($I`PrettyLog
  *
  * **Example** (Structured logging config)
  *
- * ```typescript
+ * ```ts import.meta.vitest name="Structured logging config"
  * import { LoggingConfig } from "@beep/observability"
  *
  * const config = LoggingConfig.make({
@@ -192,7 +192,7 @@ export class PrettyLoggerConfig extends S.Class<PrettyLoggerConfig>($I`PrettyLog
  *   minLogLevel: "Info",
  * })
  *
- * console.log(config.format)// "structured"
+ * config.format // => "structured"
  * ```
  *
  * @category models

@@ -27,14 +27,14 @@ type TokenizationShape = {
  *
  * **Example** (Make tokenization error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make tokenization error"
  * import { TokenizationError } from "@beep/nlp-processing/Core/Tokenization"
  *
  * const error = TokenizationError.make({
  *   operation: "tokenize",
  *   cause: new Error("tokenizer unavailable")
  * })
- * console.log(error.operation) // "tokenize"
+ * error.operation // => "tokenize"
  * ```
  *
  * @category errors
@@ -148,7 +148,7 @@ export const sentences = Effect.fn("Nlp.Core.Tokenization.sentences")(function* 
  *
  * **Example** (Build document with mock)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build document with mock"
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
  * import { Document, DocumentId } from "@beep/nlp/Core/Document"
@@ -171,7 +171,7 @@ export const sentences = Effect.fn("Nlp.Core.Tokenization.sentences")(function* 
  *   Effect.provideService(tokenizeToDocument("Effect works.", "doc-001"), Tokenization, service),
  *   (document) => document.id
  * )
- * Effect.runPromise(program).then(console.log) // "doc-001"
+ * await Effect.runPromise(program) // => "doc-001"
  * ```
  *
  * @effects Requires a {@link Tokenization} service and executes that service's
@@ -192,7 +192,7 @@ export const tokenizeToDocument = Effect.fn("Nlp.Core.Tokenization.tokenizeToDoc
  *
  * **Example** (Count tokens with mock)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count tokens with mock"
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
  * import { Document, DocumentId } from "@beep/nlp/Core/Document"
@@ -212,7 +212,7 @@ export const tokenizeToDocument = Effect.fn("Nlp.Core.Tokenization.tokenizeToDoc
  *   tokenCount: (text) => Effect.succeed(text.split(" ").length)
  * })
  * const program = Effect.provideService(tokenCount("typed effects"), Tokenization, service)
- * Effect.runPromise(program).then(console.log) // 2
+ * await Effect.runPromise(program) // => 2
  * ```
  *
  * @effects Requires a {@link Tokenization} service and executes that service's
