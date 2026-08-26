@@ -1,3 +1,10 @@
+/**
+ * Service contracts for the doctest fence analyzer and rewriter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import { Context } from "effect";
 import type { Effect } from "effect";

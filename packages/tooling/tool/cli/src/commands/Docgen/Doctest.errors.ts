@@ -1,3 +1,10 @@
+/**
+ * Typed errors raised by the doctest analyzer and rewriter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
