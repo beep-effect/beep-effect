@@ -79,7 +79,7 @@ const fixtureSpecs: ReadonlyArray<FixtureSpec> = [
     relativePath: "documents/html-truncated.html",
     mediaType: "text/html",
     expectation: "degraded",
-    degradedKind: O.some("malformed-structure"),
+    degradedKind: O.some("truncated"),
     summary: "Academic HTML cut off inside an attribute after a deliberately bogus charset declaration.",
   },
   {
@@ -103,7 +103,7 @@ const fixtureSpecs: ReadonlyArray<FixtureSpec> = [
     relativePath: "documents/pdf-truncated.pdf",
     mediaType: "application/pdf",
     expectation: "degraded",
-    degradedKind: O.some("truncated"),
+    degradedKind: O.some("extraction-failed"),
     summary: "The two-column PDF cut immediately before its explicit xref table.",
   },
 ];

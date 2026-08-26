@@ -21,6 +21,231 @@
     },
     {
       "file": "apps/labs/semantica/src/canary/Command.ts",
+      "symbol": "StageNotImplemented",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "StageNotImplemented"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/ByteWitness.ts",
+      "symbol": "ByteExpectation",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ByteExpectation",
+      "description": "Expected relative path, SHA-256 digest, and byte length for one witnessed file."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusManifest",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "CorpusManifest",
+      "description": "Schema-refined, content-addressed manifest that defines the W1 corpus."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusManifestRow",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "CorpusManifestRow",
+      "description": "Content hash, byte length, and deterministic relative path for one W1 paper."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusManifestSelection",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "CorpusManifestSelection",
+      "description": "Deterministic first-25 selection rule and source PDF count used to define W1."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusPaperId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "CorpusPaperId",
+      "description": "Twelve-character lowercase hexadecimal academia corpus identifier."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "CorpusRootUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "CorpusRootUnavailable"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "ManifestDecodeFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ManifestDecodeFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "ManifestDiff",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "ManifestDiff",
+      "description": "Exhaustive row-level W1 manifest drift details."
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "ManifestDrift",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ManifestDrift"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "symbol": "ManifestWriteFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ManifestWriteFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1Drift",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "F1Drift"
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1Fixture",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "F1Fixture",
+      "description": "Content-addressed F1 document metadata with a declared parser outcome."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1FixtureId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "F1FixtureId",
+      "description": "Branded lowercase kebab-case identifier for one F1 fixture."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1Index",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "F1Index",
+      "description": "Validated F1 fixture index with deterministic coverage and uniqueness constraints."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "F1IndexDecodeFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "F1IndexDecodeFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "FixtureDegradedKind",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "FixtureDegradedKind",
+      "description": "Invalid UTF-8, truncation, or extraction failure declared by a degraded F1 fixture."
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "symbol": "FixtureExpectation",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "FixtureExpectation",
+      "description": "Expected successful parse or declared typed degradation for an F1 fixture."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Degraded.ts",
+      "symbol": "DegradedKind",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "DegradedKind",
+      "description": "Exhaustive typed parse and extraction degradation kinds admitted by C0."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Document.ts",
+      "symbol": "FixtureDeclaration",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "FixtureDeclaration",
+      "description": "Fixture parse expectation and optional declared degradation copied into source provenance."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Document.ts",
+      "symbol": "Origin",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "Origin",
+      "description": "Tagged source origin for a W1 paper or synthetic F1 fixture."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Document.ts",
+      "symbol": "SourceDocument",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "SourceDocument",
+      "description": "Full byte identity, media type, origin, size, and ingest event for one source document."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "AnchorRejected",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "AnchorRejected"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "DocumentUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "DocumentUnavailable"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "GoldUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "GoldUnavailable"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "LedgerFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "LedgerFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "ParserFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ParserFailed"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "ProviderCacheCorrupt",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ProviderCacheCorrupt"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "ProviderUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ProviderUnavailable"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "symbol": "ReportInvalid",
+      "kind": "tagged-error",
+      "owner": "@beep/semantica",
+      "identity": "ReportInvalid"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
       "symbol": "CanaryStage",
       "kind": "literal-kit",
       "owner": "@beep/semantica",
@@ -28,11 +253,356 @@
       "description": "Headless Semantica canary stages available through the lab command."
     },
     {
-      "file": "apps/labs/semantica/src/canary/Command.ts",
-      "symbol": "StageNotImplemented",
-      "kind": "tagged-error",
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "DocumentOutcome",
+      "kind": "schema-class",
       "owner": "@beep/semantica",
-      "identity": "StageNotImplemented"
+      "identity": "DocumentOutcome",
+      "description": "Per-document accounting for parsing, both extraction lanes, claims, anchors, and provider cache keys."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "EvalReport",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvalReport",
+      "description": "Content-addressed evaluation report with exact stage metrics and derived degradation accounting."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "EvalRun",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvalRun",
+      "description": "Replay-stable evaluation inputs with independent gold and hosted-extraction provider families."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "EvalSelection",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvalSelection",
+      "description": "Unique W1 paper ids and non-empty F1 fixture ids selected for one evaluation run."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "MetricName",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "MetricName",
+      "description": "Structure span, entity span, REBEL-style triple, pairwise, and B-Cubed correctness metrics used by C0 (structure-span-f1 is lab-local; the rest are the #574 names the law table adopts)."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "MetricScore",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "MetricScore",
+      "description": "Unit-interval metric value with subset, lane, support count, and explicit support status."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "MetricStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "MetricStatus",
+      "description": "Computed score or explicit unsupported-capability status."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "MetricSubset",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "MetricSubset",
+      "description": "Structure, entity, relation, or all-document evaluation subset."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "symbol": "RequiredMetric",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "RequiredMetric",
+      "description": "Required evaluation coordinate composed of metric name, gold subset, and extraction lane."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ClaimBody",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "ClaimBody",
+      "description": "Exhaustive anchored entity, relation, and structure evidence bodies."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ConflictBasis",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ConflictBasis",
+      "description": "Same-anchor label disagreement or same-endpoint predicate disagreement."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ConflictWitness",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ConflictWitness",
+      "description": "Content-addressed record that keeps two conflicting evidence claims as separate nodes."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "DegradedClaim",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "DegradedClaim",
+      "description": "Typed chunk-scoped extraction degradation that never silently becomes a claim."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "EvidenceBatch",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvidenceBatch",
+      "description": "Coherent extraction batch with unique claims and explicit unsupported-capability declarations."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "EvidenceClaim",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvidenceClaim",
+      "description": "Grounded claim with model, method, confidence, cache provenance, and verified anchor receipt."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ExtractOutcome",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "ExtractOutcome",
+      "description": "Extraction result preserving either a validated batch or a typed degraded state."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ExtractionLane",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ExtractionLane",
+      "description": "Hosted LangExtract and local Wink extraction lanes."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "ExtractionMethod",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ExtractionMethod",
+      "description": "Pinned hosted LangExtract and local Wink extraction methods."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "LossDeclaration",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "LossDeclaration",
+      "description": "Relation or structure capability absent from an extraction lane by design."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "symbol": "StructureRole",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "StructureRole",
+      "description": "Title, abstract, section, and reference roles in a paper's structure."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldEntityLabel",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldEntityLabel",
+      "description": "Entity surface label and type grounded to canonical paper text with a spot-check marker."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldRef",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldRef",
+      "description": "Content-addressed gold-v1 reference with spot-check coverage and an independent proposer model."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldRelationLabel",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldRelationLabel",
+      "description": "Relation predicate and endpoint surfaces grounded to canonical paper text with a spot-check marker."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldStructureLabel",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldStructureLabel",
+      "description": "Paper structural role and depth grounded to canonical text with a spot-check marker."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "symbol": "GoldSubset",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "GoldSubset",
+      "description": "Unique, exact-sized gold paper ids satisfying relation proper-subset entity proper-subset structure."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "BatchId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "BatchId",
+      "description": "Full SHA-256 identity of one extraction batch."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "ChunkId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "ChunkId",
+      "description": "Full SHA-256 identity of one document-scoped canonical-text chunk."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "ClaimId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "ClaimId",
+      "description": "Full SHA-256 identity of one grounded evidence claim."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "DocumentId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "DocumentId",
+      "description": "Full SHA-256 identity of one source document's exact bytes."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "ProvenanceEventId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "ProvenanceEventId",
+      "description": "Full SHA-256 identity of one append-only provenance event."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "symbol": "RunId",
+      "kind": "brand",
+      "owner": "@beep/semantica",
+      "identity": "RunId",
+      "description": "Full SHA-256 identity of one replay-stable evaluation run."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/MediaType.ts",
+      "symbol": "MediaType",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "MediaType",
+      "description": "Markdown, HTML, and born-digital PDF media types accepted by the C0 parser."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Model.ts",
+      "symbol": "ModelIdentity",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ModelIdentity",
+      "description": "Pinned provider family, model name, revision, prompt artifact hash, and task role."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Model.ts",
+      "symbol": "ProviderFamily",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ProviderFamily",
+      "description": "Anthropic and xAI hosted providers plus the local Wink pattern provider."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Model.ts",
+      "symbol": "TaskType",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "TaskType",
+      "description": "Extraction and gold-proposal roles that distinguish otherwise identical models."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Provenance.ts",
+      "symbol": "EventBody",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "EventBody",
+      "description": "Exhaustive timestamp-free C0 provenance event bodies."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Provenance.ts",
+      "symbol": "ProvenanceEvent",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ProvenanceEvent",
+      "description": "Replay-stable provenance event whose id hashes only its predecessor and typed body."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/ProviderCache.ts",
+      "symbol": "ProviderCacheEntry",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ProviderCacheEntry",
+      "description": "Write-once provider response whose key and exact text digest are both verified."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/ProviderCache.ts",
+      "symbol": "ProviderCacheKey",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "ProviderCacheKey",
+      "description": "Versioned provider model, request kind, and exact input digest used as a cache key preimage."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/ProviderCache.ts",
+      "symbol": "RequestKind",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "RequestKind",
+      "description": "Provider request kinds supported by the C0 content-addressed cache."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Telemetry.ts",
+      "symbol": "EvalRunTelemetry",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "EvalRunTelemetry",
+      "description": "Live-or-replay timing and byte measurements kept outside every replay-stable digest preimage."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Text.ts",
+      "symbol": "Chunk",
+      "kind": "schema-class",
+      "owner": "@beep/semantica",
+      "identity": "Chunk",
+      "description": "Document-scoped chunk whose exact text anchor has a persisted verification receipt."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Text.ts",
+      "symbol": "ChunkKind",
+      "kind": "literal-kit",
+      "owner": "@beep/semantica",
+      "identity": "ChunkKind",
+      "description": "Heading, paragraph, and sentence units emitted by the C0 chunker."
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Text.ts",
+      "symbol": "ParseOutcome",
+      "kind": "tagged-union",
+      "owner": "@beep/semantica",
+      "identity": "ParseOutcome",
+      "description": "Parser outcome preserving either raw text or a typed degraded state."
     },
     {
       "file": "apps/oip-web/src/app/api/contact/ContactRouteResponse.ts",
@@ -11736,6 +12306,43 @@
       "description": "Browser-only observability configuration."
     },
     {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "symbol": "IdentityDatasetDecodeError",
+      "kind": "tagged-error",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityDatasetDecodeError"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "symbol": "IdentityEntryIriError",
+      "kind": "tagged-error",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityEntryIriError"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "symbol": "IdentityFiberPathError",
+      "kind": "tagged-error",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityFiberPathError"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "symbol": "IdentityRdfBinding",
+      "kind": "schema-class",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityRdfBinding",
+      "description": "Explicit RDF predicates for identity registry fields and named string fibers."
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityShaclProjection.ts",
+      "symbol": "IdentityShapePolicy",
+      "kind": "schema-class",
+      "owner": "@beep/semantic-web",
+      "identity": "IdentityShapePolicy",
+      "description": "Named identity fibers that every projected node shape requires."
+    },
+    {
       "file": "packages/foundation/capability/semantic-web/src/services/canonicalization.ts",
       "symbol": "CanonicalDatasetResult",
       "kind": "schema-class",
@@ -13520,6 +14127,34 @@
     {
       "file": "packages/foundation/modeling/identity/src/Id.ts",
       "symbol": "IdentitySegmentCountError",
+      "kind": "tagged-error",
+      "owner": "@beep/identity"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "symbol": "IdentityEntry",
+      "kind": "schema-class",
+      "owner": "@beep/identity",
+      "identity": "IdentityEntry",
+      "description": "One registered identity with its literal IRI and CURIE projections and named string fiber parts."
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "symbol": "IdentityNotFoundError",
+      "kind": "tagged-error",
+      "owner": "@beep/identity"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "symbol": "IdentityRef",
+      "kind": "tagged-union",
+      "owner": "@beep/identity",
+      "identity": "IdentityRef",
+      "description": "Exact identity reference in one of three encodings: identity, IRI, or CURIE."
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "symbol": "IdentityRegistryConflictError",
       "kind": "tagged-error",
       "owner": "@beep/identity"
     },
@@ -21421,6 +22056,302 @@
       "owner": "@beep/dock",
       "identity": "TabChrome",
       "description": "Per-tab and fixed tab-strip pixel allowances."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "CapabilityConflictError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "CapabilityConflictError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "DependencyCycleError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "DependencyCycleError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "DevelopmentOnlyCapabilityError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "DevelopmentOnlyCapabilityError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "IncompatibleRegistrationError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "IncompatibleRegistrationError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "KeybindingConflictError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "KeybindingConflictError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "MissingDependencyError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "MissingDependencyError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "ProfileResolutionError",
+      "kind": "tagged-union",
+      "owner": "@beep/editor",
+      "identity": "ProfileResolutionError",
+      "description": "Tagged union of every expected deterministic profile resolution failure."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "UnknownCapabilityError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "UnknownCapabilityError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "symbol": "UnknownCommandError",
+      "kind": "tagged-error",
+      "owner": "@beep/editor",
+      "identity": "UnknownCommandError"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/projection.ts",
+      "symbol": "ShortcutHelpEntry",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "ShortcutHelpEntry",
+      "description": "Generated command help row with an optional platform-specific chord."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ActivationSurface",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "ActivationSurface",
+      "description": "User-visible affordance surface generated from a resolved command."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CanonicalCompatibility",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "CanonicalCompatibility",
+      "description": "Loss behavior when an editor semantic crosses the canonical document codec."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityCatalog",
+      "kind": "schema-const",
+      "owner": "@beep/editor",
+      "identity": "CapabilityCatalog",
+      "description": "Validated registration source with globally unique capability, command, and registration keys."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityCategory",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "CapabilityCategory",
+      "description": "P1 subset of the editor capability atlas taxonomy."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityClassification",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "CapabilityClassification",
+      "description": "Atlas category and ratified P1 disposition for a descriptor."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityDescriptor",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "CapabilityDescriptor",
+      "description": "Catalog row that owns registrations, commands, dependencies, and canonical loss policy."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityDisposition",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "CapabilityDisposition",
+      "description": "P1 implementation disposition used by profile resolution policy."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityId",
+      "kind": "brand",
+      "owner": "@beep/editor",
+      "identity": "CapabilityId",
+      "description": "Stable lowercase dot-separated identifier for an editor capability."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityMode",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "CapabilityMode",
+      "description": "Whether a catalog capability is authoring-enabled or readable only."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CapabilityRegistrations",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "CapabilityRegistrations",
+      "description": "Unique runtime registration keys owned by one capability descriptor."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CommandDefinition",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "CommandDefinition",
+      "description": "Command metadata and default bindings owned by a capability descriptor."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "CommandId",
+      "kind": "brand",
+      "owner": "@beep/editor",
+      "identity": "CommandId",
+      "description": "Stable lowercase dot-separated identifier for an editor command."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "EditorProfile",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "EditorProfile",
+      "description": "App-owned explicit capability selection and keybinding override set."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ExtensionKey",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "ExtensionKey",
+      "description": "Closed registry of runtime editor extensions owned by P1 descriptors."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "KeyChord",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "KeyChord",
+      "description": "Canonical parsed keyboard chord used for equality and conflict detection."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "KeyChordFromString",
+      "kind": "codec",
+      "owner": "@beep/editor",
+      "identity": "KeyChordFromString",
+      "description": "Bidirectional codec between authored chord strings and canonical parsed key chords."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "Keybinding",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "Keybinding",
+      "description": "A platform-specific keyboard chord attached to a command."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "KeybindingOverride",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "KeybindingOverride",
+      "description": "Complete replacement for one resolved command's default bindings."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "Modifier",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "Modifier",
+      "description": "Canonical modifier vocabulary in deterministic chord order."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "NodeRegistrationKey",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "NodeRegistrationKey",
+      "description": "Closed registry of Lexical node constructors owned by P1 descriptors."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "Platform",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "Platform",
+      "description": "Platform family used to resolve authored keyboard bindings."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ProfileId",
+      "kind": "brand",
+      "owner": "@beep/editor",
+      "identity": "ProfileId",
+      "description": "Stable branded identifier for an app-owned editor profile."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ProfileKind",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "ProfileKind",
+      "description": "Profile ownership class used to gate development-only capabilities."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ReadOnlyFallback",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "ReadOnlyFallback",
+      "description": "Fallback presentation used for a capability whose authoring controls are disabled."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ResolvedCapability",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "ResolvedCapability",
+      "description": "One catalog capability in catalog order with its resolved authoring mode."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ResolvedCommand",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "ResolvedCommand",
+      "description": "Enabled command with its owning capability and final keybindings."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "ResolvedEditorProfile",
+      "kind": "schema-class",
+      "owner": "@beep/editor",
+      "identity": "ResolvedEditorProfile",
+      "description": "Deterministic registration, command, and disabled-chord plan for an editor mount."
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "symbol": "TransformerKey",
+      "kind": "literal-kit",
+      "owner": "@beep/editor",
+      "identity": "TransformerKey",
+      "description": "Closed registry of Markdown transformers owned by P1 descriptors."
     },
     {
       "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",

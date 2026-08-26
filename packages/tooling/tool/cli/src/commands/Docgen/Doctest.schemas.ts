@@ -1,3 +1,10 @@
+/**
+ * Schema models for Docgen doctest discovery, assertion marking, and reports.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";

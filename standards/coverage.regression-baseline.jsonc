@@ -5440,15 +5440,15 @@
     },
     "@beep/editor": {
       "path": "packages/foundation/ui-system/editor",
-      "lines": 49.66,
-      "statements": 47.3,
-      "branches": 41.3,
-      "functions": 33.17,
+      "lines": 63.81,
+      "statements": 61.12,
+      "branches": 46.7,
+      "functions": 54.96,
       "uncovered": {
-        "lines": 598,
-        "statements": 713,
-        "branches": 361,
-        "functions": 284
+        "lines": 587,
+        "statements": 708,
+        "branches": 404,
+        "functions": 295
       },
       "files": {
         "packages/foundation/ui-system/editor/src/artifact-ref-node.tsx": {
@@ -5463,16 +5463,148 @@
             "functions": 9
           }
         },
-        "packages/foundation/ui-system/editor/src/chat/atoms.ts": {
-          "lines": 34.11,
-          "statements": 30.54,
-          "branches": 27.53,
-          "functions": 18.03,
+        "packages/foundation/ui-system/editor/src/capability/catalog.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 112,
-            "statements": 141,
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/composer.tsx": {
+          "lines": 76.92,
+          "statements": 71.42,
+          "branches": 75,
+          "functions": 55.55,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 4,
+            "functions": 4
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/profiles.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/projection.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 50,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/resolver.ts": {
+          "lines": 94.3,
+          "statements": 94.64,
+          "branches": 76.92,
+          "functions": 93.25,
+          "uncovered": {
+            "lines": 9,
+            "statements": 9,
+            "branches": 9,
+            "functions": 6
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/runtime.tsx": {
+          "lines": 73.68,
+          "statements": 68.18,
+          "branches": 62.9,
+          "functions": 57.5,
+          "uncovered": {
+            "lines": 20,
+            "statements": 28,
+            "branches": 23,
+            "functions": 17
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/schemas.ts": {
+          "lines": 95.49,
+          "statements": 95.72,
+          "branches": 66.66,
+          "functions": 97.67,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 8,
+            "functions": 1
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/shortcut-help.tsx": {
+          "lines": 100,
+          "statements": 80,
+          "branches": 100,
+          "functions": 75,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/foundation/ui-system/editor/src/capability/toolbar.tsx": {
+          "lines": 86.66,
+          "statements": 87.5,
+          "branches": 100,
+          "functions": 81.81,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/foundation/ui-system/editor/src/chat/atoms.ts": {
+          "lines": 34.7,
+          "statements": 31.03,
+          "branches": 27.53,
+          "functions": 19.67,
+          "uncovered": {
+            "lines": 111,
+            "statements": 140,
             "branches": 50,
-            "functions": 50
+            "functions": 49
           }
         },
         "packages/foundation/ui-system/editor/src/chat/attachment-model.ts": {
@@ -5584,49 +5716,49 @@
           }
         },
         "packages/foundation/ui-system/editor/src/chat/toolbar.tsx": {
-          "lines": 35.59,
-          "statements": 33.33,
-          "branches": 33.33,
-          "functions": 15.15,
+          "lines": 47.45,
+          "statements": 45.45,
+          "branches": 38.09,
+          "functions": 27.27,
           "uncovered": {
-            "lines": 38,
-            "statements": 44,
-            "branches": 14,
-            "functions": 28
+            "lines": 31,
+            "statements": 36,
+            "branches": 13,
+            "functions": 24
           }
         },
         "packages/foundation/ui-system/editor/src/chat/typeahead.tsx": {
-          "lines": 16.48,
-          "statements": 15.38,
-          "branches": 4,
-          "functions": 8.19,
+          "lines": 20.32,
+          "statements": 20.29,
+          "branches": 5,
+          "functions": 13.55,
           "uncovered": {
-            "lines": 157,
-            "statements": 176,
-            "branches": 96,
-            "functions": 56
+            "lines": 145,
+            "statements": 161,
+            "branches": 95,
+            "functions": 51
           }
         },
         "packages/foundation/ui-system/editor/src/code-block-node.tsx": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 31.57,
+          "statements": 28.57,
           "branches": 0,
-          "functions": 0,
+          "functions": 27.27,
           "uncovered": {
-            "lines": 19,
-            "statements": 21,
+            "lines": 13,
+            "statements": 15,
             "branches": 2,
-            "functions": 11
+            "functions": 8
           }
         },
         "packages/foundation/ui-system/editor/src/code-block-view.tsx": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 35.71,
+          "statements": 27.77,
           "branches": 0,
           "functions": 0,
           "uncovered": {
-            "lines": 14,
-            "statements": 18,
+            "lines": 9,
+            "statements": 13,
             "branches": 6,
             "functions": 11
           }
@@ -5640,7 +5772,7 @@
             "lines": 17,
             "statements": 17,
             "branches": 8,
-            "functions": 10
+            "functions": 9
           }
         },
         "packages/foundation/ui-system/editor/src/index.ts": {
@@ -5656,22 +5788,22 @@
           }
         },
         "packages/foundation/ui-system/editor/src/mermaid-node.tsx": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 35.29,
+          "statements": 30,
           "branches": 0,
-          "functions": 0,
+          "functions": 25,
           "uncovered": {
-            "lines": 17,
-            "statements": 20,
+            "lines": 11,
+            "statements": 14,
             "branches": 2,
-            "functions": 12
+            "functions": 9
           }
         },
         "packages/foundation/ui-system/editor/src/mermaid-view.tsx": {
-          "lines": 92.26,
-          "statements": 87.32,
+          "lines": 92.13,
+          "statements": 87.14,
           "branches": 76.77,
-          "functions": 92.94,
+          "functions": 92.77,
           "uncovered": {
             "lines": 28,
             "statements": 54,
@@ -5716,15 +5848,15 @@
           }
         },
         "packages/foundation/ui-system/editor/src/viewer.tsx": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 32.5,
+          "statements": 29.54,
           "branches": 0,
-          "functions": 0,
+          "functions": 20,
           "uncovered": {
-            "lines": 40,
-            "statements": 44,
+            "lines": 27,
+            "statements": 31,
             "branches": 28,
-            "functions": 15
+            "functions": 12
           }
         },
         "packages/foundation/ui-system/editor/src/youtube-embed.tsx": {
@@ -18553,27 +18685,27 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 72.26,
-      "statements": 70.97,
-      "branches": 64.28,
-      "functions": 61.43,
+      "lines": 72.73,
+      "statements": 71.47,
+      "branches": 64.56,
+      "functions": 61.91,
       "uncovered": {
-        "lines": 657,
-        "statements": 734,
+        "lines": 666,
+        "statements": 743,
         "branches": 180,
-        "functions": 442
+        "functions": 446
       },
       "files": {
         "apps/professional-desktop/src/App.tsx": {
-          "lines": 82.37,
-          "statements": 80.91,
+          "lines": 82.01,
+          "statements": 80.57,
           "branches": 69.56,
-          "functions": 69.46,
+          "functions": 68.93,
           "uncovered": {
-            "lines": 40,
-            "statements": 46,
+            "lines": 41,
+            "statements": 47,
             "branches": 21,
-            "functions": 40
+            "functions": 41
           }
         },
         "apps/professional-desktop/src/chat/ChatFixtures.ts": {
@@ -18769,10 +18901,10 @@
           }
         },
         "apps/professional-desktop/src/chat/ui/YouTubeWatchOpener.tsx": {
-          "lines": 97.14,
-          "statements": 92.1,
+          "lines": 96.55,
+          "statements": 90.62,
           "branches": 75,
-          "functions": 88.88,
+          "functions": 87.5,
           "uncovered": {
             "lines": 1,
             "statements": 3,
@@ -18814,6 +18946,30 @@
             "statements": 23,
             "branches": 12,
             "functions": 19
+          }
+        },
+        "apps/professional-desktop/src/editor-proof/EditorProof.atoms.ts": {
+          "lines": 71.79,
+          "statements": 73.17,
+          "branches": 100,
+          "functions": 53.84,
+          "uncovered": {
+            "lines": 11,
+            "statements": 11,
+            "branches": 0,
+            "functions": 6
+          }
+        },
+        "apps/professional-desktop/src/editor-proof/EditorProofPanel.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "apps/professional-desktop/src/intake/DocumentIntakeOrchestrator.ts": {
@@ -18896,7 +19052,7 @@
           "uncovered": {
             "lines": 22,
             "statements": 26,
-            "branches": 6,
+            "branches": 8,
             "functions": 6
           }
         },
@@ -19131,12 +19287,12 @@
         "apps/professional-desktop/src/sync/VaultSyncPanel.tsx": {
           "lines": 80.48,
           "statements": 80.95,
-          "branches": 78.78,
+          "branches": 81.81,
           "functions": 65.21,
           "uncovered": {
             "lines": 8,
             "statements": 8,
-            "branches": 7,
+            "branches": 6,
             "functions": 8
           }
         },
@@ -20131,15 +20287,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 74.49,
-      "statements": 74.26,
-      "branches": 61.14,
-      "functions": 67.85,
+      "lines": 74.55,
+      "statements": 74.32,
+      "branches": 61.27,
+      "functions": 67.96,
       "uncovered": {
-        "lines": 8258,
-        "statements": 8684,
-        "branches": 4690,
-        "functions": 3105
+        "lines": 8255,
+        "statements": 8683,
+        "branches": 4692,
+        "functions": 3104
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -20575,10 +20731,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
-          "lines": 81.27,
-          "statements": 81.38,
-          "branches": 77.27,
-          "functions": 76.92,
+          "lines": 84.1,
+          "statements": 84.3,
+          "branches": 80.76,
+          "functions": 79.83,
           "uncovered": {
             "lines": 41,
             "statements": 43,
@@ -21403,14 +21559,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts": {
-          "lines": 90.78,
-          "statements": 89.34,
-          "branches": 79.11,
-          "functions": 84.96,
+          "lines": 91.84,
+          "statements": 90.05,
+          "branches": 81.15,
+          "functions": 86.3,
           "uncovered": {
-            "lines": 28,
-            "statements": 36,
-            "branches": 33,
+            "lines": 27,
+            "statements": 37,
+            "branches": 36,
             "functions": 23
           }
         },
@@ -25651,15 +25807,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts": {
-          "lines": 60.68,
-          "statements": 60.54,
-          "branches": 34.32,
-          "functions": 67.44,
+          "lines": 62.06,
+          "statements": 61.9,
+          "branches": 35.82,
+          "functions": 69.76,
           "uncovered": {
-            "lines": 57,
-            "statements": 58,
-            "branches": 44,
-            "functions": 14
+            "lines": 55,
+            "statements": 56,
+            "branches": 43,
+            "functions": 13
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {

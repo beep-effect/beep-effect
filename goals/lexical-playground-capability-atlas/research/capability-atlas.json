@@ -12643,20 +12643,20 @@
       "compatibility": [
         {
           "format": "beep-md",
-          "status": "unsupported",
-          "loss": "The current canonical model does not retain this style as a typed semantic.",
-          "ownerGoal": "configurable-full-document-editor"
+          "status": "lossless",
+          "loss": "The canonical model represents strikethrough as Md.Del; the live codec maps bit 4 both ways (packages/foundation/modeling/lexical/src/Lexical.codec.ts:247,479).",
+          "ownerGoal": "none"
         },
         {
           "format": "lexical-wire-strict",
-          "status": "lossy",
-          "loss": "The current strict wire boundary does not guarantee this Playground style.",
+          "status": "lossless",
+          "loss": "The strict wire model admits the strikethrough bit (TextFormatBits.strikethrough = 4).",
           "ownerGoal": "configurable-full-document-editor"
         },
         {
           "format": "markdown",
-          "status": "lossy",
-          "loss": "Markdown either drops the style or narrows it to a coarser semantic.",
+          "status": "lossless",
+          "loss": "The pinned STRIKETHROUGH transformer (~~) has a direct portable representation.",
           "ownerGoal": "configurable-full-document-editor"
         },
         {
@@ -13317,9 +13317,9 @@
       "compatibility": [
         {
           "format": "beep-md",
-          "status": "lossless",
-          "loss": "The canonical model can represent this semantic without loss.",
-          "ownerGoal": "none"
+          "status": "unsupported",
+          "loss": "The current canonical model does not retain this style as a typed semantic; the live codec drops bit 256 (packages/foundation/modeling/lexical/src/Lexical.codec.ts:479-485).",
+          "ownerGoal": "configurable-full-document-editor"
         },
         {
           "format": "lexical-wire-strict",
@@ -13484,9 +13484,9 @@
       "compatibility": [
         {
           "format": "beep-md",
-          "status": "lossless",
-          "loss": "The canonical model can represent this semantic without loss.",
-          "ownerGoal": "none"
+          "status": "unsupported",
+          "loss": "The current canonical model does not retain this style as a typed semantic; the live codec drops bit 512 (packages/foundation/modeling/lexical/src/Lexical.codec.ts:479-485).",
+          "ownerGoal": "configurable-full-document-editor"
         },
         {
           "format": "lexical-wire-strict",
@@ -13651,9 +13651,9 @@
       "compatibility": [
         {
           "format": "beep-md",
-          "status": "lossless",
-          "loss": "The canonical model can represent this semantic without loss.",
-          "ownerGoal": "none"
+          "status": "unsupported",
+          "loss": "The current canonical model does not retain this style as a typed semantic; the live codec drops bit 1024 (packages/foundation/modeling/lexical/src/Lexical.codec.ts:479-485).",
+          "ownerGoal": "configurable-full-document-editor"
         },
         {
           "format": "lexical-wire-strict",
@@ -22180,8 +22180,8 @@
       "compatibility": [
         {
           "format": "beep-md",
-          "status": "lossless",
-          "loss": "The canonical envelope remains authoritative before and after projection.",
+          "status": "unsupported",
+          "loss": "The HIGHLIGHT transformer produces the highlight bit (128), which the current canonical model does not retain; the live codec drops it (packages/foundation/modeling/lexical/src/Lexical.codec.ts:479-485).",
           "ownerGoal": "configurable-full-document-editor"
         },
         {
@@ -24246,9 +24246,17 @@
             "detail": "Pinned interchange evidence used to classify Canonical @beep/md JSON."
           }
         ],
-        "live": []
+        "live": [
+          {
+            "auditPath": "goals/lexical-playground-capability-atlas/history/p2-qa/2026-08-25/ROUNDS.md",
+            "screenshots": [
+              "goals/lexical-playground-capability-atlas/history/p2-qa/2026-08-25/round-4/screenshots/canonical-json-import-lifecycle--after-valid-import.png"
+            ],
+            "detail": "P2 round 4 (recorded playwright lane, judged requiredCount 0) imported edited canonical @beep/md JSON through the editor-proof panel: the remounted editor shows the imported heading, an invalid document surfaces a typed alert while the editor stays mounted, and Reload from canonical keeps the imported document."
+          }
+        ]
       },
-      "evidenceStatus": "verified-source",
+      "evidenceStatus": "verified-live",
       "category": "interchange",
       "disposition": {
         "kind": "implement",
@@ -24270,7 +24278,7 @@
         {
           "surface": "importer",
           "action": "Import through the Canonical @beep/md JSON boundary.",
-          "evidenceStatus": "unverified"
+          "evidenceStatus": "verified-live"
         },
         {
           "surface": "programmatic",

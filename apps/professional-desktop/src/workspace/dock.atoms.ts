@@ -56,7 +56,7 @@ import type { DockAtomOperation, DockPersistenceOperation } from "@beep/dock";
 import type { DockAtomGraph } from "@beep/dock-react";
 
 /**
- * Every desktop dock panel: the four shell surfaces plus the nine ontology
+ * Every desktop dock panel: the five shell surfaces plus the nine ontology
  * workbench regions. `cluster` names the default-layout group a panel calls
  * home — reopening a closed panel targets a group where its cluster siblings
  * live, so SPARQL lands beside Inspector rather than in a random group.
@@ -66,7 +66,7 @@ import type { DockAtomGraph } from "@beep/dock-react";
  * ```ts
  * import { DESKTOP_PANELS } from "@/workspace/dock.atoms"
  *
- * console.log(DESKTOP_PANELS.length) // 13
+ * console.log(DESKTOP_PANELS.length) // 14
  * ```
  *
  * @category constants
@@ -87,6 +87,13 @@ export const DESKTOP_PANELS = [
     key: "sync",
     label: "Vault sync",
     title: "Vault sync",
+  },
+  {
+    cluster: "shell",
+    description: "Prove capability profiles over a sample document.",
+    key: "editor-proof",
+    label: "Editor proof",
+    title: "Editor Capability Proof",
   },
   {
     cluster: "shell",
@@ -161,7 +168,7 @@ export const DESKTOP_PANELS = [
 ] as const;
 
 /**
- * One of the thirteen desktop panel keys.
+ * One of the fourteen desktop panel keys.
  *
  * **Example** (Assigning ontology graph key)
  *

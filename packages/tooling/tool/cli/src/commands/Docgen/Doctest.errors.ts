@@ -1,3 +1,10 @@
+/**
+ * Error models for Docgen doctest analysis and source rewriting.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 

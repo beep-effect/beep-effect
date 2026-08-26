@@ -11,7 +11,9 @@ Another 154 entries are `verified-live`, 153 of them with exercise evidence;
 P0's entry gate is closed. The 10 `unverified` entries have user-approved
 Exception Ledger waivers. The activation-path gate is closed with zero open
 paths. P0.5 exercised 10 of the 13 paths that previously opened the gate and
-closed the other three with user-approved scope waivers.
+closed the other three with user-approved scope waivers; the
+`interchange.canonical-json` importer waiver retired on 2026-08-25 once P2 round 4
+recorded the canonical JSON import lifecycle.
 
 ## Approved waiver scopes
 
@@ -29,7 +31,6 @@ closed the other three with user-approved scope waivers.
 | `transformer.tweet` | waived (SPEC Exception Ledger, user-approved 2026-08-24): genuine defect: The Enter-triggered transformer replaces the selected TextNode without moving selection, reports `updateEditor: selection has been lost` followed by `Point.getNode: node not found`, and unmounts the app because the Playground has no error boundary. Pinned paths: `packages/lexical-playground/src/plugins/MarkdownTransformers/index.ts:184-200` and `packages/lexical-markdown/src/MarkdownShortcuts.ts:75-92`. Evidence: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/transformer.tweet/observations.ndjson`. |
 | `table.column-reorder` | waived (SPEC Exception Ledger, user-approved 2026-08-24): unavailable upstream: The pinned table action menu at `packages/lexical-playground/src/plugins/TableActionMenuPlugin/index.tsx:467-670` has no reorder or move-column item. The only route is the hover `Drag to reorder column` control at `packages/lexical-playground/src/plugins/TableHoverActionsV2Plugin/index.tsx:626-665`, backed by `$moveTableColumn` at lines 500-528. The context-menu path remains `unverified`; Goal B owns an accessible non-drag route under D13. |
 | `document.read-only` | waived (SPEC Exception Ledger, user-approved 2026-08-24): unavailable upstream: The pinned Playground has no mount-time read-only input at `packages/lexical-playground/src/App.tsx:326-350` or `packages/lexical-playground/src/appSettings.ts:14-44`. The runtime lock calls `editor.setEditable` at `packages/lexical-playground/src/plugins/ActionsPlugin/index.tsx:354-361`. Reload evidence proves that the lock resets to `contenteditable="true"` after remount: `goals/lexical-playground-capability-atlas/history/p0-exercise/2026-08-24/document.read-only/observations.ndjson:19-24`. |
-| `interchange.canonical-json` | waived (SPEC Exception Ledger, user-approved 2026-08-24): product-host path: No Playground or current `@beep/editor` surface imports canonical `@beep/md` JSON. P1 builds Storybook fixtures over the canonical document, and P2 records the import lifecycle. |
 
 ## Activation-path gate
 
@@ -50,7 +51,6 @@ previously opened it as follows:
 | `authoring.autocomplete` | `selection` | exercised: passing touch-swipe row 37, ghost-detached row 38, and exact completion row 39 |
 | `table.column-reorder` | `context-menu` | waived by scope: the pinned menu has no reorder or move-column item |
 | `document.read-only` | `read-only` | waived by scope: the pinned app has no mount input, and rows 19-24 prove that runtime lock state resets on remount |
-| `interchange.canonical-json` | `importer` | waived by scope: P1/P2 own the product-host canonical import lifecycle |
 
 The atlas still records 35 paths with `evidenceStatus: unverified`, but none
 opens the live gate. Twenty-two are `programmatic`, so verified source evidence
