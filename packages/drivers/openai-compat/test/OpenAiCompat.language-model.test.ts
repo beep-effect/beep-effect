@@ -279,6 +279,55 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
   );
 
   it.effect(
+    "declares tool_choice alongside declared tools",
+    Effect.fnUntraced(function* () {
+      const requests = yield* Ref.make<ReadonlyArray<OpenAiCompatChatCompletionRequest>>([]);
+      const languageModel = yield* makeFromProvider({
+        model: "compat-model",
+        moduleName: "OpenAiCompatLanguageModelTest",
+        provider: {
+          createChatCompletion: (request) =>
+            pipe(Ref.update(requests, A.append(request)), Effect.as(makeResponse("hello from compat"))),
+          streamChatCompletion: () => Stream.empty,
+        },
+      });
+
+      const WeatherTool = Tool.make("weather", {
+        parameters: S.Struct({ city: S.String }),
+        success: S.String,
+      });
+      yield* languageModel.generateText({
+        prompt: "weather",
+        toolChoice: "auto",
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        prompt: "weather",
+        toolChoice: { tool: "weather" },
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        prompt: "weather",
+        toolChoice: { mode: "required", oneOf: ["weather"] },
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        prompt: "weather",
+        toolChoice: { mode: "auto", oneOf: ["weather"] },
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      const captured = yield* Ref.get(requests);
+
+      expect(captured).toHaveLength(4);
+      expect(Object.hasOwn(captured[0] ?? {}, "tools")).toBe(true);
+      expect(captured[0]?.tool_choice).toBe("auto");
+      expect(captured[1]?.tool_choice).toEqual({ function: { name: "weather" }, type: "function" });
+      expect(captured[2]?.tool_choice).toEqual({ function: { name: "weather" }, type: "function" });
+      expect(captured[3]?.tool_choice).toBe("auto");
+    })
+  );
+
+  it.effect(
     "decodes tool calls from chat completion responses",
     Effect.fnUntraced(function* () {
       const languageModel = yield* makeFromProvider({
