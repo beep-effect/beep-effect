@@ -1,0 +1,158 @@
+{
+  "version": "gold/v1",
+  "paperId": "0a4ab229f341",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 0,
+      "endChar": 67,
+      "quoteSha256": "e0be0ba66a398f0c541abb166ae185875d879327712e4fbe78789972d4e19384",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 270,
+      "endChar": 278,
+      "quoteSha256": "d21b4a64a2d8656a0fdf7ab2e89a49164ac504686cfa2a3d442e87c209286330",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1540,
+      "endChar": 1548,
+      "quoteSha256": "8bfdb93cafaa91477de5fa9fa09d33946f57adae516e2ab45a309df988f36ba1",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1632,
+      "endChar": 1646,
+      "quoteSha256": "c9234967b670c32478644b4236ec8fd2f351225696cacbcd0fad1f1838b95170",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 6935,
+      "endChar": 6947,
+      "quoteSha256": "b9cecd7cdf8e46c955bd793d1c2118df2e93b68fc2048da987e06cbd735e0efa",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 7065,
+      "endChar": 7077,
+      "quoteSha256": "683f5b05be12e7993f00e54a4e9e84c242d0377b7d993e979318ecb1acc8c8fb",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 7724,
+      "endChar": 7737,
+      "quoteSha256": "d649b2f0518e9dd518f063f98479c7f9ac007aa2960c6ce896a585b731d73104",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 8156,
+      "endChar": 8181,
+      "quoteSha256": "86f88171ffdb8b43153f819d60af78adba1a9375700ed0d1df0c63c031844fa5",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 9069,
+      "endChar": 9091,
+      "quoteSha256": "9bba585c1d530ec6ba2b77dcdbe3f4b8ec13cee89e8af41f412fdeef5e4e65e0",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 9781,
+      "endChar": 9795,
+      "quoteSha256": "abf75a8508af7f8621f4401d9a85ba2b7135005e3321f65cc8fa34d28c72f0a1",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 14013,
+      "endChar": 14047,
+      "quoteSha256": "78f26f7a374becb3eefe9ef456cdd1b16db62d21f9dedf08c122a28eee415e40",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 14225,
+      "endChar": 14248,
+      "quoteSha256": "eb4154da66dd7af74a2b158936cb37fe5fee293babdd4f029aec3dd7b034f35d",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 14406,
+      "endChar": 14431,
+      "quoteSha256": "093a22d59205168e2eef6cf847ed77a94201cfc19d7e28a65c1bd4fdb2c00028",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 15273,
+      "endChar": 15294,
+      "quoteSha256": "26b00536262c59ee9089f5d50cc270cd18b00a4efc8b3937123ee59248bf64ef",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 15812,
+      "endChar": 15837,
+      "quoteSha256": "0e63a6fe1d610c679c46fbecfc250890c34c71c4f246bfe1adaf901decb58b07",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 17508,
+      "endChar": 17538,
+      "quoteSha256": "8de3010446918596e0648d86388f17cbeb7f402fd7dcbbd1af9d80f3b3617f32",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 18137,
+      "endChar": 18149,
+      "quoteSha256": "92f86aeca018a0e10c7a3f54d5b9364ab25f8d66a727a04e41fcc6c8655c3e4f",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 18316,
+      "endChar": 18341,
+      "quoteSha256": "4c213af08d7ecbc71f64fc76185524c168e50132e784110ef23abb1053bb10c3",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

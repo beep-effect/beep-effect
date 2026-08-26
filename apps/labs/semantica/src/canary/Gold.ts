@@ -2,8 +2,9 @@ import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Console, Effect, FileSystem, Order, Path, Result, Struct, Tuple } from "effect";
+import { Console, Effect, FileSystem, Number as N, Order, Path, Result, Struct, Tuple } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -11,9 +12,19 @@ import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { makeGoldPrompt } from "@/gold/Prompts";
 import { loadDocumentSelection } from "@/layers/DocumentSourceLive";
+import { LabConfig } from "@/runtime/Config";
 import { contentDigest } from "@/schema/Digest";
 import { GoldUnavailable } from "@/schema/Errors";
-import { GoldEntityLabel, GoldFile, GoldRef, GoldRelationLabel, GoldStructureLabel, GoldSubset } from "@/schema/Gold";
+import {
+  CurrentGoldDocumentText,
+  GoldEntityLabel,
+  GoldFile,
+  GoldFileEncoded,
+  GoldRef,
+  GoldRelationLabel,
+  GoldStructureLabel,
+  GoldSubset,
+} from "@/schema/Gold";
 import { ModelIdentity } from "@/schema/Model";
 import { Canonicalizer } from "@/services/Canonicalizer";
 import { DocumentSelection, DocumentSource } from "@/services/DocumentSource";
@@ -48,7 +59,15 @@ export const GOLD_SUBSETS = ["structure", "entity", "relation"] as const satisfi
 
 const StructureProposalLabel = S.Struct(Struct.omit(GoldStructureLabel.fields, ["verified"]));
 const EntityProposalLabel = S.Struct(Struct.omit(GoldEntityLabel.fields, ["verified"]));
-const RelationProposalLabel = S.Struct(Struct.omit(GoldRelationLabel.fields, ["verified"]));
+const RelationProposalLabel = S.Struct(
+  Struct.omit(GoldRelationLabel.fields, [
+    "objectEndChar",
+    "objectStartChar",
+    "subjectEndChar",
+    "subjectStartChar",
+    "verified",
+  ])
+);
 
 const StructureProposalJson = S.fromJsonString(
   S.Struct({
@@ -219,11 +238,16 @@ const writeJsonAtomic = Effect.fn("Gold.writeJsonAtomic")(function* (target: str
 });
 
 const GoldFileJson = S.fromJsonString(GoldFile, { space: 2 });
+const GoldFileEncodedJson = S.fromJsonString(GoldFileEncoded);
 const GoldRefJson = S.fromJsonString(GoldRef, { space: 2 });
-const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileValue) => `${file.paperId}:${file.subset}`);
-const modelIdentityEquivalence = S.toEquivalence(ModelIdentity);
+const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileEncoded) => `${file.paperId}:${file.subset}`);
+const modelIdentityEquivalence = S.toEquivalence(S.toEncoded(ModelIdentity));
 const isGoldUnavailable = S.is(GoldUnavailable);
+const isEntityProposalLabel = S.is(EntityProposalLabel);
 const isRelationProposalLabel = S.is(RelationProposalLabel);
+const isGoldEntityLabel = S.is(GoldEntityLabel);
+const isGoldRelationLabel = S.is(GoldRelationLabel);
+const isGoldStructureLabel = S.is(GoldStructureLabel);
 const nfc = Str.normalize("NFC");
 
 const goldFilePath = (path: Path.Path, directory: string, job: GoldJob): string =>
@@ -238,7 +262,7 @@ const readWrittenGold = Effect.fn("Gold.readWrittenGold")(function* (directory: 
       Effect.flatMap((exists) =>
         exists
           ? fs.readFileString(filePath).pipe(
-              Effect.flatMap(S.decodeEffect(GoldFileJson)),
+              Effect.flatMap(S.decodeEffect(GoldFileEncodedJson)),
               Effect.flatMap((file) =>
                 Str.Equivalence(file.paperId, job.paperId) && Str.Equivalence(file.subset, job.subset)
                   ? Effect.succeed(Tuple.make(job, O.some(file)))
@@ -250,7 +274,7 @@ const readWrittenGold = Effect.fn("Gold.readWrittenGold")(function* (directory: 
                     )
               )
             )
-          : Effect.succeed(Tuple.make(job, O.none<GoldFileValue>()))
+          : Effect.succeed(Tuple.make(job, O.none<GoldFileEncoded>()))
       ),
       Effect.mapError((error) =>
         isGoldUnavailable(error)
@@ -265,17 +289,265 @@ const readWrittenGold = Effect.fn("Gold.readWrittenGold")(function* (directory: 
   };
 });
 
-const entityQuotesFor = Effect.fn("Gold.entityQuotesFor")(function* (directory: string, paperId: CorpusPaperId) {
+const entityLabelsFor = Effect.fn("Gold.entityLabelsFor")(function* (
+  directory: string,
+  paperId: CorpusPaperId,
+  text: string
+) {
   const inventory = yield* readWrittenGold(directory, [GoldJob.make({ paperId, subset: "entity" })]);
-  return A.flatMap(inventory.files, (file) =>
-    file.subset === "entity" ? A.map(file.labels, (label) => nfc(label.quote)) : []
+  const files = yield* Effect.forEach(inventory.files, (file) =>
+    S.decodeEffect(GoldFile)(file).pipe(
+      Effect.provideService(CurrentGoldDocumentText, text),
+      Effect.mapError(() =>
+        unavailable("digest-failed", "An entity gold label digest does not match its canonical document slice.")
+      )
+    )
   );
+  return A.flatMap(files, (file) => (file.subset === "entity" ? file.labels : []));
 });
 
-const relationEndpointsExist = (label: ProposedLabel, entityQuotes: ReadonlyArray<string>): boolean =>
-  isRelationProposalLabel(label) &&
-  A.some(entityQuotes, (quote) => Str.Equivalence(quote, nfc(label.subject))) &&
-  A.some(entityQuotes, (quote) => Str.Equivalence(quote, nfc(label.object)));
+type RelationEndpoint = { readonly endChar: number; readonly quote: string; readonly startChar: number };
+type RelationEndpoints = { readonly object: RelationEndpoint; readonly subject: RelationEndpoint };
+
+const relationEndpointsFor = (
+  label: ProposedLabel,
+  entityLabels: ReadonlyArray<GoldEntityLabel>,
+  evidence: TextAnchor
+): O.Option<RelationEndpoints> =>
+  isRelationProposalLabel(label)
+    ? O.all({
+        object: A.findFirst(entityLabels, (entity) =>
+          Str.Equivalence(nfc(foldWhitespace(entity.quote).text), nfc(foldWhitespace(label.object).text))
+        ).pipe(
+          O.map((entity) => ({ endChar: entity.endChar, quote: entity.quote, startChar: entity.startChar })),
+          O.orElse(() =>
+            resolveGoldQuoteAnchor(evidence.quote, label.object, 0).pipe(
+              O.map(([startChar, endChar, quote]) => ({
+                endChar: N.sum(evidence.startChar, endChar),
+                quote,
+                startChar: N.sum(evidence.startChar, startChar),
+              }))
+            )
+          )
+        ),
+        subject: A.findFirst(entityLabels, (entity) =>
+          Str.Equivalence(nfc(foldWhitespace(entity.quote).text), nfc(foldWhitespace(label.subject).text))
+        ).pipe(
+          O.map((entity) => ({ endChar: entity.endChar, quote: entity.quote, startChar: entity.startChar })),
+          O.orElse(() =>
+            resolveGoldQuoteAnchor(evidence.quote, label.subject, 0).pipe(
+              O.map(([startChar, endChar, quote]) => ({
+                endChar: N.sum(evidence.startChar, endChar),
+                quote,
+                startChar: N.sum(evidence.startChar, startChar),
+              }))
+            )
+          )
+        ),
+      })
+    : O.none();
+
+const makeVerifiedGoldLabel = Effect.fnUntraced(function* (
+  label: ProposedLabel,
+  anchor: TextAnchor,
+  endpoints: O.Option<RelationEndpoints>
+) {
+  if (isEntityProposalLabel(label)) {
+    return yield* GoldEntityLabel.makeEffect({
+      cluster: label.cluster,
+      endChar: anchor.endChar,
+      entityType: label.entityType,
+      label: anchor.quote,
+      quote: anchor.quote,
+      startChar: anchor.startChar,
+      verified: false,
+    }).pipe(Effect.result, Effect.map(Result.getSuccess));
+  }
+  if (isRelationProposalLabel(label)) {
+    return yield* O.match(endpoints, {
+      onNone: () => Effect.succeed(O.none()),
+      onSome: (resolved) =>
+        GoldRelationLabel.makeEffect({
+          endChar: anchor.endChar,
+          object: resolved.object.quote,
+          objectEndChar: NonNegativeInt.make(resolved.object.endChar),
+          objectStartChar: NonNegativeInt.make(resolved.object.startChar),
+          predicate: label.predicate,
+          quote: anchor.quote,
+          startChar: anchor.startChar,
+          subject: resolved.subject.quote,
+          subjectEndChar: NonNegativeInt.make(resolved.subject.endChar),
+          subjectStartChar: NonNegativeInt.make(resolved.subject.startChar),
+          verified: false,
+        }).pipe(Effect.result, Effect.map(Result.getSuccess)),
+    });
+  }
+  return yield* GoldStructureLabel.makeEffect({
+    depth: label.depth,
+    endChar: anchor.endChar,
+    quote: anchor.quote,
+    role: label.role,
+    startChar: anchor.startChar,
+    verified: false,
+  }).pipe(Effect.result, Effect.map(Result.getSuccess));
+});
+
+// A 2,000-character window tolerates roughly a page of PDF extraction drift
+// while preventing short evidence strings from re-anchoring across a paper.
+const GOLD_ANCHOR_DRIFT_WINDOW = 2_000;
+
+const anchorDistance = (candidate: number, claimed: number): number =>
+  N.max(N.subtract(candidate, claimed), N.subtract(claimed, candidate));
+
+const exactOccurrences = (text: string, quote: string): ReadonlyArray<number> =>
+  A.unfold(0, (searchStart) =>
+    Str.indexOf(quote)(Str.slice(searchStart)(text)).pipe(
+      O.map((relativeStart) => {
+        const start = N.sum(searchStart, relativeStart);
+        return [start, N.sum(start, 1)] as const;
+      })
+    )
+  );
+
+const nearestStartWithinWindow = (occurrences: ReadonlyArray<number>, claimedStart: number): O.Option<number> =>
+  A.reduce(occurrences, O.none<{ readonly distance: number; readonly start: number }>(), (best, start) => {
+    const distance = anchorDistance(start, claimedStart);
+    if (N.isGreaterThan(distance, GOLD_ANCHOR_DRIFT_WINDOW)) {
+      return best;
+    }
+    return O.match(best, {
+      onNone: () => O.some({ distance, start }),
+      onSome: (current) => (N.isLessThan(distance, current.distance) ? O.some({ distance, start }) : best),
+    });
+  }).pipe(O.map((best) => best.start));
+
+const foldWhitespace = (text: string) => {
+  const runs = A.fromIterable(Str.matchAll(/-[ \t]*\r?\n[ \t]*|\s+|[^\s-]+|-/gu)(text));
+  const [, segments] = A.mapAccum(runs, 0, (foldedStart, match) => {
+    const source = A.getUnsafe(match, 0);
+    const sourceStart = match.index === undefined ? 0 : match.index;
+    const discretionaryHyphen = O.isSome(Str.search(/^-[ \t]*\r?\n[ \t]*$/u)(source));
+    const whitespace = Str.isEmpty(Str.trim(source));
+    const folded = discretionaryHyphen ? "" : whitespace ? " " : source;
+    const foldedEnd = N.sum(foldedStart, Str.length(folded));
+    return [
+      foldedEnd,
+      {
+        folded,
+        foldedEnd,
+        foldedStart,
+        sourceEnd: N.sum(sourceStart, Str.length(source)),
+        sourceStart,
+        whitespace,
+      },
+    ] as const;
+  });
+  return {
+    segments,
+    text: A.join(
+      A.map(segments, (segment) => segment.folded),
+      ""
+    ),
+  };
+};
+
+const sourceStartFor = (foldedIndex: number, folded: ReturnType<typeof foldWhitespace>): O.Option<number> =>
+  A.findFirst(
+    folded.segments,
+    (segment) => N.isLessThanOrEqualTo(segment.foldedStart, foldedIndex) && N.isLessThan(foldedIndex, segment.foldedEnd)
+  ).pipe(
+    O.map((segment) =>
+      segment.whitespace
+        ? segment.sourceStart
+        : N.sum(segment.sourceStart, N.subtract(foldedIndex, segment.foldedStart))
+    )
+  );
+
+const sourceEndFor = (foldedIndex: number, folded: ReturnType<typeof foldWhitespace>): O.Option<number> =>
+  A.findFirst(
+    folded.segments,
+    (segment) => N.isLessThan(segment.foldedStart, foldedIndex) && N.isLessThanOrEqualTo(foldedIndex, segment.foldedEnd)
+  ).pipe(
+    O.map((segment) =>
+      segment.whitespace ? segment.sourceEnd : N.sum(segment.sourceStart, N.subtract(foldedIndex, segment.foldedStart))
+    )
+  );
+
+const nearestWhitespaceFoldedSpan = (
+  text: string,
+  quote: string,
+  claimedStart: number
+): O.Option<readonly [startChar: number, endChar: number]> => {
+  const foldedText = foldWhitespace(text);
+  const foldedQuote = foldWhitespace(quote).text;
+  const candidates = A.getSomes(
+    A.map(exactOccurrences(foldedText.text, foldedQuote), (foldedStart) => {
+      const foldedEnd = N.sum(foldedStart, Str.length(foldedQuote));
+      return O.all([sourceStartFor(foldedStart, foldedText), sourceEndFor(foldedEnd, foldedText)]);
+    })
+  );
+  return A.reduce(
+    candidates,
+    O.none<{ readonly distance: number; readonly span: readonly [number, number] }>(),
+    (best, span) => {
+      const distance = anchorDistance(span[0], claimedStart);
+      if (N.isGreaterThan(distance, GOLD_ANCHOR_DRIFT_WINDOW)) {
+        return best;
+      }
+      return O.match(best, {
+        onNone: () => O.some({ distance, span }),
+        onSome: (current) => (N.isLessThan(distance, current.distance) ? O.some({ distance, span }) : best),
+      });
+    }
+  ).pipe(O.map((best) => best.span));
+};
+
+/**
+ * Resolves a proposed quote to an exact canonical-text slice within the gold drift window.
+ *
+ * **Details**
+ *
+ * An exact match at the claimed offset wins. Nearby exact matches are considered
+ * next, followed by whitespace-folded matches. Every result carries the real
+ * UTF-16 offsets and exact document slice.
+ *
+ * **Example** (Recover a line-broken quote)
+ *
+ * ```ts
+ * import { resolveGoldQuoteAnchor } from "@/canary/Gold"
+ *
+ * console.log(resolveGoldQuoteAnchor("alpha\n beta", "alpha beta", 0))
+ * ```
+ *
+ * @category anchoring
+ * @since 0.0.0
+ */
+export const resolveGoldQuoteAnchor: {
+  (
+    quote: string,
+    claimedStart: number
+  ): (text: string) => O.Option<readonly [startChar: number, endChar: number, quote: string]>;
+  (
+    text: string,
+    quote: string,
+    claimedStart: number
+  ): O.Option<readonly [startChar: number, endChar: number, quote: string]>;
+} = dual(3, (text: string, quote: string, claimedStart: number) => {
+  const quoteLength = Str.length(quote);
+  const claimedEnd = N.sum(claimedStart, quoteLength);
+  const exactAtClaim = O.some(claimedStart).pipe(
+    O.filter(() => Str.Equivalence(Str.slice(claimedStart, claimedEnd)(text), quote)),
+    O.map((startChar) => [startChar, claimedEnd] as const)
+  );
+  const exactNearby = nearestStartWithinWindow(exactOccurrences(text, quote), claimedStart).pipe(
+    O.map((startChar) => [startChar, N.sum(startChar, quoteLength)] as const)
+  );
+  return exactAtClaim.pipe(
+    O.orElse(() => exactNearby),
+    O.orElse(() => nearestWhitespaceFoldedSpan(text, quote, claimedStart)),
+    O.map(([startChar, endChar]) => [startChar, endChar, Str.slice(startChar, endChar)(text)] as const)
+  );
+});
 
 const proposeJob = Effect.fn("Gold.proposeJob")(function* (
   selection: DocumentSelection,
@@ -287,6 +559,7 @@ const proposeJob = Effect.fn("Gold.proposeJob")(function* (
   const canonicalizer = yield* Canonicalizer;
   const languageModel = yield* LanguageModel.LanguageModel;
   const proposer = yield* ActiveModelIdentity;
+  const config = yield* LabConfig;
   const path = yield* Path.Path;
 
   const documents = yield* source
@@ -324,37 +597,66 @@ const proposeJob = Effect.fn("Gold.proposeJob")(function* (
         text: canonical.text,
       }),
     })
-    .pipe(Effect.mapError(() => unavailable("provider-failed", "The gold proposer could not generate a response.")));
+    .pipe(
+      Effect.timeout(config.goldGenerationTimeout),
+      Effect.mapError(() =>
+        unavailable("provider-failed", "The gold proposer failed or exceeded its configured generation timeout.")
+      )
+    );
   const proposed = yield* decodeProposal(job.subset, response.text);
-  const entityQuotes = Str.Equivalence(job.subset, "relation")
-    ? yield* entityQuotesFor(outputDirectory, job.paperId)
+  const entityLabels = Str.Equivalence(job.subset, "relation")
+    ? yield* entityLabelsFor(outputDirectory, job.paperId, canonical.text)
     : [];
   const verified = yield* Effect.forEach(
     proposed,
     Effect.fnUntraced(function* (label) {
+      const resolved = resolveGoldQuoteAnchor(canonical.text, label.quote, label.startChar);
+      if (O.isNone(resolved)) {
+        return O.none();
+      }
+      const [startChar, endChar, quote] = resolved.value;
       const anchor = yield* S.decodeEffect(TextAnchor)({
-        endChar: label.endChar,
-        quote: label.quote,
-        startChar: label.startChar,
+        endChar,
+        quote,
+        startChar,
       }).pipe(Effect.result);
-      if (
-        Result.isFailure(anchor) ||
-        (Str.Equivalence(job.subset, "relation") && !relationEndpointsExist(label, entityQuotes))
-      ) {
+      if (Result.isFailure(anchor)) {
         return O.none();
       }
       const verification = yield* canonicalizer.verify(canonical, anchor.success).pipe(Effect.result);
-      return Result.isSuccess(verification) ? O.some({ ...label, verified: false }) : O.none();
+      if (Result.isFailure(verification)) {
+        return O.none();
+      }
+      const endpoints = relationEndpointsFor(label, entityLabels, anchor.success);
+      return yield* makeVerifiedGoldLabel(label, anchor.success, endpoints);
     })
   );
   const labels = A.getSomes(verified);
-  const file = yield* S.decodeUnknownEffect(GoldFile)({
-    labels,
-    paperId: job.paperId,
-    proposer,
-    subset: job.subset,
-    version: "gold/v1",
-  }).pipe(
+  const file = yield* (
+    job.subset === "structure"
+      ? GoldFile.makeEffect({
+          labels: A.filter(labels, isGoldStructureLabel),
+          paperId: job.paperId,
+          proposer,
+          subset: "structure",
+          version: "gold/v1",
+        })
+      : job.subset === "entity"
+        ? GoldFile.makeEffect({
+            labels: A.filter(labels, isGoldEntityLabel),
+            paperId: job.paperId,
+            proposer,
+            subset: "entity",
+            version: "gold/v1",
+          })
+        : GoldFile.makeEffect({
+            labels: A.filter(labels, isGoldRelationLabel),
+            paperId: job.paperId,
+            proposer,
+            subset: "relation",
+            version: "gold/v1",
+          })
+  ).pipe(
     Effect.mapError(() =>
       unavailable("model-output-invalid", "Verified labels did not produce a schema-valid GoldFile.")
     )
@@ -406,6 +708,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   | DocumentSource
   | F1Catalog
   | FileSystem.FileSystem
+  | LabConfig
   | LanguageModel.LanguageModel
   | Parser
   | Path.Path
@@ -453,7 +756,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   }
   return yield* A.match(inventory.missingJobs, {
     onEmpty: Effect.fn("Gold.writeReference")(function* () {
-      const digest = yield* contentDigest(S.Array(GoldFile))(inventory.files).pipe(
+      const digest = yield* contentDigest(S.Array(GoldFileEncoded))(inventory.files).pipe(
         Effect.mapError(() => unavailable("digest-failed", "The gold-v1 file set could not be hashed."))
       );
       const reference = GoldRef.make({

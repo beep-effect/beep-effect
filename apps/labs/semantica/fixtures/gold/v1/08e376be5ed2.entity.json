@@ -1,0 +1,374 @@
+{
+  "version": "gold/v1",
+  "paperId": "08e376be5ed2",
+  "subset": "entity",
+  "labels": [
+    {
+      "cluster": "journal-JEAI",
+      "endChar": 50,
+      "entityType": "journal",
+      "labelSha256": "78afce810611b354ac90ec1490ef04f8f10986a3688133739d3bd89d3b7516d9",
+      "quoteSha256": "78afce810611b354ac90ec1490ef04f8f10986a3688133739d3bd89d3b7516d9",
+      "startChar": 0,
+      "verified": false
+    },
+    {
+      "cluster": "issue-2-1",
+      "endChar": 86,
+      "entityType": "publication-issue",
+      "labelSha256": "3da7a3668ec4f31daa7604efe57c685860c57fad8ae18907d3a5daf42f393de7",
+      "quoteSha256": "3da7a3668ec4f31daa7604efe57c685860c57fad8ae18907d3a5daf42f393de7",
+      "startChar": 69,
+      "verified": false
+    },
+    {
+      "cluster": "doi-jeai-2-1-43",
+      "endChar": 123,
+      "entityType": "DOI",
+      "labelSha256": "4a7ea448a84ed7d3f97ad24d60bef348bd4dc55f8eedc5490e1f444ff8cec71a",
+      "quoteSha256": "4a7ea448a84ed7d3f97ad24d60bef348bd4dc55f8eedc5490e1f444ff8cec71a",
+      "startChar": 87,
+      "verified": false
+    },
+    {
+      "cluster": "issn-3117-3357",
+      "endChar": 139,
+      "entityType": "ISSN",
+      "labelSha256": "3cd42c280d6d66155a0b9266fbda9848087de41d2e722a183aa52d64653dbed4",
+      "quoteSha256": "3cd42c280d6d66155a0b9266fbda9848087de41d2e722a183aa52d64653dbed4",
+      "startChar": 130,
+      "verified": false
+    },
+    {
+      "cluster": "journal-url",
+      "endChar": 205,
+      "entityType": "URL",
+      "labelSha256": "0f61f8bd4b3664debb6cabab8dc797ef5dc3ca367fcd371a0f17e07af31edf1c",
+      "quoteSha256": "0f61f8bd4b3664debb6cabab8dc797ef5dc3ca367fcd371a0f17e07af31edf1c",
+      "startChar": 159,
+      "verified": false
+    },
+    {
+      "cluster": "article-id-JEAI-26-43",
+      "endChar": 216,
+      "entityType": "article-id",
+      "labelSha256": "3029cbb9ec986da8bf2c39bcecce8c68a0c67ce8413ad17dd759f84e444500be",
+      "quoteSha256": "3029cbb9ec986da8bf2c39bcecce8c68a0c67ce8413ad17dd759f84e444500be",
+      "startChar": 206,
+      "verified": false
+    },
+    {
+      "cluster": "Mind-Tool",
+      "endChar": 226,
+      "entityType": "system",
+      "labelSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "quoteSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "startChar": 217,
+      "verified": false
+    },
+    {
+      "cluster": "paper-title",
+      "endChar": 268,
+      "entityType": "work",
+      "labelSha256": "615bb981f1dfc1043c521d238acd8db4832128846881755fcdd8595268fa5173",
+      "quoteSha256": "615bb981f1dfc1043c521d238acd8db4832128846881755fcdd8595268fa5173",
+      "startChar": 217,
+      "verified": false
+    },
+    {
+      "cluster": "Ioannis-Chrysochos",
+      "endChar": 287,
+      "entityType": "person",
+      "labelSha256": "7e3b5405af39a774f0f2341746ff3dec4f63a427af1a6fed3c407bf7245d75ce",
+      "quoteSha256": "7e3b5405af39a774f0f2341746ff3dec4f63a427af1a6fed3c407bf7245d75ce",
+      "startChar": 269,
+      "verified": false
+    },
+    {
+      "cluster": "author-role",
+      "endChar": 311,
+      "entityType": "role",
+      "labelSha256": "8cd90a60fc545d0cecb6c54a0245734acb47fd9ee86060fdfc383bd6cbad25d0",
+      "quoteSha256": "8cd90a60fc545d0cecb6c54a0245734acb47fd9ee86060fdfc383bd6cbad25d0",
+      "startChar": 289,
+      "verified": false
+    },
+    {
+      "cluster": "CYTA",
+      "endChar": 336,
+      "entityType": "organization",
+      "labelSha256": "1ffef621eb0d2e388f5378ab56293c5039e6bb6bcf9bc23547a783741d9d83c3",
+      "quoteSha256": "1ffef621eb0d2e388f5378ab56293c5039e6bb6bcf9bc23547a783741d9d83c3",
+      "startChar": 313,
+      "verified": false
+    },
+    {
+      "cluster": "Nicosia",
+      "endChar": 345,
+      "entityType": "city",
+      "labelSha256": "7bee85a2d89fe2978d484fd57513ea6c19734a6c2f651c79d4c3b5fbb840c1fe",
+      "quoteSha256": "7bee85a2d89fe2978d484fd57513ea6c19734a6c2f651c79d4c3b5fbb840c1fe",
+      "startChar": 338,
+      "verified": false
+    },
+    {
+      "cluster": "Cyprus",
+      "endChar": 353,
+      "entityType": "country",
+      "labelSha256": "5f1162c57ecf998190d473ff238b6e311d7c52f5f81ca7ac3fca9267832b585c",
+      "quoteSha256": "5f1162c57ecf998190d473ff238b6e311d7c52f5f81ca7ac3fca9267832b585c",
+      "startChar": 347,
+      "verified": false
+    },
+    {
+      "cluster": "Ioannis-Chrysochos",
+      "endChar": 395,
+      "entityType": "person",
+      "labelSha256": "7e3b5405af39a774f0f2341746ff3dec4f63a427af1a6fed3c407bf7245d75ce",
+      "quoteSha256": "7e3b5405af39a774f0f2341746ff3dec4f63a427af1a6fed3c407bf7245d75ce",
+      "startChar": 377,
+      "verified": false
+    },
+    {
+      "cluster": "author-role",
+      "endChar": 419,
+      "entityType": "role",
+      "labelSha256": "8cd90a60fc545d0cecb6c54a0245734acb47fd9ee86060fdfc383bd6cbad25d0",
+      "quoteSha256": "8cd90a60fc545d0cecb6c54a0245734acb47fd9ee86060fdfc383bd6cbad25d0",
+      "startChar": 397,
+      "verified": false
+    },
+    {
+      "cluster": "CYTA",
+      "endChar": 444,
+      "entityType": "organization",
+      "labelSha256": "1ffef621eb0d2e388f5378ab56293c5039e6bb6bcf9bc23547a783741d9d83c3",
+      "quoteSha256": "1ffef621eb0d2e388f5378ab56293c5039e6bb6bcf9bc23547a783741d9d83c3",
+      "startChar": 421,
+      "verified": false
+    },
+    {
+      "cluster": "Nicosia",
+      "endChar": 453,
+      "entityType": "city",
+      "labelSha256": "7bee85a2d89fe2978d484fd57513ea6c19734a6c2f651c79d4c3b5fbb840c1fe",
+      "quoteSha256": "7bee85a2d89fe2978d484fd57513ea6c19734a6c2f651c79d4c3b5fbb840c1fe",
+      "startChar": 446,
+      "verified": false
+    },
+    {
+      "cluster": "Cyprus",
+      "endChar": 461,
+      "entityType": "country",
+      "labelSha256": "5f1162c57ecf998190d473ff238b6e311d7c52f5f81ca7ac3fca9267832b585c",
+      "quoteSha256": "5f1162c57ecf998190d473ff238b6e311d7c52f5f81ca7ac3fca9267832b585c",
+      "startChar": 455,
+      "verified": false
+    },
+    {
+      "cluster": "author-email",
+      "endChar": 504,
+      "entityType": "email",
+      "labelSha256": "6cf6aa64170fd4f9954d278874eea50f333cc572dc42a47af5f9b7aa3ab07124",
+      "quoteSha256": "6cf6aa64170fd4f9954d278874eea50f333cc572dc42a47af5f9b7aa3ab07124",
+      "startChar": 471,
+      "verified": false
+    },
+    {
+      "cluster": "date-received",
+      "endChar": 536,
+      "entityType": "date",
+      "labelSha256": "63812b8f2cfbce8a61deaa579925e0104fe7a871faf96e6988288d09a2a49393",
+      "quoteSha256": "63812b8f2cfbce8a61deaa579925e0104fe7a871faf96e6988288d09a2a49393",
+      "startChar": 520,
+      "verified": false
+    },
+    {
+      "cluster": "date-accepted",
+      "endChar": 570,
+      "entityType": "date",
+      "labelSha256": "637c86f1b3c01a9378f05556972ec551a6c89569d5b65427975582d6ee99be36",
+      "quoteSha256": "637c86f1b3c01a9378f05556972ec551a6c89569d5b65427975582d6ee99be36",
+      "startChar": 553,
+      "verified": false
+    },
+    {
+      "cluster": "date-published",
+      "endChar": 605,
+      "entityType": "date",
+      "labelSha256": "770202383e3a4a8baa09199f35d63fab0eb55befd2a8d4c83c18cf6fb0babf7e",
+      "quoteSha256": "770202383e3a4a8baa09199f35d63fab0eb55befd2a8d4c83c18cf6fb0babf7e",
+      "startChar": 588,
+      "verified": false
+    },
+    {
+      "cluster": "Ioannis-Chrysochos",
+      "endChar": 628,
+      "entityType": "person",
+      "labelSha256": "b36ced4b8ab00126c7a5e433479c8d3083feec85e825b6d13d8a3ac67b874e4b",
+      "quoteSha256": "b36ced4b8ab00126c7a5e433479c8d3083feec85e825b6d13d8a3ac67b874e4b",
+      "startChar": 616,
+      "verified": false
+    },
+    {
+      "cluster": "Mind-Tool",
+      "endChar": 645,
+      "entityType": "system",
+      "labelSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "quoteSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "startChar": 636,
+      "verified": false
+    },
+    {
+      "cluster": "paper-title",
+      "endChar": 687,
+      "entityType": "work",
+      "labelSha256": "615bb981f1dfc1043c521d238acd8db4832128846881755fcdd8595268fa5173",
+      "quoteSha256": "615bb981f1dfc1043c521d238acd8db4832128846881755fcdd8595268fa5173",
+      "startChar": 636,
+      "verified": false
+    },
+    {
+      "cluster": "journal-JEAI",
+      "endChar": 707,
+      "entityType": "journal",
+      "labelSha256": "b6c657fb604f56c9340bc89efe3a350abbf951b425c57501d3bd0da218127e6f",
+      "quoteSha256": "b6c657fb604f56c9340bc89efe3a350abbf951b425c57501d3bd0da218127e6f",
+      "startChar": 689,
+      "verified": false
+    },
+    {
+      "cluster": "date-anthropic-research",
+      "endChar": 753,
+      "entityType": "date",
+      "labelSha256": "afddde14e72cc180e5c15096b1dc3162d4d20a7271b8afb55b3fbf9df95ba017",
+      "quoteSha256": "afddde14e72cc180e5c15096b1dc3162d4d20a7271b8afb55b3fbf9df95ba017",
+      "startChar": 740,
+      "verified": false
+    },
+    {
+      "cluster": "Anthropic",
+      "endChar": 764,
+      "entityType": "organization",
+      "labelSha256": "744205e43529c1fc39bc4ed37dbcd1e91facc78d2a2d136bc893b023ac3c75f5",
+      "quoteSha256": "744205e43529c1fc39bc4ed37dbcd1e91facc78d2a2d136bc893b023ac3c75f5",
+      "startChar": 755,
+      "verified": false
+    },
+    {
+      "cluster": "Mind-Tool",
+      "endChar": 1289,
+      "entityType": "system",
+      "labelSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "quoteSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "startChar": 1280,
+      "verified": false
+    },
+    {
+      "cluster": "Anthropic",
+      "endChar": 1375,
+      "entityType": "organization",
+      "labelSha256": "744205e43529c1fc39bc4ed37dbcd1e91facc78d2a2d136bc893b023ac3c75f5",
+      "quoteSha256": "744205e43529c1fc39bc4ed37dbcd1e91facc78d2a2d136bc893b023ac3c75f5",
+      "startChar": 1366,
+      "verified": false
+    },
+    {
+      "cluster": "Anthropic",
+      "endChar": 1453,
+      "entityType": "organization",
+      "labelSha256": "744205e43529c1fc39bc4ed37dbcd1e91facc78d2a2d136bc893b023ac3c75f5",
+      "quoteSha256": "744205e43529c1fc39bc4ed37dbcd1e91facc78d2a2d136bc893b023ac3c75f5",
+      "startChar": 1444,
+      "verified": false
+    },
+    {
+      "cluster": "Mind-Tool",
+      "endChar": 1526,
+      "entityType": "system",
+      "labelSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "quoteSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "startChar": 1517,
+      "verified": false
+    },
+    {
+      "cluster": "Anthropic",
+      "endChar": 1845,
+      "entityType": "organization",
+      "labelSha256": "744205e43529c1fc39bc4ed37dbcd1e91facc78d2a2d136bc893b023ac3c75f5",
+      "quoteSha256": "744205e43529c1fc39bc4ed37dbcd1e91facc78d2a2d136bc893b023ac3c75f5",
+      "startChar": 1836,
+      "verified": false
+    },
+    {
+      "cluster": "Edwin-Hutchins",
+      "endChar": 2409,
+      "entityType": "person",
+      "labelSha256": "e1ee9d20d2336e24d7cc0e5f15ae9b8af7e9b32f43cbd6b1ff31e066ee722aed",
+      "quoteSha256": "e1ee9d20d2336e24d7cc0e5f15ae9b8af7e9b32f43cbd6b1ff31e066ee722aed",
+      "startChar": 2401,
+      "verified": false
+    },
+    {
+      "cluster": "Mind-Tool",
+      "endChar": 2462,
+      "entityType": "system",
+      "labelSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "quoteSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "startChar": 2453,
+      "verified": false
+    },
+    {
+      "cluster": "Mind-Tool",
+      "endChar": 2639,
+      "entityType": "system",
+      "labelSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "quoteSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "startChar": 2630,
+      "verified": false
+    },
+    {
+      "cluster": "Proxmox",
+      "endChar": 2888,
+      "entityType": "software",
+      "labelSha256": "f882f09e10025922ec1c5e04547d6f175a616913748fab61802ef600ccc37e26",
+      "quoteSha256": "f882f09e10025922ec1c5e04547d6f175a616913748fab61802ef600ccc37e26",
+      "startChar": 2881,
+      "verified": false
+    },
+    {
+      "cluster": "Kubernetes",
+      "endChar": 2909,
+      "entityType": "software",
+      "labelSha256": "a37d07fe30048d3ae9db9a02c8c16da029bb44a586c5adaea2a1ce7be2c9d904",
+      "quoteSha256": "a37d07fe30048d3ae9db9a02c8c16da029bb44a586c5adaea2a1ce7be2c9d904",
+      "startChar": 2899,
+      "verified": false
+    },
+    {
+      "cluster": "Mind-Tool",
+      "endChar": 2983,
+      "entityType": "system",
+      "labelSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "quoteSha256": "471627b289844926531824f3915a96a2f4fd1321736daf527fc8dcc33d485cb6",
+      "startChar": 2974,
+      "verified": false
+    },
+    {
+      "cluster": "Anthropic",
+      "endChar": 3177,
+      "entityType": "organization",
+      "labelSha256": "c70eca6b0f88f44d81a41311647e50fda1ac454ec04ffd442b0eb4743a993131",
+      "quoteSha256": "c70eca6b0f88f44d81a41311647e50fda1ac454ec04ffd442b0eb4743a993131",
+      "startChar": 3168,
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}
