@@ -2,15 +2,13 @@
 
 Date: 2026-08-25
 
-Benjamin was unavailable for the align round. The operator-ratified entries below are pinned,
-but still await Benjamin's confirmation. Every other entry is a recommendation, not a settled
-decision.
+Benjamin completed the align round on 2026-08-26. Every entry below is ratified.
 
-## Ratified by operator, pending Benjamin's confirmation
+## Ratified by operator and confirmed by Benjamin
 
 ### 2026-08-25 — Demo architecture
 
-**Status:** ratified by operator, pending Benjamin's confirmation
+**Status:** ratified 2026-08-25; confirmed by Benjamin 2026-08-26
 
 **Question:** Which demo architecture should carry the lunch scenario?
 
@@ -29,7 +27,7 @@ Semantica's ingest, extract, and serve commands still stop at `StageNotImplement
 
 ### 2026-08-25 — Lunch use cases and closing beat
 
-**Status:** ratified by operator, pending Benjamin's confirmation
+**Status:** ratified 2026-08-25; confirmed by Benjamin 2026-08-26
 
 **Question:** Which use cases define the lunch story?
 
@@ -49,7 +47,7 @@ candidates, not part of the lunch promise.
 
 ### 2026-08-25 — Deployment boundary
 
-**Status:** ratified by operator, pending Benjamin's confirmation
+**Status:** ratified 2026-08-25; confirmed by Benjamin 2026-08-26
 
 **Question:** Where should the lunch build run?
 
@@ -66,7 +64,7 @@ endpoint and a cloud-only runtime are rejected.
 
 ### 2026-08-25 — Lunch data boundary
 
-**Status:** ratified by operator, pending Benjamin's confirmation
+**Status:** ratified 2026-08-25; confirmed by Benjamin 2026-08-26
 
 **Question:** What data may the lunch demo use?
 
@@ -85,7 +83,7 @@ scraped supplier data are rejected for this demo.
 
 ### 2026-08-25 — Engagement framing
 
-**Status:** ratified by operator, pending Benjamin's confirmation
+**Status:** ratified 2026-08-25; confirmed by Benjamin 2026-08-26
 
 **Question:** What commercial story should the demo support?
 
@@ -102,7 +100,7 @@ consulting pitch, and claim of a finished SaaS product are rejected.
 
 ### 2026-08-25 — Appetite and definition of done
 
-**Status:** ratified by operator, pending Benjamin's confirmation
+**Status:** ratified 2026-08-25; confirmed by Benjamin 2026-08-26
 
 **Question:** How much work is authorized before lunch?
 
@@ -117,16 +115,16 @@ ontology in five days. Those options are rejected from the lunch scope.
 [recommended five-day cut](./research/04-in-repo-capability-inventory.md#recommended-five-day-cut),
 [Option C recommendation](./research/08-demo-options.md#recommendation).
 
-## Proposed for Benjamin's align round
+## Ratified in Benjamin's 2026-08-26 align round
 
 ### 2026-08-25 — License the TypeScript port for component reuse?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** License the TypeScript port under MIT or Apache-2.0 so its workbench components can
 be reused?
 
-**Recommended answer:** Yes. Prefer Apache-2.0 to match the relevant upstream TrustGraph
+**Answer:** Yes. Prefer Apache-2.0 to match the relevant upstream TrustGraph
 repositories and retain the license and attribution record at the port root.
 
 **Reasoning:** The port has useful workbench routes, but its root license is unverified. Until
@@ -139,11 +137,11 @@ dependency; leaving the license absent and treating the port as reusable.
 
 ### 2026-08-25 — Confirm the lab slug and working product name?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** Confirm the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) and "LeJeune Knowledge Desk"?
 
-**Recommended answer:** Yes. Keep the package slug descriptive and disposable. Use the product
+**Answer:** Yes. Keep the package slug descriptive and disposable. Use the product
 name only on the demo surface, with beep branding and no copied third-party marks.
 
 **Reasoning:** A small branded app keeps the RFQ, evidence, graph, review, and memory change on
@@ -155,11 +153,11 @@ a production LeJeune product; carrying TrustGraph marks into the demo.
 
 ### 2026-08-25 — Which two RFQ layouts should the demo fix?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** Which two RFQ layouts should the deterministic fixture set support?
 
-**Recommended answer:** Fix one Outlook body table with an attached Excel takeoff, and one prose
+**Answer:** Fix one Outlook body table with an attached Excel takeoff, and one prose
 email with an attached PDF schedule. Both should split relevant facts across messages and leave
 at least one field missing.
 
@@ -174,12 +172,12 @@ layouts in the first slice; OCR-heavy drawings in the lunch path.
 
 ### 2026-08-25 — Ask for one anonymized RFQ before lunch?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** Should Benjamin ask the LeJeune sales and logistics contact for one anonymized real
 RFQ before lunch?
 
-**Recommended answer:** Yes, with explicit permission, only to check whether the two synthetic
+**Answer:** Yes, with explicit permission, only to check whether the two synthetic
 layouts feel real. Keep it outside the repo and the lunch bundle. The demo remains public plus
 synthetic even if the sample arrives.
 
@@ -193,13 +191,14 @@ asking for a mailbox export before consent and pilot terms exist.
 
 ### 2026-08-25 — Which model-provider posture should the demo use?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** Should the demo use a local model, a hosted provider, or both?
 
-**Recommended answer:** Use an already configured hosted provider for extraction and reasoning
-over public and synthetic content. Keep a fixed local replay of successful outputs as the fully
-offline fallback.
+**Answer:** Use the already API-key-wired `@beep/anthropic` hosted driver for extraction and
+reasoning over public and synthetic content. If it fails proving, keep the `openai-compat`,
+`venice-ai`, and `xai` drivers as fallback candidates. Keep a fixed local replay of successful
+outputs as the fully offline fallback.
 
 **Reasoning:** Hosted providers are allowed for this data boundary. The repo has several model
 adapters, but lane 04 did not verify a live provider. Local-only inference would add hardware and
@@ -213,14 +212,16 @@ LeJeune correspondence; a demo that fails when the provider is unavailable.
 
 ### 2026-08-25 — Freeze which ontology and rule-check slice?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** What ontology and specification rules should freeze on day one?
 
-**Recommended answer:** Use the 12 shared-contract classes: `ProductVariant`, `Component`,
+**Answer:** Use the 12 shared-contract classes: `ProductVariant`, `Component`,
 `Standard`, `Finish`, `Tool`, `SupplierOffer`, `Project`, `RFQ`, `QuoteLine`, `LotCertificate`,
 `Approval`, and `ExpertClaim`. Fix three rule checks: matched assemblies, DTI strength matching,
-and the A490 hot-dip-galvanizing refusal.
+and the A490 hot-dip-galvanizing refusal. Keep the twelve class schemas and three rule checks
+lab-local in the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) until an explicit
+shared promotion. Nothing is promoted to shared or foundation now.
 
 **Reasoning:** These classes cover the 30-minute scenario. The three rules create visible,
 cited refusals without pretending to encode complete ASTM, RCSC, or AISC practice.
@@ -232,11 +233,11 @@ rules that cannot open a governing source and revision.
 
 ### 2026-08-25 — What deletion date governs the lab and corpus?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** What date should trigger lab disposition and demo-corpus deletion?
 
-**Recommended answer:** Set 2026-09-30 as the delete-or-promote review date. Delete the mutable
+**Answer:** Set 2026-09-30 as the delete-or-promote review date. Delete the mutable
 demo corpus then unless a consented pilot authorizes a new retention term. Keep authored packet
 history and source ledgers.
 
@@ -250,11 +251,11 @@ pilot without a new authorization.
 
 ### 2026-08-25 — Who reviews veteran-memory claims in a pilot?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** Which roles should adjudicate a veteran correction before the system reuses it?
 
-**Recommended answer:** Require the source veteran, an active successor, and the appropriate
+**Answer:** Require the source veteran, an active successor, and the appropriate
 technical or commercial authority for the claim. Record the reviewer, valid-from date,
 superseded claim, scope, and source.
 
@@ -268,11 +269,11 @@ product scope; indefinite validity.
 
 ### 2026-08-25 — How should the draft-only PO closing beat look?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** How literal should the supplier PO draft look while preserving the no-write rule?
 
-**Recommended answer:** Show a neutral supplier-offer comparison, a PO draft, policy and evidence
+**Answer:** Show a neutral supplier-offer comparison, a PO draft, policy and evidence
 checks, approve/edit/reject, and a clearly labeled non-executing receipt. Do not mimic a live
 supplier portal or imply submission.
 
@@ -287,11 +288,11 @@ state.
 
 ### 2026-08-25 — What is the paid pilot's first scope and success measure?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** What bounded pilot should the lunch ask permission to start?
 
-**Recommended answer:** Offer a two- to four-week pilot around one consenting mailbox or PST and
+**Answer:** Offer a two- to four-week pilot around one consenting mailbox or PST and
 one RFQ class. Measure time to reviewed draft, citation coverage, accepted line matches, rep
 edits, missing-field catches, and reuse of reviewed corrections.
 
@@ -307,11 +308,11 @@ demo applause rather than review outcomes.
 
 ### 2026-08-25 — What pricing shape should the pilot use?
 
-**Status:** PROPOSED
+**Status:** RATIFIED 2026-08-26 (align round)
 
 **Question:** How should the first paid engagement be priced?
 
-**Recommended answer:** Quote a fixed-fee discovery and pilot with named data, workflow, and
+**Answer:** Quote a fixed-fee discovery and pilot with named data, workflow, and
 measurement boundaries. Price any managed continuation after the baseline shows review volume
 and accepted-draft performance. Do not use per-seat pricing.
 
@@ -323,3 +324,20 @@ or a defensible outcome price before discovery.
 
 **Rejected options:** A SaaS seat subscription; open-ended time and materials with no acceptance
 measures; outcome pricing based on an unmeasured baseline.
+
+### 2026-08-26 — Corpus refresh moves to the operator browser lane
+
+**Status:** ratified 2026-08-26 (operator)
+
+**Answer:** While the site's bot filter answers the honest crawler identity with an HTTP 202
+captcha challenge, the sanctioned corpus-refresh path is the operator's own signed-in Chrome
+session driven by the Codex extension. `ops/mine-site.ts` stays stop-at-preflight by design.
+Browser captures land machine-local under dated browser-run directories with an index and never
+enter the repo. The boundary is unchanged: public pages only, no forms, no logins, and polite
+pacing.
+
+**Rationale:** An operator browsing their own browser is ordinary access, not crawler disguise.
+The crawler boundary in [`research/08-demo-options.md`](./research/08-demo-options.md) is
+untouched.
+
+**Rejected options:** Changing the crawler identity; solving captchas programmatically.

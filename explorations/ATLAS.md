@@ -39,18 +39,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
-- [`lejeune-bolt-agentic-demo`](./lejeune-bolt-agentic-demo/README.md) — align
-  (2026-08-25): lunch pitch next week to LeJeune Bolt (Burnsville MN structural
+- [`lejeune-bolt-agentic-demo`](./lejeune-bolt-agentic-demo/README.md) — shape
+  (2026-08-26): lunch pitch next week to LeJeune Bolt (Burnsville MN structural
   fastener distributor; stadium/bridge/TNA work) whose veterans are retiring.
   Six research lanes synthesized; operator-ratified thesis: Option C — a
-  disposable the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`) ("LeJeune Knowledge Desk")
-  composing beep bricks, deployed to the tailnet only, running a fixed 30-minute
-  scenario over the public site corpus + synthetic Office records. Top three
-  use cases: RFQ email → reviewed quote request with exact spans; cited
-  specification clarification (advisory, drafts RFI); veteran temporal memory
-  (reviewed claims with validity/supersession). Approval-gated PO draft is the
-  closing beat; service-as-software pilot is the ask. 11 PROPOSED align
-  questions await Benjamin's grill.
+  disposable version of the proposed `lejeune-bolt-workbench` lab (under `apps/labs/`), working
+  title "LeJeune Knowledge Desk," composing beep bricks, deployed to the tailnet only, and
+  running a fixed 30-minute scenario over the public site corpus plus synthetic Office records.
+  Align completed with Benjamin (17 decisions ratified). Next: shape review of the brief;
+  graduation follows decompose.
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
   (digest-named global protocol type + projections + journal-audited
