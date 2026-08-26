@@ -10,8 +10,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, Result, SchemaIssue, SchemaTransformation } from "effect";
-import * as Encoding from "effect/Encoding";
+import { Effect, Encoding, Result, SchemaIssue, SchemaTransformation } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 
