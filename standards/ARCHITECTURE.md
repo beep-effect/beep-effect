@@ -55,7 +55,7 @@ Start with the smallest boundary that owns the meaning:
 | Repo-authored libraries published for external consumption | `ecosystem/*`, through the promotion gate in [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md). |
 | Law-abiding experimental app proving an uncertain idea | `apps/labs/*`, per [15-lab-apps.md](architecture/15-lab-apps.md). |
 | Typed application/runtime configuration contracts | The slice or shared `config` package. |
-| Product-agnostic UI primitives, themes, tokens, hooks, or composition helpers | `foundation/ui-system`. |
+| Product-agnostic UI primitives, themes, tokens, hooks, composition helpers, or repo brand identity | `foundation/ui-system`. |
 | Browser/client product state, adapters, or interaction behavior | The slice `client` or `ui` package. |
 | App runtime wiring | The app entrypoint or an app-local `src/runtime/Layer.ts` helper. |
 
@@ -471,8 +471,8 @@ Route specific homes before reaching for `foundation/capability`:
 2. External engines, SDKs, services, frameworks, and browser platform wrappers
    go to `drivers`.
 3. Repo operations, generators, policy packs, and automation go to `tooling`.
-4. Product-agnostic UI primitives, themes, tokens, hooks, and composition
-   helpers go to `foundation/ui-system`.
+4. Product-agnostic UI primitives, themes, tokens, hooks, composition
+   helpers, and repo brand identity go to `foundation/ui-system`.
 5. Only remaining repo-owned, domain-agnostic technical services may go to
    `foundation/capability`.
 
@@ -688,7 +688,7 @@ canonical:
 | `foundation/primitive`     | flat modules plus `index.ts`; optional environment entrypoints such as `*.browser.ts` |
 | `foundation/modeling`      | concept modules with `*.schema.ts`, `*.brand.ts`, `*.codec.ts`, `index.ts`; package-specific role files when canonized |
 | `foundation/capability`    | `*.service.ts`, `*.layer.ts`, `*.schema.ts`, `*.errors.ts`, optional `*.client.ts` |
-| `foundation/ui-system`     | `components/`, `themes/`, `styles/`, `hooks/`, `index.ts`                        |
+| `foundation/ui-system`     | `components/`, `themes/`, `styles/`, `hooks/`, `assets/`, `index.ts`             |
 | `drivers`                  | `*.service.ts`, `*.layer.ts`, `*.errors.ts`, `*.config.ts`, optional `*.browser.ts`, `*.test-layer.ts` |
 | `tooling/library`          | library modules plus `index.ts`                                                   |
 | `tooling/tool`             | `src/bin.ts`, `commands/`, `*.command.ts`, `*.service.ts`, `*.schemas.ts`, `index.ts` |

@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import type { StorybookConfig } from "@storybook/react-vite";
 import type { Plugin } from "vite";
 
@@ -55,10 +56,16 @@ const config: StorybookConfig = {
     "../../../packages/drivers/graph-3d/stories/**/*.stories.@(ts|tsx)",
   ],
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-themes", "@storybook/addon-vitest"],
-  staticDirs: [{ from: "../../../node_modules/emojibase-data", to: "/emojibase-data" }],
+  staticDirs: [
+    { from: "../../../node_modules/emojibase-data", to: "/emojibase-data" },
+    // beep brand assets (favicon, wordmark) for the manager chrome; see manager.ts. Served as
+    // static files on purpose: the manager bundle must not import @beep/brand (effect/Schema).
+    { from: "../../../packages/foundation/ui-system/brand/assets", to: "/brand" },
+  ],
+  managerHead: (head) => `${head}<link rel="icon" type="image/svg+xml" href="./brand/favicon.svg" />`,
   viteFinal(config) {
-    const dedupe = Array.from(new Set(["react", "react-dom", ...(config.resolve?.dedupe ?? [])]));
-    const fsAllow = Array.from(new Set([repoRoot, ...(config.server?.fs?.allow ?? [])]));
+    const dedupe = A.dedupe(["react", "react-dom", ...(config.resolve?.dedupe ?? [])]);
+    const fsAllow = A.dedupe([repoRoot, ...(config.server?.fs?.allow ?? [])]);
 
     return {
       ...config,

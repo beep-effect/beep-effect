@@ -20983,6 +20983,222 @@
       "description": "Dot-delimited or segment-array path accepted by struct lookup helpers."
     },
     {
+      "file": "packages/foundation/ui-system/brand/src/Brand.assets.ts",
+      "symbol": "RenderedAsset",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "RenderedAsset",
+      "description": "A generated file: package-relative path and text content."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "Alpha",
+      "kind": "brand",
+      "owner": "@beep/brand",
+      "identity": "Alpha",
+      "description": "Opacity in the closed unit interval."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "Border",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "Border",
+      "description": "Border colors at rest and on hover."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "BrandIdentity",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "BrandIdentity",
+      "description": "The whole brand identity: color schemes, typography, and the mark."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "BrandMark",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "BrandMark",
+      "description": "Geometry of the beep mark on a square view box."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "ColorScale",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "ColorScale",
+      "description": "Ten-stop hex color scale keyed by ScaleStep."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "ColorScheme",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "ColorScheme",
+      "description": "A complete color scheme for one appearance."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "FontStack",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "FontStack",
+      "description": "A font family with its ordered fallbacks."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "Foreground",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "Foreground",
+      "description": "Foreground text colors at three emphasis levels."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "Glow",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "Glow",
+      "description": "The three ambient glow layers."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "GlowLayer",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "GlowLayer",
+      "description": "Radial glow layer with start and mid stops."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "GlowStop",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "GlowStop",
+      "description": "A brand scale step at an opacity."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "MarkGround",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "MarkGround",
+      "description": "Rounded ground rectangle behind the mark."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "MarkPaint",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "MarkPaint",
+      "description": "Colors for the mark's stroke, frame, and lenses."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "MarkPoint",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "MarkPoint",
+      "description": "A point in mark user units."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "MarkRotation",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "MarkRotation",
+      "description": "A rotation in degrees about an origin."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "MarkSvgRequest",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "MarkSvgRequest",
+      "description": "Request to render the mark as a standalone SVG document."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "PixelGlasses",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "PixelGlasses",
+      "description": "Tilted pixel glasses: placement transform plus frame and lens paths."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "ScaleStep",
+      "kind": "literal-kit",
+      "owner": "@beep/brand",
+      "identity": "ScaleStep",
+      "description": "Tint step of a ten-stop brand color scale, lightest first."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "SchemeName",
+      "kind": "literal-kit",
+      "owner": "@beep/brand",
+      "identity": "SchemeName",
+      "description": "Appearance name of a color scheme."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "Semantic",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "Semantic",
+      "description": "Semantic status colors."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "SurfaceScale",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "SurfaceScale",
+      "description": "Six-stop surface scale keyed by SurfaceStep."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "SurfaceStep",
+      "kind": "literal-kit",
+      "owner": "@beep/brand",
+      "identity": "SurfaceStep",
+      "description": "Elevation step of a six-stop surface scale, base first."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "SvgPaint",
+      "kind": "union",
+      "owner": "@beep/brand",
+      "identity": "SvgPaint",
+      "description": "A hex color or the inherited currentColor keyword."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "SvgPathData",
+      "kind": "brand",
+      "owner": "@beep/brand",
+      "identity": "SvgPathData",
+      "description": "SVG path data beginning with a move-to command."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "Typography",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "Typography",
+      "description": "Brand typography: sans and mono stacks."
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "symbol": "WordmarkSvgRequest",
+      "kind": "schema-class",
+      "owner": "@beep/brand",
+      "identity": "WordmarkSvgRequest",
+      "description": "Request to render the mark beside the brand name."
+    },
+    {
       "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
       "symbol": "DockPanelApi",
       "kind": "schema-class",

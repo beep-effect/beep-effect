@@ -1953,7 +1953,11 @@
       "@beep/editor/capability/toolbar": [
         "./packages/foundation/ui-system/editor/src/capability/toolbar.tsx"
       ],
-      "@beep/ecfr/contract": ["./packages/drivers/ecfr/src/contract.ts"]
+      "@beep/ecfr/contract": ["./packages/drivers/ecfr/src/contract.ts"],
+      "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
+      "@beep/brand/react": [
+        "./packages/foundation/ui-system/brand/src/react.tsx"
+      ]
     }
   }
 }
