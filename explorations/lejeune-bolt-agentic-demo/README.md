@@ -2,10 +2,15 @@
 
 ## Status
 
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Graduated on 2026-08-26 into
+[`lejeune-demo-corpus-and-ontology`](../../goals/lejeune-demo-corpus-and-ontology/README.md)
+and
+[`lejeune-knowledge-desk-lab`](../../goals/lejeune-knowledge-desk-lab/README.md).
 
 ## Spark
 
@@ -16,7 +21,7 @@ foundations, then offer a measured service-as-software pilot.
 
 ## Next Open Question
 
-Graduation: create the two promised-now goals/ packets and start day 1 on Benjamin's signal?
+None — graduated; day 1 starts on Benjamin's signal (see the two goals/ packets).
 
 ## Read This First
 
@@ -50,3 +55,8 @@ Graduation: create the two promised-now goals/ packets and start day 1 on Benjam
 - 2026-08-26: Benjamin's grill session ratified shape review and decompose with seven decisions:
   one lab package, replay-first demo, walking-skeleton schedule, Cosmos timebox, day-1 provider
   gate, governance tax plus recorded QA rehearsal, and the graduate-now call.
+- 2026-08-26: graduated both promised-now packets into
+  [`lejeune-demo-corpus-and-ontology`](../../goals/lejeune-demo-corpus-and-ontology/README.md)
+  and
+  [`lejeune-knowledge-desk-lab`](../../goals/lejeune-knowledge-desk-lab/README.md);
+  gated M365-pilot and TrustGraph-donor candidates remain re-entry points in `MAP.md`.

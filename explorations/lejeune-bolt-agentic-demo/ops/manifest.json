@@ -3,14 +3,15 @@
   "exploration": {
     "slug": "lejeune-bolt-agentic-demo",
     "title": "LeJeune Bolt Agentic Demo",
-    "status": "active",
-    "stage": "decompose",
-    "openQuestions": [
-      "Graduation: create the two promised-now goals/ packets and start day 1 on Benjamin's signal?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/lejeune-demo-corpus-and-ontology",
+        "goals/lejeune-knowledge-desk-lab"
+      ],
       "docs": [],
       "supersededBy": null
     },

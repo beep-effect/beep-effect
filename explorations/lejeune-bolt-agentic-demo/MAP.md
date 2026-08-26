@@ -2,8 +2,11 @@
 
 **RATIFIED 2026-08-26 — shape review passed; decompose complete**
 
-Benjamin passed shape review and completed decompose on 2026-08-26. Graduation of the two
-promised-now packets is next; build starts on Benjamin's signal.
+**GRADUATION EXECUTED 2026-08-26:** the promised-now work now lives in
+[`lejeune-demo-corpus-and-ontology`](../../goals/lejeune-demo-corpus-and-ontology/README.md)
+and
+[`lejeune-knowledge-desk-lab`](../../goals/lejeune-knowledge-desk-lab/README.md).
+Build starts on Benjamin's signal.
 
 ## Candidate goal packets
 

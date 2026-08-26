@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "lejeune-demo-corpus-and-ontology",
+    "packetId": "goal-packet/v1:9d81113b8422f8848250d5e738e281f5f619347509b34653fb69940201f83bcb",
+    "title": "LeJeune Demo Corpus and Ontology",
+    "status": "active",
+    "created": "2026-08-26",
+    "updated": "2026-08-26",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/lejeune-demo-corpus-and-ontology",
+  "lifecycle": "active",
+  "mission": "Build the machine-local public and synthetic fixture bundle, small fastener ontology, exact-span extraction set, and deterministic projections for the LeJeune lunch demo.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/lejeune-bolt-agentic-demo",
+    "graduated": "2026-08-26"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/lejeune-demo-corpus-and-ontology/README.md",
+    "goals/lejeune-demo-corpus-and-ontology/SPEC.md",
+    "goals/lejeune-demo-corpus-and-ontology/PLAN.md",
+    "goals/lejeune-demo-corpus-and-ontology/GOAL.md",
+    "goals/lejeune-demo-corpus-and-ontology/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/lejeune-demo-corpus-and-ontology/GOAL.md"
+    }
+  ],
+  "provides": ["lejeune/demo-corpus-and-ontology"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Fixture and ontology freeze proof",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Bundle build (parse -> spans -> projections)",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Rule checks, citations, and replay recording",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/lejeune-demo-corpus-and-ontology/GOAL.md)\" -le 4000",
+    "jq . goals/lejeune-demo-corpus-and-ontology/ops/manifest.json",
+    "rg -n \"lejeune-demo-corpus-and-ontology|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/lejeune-demo-corpus-and-ontology",
+    "git diff --check -- goals/lejeune-demo-corpus-and-ontology",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Graduated from explorations/lejeune-bolt-agentic-demo on 2026-08-26; build (day 1 of the five-day walking-skeleton schedule) starts on Benjamin's signal."
+}
