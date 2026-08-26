@@ -442,9 +442,12 @@ turbo work, so they are cheap to run mid-loop.
   their trimmed raw text. The path never contains the remote URL.
   `verify --tier review-fix` remains the cheaper loop lane while a full proof is
   already active. Current v3 locks whose recorded pid is no longer running are
-  reclaimed on the next acquire. V3 clients refuse legacy v2 and unreadable
-  lock files; remove either only after confirming every sibling checkout is
-  idle and running the current Yeet version.
+  reclaimed on the next acquire. Dead observation claims are recovered through
+  an observation-bound tombstone; dead or unreadable tombstones are never
+  auto-reclaimed and name the exact path to remove only after confirming every
+  sibling checkout is idle. V3 clients refuse legacy v2 and unreadable lock
+  files; remove either only after confirming every sibling checkout is idle and
+  running the current Yeet version.
 - The cheap tier always collects every lane failure. The later full proof
   collects all sibling failures in its active wave, then stops before the next
   wave under the default fail-fast policy. `--collect-all` tells the full proof

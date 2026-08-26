@@ -74,6 +74,7 @@ import {
   TurboPlanTask,
   TurboWorkspacePackage,
   tryReclaimStaleProofLockForTesting,
+  tryRecoverObservedProofLockReapClaimForTesting,
   validateMonitorGuards,
   validatePublishBranchForTesting,
   validatePublishCommitMessageForTesting,
@@ -104,7 +105,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Deferred, Effect, Fiber, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -120,12 +121,17 @@ const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const attemptUuid = S.decodeUnknownSync(UUID);
 const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
+const proofLockReapClaimTombstonePath = (claimPath: string, observedText: string): string =>
+  `${claimPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
 
-const encodeProofLockReapClaim = Effect.fn("test.encodeProofLockReapClaim")(function* (pid: number) {
+const encodeProofLockReapClaim = Effect.fn("test.encodeProofLockReapClaim")(function* (
+  pid: number,
+  startedAt = "2026-08-26T00:00:00.000Z"
+) {
   return yield* encodeJson({
     schemaVersion: "yeet-proof-lock-reap-claim/v1",
     pid,
-    startedAt: "2026-08-26T00:00:00.000Z",
+    startedAt,
   });
 });
 
@@ -2716,6 +2722,158 @@ describe("yeet publish scope helpers", () => {
       )
     ));
 
+  it("does not let a stale dead-claim observation delete a fresh claim or enter the lock move", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const delayedClaimText = `${yield* encodeProofLockReapClaim(process.pid, "2026-08-26T00:00:00.002Z")}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const tombstoneCleaned = yield* Deferred.make<void>();
+          const releaseWinner = yield* Deferred.make<void>();
+          let pauseFirstTombstoneCleanup = true;
+          const racingFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            remove: Effect.fn("YeetTest.pauseRecoveredClaimOwner")(function* (target, options) {
+              yield* fs.remove(target, options);
+              if (pauseFirstTombstoneCleanup && Str.Equivalence(target, tombstonePath)) {
+                pauseFirstTombstoneCleanup = false;
+                yield* Deferred.succeed(tombstoneCleaned, undefined);
+                yield* Deferred.await(releaseWinner);
+              }
+            }),
+          });
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, deadClaimText);
+
+          const winner = yield* Effect.forkChild(
+            tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-a\n").pipe(
+              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+            )
+          );
+          yield* Deferred.await(tombstoneCleaned);
+          const freshClaimText = yield* fs.readFileString(claimPath);
+          expect(freshClaimText).not.toBe(deadClaimText);
+          expect(yield* fs.exists(tombstonePath)).toBe(false);
+
+          expect(
+            yield* tryRecoverObservedProofLockReapClaimForTesting(claimPath, delayedClaimText, deadClaimText).pipe(
+              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+            )
+          ).toBe(false);
+          expect(yield* fs.readFileString(claimPath)).toBe(freshClaimText);
+          expect(yield* fs.exists(tombstonePath)).toBe(false);
+
+          expect(
+            yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "delayed-winner\n").pipe(
+              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+            )
+          ).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
+          expect(yield* fs.readFileString(claimPath)).toBe(freshClaimText);
+
+          yield* Deferred.succeed(releaseWinner, undefined);
+          expect(yield* Fiber.join(winner)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toBe("winner-a\n");
+          expect(yield* fs.exists(claimPath)).toBe(false);
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-b\n")).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe("winner-a\n");
+        })
+      )
+    ));
+
+  it("refuses a live-owner dead-claim tombstone without changing either marker", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const liveTombstoneText = `${yield* encodeProofLockReapClaim(process.pid)}\n`;
+          yield* fs.writeFileString(claimPath, deadClaimText);
+          yield* fs.writeFileString(tombstonePath, liveTombstoneText);
+
+          expect(
+            yield* tryRecoverObservedProofLockReapClaimForTesting(
+              claimPath,
+              `${yield* encodeProofLockReapClaim(process.pid)}\n`,
+              deadClaimText
+            )
+          ).toBe(false);
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          expect(yield* fs.readFileString(tombstonePath)).toBe(liveTombstoneText);
+        })
+      )
+    ));
+
+  it("fails closed on a dead-owner dead-claim tombstone and names its exact path", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const deadTombstoneText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          yield* fs.writeFileString(claimPath, deadClaimText);
+          yield* fs.writeFileString(tombstonePath, deadTombstoneText);
+
+          const refusal = yield* tryRecoverObservedProofLockReapClaimForTesting(
+            claimPath,
+            `${yield* encodeProofLockReapClaim(process.pid)}\n`,
+            deadClaimText
+          ).pipe(Effect.flip);
+          expect(refusal.message).toContain("dead-owner proof-lock reclamation tombstone");
+          expect(refusal.message).toContain(tombstonePath);
+          expect(refusal.message).toContain("depth-2 tombstones are never auto-reclaimed");
+          expect(refusal.message).toContain("confirming every sibling checkout is idle");
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          expect(yield* fs.readFileString(tombstonePath)).toBe(deadTombstoneText);
+        })
+      )
+    ));
+
+  it("fails closed on an unreadable dead-claim tombstone and names its exact path", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const unreadableTombstoneText = "not-json\n";
+          yield* fs.writeFileString(claimPath, deadClaimText);
+          yield* fs.writeFileString(tombstonePath, unreadableTombstoneText);
+
+          const refusal = yield* tryRecoverObservedProofLockReapClaimForTesting(
+            claimPath,
+            `${yield* encodeProofLockReapClaim(process.pid)}\n`,
+            deadClaimText
+          ).pipe(Effect.flip);
+          expect(refusal.message).toContain("unreadable proof-lock reclamation tombstone");
+          expect(refusal.message).toContain(tombstonePath);
+          expect(refusal.message).toContain("depth-2 tombstones are never auto-reclaimed");
+          expect(refusal.message).toContain("confirming every sibling checkout is idle");
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          expect(yield* fs.readFileString(tombstonePath)).toBe(unreadableTombstoneText);
+        })
+      )
+    ));
+
   it("refuses a live-owner observation claim and leaves the stale v3 lock untouched", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ lockPath }) =>
@@ -2776,7 +2934,7 @@ describe("yeet publish scope helpers", () => {
       )
     ));
 
-  it("allows exactly one of two concurrent dead-claim recoverers to replace the stale lock", () =>
+  it("allows exactly one interleaved dead-claim recoverer to win the tombstone and lease", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ lockPath }) =>
         Effect.gen(function* () {
@@ -2793,20 +2951,53 @@ describe("yeet publish scope helpers", () => {
             })
           )}\n`;
           const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const winnerText = "winner-a\n";
+          const loserText = "winner-b\n";
           yield* fs.writeFileString(lockPath, staleText);
-          yield* fs.writeFileString(claimPath, `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`);
+          yield* fs.writeFileString(claimPath, deadClaimText);
 
-          const outcomes = yield* Effect.all(
-            [
-              tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-a\n"),
-              tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-b\n"),
-            ],
-            { concurrency: "unbounded" }
+          const tombstoneCreated = yield* Deferred.make<void>();
+          const releaseWinner = yield* Deferred.make<void>();
+          const racingFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            writeFileString: Effect.fn("YeetTest.pauseTombstoneWinner")(function* (target, contents, options) {
+              if (!Str.Equivalence(target, tombstonePath) || options?.flag !== "wx") {
+                return yield* fs.writeFileString(target, contents, options);
+              }
+              yield* fs.writeFileString(target, contents, options);
+              yield* Deferred.succeed(tombstoneCreated, undefined);
+              yield* Deferred.await(releaseWinner);
+            }),
+          });
+
+          const winner = yield* Effect.forkChild(
+            tryReclaimStaleProofLockForTesting(lockPath, staleText, winnerText).pipe(
+              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+            )
           );
+          yield* Deferred.await(tombstoneCreated);
+          const tombstoneText = yield* fs.readFileString(tombstonePath);
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
 
-          expect(A.filter(outcomes, (outcome) => outcome)).toHaveLength(1);
-          expect(A.contains(["winner-a\n", "winner-b\n"], yield* fs.readFileString(lockPath))).toBe(true);
+          expect(
+            yield* tryRecoverObservedProofLockReapClaimForTesting(
+              claimPath,
+              `${yield* encodeProofLockReapClaim(process.pid, "2026-08-26T00:00:00.003Z")}\n`,
+              deadClaimText
+            ).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem))
+          ).toBe(false);
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          expect(yield* fs.readFileString(tombstonePath)).toBe(tombstoneText);
+
+          yield* Deferred.succeed(releaseWinner, undefined);
+          expect(yield* Fiber.join(winner)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
           expect(yield* fs.exists(claimPath)).toBe(false);
+          expect(yield* fs.exists(tombstonePath)).toBe(false);
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, loserText)).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
         })
       )
     ));
