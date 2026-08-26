@@ -434,9 +434,12 @@ turbo work, so they are cheap to run mid-loop.
   afterward, and still runs full local proof after pushing.
 - If Yeet refuses untracked, unstaged, or newly generated paths, inspect the
   paths and decide whether they belong in the reviewed publish intent.
-- Yeet serializes full local proof runs across sibling checkouts with an opaque
-  lock under the machine temporary directory. The lock key is a hash of the
-  origin remote, so the path never contains the remote URL.
+- Yeet serializes each clean-HEAD install preflight and full local proof across
+  sibling checkouts with an opaque lock under the machine temporary directory.
+  The lock key hashes a canonical host/repository identity, so equivalent SCP,
+  SSH, HTTPS, and Git origin URLs share one coordinator even when `.git`,
+  trailing slashes, user info, or default ports differ. Unparseable origins use
+  their trimmed raw text. The path never contains the remote URL.
   `verify --tier review-fix` remains the cheaper loop lane while a full proof is
   already active. Locks whose recorded pid is no longer running are removed
   automatically on the next acquire; manual removal is only needed for

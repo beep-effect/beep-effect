@@ -7,9 +7,104 @@
 
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { Effect, flow, Path } from "effect";
+import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import { Effect, flow, Path, pipe } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+
+const $I = $RepoCliId.create("commands/Yeet/internal/ArtifactPaths");
+
+const RepositoryOriginProtocol = LiteralKit(["https:", "ssh:", "git:"]).pipe(
+  $I.annoteSchema("RepositoryOriginProtocol", {
+    description: "Git remote protocols whose repository identity can be canonicalized.",
+  })
+);
+
+type RepositoryOriginProtocol = typeof RepositoryOriginProtocol.Type;
+
+class CanonicalRepositoryOrigin extends S.Class<CanonicalRepositoryOrigin>($I`CanonicalRepositoryOrigin`)(
+  {
+    authority: S.String,
+    repositoryPath: S.String,
+  },
+  $I.annote("CanonicalRepositoryOrigin", {
+    description: "Canonical host authority and owner/repository path for a Git remote.",
+  })
+) {}
+
+const isRepositoryOriginProtocol = S.is(RepositoryOriginProtocol);
+const parseRepositoryUrl = O.liftThrowable((value: string) => new URL(value));
+
+const defaultPortForProtocol = (protocol: RepositoryOriginProtocol): string =>
+  RepositoryOriginProtocol.$match(protocol, {
+    "https:": () => "443",
+    "ssh:": () => "22",
+    "git:": () => "9418",
+  });
+
+const canonicalRepositoryPath = (pathname: string): O.Option<string> => {
+  const normalized = pipe(pathname, Str.trim, Str.replace(/^\/+|\/+$/gu, ""), Str.replace(/\.git$/iu, ""));
+  const segments = pipe(Str.split(normalized, "/"), A.filter(Str.isNonEmpty));
+  return A.length(segments) >= 2 ? O.some(A.join(segments, "/")) : O.none();
+};
+
+const canonicalRepositoryOriginFromUrl = (value: string): O.Option<CanonicalRepositoryOrigin> =>
+  pipe(
+    parseRepositoryUrl(value),
+    O.flatMap((url) => {
+      if (!isRepositoryOriginProtocol(url.protocol)) {
+        return O.none();
+      }
+      const hostname = Str.toLowerCase(url.hostname);
+      if (!Str.isNonEmpty(hostname)) {
+        return O.none();
+      }
+      const authority =
+        Str.isNonEmpty(url.port) && !Str.Equivalence(url.port, defaultPortForProtocol(url.protocol))
+          ? `${hostname}:${url.port}`
+          : hostname;
+      return pipe(
+        canonicalRepositoryPath(url.pathname),
+        O.map((repositoryPath) => CanonicalRepositoryOrigin.make({ authority, repositoryPath }))
+      );
+    })
+  );
+
+const canonicalRepositoryOriginFromScp = (value: string): O.Option<CanonicalRepositoryOrigin> =>
+  pipe(
+    Str.match(/^git@([^/:\s]+):(.+)$/u)(value),
+    O.flatMap((match) =>
+      O.all({
+        hostname: A.get(match, 1),
+        pathname: A.get(match, 2),
+      })
+    ),
+    O.flatMap(({ hostname, pathname }) =>
+      pipe(
+        canonicalRepositoryPath(pathname),
+        O.map((repositoryPath) =>
+          CanonicalRepositoryOrigin.make({ authority: Str.toLowerCase(hostname), repositoryPath })
+        )
+      )
+    )
+  );
+
+const renderCanonicalRepositoryOrigin = (origin: CanonicalRepositoryOrigin): string =>
+  `${origin.authority}/${origin.repositoryPath}`;
+
+const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
+  const trimmed = Str.trim(repositoryIdentity);
+  return pipe(
+    canonicalRepositoryOriginFromScp(trimmed),
+    O.orElse(() => canonicalRepositoryOriginFromUrl(trimmed)),
+    O.map(renderCanonicalRepositoryOrigin),
+    O.getOrElse(() => trimmed)
+  );
+};
 
 /**
  * Convert an arbitrary branch or step name into a stable artifact file segment.
@@ -40,9 +135,10 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
  *
  * **Details**
  *
- * The origin identity is hashed before it reaches the path, so sibling clones
- * of the same repository coordinate without exposing a credential-bearing
- * remote URL in a filename.
+ * Recognized Git remotes first normalize to a lowercase host plus repository
+ * path. Equivalent SCP, SSH, HTTPS, and Git URLs therefore share a lock. The
+ * normalized identity is hashed before it reaches the path, so a
+ * credential-bearing remote URL never appears in a filename.
  *
  * **Example** (Share a coordinator across checkouts)
  *
@@ -64,7 +160,11 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
   repositoryIdentity: string
 ): Effect.fn.Return<string, never, Path.Path> {
   const path = yield* Path.Path;
-  return path.join(tmpdir(), "beep-yeet-proof-locks", `${artifactNameHash(repositoryIdentity)}.lock`);
+  return path.join(
+    tmpdir(),
+    "beep-yeet-proof-locks",
+    `${artifactNameHash(canonicalRepositoryIdentity(repositoryIdentity))}.lock`
+  );
 });
 
 /**
