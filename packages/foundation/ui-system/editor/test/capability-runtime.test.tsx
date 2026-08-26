@@ -89,6 +89,12 @@ describe("capability runtime", { concurrent: false }, () => {
       const bold = screen.getByRole("button", { name: "Bold" });
       expect(bold).toHaveAttribute("aria-keyshortcuts", "Control+B");
       expect(bold.getAttribute("title")).toContain("Ctrl+B");
+      // A mouse press on a toolbar button must not steal the editor's focus
+      // (the mousedown is cancelled) and the click runs the command.
+      const mouseDownCancelled = !fireEvent.mouseDown(bold);
+      expect(mouseDownCancelled).toBe(true);
+      fireEvent.click(bold);
+      expect(document.querySelector("[contenteditable='true']")).not.toBeNull();
       yield* Effect.void;
     })
   );
