@@ -72,12 +72,12 @@ const fileByteCeiling = (): number => {
   }
   return limit;
 };
-const MAX_BODY_BYTES: Record<Kind, number> = {
+const STATIC_BODY_BYTES: Record<Exclude<Kind, "file">, number> = {
   robots: 512 * 1024,
   sitemap: 16 * 1024 * 1024,
   page: 8 * 1024 * 1024,
-  file: fileByteCeiling(),
 };
+const maxBodyBytes = (kind: Kind): number => (kind === "file" ? fileByteCeiling() : STATIC_BODY_BYTES[kind]);
 
 type Kind = "robots" | "sitemap" | "page" | "file";
 type Rule = { allow: boolean; path: string; pattern: RegExp };
@@ -501,7 +501,7 @@ async function request(ctx: Ctx, url: string, kind: Kind): Promise<Fetched> {
       redirect: "manual",
       signal: AbortSignal.timeout(60_000),
     });
-    const capped = await readCapped(response, MAX_BODY_BYTES[kind]);
+    const capped = await readCapped(response, maxBodyBytes(kind));
     return {
       status: response.status,
       contentType: response.headers.get("content-type") ?? "",
@@ -615,7 +615,7 @@ type Handler = (ctx: Ctx, hop: Hop, fetched: Fetched, name: string, artifact: st
 async function oversized(ctx: Ctx, hop: Hop, fetched: Fetched): Promise<null> {
   await log(
     ctx,
-    `SKIP body over ${MAX_BODY_BYTES[hop.kind]} bytes for ${hop.finalUrl} (HTTP ${fetched.status}); nothing stored`
+    `SKIP body over ${maxBodyBytes(hop.kind)} bytes for ${hop.finalUrl} (HTTP ${fetched.status}); nothing stored`
   );
   await record(ctx, emptyRow(hop.url, hop.finalUrl, 0, fetched.contentType, `${hop.robots}; oversized body skipped`));
   ctx.results.set(hop.url, null);
@@ -835,6 +835,7 @@ async function main(): Promise<void> {
     return;
   }
   const options = parseArgs(process.argv.slice(2));
+  maxBodyBytes("file");
   const root = await canonical(options.root);
   await guardRoot(root);
   if (options.dryRun) {
