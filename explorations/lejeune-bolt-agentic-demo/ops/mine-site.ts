@@ -16,6 +16,10 @@
  * Fixture-only overrides (production uses the defaults): LEJEUNE_SEED_HOSTS (space-separated
  * hosts), LEJEUNE_SCHEME (http for a local fixture), LEJEUNE_PREFLIGHT (space-separated URLs).
  *
+ * Bodies are read through a per-kind byte ceiling (robots 512 KiB, sitemaps 16 MiB, pages
+ * 8 MiB, files 64 MiB or LEJEUNE_MAX_FILE_BYTES); an oversized response is recorded and skipped.
+ * Robots rules support `*` wildcards and `$` end anchors with longest-pattern precedence.
+ *
  * Exit codes: 2 usage or refused corpus root, 3 remote refusal, challenge, or unexpected
  * response, 4 robots.txt unreadable or newly prohibitive, 6 manifest validation failed.
  */
@@ -59,9 +63,15 @@ const SKIP_EXT = new Set([
 const TRACKING = /^(utm_.+|fbclid|gclid|dclid|_ga|mc_cid|mc_eid)$/i;
 const CHALLENGE = /sgcaptcha|\/\.well-known\/[a-z_-]*captcha|cf-chl|challenge-platform|just a moment/i;
 const MAX_REDIRECTS = 3;
+const MAX_BODY_BYTES: Record<Kind, number> = {
+  robots: 512 * 1024,
+  sitemap: 16 * 1024 * 1024,
+  page: 8 * 1024 * 1024,
+  file: Number(process.env.LEJEUNE_MAX_FILE_BYTES ?? String(64 * 1024 * 1024)),
+};
 
 type Kind = "robots" | "sitemap" | "page" | "file";
-type Rule = { allow: boolean; path: string };
+type Rule = { allow: boolean; path: string; pattern: RegExp };
 type Group = { agents: string[]; rules: Rule[]; delay: number };
 type Robots = { groups: Group[]; sitemaps: string[] };
 type Policy = { current: Robots; previous?: Robots; changed: boolean };
@@ -92,7 +102,7 @@ type Ctx = {
   lastRequest: Map<string, number>;
   prior: Map<string, Entry>;
 };
-type Fetched = { status: number; contentType: string; location: string | null; body: Uint8Array };
+type Fetched = { status: number; contentType: string; location: string | null; body: Uint8Array; truncated: boolean };
 
 class Stop extends Error {
   constructor(
@@ -223,10 +233,16 @@ function robotsAgent(state: RobotsState, value: string): void {
   state.group.agents.push(value.toLowerCase());
 }
 
+const rulePattern = (path: string): RegExp => {
+  const anchored = path.endsWith("$");
+  const escaped = (anchored ? path.slice(0, -1) : path).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll("\\*", ".*");
+  return new RegExp(`^${escaped}${anchored ? "$" : ""}`);
+};
+
 function robotsRule(state: RobotsState, allow: boolean, value: string): void {
   if (!state.group) return;
   state.directives = true;
-  if (value) state.group.rules.push({ allow, path: value });
+  if (value) state.group.rules.push({ allow, path: value, pattern: rulePattern(value) });
 }
 
 function robotsDelay(state: RobotsState, value: string): void {
@@ -274,7 +290,7 @@ function applicable(policy: Robots): { rules: Rule[]; delay: number } {
 function decide(url: string, robots: Robots): { allowed: boolean; note: string } {
   const parsed = new URL(url);
   const target = parsed.pathname + parsed.search;
-  const matches = applicable(robots).rules.filter((rule) => target.startsWith(rule.path));
+  const matches = applicable(robots).rules.filter((rule) => rule.pattern.test(target));
   matches.sort((a, b) => b.path.length - a.path.length || Number(b.allow) - Number(a.allow));
   const rule = matches[0];
   return rule
@@ -449,7 +465,26 @@ async function cacheHit(ctx: Ctx, url: string, robots: string, name: string, art
   return { entry: row, path: destination };
 }
 
-async function request(ctx: Ctx, url: string): Promise<Fetched> {
+async function readCapped(response: Response, limit: number): Promise<{ body: Uint8Array; truncated: boolean }> {
+  const declared = Number(response.headers.get("content-length") ?? "0");
+  if (declared > limit || !response.body) {
+    await response.body?.cancel();
+    return { body: new Uint8Array(), truncated: declared > limit };
+  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for await (const chunk of response.body) {
+    total += chunk.length;
+    if (total > limit) {
+      await response.body.cancel();
+      return { body: new Uint8Array(), truncated: true };
+    }
+    chunks.push(chunk);
+  }
+  return { body: Buffer.concat(chunks), truncated: false };
+}
+
+async function request(ctx: Ctx, url: string, kind: Kind): Promise<Fetched> {
   await pace(ctx, hostOf(url));
   try {
     const response = await fetch(url, {
@@ -457,11 +492,12 @@ async function request(ctx: Ctx, url: string): Promise<Fetched> {
       redirect: "manual",
       signal: AbortSignal.timeout(60_000),
     });
+    const capped = await readCapped(response, MAX_BODY_BYTES[kind]);
     return {
       status: response.status,
       contentType: response.headers.get("content-type") ?? "",
       location: response.headers.get("location"),
-      body: new Uint8Array(await response.arrayBuffer()),
+      ...capped,
     };
   } catch (cause) {
     await log(ctx, `ERROR request failed for ${url}: ${cause instanceof Error ? cause.message : "unknown error"}`);
@@ -469,7 +505,7 @@ async function request(ctx: Ctx, url: string): Promise<Fetched> {
   }
 }
 
-type Outcome = "refusal" | "redirect" | "missing" | "ok" | "unexpected";
+type Outcome = "refusal" | "redirect" | "missing" | "ok" | "unexpected" | "oversized";
 
 const REFUSAL_STATUSES = new Set([401, 403, 429]);
 const MISSING_STATUSES = new Set([404, 410]);
@@ -567,17 +603,28 @@ async function store(ctx: Ctx, hop: Hop, fetched: Fetched, name: string, artifac
 
 type Terminal = Exclude<Outcome, "redirect">;
 type Handler = (ctx: Ctx, hop: Hop, fetched: Fetched, name: string, artifact: string) => Promise<Result | null>;
+async function oversized(ctx: Ctx, hop: Hop, fetched: Fetched): Promise<null> {
+  await log(
+    ctx,
+    `SKIP body over ${MAX_BODY_BYTES[hop.kind]} bytes for ${hop.finalUrl} (HTTP ${fetched.status}); nothing stored`
+  );
+  await record(ctx, emptyRow(hop.url, hop.finalUrl, 0, fetched.contentType, `${hop.robots}; oversized body skipped`));
+  ctx.results.set(hop.url, null);
+  return null;
+}
+
 const HANDLERS: Record<Terminal, Handler> = {
   refusal: (ctx, hop, fetched) => refuse(ctx, hop, fetched),
   unexpected: (ctx, hop, fetched) => unexpected(ctx, hop, fetched),
   missing: (ctx, hop, fetched) => missing(ctx, hop, fetched),
+  oversized: (ctx, hop, fetched) => oversized(ctx, hop, fetched),
   ok: store,
 };
 
 async function follow(ctx: Ctx, hop: Hop, name: string, artifact: string): Promise<Result | null> {
   for (let current = hop; ; ) {
-    const fetched = await request(ctx, current.finalUrl);
-    const outcome = outcomeOf(fetched.status);
+    const fetched = await request(ctx, current.finalUrl, current.kind);
+    const outcome = fetched.truncated ? "oversized" : outcomeOf(fetched.status);
     if (outcome !== "redirect") return HANDLERS[outcome](ctx, current, fetched, name, artifact);
     const next = await redirectHop(ctx, current, fetched);
     if (!next) return null;

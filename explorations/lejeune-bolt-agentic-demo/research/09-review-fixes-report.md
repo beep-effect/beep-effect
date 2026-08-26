@@ -171,6 +171,15 @@ behaviour gap. All three are fixed in the same follow-up commit.
   challenge marker.
 - Off-scope redirects: skipped and recorded (status row without an artifact) instead of
   aborting the whole run, matching how off-scope sitemap entries and links are handled.
+- Robots patterns (`PRRT_kwDOPbO_N86cWE1g`): rules are compiled at parse time with `*` as a
+  wildcard and a trailing `$` as an end anchor, and `decide()` matches the compiled pattern with
+  longest-pattern precedence instead of a literal `startsWith`. Fixture: `Disallow: /wild*`
+  blocks `/wild-x/`, `Disallow: /end/$` blocks `/end/` but not `/end/sub/`.
+- Body ceiling (`PRRT_kwDOPbO_N86cV8sj`): responses are streamed through a per-kind byte limit
+  (robots 512 KiB, sitemaps 16 MiB, pages 8 MiB, files 64 MiB or `LEJEUNE_MAX_FILE_BYTES`), with
+  the declared `Content-Length` checked first; an oversized body is cancelled, recorded as a
+  skipped row, and never written. Fixture: a 3 MiB PDF under a 2 MiB cap is skipped while the
+  small PDF is stored.
 
 Proof against a local fixture site (robots with `Disallow: /private/` and a longer
 `Allow: /private/allowed/`, a sitemap index with an off-host child, page locs including an
