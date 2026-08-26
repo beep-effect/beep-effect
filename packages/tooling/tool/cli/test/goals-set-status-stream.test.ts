@@ -201,11 +201,79 @@ describe("set-status guarded stream writer", () => {
               })
             );
             expect(plan.streamPresent).toBe(false);
+            expect(plan.disposition).toBe("streamless");
             const outcome = yield* writer.commit(plan);
+            expect(outcome.disposition).toBe("streamless");
             expect(outcome.appended).toBe(0);
             expect(outcome.traceWritten).toBe(false);
           })
         ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "returns an explicit skipped plan and outcome for the current derived status",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("idempotent-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "idempotent-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const beforeFiles = yield* listEventFiles("idempotent-demo");
+            const beforeTrace = yield* fs.readFileString("goals/idempotent-demo/ops/trace.json");
+            const writer = yield* PacketTransitionWriter;
+            const plan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator: PacketStreamLocator.make({
+                  packet: "idempotent-demo",
+                  root: "goals",
+                  packetPath: "goals/idempotent-demo",
+                }),
+                status: "paused",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            expect(plan.disposition).toBe("skipped");
+            expect(plan.events).toStrictEqual([]);
+            expect(plan.derivedAfter?.status).toBe("paused");
+
+            const outcome = yield* writer.commit(plan);
+            expect(outcome.disposition).toBe("skipped");
+            expect(outcome.appended).toBe(0);
+            expect(outcome.traceWritten).toBe(false);
+            expect(yield* listEventFiles("idempotent-demo")).toStrictEqual(beforeFiles);
+            expect(yield* fs.readFileString("goals/idempotent-demo/ops/trace.json")).toBe(beforeTrace);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "fails invalid writer actors during request decode",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const decoded = yield* Effect.exit(
+            S.decodeEffect(PacketTransitionRequest)({
+              locator: { packet: "decode-demo", root: "goals", packetPath: "goals/decode-demo" },
+              status: "paused",
+              previousStatus: "active",
+              actor: "",
+              at: "2026-08-17T10:00:00.000Z",
+            })
+          );
+          expect(Exit.isFailure(decoded)).toBe(true);
+          if (Exit.isFailure(decoded)) {
+            expect(String(Cause.squash(decoded.cause))).toContain("Expected a non-empty actor");
+          }
+        })
       ),
     30_000
   );

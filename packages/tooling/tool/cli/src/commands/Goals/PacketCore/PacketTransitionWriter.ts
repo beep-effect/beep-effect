@@ -22,6 +22,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { A, O, pipe } from "@beep/utils";
 import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
@@ -30,6 +31,8 @@ import { PacketStreamError } from "./PacketCore.errors.ts";
 import {
   PacketDerivedState,
   PacketEvent,
+  PacketEventActor,
+  PacketEventTimestamp,
   PacketRevision,
   PacketRiskTier,
   PacketStage,
@@ -68,6 +71,12 @@ const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketTransitionWriter")
  * @since 0.0.0
  */
 export const PACKET_TRACE_SEGMENTS = ["ops", "trace.json"] as const;
+
+const PacketTransitionDisposition = LiteralKit(["append", "skipped", "streamless"]).pipe(
+  $I.annoteSchema("PacketTransitionDisposition", {
+    description: "Guarded transition disposition: append events, skip an idempotent transition, or no stream.",
+  })
+);
 
 const PacketTransitionGenesisPairCheck = S.makeFilter(
   (request: { readonly genesisStage?: PacketStage; readonly genesisOrdinal?: PacketStageOrdinal }) =>
@@ -116,8 +125,8 @@ export class PacketTransitionRequest extends S.Class<PacketTransitionRequest>($I
     previousStatus: PacketStatusToken,
     genesisStage: S.optionalKey(PacketStage),
     genesisOrdinal: S.optionalKey(PacketStageOrdinal),
-    actor: S.String,
-    at: S.String,
+    actor: PacketEventActor,
+    at: PacketEventTimestamp,
   }).check(PacketTransitionGenesisPairCheck),
   $I.annote("PacketTransitionRequest", {
     description: "One requested status transition with caller-validated vocabulary and genesis stage info.",
@@ -166,8 +175,8 @@ export class PacketRiskTierOverrideRequest extends S.Class<PacketRiskTierOverrid
     genesisStatus: PacketStatusToken,
     genesisStage: S.optionalKey(PacketStage),
     genesisOrdinal: S.optionalKey(PacketStageOrdinal),
-    actor: S.String,
-    at: S.String,
+    actor: PacketEventActor,
+    at: PacketEventTimestamp,
   }).check(PacketTransitionGenesisPairCheck),
   $I.annote("PacketRiskTierOverrideRequest", {
     description: "One requested operator risk-tier override with its recorded reason and genesis fallback.",
@@ -242,6 +251,7 @@ export type PacketPlanRequest = typeof PacketPlanRequest.Type;
  *     actor: "operator",
  *     at: "2026-08-17T00:00:00.000Z",
  *   }),
+ *   disposition: "streamless",
  *   streamPresent: false,
  *   currentRevision: 0,
  *   events: [],
@@ -256,6 +266,7 @@ export type PacketPlanRequest = typeof PacketPlanRequest.Type;
 export class PacketTransitionPlan extends S.Class<PacketTransitionPlan>($I`PacketTransitionPlan`)(
   {
     request: PacketPlanRequest,
+    disposition: PacketTransitionDisposition,
     streamPresent: S.Boolean,
     currentRevision: PacketRevision,
     currentTip: S.optionalKey(PacketTip),
@@ -277,6 +288,7 @@ export class PacketTransitionPlan extends S.Class<PacketTransitionPlan>($I`Packe
  * import { PacketTransitionOutcome } from "@beep/repo-cli/test/Goals"
  *
  * const outcome = PacketTransitionOutcome.make({
+ *   disposition: "streamless",
  *   appended: 0,
  *   tracePath: "goals/demo/ops/trace.json",
  *   traceWritten: false,
@@ -289,13 +301,14 @@ export class PacketTransitionPlan extends S.Class<PacketTransitionPlan>($I`Packe
  */
 export class PacketTransitionOutcome extends S.Class<PacketTransitionOutcome>($I`PacketTransitionOutcome`)(
   {
+    disposition: PacketTransitionDisposition,
     appended: PacketRevision,
     tip: S.optionalKey(PacketTip),
     tracePath: S.String,
     traceWritten: S.Boolean,
   },
   $I.annote("PacketTransitionOutcome", {
-    description: "Committed-transition result: appended event count, new tip, trace projection path.",
+    description: "Committed-transition result with an explicit append, skipped, or streamless disposition.",
   })
 ) {}
 
@@ -501,12 +514,14 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     request: PacketPlanRequest,
     stream: GuardedStream,
     events: ReadonlyArray<PacketEvent>,
-    tracePath: string
+    tracePath: string,
+    disposition: typeof PacketTransitionDisposition.Type
   ) => Effect.Effect<PacketTransitionPlan, PacketStreamError> = Effect.fnUntraced(function* (
     request: PacketPlanRequest,
     stream: GuardedStream,
     events: ReadonlyArray<PacketEvent>,
-    tracePath: string
+    tracePath: string,
+    disposition: typeof PacketTransitionDisposition.Type
   ) {
     const drafts = yield* storedDrafts(request.locator.packet, events);
     const derivedAfter = foldPacketEvents({
@@ -516,6 +531,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     });
     return PacketTransitionPlan.make({
       request,
+      disposition,
       streamPresent: true,
       currentRevision: stream.derived.revision,
       ...optionalProp("currentTip", O.fromUndefinedOr(stream.derived.tip)),
@@ -531,6 +547,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     if (!streamPresent) {
       return PacketTransitionPlan.make({
         request,
+        disposition: "streamless",
         streamPresent: false,
         currentRevision: 0,
         events: A.empty<PacketEvent>(),
@@ -538,8 +555,11 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
       });
     }
     const stream = yield* foldGuardedStream(request.locator);
+    if (stream.derived.status === request.status) {
+      return yield* sealedPlan(request, stream, A.empty<PacketEvent>(), tracePath, "skipped");
+    }
     const events = yield* draftEvents(request, stream.derived);
-    return yield* sealedPlan(request, stream, events, tracePath);
+    return yield* sealedPlan(request, stream, events, tracePath, "append");
   });
 
   const planRiskTierOverride = Effect.fn("PacketTransitionWriter.planRiskTierOverride")(function* (
@@ -555,14 +575,16 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     }
     const stream = yield* foldGuardedStream(request.locator);
     const events = yield* draftOverrideEvents(request, stream.derived);
-    return yield* sealedPlan(request, stream, events, tracePath);
+    return yield* sealedPlan(request, stream, events, tracePath, "append");
   });
 
   const commit = Effect.fn("PacketTransitionWriter.commit")(function* (transitionPlan: PacketTransitionPlan) {
     const locator = transitionPlan.request.locator;
-    if (!transitionPlan.streamPresent) {
+    if (transitionPlan.disposition !== "append") {
       return PacketTransitionOutcome.make({
+        disposition: transitionPlan.disposition,
         appended: 0,
+        ...optionalProp("tip", O.fromUndefinedOr(transitionPlan.currentTip)),
         tracePath: transitionPlan.tracePath,
         traceWritten: false,
       });
@@ -583,6 +605,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
         )
       );
     return PacketTransitionOutcome.make({
+      disposition: "append",
       appended: A.length(transitionPlan.events),
       ...optionalProp("tip", O.fromUndefinedOr(derived.tip)),
       tracePath: transitionPlan.tracePath,

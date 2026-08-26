@@ -249,6 +249,13 @@ const printTransitionPreview = Effect.fn("Goals.printTransitionPreview")(functio
     O.match({ onNone: () => "empty", onSome: (tip) => `${tip.seq}@${shortTip(tip.id)}` })
   );
   yield* Console.log(`[goals:set-status] stream: revision ${transition.currentRevision}, tip ${tipText}`);
+  if (transition.disposition === "skipped") {
+    yield* Console.log(
+      `[goals:set-status] outcome: skipped; stream already derives status ${status}, so no event or trace write is planned.`
+    );
+    yield* Console.log("[goals:set-status] preview only — nothing written.");
+    return;
+  }
   for (const event of transition.events) {
     yield* Console.log(`[goals:set-status] ${previewEventLine(event)}`);
   }
@@ -394,9 +401,13 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
 
   if (O.isSome(plan)) {
     const outcome = yield* writer.commit(plan.value);
-    yield* Console.log(
-      `[goals:set-status] ${slug}: appended ${outcome.appended} event(s); regenerated ${outcome.tracePath}.`
-    );
+    if (outcome.disposition === "skipped") {
+      yield* Console.log(`[goals:set-status] ${slug}: skipped; stream already derives status ${status}.`);
+    } else {
+      yield* Console.log(
+        `[goals:set-status] ${slug}: appended ${outcome.appended} event(s); regenerated ${outcome.tracePath}.`
+      );
+    }
   }
 
   let nextManifest = applyJsoncModification({ content: manifestText, path: ["initiative", "status"], value: status });

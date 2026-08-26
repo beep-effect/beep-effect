@@ -36,6 +36,8 @@ const FIXTURES_ROOT = new URL("./fixtures/packet-core", import.meta.url).pathnam
 const GOLDEN_PATH = `${FIXTURES_ROOT}/golden-linear`;
 const FORKED_PATH = `${FIXTURES_ROOT}/forked`;
 const RISK_OVERRIDE_PATH = `${FIXTURES_ROOT}/risk-override`;
+const RAW_UNKNOWN_KEY_PATH = `${FIXTURES_ROOT}/raw-unknown-key`;
+const PACKET_MISMATCH_PATH = `${FIXTURES_ROOT}/packet-mismatch`;
 
 type EventBody = PacketEvent["body"];
 
@@ -330,6 +332,39 @@ describe("foldPacketEvents", () => {
           expect(A.length(derived.issues)).toBe(1);
           expect(derived.issues[0]?.kind).toBe("missing-parent");
           expect(derived.revision).toBe(0);
+        })
+      ),
+    20_000
+  );
+
+  it(
+    "orders same-sequence fork verdicts by parent digest",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          let events = A.empty<StoredPacketEvent>();
+          for (const parentByte of ["b", "a"]) {
+            for (const at of ["2026-08-17T00:00:00.000Z", "2026-08-17T00:00:01.000Z"]) {
+              const event = PacketEvent.make({
+                schemaVersion: "packet-event/v1",
+                packet: "demo",
+                root: "goals",
+                seq: 2,
+                parent: parentByte.repeat(64),
+                expectedRevision: 1,
+                at,
+                actor: "test",
+                body: { type: "status-set", status: "paused", previous: "active" },
+              });
+              const id = yield* packetEventDigest(event);
+              events = A.append(
+                events,
+                StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event })
+              );
+            }
+          }
+          const derived = foldPacketEvents({ packet: "demo", root: "goals", events });
+          expect(A.map(derived.forks, (fork) => fork.parent)).toStrictEqual(["a".repeat(64), "b".repeat(64)]);
         })
       ),
     20_000
@@ -695,6 +730,44 @@ describe("store read robustness", () => {
       actor: "test",
       body: { type: "packet-created", status: "active" },
     });
+
+  it(
+    "rejects an otherwise decodable event whose raw JSON carries an unknown key",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const store = yield* PacketEventStore;
+          const listing = yield* store.list(
+            PacketStreamLocator.make({ packet: "golden-linear", root: "goals", packetPath: RAW_UNKNOWN_KEY_PATH })
+          );
+          expect(listing.events).toStrictEqual([]);
+          expect(A.map(listing.issues, (item) => item.kind)).toStrictEqual(["digest-mismatch"]);
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "rejects copied history whose packet and root disagree with the locator",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const store = yield* PacketEventStore;
+          const listing = yield* store.list(
+            PacketStreamLocator.make({
+              packet: "copied-history",
+              root: "explorations",
+              packetPath: PACKET_MISMATCH_PATH,
+            })
+          );
+          expect(listing.events).toStrictEqual([]);
+          expect(A.map(listing.issues, (item) => item.kind)).toStrictEqual(["packet-mismatch"]);
+          expect(listing.issues[0]?.detail).toContain("goals/golden-linear");
+          expect(listing.issues[0]?.detail).toContain("explorations/copied-history");
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
 
   it(
     "reports unreadable names, invalid JSON, undecodable events, and digest or name mismatches as issues",

@@ -1,7 +1,8 @@
-import { exploreCommand } from "@beep/repo-cli/test/Explore";
+import { exploreCommand, packetForkFindingKey } from "@beep/repo-cli/test/Explore";
 import {
   foldPacketEvents,
   PacketEvent,
+  PacketForkVerdict,
   packetEventDigest,
   packetEventFileName,
   projectPacketTrace,
@@ -179,6 +180,65 @@ describe("explore --check", () => {
             const summaryCount = A.length(Str.split(output, "repair plan (read-only)")) - 1;
             expect(forkCount).toBe(2);
             expect(summaryCount).toBe(1);
+            const parentA = "a".repeat(64);
+            const parentB = "b".repeat(64);
+            const forkA = PacketForkVerdict.make({ parent: parentA, parentSeq: 1, children: [] });
+            const forkB = PacketForkVerdict.make({ parent: parentB, parentSeq: 1, children: [] });
+            expect(packetForkFindingKey("twinned", forkA)).toBe(`twinned packet-stream-fork ${parentA}`);
+            expect(packetForkFindingKey("twinned", forkB)).toBe(`twinned packet-stream-fork ${parentB}`);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "reports root-specific manifest status drift for goals and explorations without blocking",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const goalEvent = PacketEvent.make({
+              schemaVersion: "packet-event/v1",
+              packet: "goal-drift",
+              root: "goals",
+              seq: 1,
+              expectedRevision: 0,
+              at: "2026-08-17T00:00:00.000Z",
+              actor: "test",
+              body: { type: "packet-created", status: "paused" },
+            });
+            yield* writeEvent("goals/goal-drift", goalEvent);
+            yield* writeProjectFile(
+              "goals/goal-drift/ops/manifest.json",
+              '{"initiative":{"status":"active"},"exploration":{"status":"paused"}}\n'
+            );
+
+            const explorationEvent = PacketEvent.make({
+              ...goalEvent,
+              packet: "exploration-drift",
+              root: "explorations",
+            });
+            yield* writeEvent("explorations/exploration-drift", explorationEvent);
+            yield* writeProjectFile(
+              "explorations/exploration-drift/ops/manifest.json",
+              '{"initiative":{"status":"paused"},"exploration":{"status":"graduated"}}\n'
+            );
+
+            const alignedEvent = PacketEvent.make({ ...goalEvent, packet: "aligned" });
+            yield* writeEvent("goals/aligned", alignedEvent);
+            yield* writeProjectFile(
+              "goals/aligned/ops/manifest.json",
+              '{"initiative":{"status":"paused"},"exploration":{"status":"active"}}\n'
+            );
+
+            const exit = yield* Effect.exit(runExploreCommand(["--check"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
+            const output = yield* consoleText();
+            expect(A.length(Str.split(output, "[packet-status-drift]")) - 1).toBe(2);
+            expect(output).toContain("goals/goal-drift/ops/manifest.json status active");
+            expect(output).toContain("explorations/exploration-drift/ops/manifest.json status graduated");
+            expect(output).not.toContain("- aligned [packet-status-drift]");
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

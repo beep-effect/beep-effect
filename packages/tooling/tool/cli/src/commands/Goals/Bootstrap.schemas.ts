@@ -750,6 +750,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "completion-gate-unsatisfied": [],
   "superseded-without-pointer": [],
   "exploration-backlink-missing": [],
+  "packet-status-drift": [],
   "packet-stream-fork": [],
   "packet-stream-integrity": [],
   "packet-trace-stale": [],

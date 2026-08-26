@@ -120,6 +120,11 @@ const storedBySeqThenId = Order.combine(
   Order.mapInput(Order.String, (stored: StoredPacketEvent) => stored.id)
 );
 
+const forkBySeqThenDigest = Order.combine(
+  Order.mapInput(Order.Number, (verdict: PacketForkVerdict) => verdict.parentSeq),
+  Order.mapInput(Order.String, (verdict: PacketForkVerdict) => verdict.parent ?? GENESIS_PARENT_KEY)
+);
+
 const parentKey = (stored: StoredPacketEvent): string => stored.event.parent ?? GENESIS_PARENT_KEY;
 
 const buildChildIndex = (
@@ -158,10 +163,7 @@ const collectForkVerdicts = (
       })
     );
   }
-  return A.sort(
-    verdicts,
-    Order.mapInput(Order.Number, (verdict: PacketForkVerdict) => verdict.parentSeq)
-  );
+  return A.sort(verdicts, forkBySeqThenDigest);
 };
 
 const missingParentIssues = (events: ReadonlyArray<StoredPacketEvent>): ReadonlyArray<PacketChainIssue> => {
