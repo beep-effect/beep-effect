@@ -555,6 +555,7 @@ const affectedDoctestFiles = [
 const affectedDoctestSources: ReadonlyArray<readonly [string, string]> = [
   ["packages/example/src/marked.ts", "const marked = import.meta.vitest;"],
   ["packages/example/src/unmarked.ts", "export const unmarked = true;"],
+  ["packages/example/src/view.tsx", "const markedTsx = import.meta.vitest;"],
   ["apps/demo/src/marked.ts", "if (import.meta.vitest) {}"],
 ];
 
@@ -568,7 +569,7 @@ layer(doctestCiLayer(affectedDoctestFiles, affectedDoctestSources, affectedDocte
         expect(affectedDoctestCommands).toHaveLength(2);
         expect(affectedDoctestCommands[0]).toBe("git diff --name-only origin/main...HEAD -- packages apps");
         expect(affectedDoctestCommands[1]).toContain(
-          "bunx vitest run --config vitest.docs.ts apps/demo/src/marked.ts packages/example/src/marked.ts"
+          "bunx vitest run --config vitest.docs.ts apps/demo/src/marked.ts packages/example/src/marked.ts packages/example/src/view.tsx"
         );
       })
     );

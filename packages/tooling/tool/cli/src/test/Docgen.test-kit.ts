@@ -14,6 +14,7 @@ export {
   classifyDoctestFence,
   DoctestFenceAnalyzerLive,
   DoctestFenceRewriterLive,
+  discoverChangedDoctestFilesForTesting,
   makeDoctestAnalyzerLayer,
   makeDoctestRewriterLayer,
   planConsoleRewrites,

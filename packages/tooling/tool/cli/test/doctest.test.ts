@@ -1,6 +1,7 @@
 import {
   analyzeDoctestSourceForTesting,
   classifyDoctestFence,
+  discoverChangedDoctestFilesForTesting,
   ParseJSDocSectionsOptions,
   parseJSDocSections,
   planConsoleRewrites,
@@ -8,9 +9,29 @@ import {
   rewriteDoctestSourceForTesting,
   validateDoctestAssertions,
 } from "@beep/repo-cli/test/Docgen";
-import { Effect } from "effect";
+import { A } from "@beep/utils";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
+import * as Str from "effect/String";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+
+const encoder = new TextEncoder();
+
+const changedFilesHandle = (output: string) =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.make(encoder.encode(output)),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: Stream.make(encoder.encode(output)),
+    unref: Effect.succeed(Effect.void),
+  });
 
 describe("doctest analyzer", () => {
   it.each([
@@ -34,6 +55,46 @@ describe("doctest analyzer", () => {
     expect(classifyDoctestFence("Effect.runSync(Effect.succeed(1))", "ts")._tag).toBe("pure");
     expect(classifyDoctestFence('import type { A } from "effect"\ntype B = A', "ts")._tag).toBe("typeOnly");
     expect(classifyDoctestFence('import * as S from "effect/Schema"\nconst X = S.String', "ts")._tag).toBe("pure");
+  });
+
+  it("classifies capability imports from module specifiers even when their bindings are aliased", () => {
+    const verdict = classifyDoctestFence('import * as FS from "effect/FileSystem"\nFS.FileSystem', "ts");
+    expect(verdict._tag).toBe("impure");
+    if (verdict._tag === "impure") expect(verdict.reason).toBe("file-system");
+
+    expect(classifyDoctestFence('export * from "effect/unstable/http/HttpClient"', "ts")).toMatchObject({
+      _tag: "impure",
+      reason: "network",
+    });
+    expect(classifyDoctestFence('import "effect/unstable/socket"', "ts")).toMatchObject({
+      _tag: "impure",
+      reason: "network",
+    });
+    expect(classifyDoctestFence('import "effect/unstable/process"', "ts")).toMatchObject({
+      _tag: "impure",
+      reason: "child-process",
+    });
+    expect(classifyDoctestFence('const sql = import("@effect/sql-pg")', "ts")).toMatchObject({
+      _tag: "impure",
+      reason: "database",
+    });
+    expect(classifyDoctestFence('import "@effect/platform-node"', "ts")).toMatchObject({
+      _tag: "impure",
+      reason: "node-import",
+    });
+    expect(classifyDoctestFence('import "bun"', "ts")).toMatchObject({
+      _tag: "impure",
+      reason: "bun-runtime",
+    });
+  });
+
+  it("keeps only recursively type-only namespaces runtime-vacuous", () => {
+    expect(classifyDoctestFence("namespace Example { export type Value = string }", "ts")._tag).toBe("typeOnly");
+    expect(classifyDoctestFence("namespace Example { export const value = 1 }", "ts")._tag).toBe("pure");
+    expect(
+      classifyDoctestFence("namespace Example { export namespace Nested { export const value = 1 } }", "ts")._tag
+    ).toBe("pure");
+    expect(classifyDoctestFence("declare namespace Example { const value: 1 }", "ts")._tag).toBe("typeOnly");
   });
 
   it("extracts titled Example sections without recognizing headings inside fences", () => {
@@ -103,6 +164,31 @@ describe("doctest rewrite planning", () => {
     expect(second.findings).toEqual([]);
   });
 
+  it("retains console-only plans for canonical fences and honors leading blank lines", () => {
+    const source = [
+      "/**",
+      " * **Example** (Canonical observation)",
+      " *",
+      ' * ```ts import.meta.vitest name="Canonical observation"',
+      " *",
+      " * console.log(1 + 1) // 2",
+      " * ```",
+      " */",
+      "export const value = 2",
+    ].join("\n");
+    const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
+
+    expect(analysis.findings).toHaveLength(1);
+    expect(analysis.findings[0]?.kind).toBe("console-rewrite");
+    const plan = O.getOrThrow(O.fromUndefinedOr(analysis.findings[0]?.plan));
+    expect(plan).toMatchObject({ addMarker: false, consoleRewrites: [{ line: 6 }] });
+    expect(plan).not.toHaveProperty("addName");
+
+    const rewritten = Effect.runSync(rewriteDoctestSourceForTesting("packages/example/src/index.ts", source, [plan]));
+    expect(Str.split(rewritten, "\n")[5]).toBe(" * 1 + 1 // => 2");
+    expect(analyzeDoctestSourceForTesting("packages/example/src/index.ts", rewritten).findings).toEqual([]);
+  });
+
   it("refuses a stale rewrite plan before producing content", () => {
     const source = ["/**", " * **Example** (Stale plan)", " *", " * ```ts", " * 1 + 1", " * ```", " */"].join("\n");
     const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
@@ -113,4 +199,27 @@ describe("doctest rewrite planning", () => {
     );
     expect(result._tag).toBe("Failure");
   });
+});
+
+const changedSourcePaths = ["packages/example/src/existing.ts", "packages/example/src/deleted.ts"];
+const changedSourceLayer = Layer.mergeAll(
+  FileSystem.layerNoop({
+    exists: (file) => Effect.succeed(Str.endsWith("packages/example/src/existing.ts")(file)),
+  }),
+  Path.layer,
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) return Effect.die("expected a standard Git command");
+      return Effect.succeed(changedFilesHandle(A.join(changedSourcePaths, "\n")));
+    })
+  )
+);
+
+layer(changedSourceLayer)("changed Doctest discovery", (it) => {
+  it.effect("drops deleted Git paths before source analysis", () =>
+    Effect.gen(function* () {
+      expect(yield* discoverChangedDoctestFilesForTesting("/repo")).toEqual(["packages/example/src/existing.ts"]);
+    })
+  );
 });

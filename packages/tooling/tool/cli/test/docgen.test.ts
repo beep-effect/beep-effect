@@ -4543,6 +4543,30 @@ export const ValidExport = packageDocAnchor;
     )
   );
 
+  it.effect("resolves a filtered Doctest include relative to the selected package src directory", () =>
+    withTempRepoCommand(
+      Effect.gen(function* () {
+        yield* writeDoctestCommandFixtureRepo();
+
+        yield* runDocgenCommand([
+          "doctest",
+          "mark",
+          "--filter",
+          "@beep/doctest-fixture",
+          "--include",
+          "console-rewrites.ts",
+          "--json",
+        ]);
+
+        const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        const report = yield* decodeDoctestReport(output);
+        expect(report.config.include).toEqual(["console-rewrites.ts"]);
+        expect(report.counts.files).toBe(1);
+        expect(report.changedFiles).toEqual([`${DOCTEST_FIXTURE_PACKAGE}/src/console-rewrites.ts`]);
+      })
+    )
+  );
+
   it.effect("writes canonical doctest markers and renders the human summary", () =>
     withTempRepoCommand(
       Effect.gen(function* () {

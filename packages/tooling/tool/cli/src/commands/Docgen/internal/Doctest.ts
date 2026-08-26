@@ -72,6 +72,12 @@ const firstSpecifier = (
   predicate: (specifier: string) => boolean
 ): O.Option<string> => A.findFirst(specifiers, predicate);
 
+const specifierOrSource = (specifier: O.Option<string>, source: O.Option<string>): O.Option<string> =>
+  pipe(
+    specifier,
+    O.orElse(() => source)
+  );
+
 const isAllowedPackageImport = (specifier: string): boolean =>
   specifier === "effect" ||
   Str.startsWith("effect/")(specifier) ||
@@ -89,14 +95,65 @@ const impurity = (code: string, language: "ts" | "typescript" | "tsx"): O.Option
   const specifiers = importSpecifiers(code);
   const reasonAndEvidence: ReadonlyArray<readonly [ImpurityReason, O.Option<string>]> = [
     ["process-env", firstMatch(code, /\bprocess\.env\b/)],
-    ["node-import", firstSpecifier(specifiers, Str.startsWith("node:"))],
-    ["file-system", firstMatch(code, /\bFileSystem\.|\bnode:fs(?:\/promises)?\b/)],
-    ["network", firstMatch(code, /\bfetch\s*\(|\bHttpClient\b/)],
-    ["child-process", firstMatch(code, /\bChildProcess\b|\bCommand\.make\b|\bnode:child_process\b/)],
-    ["bun-runtime", firstMatch(code, /\bBun\./)],
+    [
+      "node-import",
+      firstSpecifier(
+        specifiers,
+        (specifier) =>
+          Str.startsWith("node:")(specifier) ||
+          (Str.startsWith("@effect/platform-")(specifier) && !Str.startsWith("@effect/platform-bun")(specifier))
+      ),
+    ],
+    [
+      "file-system",
+      specifierOrSource(
+        firstSpecifier(specifiers, (specifier) => specifier === "effect/FileSystem"),
+        firstMatch(code, /\bFileSystem\.|\bnode:fs(?:\/promises)?\b/)
+      ),
+    ],
+    [
+      "network",
+      specifierOrSource(
+        firstSpecifier(
+          specifiers,
+          (specifier) =>
+            specifier === "effect/unstable/http" ||
+            Str.startsWith("effect/unstable/http/")(specifier) ||
+            specifier === "effect/unstable/socket"
+        ),
+        firstMatch(code, /\bfetch\s*\(|\bHttpClient\b/)
+      ),
+    ],
+    [
+      "child-process",
+      specifierOrSource(
+        firstSpecifier(
+          specifiers,
+          (specifier) =>
+            specifier === "effect/unstable/process" || Str.startsWith("effect/unstable/process/")(specifier)
+        ),
+        firstMatch(code, /\bChildProcess\b|\bCommand\.make\b|\bnode:child_process\b/)
+      ),
+    ],
+    [
+      "bun-runtime",
+      specifierOrSource(
+        firstSpecifier(
+          specifiers,
+          (specifier) => specifier === "bun" || Str.startsWith("@effect/platform-bun")(specifier)
+        ),
+        firstMatch(code, /\bBun\./)
+      ),
+    ],
     [
       "database",
-      firstMatch(code, /\b(?:Sql|Database|Pg|Sqlite|Drizzle)\b|(?:postgres|mysql|sqlite|drizzle|pg)(?:\/|$)/i),
+      specifierOrSource(
+        firstSpecifier(
+          specifiers,
+          (specifier) => Str.startsWith("effect/unstable/sql")(specifier) || Str.startsWith("@effect/sql")(specifier)
+        ),
+        firstMatch(code, /\b(?:Sql|Database|Pg|Sqlite|Drizzle)\b|(?:postgres|mysql|sqlite|drizzle|pg)(?:\/|$)/i)
+      ),
     ],
     [
       "external-package-import",
@@ -130,12 +187,25 @@ const isDeclaredStatement = (statement: Node): boolean =>
     Node.isEnumDeclaration(statement)) &&
   statement.getFirstChildByKind(SyntaxKind.DeclareKeyword) !== undefined;
 
-const isTypeOnlyStatement = (statement: Node): boolean =>
-  Node.isImportDeclaration(statement) ||
-  Node.isTypeAliasDeclaration(statement) ||
-  Node.isInterfaceDeclaration(statement) ||
-  Node.isModuleDeclaration(statement) ||
-  isDeclaredStatement(statement);
+const isDeclaredModule = (statement: Node): boolean => Node.isModuleDeclaration(statement) && statement.isAmbient();
+
+function isTypeOnlyModule(statement: Node): boolean {
+  if (!Node.isModuleDeclaration(statement)) return false;
+  if (isDeclaredModule(statement)) return true;
+  const body = statement.getBody();
+  if (body === undefined) return true;
+  return Node.isModuleBlock(body) ? A.every(body.getStatements(), isTypeOnlyStatement) : isTypeOnlyModule(body);
+}
+
+function isTypeOnlyStatement(statement: Node): boolean {
+  return (
+    Node.isImportDeclaration(statement) ||
+    Node.isTypeAliasDeclaration(statement) ||
+    Node.isInterfaceDeclaration(statement) ||
+    isTypeOnlyModule(statement) ||
+    isDeclaredStatement(statement)
+  );
+}
 
 /**
  * Classifies a TypeScript fence as runnable, impure, or runtime-vacuous.
@@ -428,6 +498,7 @@ const canonicalInfoString = (title: string): O.Option<string> =>
 
 type ScannedFence = {
   readonly code: string;
+  readonly codeStartLine: number;
   readonly infoString: string;
   readonly location: FenceLocation;
 };
@@ -446,9 +517,12 @@ const scanSourceFences = (file: string, source: string): ReadonlyArray<ScannedFe
     return A.map(details, (detail, index) => {
       const absoluteStart = span.start + detail.fenceStart;
       const absoluteEnd = span.start + detail.fenceEnd;
+      const rawCode = Str.slice(detail.codeStart, detail.codeEnd)(masked);
+      const trimmedCodeOffset = O.getOrElse(Str.indexOf(detail.code)(rawCode), () => 0);
       const title = exampleTitles[index];
       return {
         code: detail.code,
+        codeStartLine: lineAtOffset(source, span.start + detail.codeStart + trimmedCodeOffset),
         infoString: detail.infoString,
         location: FenceLocation.make({
           file,
@@ -526,18 +600,30 @@ const markerFindings = (
       })
     );
   }
-  return fence.infoString === canonicalInfo
-    ? A.empty()
-    : A.of(
+  if (fence.infoString !== canonicalInfo) {
+    return A.of(
+      DoctestFinding.make({
+        kind: "marker-metadata-drift",
+        location: fence.location,
+        info,
+        verdict,
+        message: `Marked fence metadata must be '${canonicalInfo}'.`,
+        ...O.getSomesStruct({ plan }),
+      })
+    );
+  }
+  return O.exists(plan, (value) => A.isReadonlyArrayNonEmpty(value.consoleRewrites))
+    ? A.of(
         DoctestFinding.make({
-          kind: "marker-metadata-drift",
+          kind: "console-rewrite",
           location: fence.location,
           info,
           verdict,
-          message: `Marked fence metadata must be '${canonicalInfo}'.`,
+          message: "Marked fence contains console observations that can become inline doctest assertions.",
           ...O.getSomesStruct({ plan }),
         })
-      );
+      )
+    : A.empty();
 };
 
 const typeOnlyFindings = (
@@ -585,14 +671,19 @@ const findingForFence = (source: string, fence: ScannedFence): ReadonlyArray<Doc
   const canonical = canonicalInfoString(title.value);
   if (O.isNone(canonical)) return A.of(unnameableTitleFinding(fence, info, verdict));
 
+  const consoleRewrites = planConsoleRewrites(fence.code, fence.codeStartLine);
   const plan = O.some(
     MarkPlan.make({
       location: fence.location,
       sourceDigest: sourceDigest(source),
       expectedInfoString: canonical.value,
       addMarker: !info.markerPresent,
-      addName: canonical.value.slice("ts import.meta.vitest ".length),
-      consoleRewrites: planConsoleRewrites(fence.code, fence.location.startLine + 1),
+      ...O.getSomesStruct({
+        addName: O.isNone(O.fromUndefinedOr(info.name))
+          ? O.some(Str.slice("ts import.meta.vitest ".length)(canonical.value))
+          : O.none<string>(),
+      }),
+      consoleRewrites,
     })
   );
   return A.flatten([
@@ -637,13 +728,42 @@ const gitErrorAdapter: GitCommandErrorAdapter<DoctestAnalysisError> = {
   onTruncated: O.none(),
 };
 
-const discoverChangedFiles = Effect.fn("Doctest.discoverChangedFiles")(function* (repoRoot: string) {
+/**
+ * Resolves the existing changed Doctest host files for a test-controlled repository root.
+ *
+ * **Example** (Build changed-file discovery)
+ *
+ * ```ts
+ * import { discoverChangedDoctestFilesForTesting } from "@beep/repo-cli/test/Docgen"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(discoverChangedDoctestFilesForTesting("/repo")))
+ * ```
+ *
+ * @param repoRoot - Repository root used for Git and filesystem resolution.
+ * @returns Existing changed TypeScript and TSX host paths.
+ * @category testing
+ * @since 0.0.0
+ */
+export const discoverChangedDoctestFilesForTesting = Effect.fn("Doctest.discoverChangedFiles")(function* (
+  repoRoot: string
+) {
   const [committed, dirty, untracked] = yield* Effect.all([
     runGitLines(repoRoot, ["diff", "--name-only", "origin/main...HEAD", "--", "packages", "apps"], gitErrorAdapter),
     runGitLines(repoRoot, ["diff", "--name-only", "HEAD", "--", "packages", "apps"], gitErrorAdapter),
     runGitLines(repoRoot, ["ls-files", "--others", "--exclude-standard", "--", "packages", "apps"], gitErrorAdapter),
   ]);
-  return pipe([...committed, ...dirty, ...untracked], A.filter(isDoctestSourcePath), A.dedupe, A.sort(Order.String));
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const candidates = pipe(
+    [...committed, ...dirty, ...untracked],
+    A.filter(isDoctestSourcePath),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  return yield* Effect.filter(candidates, (file) => fs.exists(path.join(repoRoot, file))).pipe(
+    Effect.mapError(() => DoctestAnalysisError.make({ message: "Failed to inspect changed Doctest source files." }))
+  );
 });
 
 const discoverFiles = Effect.fn("Doctest.discoverFiles")(function* (config: DoctestCliConfig) {
@@ -665,17 +785,28 @@ const discoverFiles = Effect.fn("Doctest.discoverFiles")(function* (config: Doct
       return O.some(`${normalizeSlashes(path.relative(repoRoot, workspace.value))}/`);
     }),
   });
-  const selected = A.isReadonlyArrayNonEmpty(config.include)
+  const includePatterns = A.flatMap(config.include, (pattern) => {
+    if (O.isNone(packagePrefix) || Str.startsWith("packages/")(pattern) || Str.startsWith("apps/")(pattern)) {
+      return A.of(pattern);
+    }
+    return Str.startsWith("src/")(pattern)
+      ? A.of(`${packagePrefix.value}${pattern}`)
+      : [`${packagePrefix.value}${pattern}`, `${packagePrefix.value}src/${pattern}`];
+  });
+  const selected = A.isReadonlyArrayNonEmpty(includePatterns)
     ? yield* fsUtils
-        .globFiles(config.include, { cwd: repoRoot })
+        .globFiles(includePatterns, { cwd: repoRoot })
         .pipe(Effect.mapError(() => DoctestAnalysisError.make({ message: "Failed to expand doctest include globs." })))
     : O.isSome(packagePrefix)
       ? yield* fsUtils
-          .globFiles(path.join(repoRoot, packagePrefix.value, "src", "**", "*.ts"))
+          .globFiles([
+            path.join(repoRoot, packagePrefix.value, "src", "**", "*.ts"),
+            path.join(repoRoot, packagePrefix.value, "src", "**", "*.tsx"),
+          ])
           .pipe(
             Effect.mapError(() => DoctestAnalysisError.make({ message: "Failed to discover package source files." }))
           )
-      : yield* discoverChangedFiles(repoRoot);
+      : yield* discoverChangedDoctestFilesForTesting(repoRoot);
   const relative = A.map(selected, (file) =>
     path.isAbsolute(file) ? normalizeSlashes(path.relative(repoRoot, file)) : normalizeSlashes(file)
   );
@@ -802,7 +933,7 @@ const applyConsoleEdit = (
   if (current === undefined) {
     return DoctestRewriteError.make({ message: "Console rewrite line is missing.", file, line: rewrite.line });
   }
-  const indentation = /^\s*/.exec(current)?.[0] ?? "";
+  const indentation = /^\s*(?:\*\s*)?/.exec(current)?.[0] ?? "";
   return replaceSourceLine(
     lines,
     lineIndex,

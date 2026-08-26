@@ -23,7 +23,7 @@ import { Str } from "@beep/utils";
  * @since 0.0.0
  */
 export const isDoctestSourcePath = (file: string): boolean =>
-  Str.endsWith(".ts")(file) &&
+  (Str.endsWith(".ts")(file) || Str.endsWith(".tsx")(file)) &&
   !Str.endsWith(".d.ts")(file) &&
   (Str.startsWith("packages/")(file) || Str.startsWith("apps/")(file)) &&
   Str.includes("/src/")(file) &&

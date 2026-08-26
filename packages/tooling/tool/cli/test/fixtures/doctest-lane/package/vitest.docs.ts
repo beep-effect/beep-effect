@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     ...shared.test,
     include: [],
-    includeSource: ["src/index.ts"],
+    includeSource: ["src/**/*.{ts,tsx}"],
     passWithNoTests: false,
     sequence: { ...shared.test?.sequence, concurrent: false },
   },

@@ -303,7 +303,7 @@
     "@beep/*": "Needed to force PNPM to install local packages"
   },
   "scripts": {
-    "doctest": "vitest --config vitest.docs.ts",
+    "doctest": "vitest run --config vitest.docs.ts",
     "ai-sync": "bun run --cwd packages/tooling/library/ai-sync ai-sync",
     "audit": "beep-cli audit packages",
     "audit:fresh": "beep-cli audit packages --force",

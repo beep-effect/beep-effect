@@ -9,7 +9,7 @@ export default defineConfig({
     ...shared.test,
     exclude: [...(shared.test?.exclude ?? []), "**/test/fixtures/**"],
     include: [],
-    includeSource: ["packages/**/src/**/*.ts", "apps/**/src/**/*.ts"],
+    includeSource: ["packages/**/src/**/*.{ts,tsx}", "apps/**/src/**/*.{ts,tsx}"],
     passWithNoTests: true,
     testTimeout: 10_000,
     sequence: {

@@ -117,21 +117,28 @@ jobs:
                 "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
             fi
 
-            mapfile -t changed_sources < <(
-              git diff --name-only "${base_ref}...HEAD" -- \
-                ':(glob)packages/**/src/**/*.ts' \
-                ':(glob)apps/**/src/**/*.ts'
-            )
+            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+            if grep -Eq '(^vitest\.docs\.ts$|^vitest\.shared\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/heavy\.yml$|^packages/tooling/tool/cli/src/commands/Docgen/|^packages/tooling/tool/cli/src/internal/jsdoc/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
+              doctest_mode=full
+            else
+              mapfile -t changed_sources < <(
+                git diff --name-only "${base_ref}...HEAD" -- \
+                  ':(glob)packages/**/src/**/*.ts' \
+                  ':(glob)packages/**/src/**/*.tsx' \
+                  ':(glob)apps/**/src/**/*.ts' \
+                  ':(glob)apps/**/src/**/*.tsx'
+              )
 
-            marked_sources=()
-            for file in "${changed_sources[@]}"; do
-              if [[ -f "$file" ]] && grep -l -F 'import.meta.vitest' -- "$file" >/dev/null; then
-                marked_sources+=("$file")
+              marked_sources=()
+              for file in "${changed_sources[@]}"; do
+                if [[ -f "$file" ]] && grep -l -F 'import.meta.vitest' -- "$file" >/dev/null; then
+                  marked_sources+=("$file")
+                fi
+              done
+
+              if (( ${#marked_sources[@]} == 0 )); then
+                should_run=false
               fi
-            done
-
-            if (( ${#marked_sources[@]} == 0 )); then
-              should_run=false
             fi
           fi
 

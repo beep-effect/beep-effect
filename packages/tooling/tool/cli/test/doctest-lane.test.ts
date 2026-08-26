@@ -39,8 +39,8 @@ describe("doctest lane fixture", () => {
       );
       expect(exitCode, stderr).toBe(0);
       const result = yield* Effect.promise(() => Bun.file(resultPath).text());
-      expect(result).toContain('"numPassedTestSuites":1');
-      expect(result).toContain('"numPassedTests":1');
+      expect(result).toContain('"numPassedTestSuites":2');
+      expect(result).toContain('"numPassedTests":2');
     })
   );
 });

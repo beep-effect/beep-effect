@@ -322,6 +322,7 @@ export const DoctestFindingKind = LiteralKit([
   "missing-example-title",
   "unnameable-example-title",
   "marker-metadata-drift",
+  "console-rewrite",
 ]).pipe(
   $I.annoteSchema("DoctestFindingKind", {
     description: "Kinds of findings the doctest analyzer and verifier report.",
