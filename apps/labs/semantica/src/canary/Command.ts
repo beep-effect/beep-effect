@@ -1,35 +1,14 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
 import { Console, Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { CorpusManifest, ManifestWriteFailed } from "@/corpus/Manifest";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
+import { CanaryStage } from "@/schema/Eval";
+
+export { CanaryStage } from "@/schema/Eval";
 
 const $I = $SemanticaId.create("canary/Command");
-
-/**
- * Canary stages exposed by the headless Semantica command.
- *
- * **Example** (Check a stage)
- *
- * ```ts
- * import { CanaryStage } from "@/canary/Command"
- *
- * console.log(CanaryStage.is.c0("c0")) // true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const CanaryStage = LiteralKit(["c0", "c1", "c2"]).pipe(
-  $I.annoteSchema("CanaryStage", {
-    description: "Headless Semantica canary stages available through the lab command.",
-  })
-);
-
-// Runtime value accepted by `CanaryStage`; app-local until a consumer outside this module exists.
-type CanaryStage = typeof CanaryStage.Type;
 
 /**
  * Parsed options shared by every Semantica canary stage.

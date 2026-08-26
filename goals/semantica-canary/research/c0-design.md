@@ -144,7 +144,7 @@ resolution in lab code).
   `empty-text-layer`, `extraction` → `extraction-failed`, `input-limit` → `input-limit`); the
   engine boundary folds those reasons into `file-extraction-failed`, so if the translation drops
   the original reason the lab adds it to that translation in `@beep/doc-text` as cleanup-on-touch
-  (O1) before the slice — the lab never classifies by message text (**open item O-5**). An
+  (O1) before the slice — the lab never classifies by message text (**O-5, closed: the boundary keeps it**). An
   observed kind that differs from the declared one is a failed assertion, never a reason to edit
   the index.
 - Hosted lane in CI: only F1 is replayable there — its recorded `ProviderCache` entries are
@@ -157,12 +157,23 @@ resolution in lab code).
 
 ## 7. Open items (must close before the slice PR)
 
-- **O-1** `MetricName`: mine upstream #574 (T3) for the metric names; until then the LiteralKit is
-  `["structure-f1","entity-f1","relation-f1","span-fidelity"]` and the doc says so.
+- **O-1 (closed 2026-08-26)** `MetricName` = the #574 names the law table adopts
+  (`DECISIONS.md` ~414: `entity-span-f1`, `rebel-end-to-end-triple-f1`, `pairwise-f1`, `b-cubed`)
+  plus one lab-local name, `structure-span-f1` (span F1 over G-structure anchors, the entity-span
+  definition applied to structure labels), because #574 scores no document structure and S7
+  requires G-structure to be scored. `RequiredMetrics(c0)` = ten coordinates: structure-span-f1 /
+  structure, entity-span-f1 / entity, pairwise-f1 / entity, b-cubed / entity,
+  rebel-end-to-end-triple-f1 / relation, each for both lanes; the pattern lane may be
+  `unsupported` for structure and relation (its declared losses), every hosted coordinate is
+  `scored`. Span fidelity is not a metric: `anchorsFailed === 0` is a report refinement.
 - **O-2** Pattern-lane targets: the Wink custom-entity patterns used for persons/orgs/methods (pinned
   into `ModelIdentity.artifactHash` for the `wink` family).
 - **O-3** Ledger DDL v1 and the `LedgerSnapshot` read model (kept minimal: what `Evaluator` needs).
-- **O-5** Confirm whether `FileProcessingOperationError` preserves the `DocTextError.reason`; if not, the
-  cleanup-on-touch translation change lands in `@beep/doc-text` (its own PR, O1) before the slice.
+- **O-5 (closed 2026-08-26)** The boundary keeps what the mapping needs: `@beep/doc-text` translates
+  `empty-text-layer` to `file-extraction-failed` with `details.outcome === "empty-text-layer"`,
+  `input-limit` to reason `output-limit-exceeded`, and everything else to `file-extraction-failed`
+  without details. `ParserLive` therefore maps `reason === "output-limit-exceeded"` → `input-limit`,
+  `details.outcome === "empty-text-layer"` → `empty-text-layer`, otherwise → `extraction-failed`.
+  No cleanup-on-touch change is required.
 - **O-4** Hosted request budget for the slice (one LangExtract call per chunk vs per document) — start
   per document, chunks carried as `RawTextChunk`s; measure in `EvalRunTelemetry`.
