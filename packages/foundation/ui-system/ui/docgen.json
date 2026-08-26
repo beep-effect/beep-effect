@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "module": "es2024",
-    "target": "es2024",
+    "target": "es2022",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "rewriteRelativeImportExtensions": true,
     "allowImportingTsExtensions": true,

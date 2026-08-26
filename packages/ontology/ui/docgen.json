@@ -12,7 +12,7 @@
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es2024",
+    "target": "es2022",
     "types": ["node", "bun"],
     "module": "es2024",
     "rewriteRelativeImportExtensions": true,
