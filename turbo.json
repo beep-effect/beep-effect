@@ -250,7 +250,9 @@
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts",
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**",
-        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/assets/**",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/styles/**"
       ],
       "outputs": ["storybook-static/**"]
     },

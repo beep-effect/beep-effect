@@ -14,7 +14,7 @@ const mark = beep.mark;
 const glasses = mark.glasses;
 
 /**
- * The beep mark as an inline SVG. The lambda stroke follows `currentColor`; the glasses use the dark-scheme foreground and page surface so they read on any ground.
+ * The beep mark as an inline SVG. The lambda stroke follows `currentColor`; the glasses fill from the theme's `--color-fg` and `--color-surface-0` tokens (brand.css), falling back to the dark scheme where the tokens are absent.
  *
  * **Example** (Render the mark at 32px in the accent color)
  *
@@ -51,9 +51,9 @@ export const BeepMark = (props: SVGProps<SVGSVGElement>) => (
       />
     ))}
     <g transform={glassesTransform(glasses)}>
-      <path fill={beep.dark.foreground.base} d={glasses.frame} />
+      <path style={{ fill: `var(--color-fg, ${beep.dark.foreground.base})` }} d={glasses.frame} />
       {A.map(glasses.lenses, (d) => (
-        <path key={d} fill={beep.dark.surface["0"]} d={d} />
+        <path key={d} style={{ fill: `var(--color-surface-0, ${beep.dark.surface["0"]})` }} d={d} />
       ))}
     </g>
   </svg>

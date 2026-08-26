@@ -2,10 +2,13 @@ import {
   BrandIdentity,
   beep,
   GENERATED_CSS_BANNER,
+  MarkPaint,
   renderThemeCss,
+  renderWordmarkSvg,
   ScaleStep,
   SurfaceStep,
   SvgPaint,
+  WordmarkSvgRequest,
 } from "@beep/brand";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -72,5 +75,27 @@ describe("renderThemeCss", () => {
     expect(css).toContain('--font-brand-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;');
     expect(css).toContain('--font-brand-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;');
     expect(css).toContain("--font-sans: var(--font-brand-sans);");
+  });
+});
+
+describe("renderWordmarkSvg escaping", () => {
+  it("escapes XML metacharacters in the name and quotes multi-word families", () => {
+    const hostile = BrandIdentity.make({ ...beep, name: 'a&b<c>"d' });
+    const svg = renderWordmarkSvg(
+      WordmarkSvgRequest.make({
+        identity: hostile,
+        paint: MarkPaint.make({
+          stroke: beep.dark.brand["400"],
+          frame: beep.dark.foreground.base,
+          lens: beep.dark.surface["0"],
+        }),
+        textFill: beep.dark.foreground.base,
+      })
+    );
+
+    expect(svg).toContain('>a&amp;b&lt;c&gt;"d</text>');
+    expect(svg).toContain('aria-label="a&amp;b&lt;c&gt;&quot;d"');
+    expect(svg).toContain("&quot;Inter Variable&quot;, Inter,");
+    expect(svg).not.toContain("<c>");
   });
 });

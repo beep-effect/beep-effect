@@ -128,7 +128,7 @@ const mark = BrandMark.make({
  * console.log(beep.dark.brand["900"])
  * ```
  *
- * @category tokens
+ * @category constants
  * @since 0.0.0
  */
 export const beep: BrandIdentity = BrandIdentity.make({ name: "beep", light, dark, typography, mark });

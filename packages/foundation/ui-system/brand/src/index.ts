@@ -10,24 +10,29 @@
 
 export {
   /**
-   * @category rendering
+   * @category models
    * @since 0.0.0
    */
   RenderedAsset,
   /**
-   * @category rendering
+   * @category encoding
    * @since 0.0.0
    */
   renderBrandAssets,
 } from "./Brand.assets.ts";
 export {
   /**
-   * @category rendering
+   * @category encoding
+   * @since 0.0.0
+   */
+  fontStack,
+  /**
+   * @category constants
    * @since 0.0.0
    */
   GENERATED_CSS_BANNER,
   /**
-   * @category rendering
+   * @category encoding
    * @since 0.0.0
    */
   renderThemeCss,
@@ -166,24 +171,24 @@ export {
 } from "./Brand.schema.ts";
 export {
   /**
-   * @category rendering
+   * @category encoding
    * @since 0.0.0
    */
   glassesTransform,
   /**
-   * @category rendering
+   * @category encoding
    * @since 0.0.0
    */
   renderMarkSvg,
   /**
-   * @category rendering
+   * @category encoding
    * @since 0.0.0
    */
   renderWordmarkSvg,
 } from "./Brand.svg.ts";
 export {
   /**
-   * @category tokens
+   * @category constants
    * @since 0.0.0
    */
   beep,

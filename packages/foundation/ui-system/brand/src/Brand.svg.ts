@@ -7,6 +7,7 @@
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";
+import { fontStack } from "./Brand.css.ts";
 import type {
   BrandMark,
   MarkGround,
@@ -22,6 +23,13 @@ const WORDMARK_GLYPH_WIDTH = 11;
 
 const round = (value: number): number => Number(value.toFixed(4));
 
+// XML text escaping (& < >); attribute escaping additionally covers both quote kinds.
+const escapeXmlText = (value: string): string =>
+  pipe(value, Str.replaceAll("&", "&amp;"), Str.replaceAll("<", "&lt;"), Str.replaceAll(">", "&gt;"));
+
+const escapeXmlAttribute = (value: string): string =>
+  pipe(escapeXmlText(value), Str.replaceAll('"', "&quot;"), Str.replaceAll("'", "&#39;"));
+
 /**
  * SVG transform placing the pixel glasses on the mark grid.
  *
@@ -35,7 +43,7 @@ const round = (value: number): number => Number(value.toFixed(4));
  *
  * @param glasses - Glasses placement and geometry.
  * @returns A `translate(...) scale(...) rotate(...)` transform list.
- * @category rendering
+ * @category encoding
  * @since 0.0.0
  */
 export const glassesTransform = (glasses: PixelGlasses): string =>
@@ -44,12 +52,12 @@ export const glassesTransform = (glasses: PixelGlasses): string =>
 const strokePath =
   (mark: BrandMark, paint: MarkPaint) =>
   (d: string): string =>
-    `<path d="${d}" stroke="${paint.stroke}" stroke-width="${mark.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    `<path d="${escapeXmlAttribute(d)}" stroke="${paint.stroke}" stroke-width="${mark.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
 
 const fillPath =
   (fill: string) =>
   (d: string): string =>
-    `<path fill="${fill}" d="${d}"/>`;
+    `<path fill="${fill}" d="${escapeXmlAttribute(d)}"/>`;
 
 const glassesGroup = (mark: BrandMark, paint: MarkPaint): string =>
   pipe(
@@ -74,7 +82,7 @@ const groundRect =
     `<rect width="${size}" height="${size}" rx="${ground.radius}" fill="${ground.fill}"/>`;
 
 const svgOpen = (width: number, height: number, label: string): string =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" fill="none" role="img" aria-label="${label}">`;
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" fill="none" role="img" aria-label="${escapeXmlAttribute(label)}">`;
 
 /**
  * Render the mark as a standalone SVG document.
@@ -104,7 +112,7 @@ const svgOpen = (width: number, height: number, label: string): string =>
  *
  * @param request - Mark, output size, paint, and optional ground.
  * @returns The SVG document text, ending with a newline.
- * @category rendering
+ * @category encoding
  * @since 0.0.0
  */
 export const renderMarkSvg = (request: MarkSvgRequest): string =>
@@ -120,7 +128,7 @@ export const renderMarkSvg = (request: MarkSvgRequest): string =>
   );
 
 const wordmarkText = (request: WordmarkSvgRequest): string =>
-  `<text x="${WORDMARK_TEXT_X}" y="17.5" font-family="${Str.replaceAll('"', "'")(`${request.identity.typography.sans.family}, ${A.join(", ")(request.identity.typography.sans.fallbacks)}`)}" font-size="18" font-weight="700" letter-spacing="-0.02em" fill="${request.textFill}">${request.identity.name}</text>`;
+  `<text x="${WORDMARK_TEXT_X}" y="17.5" font-family="${escapeXmlAttribute(fontStack(request.identity.typography.sans))}" font-size="18" font-weight="700" letter-spacing="-0.02em" fill="${request.textFill}">${escapeXmlText(request.identity.name)}</text>`;
 
 /**
  * Render the mark beside the brand name as a horizontal wordmark SVG.
@@ -142,7 +150,7 @@ const wordmarkText = (request: WordmarkSvgRequest): string =>
  *
  * @param request - Identity, mark paint, and text fill.
  * @returns The SVG document text, ending with a newline.
- * @category rendering
+ * @category encoding
  * @since 0.0.0
  */
 export const renderWordmarkSvg = (request: WordmarkSvgRequest): string =>

@@ -20,7 +20,7 @@ import type { BrandIdentity, ColorScheme, FontStack, Glow, GlowLayer, GlowStop, 
  * console.log(GENERATED_CSS_BANNER.startsWith("/*"))
  * ```
  *
- * @category rendering
+ * @category constants
  * @since 0.0.0
  */
 export const GENERATED_CSS_BANNER =
@@ -33,7 +33,23 @@ const block = (selector: string, lines: ReadonlyArray<string>): string =>
 
 const quoteFamily = (family: string): string => (Str.includes(" ")(family) ? `"${family}"` : family);
 
-const fontStack = (stack: FontStack): string =>
+/**
+ * Render a {@link FontStack} as a CSS font-family list, quoting multi-word families and leaving generic keywords bare.
+ *
+ * **Example** (Render the brand sans stack)
+ *
+ * ```ts
+ * import { beep, fontStack } from "@beep/brand"
+ *
+ * console.log(fontStack(beep.typography.sans))
+ * ```
+ *
+ * @param stack - Font stack to render.
+ * @returns The comma-separated font-family value.
+ * @category encoding
+ * @since 0.0.0
+ */
+export const fontStack = (stack: FontStack): string =>
   pipe([stack.family, ...stack.fallbacks], A.map(quoteFamily), A.join(", "));
 
 const scaleLines = (scheme: ColorScheme): ReadonlyArray<string> =>
@@ -101,7 +117,7 @@ const schemeLines = (scheme: ColorScheme): ReadonlyArray<string> =>
  *
  * @param identity - Brand identity to encode.
  * @returns The stylesheet text, ending with a newline.
- * @category rendering
+ * @category encoding
  * @since 0.0.0
  */
 export const renderThemeCss = (identity: BrandIdentity): string =>

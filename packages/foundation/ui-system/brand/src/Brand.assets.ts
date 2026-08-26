@@ -25,7 +25,7 @@ const $I = $BrandId.create("Brand.assets");
  * console.log(RenderedAsset.make({ path: "styles/brand.css", content: "" }).path)
  * ```
  *
- * @category rendering
+ * @category models
  * @since 0.0.0
  */
 export class RenderedAsset extends S.Class<RenderedAsset>($I`RenderedAsset`)(
@@ -36,9 +36,6 @@ export class RenderedAsset extends S.Class<RenderedAsset>($I`RenderedAsset`)(
   $I.annote("RenderedAsset", { description: "A generated file: package-relative path and text content." })
 ) {}
 
-const onDark = (identity: BrandIdentity): MarkPaint =>
-  MarkPaint.make({ stroke: "currentColor", frame: identity.dark.foreground.base, lens: identity.dark.surface["0"] });
-
 const accentOnDark = (identity: BrandIdentity): MarkPaint =>
   MarkPaint.make({
     stroke: identity.dark.brand["400"],
@@ -46,11 +43,13 @@ const accentOnDark = (identity: BrandIdentity): MarkPaint =>
     lens: identity.dark.surface["0"],
   });
 
+// On a light surface the dark-scheme frame (near-white) disappears; the light foreground
+// keeps the glasses outline legible, with light lenses inside it.
 const accentOnLight = (identity: BrandIdentity): MarkPaint =>
   MarkPaint.make({
     stroke: identity.light.brand["400"],
-    frame: identity.dark.foreground.base,
-    lens: identity.dark.surface["0"],
+    frame: identity.light.foreground.base,
+    lens: identity.light.surface["0"],
   });
 
 const favicon = (identity: BrandIdentity): MarkPaint =>
@@ -79,15 +78,17 @@ const favicon = (identity: BrandIdentity): MarkPaint =>
  *
  * @param identity - Brand identity to render.
  * @returns The stylesheet and SVG assets in a stable order.
- * @category rendering
+ * @category encoding
  * @since 0.0.0
  */
 export const renderBrandAssets = (identity: BrandIdentity): ReadonlyArray<RenderedAsset> => [
   RenderedAsset.make({ path: "styles/brand.css", content: renderThemeCss(identity) }),
   RenderedAsset.make({
     path: "assets/mark.svg",
+    // The standalone file is consumed through <img> and asset URLs where currentColor cannot
+    // inherit, so the stroke is the explicit accent; inline consumers use BeepMark instead.
     content: renderMarkSvg(
-      MarkSvgRequest.make({ mark: identity.mark, size: identity.mark.viewBox, paint: onDark(identity) })
+      MarkSvgRequest.make({ mark: identity.mark, size: identity.mark.viewBox, paint: accentOnDark(identity) })
     ),
   }),
   RenderedAsset.make({
