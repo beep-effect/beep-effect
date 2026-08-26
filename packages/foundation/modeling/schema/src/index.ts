@@ -34,6 +34,11 @@ export * from "./AbortSignal.ts";
  * @since 0.0.0
  * @category validation
  */
+export * from "./ArrayBuffer.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./ArrayOf.ts";
 /**
  * @since 0.0.0
