@@ -24,7 +24,7 @@ import * as S from "effect/Schema";
  *
  * **Example** (Filter JSON lines stream)
  *
- * ```ts import.meta.vitest name="Filter JSON lines stream"
+ * ```ts
  * import { Effect, Stream } from "effect"
  * import * as S from "effect/Schema"
  * import { streamFilterJson } from "@beep/utils/Stream"

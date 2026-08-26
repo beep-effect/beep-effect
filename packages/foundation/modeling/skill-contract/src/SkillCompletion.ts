@@ -181,7 +181,7 @@ export class EvaluateSkillCompletionInput extends S.Class<EvaluateSkillCompletio
  *
  * **Example** (Inspect invariant reasons)
  *
- * ```ts import.meta.vitest name="Inspect invariant reasons"
+ * ```ts
  * import { CompletionInvariantReason } from "@beep/skill-contract"
  *
  * console.log(CompletionInvariantReason.Options)
@@ -216,7 +216,7 @@ export type CompletionInvariantReason = typeof CompletionInvariantReason.Type;
  *
  * **Example** (Construct an invariant error)
  *
- * ```ts import.meta.vitest name="Construct an invariant error"
+ * ```ts
  * import { CompletionInvariantError } from "@beep/skill-contract"
  *
  * const error = CompletionInvariantError.make({
@@ -529,7 +529,7 @@ export class FailedWithPartialEffects extends S.Class<FailedWithPartialEffects>(
  *
  * **Example** (Inspect terminal variants)
  *
- * ```ts import.meta.vitest name="Inspect terminal variants"
+ * ```ts
  * import { SkillTerminal } from "@beep/skill-contract"
  *
  * console.log(SkillTerminal.discriminants)

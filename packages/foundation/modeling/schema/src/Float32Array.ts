@@ -188,7 +188,7 @@ export declare namespace Float32ArrayFromArray {
  *
  * **Example** (Access insert field schema)
  *
- * ```ts import.meta.vitest name="Access insert field schema"
+ * ```ts
  * import { Float32ArrayField } from "@beep/schema/Float32Array";
  * import * as S from "effect/Schema";
  *

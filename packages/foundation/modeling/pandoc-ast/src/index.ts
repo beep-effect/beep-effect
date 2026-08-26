@@ -27,7 +27,7 @@ export const VERSION = "0.0.0";
  *
  * **Example** (Import decodePandocJsonString codec)
  *
- * ```ts import.meta.vitest name="Import decodePandocJsonString codec"
+ * ```ts
  * import { decodePandocJsonString } from "@beep/pandoc-ast"
  *
  * console.log(decodePandocJsonString)
@@ -42,7 +42,7 @@ export * from "./Pandoc.codec.ts";
  *
  * **Example** (Import pandocToDocument mapper)
  *
- * ```ts import.meta.vitest name="Import pandocToDocument mapper"
+ * ```ts
  * import { pandocToDocument } from "@beep/pandoc-ast"
  *
  * console.log(pandocToDocument)
@@ -57,7 +57,7 @@ export * from "./Pandoc.mapping.ts";
  *
  * **Example** (Make empty PandocDocument)
  *
- * ```ts import.meta.vitest name="Make empty PandocDocument"
+ * ```ts
  * import { PandocDocument } from "@beep/pandoc-ast"
  *
  * console.log(PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} })._tag)
@@ -72,7 +72,7 @@ export * from "./Pandoc.model.ts";
  *
  * **Example** (Create empty compatibility report)
  *
- * ```ts import.meta.vitest name="Create empty compatibility report"
+ * ```ts
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast"
  *
  * console.log(PandocCompatibilityReport.fromIssues([]).profile)

@@ -55,7 +55,7 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
  *
  * **Example** (Annotate a link mode value)
  *
- * ```ts import.meta.vitest name="Annotate a link mode value"
+ * ```ts
  * import type { MarkdownLinkMode } from "@beep/ontology"
  *
  * const mode: MarkdownLinkMode = "obsidian"
@@ -72,7 +72,7 @@ export type MarkdownLinkMode = typeof MarkdownLinkMode.Type;
  *
  * **Example** (Construct portable link options)
  *
- * ```ts import.meta.vitest name="Construct portable link options"
+ * ```ts
  * import { MarkdownOptions } from "@beep/ontology"
  *
  * const options = MarkdownOptions.make({ linkMode: "portable" })

@@ -49,7 +49,7 @@ export const NoOpenValue = NoOpenValueBase.pipe(
  *
  * **Example** (Assign noopen type value)
  *
- * ```ts import.meta.vitest name="Assign noopen type value"
+ * ```ts
  * import { NoOpenValue } from "@beep/schema/NoOpen"
  *
  * const value: NoOpenValue = "noopen"
@@ -68,7 +68,7 @@ const NoOpenOptionBase = LiteralKit([false, ...NoOpenValueBase.Options]);
  *
  * **Example** (Decode noopen option value)
  *
- * ```ts import.meta.vitest name="Decode noopen option value"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenOption } from "@beep/schema/NoOpen"
  *
@@ -90,7 +90,7 @@ export const NoOpenOption = NoOpenOptionBase.pipe(
  *
  * **Example** (Type decoded noopen option)
  *
- * ```ts import.meta.vitest name="Type decoded noopen option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenOption } from "@beep/schema/NoOpen"
  *
@@ -108,7 +108,7 @@ export type NoOpenOption = typeof NoOpenOption.Type;
  *
  * **Example** (Make response header model)
  *
- * ```ts import.meta.vitest name="Make response header model"
+ * ```ts
  * import * as O from "effect/Option"
  * import { NoOpenResponseHeader } from "@beep/schema/NoOpen"
  *
@@ -136,7 +136,7 @@ type NoOpenResponseHeaderEncoded = typeof NoOpenResponseHeader.Encoded;
  *
  * **Example** (Decode into response header)
  *
- * ```ts import.meta.vitest name="Decode into response header"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenHeader } from "@beep/schema/NoOpen"
  *
@@ -211,7 +211,7 @@ export const NoOpenHeader = S.UndefinedOr(NoOpenOption).pipe(
  *
  * **Example** (Type decoded response header)
  *
- * ```ts import.meta.vitest name="Type decoded response header"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenHeader } from "@beep/schema/NoOpen"
  *

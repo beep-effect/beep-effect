@@ -3,7 +3,7 @@
  *
  * **Example** (Decode HTTP method schema)
  *
- * ```ts import.meta.vitest name="Decode HTTP method schema"
+ * ```ts
  * import * as HttpMethod from "@beep/schema/HttpMethod"
  * import * as S from "effect/Schema"
  *

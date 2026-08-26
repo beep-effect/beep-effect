@@ -99,7 +99,7 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
  *
  * **Example** (Accept ArtifactUri type)
  *
- * ```ts import.meta.vitest name="Accept ArtifactUri type"
+ * ```ts
  * import type { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
  *
  * const accept = (uri: ArtifactUri) => uri

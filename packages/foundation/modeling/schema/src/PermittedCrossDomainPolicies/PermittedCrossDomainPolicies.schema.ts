@@ -55,7 +55,7 @@ export const PermittedCrossDomainPoliciesValue = PermittedCrossDomainPoliciesVal
  *
  * **Example** (Assign none policy type)
  *
- * ```ts import.meta.vitest name="Assign none policy type"
+ * ```ts
  * import type { PermittedCrossDomainPoliciesValue } from "@beep/schema/PermittedCrossDomainPolicies"
  *
  * const value: PermittedCrossDomainPoliciesValue = "none"
@@ -74,7 +74,7 @@ const PermittedCrossDomainPoliciesOptionBase = LiteralKit([false, ...PermittedCr
  *
  * **Example** (Decode master-only option)
  *
- * ```ts import.meta.vitest name="Decode master-only option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { PermittedCrossDomainPoliciesOption } from "@beep/schema/PermittedCrossDomainPolicies"
  *
@@ -96,7 +96,7 @@ export const PermittedCrossDomainPoliciesOption = PermittedCrossDomainPoliciesOp
  *
  * **Example** (Assign master-only option type)
  *
- * ```ts import.meta.vitest name="Assign master-only option type"
+ * ```ts
  * import type { PermittedCrossDomainPoliciesOption } from "@beep/schema/PermittedCrossDomainPolicies"
  *
  * const option: PermittedCrossDomainPoliciesOption = "master-only"
@@ -113,7 +113,7 @@ export type PermittedCrossDomainPoliciesOption = typeof PermittedCrossDomainPoli
  *
  * **Example** (Make response header model)
  *
- * ```ts import.meta.vitest name="Make response header model"
+ * ```ts
  * import * as O from "effect/Option"
  * import { PermittedCrossDomainPoliciesResponseHeader } from "@beep/schema/PermittedCrossDomainPolicies"
  *
@@ -146,7 +146,7 @@ type PermittedCrossDomainPoliciesResponseHeaderEncoded = typeof PermittedCrossDo
  *
  * **Example** (Decode none into header)
  *
- * ```ts import.meta.vitest name="Decode none into header"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { PermittedCrossDomainPoliciesHeader } from "@beep/schema/PermittedCrossDomainPolicies"
  *
@@ -224,7 +224,7 @@ export const PermittedCrossDomainPoliciesHeader = S.Union([PermittedCrossDomainP
  *
  * **Example** (Type annotated header value)
  *
- * ```ts import.meta.vitest name="Type annotated header value"
+ * ```ts
  * import * as O from "effect/Option"
  * import {
  *   PermittedCrossDomainPoliciesResponseHeader,
@@ -260,7 +260,7 @@ export {
  *
  * **Example** (Decode via Header alias)
  *
- * ```ts import.meta.vitest name="Decode via Header alias"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/PermittedCrossDomainPolicies"
  *
@@ -278,7 +278,7 @@ export const Header = PermittedCrossDomainPoliciesHeader;
  *
  * **Example** (Type annotated Header alias)
  *
- * ```ts import.meta.vitest name="Type annotated Header alias"
+ * ```ts
  * import * as O from "effect/Option"
  * import { PermittedCrossDomainPoliciesResponseHeader, type Header } from "@beep/schema/PermittedCrossDomainPolicies"
  *

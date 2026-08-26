@@ -3,7 +3,7 @@
  *
  * **Example** (Decoding with Age.Schema)
  *
- * ```ts import.meta.vitest name="Decoding with Age.Schema"
+ * ```ts
  * import * as Age from "@beep/schema/Age"
  * import * as S from "effect/Schema"
  *

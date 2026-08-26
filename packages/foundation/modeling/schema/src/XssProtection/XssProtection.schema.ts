@@ -50,7 +50,7 @@ export const XSSProtectionMode = XSSProtectionModeBase.pipe(
  *
  * **Example** (Assign block-rendering mode)
  *
- * ```ts import.meta.vitest name="Assign block-rendering mode"
+ * ```ts
  * import type { XSSProtectionMode } from "@beep/schema/XssProtection"
  *
  * const mode: XSSProtectionMode = "block-rendering"
@@ -67,7 +67,7 @@ export type XSSProtectionMode = typeof XSSProtectionMode.Type;
  *
  * **Example** (Make report config)
  *
- * ```ts import.meta.vitest name="Make report config"
+ * ```ts
  * import { XSSProtectionReportConfig } from "@beep/schema/XssProtection"
  *
  * const config = XSSProtectionReportConfig.make({ uri: "https://example.com/report" })
@@ -91,7 +91,7 @@ export class XSSProtectionReportConfig extends S.Class<XSSProtectionReportConfig
  *
  * **Example** (Decode report tuple)
  *
- * ```ts import.meta.vitest name="Decode report tuple"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { XSSProtectionReport, XSSProtectionReportConfig } from "@beep/schema/XssProtection"
  *
@@ -116,7 +116,7 @@ export const XSSProtectionReport = S.Tuple([S.Literal("report"), XSSProtectionRe
  *
  * **Example** (Assign report tuple)
  *
- * ```ts import.meta.vitest name="Assign report tuple"
+ * ```ts
  * import { XSSProtectionReportConfig, type XSSProtectionReport } from "@beep/schema/XssProtection"
  *
  * const value: XSSProtectionReport = ["report", XSSProtectionReportConfig.make({ uri: "https://example.com/report" })]
@@ -133,7 +133,7 @@ export type XSSProtectionReport = typeof XSSProtectionReport.Type;
  *
  * **Example** (Decode sanitize option)
  *
- * ```ts import.meta.vitest name="Decode sanitize option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { XSSProtectionOption } from "@beep/schema/XssProtection"
  *
@@ -154,7 +154,7 @@ export const XSSProtectionOption = S.Union([S.Literal(false), XSSProtectionMode,
  *
  * **Example** (Assign sanitize option)
  *
- * ```ts import.meta.vitest name="Assign sanitize option"
+ * ```ts
  * import type { XSSProtectionOption } from "@beep/schema/XssProtection"
  *
  * const option: XSSProtectionOption = "sanitize"
@@ -171,7 +171,7 @@ export type XSSProtectionOption = typeof XSSProtectionOption.Type;
  *
  * **Example** (Make response header)
  *
- * ```ts import.meta.vitest name="Make response header"
+ * ```ts
  * import * as O from "effect/Option"
  * import { XSSProtectionResponseHeader } from "@beep/schema/XssProtection"
  *
@@ -236,7 +236,7 @@ const formatXSSProtectionValue = Effect.fn("XSSProtection.formatXSSProtectionVal
  *
  * **Example** (Decode block-rendering header)
  *
- * ```ts import.meta.vitest name="Decode block-rendering header"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { XSSProtectionHeader } from "@beep/schema/XssProtection"
  *
@@ -299,7 +299,7 @@ export const XSSProtectionHeader = S.Union([XSSProtectionOption, S.Undefined]).p
  *
  * **Example** (Assign response header type)
  *
- * ```ts import.meta.vitest name="Assign response header type"
+ * ```ts
  * import * as O from "effect/Option"
  * import { XSSProtectionResponseHeader, type XSSProtectionHeader } from "@beep/schema/XssProtection"
  *
@@ -325,7 +325,7 @@ export { XSSProtectionMode as Mode, XSSProtectionResponseHeader as ResponseHeade
  *
  * **Example** (Decode sanitize via alias)
  *
- * ```ts import.meta.vitest name="Decode sanitize via alias"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/XssProtection"
  *
@@ -342,7 +342,7 @@ export const Option = XSSProtectionOption;
  *
  * **Example** (Assign Option alias type)
  *
- * ```ts import.meta.vitest name="Assign Option alias type"
+ * ```ts
  * import type { Option } from "@beep/schema/XssProtection"
  *
  * const option: Option = "sanitize"
@@ -359,7 +359,7 @@ export type Option = typeof Option.Type;
  *
  * **Example** (Decode header via alias)
  *
- * ```ts import.meta.vitest name="Decode header via alias"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/XssProtection"
  *
@@ -377,7 +377,7 @@ export const Header = XSSProtectionHeader;
  *
  * **Example** (Assign Header alias type)
  *
- * ```ts import.meta.vitest name="Assign Header alias type"
+ * ```ts
  * import * as O from "effect/Option"
  * import { XSSProtectionResponseHeader, type Header } from "@beep/schema/XssProtection"
  *

@@ -3,7 +3,7 @@
  *
  * **Example** (Import parser options module)
  *
- * ```ts import.meta.vitest name="Import parser options module"
+ * ```ts
  * import * as ParserOptions from "@beep/schema/ParserOptions"
  *
  * const options = ParserOptions.Schema.make({})

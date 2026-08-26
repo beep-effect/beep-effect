@@ -27,7 +27,7 @@ const $I = $OntologyId.create("Fold");
  * Absolute IRI literal accepted at tuple endpoints.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { AbsoluteIri } from "@beep/ontology"
  *
  * const iri: AbsoluteIri = "https://schema.org/CreativeWork"
@@ -51,7 +51,7 @@ export type AbsoluteIri =
  * Handles resolve through their owned identity annotations during assembly.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { SchemaHandle } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
@@ -68,7 +68,7 @@ export type SchemaHandle = S.Top;
  * Tuple subject: a schema handle, known CURIE, or absolute IRI literal.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { Subject } from "@beep/ontology"
  *
  * const subject: Subject = "skos:Concept"
@@ -84,7 +84,7 @@ export type Subject = SchemaHandle | Curie<CoreVocab> | AbsoluteIri;
  * Scalar payload accepted inside a typed literal object.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { LiteralScalar } from "@beep/ontology"
  *
  * const scalar: LiteralScalar = 42
@@ -103,7 +103,7 @@ export type LiteralScalar = string | number | boolean;
  * must ride this wrapper, so the grammar never guesses.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { TypedLiteral } from "@beep/ontology"
  *
  * const literal: TypedLiteral = { value: "Claim", language: "en" }
@@ -123,7 +123,7 @@ export type TypedLiteral = {
  * Tuple object: a subject endpoint or a typed literal.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { TupleObject } from "@beep/ontology"
  *
  * const object: TupleObject = { value: true }
@@ -142,7 +142,7 @@ export type TupleObject = Subject | TypedLiteral;
  * reverse-marked with `^` (SPARQL inverse-path syntax).
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { Triple } from "@beep/ontology"
  *
  * const triple: Triple = ["https://ns.beep.sh/patent/Claim", "rdfs:subClassOf", "owl:Thing"]
@@ -158,7 +158,7 @@ export type Triple = readonly [Subject, Predicate<CoreVocab>, TupleObject];
  * Input payload accepted by the ontology fold entrypoint.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { OntologyFoldInput } from "@beep/ontology"
  *
  * const input: OntologyFoldInput = { label: "Patent Core", schemas: [], triples: [] }
@@ -283,7 +283,7 @@ export const TripleValue = S.Tuple([SubjectValue, PredicateString, ObjectValue])
  * Runtime type for {@link TripleValue}.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { TripleValue } from "@beep/ontology"
  *
  * const decoded: TripleValue = ["skos:Concept", "rdfs:seeAlso", "http://www.w3.org/2002/07/owl#Thing"]
@@ -319,7 +319,7 @@ export const SkosClassification = LiteralKit(["concept", "conceptScheme"]).pipe(
  * Runtime type for {@link SkosClassification}.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { SkosClassification } from "@beep/ontology"
  *
  * const marker: SkosClassification = "conceptScheme"
@@ -358,7 +358,7 @@ export const AssembledPredicateKind = LiteralKit(["datatype", "object"]).pipe(
  * Runtime type for {@link AssembledPredicateKind}.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { AssembledPredicateKind } from "@beep/ontology"
  *
  * const kind: AssembledPredicateKind = "object"
@@ -374,7 +374,7 @@ export type AssembledPredicateKind = typeof AssembledPredicateKind.Type;
  * Resolved literal payload carried by an assembled fact object.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import { FactLiteral } from "@beep/ontology"
  * import * as O from "effect/Option"
  *
@@ -420,7 +420,7 @@ export const FactObject = S.Union([IRI, FactLiteral]).pipe(
  * Runtime type for {@link FactObject}.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { FactObject } from "@beep/ontology"
  * import { FactLiteral } from "@beep/ontology"
  * import * as O from "effect/Option"
@@ -441,7 +441,7 @@ export type FactObject = typeof FactObject.Type;
  * never an enumerated field.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import { AssembledFact } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
@@ -473,7 +473,7 @@ export class AssembledFact extends S.Class<AssembledFact>($I`AssembledFact`)(
  * One assembled field predicate with its inferred kind.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import { AssembledPredicate } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
@@ -509,7 +509,7 @@ export class AssembledPredicate extends S.Class<AssembledPredicate>($I`Assembled
  * One assembled ontology class with its field predicates.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import { AssembledClass } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
@@ -567,7 +567,7 @@ export const OntologyWarningCode = LiteralKit([
  * Runtime type for {@link OntologyWarningCode}.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { OntologyWarningCode } from "@beep/ontology"
  *
  * const code: OntologyWarningCode = "missingPrefLabel"
@@ -586,7 +586,7 @@ export type OntologyWarningCode = typeof OntologyWarningCode.Type;
  * {@link OntologyAssemblyError} failures instead.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import { OntologyValidationWarning } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
@@ -615,7 +615,7 @@ export class OntologyValidationWarning extends S.Class<OntologyValidationWarning
  * The assembled, deterministic result of an ontology fold.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import { AssembledOntology } from "@beep/ontology"
  * import * as S from "effect/Schema"
  *
@@ -680,7 +680,7 @@ export const OntologyAssemblyErrorReason = LiteralKit([
  * Runtime type for {@link OntologyAssemblyErrorReason}.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import type { OntologyAssemblyErrorReason } from "@beep/ontology"
  *
  * const reason: OntologyAssemblyErrorReason = "unresolvedHandle"
@@ -696,7 +696,7 @@ export type OntologyAssemblyErrorReason = typeof OntologyAssemblyErrorReason.Typ
  * Typed assembly failure raised by the ontology fold's gate.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import { OntologyAssemblyError } from "@beep/ontology"
  * import * as O from "effect/Option"
  *

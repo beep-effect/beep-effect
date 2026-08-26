@@ -121,7 +121,7 @@ export const YouTubeVideoId = S.String.check(
  *
  * **Example** (Parse footnote identifier)
  *
- * ```ts import.meta.vitest name="Parse footnote identifier"
+ * ```ts
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
  *
  * const identifier = FootnoteIdentifier.fromUnknown("note-1")
@@ -151,7 +151,7 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
  *
  * **Example** (Type footnote identifier)
  *
- * ```ts import.meta.vitest name="Type footnote identifier"
+ * ```ts
  * import type { FootnoteIdentifier as FootnoteIdentifierValue } from "@beep/md/Md.model"
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
  *
@@ -192,7 +192,7 @@ export const TableAlignment = LiteralKit(["none", "left", "center", "right"]).pi
  *
  * **Example** (Assign right alignment)
  *
- * ```ts import.meta.vitest name="Assign right alignment"
+ * ```ts
  * import type { TableAlignment } from "@beep/md/Md.model"
  *
  * const alignment: TableAlignment = "right"
@@ -232,7 +232,7 @@ export const AdmonitionKind = LiteralKit(["note", "tip", "important", "warning",
  *
  * **Example** (Assign tip kind)
  *
- * ```ts import.meta.vitest name="Assign tip kind"
+ * ```ts
  * import type { AdmonitionKind } from "@beep/md/Md.model"
  *
  * const kind: AdmonitionKind = "tip"
@@ -272,7 +272,7 @@ export const EmbedKind = LiteralKit(["link", "image", "video", "audio", "unknown
  *
  * **Example** (Assign image kind)
  *
- * ```ts import.meta.vitest name="Assign image kind"
+ * ```ts
  * import type { EmbedKind } from "@beep/md/Md.model"
  *
  * const kind: EmbedKind = "image"
@@ -993,7 +993,7 @@ export class InlineMath extends S.TaggedClass<InlineMath>($I`InlineMath`)(
  *
  * **Example** (Encode inline math)
  *
- * ```ts import.meta.vitest name="Encode inline math"
+ * ```ts
  * import type { InlineMath } from "@beep/md/Md.model"
  *
  * const encoded: InlineMath.Encoded = { _tag: "inlineMath", value: "a+b" }
@@ -1050,7 +1050,7 @@ export class FootnoteReference extends S.TaggedClass<FootnoteReference>($I`Footn
  *
  * **Example** (Encode footnote reference)
  *
- * ```ts import.meta.vitest name="Encode footnote reference"
+ * ```ts
  * import type { FootnoteReference } from "@beep/md/Md.model"
  *
  * const encoded: FootnoteReference.Encoded = { _tag: "footnoteReference", identifier: "note-1" }
@@ -2514,7 +2514,7 @@ export class MathBlock extends S.TaggedClass<MathBlock>($I`MathBlock`)(
  *
  * **Example** (Encode math block)
  *
- * ```ts import.meta.vitest name="Encode math block"
+ * ```ts
  * import type { MathBlock } from "@beep/md/Md.model"
  *
  * const encoded: MathBlock.Encoded = { _tag: "mathBlock", value: "a=b" }
@@ -2577,7 +2577,7 @@ export class FootnoteDefinition extends S.TaggedClass<FootnoteDefinition>($I`Foo
  *
  * **Example** (Encode footnote definition)
  *
- * ```ts import.meta.vitest name="Encode footnote definition"
+ * ```ts
  * import type { FootnoteDefinition } from "@beep/md/Md.model"
  *
  * const encoded: FootnoteDefinition.Encoded = {
@@ -2654,7 +2654,7 @@ export class Admonition extends S.TaggedClass<Admonition>($I`Admonition`)(
  *
  * **Example** (Encode admonition block)
  *
- * ```ts import.meta.vitest name="Encode admonition block"
+ * ```ts
  * import type { Admonition } from "@beep/md/Md.model"
  *
  * const encoded: Admonition.Encoded = { _tag: "admonition", kind: "tip", children: [] }
@@ -2727,7 +2727,7 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
  *
  * **Example** (Encode embed block)
  *
- * ```ts import.meta.vitest name="Encode embed block"
+ * ```ts
  * import type { Embed } from "@beep/md/Md.model"
  *
  * const encoded: Embed.Encoded = { _tag: "embed", kind: "video", src: "https://example.com/demo" }

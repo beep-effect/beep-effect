@@ -21,7 +21,7 @@
  * const sym = $MyPkgId.symbol()
  *
  * userId // => "@beep/my-pkg/UserId"
- * console.log(sym)// Symbol.for("@beep/my-pkg")
+ * sym // => Symbol.for("@beep/my-pkg")
  * ```
  *
  * @packageDocumentation
@@ -131,7 +131,7 @@ const $I = {
  *
  * **Example** (Reject an interpolated tag call)
  *
- * ```ts import.meta.vitest name="Reject an interpolated tag call"
+ * ```ts
  * import { make, IdentityInterpolationError } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
@@ -385,7 +385,7 @@ export type TitleFromIdentifier<Identifier extends string> = JoinTitleWords<
  *
  * **Example** (Project an identity onto a namespace authority)
  *
- * ```ts import.meta.vitest name="Project an identity onto a namespace authority"
+ * ```ts
  * import type { IriFromIdentity } from "@beep/identity"
  *
  * type Iri = IriFromIdentity<"https://ns.beep.sh/", "@beep/schema/Entity">
@@ -414,7 +414,7 @@ export type IriFromIdentity<Authority extends string, Identity extends string> =
  *
  * **Example** (Abbreviate an identity with an owned prefix)
  *
- * ```ts import.meta.vitest name="Abbreviate an identity with an owned prefix"
+ * ```ts
  * import type { CurieFromIdentity } from "@beep/identity"
  *
  * type Curie = CurieFromIdentity<"beep", "@beep/schema/Entity">
@@ -444,7 +444,7 @@ export type CurieFromIdentity<Prefix extends string, Identity extends string> = 
  *
  * **Example** (Slug a mixed-separator identity)
  *
- * ```ts import.meta.vitest name="Slug a mixed-separator identity"
+ * ```ts
  * import type { SlugFromIdentifier } from "@beep/identity"
  *
  * type Slug = SlugFromIdentifier<"@beep/Ontology.models/HttpUrl">
@@ -701,7 +701,7 @@ export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
  *
  * **Example** (Mark a schema as a SKOS concept)
  *
- * ```ts import.meta.vitest name="Mark a schema as a SKOS concept"
+ * ```ts
  * import type { SkosClassification } from "@beep/identity"
  *
  * const marker: SkosClassification = "concept"
@@ -724,7 +724,7 @@ export type SkosClassification = "concept" | "conceptScheme";
  *
  * **Example** (Borrow a vocabulary predicate)
  *
- * ```ts import.meta.vitest name="Borrow a vocabulary predicate"
+ * ```ts
  * import type { OntologyKeyOptions } from "@beep/identity"
  *
  * const options: OntologyKeyOptions = { term: "skos:prefLabel" }
@@ -755,7 +755,7 @@ export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = Omit<
  *
  * **Example** (Describe and classify a schema class)
  *
- * ```ts import.meta.vitest name="Describe and classify a schema class"
+ * ```ts
  * import type { OntologyClassExtras } from "@beep/identity"
  *
  * const extras: OntologyClassExtras = { description: "A patent claim.", skos: "concept" }
@@ -1648,7 +1648,7 @@ export const BaseIdentityInput = S.String.pipe(
  *
  * **Example** (Hold a normalized base segment)
  *
- * ```ts import.meta.vitest name="Hold a normalized base segment"
+ * ```ts
  * import type { BaseIdentityInput } from "@beep/identity"
  *
  * const base: BaseIdentityInput = "my-pkg"
@@ -2162,7 +2162,7 @@ type MakeReturn<
  *
  * **Example** (Compose from a fully scoped name)
  *
- * ```ts import.meta.vitest name="Compose from a fully scoped name"
+ * ```ts
  * import { make } from "@beep/identity"
  *
  * // Full scoped name works too

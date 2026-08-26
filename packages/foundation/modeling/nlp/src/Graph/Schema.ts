@@ -50,7 +50,7 @@ export const TextNodeType = LiteralKit(["sentence", "token", "paragraph", "docum
  *
  * **Example** (Assign TextNodeType union)
  *
- * ```ts import.meta.vitest name="Assign TextNodeType union"
+ * ```ts
  * import type { TextNodeType } from "@beep/nlp/Graph/Schema"
  *
  * const kind: TextNodeType = "sentence"
@@ -100,7 +100,7 @@ export const TextEdgeRelation = LiteralKit([
  *
  * **Example** (Assign TextEdgeRelation union)
  *
- * ```ts import.meta.vitest name="Assign TextEdgeRelation union"
+ * ```ts
  * import type { TextEdgeRelation } from "@beep/nlp/Graph/Schema"
  *
  * const relation: TextEdgeRelation = "contains"
@@ -187,7 +187,7 @@ export const TextNode = TextNodeType.mapMembers(
  *
  * **Example** (Read TextNode type field)
  *
- * ```ts import.meta.vitest name="Read TextNode type field"
+ * ```ts
  * import type { TextNode } from "@beep/nlp/Graph/Schema"
  *
  * const typeName = (node: TextNode) => node.type
@@ -251,7 +251,7 @@ export const TextEdge = TextEdgeRelation.mapMembers(
  *
  * **Example** (Read TextEdge relation field)
  *
- * ```ts import.meta.vitest name="Read TextEdge relation field"
+ * ```ts
  * import type { TextEdge } from "@beep/nlp/Graph/Schema"
  *
  * const relation = (edge: TextEdge) => edge.relation

@@ -3,7 +3,7 @@
  *
  * **Example** (Import and decode schema)
  *
- * ```ts import.meta.vitest name="Import and decode schema"
+ * ```ts
  * import * as CardinalDirection from "@beep/schema/CardinalDirection"
  * import * as S from "effect/Schema"
  *

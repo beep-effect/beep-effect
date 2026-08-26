@@ -14,7 +14,7 @@ const $I = $SchemaId.create("DomEvent");
  *
  * **Example** (Guard Event instance)
  *
- * ```ts import.meta.vitest name="Guard Event instance"
+ * ```ts
  * import { isEvent } from "@beep/schema/DomEvent"
  *
  * console.log(isEvent(new Event("submit")))
@@ -30,7 +30,7 @@ export const isEvent = (u: unknown): u is Event => u instanceof Event;
  *
  * **Example** (Decode Event with schema)
  *
- * ```ts import.meta.vitest name="Decode Event with schema"
+ * ```ts
  * import { DOMEvent } from "@beep/schema/DomEvent"
  * import * as S from "effect/Schema"
  *
@@ -52,7 +52,7 @@ export const DOMEvent = S.declare(isEvent).pipe(
  *
  * **Example** (Typed DOMEvent decode)
  *
- * ```ts import.meta.vitest name="Typed DOMEvent decode"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DOMEvent } from "@beep/schema/DomEvent"
  *

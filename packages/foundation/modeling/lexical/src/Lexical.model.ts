@@ -239,7 +239,7 @@ export const TextFormatMask = TextFormatMaskBase;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (mask: TextFormatMask) => mask
@@ -407,7 +407,7 @@ export const TextDetailMask = TextDetailMaskBase;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { TextDetailMask } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (mask: TextDetailMask) => mask
@@ -448,7 +448,7 @@ export const LexicalIndentDepth = NonNegativeInt.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { LexicalIndentDepth } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (depth: LexicalIndentDepth) => depth
@@ -526,7 +526,7 @@ export const TableCellSpan = PosInt.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { TableCellSpan } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (span: TableCellSpan) => span
@@ -567,7 +567,7 @@ export const TableDimension = NonNegativeInt.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { TableDimension } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (dimension: TableDimension) => dimension
@@ -584,7 +584,7 @@ export type TableDimension = typeof TableDimension.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
  *
  * console.log(ArtifactRefId.fromUnknown("artifact-123"))
@@ -613,7 +613,7 @@ export const ArtifactRefId = S.NonEmptyString.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (id: ArtifactRefId) => id
@@ -651,7 +651,7 @@ export const ElementFormat = LiteralKit(["left", "start", "center", "right", "en
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { ElementFormat } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (format: ElementFormat) => format
@@ -688,7 +688,7 @@ export const Direction = LiteralKit(["ltr", "rtl"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { Direction } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (direction: Direction) => direction
@@ -725,7 +725,7 @@ export const TextMode = LiteralKit(["normal", "token", "segmented"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { TextMode } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (mode: TextMode) => mode
@@ -762,7 +762,7 @@ export const HeadingTag = LiteralKit(["h1", "h2", "h3", "h4", "h5", "h6"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { HeadingTag } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (tag: HeadingTag) => tag
@@ -799,7 +799,7 @@ export const ListType = LiteralKit(["number", "bullet", "check"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { ListType } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (listType: ListType) => listType
@@ -836,7 +836,7 @@ export const ListTag = LiteralKit(["ul", "ol"]).pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { ListTag } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (tag: ListTag) => tag
@@ -897,7 +897,7 @@ export const SafeInlineStyle = S.String.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { SafeInlineStyle } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (style: SafeInlineStyle) => style
@@ -956,7 +956,7 @@ export const SafeStyleValue = S.String.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { SafeStyleValue } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (value: SafeStyleValue) => value
@@ -1012,7 +1012,7 @@ export const SafeUrl = S.String.pipe(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { SafeUrl } from "@beep/lexical-schema/Lexical.model"
  *
  * const accept = (url: SafeUrl) => url
@@ -2603,7 +2603,7 @@ export const LexicalNode = RawLexicalNode.check(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
  * const nodeType = (node: LexicalNode) => node.type
@@ -2876,7 +2876,7 @@ export declare namespace SerializedEditorState {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
@@ -2909,7 +2909,7 @@ export const LexicalNodeWire = S.StructWithRest(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
  *
  * const node: LexicalNodeWire = { type: "future-node", version: 2 }
@@ -2926,7 +2926,7 @@ export type LexicalNodeWire = typeof LexicalNodeWire.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
  *
  * const children: LexicalNodeWire.Type["children"] = { futureShape: true }
@@ -2966,7 +2966,7 @@ export declare namespace LexicalNodeWire {
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { SerializedEditorStateWire } from "@beep/lexical-schema/Lexical.model"
@@ -3005,7 +3005,7 @@ export const SerializedEditorStateWire = S.StructWithRest(
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import type { SerializedEditorStateWire } from "@beep/lexical-schema/Lexical.model"
  *
  * const state: SerializedEditorStateWire = { root: { type: "root", version: 1, children: [] } }
@@ -3022,7 +3022,7 @@ export type SerializedEditorStateWire = typeof SerializedEditorStateWire.Type;
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { EditorStateWireFromJson } from "@beep/lexical-schema/Lexical.model"
@@ -3076,7 +3076,7 @@ export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`Lex
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { LexicalCompatibilityIssue } from "@beep/lexical-schema/Lexical.model"
  *
  * const issue = LexicalCompatibilityIssue.make({ message: "Unknown node type." })
@@ -3107,7 +3107,7 @@ export class LexicalCompatibilityIssue extends S.Class<LexicalCompatibilityIssue
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { Effect } from "effect"
  * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3214,7 +3214,7 @@ export const decodeEditorStateStrictResult = (
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { Effect } from "effect"
  * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3241,7 +3241,7 @@ export const decodeEditorStateStrict = (input: unknown): Effect.Effect<Serialize
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { Effect } from "effect"
  * import { decodeEditorStateLossless } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3304,7 +3304,7 @@ export const analyzeEditorStateCompatibilityResult = (
  *
  * **Example** (Use the lexical model)
  *
- * ```ts import.meta.vitest name="Use the lexical model"
+ * ```ts
  * import { Effect } from "effect"
  * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
  *

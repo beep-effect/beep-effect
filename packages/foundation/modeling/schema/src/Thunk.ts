@@ -54,7 +54,7 @@ export type TypeId = typeof TypeId;
  *
  * **Example** (Satisfy ThunkUnknown type)
  *
- * ```ts import.meta.vitest name="Satisfy ThunkUnknown type"
+ * ```ts
  * import { nominal, type ThunkUnknown } from "@beep/schema/Thunk"
  *
  * const thunk = nominal(() => "ready") satisfies ThunkUnknown
@@ -73,7 +73,7 @@ const isThunkUnknownValue = (u: unknown): u is () => unknown => P.isFunction(u);
  *
  * **Example** (Brand zero-arg function)
  *
- * ```ts import.meta.vitest name="Brand zero-arg function"
+ * ```ts
  * import { nominal } from "@beep/schema/Thunk"
  *
  * const thunk = nominal(() => 42)
@@ -91,7 +91,7 @@ export const nominal = Brand.make<ThunkUnknown>(isThunkUnknownValue);
  *
  * **Example** (Decode unknown as thunk)
  *
- * ```ts import.meta.vitest name="Decode unknown as thunk"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ThunkUnknown } from "@beep/schema/Thunk"
  *
@@ -139,7 +139,7 @@ export const isThunkUnknown = ThunkUnknown.is;
  *
  * **Example** (Make string thunk schema)
  *
- * ```ts import.meta.vitest name="Make string thunk schema"
+ * ```ts
  * import * as S from "effect/Schema"
  * import * as P from "effect/Predicate"
  * import { make } from "@beep/schema/Thunk"

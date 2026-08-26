@@ -3,7 +3,7 @@
  *
  * **Example** (Decode HTTP status schema)
  *
- * ```ts import.meta.vitest name="Decode HTTP status schema"
+ * ```ts
  * import * as HttpStatus from "@beep/schema/HttpStatus"
  * import * as S from "effect/Schema"
  *

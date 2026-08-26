@@ -23,7 +23,7 @@ import { LiteralKit } from "../LiteralKit/index.ts";
  *
  * **Example** (Create identity composer)
  *
- * ```ts import.meta.vitest name="Create identity composer"
+ * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  *
  * const $I = $SchemaId.create("JSONSchema")
@@ -43,7 +43,7 @@ export const $I = $SchemaId.create("JSONSchema");
  *
  * **Example** (Decode canonical keyword)
  *
- * ```ts import.meta.vitest name="Decode canonical keyword"
+ * ```ts
  * import { CanonicalKeyword } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -123,7 +123,7 @@ export const CanonicalKeyword = LiteralKit([
  *
  * **Example** (Annotate keyword type)
  *
- * ```ts import.meta.vitest name="Annotate keyword type"
+ * ```ts
  * import type { CanonicalKeyword } from "@beep/schema/JSONSchema"
  *
  * const keyword: CanonicalKeyword = "properties"
@@ -140,7 +140,7 @@ export type CanonicalKeyword = typeof CanonicalKeyword.Type;
  *
  * **Example** (Guard keyword values)
  *
- * ```ts import.meta.vitest name="Guard keyword values"
+ * ```ts
  * import { isCanonicalKeyword } from "@beep/schema/JSONSchema"
  *
  * console.log(isCanonicalKeyword("properties"))
@@ -157,7 +157,7 @@ export const isCanonicalKeyword = S.is(CanonicalKeyword);
  *
  * **Example** (Decode type name)
  *
- * ```ts import.meta.vitest name="Decode type name"
+ * ```ts
  * import { TypeName } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -179,7 +179,7 @@ export const TypeName = LiteralKit(["array", "boolean", "integer", "null", "numb
  *
  * **Example** (Annotate type name)
  *
- * ```ts import.meta.vitest name="Annotate type name"
+ * ```ts
  * import type { TypeName } from "@beep/schema/JSONSchema"
  *
  * const name: TypeName = "string"
@@ -205,7 +205,7 @@ const TypeNameListUniqueCheck = S.isUnique({
  *
  * **Example** (Decode type name list)
  *
- * ```ts import.meta.vitest name="Decode type name list"
+ * ```ts
  * import { TypeNameList } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -229,7 +229,7 @@ export const TypeNameList = S.NonEmptyArray(TypeName)
  *
  * **Example** (Annotate type name list)
  *
- * ```ts import.meta.vitest name="Annotate type name list"
+ * ```ts
  * import type { TypeNameList } from "@beep/schema/JSONSchema"
  *
  * const names: TypeNameList = ["string", "null"]
@@ -247,7 +247,7 @@ export type TypeNameList = typeof TypeNameList.Type;
  *
  * **Example** (Decode single or list types)
  *
- * ```ts import.meta.vitest name="Decode single or list types"
+ * ```ts
  * import { Types } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -270,7 +270,7 @@ export const Types = S.Union([TypeName, TypeNameList]).pipe(
  *
  * **Example** (Annotate types union)
  *
- * ```ts import.meta.vitest name="Annotate types union"
+ * ```ts
  * import type { Types } from "@beep/schema/JSONSchema"
  *
  * const single: Types = "object"
@@ -296,7 +296,7 @@ const NonNegativeCountCheck = S.isGreaterThanOrEqualTo(0, {
  *
  * **Example** (Decode non-negative count)
  *
- * ```ts import.meta.vitest name="Decode non-negative count"
+ * ```ts
  * import { NonNegativeCount } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -319,7 +319,7 @@ export const NonNegativeCount = S.Int.check(NonNegativeCountCheck).pipe(
  *
  * **Example** (Annotate non-negative count)
  *
- * ```ts import.meta.vitest name="Annotate non-negative count"
+ * ```ts
  * import type { NonNegativeCount } from "@beep/schema/JSONSchema"
  *
  * const maxItems: NonNegativeCount = 3
@@ -344,7 +344,7 @@ const PositiveNumberCheck = S.isGreaterThan(0, {
  *
  * **Example** (Decode positive number)
  *
- * ```ts import.meta.vitest name="Decode positive number"
+ * ```ts
  * import { PositiveNumber } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -367,7 +367,7 @@ export const PositiveNumber = S.Finite.check(PositiveNumberCheck).pipe(
  *
  * **Example** (Annotate positive number)
  *
- * ```ts import.meta.vitest name="Annotate positive number"
+ * ```ts
  * import type { PositiveNumber } from "@beep/schema/JSONSchema"
  *
  * const step: PositiveNumber = 0.5
@@ -410,7 +410,7 @@ const RegexCompilesCheck = S.makeFilter<string>(
  *
  * **Example** (Filter regex record keys)
  *
- * ```ts import.meta.vitest name="Filter regex record keys"
+ * ```ts
  * import * as R from "effect/Record"
  * import * as S from "effect/Schema"
  *
@@ -463,7 +463,7 @@ const safeRegexSources = [
  *
  * **Example** (Decode regex pattern string)
  *
- * ```ts import.meta.vitest name="Decode regex pattern string"
+ * ```ts
  * import { RegexPatternString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -486,7 +486,7 @@ export const RegexPatternString = S.String.check(RegexCompilesCheck).pipe(
  *
  * **Example** (Annotate regex pattern string)
  *
- * ```ts import.meta.vitest name="Annotate regex pattern string"
+ * ```ts
  * import type { RegexPatternString } from "@beep/schema/JSONSchema"
  *
  * const pattern: RegexPatternString = "^[a-z]+$"
@@ -513,7 +513,7 @@ const AnchorNameCheck = S.isPattern(anchorNamePattern, {
  *
  * **Example** (Decode anchor name)
  *
- * ```ts import.meta.vitest name="Decode anchor name"
+ * ```ts
  * import { AnchorName } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -536,7 +536,7 @@ export const AnchorName = S.String.check(AnchorNameCheck).pipe(
  *
  * **Example** (Annotate anchor name)
  *
- * ```ts import.meta.vitest name="Annotate anchor name"
+ * ```ts
  * import type { AnchorName } from "@beep/schema/JSONSchema"
  *
  * const anchor: AnchorName = "node"
@@ -671,7 +671,7 @@ const UriReferenceCheck = S.makeFilter<string>((value) => parseUriReference(valu
  *
  * **Example** (Decode URI reference)
  *
- * ```ts import.meta.vitest name="Decode URI reference"
+ * ```ts
  * import { UriReferenceString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -703,7 +703,7 @@ export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
  *
  * **Example** (Annotate URI reference)
  *
- * ```ts import.meta.vitest name="Annotate URI reference"
+ * ```ts
  * import type { UriReferenceString } from "@beep/schema/JSONSchema"
  *
  * const ref: UriReferenceString = "#/$defs/User"
@@ -756,7 +756,7 @@ const AbsoluteUriCheck = S.makeFilter<string>(isNormalizedAbsoluteUri, {
  *
  * **Example** (Decode absolute URI)
  *
- * ```ts import.meta.vitest name="Decode absolute URI"
+ * ```ts
  * import { AbsoluteUriString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -784,7 +784,7 @@ export const AbsoluteUriString = UriReferenceString.check(AbsoluteUriCheck).pipe
  *
  * **Example** (Annotate absolute URI)
  *
- * ```ts import.meta.vitest name="Annotate absolute URI"
+ * ```ts
  * import type { AbsoluteUriString } from "@beep/schema/JSONSchema"
  *
  * const uri: AbsoluteUriString = "https://json-schema.org/draft/2020-12/schema"
@@ -810,7 +810,7 @@ const IdUriReferenceCheck = S.isPattern(/^[^#]*#?$/, {
  *
  * **Example** (Decode $id URI reference)
  *
- * ```ts import.meta.vitest name="Decode $id URI reference"
+ * ```ts
  * import { IdUriReferenceString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -834,7 +834,7 @@ export const IdUriReferenceString = UriReferenceString.check(IdUriReferenceCheck
  *
  * **Example** (Annotate $id URI reference)
  *
- * ```ts import.meta.vitest name="Annotate $id URI reference"
+ * ```ts
  * import type { IdUriReferenceString } from "@beep/schema/JSONSchema"
  *
  * const id: IdUriReferenceString = "https://example.com/schema.json"
@@ -863,7 +863,7 @@ const NotCanonicalKeywordCheck = S.makeFilter<string>(
  *
  * **Example** (Decode extension key)
  *
- * ```ts import.meta.vitest name="Decode extension key"
+ * ```ts
  * import { ExtensionKey } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -886,7 +886,7 @@ export const ExtensionKey = S.String.check(NotCanonicalKeywordCheck).pipe(
  *
  * **Example** (Annotate extension key)
  *
- * ```ts import.meta.vitest name="Annotate extension key"
+ * ```ts
  * import type { ExtensionKey } from "@beep/schema/JSONSchema"
  *
  * const key: ExtensionKey = "x-vendor"
@@ -905,7 +905,7 @@ export type ExtensionKey = typeof ExtensionKey.Type;
  *
  * **Example** (Decode nested JSON value)
  *
- * ```ts import.meta.vitest name="Decode nested JSON value"
+ * ```ts
  * import { JsonValue } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -928,7 +928,7 @@ export const JsonValue = S.Json.pipe(
  *
  * **Example** (Annotate JSON value type)
  *
- * ```ts import.meta.vitest name="Annotate JSON value type"
+ * ```ts
  * import type { JsonValue } from "@beep/schema/JSONSchema"
  *
  * const value: JsonValue = { nested: [1, "two", null] }
@@ -967,7 +967,7 @@ const ExtensionsBagKeysCheck = S.makeFilter<{ readonly [key: string]: unknown }>
  *
  * **Example** (Decode extensions bag)
  *
- * ```ts import.meta.vitest name="Decode extensions bag"
+ * ```ts
  * import { ExtensionsBag } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
@@ -999,7 +999,7 @@ export const ExtensionsBag = S.Record(S.String, S.Unknown)
  *
  * **Example** (Annotate extensions bag)
  *
- * ```ts import.meta.vitest name="Annotate extensions bag"
+ * ```ts
  * import type { ExtensionsBag } from "@beep/schema/JSONSchema"
  *
  * const bag: ExtensionsBag = { "x-vendor": 42 }

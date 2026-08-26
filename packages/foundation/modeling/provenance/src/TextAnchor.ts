@@ -142,7 +142,7 @@ const TextAnchorSchema = TextAnchorStruct.mapFields(identity)
  *
  * **Example** (Decoding a TextAnchor)
  *
- * ```ts import.meta.vitest name="Decoding a TextAnchor"
+ * ```ts
  * import { Effect } from "effect"
  * import { TextAnchor } from "@beep/provenance/TextAnchor"
  * import * as S from "effect/Schema"

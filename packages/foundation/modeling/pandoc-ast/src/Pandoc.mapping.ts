@@ -1218,7 +1218,7 @@ export declare namespace DocumentToPandocResult {
  *
  * **Example** (Map empty pandoc document)
  *
- * ```ts import.meta.vitest name="Map empty pandoc document"
+ * ```ts
  * import * as Effect from "effect/Effect"
  * import { pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
@@ -1267,7 +1267,7 @@ export const pandocToDocument = (
  *
  * **Example** (Map empty md document)
  *
- * ```ts import.meta.vitest name="Map empty md document"
+ * ```ts
  * import * as Effect from "effect/Effect"
  * import * as Md from "@beep/md/Md.model"
  * import { documentToPandoc } from "@beep/pandoc-ast/Pandoc.mapping"

@@ -3,7 +3,7 @@
  *
  * **Example** (Import namespace keys check)
  *
- * ```ts import.meta.vitest name="Import namespace keys check"
+ * ```ts
  * import * as PermittedCrossDomainPolicies from "@beep/schema/PermittedCrossDomainPolicies"
  *
  * console.log(Object.keys(PermittedCrossDomainPolicies).includes("Header"))

@@ -92,7 +92,7 @@ const decodeJsonlUnknown = Effect.fn("Jsonl.decodeJsonlUnknown")(function* (cont
  *
  * **Example** (Decode JSONL text values)
  *
- * ```ts import.meta.vitest name="Decode JSONL text values"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { JsonlTextToUnknown } from "@beep/schema/Jsonl"

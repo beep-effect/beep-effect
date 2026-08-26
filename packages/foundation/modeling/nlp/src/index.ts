@@ -26,7 +26,7 @@ export * as Algebra from "./Algebra/index.ts";
  *
  * **Example** (Make document identifier)
  *
- * ```ts import.meta.vitest name="Make document identifier"
+ * ```ts
  * import { Core } from "@beep/nlp"
  *
  * console.log(Core.DocumentId.make("doc-a"))
@@ -41,7 +41,7 @@ export * as Core from "./Core/index.ts";
  *
  * **Example** (Log text node schema)
  *
- * ```ts import.meta.vitest name="Log text node schema"
+ * ```ts
  * import { Graph } from "@beep/nlp"
  *
  * console.log(Graph.Schema.TextNode)
@@ -57,7 +57,7 @@ export * as Graph from "./Graph/index.ts";
  *
  * **Example** (Log annotated document contract)
  *
- * ```ts import.meta.vitest name="Log annotated document contract"
+ * ```ts
  * import { Handoff } from "@beep/nlp"
  *
  * console.log(Handoff.Contract.AnnotatedDocument)

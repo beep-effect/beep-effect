@@ -26,7 +26,7 @@ const defaultMaxAge = 60 * 60 * 24 * 365 * 2;
  *
  * **Example** (Making HSTS config)
  *
- * ```ts import.meta.vitest name="Making HSTS config"
+ * ```ts
  * import { ForceHttpsRedirectConfig } from "@beep/schema/ForceHttpsRedirect"
  *
  * const config = ForceHttpsRedirectConfig.make({ includeSubDomains: true, preload: true })
@@ -52,7 +52,7 @@ export class ForceHttpsRedirectConfig extends S.Class<ForceHttpsRedirectConfig>(
  *
  * **Example** (Decoding enabled HSTS tuple)
  *
- * ```ts import.meta.vitest name="Decoding enabled HSTS tuple"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ForceHttpsRedirectConfig, ForceHttpsRedirectEnabled } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -77,7 +77,7 @@ export const ForceHttpsRedirectEnabled = S.Tuple([S.Literal(true), ForceHttpsRed
  *
  * **Example** (Typing enabled HSTS tuple)
  *
- * ```ts import.meta.vitest name="Typing enabled HSTS tuple"
+ * ```ts
  * import { ForceHttpsRedirectConfig, type ForceHttpsRedirectEnabled } from "@beep/schema/ForceHttpsRedirect"
  *
  * const enabled: ForceHttpsRedirectEnabled = [true, ForceHttpsRedirectConfig.make({ includeSubDomains: true })]
@@ -94,7 +94,7 @@ export type ForceHttpsRedirectEnabled = typeof ForceHttpsRedirectEnabled.Type;
  *
  * **Example** (Decoding HSTS option)
  *
- * ```ts import.meta.vitest name="Decoding HSTS option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ForceHttpsRedirectOption } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -115,7 +115,7 @@ export const ForceHttpsRedirectOption = S.Union([S.Boolean, ForceHttpsRedirectEn
  *
  * **Example** (Typing HSTS option)
  *
- * ```ts import.meta.vitest name="Typing HSTS option"
+ * ```ts
  * import type { ForceHttpsRedirectOption } from "@beep/schema/ForceHttpsRedirect"
  *
  * const option: ForceHttpsRedirectOption = true
@@ -132,7 +132,7 @@ export type ForceHttpsRedirectOption = typeof ForceHttpsRedirectOption.Type;
  *
  * **Example** (Making HSTS response header)
  *
- * ```ts import.meta.vitest name="Making HSTS response header"
+ * ```ts
  * import * as O from "effect/Option"
  * import { ForceHttpsRedirectResponseHeader } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -176,7 +176,7 @@ const formatForceHttpsRedirectValue = (config: ForceHttpsRedirectConfig): string
  *
  * **Example** (Decoding HSTS header)
  *
- * ```ts import.meta.vitest name="Decoding HSTS header"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ForceHttpsRedirectHeader } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -257,7 +257,7 @@ export const ForceHttpsRedirectHeader = S.Union([ForceHttpsRedirectOption, S.Und
  *
  * **Example** (Typing HSTS response header)
  *
- * ```ts import.meta.vitest name="Typing HSTS response header"
+ * ```ts
  * import * as O from "effect/Option"
  * import { ForceHttpsRedirectResponseHeader, type ForceHttpsRedirectHeader } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -286,7 +286,7 @@ export { ForceHttpsRedirectConfig as Config, ForceHttpsRedirectResponseHeader as
  *
  * **Example** (Decoding Option alias)
  *
- * ```ts import.meta.vitest name="Decoding Option alias"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -303,7 +303,7 @@ export const Option = ForceHttpsRedirectOption;
  *
  * **Example** (Typing Option alias)
  *
- * ```ts import.meta.vitest name="Typing Option alias"
+ * ```ts
  * import type { Option } from "@beep/schema/ForceHttpsRedirect"
  *
  * const option: Option = true
@@ -320,7 +320,7 @@ export type Option = typeof Option.Type;
  *
  * **Example** (Decoding Header alias)
  *
- * ```ts import.meta.vitest name="Decoding Header alias"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -338,7 +338,7 @@ export const Header = ForceHttpsRedirectHeader;
  *
  * **Example** (Typing Header alias)
  *
- * ```ts import.meta.vitest name="Typing Header alias"
+ * ```ts
  * import * as O from "effect/Option"
  * import { ForceHttpsRedirectResponseHeader, type Header } from "@beep/schema/ForceHttpsRedirect"
  *

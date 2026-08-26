@@ -97,7 +97,7 @@ export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = Readonly
  *
  * **Example** (Validates existing MutableHashMap)
  *
- * ```ts import.meta.vitest name="Validates existing MutableHashMap"
+ * ```ts
  * import { MutableHashMap } from "effect"
  * import * as S from "effect/Schema"
  * import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap"
@@ -127,7 +127,7 @@ export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
  *
  * **Example** (Decodes entries to MutableHashMap)
  *
- * ```ts import.meta.vitest name="Decodes entries to MutableHashMap"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashMap } from "@beep/schema/MutableHashMap"
  *
@@ -176,7 +176,7 @@ export const isMutableHashMap = <Key, Value>(value: unknown): value is MutableHa
  *
  * **Example** (Decodes existing map entries)
  *
- * ```ts import.meta.vitest name="Decodes existing map entries"
+ * ```ts
  * import { MutableHashMap } from "effect"
  * import * as S from "effect/Schema"
  * import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap"
@@ -292,7 +292,7 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
  *
  * **Example** (Round-trips map via entry arrays)
  *
- * ```ts import.meta.vitest name="Round-trips map via entry arrays"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashMap } from "@beep/schema/MutableHashMap"
  *

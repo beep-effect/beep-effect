@@ -25,7 +25,7 @@ type ArbitraryFastCheck = Parameters<S.Annotations.ToArbitrary.Candidate["make"]
  *
  * **Example** (Making API version tuple)
  *
- * ```ts import.meta.vitest name="Making API version tuple"
+ * ```ts
  * import { PandocApiVersion } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(PandocApiVersion.make([1, 23, 1]))
@@ -152,7 +152,7 @@ const PandocFutureConstructorWire = PandocUnknownConstructorWire.pipe(
  *
  * **Example** (Decoding key-value pair)
  *
- * ```ts import.meta.vitest name="Decoding key-value pair"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { PandocKeyValue } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -260,7 +260,7 @@ export declare namespace PandocAttr {
  *
  * **Example** (Making link target)
  *
- * ```ts import.meta.vitest name="Making link target"
+ * ```ts
  * import { PandocTarget } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const target = PandocTarget.make({ title: "", url: "https://example.com" })
@@ -2907,7 +2907,7 @@ const DeferredPandocMetaValue: S.Codec<PandocMetaValue.Type, PandocMetaValue.Enc
  *
  * **Example** (Making boolean meta value)
  *
- * ```ts import.meta.vitest name="Making boolean meta value"
+ * ```ts
  * import { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(MetaBool.make({ value: true }).value)
@@ -2925,7 +2925,7 @@ export const MetaBool = S.TaggedStruct("metaBool", { value: S.Boolean }).pipe(
  *
  * **Example** (Making string meta value)
  *
- * ```ts import.meta.vitest name="Making string meta value"
+ * ```ts
  * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(MetaString.make({ value: "Document" }).value)
@@ -2943,7 +2943,7 @@ export const MetaString = S.TaggedStruct("metaString", { value: S.String }).pipe
  *
  * **Example** (Making inline-list meta)
  *
- * ```ts import.meta.vitest name="Making inline-list meta"
+ * ```ts
  * import { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(MetaInlines.make({ children: [] }).children.length)
@@ -2961,7 +2961,7 @@ export const MetaInlines = S.TaggedStruct("metaInlines", { children: PandocInlin
  *
  * **Example** (Making block-list meta)
  *
- * ```ts import.meta.vitest name="Making block-list meta"
+ * ```ts
  * import { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(MetaBlocks.make({ children: [] }).children.length)
@@ -2979,7 +2979,7 @@ export const MetaBlocks = S.TaggedStruct("metaBlocks", { children: PandocBlockCh
  *
  * **Example** (Making recursive meta list)
  *
- * ```ts import.meta.vitest name="Making recursive meta list"
+ * ```ts
  * import { MetaList, MetaString } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(MetaList.make({ values: [MetaString.make({ value: "one" })] }).values.length)
@@ -2997,7 +2997,7 @@ export const MetaList = S.TaggedStruct("metaList", { values: DeferredPandocMetaV
  *
  * **Example** (Making recursive meta map)
  *
- * ```ts import.meta.vitest name="Making recursive meta map"
+ * ```ts
  * import { MetaMap, MetaString } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(MetaMap.make({ entries: { title: MetaString.make({ value: "Doc" }) } }).entries.title)
@@ -3015,7 +3015,7 @@ export const MetaMap = S.TaggedStruct("metaMap", {
  *
  * **Example** (Making unknown meta value)
  *
- * ```ts import.meta.vitest name="Making unknown meta value"
+ * ```ts
  * import { UnknownMeta } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(UnknownMeta.make({ wire: { t: "MetaFuture" } }).constructorName)
@@ -3061,7 +3061,7 @@ export class UnknownMeta extends S.TaggedClass<UnknownMeta>($I`UnknownMeta`)(
  *
  * **Example** (Checking meta value union)
  *
- * ```ts import.meta.vitest name="Checking meta value union"
+ * ```ts
  * import { MetaString, PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(PandocMetaValue.is(MetaString.make({ value: "Doc" })))

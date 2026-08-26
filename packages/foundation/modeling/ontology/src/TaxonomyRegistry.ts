@@ -22,7 +22,7 @@ const $I = $OntologyId.create("TaxonomyRegistry");
  *
  * **Example** (Make LibrarianInput with metadata)
  *
- * ```ts import.meta.vitest name="Make LibrarianInput with metadata"
+ * ```ts
  * import { LibrarianInput } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * const input = LibrarianInput.make({ client: "acme", conceptIri: IRIReference.make("https://ns.beep.sh/example"), documentClass: "received", fileName: "mail.eml", matter: "aurora" })
@@ -48,7 +48,7 @@ export class LibrarianInput extends S.Class<LibrarianInput>($I`LibrarianInput`)(
  *
  * **Example** (Create local vault FilingPath)
  *
- * ```ts import.meta.vitest name="Create local vault FilingPath"
+ * ```ts
  * import { FilingPath } from "@beep/ontology/TaxonomyRegistry"
  * console.log(FilingPath.make({ kind: "local-vault", path: "vault/acme/matter/mail" }).kind)
  * ```
@@ -66,7 +66,7 @@ export class FilingPath extends S.Class<FilingPath>($I`FilingPath`)(
  *
  * **Example** (Access filingPaths from output)
  *
- * ```ts import.meta.vitest name="Access filingPaths from output"
+ * ```ts
  * import type { LibrarianOutput } from "@beep/ontology/TaxonomyRegistry"
  * const show = (output: LibrarianOutput) => output.filingPaths
  * console.log(show)
@@ -91,7 +91,7 @@ export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput
  *
  * **Example** (Make concept-not-found error)
  *
- * ```ts import.meta.vitest name="Make concept-not-found error"
+ * ```ts
  * import { TaxonomyConceptNotFound } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * console.log(TaxonomyConceptNotFound.make({ conceptIri: IRIReference.make("https://ns.beep.sh/missing") })._tag)
@@ -113,7 +113,7 @@ export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFou
  *
  * **Example** (Make unsupported-class error)
  *
- * ```ts import.meta.vitest name="Make unsupported-class error"
+ * ```ts
  * import { UnsupportedDocumentClass } from "@beep/ontology/TaxonomyRegistry"
  * import { IRIReference } from "@beep/rdf"
  * console.log(UnsupportedDocumentClass.make({ conceptIri: IRIReference.make("https://ns.beep.sh/example"), documentClass: "filed" }).documentClass)

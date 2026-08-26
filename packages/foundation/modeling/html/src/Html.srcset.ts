@@ -216,7 +216,7 @@ export const SrcsetProfile = LiteralKit(["width", "density"]).pipe(
  *
  * **Example** (Density profile type assignment)
  *
- * ```ts import.meta.vitest name="Density profile type assignment"
+ * ```ts
  * import type { SrcsetProfile } from "@beep/html/Html.srcset"
  *
  * const profile: SrcsetProfile = "density"

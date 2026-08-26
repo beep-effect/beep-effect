@@ -50,7 +50,7 @@ export const VerifiedTextAnchorErrorReason = LiteralKit([
  *
  * **Example** (Assign typed error reason)
  *
- * ```ts import.meta.vitest name="Assign typed error reason"
+ * ```ts
  * import type { VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor"
  *
  * const reason: VerifiedTextAnchorErrorReason = "stale-source"

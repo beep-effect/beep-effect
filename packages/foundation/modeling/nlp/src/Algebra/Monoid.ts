@@ -97,7 +97,7 @@ export const make = <A>(options: { readonly empty: A; readonly combine: Monoid<A
  *
  * **Example** (Folding number sum monoid)
  *
- * ```ts import.meta.vitest name="Folding number sum monoid"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const totalCharacters = Monoid.fold(Monoid.NumberSum)([5, 8, 13])
@@ -124,7 +124,7 @@ export const fold =
  *
  * **Example** (Joining strings with separator)
  *
- * ```ts import.meta.vitest name="Joining strings with separator"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const joined = Monoid.combineAll(Monoid.StringJoin(" / "))(["title", "summary", "body"])
@@ -155,7 +155,7 @@ export const combineAll =
  *
  * **Example** (Concatenating string tokens)
  *
- * ```ts import.meta.vitest name="Concatenating string tokens"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const token = Monoid.fold(Monoid.StringConcat)(["sub", "word"])
@@ -181,7 +181,7 @@ export const StringConcat: Monoid<string> = {
  *
  * **Example** (Joining strings skipping empties)
  *
- * ```ts import.meta.vitest name="Joining strings skipping empties"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const phrase = Monoid.fold(Monoid.StringJoin(" "))(["effect", "", "schemas"])
@@ -207,7 +207,7 @@ export const StringJoin = (separator: string): Monoid<string> => ({
  *
  * **Example** (Building delimited list string)
  *
- * ```ts import.meta.vitest name="Building delimited list string"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const list = Monoid.fold(Monoid.StringDelimited({ prefix: "[", suffix: "]", separator: ", " }))(["alpha", "beta", "gamma"])
@@ -246,7 +246,7 @@ export const StringDelimited = (options: {
  *
  * **Example** (Summing word counts)
  *
- * ```ts import.meta.vitest name="Summing word counts"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const wordCount = Monoid.fold(Monoid.NumberSum)([120, 80, 30])
@@ -268,7 +268,7 @@ export const NumberSum: Monoid<number> = {
  *
  * **Example** (Multiplying weight factors)
  *
- * ```ts import.meta.vitest name="Multiplying weight factors"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const combinedWeight = Monoid.fold(Monoid.NumberProduct)([0.8, 0.5, 0.25])
@@ -290,7 +290,7 @@ export const NumberProduct: Monoid<number> = {
  *
  * **Example** (Finding peak score)
  *
- * ```ts import.meta.vitest name="Finding peak score"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const peakScore = Monoid.fold(Monoid.NumberMax)([0.42, 0.91, 0.73])
@@ -312,7 +312,7 @@ export const NumberMax: Monoid<number> = {
  *
  * **Example** (Finding nearest distance)
  *
- * ```ts import.meta.vitest name="Finding nearest distance"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const nearestDistance = Monoid.fold(Monoid.NumberMin)([12, 4, 19])
@@ -468,7 +468,7 @@ export const SetIntersection: <A>() => Monoid<O.Option<HashSet.HashSet<A>>> = <A
  *
  * **Example** (Adding embedding vectors)
  *
- * ```ts import.meta.vitest name="Adding embedding vectors"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const embeddingSum = Monoid.fold(Monoid.VectorAdd(3))([
@@ -493,7 +493,7 @@ export const VectorAdd = (dimension: number): Monoid<ReadonlyArray<number>> => (
  *
  * **Example** (Averaging vector embeddings)
  *
- * ```ts import.meta.vitest name="Averaging vector embeddings"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const accumulated = Monoid.fold(Monoid.VectorAverage(2))([
@@ -524,7 +524,7 @@ export const VectorAverage = (
  *
  * **Example** (Extracting vector average)
  *
- * ```ts import.meta.vitest name="Extracting vector average"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const average = Monoid.getAverage({ sum: [12, 18], count: 3 })
@@ -550,7 +550,7 @@ export const getAverage = (result: {
  *
  * **Example** (Combining sum and max)
  *
- * ```ts import.meta.vitest name="Combining sum and max"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const Stats = Monoid.Product(Monoid.NumberSum, Monoid.NumberMax)
@@ -582,7 +582,7 @@ export const Product: {
  *
  * **Example** (Triple product corpus stats)
  *
- * ```ts import.meta.vitest name="Triple product corpus stats"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const CorpusStats = Monoid.Product3(Monoid.NumberSum, Monoid.NumberSum, Monoid.NumberMax)
@@ -618,7 +618,7 @@ export const Product3: {
  *
  * **Example** (Folding optional scores)
  *
- * ```ts import.meta.vitest name="Folding optional scores"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as O from "effect/Option"
  *
@@ -681,7 +681,7 @@ export const Endo = <A>(): Monoid<(a: A) => A> => ({
  *
  * **Example** (Reversing join order)
  *
- * ```ts import.meta.vitest name="Reversing join order"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const reversed = Monoid.fold(Monoid.Dual(Monoid.StringJoin(" -> ")))(["parse", "rank", "answer"])
@@ -707,7 +707,7 @@ export const Dual = <A>(monoid: Monoid<A>): Monoid<A> => ({
  *
  * **Example** (Checking all conditions)
  *
- * ```ts import.meta.vitest name="Checking all conditions"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const allChecksPassed = Monoid.fold(Monoid.BooleanAll)([true, true, false])
@@ -729,7 +729,7 @@ export const BooleanAll: Monoid<boolean> = {
  *
  * **Example** (Checking any match)
  *
- * ```ts import.meta.vitest name="Checking any match"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const anyMatch = Monoid.fold(Monoid.BooleanAny)([false, false, true])
@@ -766,7 +766,7 @@ const checkIdentity = <A>(
  *
  * **Example** (Validating left identity)
  *
- * ```ts import.meta.vitest name="Validating left identity"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const valid = Monoid.checkLeftIdentity(Monoid.StringJoin(" "), { x: "token" })
@@ -790,7 +790,7 @@ export const checkLeftIdentity: {
  *
  * **Example** (Validating right identity)
  *
- * ```ts import.meta.vitest name="Validating right identity"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const valid = Monoid.checkRightIdentity(Monoid.NumberSum, { x: 42 })
@@ -814,7 +814,7 @@ export const checkRightIdentity: {
  *
  * **Example** (Validating associativity law)
  *
- * ```ts import.meta.vitest name="Validating associativity law"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const valid = Monoid.checkAssociativity({ monoid: Monoid.NumberProduct, x: 2, y: 3, z: 4 })
@@ -844,7 +844,7 @@ export const checkAssociativity = <A>(options: {
  *
  * **Example** (Checking all monoid laws)
  *
- * ```ts import.meta.vitest name="Checking all monoid laws"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
  * const valid = Monoid.checkLaws(Monoid.NumberSum, { values: [1, 2, 3] })

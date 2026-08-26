@@ -142,7 +142,7 @@ export const HtmlConformanceRule = LiteralKit([
  * import type { HtmlConformanceRule } from "@beep/html/Html.conformance"
  *
  * const rule: HtmlConformanceRule = "contentModel"
- * console.log(rule)
+ * rule // => "contentModel"
  * ```
  *
  * @category models
@@ -2337,6 +2337,7 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
  * const program = conform(Fragment.make({ children: [] })).pipe(
  *   Effect.map((value) => conformantRoot(value)._tag)
  * )
+ * Effect.runSync(program) // => "#fragment"
  * ```
  *
  * @effects Detaches and freezes the supplied tree, then fails with
@@ -2371,6 +2372,7 @@ export const conform = Effect.fn("Html.conform")(function* (root: HtmlRoot.Type)
  * const program = conform(Fragment.make({ children: [] })).pipe(
  *   Effect.map(conformantRoot)
  * )
+ * Effect.runSync(program)._tag // => "#fragment"
  * ```
  *
  * @category getters

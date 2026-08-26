@@ -172,7 +172,7 @@ const jsonPathToPointer = (path: ReadonlyArray<JsonPathSegment>): string =>
  *
  * **Example** (Convert path via toPointer)
  *
- * ```ts import.meta.vitest name="Convert path via toPointer"
+ * ```ts
  * import { JsonPath } from "@beep/pandoc-ast/Pandoc.report"
  *
  * console.log(JsonPath.toPointer(["blocks", 0]))

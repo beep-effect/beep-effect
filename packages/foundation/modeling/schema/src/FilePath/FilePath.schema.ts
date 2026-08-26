@@ -35,7 +35,7 @@ const FilePathArbitraryValues = [
  *
  * **Example** (Check supported path family)
  *
- * ```ts import.meta.vitest name="Check supported path family"
+ * ```ts
  * import { SupportedPathFamily } from "@beep/schema/FilePath"
  *
  * console.log(SupportedPathFamily.Options.includes("posixAbsolute"))
@@ -55,7 +55,7 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
  *
  * **Example** (Decode path family literal)
  *
- * ```ts import.meta.vitest name="Decode path family literal"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { SupportedPathFamily } from "@beep/schema/FilePath"
  *
@@ -153,14 +153,14 @@ const FilePathChecks = S.makeFilterGroup(
  *
  * **Example** (Reject bare root paths)
  *
- * ```ts import.meta.vitest name="Reject bare root paths"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
  *
  * const is = S.is(FilePath)
  *
  * console.log(is("/")) // false -- bare root
- * is("src/index.ts") // => true
+ * console.log(is("src/index.ts")) // true
  * ```
  *
  * @category constructors
@@ -186,7 +186,7 @@ export const FilePath = S.String.check(FilePathChecks)
  *
  * **Example** (Type annotated file path)
  *
- * ```ts import.meta.vitest name="Type annotated file path"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
  *

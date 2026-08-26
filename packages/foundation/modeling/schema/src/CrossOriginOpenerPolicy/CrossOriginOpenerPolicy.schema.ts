@@ -26,7 +26,7 @@ const CoopValueBase = LiteralKit(["unsafe-none", "same-origin-allow-popups", "sa
  *
  * **Example** (Decode same-origin value)
  *
- * ```ts import.meta.vitest name="Decode same-origin value"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { CoopValue } from "@beep/schema/CrossOriginOpenerPolicy"
  *
@@ -49,7 +49,7 @@ export const CoopValue = CoopValueBase.pipe(
  *
  * **Example** (Annotate same-origin type)
  *
- * ```ts import.meta.vitest name="Annotate same-origin type"
+ * ```ts
  * import type { CoopValue } from "@beep/schema/CrossOriginOpenerPolicy"
  *
  * const value: CoopValue = "same-origin"
@@ -68,7 +68,7 @@ const CrossOriginOpenerPolicyOptionBase = LiteralKit([false, ...CoopValueBase.Op
  *
  * **Example** (Decode disabled option)
  *
- * ```ts import.meta.vitest name="Decode disabled option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { CrossOriginOpenerPolicyOption } from "@beep/schema/CrossOriginOpenerPolicy"
  *
@@ -91,7 +91,7 @@ export const CrossOriginOpenerPolicyOption = CrossOriginOpenerPolicyOptionBase.p
  *
  * **Example** (Annotate false option type)
  *
- * ```ts import.meta.vitest name="Annotate false option type"
+ * ```ts
  * import type { CrossOriginOpenerPolicyOption } from "@beep/schema/CrossOriginOpenerPolicy"
  *
  * const option: CrossOriginOpenerPolicyOption = false
@@ -108,7 +108,7 @@ export type CrossOriginOpenerPolicyOption = typeof CrossOriginOpenerPolicyOption
  *
  * **Example** (Construct response header)
  *
- * ```ts import.meta.vitest name="Construct response header"
+ * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginOpenerPolicyResponseHeader } from "@beep/schema/CrossOriginOpenerPolicy"
  *
@@ -141,7 +141,7 @@ type CrossOriginOpenerPolicyResponseHeaderEncoded = typeof CrossOriginOpenerPoli
  *
  * **Example** (Create header from option)
  *
- * ```ts import.meta.vitest name="Create header from option"
+ * ```ts
  * import { Effect } from "effect"
  * import { CrossOriginOpenerPolicyHeader } from "@beep/schema/CrossOriginOpenerPolicy"
  *
@@ -212,7 +212,7 @@ export const CrossOriginOpenerPolicyHeader = S.Union([CrossOriginOpenerPolicyOpt
  *
  * **Example** (Annotate header instance type)
  *
- * ```ts import.meta.vitest name="Annotate header instance type"
+ * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginOpenerPolicyResponseHeader, type CrossOriginOpenerPolicyHeader } from "@beep/schema/CrossOriginOpenerPolicy"
  *
@@ -241,7 +241,7 @@ export { CrossOriginOpenerPolicyOption as Option, CrossOriginOpenerPolicyRespons
  *
  * **Example** (Create header via alias)
  *
- * ```ts import.meta.vitest name="Create header via alias"
+ * ```ts
  * import { Effect } from "effect"
  * import { Header } from "@beep/schema/CrossOriginOpenerPolicy"
  *
@@ -260,7 +260,7 @@ export const Header = CrossOriginOpenerPolicyHeader;
  *
  * **Example** (Annotate Header alias type)
  *
- * ```ts import.meta.vitest name="Annotate Header alias type"
+ * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginOpenerPolicyResponseHeader, type Header } from "@beep/schema/CrossOriginOpenerPolicy"
  *

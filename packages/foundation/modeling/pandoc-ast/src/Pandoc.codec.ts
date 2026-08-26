@@ -110,7 +110,7 @@ export type PandocConstructorWire = typeof PandocConstructorWire.Type;
  *
  * **Example** (Decode empty document wire)
  *
- * ```ts import.meta.vitest name="Decode empty document wire"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { PandocJsonWire } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -311,7 +311,7 @@ export const PandocLosslessBlock = S.Json.pipe(
  *
  * **Example** (Annotate lossless block)
  *
- * ```ts import.meta.vitest name="Annotate lossless block"
+ * ```ts
  * import type { PandocLosslessBlock } from "@beep/pandoc-ast/Pandoc.codec"
  *
  * const block: PandocLosslessBlock = { c: "hello", t: "Str" }
@@ -334,7 +334,7 @@ export type PandocLosslessBlock = typeof PandocLosslessBlock.Type;
  *
  * **Example** (Decode lossless empty document)
  *
- * ```ts import.meta.vitest name="Decode lossless empty document"
+ * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -1038,7 +1038,7 @@ const encodeMeta = (meta: PandocMeta): Readonly<Record<string, S.Json>> =>
  *
  * **Example** (Decode empty JSON object)
  *
- * ```ts import.meta.vitest name="Decode empty JSON object"
+ * ```ts
  * import * as Effect from "effect/Effect"
  * import { decodePandocJson } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -1099,7 +1099,7 @@ export const decodePandocJsonStrict = (input: unknown): Effect.Effect<PandocDocu
  *
  * **Example** (Alias strict empty decode)
  *
- * ```ts import.meta.vitest name="Alias strict empty decode"
+ * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJson } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -1121,7 +1121,7 @@ export const decodePandocJson = decodePandocJsonStrict;
  *
  * **Example** (Decode empty JSON string)
  *
- * ```ts import.meta.vitest name="Decode empty JSON string"
+ * ```ts
  * import * as Effect from "effect/Effect"
  * import { decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -1144,7 +1144,7 @@ export const decodePandocJsonStringStrict = (input: unknown): Effect.Effect<Pand
  *
  * **Example** (Alias string strict decode)
  *
- * ```ts import.meta.vitest name="Alias string strict decode"
+ * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -1543,7 +1543,7 @@ const decodePandocJsonLosslessInternal = (input: unknown): Effect.Effect<PandocL
  *
  * **Example** (Lossless-decode empty document)
  *
- * ```ts import.meta.vitest name="Lossless-decode empty document"
+ * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -1568,7 +1568,7 @@ export const decodePandocJsonLossless = (input: unknown): Effect.Effect<PandocLo
  *
  * **Example** (Lossless-decode JSON string)
  *
- * ```ts import.meta.vitest name="Lossless-decode JSON string"
+ * ```ts
  * import { Effect } from "effect"
  * import { decodePandocJsonStringLossless } from "@beep/pandoc-ast/Pandoc.codec"
  *
@@ -1595,7 +1595,7 @@ export const decodePandocJsonStringLossless = (
  *
  * **Example** (Encode empty document wire)
  *
- * ```ts import.meta.vitest name="Encode empty document wire"
+ * ```ts
  * import * as Effect from "effect/Effect"
  * import { encodePandocJson } from "@beep/pandoc-ast/Pandoc.codec"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
@@ -1621,7 +1621,7 @@ export const encodePandocJson = (document: PandocDocument.Type): Effect.Effect<P
  *
  * **Example** (Encode document to string)
  *
- * ```ts import.meta.vitest name="Encode document to string"
+ * ```ts
  * import * as Effect from "effect/Effect"
  * import { encodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"

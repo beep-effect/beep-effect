@@ -38,7 +38,7 @@ export const Timezone = LiteralKit(TimezonesData.TimezoneNameValues).pipe(
  *
  * **Example** (Type annotated timezone)
  *
- * ```ts import.meta.vitest name="Type annotated timezone"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Timezone } from "@beep/schema/Timezone"
  *

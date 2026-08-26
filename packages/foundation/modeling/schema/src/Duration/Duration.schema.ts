@@ -16,7 +16,7 @@ import * as S from "effect/Schema";
  *
  * **Example** (Decode an Effect duration)
  *
- * ```ts import.meta.vitest name="Decode an Effect duration"
+ * ```ts
  * import * as Duration from "@beep/schema/Duration"
  * import { Duration as EffectDuration } from "effect"
  * import * as S from "effect/Schema"
@@ -35,7 +35,7 @@ export const Schema = S.Duration;
  *
  * **Example** (Annotate an Effect duration)
  *
- * ```ts import.meta.vitest name="Annotate an Effect duration"
+ * ```ts
  * import type { Schema as DurationValue } from "@beep/schema/Duration"
  * import { Duration } from "effect"
  *
@@ -54,7 +54,7 @@ export type Schema = typeof Schema.Type;
  *
  * **Example** (Decode through the compatibility schema)
  *
- * ```ts import.meta.vitest name="Decode through the compatibility schema"
+ * ```ts
  * import { Duration as EffectDuration } from "effect"
  * import { Duration } from "@beep/schema/Duration"
  * import * as S from "effect/Schema"
@@ -73,7 +73,7 @@ export const Duration = Schema;
  *
  * **Example** (Annotate through the compatibility type)
  *
- * ```ts import.meta.vitest name="Annotate through the compatibility type"
+ * ```ts
  * import type { Duration as DurationValue } from "@beep/schema/Duration"
  * import { Duration } from "effect"
  *

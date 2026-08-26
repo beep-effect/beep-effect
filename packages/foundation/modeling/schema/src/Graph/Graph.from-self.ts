@@ -303,7 +303,7 @@ const makeMutableGraphFromSelf = <Node extends S.Top, Edge extends S.Top>(
  *
  * **Example** (Create immutable graph schema)
  *
- * ```ts import.meta.vitest name="Create immutable graph schema"
+ * ```ts
  * import { GraphFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -331,7 +331,7 @@ export const GraphFromSelf = <Node extends S.Top, Edge extends S.Top>(options: {
  *
  * **Example** (Create directed graph schema)
  *
- * ```ts import.meta.vitest name="Create directed graph schema"
+ * ```ts
  * import { DirectedGraphFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -362,7 +362,7 @@ export const DirectedGraphFromSelf = <Node extends S.Top, Edge extends S.Top>(op
  *
  * **Example** (Create undirected graph schema)
  *
- * ```ts import.meta.vitest name="Create undirected graph schema"
+ * ```ts
  * import { UndirectedGraphFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -393,7 +393,7 @@ export const UndirectedGraphFromSelf = <Node extends S.Top, Edge extends S.Top>(
  *
  * **Example** (Create mutable graph schema)
  *
- * ```ts import.meta.vitest name="Create mutable graph schema"
+ * ```ts
  * import { MutableGraphFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -421,7 +421,7 @@ export const MutableGraphFromSelf = <Node extends S.Top, Edge extends S.Top>(opt
  *
  * **Example** (Create mutable directed schema)
  *
- * ```ts import.meta.vitest name="Create mutable directed schema"
+ * ```ts
  * import { MutableDirectedGraphFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *
@@ -452,7 +452,7 @@ export const MutableDirectedGraphFromSelf = <Node extends S.Top, Edge extends S.
  *
  * **Example** (Create mutable undirected schema)
  *
- * ```ts import.meta.vitest name="Create mutable undirected schema"
+ * ```ts
  * import { MutableUndirectedGraphFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
  *

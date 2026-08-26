@@ -61,7 +61,7 @@ const assertAsciiFoldUnique = (values: ReadonlyArray<string>, label: string, all
  *
  * **Example** (Validate with `makeAsciiCaseInsensitiveEnumerated`)
  *
- * ```ts import.meta.vitest name="Validate with makeAsciiCaseInsensitiveEnumerated"
+ * ```ts
  * import { makeAsciiCaseInsensitiveEnumerated } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -139,7 +139,7 @@ export const Dir = makeAsciiCaseInsensitiveEnumerated(["ltr", "rtl", "auto"]).pi
  *
  * **Example** (Annotate a `Dir` value)
  *
- * ```ts import.meta.vitest name="Annotate a Dir value"
+ * ```ts
  * import type { Dir } from "@beep/html/Html.attributes"
  *
  * const dir: Dir = "ltr"
@@ -183,7 +183,7 @@ export const Translate = TranslateInput.pipe(
  *
  * **Example** (Annotate a `Translate` value)
  *
- * ```ts import.meta.vitest name="Annotate a Translate value"
+ * ```ts
  * import type { Translate } from "@beep/html/Html.attributes"
  *
  * const translate: Translate = "yes"
@@ -227,7 +227,7 @@ export const ContentEditable = ContentEditableInput.pipe(
  *
  * **Example** (Annotate a `ContentEditable` value)
  *
- * ```ts import.meta.vitest name="Annotate a ContentEditable value"
+ * ```ts
  * import type { ContentEditable } from "@beep/html/Html.attributes"
  *
  * const contentEditable: ContentEditable = "true"
@@ -260,7 +260,7 @@ export const Draggable = makeAsciiCaseInsensitiveEnumerated(["true", "false"]).p
  *
  * **Example** (Annotate a `Draggable` value)
  *
- * ```ts import.meta.vitest name="Annotate a Draggable value"
+ * ```ts
  * import type { Draggable } from "@beep/html/Html.attributes"
  *
  * const draggable: Draggable = "true"
@@ -304,7 +304,7 @@ export const SpellCheck = SpellCheckInput.pipe(
  *
  * **Example** (Annotate a `SpellCheck` value)
  *
- * ```ts import.meta.vitest name="Annotate a SpellCheck value"
+ * ```ts
  * import type { SpellCheck } from "@beep/html/Html.attributes"
  *
  * const spellCheck: SpellCheck = "true"
@@ -348,7 +348,7 @@ export const WritingSuggestions = WritingSuggestionsInput.pipe(
  *
  * **Example** (Annotate a `WritingSuggestions` value)
  *
- * ```ts import.meta.vitest name="Annotate a WritingSuggestions value"
+ * ```ts
  * import type { WritingSuggestions } from "@beep/html/Html.attributes"
  *
  * const writingSuggestions: WritingSuggestions = "true"
@@ -386,7 +386,7 @@ export const AutoCapitalize = makeAsciiCaseInsensitiveEnumerated([
  *
  * **Example** (Annotate a `AutoCapitalize` value)
  *
- * ```ts import.meta.vitest name="Annotate a AutoCapitalize value"
+ * ```ts
  * import type { AutoCapitalize } from "@beep/html/Html.attributes"
  *
  * const autoCapitalize: AutoCapitalize = "off"
@@ -430,7 +430,7 @@ export const AutoCorrect = AutoCorrectInput.pipe(
  *
  * **Example** (Annotate a `AutoCorrect` value)
  *
- * ```ts import.meta.vitest name="Annotate a AutoCorrect value"
+ * ```ts
  * import type { AutoCorrect } from "@beep/html/Html.attributes"
  *
  * const autoCorrect: AutoCorrect = "on"
@@ -470,7 +470,7 @@ export const InputMode = makeAsciiCaseInsensitiveEnumerated([
  *
  * **Example** (Annotate a `InputMode` value)
  *
- * ```ts import.meta.vitest name="Annotate a InputMode value"
+ * ```ts
  * import type { InputMode } from "@beep/html/Html.attributes"
  *
  * const inputMode: InputMode = "text"
@@ -509,7 +509,7 @@ export const EnterKeyHint = makeAsciiCaseInsensitiveEnumerated([
  *
  * **Example** (Annotate a `EnterKeyHint` value)
  *
- * ```ts import.meta.vitest name="Annotate a EnterKeyHint value"
+ * ```ts
  * import type { EnterKeyHint } from "@beep/html/Html.attributes"
  *
  * const enterKeyHint: EnterKeyHint = "enter"
@@ -553,7 +553,7 @@ export const Hidden = HiddenInput.pipe(
  *
  * **Example** (Annotate a `Hidden` value)
  *
- * ```ts import.meta.vitest name="Annotate a Hidden value"
+ * ```ts
  * import type { Hidden } from "@beep/html/Html.attributes"
  *
  * const hidden: Hidden = "hidden"
@@ -597,7 +597,7 @@ export const Popover = PopoverInput.pipe(
  *
  * **Example** (Annotate a `Popover` value)
  *
- * ```ts import.meta.vitest name="Annotate a Popover value"
+ * ```ts
  * import type { Popover } from "@beep/html/Html.attributes"
  *
  * const popover: Popover = "auto"
@@ -630,7 +630,7 @@ export const PopoverTargetAction = makeAsciiCaseInsensitiveEnumerated(["toggle",
  *
  * **Example** (Annotate a `PopoverTargetAction` value)
  *
- * ```ts import.meta.vitest name="Annotate a PopoverTargetAction value"
+ * ```ts
  * import type { PopoverTargetAction } from "@beep/html/Html.attributes"
  *
  * const action: PopoverTargetAction = "toggle"
@@ -671,7 +671,7 @@ export const BooleanAttribute = S.Literals([true, ""]).pipe(
  *
  * **Example** (Annotate a `BooleanAttribute` value)
  *
- * ```ts import.meta.vitest name="Annotate a BooleanAttribute value"
+ * ```ts
  * import type { BooleanAttribute } from "@beep/html/Html.attributes"
  *
  * const value: BooleanAttribute = true
@@ -691,7 +691,7 @@ const CrossOriginInput = makeAsciiCaseInsensitiveEnumerated(["", ...CrossOriginB
  *
  * **Example** (Validate with `CrossOrigin`)
  *
- * ```ts import.meta.vitest name="Validate with CrossOrigin"
+ * ```ts
  * import { CrossOrigin } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -720,7 +720,7 @@ export const CrossOrigin = CrossOriginInput.pipe(
  *
  * **Example** (Annotate a `CrossOrigin` value)
  *
- * ```ts import.meta.vitest name="Annotate a CrossOrigin value"
+ * ```ts
  * import type { CrossOrigin } from "@beep/html/Html.attributes"
  *
  * const value: CrossOrigin = "anonymous"
@@ -764,7 +764,7 @@ export const ReferrerPolicy = makeAsciiCaseInsensitiveEnumerated([
  *
  * **Example** (Annotate a `ReferrerPolicy` value)
  *
- * ```ts import.meta.vitest name="Annotate a ReferrerPolicy value"
+ * ```ts
  * import type { ReferrerPolicy } from "@beep/html/Html.attributes"
  *
  * const value: ReferrerPolicy = "strict-origin"
@@ -782,7 +782,7 @@ export type ReferrerPolicy = typeof ReferrerPolicy.Type;
  *
  * **Example** (Validate with `Utf8Charset`)
  *
- * ```ts import.meta.vitest name="Validate with Utf8Charset"
+ * ```ts
  * import { Utf8Charset } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -803,7 +803,7 @@ export const Utf8Charset = makeAsciiCaseInsensitiveEnumerated(["utf-8"]).pipe(
  *
  * **Example** (Annotate a `Utf8Charset` value)
  *
- * ```ts import.meta.vitest name="Annotate a Utf8Charset value"
+ * ```ts
  * import type { Utf8Charset } from "@beep/html/Html.attributes"
  *
  * const value: Utf8Charset = "utf-8"
@@ -821,7 +821,7 @@ export type Utf8Charset = typeof Utf8Charset.Type;
  *
  * **Example** (Validate with `FormAutocomplete`)
  *
- * ```ts import.meta.vitest name="Validate with FormAutocomplete"
+ * ```ts
  * import { FormAutocomplete } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -842,7 +842,7 @@ export const FormAutocomplete = makeAsciiCaseInsensitiveEnumerated(["on", "off"]
  *
  * **Example** (Annotate a `FormAutocomplete` value)
  *
- * ```ts import.meta.vitest name="Annotate a FormAutocomplete value"
+ * ```ts
  * import type { FormAutocomplete } from "@beep/html/Html.attributes"
  *
  * const value: FormAutocomplete = "off"
@@ -876,7 +876,7 @@ const CustomButtonCommand = S.String.check(
  *
  * **Example** (Validate with `ButtonCommand`)
  *
- * ```ts import.meta.vitest name="Validate with ButtonCommand"
+ * ```ts
  * import { ButtonCommand } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -898,7 +898,7 @@ export const ButtonCommand = S.Union([BuiltInButtonCommand, CustomButtonCommand]
  *
  * **Example** (Annotate a `ButtonCommand` value)
  *
- * ```ts import.meta.vitest name="Annotate a ButtonCommand value"
+ * ```ts
  * import type { ButtonCommand } from "@beep/html/Html.attributes"
  *
  * const value: ButtonCommand = "show-modal"
@@ -942,7 +942,7 @@ export const HeadingOffset = S.Int.check(
  *
  * **Example** (Annotate a `HeadingOffset` value)
  *
- * ```ts import.meta.vitest name="Annotate a HeadingOffset value"
+ * ```ts
  * import type { HeadingOffset } from "@beep/html/Html.attributes"
  *
  * const offset: HeadingOffset = 2
@@ -987,7 +987,7 @@ export const HtmlNonNegativeInteger = S.Int.check(
  *
  * **Example** (Annotate a `HtmlNonNegativeInteger` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlNonNegativeInteger value"
+ * ```ts
  * import type { HtmlNonNegativeInteger } from "@beep/html/Html.attributes"
  *
  * const value: HtmlNonNegativeInteger = 0
@@ -1032,7 +1032,7 @@ export const HtmlPositiveInteger = S.Int.check(
  *
  * **Example** (Annotate a `HtmlPositiveInteger` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlPositiveInteger value"
+ * ```ts
  * import type { HtmlPositiveInteger } from "@beep/html/Html.attributes"
  *
  * const value: HtmlPositiveInteger = 1
@@ -1071,7 +1071,7 @@ export const HtmlFiniteNumber = S.Finite.pipe(
  *
  * **Example** (Annotate a `HtmlFiniteNumber` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlFiniteNumber value"
+ * ```ts
  * import type { HtmlFiniteNumber } from "@beep/html/Html.attributes"
  *
  * const value: HtmlFiniteNumber = 1.5
@@ -1117,7 +1117,7 @@ export const HtmlNonNegativeNumber = HtmlFiniteNumber.check(
  *
  * **Example** (Annotate a `HtmlNonNegativeNumber` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlNonNegativeNumber value"
+ * ```ts
  * import type { HtmlNonNegativeNumber } from "@beep/html/Html.attributes"
  *
  * const value: HtmlNonNegativeNumber = 0.5
@@ -1163,7 +1163,7 @@ export const HtmlPositiveNumber = HtmlFiniteNumber.check(
  *
  * **Example** (Annotate a `HtmlPositiveNumber` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlPositiveNumber value"
+ * ```ts
  * import type { HtmlPositiveNumber } from "@beep/html/Html.attributes"
  *
  * const value: HtmlPositiveNumber = 0.5
@@ -1180,14 +1180,14 @@ export type HtmlPositiveNumber = typeof HtmlPositiveNumber.Type;
  *
  * **Example** (Validate with `HtmlStep`)
  *
- * ```ts import.meta.vitest name="Validate with HtmlStep"
+ * ```ts
  * import { HtmlStep } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlStep)("ANY")
  * if (Result.isSuccess(decoded)) console.log(decoded.success) // "any"
- * S.is(HtmlStep)(0) // => false
+ * console.log(S.is(HtmlStep)(0)) // false
  * ```
  *
  * @category schemas
@@ -1203,7 +1203,7 @@ export const HtmlStep = S.Union([makeAsciiCaseInsensitiveEnumerated(["any"]), Ht
  *
  * **Example** (Annotate a `HtmlStep` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlStep value"
+ * ```ts
  * import type { HtmlStep } from "@beep/html/Html.attributes"
  *
  * const value: HtmlStep = "any"
@@ -1243,7 +1243,7 @@ export const stripHtmlAsciiWhitespace = Str.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$
  *
  * **Example** (Call `tokenizeHtmlSpaceSeparated`)
  *
- * ```ts import.meta.vitest name="Call tokenizeHtmlSpaceSeparated"
+ * ```ts
  * import { tokenizeHtmlSpaceSeparated } from "@beep/html/Html.attributes"
  *
  * console.log(tokenizeHtmlSpaceSeparated("noopener\tnoreferrer"))
@@ -1381,7 +1381,7 @@ const makeOpenSpaceSeparatedTokenList = (
  *
  * **Example** (Validate with `HtmlRelationList`)
  *
- * ```ts import.meta.vitest name="Validate with HtmlRelationList"
+ * ```ts
  * import { HtmlRelationList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1404,7 +1404,7 @@ export const HtmlRelationList = makeOpenSpaceSeparatedTokenList(true, undefined,
  *
  * **Example** (Annotate a `HtmlRelationList` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlRelationList value"
+ * ```ts
  * import type { HtmlRelationList } from "@beep/html/Html.attributes"
  *
  * const value: HtmlRelationList = "me x-beep"
@@ -1427,7 +1427,7 @@ export type HtmlRelationList = typeof HtmlRelationList.Type;
  *
  * **Example** (Validate with `LinkRelationList`)
  *
- * ```ts import.meta.vitest name="Validate with LinkRelationList"
+ * ```ts
  * import { LinkRelationList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1458,7 +1458,7 @@ export const LinkRelationList = makeOpenSpaceSeparatedTokenList(
  *
  * **Example** (Annotate a `LinkRelationList` value)
  *
- * ```ts import.meta.vitest name="Annotate a LinkRelationList value"
+ * ```ts
  * import type { LinkRelationList } from "@beep/html/Html.attributes"
  *
  * const value: LinkRelationList = "icon"
@@ -1475,7 +1475,7 @@ export type LinkRelationList = typeof LinkRelationList.Type;
  *
  * **Example** (Validate with `HtmlIdReferenceList`)
  *
- * ```ts import.meta.vitest name="Validate with HtmlIdReferenceList"
+ * ```ts
  * import { HtmlIdReferenceList } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1498,7 +1498,7 @@ export const HtmlIdReferenceList = makeOpenSpaceSeparatedTokenList(false).pipe(
  *
  * **Example** (Annotate a `HtmlIdReferenceList` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlIdReferenceList value"
+ * ```ts
  * import type { HtmlIdReferenceList } from "@beep/html/Html.attributes"
  *
  * const value: HtmlIdReferenceList = "first second"
@@ -1537,7 +1537,7 @@ const CanonicalMetadataName = MetadataNameInput.check(
  *
  * **Example** (Validate with `MetadataName`)
  *
- * ```ts import.meta.vitest name="Validate with MetadataName"
+ * ```ts
  * import { MetadataName } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -1565,7 +1565,7 @@ export const MetadataName = MetadataNameInput.pipe(
  *
  * **Example** (Annotate a `MetadataName` value)
  *
- * ```ts import.meta.vitest name="Annotate a MetadataName value"
+ * ```ts
  * import type { MetadataName } from "@beep/html/Html.attributes"
  *
  * const value: MetadataName = "x-beep"
@@ -1646,7 +1646,7 @@ export const AutocompleteAttribute = AutocompleteAttributeInput.pipe(
  *
  * **Example** (Annotate a `AutocompleteAttribute` value)
  *
- * ```ts import.meta.vitest name="Annotate a AutocompleteAttribute value"
+ * ```ts
  * import type { AutocompleteAttribute } from "@beep/html/Html.attributes"
  *
  * const value: AutocompleteAttribute = "email"
@@ -1692,7 +1692,7 @@ export const ForeignElementName = S.String.check(
  *
  * **Example** (Annotate a `ForeignElementName` value)
  *
- * ```ts import.meta.vitest name="Annotate a ForeignElementName value"
+ * ```ts
  * import type { ForeignElementName } from "@beep/html/Html.attributes"
  *
  * const name: ForeignElementName = "path"
@@ -1737,7 +1737,7 @@ export const ForeignAttributeName = S.String.check(
  *
  * **Example** (Annotate a `ForeignAttributeName` value)
  *
- * ```ts import.meta.vitest name="Annotate a ForeignAttributeName value"
+ * ```ts
  * import type { ForeignAttributeName } from "@beep/html/Html.attributes"
  *
  * const name: ForeignAttributeName = "viewBox"
@@ -1788,7 +1788,7 @@ export const HtmlIdValue = S.String.check(
  *
  * **Example** (Annotate a `HtmlIdValue` value)
  *
- * ```ts import.meta.vitest name="Annotate a HtmlIdValue value"
+ * ```ts
  * import type { HtmlIdValue } from "@beep/html/Html.attributes"
  *
  * const value: HtmlIdValue = "section-1"
@@ -1818,7 +1818,7 @@ type OptionalString = typeof OptionalString;
  *
  * **Example** (Validate with `EnumeratedGlobalAttributes`)
  *
- * ```ts import.meta.vitest name="Validate with EnumeratedGlobalAttributes"
+ * ```ts
  * import { EnumeratedGlobalAttributes } from "@beep/html/Html.attributes"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"

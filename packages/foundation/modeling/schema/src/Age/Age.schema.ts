@@ -14,7 +14,7 @@ const $I = $SchemaId.create("Age");
  *
  * **Example** (Decode age value)
  *
- * ```ts import.meta.vitest name="Decode age value"
+ * ```ts
  * import { Age } from "@beep/schema/Age"
  * import * as S from "effect/Schema"
  *

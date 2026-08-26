@@ -3,7 +3,7 @@
  *
  * **Example** (Import namespace and list keys)
  *
- * ```ts import.meta.vitest name="Import namespace and list keys"
+ * ```ts
  * import * as DomReactNode from "@beep/schema/DomReactNode"
  *
  * console.log(Object.keys(DomReactNode).includes("Schema"))

@@ -37,7 +37,7 @@ export const EmailString = InternalEmailString;
  *
  * **Example** (Type branded email strings)
  *
- * ```ts import.meta.vitest name="Type branded email strings"
+ * ```ts
  * import * as S from "effect/Schema"
  * import type { EmailString } from "@beep/schema"
  * import { EmailString as EmailStringSchema } from "@beep/schema"
@@ -80,7 +80,7 @@ export const Email = InternalEmail;
  *
  * **Example** (Type redacted email values)
  *
- * ```ts import.meta.vitest name="Type redacted email values"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Email, type Email as EmailValue } from "@beep/schema"
  *

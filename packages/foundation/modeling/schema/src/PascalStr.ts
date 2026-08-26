@@ -49,7 +49,7 @@ export const PascalCaseStr = NonEmptyTrimmedStr.pipe(
  *
  * **Example** (Type-annotated PascalCase decode)
  *
- * ```ts import.meta.vitest name="Type-annotated PascalCase decode"
+ * ```ts
  * import * as S from "effect/Schema"
  * import type { PascalCaseStr } from "@beep/schema"
  * import { PascalCaseStr as PascalCaseStrSchema } from "@beep/schema"

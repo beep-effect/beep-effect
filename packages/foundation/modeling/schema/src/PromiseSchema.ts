@@ -79,7 +79,7 @@ export const isPromise = (u: unknown): u is globalThis.Promise<unknown> =>
  *
  * **Example** (Decoding a native promise)
  *
- * ```ts import.meta.vitest name="Decoding a native promise"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { PromiseSchema } from "@beep/schema/PromiseSchema"
  *

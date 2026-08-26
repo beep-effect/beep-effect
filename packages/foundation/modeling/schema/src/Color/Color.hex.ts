@@ -120,7 +120,7 @@ export const rgbToHexValue = ({ r, g, b }: RgbEncoded): HexColor =>
  *
  * **Example** (Decode short hex input)
  *
- * ```ts import.meta.vitest name="Decode short hex input"
+ * ```ts
  * import { HexColorInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -142,7 +142,7 @@ export const HexColorInput = S.String.check(HexColorInputChecks).pipe(
  *
  * **Example** (Type annotated hex input)
  *
- * ```ts import.meta.vitest name="Type annotated hex input"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { HexColorInput } from "@beep/schema/Color"
  *
@@ -160,7 +160,7 @@ export type HexColorInput = typeof HexColorInput.Type;
  *
  * **Example** (Decode canonical hex color)
  *
- * ```ts import.meta.vitest name="Decode canonical hex color"
+ * ```ts
  * import { HexColor } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -186,7 +186,7 @@ export const HexColor = S.String.check(HexColorChecks).pipe(
  *
  * **Example** (Type annotated hex color)
  *
- * ```ts import.meta.vitest name="Type annotated hex color"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { HexColor } from "@beep/schema/Color"
  *
@@ -204,7 +204,7 @@ export type HexColor = typeof HexColor.Type;
  *
  * **Example** (Normalize short hex input)
  *
- * ```ts import.meta.vitest name="Normalize short hex input"
+ * ```ts
  * import { NormalizeHexColor } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
  *
@@ -233,7 +233,7 @@ export const NormalizeHexColor = HexColorInput.pipe(
  *
  * **Example** (Type annotated normalized hex)
  *
- * ```ts import.meta.vitest name="Type annotated normalized hex"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeHexColor } from "@beep/schema/Color"
  *

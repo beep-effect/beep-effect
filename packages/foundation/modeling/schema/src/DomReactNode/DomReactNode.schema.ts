@@ -16,7 +16,7 @@ const $I = $SchemaId.create("DomReactNode");
  *
  * **Example** (Guard mixed ReactNode array)
  *
- * ```ts import.meta.vitest name="Guard mixed ReactNode array"
+ * ```ts
  * import { isReactNode } from "@beep/schema/DomReactNode"
  *
  * console.log(isReactNode(["hello", 1, null]))
@@ -44,7 +44,7 @@ export const isReactNode = (u: unknown): u is React.ReactNode => {
  *
  * **Example** (Decode string as ReactNode)
  *
- * ```ts import.meta.vitest name="Decode string as ReactNode"
+ * ```ts
  * import { DOMReactNode } from "@beep/schema/DomReactNode"
  * import * as S from "effect/Schema"
  *
@@ -66,7 +66,7 @@ export const DOMReactNode = S.declare(isReactNode).pipe(
  *
  * **Example** (Annotate decoded ReactNode type)
  *
- * ```ts import.meta.vitest name="Annotate decoded ReactNode type"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DOMReactNode } from "@beep/schema/DomReactNode"
  *
@@ -84,7 +84,7 @@ export type DOMReactNode = typeof DOMReactNode.Type;
  *
  * **Example** (Guard object as React ref)
  *
- * ```ts import.meta.vitest name="Guard object as React ref"
+ * ```ts
  * import { isReactRef } from "@beep/schema/DomReactNode"
  *
  * console.log(isReactRef({ current: null }))

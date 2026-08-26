@@ -216,7 +216,7 @@ export * from "./Html.ts";
  *
  * **Example** (Check HTTP method literal)
  *
- * ```ts import.meta.vitest name="Check HTTP method literal"
+ * ```ts
  * import { HttpMethod } from "@beep/schema"
  *
  * console.log(HttpMethod.Schema.is.OPTIONS("OPTIONS"))
@@ -250,7 +250,7 @@ export * from "./Int64.ts";
  *
  * **Example** (Decode JSON Schema node)
  *
- * ```ts import.meta.vitest name="Decode JSON Schema node"
+ * ```ts
  * import { JSONSchema } from "@beep/schema"
  * import * as S from "effect/Schema"
  *

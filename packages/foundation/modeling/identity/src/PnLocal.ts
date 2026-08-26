@@ -152,7 +152,7 @@ export const SafePnLocal = S.String.check(
  *
  * **Example** (Type a safe local)
  *
- * ```ts import.meta.vitest name="Type a safe local"
+ * ```ts
  * import type { SafePnLocal } from "@beep/identity"
  *
  * const local: SafePnLocal = "prefLabel"
@@ -200,7 +200,7 @@ export const SafePnPrefix = S.String.check(
  *
  * **Example** (Type a safe prefix)
  *
- * ```ts import.meta.vitest name="Type a safe prefix"
+ * ```ts
  * import type { SafePnPrefix } from "@beep/identity"
  *
  * const prefix: SafePnPrefix = "skos"
@@ -358,7 +358,7 @@ export const EscapedPnLocal = S.String.check(
  *
  * **Example** (Type an escaped local)
  *
- * ```ts import.meta.vitest name="Type an escaped local"
+ * ```ts
  * import type { EscapedPnLocal } from "@beep/identity"
  *
  * const local: EscapedPnLocal = "Ontology.models\\/HttpUrl"

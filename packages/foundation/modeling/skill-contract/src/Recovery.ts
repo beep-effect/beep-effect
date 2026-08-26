@@ -171,7 +171,7 @@ export class RecoveryAttemptReceipt extends S.Class<RecoveryAttemptReceipt>($I`R
  *
  * **Example** (Inspect terminal failure reasons)
  *
- * ```ts import.meta.vitest name="Inspect terminal failure reasons"
+ * ```ts
  * import { FailureTerminalReason } from "@beep/skill-contract"
  *
  * console.log(FailureTerminalReason.Options)
@@ -304,7 +304,7 @@ export class FailureReceiptPredicate extends S.Class<FailureReceiptPredicate>($I
  *
  * **Example** (Inspect failure predicate identity)
  *
- * ```ts import.meta.vitest name="Inspect failure predicate identity"
+ * ```ts
  * import { FailurePredicateType } from "@beep/skill-contract"
  *
  * console.log(FailurePredicateType)

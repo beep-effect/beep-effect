@@ -90,7 +90,7 @@ import type {
  *
  * **Example** (Accept InlineInput type)
  *
- * ```ts import.meta.vitest name="Accept InlineInput type"
+ * ```ts
  * import type { InlineInput } from "@beep/md/Md"
  *
  * const accept = (input: InlineInput) => input
@@ -107,7 +107,7 @@ export type InlineInput = string | Inline;
  *
  * **Example** (Inline content array)
  *
- * ```ts import.meta.vitest name="Inline content array"
+ * ```ts
  * import { Md } from "@beep/md"
  * import type { InlineContent } from "@beep/md/Md"
  *
@@ -146,7 +146,7 @@ export type InlineContentBuilder<Node> = {
  *
  * **Example** (Accept BlockInput type)
  *
- * ```ts import.meta.vitest name="Accept BlockInput type"
+ * ```ts
  * import type { BlockInput } from "@beep/md/Md"
  *
  * const accept = (input: BlockInput) => input
@@ -163,7 +163,7 @@ export type BlockInput = string | Block;
  *
  * **Example** (Block content array)
  *
- * ```ts import.meta.vitest name="Block content array"
+ * ```ts
  * import { Md } from "@beep/md"
  * import type { BlockContent } from "@beep/md/Md"
  *
@@ -186,7 +186,7 @@ export type BlockContent = BlockInput | ReadonlyArray<BlockInput>;
  *
  * **Example** (Template value as heading)
  *
- * ```ts import.meta.vitest name="Template value as heading"
+ * ```ts
  * import { Md } from "@beep/md"
  * import type { BlockTemplateValue } from "@beep/md/Md"
  *
@@ -225,7 +225,7 @@ export type BlockContentBuilder<Node> = {
  *
  * **Example** (Strong list item child)
  *
- * ```ts import.meta.vitest name="Strong list item child"
+ * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemChildInput } from "@beep/md/Md"
  *
@@ -243,7 +243,7 @@ export type ListItemChildInput = InlineInput | Block;
  *
  * **Example** (Nested list item content)
  *
- * ```ts import.meta.vitest name="Nested list item content"
+ * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemContent } from "@beep/md/Md"
  *
@@ -282,7 +282,7 @@ export type ListItemContentBuilder<Node> = {
  *
  * **Example** (List item input array)
  *
- * ```ts import.meta.vitest name="List item input array"
+ * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemInput } from "@beep/md/Md"
  *
@@ -312,7 +312,7 @@ type TaskListCompatibilityInput =
  *
  * **Example** (Checked task item object)
  *
- * ```ts import.meta.vitest name="Checked task item object"
+ * ```ts
  * import type { TaskListItemInput } from "@beep/md/Md"
  *
  * const item: TaskListItemInput = { text: "Done", checked: true }
@@ -331,7 +331,7 @@ export type TaskListItemInput = TaskListCompatibilityInput;
  *
  * **Example** (String table cell)
  *
- * ```ts import.meta.vitest name="String table cell"
+ * ```ts
  * import type { TableCellInput } from "@beep/md/Md"
  *
  * const cell: TableCellInput = "Name"
@@ -348,7 +348,7 @@ export type TableCellInput = InlineContent | TableCell;
  *
  * **Example** (Row with table cell)
  *
- * ```ts import.meta.vitest name="Row with table cell"
+ * ```ts
  * import { Md } from "@beep/md"
  * import type { TableRowInput } from "@beep/md/Md"
  *
@@ -1290,7 +1290,7 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
  *
  * **Example** (Effectful YouTube constructor)
  *
- * ```ts import.meta.vitest name="Effectful YouTube constructor"
+ * ```ts
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  *

@@ -31,7 +31,7 @@ const SecureHeaderBase = LiteralKit([
  *
  * **Example** (Check Options membership)
  *
- * ```ts import.meta.vitest name="Check Options membership"
+ * ```ts
  * import { SecureHeader } from "@beep/schema/SecureHeader"
  *
  * console.log(SecureHeader.Options.includes("NO_SNIFF"))
@@ -52,7 +52,7 @@ export const SecureHeader = SecureHeaderBase.pipe(
  *
  * **Example** (Type a header identifier)
  *
- * ```ts import.meta.vitest name="Type a header identifier"
+ * ```ts
  * import { SecureHeader } from "@beep/schema/SecureHeader"
  *
  * const header: SecureHeader = "NO_SNIFF"

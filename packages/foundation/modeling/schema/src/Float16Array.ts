@@ -47,7 +47,7 @@ const unsupportedFloat16ArrayRuntime = (): never => {
  *
  * **Example** (Type guard usage)
  *
- * ```ts import.meta.vitest name="Type guard usage"
+ * ```ts
  * import { isFloat16Array } from "@beep/schema/Float16Array";
  *
  * const value = new Float16Array([1, 2, 3]);
@@ -237,7 +237,7 @@ export declare namespace Float16ArrayFromArray {
  *
  * **Example** (Check insert schema)
  *
- * ```ts import.meta.vitest name="Check insert schema"
+ * ```ts
  * import { Float16ArrayField } from "@beep/schema/Float16Array";
  * import * as S from "effect/Schema";
  *

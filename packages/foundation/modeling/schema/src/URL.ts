@@ -27,7 +27,7 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
  *
  * **Example** (Decode URL-encoded string)
  *
- * ```ts import.meta.vitest name="Decode URL-encoded string"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { URLStr } from "@beep/schema/URL"
  *
@@ -57,7 +57,7 @@ export const URLStr = NonEmptyTrimmedStr.pipe(
  *
  * **Example** (Type annotated URL string)
  *
- * ```ts import.meta.vitest name="Type annotated URL string"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { URLStr } from "@beep/schema/URL"
  *
@@ -92,7 +92,7 @@ const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("Https
  *
  * **Example** (Decode HTTPS URL string)
  *
- * ```ts import.meta.vitest name="Decode HTTPS URL string"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { HttpsUrl } from "@beep/schema/URL"
  *
@@ -117,7 +117,7 @@ export const HttpsUrl = HttpsUrlDefinition.pipe(
  *
  * **Example** (Type annotated HTTPS URL)
  *
- * ```ts import.meta.vitest name="Type annotated HTTPS URL"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { HttpsUrl } from "@beep/schema/URL"
  *
@@ -135,7 +135,7 @@ export type HttpsUrl = typeof HttpsUrl.Type;
  *
  * **Example** (Satisfy Encoded type)
  *
- * ```ts import.meta.vitest name="Satisfy Encoded type"
+ * ```ts
  * import { HttpsUrl } from "@beep/schema/URL"
  *
  * const encoded = "https://example.com" satisfies HttpsUrl.Encoded
@@ -151,7 +151,7 @@ export declare namespace HttpsUrl {
    *
    * **Example** (Satisfy Encoded type)
    *
-   * ```ts import.meta.vitest name="Satisfy Encoded type"
+   * ```ts
    * import { HttpsUrl } from "@beep/schema/URL"
    *
    * const encoded = "https://example.com" satisfies HttpsUrl.Encoded

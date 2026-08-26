@@ -9,7 +9,7 @@
  *
  * **Example** (Derive schema and service IDs)
  *
- * ```ts import.meta.vitest name="Derive schema and service IDs"
+ * ```ts
  * import { $I, $SchemaId } from "@beep/identity/packages"
  *
  * const serviceId = $SchemaId`TenantService`
@@ -509,7 +509,7 @@ export const $SharedDomainId = composers.$SharedDomainId;
  *
  * **Example** (Make a shared use-case contract ID)
  *
- * ```ts import.meta.vitest name="Make a shared use-case contract ID"
+ * ```ts
  * import { $SharedUseCasesId } from "@beep/identity/packages"
  *
  * const id = $SharedUseCasesId.make("PromotionGate")
@@ -720,7 +720,7 @@ export const $EpistemicDomainId: Identity.IdentityComposer<"@beep/epistemic-doma
  *
  * **Example** (Make epistemic use-cases ID)
  *
- * ```ts import.meta.vitest name="Make epistemic use-cases ID"
+ * ```ts
  * import { $EpistemicUseCasesId } from "@beep/identity"
  *
  * const id = $EpistemicUseCasesId.make("ClaimGate")
@@ -819,7 +819,7 @@ export const $LawPracticeDomainId: Identity.IdentityComposer<"@beep/law-practice
  *
  * **Example** (Make law practice use-cases ID)
  *
- * ```ts import.meta.vitest name="Make law practice use-cases ID"
+ * ```ts
  * import { $LawPracticeUseCasesId } from "@beep/identity"
  *
  * const id = $LawPracticeUseCasesId.make("OfficeActionReview")
@@ -837,7 +837,7 @@ export const $LawPracticeUseCasesId: Identity.IdentityComposer<"@beep/law-practi
  *
  * **Example** (Make law practice server ID)
  *
- * ```ts import.meta.vitest name="Make law practice server ID"
+ * ```ts
  * import { $LawPracticeServerId } from "@beep/identity"
  *
  * const id = $LawPracticeServerId.make("LawPracticeServerLive")
@@ -872,7 +872,7 @@ export const $ProfessionalDesktopId: Identity.IdentityComposer<"@beep/profession
  *
  * **Example** (Log all package composers)
  *
- * ```ts import.meta.vitest name="Log all package composers"
+ * ```ts
  * import { RepoPkgs } from "@beep/identity/packages"
  *
  * console.log(RepoPkgs)
@@ -888,7 +888,7 @@ export const RepoPkgs = composers;
  *
  * **Example** (Log markdown package ID)
  *
- * ```ts import.meta.vitest name="Log markdown package ID"
+ * ```ts
  * import { $MdId } from "@beep/identity/packages"
  *
  * console.log($MdId)
@@ -904,7 +904,7 @@ export const $MdId: Identity.IdentityComposer<"@beep/md"> = composers.$MdId;
  *
  * **Example** (Log OIP web package ID)
  *
- * ```ts import.meta.vitest name="Log OIP web package ID"
+ * ```ts
  * import { $OipWebId } from "@beep/identity/packages"
  *
  * console.log($OipWebId)
@@ -920,7 +920,7 @@ export const $OipWebId: Identity.IdentityComposer<"@beep/oip-web"> = composers.$
  *
  * **Example** (Log drizzle package ID)
  *
- * ```ts import.meta.vitest name="Log drizzle package ID"
+ * ```ts
  * import { $DrizzleId } from "@beep/identity/packages"
  *
  * console.log($DrizzleId)
@@ -936,7 +936,7 @@ export const $DrizzleId: Identity.IdentityComposer<"@beep/drizzle"> = composers.
  *
  * **Example** (Log duckdb package ID)
  *
- * ```ts import.meta.vitest name="Log duckdb package ID"
+ * ```ts
  * import { $DuckdbId } from "@beep/identity/packages"
  *
  * console.log($DuckdbId)
@@ -952,7 +952,7 @@ export const $DuckdbId: Identity.IdentityComposer<"@beep/duckdb"> = composers.$D
  *
  * **Example** (Log face detection package ID)
  *
- * ```ts import.meta.vitest name="Log face detection package ID"
+ * ```ts
  * import { $FaceDetectionId } from "@beep/identity/packages"
  *
  * console.log($FaceDetectionId)
@@ -968,7 +968,7 @@ export const $FaceDetectionId: Identity.IdentityComposer<"@beep/face-detection">
  *
  * **Example** (Log ffmpeg package ID)
  *
- * ```ts import.meta.vitest name="Log ffmpeg package ID"
+ * ```ts
  * import { $FfmpegId } from "@beep/identity/packages"
  *
  * console.log($FfmpegId)
@@ -984,7 +984,7 @@ export const $FfmpegId: Identity.IdentityComposer<"@beep/ffmpeg"> = composers.$F
  *
  * **Example** (Log postgres package ID)
  *
- * ```ts import.meta.vitest name="Log postgres package ID"
+ * ```ts
  * import { $PostgresId } from "@beep/identity/packages"
  *
  * console.log($PostgresId)
@@ -1000,7 +1000,7 @@ export const $PostgresId: Identity.IdentityComposer<"@beep/postgres"> = composer
  *
  * **Example** (Make anthropic package ID)
  *
- * ```ts import.meta.vitest name="Make anthropic package ID"
+ * ```ts
  * import { $AnthropicId } from "@beep/identity"
  *
  * const id = $AnthropicId.make("Anthropic")
@@ -1017,7 +1017,7 @@ export const $AnthropicId: Identity.IdentityComposer<"@beep/anthropic"> = compos
  *
  * **Example** (Log Venice AI package ID)
  *
- * ```ts import.meta.vitest name="Log Venice AI package ID"
+ * ```ts
  * import { $VeniceAiId } from "@beep/identity/packages"
  *
  * console.log($VeniceAiId)
@@ -1033,7 +1033,7 @@ export const $VeniceAiId: Identity.IdentityComposer<"@beep/venice-ai"> = compose
  *
  * **Example** (Log xAI package ID)
  *
- * ```ts import.meta.vitest name="Log xAI package ID"
+ * ```ts
  * import { $XaiId } from "@beep/identity/packages"
  *
  * console.log($XaiId)
@@ -1049,7 +1049,7 @@ export const $XaiId: Identity.IdentityComposer<"@beep/xai"> = composers.$XaiId;
  *
  * **Example** (Make ACP package ID)
  *
- * ```ts import.meta.vitest name="Make ACP package ID"
+ * ```ts
  * import { $AcpId } from "@beep/identity"
  *
  * const id = $AcpId.make("AcpClient")
@@ -1066,7 +1066,7 @@ export const $AcpId: Identity.IdentityComposer<"@beep/acp"> = composers.$AcpId;
  *
  * **Example** (Make OpenAI compat package ID)
  *
- * ```ts import.meta.vitest name="Make OpenAI compat package ID"
+ * ```ts
  * import { $OpenaiCompatId } from "@beep/identity"
  *
  * const id = $OpenaiCompatId.make("LanguageModel")
@@ -1083,7 +1083,7 @@ export const $OpenaiCompatId: Identity.IdentityComposer<"@beep/openai-compat"> =
  *
  * **Example** (Make workspace tables package ID)
  *
- * ```ts import.meta.vitest name="Make workspace tables package ID"
+ * ```ts
  * import { $WorkspaceTablesId } from "@beep/identity"
  *
  * const id = $WorkspaceTablesId.make("WorkspaceTable")
@@ -1100,7 +1100,7 @@ export const $WorkspaceTablesId: Identity.IdentityComposer<"@beep/workspace-tabl
  *
  * **Example** (Make workspace use-cases package ID)
  *
- * ```ts import.meta.vitest name="Make workspace use-cases package ID"
+ * ```ts
  * import { $WorkspaceUseCasesId } from "@beep/identity"
  *
  * const id = $WorkspaceUseCasesId.make("ThreadStore")
@@ -1118,7 +1118,7 @@ export const $WorkspaceUseCasesId: Identity.IdentityComposer<"@beep/workspace-us
  *
  * **Example** (Make workspace server package ID)
  *
- * ```ts import.meta.vitest name="Make workspace server package ID"
+ * ```ts
  * import { $WorkspaceServerId } from "@beep/identity"
  *
  * const id = $WorkspaceServerId.make("ThreadStoreLive")
@@ -1135,7 +1135,7 @@ export const $WorkspaceServerId: Identity.IdentityComposer<"@beep/workspace-serv
  *
  * **Example** (Make documents domain package ID)
  *
- * ```ts import.meta.vitest name="Make documents domain package ID"
+ * ```ts
  * import { $DocumentsDomainId } from "@beep/identity"
  *
  * const id = $DocumentsDomainId.make("LegalDocumentTaxonomy")
@@ -1152,7 +1152,7 @@ export const $DocumentsDomainId: Identity.IdentityComposer<"@beep/documents-doma
  *
  * **Example** (Make documents use-cases package ID)
  *
- * ```ts import.meta.vitest name="Make documents use-cases package ID"
+ * ```ts
  * import { $DocumentsUseCasesId } from "@beep/identity"
  *
  * const id = $DocumentsUseCasesId.make("FilingDecision")
@@ -1170,7 +1170,7 @@ export const $DocumentsUseCasesId: Identity.IdentityComposer<"@beep/documents-us
  *
  * **Example** (Make documents server package ID)
  *
- * ```ts import.meta.vitest name="Make documents server package ID"
+ * ```ts
  * import { $DocumentsServerId } from "@beep/identity"
  *
  * const id = $DocumentsServerId.make("DocumentsServerLive")
@@ -1187,7 +1187,7 @@ export const $DocumentsServerId: Identity.IdentityComposer<"@beep/documents-serv
  *
  * **Example** (Make architecture lab domain ID)
  *
- * ```ts import.meta.vitest name="Make architecture lab domain ID"
+ * ```ts
  * import { $ArchitectureLabDomainId } from "@beep/identity"
  *
  * const id = $ArchitectureLabDomainId.make("WorkItem")
@@ -1205,7 +1205,7 @@ export const $ArchitectureLabDomainId: Identity.IdentityComposer<"@beep/architec
  *
  * **Example** (Make architecture lab use-cases ID)
  *
- * ```ts import.meta.vitest name="Make architecture lab use-cases ID"
+ * ```ts
  * import { $ArchitectureLabUseCasesId } from "@beep/identity"
  *
  * const id = $ArchitectureLabUseCasesId.make("WorkItemService")
@@ -1223,7 +1223,7 @@ export const $ArchitectureLabUseCasesId: Identity.IdentityComposer<"@beep/archit
  *
  * **Example** (Make architecture lab config ID)
  *
- * ```ts import.meta.vitest name="Make architecture lab config ID"
+ * ```ts
  * import { $ArchitectureLabConfigId } from "@beep/identity"
  *
  * const id = $ArchitectureLabConfigId.make("Config")
@@ -1241,7 +1241,7 @@ export const $ArchitectureLabConfigId: Identity.IdentityComposer<"@beep/architec
  *
  * **Example** (Make architecture lab server ID)
  *
- * ```ts import.meta.vitest name="Make architecture lab server ID"
+ * ```ts
  * import { $ArchitectureLabServerId } from "@beep/identity"
  *
  * const id = $ArchitectureLabServerId.make("Layer")
@@ -1259,7 +1259,7 @@ export const $ArchitectureLabServerId: Identity.IdentityComposer<"@beep/architec
  *
  * **Example** (Make architecture lab tables ID)
  *
- * ```ts import.meta.vitest name="Make architecture lab tables ID"
+ * ```ts
  * import { $ArchitectureLabTablesId } from "@beep/identity"
  *
  * const id = $ArchitectureLabTablesId.make("WorkItemTable")
@@ -1277,7 +1277,7 @@ export const $ArchitectureLabTablesId: Identity.IdentityComposer<"@beep/architec
  *
  * **Example** (Make architecture lab client ID)
  *
- * ```ts import.meta.vitest name="Make architecture lab client ID"
+ * ```ts
  * import { $ArchitectureLabClientId } from "@beep/identity"
  *
  * const id = $ArchitectureLabClientId.make("WorkItemClient")
@@ -1295,7 +1295,7 @@ export const $ArchitectureLabClientId: Identity.IdentityComposer<"@beep/architec
  *
  * **Example** (Make architecture lab UI ID)
  *
- * ```ts import.meta.vitest name="Make architecture lab UI ID"
+ * ```ts
  * import { $ArchitectureLabUiId } from "@beep/identity"
  *
  * const id = $ArchitectureLabUiId.make("WorkItemViewModel")
@@ -1313,7 +1313,7 @@ export const $ArchitectureLabUiId: Identity.IdentityComposer<"@beep/architecture
  *
  * **Example** (Make architecture lab proof ID)
  *
- * ```ts import.meta.vitest name="Make architecture lab proof ID"
+ * ```ts
  * import { $ArchitectureLabProofId } from "@beep/identity"
  *
  * const id = $ArchitectureLabProofId.make("Proof")
@@ -1331,7 +1331,7 @@ export const $ArchitectureLabProofId: Identity.IdentityComposer<"@beep/architect
  *
  * **Example** (Make Runpod package ID)
  *
- * ```ts import.meta.vitest name="Make Runpod package ID"
+ * ```ts
  * import { $RunpodId } from "@beep/identity"
  *
  * const id = $RunpodId.make("Runpod")
@@ -1348,7 +1348,7 @@ export const $RunpodId: Identity.IdentityComposer<"@beep/runpod"> = composers.$R
  *
  * **Example** (Make 1Password CLI package ID)
  *
- * ```ts import.meta.vitest name="Make 1Password CLI package ID"
+ * ```ts
  * import { $OnepasswordCliId } from "@beep/identity"
  *
  * const id = $OnepasswordCliId.make("OnepasswordCli")
@@ -1365,7 +1365,7 @@ export const $OnepasswordCliId: Identity.IdentityComposer<"@beep/onepassword-cli
  *
  * **Example** (Make Discord package ID)
  *
- * ```ts import.meta.vitest name="Make Discord package ID"
+ * ```ts
  * import { $DiscordId } from "@beep/identity"
  *
  * const id = $DiscordId.make("Discord")
@@ -1382,7 +1382,7 @@ export const $DiscordId: Identity.IdentityComposer<"@beep/discord"> = composers.
  *
  * **Example** (Make AI provider CLI package ID)
  *
- * ```ts import.meta.vitest name="Make AI provider CLI package ID"
+ * ```ts
  * import { $AiProviderCliId } from "@beep/identity"
  *
  * const id = $AiProviderCliId.make("AiProviderCli")
@@ -1399,7 +1399,7 @@ export const $AiProviderCliId: Identity.IdentityComposer<"@beep/ai-provider-cli"
  *
  * **Example** (Make Sanity package ID)
  *
- * ```ts import.meta.vitest name="Make Sanity package ID"
+ * ```ts
  * import { $SanityId } from "@beep/identity"
  *
  * const id = $SanityId.make("Sanity")
@@ -1416,7 +1416,7 @@ export const $SanityId: Identity.IdentityComposer<"@beep/sanity"> = composers.$S
  *
  * **Example** (Make HubSpot package ID)
  *
- * ```ts import.meta.vitest name="Make HubSpot package ID"
+ * ```ts
  * import { $HubspotId } from "@beep/identity"
  *
  * const id = $HubspotId.make("Hubspot")
@@ -1433,7 +1433,7 @@ export const $HubspotId: Identity.IdentityComposer<"@beep/hubspot"> = composers.
  *
  * **Example** (Make Phoenix package ID)
  *
- * ```ts import.meta.vitest name="Make Phoenix package ID"
+ * ```ts
  * import { $PhoenixId } from "@beep/identity"
  *
  * const id = $PhoenixId.make("Phoenix")
@@ -1450,7 +1450,7 @@ export const $PhoenixId: Identity.IdentityComposer<"@beep/phoenix"> = composers.
  *
  * **Example** (Make AI sync package ID)
  *
- * ```ts import.meta.vitest name="Make AI sync package ID"
+ * ```ts
  * import { $AiSyncId } from "@beep/identity"
  *
  * const id = $AiSyncId.make("AiSync")
@@ -2420,7 +2420,7 @@ export const $GovLegalMcpId: Identity.IdentityComposer<"@beep/gov-legal-mcp"> = 
  *
  * **Example** (Make epistemic client package ID)
  *
- * ```ts import.meta.vitest name="Make epistemic client package ID"
+ * ```ts
  * import { $EpistemicClientId } from "@beep/identity"
  *
  * console.log($EpistemicClientId.make("ContradictionTriage"))
@@ -2436,7 +2436,7 @@ export const $EpistemicClientId: Identity.IdentityComposer<"@beep/epistemic-clie
  *
  * **Example** (Make epistemic UI package ID)
  *
- * ```ts import.meta.vitest name="Make epistemic UI package ID"
+ * ```ts
  * import { $EpistemicUiId } from "@beep/identity"
  *
  * console.log($EpistemicUiId.make("ContradictionTriage"))
@@ -2452,7 +2452,7 @@ export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = c
  *
  * **Example** (Compose an identifier)
  *
- * ```ts import.meta.vitest name="Compose an identifier"
+ * ```ts
  * import { $EffectDrizzleId } from "@beep/identity/packages"
  *
  * console.log($EffectDrizzleId.make("EffectDrizzle"))

@@ -92,7 +92,7 @@ export const DurationUnit = LiteralKit([
  *
  * **Example** (Annotate a duration unit)
  *
- * ```ts import.meta.vitest name="Annotate a duration unit"
+ * ```ts
  * import type { DurationUnit } from "@beep/schema/Duration"
  *
  * const unit: DurationUnit = "hours"
@@ -110,7 +110,7 @@ export type DurationUnit = typeof DurationUnit.Type;
  *
  * **Example** (Use the compatibility unit alias)
  *
- * ```ts import.meta.vitest name="Use the compatibility unit alias"
+ * ```ts
  * import type { Unit } from "@beep/schema/Duration"
  *
  * const unit: Unit = "seconds"
@@ -224,7 +224,7 @@ export const DurationInput = S.Union([
  *
  * **Example** (Annotate decoded duration input)
  *
- * ```ts import.meta.vitest name="Annotate decoded duration input"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DurationInput } from "@beep/schema/Duration"
  *
@@ -327,7 +327,7 @@ export type DurationFromInput = typeof DurationFromInput.Type;
  *
  * **Example** (Decode through the input alias)
  *
- * ```ts import.meta.vitest name="Decode through the input alias"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Input } from "@beep/schema/Duration"
  *
@@ -346,7 +346,7 @@ export const Input = DurationInput;
  *
  * **Example** (Annotate input through the alias)
  *
- * ```ts import.meta.vitest name="Annotate input through the alias"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Input } from "@beep/schema/Duration"
  *

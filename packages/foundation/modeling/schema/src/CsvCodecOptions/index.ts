@@ -3,7 +3,7 @@
  *
  * **Example** (Make default codec options)
  *
- * ```ts import.meta.vitest name="Make default codec options"
+ * ```ts
  * import * as CsvCodecOptions from "@beep/schema/CsvCodecOptions"
  *
  * const options = CsvCodecOptions.Schema.make({})

@@ -114,7 +114,7 @@ const decodeMarkdownText = Effect.fn("Markdown.decodeMarkdownText")(function* (c
  *
  * **Example** (Decode Markdown document)
  *
- * ```ts import.meta.vitest name="Decode Markdown document"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Markdown } from "@beep/schema/Markdown"
  *
@@ -141,7 +141,7 @@ export const Markdown = S.String.pipe(
  *
  * **Example** (Annotate Markdown document)
  *
- * ```ts import.meta.vitest name="Annotate Markdown document"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Markdown } from "@beep/schema/Markdown"
  *
@@ -164,7 +164,7 @@ export type Markdown = typeof Markdown.Type;
  *
  * **Example** (Render Markdown to HTML)
  *
- * ```ts import.meta.vitest name="Render Markdown to HTML"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { MarkdownTextToHtml } from "@beep/schema/Markdown"
@@ -200,7 +200,7 @@ export const MarkdownTextToHtml = (options?: MarkdownRenderOptions) => {
  *
  * **Example** (Decode Markdown through schema)
  *
- * ```ts import.meta.vitest name="Decode Markdown through schema"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { decodeMarkdownTextAs } from "@beep/schema/Markdown"

@@ -36,7 +36,7 @@ const EvmAddressChecks = S.makeFilterGroup(
  *
  * **Example** (Decode zero EVM address)
  *
- * ```ts import.meta.vitest name="Decode zero EVM address"
+ * ```ts
  * import { EvmAddress } from "@beep/schema/EvmAddress"
  * import * as S from "effect/Schema"
  *
@@ -59,7 +59,7 @@ export const EvmAddress = S.NonEmptyString.check(EvmAddressChecks).pipe(
  *
  * **Example** (Type annotated EVM address)
  *
- * ```ts import.meta.vitest name="Type annotated EVM address"
+ * ```ts
  * import { EvmAddress } from "@beep/schema/EvmAddress"
  * import * as S from "effect/Schema"
  *
@@ -77,7 +77,7 @@ export type EvmAddress = typeof EvmAddress.Type;
  *
  * **Example** (Make redacted EVM address)
  *
- * ```ts import.meta.vitest name="Make redacted EVM address"
+ * ```ts
  * import { EvmAddressRedacted } from "@beep/schema/EvmAddress"
  *
  * const address = EvmAddressRedacted.makeRedacted("0x0000000000000000000000000000000000000000")
@@ -102,7 +102,7 @@ export const EvmAddressRedacted = EvmAddress.pipe(
  *
  * **Example** (Type redacted EVM address)
  *
- * ```ts import.meta.vitest name="Type redacted EVM address"
+ * ```ts
  * import { EvmAddressRedacted } from "@beep/schema/EvmAddress"
  *
  * const address: EvmAddressRedacted = EvmAddressRedacted.makeRedacted("0x0000000000000000000000000000000000000000")

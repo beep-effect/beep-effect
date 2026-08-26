@@ -450,7 +450,7 @@ export const elements = (pattern: Pattern): ReadonlyArray<PatternElement> => toE
  *
  * **Example** (Lookup element by index)
  *
- * ```ts import.meta.vitest name="Lookup element by index"
+ * ```ts
  * import * as O from "effect/Option"
  * import { elementAt, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -491,7 +491,7 @@ export const isEmpty = (pattern: Pattern): boolean => Chunk.isEmpty(pattern.elem
  *
  * **Example** (Get first pattern element)
  *
- * ```ts import.meta.vitest name="Get first pattern element"
+ * ```ts
  * import * as O from "effect/Option"
  * import { head, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -509,7 +509,7 @@ export const head = elementAt(0);
  *
  * **Example** (Get last pattern element)
  *
- * ```ts import.meta.vitest name="Get last pattern element"
+ * ```ts
  * import * as O from "effect/Option"
  * import { last, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -527,7 +527,7 @@ export const last = (pattern: Pattern): O.Option<PatternElement> => elementAt(pa
  *
  * **Example** (Map elements to new literals)
  *
- * ```ts import.meta.vitest name="Map elements to new literals"
+ * ```ts
  * import * as O from "effect/Option"
  * import { elementAt, literal, make, mapElements } from "@beep/nlp/Core/PatternBuilders"
  *
@@ -761,7 +761,7 @@ const toLiteralReplacer = (replacement: PatternElement | LiteralReplacer): Liter
  *
  * **Example** (Generalize literals to POS)
  *
- * ```ts import.meta.vitest name="Generalize literals to POS"
+ * ```ts
  * import * as O from "effect/Option"
  * import { generalizeLiterals, head, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
  *

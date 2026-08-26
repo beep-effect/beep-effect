@@ -74,7 +74,7 @@ export class SkillMarkdownProjection extends S.Class<SkillMarkdownProjection>($I
  *
  * **Example** (Inspect denial reasons)
  *
- * ```ts import.meta.vitest name="Inspect denial reasons"
+ * ```ts
  * import { SkillArtifactDenialReason } from "@beep/skill-contract"
  *
  * console.log(SkillArtifactDenialReason.Options)

@@ -3,7 +3,7 @@
  *
  * **Example** (Import CsvParser namespace)
  *
- * ```ts import.meta.vitest name="Import CsvParser namespace"
+ * ```ts
  * import * as CsvParser from "@beep/schema/CsvParser"
  *
  * console.log(CsvParser.parse)

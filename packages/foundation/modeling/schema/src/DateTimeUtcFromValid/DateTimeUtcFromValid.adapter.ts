@@ -18,7 +18,7 @@ const $I = $SchemaId.create("DateTimeUtcFromValid");
  *
  * **Example** (Decode null date input)
  *
- * ```ts import.meta.vitest name="Decode null date input"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DateInputToDateTime } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -47,7 +47,7 @@ export type DateInputToDateTime = typeof DateInputToDateTime.Type;
  *
  * **Example** (Assign UTC timezone token)
  *
- * ```ts import.meta.vitest name="Assign UTC timezone token"
+ * ```ts
  * import type { DateTimeAdapterTimezone } from "@beep/schema/DateTimeUtcFromValid"
  *
  * const timezone: DateTimeAdapterTimezone = "UTC"
@@ -64,7 +64,7 @@ export type DateTimeAdapterTimezone = string;
  *
  * **Example** (Apply UTC to DateTime)
  *
- * ```ts import.meta.vitest name="Apply UTC to DateTime"
+ * ```ts
  * import * as DateTime from "effect/DateTime"
  * import { applyTimezone } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -99,7 +99,7 @@ export const applyTimezone: {
  *
  * **Example** (Create DateTime with timezone)
  *
- * ```ts import.meta.vitest name="Create DateTime with timezone"
+ * ```ts
  * import { createDateTimeWithTimezone } from "@beep/schema/DateTimeUtcFromValid"
  *
  * const value = createDateTimeWithTimezone("2024-01-01T00:00:00.000Z", "UTC")
@@ -129,7 +129,7 @@ export const createDateTimeWithTimezone: {
  *
  * **Example** (Create invalid DateTime value)
  *
- * ```ts import.meta.vitest name="Create invalid DateTime value"
+ * ```ts
  * import { createInvalidDateTime } from "@beep/schema/DateTimeUtcFromValid"
  *
  * console.log(Number.isNaN(createInvalidDateTime().epochMilliseconds))

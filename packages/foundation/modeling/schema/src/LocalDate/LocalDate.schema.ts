@@ -41,12 +41,12 @@ const $I = $SchemaId.create("LocalDate");
  *
  * **Example** (Make and convert LocalDate)
  *
- * ```ts import.meta.vitest name="Make and convert LocalDate"
+ * ```ts
  * import { LocalDate } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 6, day: 15 })
  *
- * date.toISOString() // => "2024-06-15"
+ * console.log(date.toISOString()) // "2024-06-15"
  * console.log(date.toDateTime())
  * ```
  *
@@ -127,7 +127,7 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
  *
  * **Example** (Check LocalDate type guard)
  *
- * ```ts import.meta.vitest name="Check LocalDate type guard"
+ * ```ts
  * import { LocalDate, isLocalDate } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -223,7 +223,7 @@ const encodeLocalDateFromString = (localDate: {
  *
  * **Example** (Parse ISO date string)
  *
- * ```ts import.meta.vitest name="Parse ISO date string"
+ * ```ts
  * import { Effect } from "effect"
  * import { fromString } from "@beep/schema/LocalDate"
  *
@@ -262,7 +262,7 @@ export const fromString = (dateString: string): Effect.Effect<LocalDate, S.Schem
  *
  * **Example** (Create from JavaScript Date)
  *
- * ```ts import.meta.vitest name="Create from JavaScript Date"
+ * ```ts
  * import { fromDate } from "@beep/schema/LocalDate"
  *
  * const date = fromDate(new Date("2024-06-15T10:30:00Z"))
@@ -285,7 +285,7 @@ export const fromDate: (date: Date) => LocalDate = flow(DateTime.fromDateUnsafe,
  *
  * **Example** (Get today's UTC date)
  *
- * ```ts import.meta.vitest name="Get today's UTC date"
+ * ```ts
  * import { today } from "@beep/schema/LocalDate"
  *
  * const date = today()
@@ -302,7 +302,7 @@ export const today = (): LocalDate => DateTime.nowUnsafe().pipe(DateTime.toDate,
  *
  * **Example** (Get today via Effect)
  *
- * ```ts import.meta.vitest name="Get today via Effect"
+ * ```ts
  * import { Effect } from "effect"
  * import { todayEffect } from "@beep/schema/LocalDate"
  *
@@ -324,7 +324,7 @@ export const todayEffect = pipe(
  *
  * **Example** (Create from DateTime)
  *
- * ```ts import.meta.vitest name="Create from DateTime"
+ * ```ts
  * import { DateTime } from "effect"
  * import { fromDateTime } from "@beep/schema/LocalDate"
  *
@@ -349,7 +349,7 @@ export const fromDateTime = (dateTime: DateTime.DateTime): LocalDate => {
  *
  * **Example** (Compare dates chronologically)
  *
- * ```ts import.meta.vitest name="Compare dates chronologically"
+ * ```ts
  * import { LocalDate, Order } from "@beep/schema/LocalDate"
  *
  * const earlier = LocalDate.make({ year: 2024, month: 1, day: 1 })
@@ -384,7 +384,7 @@ export const Order: {
  *
  * **Example** (Check if date is before)
  *
- * ```ts import.meta.vitest name="Check if date is before"
+ * ```ts
  * import { LocalDate, isBefore } from "@beep/schema/LocalDate"
  *
  * const earlier = LocalDate.make({ year: 2024, month: 1, day: 1 })
@@ -405,7 +405,7 @@ export const isBefore: {
  *
  * **Example** (Check if date is after)
  *
- * ```ts import.meta.vitest name="Check if date is after"
+ * ```ts
  * import { LocalDate, isAfter } from "@beep/schema/LocalDate"
  *
  * const earlier = LocalDate.make({ year: 2024, month: 1, day: 1 })
@@ -426,7 +426,7 @@ export const isAfter: {
  *
  * **Example** (Check date equality)
  *
- * ```ts import.meta.vitest name="Check date equality"
+ * ```ts
  * import { LocalDate, equals } from "@beep/schema/LocalDate"
  *
  * const a = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -447,7 +447,7 @@ export const equals: {
  *
  * **Example** (Add days to date)
  *
- * ```ts import.meta.vitest name="Add days to date"
+ * ```ts
  * import { LocalDate, addDays } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -471,7 +471,7 @@ export const addDays: {
  *
  * **Example** (Add months to date)
  *
- * ```ts import.meta.vitest name="Add months to date"
+ * ```ts
  * import { LocalDate, addMonths } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -495,7 +495,7 @@ export const addMonths: {
  *
  * **Example** (Add years to date)
  *
- * ```ts import.meta.vitest name="Add years to date"
+ * ```ts
  * import { LocalDate, addYears } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -519,7 +519,7 @@ export const addYears: {
  *
  * **Example** (Difference in whole days)
  *
- * ```ts import.meta.vitest name="Difference in whole days"
+ * ```ts
  * import { LocalDate, diffInDays } from "@beep/schema/LocalDate"
  *
  * const earlier = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -545,7 +545,7 @@ export const diffInDays: {
  *
  * **Example** (Get first day of month)
  *
- * ```ts import.meta.vitest name="Get first day of month"
+ * ```ts
  * import { LocalDate, startOfMonth } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -567,7 +567,7 @@ export const startOfMonth = (date: LocalDate): LocalDate =>
  *
  * **Example** (Get last day of month)
  *
- * ```ts import.meta.vitest name="Get last day of month"
+ * ```ts
  * import { LocalDate, endOfMonth } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 2, day: 15 })
@@ -589,7 +589,7 @@ export const endOfMonth = (date: LocalDate): LocalDate =>
  *
  * **Example** (Get first day of year)
  *
- * ```ts import.meta.vitest name="Get first day of year"
+ * ```ts
  * import { LocalDate, startOfYear } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -611,7 +611,7 @@ export const startOfYear = (date: LocalDate): LocalDate =>
  *
  * **Example** (Get last day of year)
  *
- * ```ts import.meta.vitest name="Get last day of year"
+ * ```ts
  * import { LocalDate, endOfYear } from "@beep/schema/LocalDate"
  *
  * const date = LocalDate.make({ year: 2024, month: 6, day: 15 })
@@ -633,7 +633,7 @@ export const endOfYear = (date: LocalDate): LocalDate =>
  *
  * **Example** (Check leap year)
  *
- * ```ts import.meta.vitest name="Check leap year"
+ * ```ts
  * import { isLeapYear } from "@beep/schema/LocalDate"
  *
  * console.log(isLeapYear(2024))
@@ -649,7 +649,7 @@ export const isLeapYear = (year: number): boolean => isLeapYearInternal(year);
  *
  * **Example** (Days in month with leap)
  *
- * ```ts import.meta.vitest name="Days in month with leap"
+ * ```ts
  * import { daysInMonth } from "@beep/schema/LocalDate"
  *
  * console.log(daysInMonth(2024, 2))
@@ -707,7 +707,7 @@ export const LocalDateFromString = S.String.pipe(
  *
  * **Example** (Type decoded LocalDate value)
  *
- * ```ts import.meta.vitest name="Type decoded LocalDate value"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { LocalDateFromString } from "@beep/schema/LocalDate"
  *

@@ -47,7 +47,7 @@ const {
  *
  * **Example** (Empty attributes schema check)
  *
- * ```ts import.meta.vitest name="Empty attributes schema check"
+ * ```ts
  * import { SafeHtmlAttributes } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
  *
@@ -81,7 +81,8 @@ export const SafeHtmlAttributes = readonlyStruct({
  * ```ts import.meta.vitest name="Make empty attributes object"
  * import { SafeHtmlAttributesStruct } from "@beep/html/Html.policy"
  *
- * console.log(SafeHtmlAttributesStruct.make({}))
+ * const attributes = SafeHtmlAttributesStruct.make({})
+ * attributes instanceof SafeHtmlAttributesStruct // => true
  * ```
  *
  * @category schemas
@@ -325,7 +326,7 @@ export const SafeImageUrlAttribute = S.String.check(
  *
  * **Example** (Decode HTTPS image URL)
  *
- * ```ts import.meta.vitest name="Decode HTTPS image URL"
+ * ```ts
  * import { SafeImageUrlAttribute } from "@beep/html/Html.policy"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -842,7 +843,7 @@ export const enforceSafeHtml: (value: ConformantHtml) => Effect.Effect<SafeHtmlA
  *
  * **Example** (Extract conformance proof)
  *
- * ```ts import.meta.vitest name="Extract conformance proof"
+ * ```ts
  * import { conform, enforceSafeHtml, Fragment, safeHtmlAstConformant } from "@beep/html"
  * import { Effect } from "effect"
  *

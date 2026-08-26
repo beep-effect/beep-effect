@@ -3,7 +3,7 @@
  *
  * **Example** (Verify Header export exists)
  *
- * ```ts import.meta.vitest name="Verify Header export exists"
+ * ```ts
  * import * as NoSniff from "@beep/schema/NoSniff"
  *
  * console.log(Object.keys(NoSniff).includes("Header"))

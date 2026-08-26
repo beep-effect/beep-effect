@@ -15,7 +15,7 @@ const $I = $SchemaId.create("ArrayOf");
  *
  * **Example** (Decode string array)
  *
- * ```ts import.meta.vitest name="Decode string array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfStrings } from "@beep/schema/ArrayOf"
  *
@@ -37,7 +37,7 @@ export const ArrayOfStrings = S.Array(S.String).pipe(
  *
  * **Example** (Typed decoded string array)
  *
- * ```ts import.meta.vitest name="Typed decoded string array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfStrings } from "@beep/schema/ArrayOf"
  *
@@ -55,7 +55,7 @@ export type ArrayOfStrings = typeof ArrayOfStrings.Type;
  *
  * **Example** (Decode non-empty strings)
  *
- * ```ts import.meta.vitest name="Decode non-empty strings"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfStrings } from "@beep/schema/ArrayOf"
  *
@@ -77,7 +77,7 @@ export const NonEmptyArrayOfStrings = S.NonEmptyArray(S.String).pipe(
  *
  * **Example** (Typed non-empty string array)
  *
- * ```ts import.meta.vitest name="Typed non-empty string array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfStrings } from "@beep/schema/ArrayOf"
  *
@@ -95,7 +95,7 @@ export type NonEmptyArrayOfStrings = typeof NonEmptyArrayOfStrings.Type;
  *
  * **Example** (Decode non-empty string items)
  *
- * ```ts import.meta.vitest name="Decode non-empty string items"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
  *
@@ -117,7 +117,7 @@ export const ArrayOfNonEmptyStrings = S.Array(S.NonEmptyString).pipe(
  *
  * **Example** (Typed non-empty string items)
  *
- * ```ts import.meta.vitest name="Typed non-empty string items"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
  *
@@ -135,7 +135,7 @@ export type ArrayOfNonEmptyStrings = typeof ArrayOfNonEmptyStrings.Type;
  *
  * **Example** (Decode non-empty non-empty strings)
  *
- * ```ts import.meta.vitest name="Decode non-empty non-empty strings"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
  *
@@ -157,7 +157,7 @@ export const NonEmptyArrayOfNonEmptyStrings = S.NonEmptyArray(S.NonEmptyString).
  *
  * **Example** (Typed non-empty non-empty strings)
  *
- * ```ts import.meta.vitest name="Typed non-empty non-empty strings"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
  *
@@ -175,7 +175,7 @@ export type NonEmptyArrayOfNonEmptyStrings = typeof NonEmptyArrayOfNonEmptyStrin
  *
  * **Example** (Decode number array)
  *
- * ```ts import.meta.vitest name="Decode number array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfNumbers } from "@beep/schema/ArrayOf"
  *
@@ -197,7 +197,7 @@ export const ArrayOfNumbers = S.Array(S.Finite).pipe(
  *
  * **Example** (Typed decoded number array)
  *
- * ```ts import.meta.vitest name="Typed decoded number array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfNumbers } from "@beep/schema/ArrayOf"
  *
@@ -215,7 +215,7 @@ export type ArrayOfNumbers = typeof ArrayOfNumbers.Type;
  *
  * **Example** (Decode non-empty numbers)
  *
- * ```ts import.meta.vitest name="Decode non-empty numbers"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfNumbers } from "@beep/schema/ArrayOf"
  *
@@ -237,7 +237,7 @@ export const NonEmptyArrayOfNumbers = S.NonEmptyArray(S.Finite).pipe(
  *
  * **Example** (Typed non-empty number array)
  *
- * ```ts import.meta.vitest name="Typed non-empty number array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfNumbers } from "@beep/schema/ArrayOf"
  *
@@ -255,7 +255,7 @@ export type NonEmptyArrayOfNumbers = typeof NonEmptyArrayOfNumbers.Type;
  *
  * **Example** (Decode integer array)
  *
- * ```ts import.meta.vitest name="Decode integer array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfInts } from "@beep/schema/ArrayOf"
  *
@@ -277,7 +277,7 @@ export const ArrayOfInts = S.Array(S.Int).pipe(
  *
  * **Example** (Typed decoded integer array)
  *
- * ```ts import.meta.vitest name="Typed decoded integer array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfInts } from "@beep/schema/ArrayOf"
  *
@@ -295,7 +295,7 @@ export type ArrayOfInts = typeof ArrayOfInts.Type;
  *
  * **Example** (Decode non-empty integers)
  *
- * ```ts import.meta.vitest name="Decode non-empty integers"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfInts } from "@beep/schema/ArrayOf"
  *
@@ -317,7 +317,7 @@ export const NonEmptyArrayOfInts = S.NonEmptyArray(S.Int).pipe(
  *
  * **Example** (Typed non-empty integer array)
  *
- * ```ts import.meta.vitest name="Typed non-empty integer array"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfInts } from "@beep/schema/ArrayOf"
  *

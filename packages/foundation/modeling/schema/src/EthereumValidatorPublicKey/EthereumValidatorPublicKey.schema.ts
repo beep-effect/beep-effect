@@ -37,7 +37,7 @@ const EthereumValidatorPublicKeyChecks = S.makeFilterGroup(
  *
  * **Example** (Decode validator public key)
  *
- * ```ts import.meta.vitest name="Decode validator public key"
+ * ```ts
  * import { EthereumValidatorPublicKey } from "@beep/schema/EthereumValidatorPublicKey"
  * import * as S from "effect/Schema"
  *
@@ -66,7 +66,7 @@ export const EthereumValidatorPublicKey = S.String.check(EthereumValidatorPublic
  *
  * **Example** (Type validator public key)
  *
- * ```ts import.meta.vitest name="Type validator public key"
+ * ```ts
  * import { EthereumValidatorPublicKey } from "@beep/schema/EthereumValidatorPublicKey"
  * import * as S from "effect/Schema"
  *
@@ -86,7 +86,7 @@ export type EthereumValidatorPublicKey = typeof EthereumValidatorPublicKey.Type;
  *
  * **Example** (Make redacted public key)
  *
- * ```ts import.meta.vitest name="Make redacted public key"
+ * ```ts
  * import { EthereumValidatorPublicKeyRedacted } from "@beep/schema/EthereumValidatorPublicKey"
  *
  * const key = EthereumValidatorPublicKeyRedacted.makeRedacted(
@@ -113,7 +113,7 @@ export const EthereumValidatorPublicKeyRedacted = EthereumValidatorPublicKey.pip
  *
  * **Example** (Type redacted public key)
  *
- * ```ts import.meta.vitest name="Type redacted public key"
+ * ```ts
  * import { EthereumValidatorPublicKeyRedacted } from "@beep/schema/EthereumValidatorPublicKey"
  *
  * const key: EthereumValidatorPublicKeyRedacted = EthereumValidatorPublicKeyRedacted.makeRedacted(

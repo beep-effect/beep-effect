@@ -28,7 +28,7 @@ import {
  *
  * **Example** (Log unofficial pairs length)
  *
- * ```ts import.meta.vitest name="Log unofficial pairs length"
+ * ```ts
  * import { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatusUnofficial.Pairs.length)

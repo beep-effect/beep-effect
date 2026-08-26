@@ -377,7 +377,7 @@ export const expandPredicate: ExpandPredicateDataLast & ExpandPredicateDataFirst
  *
  * **Example** (Build codec from vocabulary)
  *
- * ```ts import.meta.vitest name="Build codec from vocabulary"
+ * ```ts
  * import { CoreVocab, makeCurieCodec } from "@beep/identity"
  *
  * const codec = makeCurieCodec(CoreVocab)
@@ -414,7 +414,7 @@ export const CoreCurieCodec = makeCurieCodec(CoreVocab);
  *
  * **Example** (Build Schema CURIE codec)
  *
- * ```ts import.meta.vitest name="Build Schema CURIE codec"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { CoreVocab, makeCurieFromIri } from "@beep/identity"
  *
@@ -438,7 +438,7 @@ export const makeCurieFromIri = <const V extends VocabShape>(vocab: V) =>
  *
  * **Example** (Decode with CurieFromIri schema)
  *
- * ```ts import.meta.vitest name="Decode with CurieFromIri schema"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { CurieFromIri } from "@beep/identity"
  *

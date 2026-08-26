@@ -23,7 +23,7 @@ import type { GraphKindValue } from "./Graph.shared.ts";
  *
  * **Example** (Directed graph schema check)
  *
- * ```ts import.meta.vitest name="Directed graph schema check"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DirectedGraph } from "@beep/schema/Graph"
  *
@@ -46,7 +46,7 @@ export interface DirectedGraph<Node extends S.Top, Edge extends S.Top>
  *
  * **Example** (Undirected graph schema check)
  *
- * ```ts import.meta.vitest name="Undirected graph schema check"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { UndirectedGraph } from "@beep/schema/Graph"
  *
@@ -69,7 +69,7 @@ export interface UndirectedGraph<Node extends S.Top, Edge extends S.Top>
  *
  * **Example** (Mutable directed schema check)
  *
- * ```ts import.meta.vitest name="Mutable directed schema check"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { MutableDirectedGraph } from "@beep/schema/Graph"
  *
@@ -92,7 +92,7 @@ export interface MutableDirectedGraph<Node extends S.Top, Edge extends S.Top>
  *
  * **Example** (Mutable undirected schema check)
  *
- * ```ts import.meta.vitest name="Mutable undirected schema check"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { MutableUndirectedGraph } from "@beep/schema/Graph"
  *
@@ -177,7 +177,7 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
  *
  * **Example** (Directed graph schema check)
  *
- * ```ts import.meta.vitest name="Directed graph schema check"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DirectedGraph } from "@beep/schema/Graph"
  *
@@ -212,7 +212,7 @@ export const DirectedGraph = <Node extends S.Top, Edge extends S.Top>(options: {
  *
  * **Example** (Undirected graph schema check)
  *
- * ```ts import.meta.vitest name="Undirected graph schema check"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { UndirectedGraph } from "@beep/schema/Graph"
  *
@@ -247,7 +247,7 @@ export const UndirectedGraph = <Node extends S.Top, Edge extends S.Top>(options:
  *
  * **Example** (Mutable directed schema check)
  *
- * ```ts import.meta.vitest name="Mutable directed schema check"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { MutableDirectedGraph } from "@beep/schema/Graph"
  *
@@ -282,7 +282,7 @@ export const MutableDirectedGraph = <Node extends S.Top, Edge extends S.Top>(opt
  *
  * **Example** (Mutable undirected schema check)
  *
- * ```ts import.meta.vitest name="Mutable undirected schema check"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { MutableUndirectedGraph } from "@beep/schema/Graph"
  *

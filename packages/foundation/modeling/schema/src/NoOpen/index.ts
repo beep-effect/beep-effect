@@ -3,7 +3,7 @@
  *
  * **Example** (Import NoOpen and check Header)
  *
- * ```ts import.meta.vitest name="Import NoOpen and check Header"
+ * ```ts
  * import * as NoOpen from "@beep/schema/NoOpen"
  *
  * console.log(Object.keys(NoOpen).includes("Header"))

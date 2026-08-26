@@ -99,7 +99,7 @@ const getQuotedFieldStart = (input: string, cursor: number, parserOptions: Parse
  *
  * **Example** (Create ParsedField value)
  *
- * ```ts import.meta.vitest name="Create ParsedField value"
+ * ```ts
  * import { ParsedField } from "@beep/schema/CsvParser"
  *
  * const field = ParsedField.make({ cursor: 4, value: "Ada" })
@@ -255,7 +255,7 @@ const parseField = (
  *
  * **Example** (Create ParsedRow value)
  *
- * ```ts import.meta.vitest name="Create ParsedRow value"
+ * ```ts
  * import { ParsedRow } from "@beep/schema/CsvParser"
  *
  * const row = ParsedRow.make({ cursor: 8, row: ["Ada", "36"] })
@@ -400,7 +400,7 @@ const parseCsvRowsEffect = Effect.fn("CsvParser.parseCsvRowsEffect")(function* (
  *
  * **Example** (Parse CSV into rows)
  *
- * ```ts import.meta.vitest name="Parse CSV into rows"
+ * ```ts
  * import { Effect } from "effect"
  * import { parseCsvRows } from "@beep/schema/CsvParser"
  * import { ParserOptions } from "@beep/schema/ParserOptions"

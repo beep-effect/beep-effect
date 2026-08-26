@@ -50,7 +50,7 @@ import type {
  * projections; the fold requires a bound composer.
  *
  * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
+ * ```ts
  * import { make } from "@beep/identity"
  * import type { BoundComposer } from "@beep/ontology"
  *

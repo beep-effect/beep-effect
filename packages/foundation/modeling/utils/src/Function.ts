@@ -7,7 +7,7 @@
  *
  * **Example** (Tuple and reverseCurry demo)
  *
- * ```ts import.meta.vitest name="Tuple and reverseCurry demo"
+ * ```ts
  * import { tuple, reverseCurry } from "@beep/utils/Function"
  *
  * const pair = tuple("beep", 5)
@@ -27,7 +27,7 @@
  *
  * **Example** (Pipe value through function)
  *
- * ```ts import.meta.vitest name="Pipe value through function"
+ * ```ts
  * import { pipe } from "@beep/utils/Function"
  *
  * const doubled = pipe(2, (value) => value * 2)
@@ -45,7 +45,7 @@ export * from "effect/Function";
  *
  * **Example** (Build readonly string-number pair)
  *
- * ```ts import.meta.vitest name="Build readonly string-number pair"
+ * ```ts
  * import { tuple } from "@beep/utils/Function"
  *
  * const pair = tuple("id", 123)
@@ -71,7 +71,7 @@ export function tuple<const T extends ReadonlyArray<unknown>>(...elements: T): R
  *
  * **Example** (Join pair via tupledCurry)
  *
- * ```ts import.meta.vitest name="Join pair via tupledCurry"
+ * ```ts
  * import { tupledCurry } from "@beep/utils/Function"
  *
  * const join = (left: string) => (right: string) => `${left}:${right}`
@@ -98,7 +98,7 @@ export function tupledCurry<A, B, C>(fn: (a: A) => (b: B) => C): (arg0: [A, B]) 
  *
  * **Example** (Reverse append argument order)
  *
- * ```ts import.meta.vitest name="Reverse append argument order"
+ * ```ts
  * import { reverseCurry } from "@beep/utils/Function"
  *
  * const append = (suffix: string) => (value: string) => `${value}${suffix}`
@@ -125,7 +125,7 @@ export function reverseCurry<A, B, C>(fn: (b: B) => (a: A) => C) {
  *
  * **Example** (Curry string join function)
  *
- * ```ts import.meta.vitest name="Curry string join function"
+ * ```ts
  * import { curry } from "@beep/utils/Function"
  *
  * const join = (left: string, right: string) => `${left}:${right}`
@@ -151,7 +151,7 @@ export function curry<A, B, C>(fn: (a: A, b: B) => C) {
  *
  * **Example** (Uncurry string join function)
  *
- * ```ts import.meta.vitest name="Uncurry string join function"
+ * ```ts
  * import { uncurry } from "@beep/utils/Function"
  *
  * const join = (left: string) => (right: string) => `${left}:${right}`
@@ -177,7 +177,7 @@ export function uncurry<A, B, C>(fn: (a: A) => (b: B) => C): (arg0: A, arg1: B) 
  *
  * **Example** (Memoize nullary counter thunk)
  *
- * ```ts import.meta.vitest name="Memoize nullary counter thunk"
+ * ```ts
  * import { lazy } from "@beep/utils/Function"
  *
  * let calls = 0

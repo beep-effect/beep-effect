@@ -3,7 +3,7 @@
  *
  * **Example** (Verify Header export)
  *
- * ```ts import.meta.vitest name="Verify Header export"
+ * ```ts
  * import * as FrameGuard from "@beep/schema/FrameGuard"
  *
  * console.log(Object.keys(FrameGuard).includes("Header"))

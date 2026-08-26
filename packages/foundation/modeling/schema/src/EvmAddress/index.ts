@@ -3,7 +3,7 @@
  *
  * **Example** (Import EVM address namespace)
  *
- * ```ts import.meta.vitest name="Import EVM address namespace"
+ * ```ts
  * import * as EvmAddress from "@beep/schema/EvmAddress"
  * import * as S from "effect/Schema"
  *

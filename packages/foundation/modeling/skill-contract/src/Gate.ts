@@ -62,7 +62,7 @@ export type GateId = typeof GateId.Type;
  *
  * **Example** (Define consumer gate identifiers)
  *
- * ```ts import.meta.vitest name="Define consumer gate identifiers"
+ * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  * import { makeGateId } from "@beep/skill-contract"
  *
@@ -204,7 +204,7 @@ export class ConditionalGateApplicability extends S.Class<ConditionalGateApplica
  *
  * **Example** (Match an unconditional applicability value)
  *
- * ```ts import.meta.vitest name="Match an unconditional applicability value"
+ * ```ts
  * import { AlwaysGateApplicability, GateApplicability } from "@beep/skill-contract"
  *
  * const value = AlwaysGateApplicability.make({})
@@ -239,7 +239,7 @@ export type GateApplicability = typeof GateApplicability.Type;
  *
  * **Example** (Construct a predicate type)
  *
- * ```ts import.meta.vitest name="Construct a predicate type"
+ * ```ts
  * import { EvidencePredicateType } from "@beep/skill-contract"
  *
  * const type = EvidencePredicateType.make("https://beep.dev/evidence/artifact-exists/v1")
@@ -269,7 +269,7 @@ export type EvidencePredicateType = typeof EvidencePredicateType.Type;
  *
  * **Example** (Require a versioned predicate)
  *
- * ```ts import.meta.vitest name="Require a versioned predicate"
+ * ```ts
  * import { EvidencePredicateType, GateEvidenceRequirement } from "@beep/skill-contract"
  *
  * const requirement = GateEvidenceRequirement.make({
@@ -297,7 +297,7 @@ export class GateEvidenceRequirement extends S.Class<GateEvidenceRequirement>($I
  *
  * **Example** (Declare a blocking gate)
  *
- * ```ts import.meta.vitest name="Declare a blocking gate"
+ * ```ts
  * import {
  *   AlwaysGateApplicability,
  *   EvidencePredicateType,
@@ -441,7 +441,7 @@ const gateAuditRecordImpl = <const Identifier extends string, const Outcome exte
  *
  * **Example** (Build a denied audit schema)
  *
- * ```ts import.meta.vitest name="Build a denied audit schema"
+ * ```ts
  * import { GateAuditRecord } from "@beep/skill-contract"
  * import * as S from "effect/Schema"
  *

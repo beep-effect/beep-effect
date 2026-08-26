@@ -35,7 +35,7 @@ type EnumMappings<L extends Literals = Literals> = A.NonEmptyReadonlyArray<EnumM
  *
  * **Example** (Number literal key mapping)
  *
- * ```ts import.meta.vitest name="Number literal key mapping"
+ * ```ts
  * import type { LiteralToKey } from "@beep/schema/LiteralKit"
  *
  * const key = "number200" satisfies LiteralToKey<200>
@@ -680,7 +680,7 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
  *
  * **Example** (Build mixed literal kit)
  *
- * ```ts import.meta.vitest name="Build mixed literal kit"
+ * ```ts
  * import { LiteralKit } from "@beep/schema";
  * import * as HashSet from "effect/HashSet";
  * import * as S from "effect/Schema";
@@ -757,7 +757,7 @@ export function LiteralKit<const L extends Literals, const M extends EnumMapping
  *
  * **Example** (Implementation signature usage)
  *
- * ```ts import.meta.vitest name="Implementation signature usage"
+ * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  *
  * const Status = LiteralKit(["ready", "blocked"])

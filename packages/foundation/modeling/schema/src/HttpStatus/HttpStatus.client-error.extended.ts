@@ -14,7 +14,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log MisdirectedRequest literal)
  *
- * ```ts import.meta.vitest name="Log MisdirectedRequest literal"
+ * ```ts
  * import { MisdirectedRequest } from "@beep/schema/HttpStatus"
  *
  * console.log(MisdirectedRequest.literal)
@@ -45,7 +45,7 @@ export type MisdirectedRequest = typeof MisdirectedRequest.Type;
  *
  * **Example** (Log UnprocessableEntity literal)
  *
- * ```ts import.meta.vitest name="Log UnprocessableEntity literal"
+ * ```ts
  * import { UnprocessableEntity } from "@beep/schema/HttpStatus"
  *
  * console.log(UnprocessableEntity.literal)
@@ -74,7 +74,7 @@ export type UnprocessableEntity = typeof UnprocessableEntity.Type;
  *
  * **Example** (Log Locked literal)
  *
- * ```ts import.meta.vitest name="Log Locked literal"
+ * ```ts
  * import { Locked } from "@beep/schema/HttpStatus"
  *
  * console.log(Locked.literal)
@@ -103,7 +103,7 @@ export type Locked = typeof Locked.Type;
  *
  * **Example** (Log FailedDependency literal)
  *
- * ```ts import.meta.vitest name="Log FailedDependency literal"
+ * ```ts
  * import { FailedDependency } from "@beep/schema/HttpStatus"
  *
  * console.log(FailedDependency.literal)
@@ -133,7 +133,7 @@ export type FailedDependency = typeof FailedDependency.Type;
  *
  * **Example** (Log TooEarly literal)
  *
- * ```ts import.meta.vitest name="Log TooEarly literal"
+ * ```ts
  * import { TooEarly } from "@beep/schema/HttpStatus"
  *
  * console.log(TooEarly.literal)
@@ -164,7 +164,7 @@ export type TooEarly = typeof TooEarly.Type;
  *
  * **Example** (Log UpgradeRequired literal)
  *
- * ```ts import.meta.vitest name="Log UpgradeRequired literal"
+ * ```ts
  * import { UpgradeRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(UpgradeRequired.literal)
@@ -197,7 +197,7 @@ export type UpgradeRequired = typeof UpgradeRequired.Type;
  *
  * **Example** (Log PreconditionRequired literal)
  *
- * ```ts import.meta.vitest name="Log PreconditionRequired literal"
+ * ```ts
  * import { PreconditionRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(PreconditionRequired.literal)
@@ -236,7 +236,7 @@ export type PreconditionRequired = typeof PreconditionRequired.Type;
  *
  * **Example** (Log TooManyRequests literal)
  *
- * ```ts import.meta.vitest name="Log TooManyRequests literal"
+ * ```ts
  * import { TooManyRequests } from "@beep/schema/HttpStatus"
  *
  * console.log(TooManyRequests.literal)
@@ -267,7 +267,7 @@ export type TooManyRequests = typeof TooManyRequests.Type;
  *
  * **Example** (Log header fields literal)
  *
- * ```ts import.meta.vitest name="Log header fields literal"
+ * ```ts
  * import { RequestHeaderFieldsTooLarge } from "@beep/schema/HttpStatus"
  *
  * console.log(RequestHeaderFieldsTooLarge.literal)
@@ -298,7 +298,7 @@ export type RequestHeaderFieldsTooLarge = typeof RequestHeaderFieldsTooLarge.Typ
  *
  * **Example** (Log legal reasons literal)
  *
- * ```ts import.meta.vitest name="Log legal reasons literal"
+ * ```ts
  * import { UnavailableForLegalReasons } from "@beep/schema/HttpStatus"
  *
  * console.log(UnavailableForLegalReasons.literal)

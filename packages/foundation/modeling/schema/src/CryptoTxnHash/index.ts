@@ -3,7 +3,7 @@
  *
  * **Example** (Import CryptoTxnHash namespace)
  *
- * ```ts import.meta.vitest name="Import CryptoTxnHash namespace"
+ * ```ts
  * import * as CryptoTxnHash from "@beep/schema/CryptoTxnHash"
  * import * as S from "effect/Schema"
  *

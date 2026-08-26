@@ -34,7 +34,7 @@ export const isPositive = S.isGreaterThan(0);
  *
  * **Example** (Decode PostgreSQL serial integer)
  *
- * ```ts import.meta.vitest name="Decode PostgreSQL serial integer"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { isPostgresSerialInt } from "@beep/schema/Number"
  *

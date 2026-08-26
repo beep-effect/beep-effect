@@ -16,7 +16,7 @@ import * as GlobalValue from "./GlobalValue.ts";
  *
  * **Example** (Read the current structural region flag)
  *
- * ```ts import.meta.vitest name="Read the current structural region flag"
+ * ```ts
  * import { structuralRegionState } from "@beep/utils/Utils"
  *
  * const enabled = structuralRegionState.enabled
@@ -48,7 +48,7 @@ export const structuralRegionState = GlobalValue.globalValue(
  *
  * **Example** (Run a body inside a structural region)
  *
- * ```ts import.meta.vitest name="Run a body inside a structural region"
+ * ```ts
  * import { structuralRegion, structuralRegionState } from "@beep/utils/Utils"
  *
  * const before = structuralRegionState.enabled

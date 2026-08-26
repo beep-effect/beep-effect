@@ -20,7 +20,7 @@ const $I = $SchemaId.create("DateTimeUtcFromValid");
  *
  * **Example** (Decoding Instant discriminator)
  *
- * ```ts import.meta.vitest name="Decoding Instant discriminator"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInputKind } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -147,7 +147,7 @@ const DateTimeInputTimeZoneId = S.String.check(DateTimeInputTimeZoneIdCheck).pip
  *
  * **Example** (Decoding and tagging string)
  *
- * ```ts import.meta.vitest name="Decoding and tagging string"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInputString } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -184,7 +184,7 @@ export type DateTimeInputString = typeof DateTimeInputString.Type;
  *
  * **Example** (Decoding and tagging number)
  *
- * ```ts import.meta.vitest name="Decoding and tagging number"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInputNumber } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -220,7 +220,7 @@ export type DateTimeInputNumber = typeof DateTimeInputNumber.Type;
  *
  * **Example** (Decoding and tagging Date)
  *
- * ```ts import.meta.vitest name="Decoding and tagging Date"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInputDate } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -256,7 +256,7 @@ export type DateTimeInputDate = typeof DateTimeInputDate.Type;
  *
  * **Example** (Decoding DateTime input)
  *
- * ```ts import.meta.vitest name="Decoding DateTime input"
+ * ```ts
  * import * as DateTime from "effect/DateTime"
  * import * as S from "effect/Schema"
  * import { DateTimeInputDateTime } from "@beep/schema/DateTimeUtcFromValid"
@@ -287,7 +287,7 @@ export type DateTimeInputDateTime = typeof DateTimeInputDateTime.Type;
  *
  * **Example** (Creating Instant tagged value)
  *
- * ```ts import.meta.vitest name="Creating Instant tagged value"
+ * ```ts
  * import { DateTimeInputInstant } from "@beep/schema/DateTimeUtcFromValid"
  *
  * const value = new DateTimeInputInstant({ epochMilliseconds: 1_704_067_200_000 })
@@ -312,7 +312,7 @@ export class DateTimeInputInstant extends S.TaggedClass<DateTimeInputInstant>($I
  *
  * **Example** (Creating InstantWithZone tagged value)
  *
- * ```ts import.meta.vitest name="Creating InstantWithZone tagged value"
+ * ```ts
  * import { DateTimeInputInstantWithZone } from "@beep/schema/DateTimeUtcFromValid"
  *
  * const value = new DateTimeInputInstantWithZone({
@@ -351,7 +351,7 @@ const DateTimePartKey = S.optionalKey(DateTimePart);
  *
  * **Example** (Creating Parts tagged value)
  *
- * ```ts import.meta.vitest name="Creating Parts tagged value"
+ * ```ts
  * import { DateTimeInputParts } from "@beep/schema/DateTimeUtcFromValid"
  *
  * const value = new DateTimeInputParts({ year: 2024, month: 1, day: 1 })
@@ -387,7 +387,7 @@ export class DateTimeInputParts extends S.TaggedClass<DateTimeInputParts>($I`Dat
  *
  * **Example** (Decoding DateTimeInput union)
  *
- * ```ts import.meta.vitest name="Decoding DateTimeInput union"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DateTimeInput } from "@beep/schema/DateTimeUtcFromValid"
  *
@@ -465,7 +465,7 @@ const encodeDateTimeInput = (value: DateTime.Utc): Effect.Effect<DateTimeInput> 
  *
  * **Example** (Decoding and encoding UTC)
  *
- * ```ts import.meta.vitest name="Decoding and encoding UTC"
+ * ```ts
  * import * as DateTime from "effect/DateTime"
  * import * as S from "effect/Schema"
  * import { DateTimeUtcFromValid } from "@beep/schema/DateTimeUtcFromValid"

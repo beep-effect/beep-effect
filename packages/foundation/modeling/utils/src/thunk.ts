@@ -16,7 +16,7 @@ type LazyArg<A> = () => A;
  *
  * **Example** (Constant value thunk)
  *
- * ```ts import.meta.vitest name="Constant value thunk"
+ * ```ts
  * import { thunk } from "@beep/utils/thunk"
  *
  * const getFortyTwo = thunk(42)
@@ -39,7 +39,7 @@ export const thunk =
  *
  * **Example** (Always returns null)
  *
- * ```ts import.meta.vitest name="Always returns null"
+ * ```ts
  * import { thunkNull } from "@beep/utils/thunk"
  *
  * const value = thunkNull()
@@ -58,7 +58,7 @@ export const thunkNull = thunk(null);
  *
  * **Example** (Always returns undefined)
  *
- * ```ts import.meta.vitest name="Always returns undefined"
+ * ```ts
  * import { thunkUndefined } from "@beep/utils/thunk"
  *
  * const value = thunkUndefined()
@@ -77,7 +77,7 @@ export const thunkUndefined = thunk(undefined);
  *
  * **Example** (Always returns void)
  *
- * ```ts import.meta.vitest name="Always returns void"
+ * ```ts
  * import { thunkVoid } from "@beep/utils/thunk"
  *
  * const value = thunkVoid()
@@ -96,7 +96,7 @@ export const thunkVoid = thunk(void 0);
  *
  * **Example** (Always returns true)
  *
- * ```ts import.meta.vitest name="Always returns true"
+ * ```ts
  * import { thunkTrue } from "@beep/utils/thunk"
  *
  * const value = thunkTrue()
@@ -115,7 +115,7 @@ export const thunkTrue = thunk(true as const);
  *
  * **Example** (Always returns false)
  *
- * ```ts import.meta.vitest name="Always returns false"
+ * ```ts
  * import { thunkFalse } from "@beep/utils/thunk"
  *
  * const value = thunkFalse()
@@ -134,7 +134,7 @@ export const thunkFalse = thunk(false as const);
  *
  * **Example** (Always returns empty string)
  *
- * ```ts import.meta.vitest name="Always returns empty string"
+ * ```ts
  * import { thunkEmptyStr } from "@beep/utils/thunk"
  *
  * const value = thunkEmptyStr()
@@ -153,7 +153,7 @@ export const thunkEmptyStr = thunk("");
  *
  * **Example** (Always returns zero)
  *
- * ```ts import.meta.vitest name="Always returns zero"
+ * ```ts
  * import { thunk0 } from "@beep/utils/thunk"
  *
  * const value = thunk0()
@@ -172,7 +172,7 @@ export const thunk0 = thunk(0);
  *
  * **Example** (Always returns one)
  *
- * ```ts import.meta.vitest name="Always returns one"
+ * ```ts
  * import { thunk1 } from "@beep/utils/thunk"
  *
  * const value = thunk1()
@@ -231,7 +231,7 @@ export const thunkEmptyReadonlyArray = <A = never>(): LazyArg<ReadonlyArray<A>> 
  *
  * **Example** (Lift Effect into thunk)
  *
- * ```ts import.meta.vitest name="Lift Effect into thunk"
+ * ```ts
  * import { Effect } from "effect"
  * import { thunkEffect } from "@beep/utils/thunk"
  *
@@ -251,7 +251,7 @@ export const thunkEffect = <T>(effect: T) => thunk(effect);
  *
  * **Example** (Thunk of Effect.void)
  *
- * ```ts import.meta.vitest name="Thunk of Effect.void"
+ * ```ts
  * import { thunkEffectVoid } from "@beep/utils/thunk"
  *
  * const eff = thunkEffectVoid()
@@ -271,7 +271,7 @@ export const thunkEffectVoid = (..._: ReadonlyArray<unknown>) => Effect.void;
  *
  * **Example** (Thunk of Effect.succeed)
  *
- * ```ts import.meta.vitest name="Thunk of Effect.succeed"
+ * ```ts
  * import { thunkEffectSucceed } from "@beep/utils/thunk"
  *
  * const getEffect = thunkEffectSucceed("hello")
@@ -292,7 +292,7 @@ export const thunkEffectSucceed = <A>(a: A) => thunkEffect(Effect.succeed(a));
  *
  * **Example** (Effect succeeding with null)
  *
- * ```ts import.meta.vitest name="Effect succeeding with null"
+ * ```ts
  * import { thunkEffectSucceedNull } from "@beep/utils/thunk"
  * import { Effect } from "effect"
  *
@@ -374,7 +374,7 @@ export const thunkEmptyReadonlyRecord = <K extends string | symbol = never, V = 
  *
  * **Example** (Thunk of Option.some)
  *
- * ```ts import.meta.vitest name="Thunk of Option.some"
+ * ```ts
  * import { thunkSome } from "@beep/utils/thunk"
  *
  * const getSome = thunkSome(42)
@@ -397,7 +397,7 @@ export const thunkSome =
  *
  * **Example** (Option.some empty string)
  *
- * ```ts import.meta.vitest name="Option.some empty string"
+ * ```ts
  * import { thunkSomeEmptyStr } from "@beep/utils/thunk"
  *
  * const opt = thunkSomeEmptyStr()
@@ -416,7 +416,7 @@ export const thunkSomeEmptyStr = thunkSome("");
  *
  * **Example** (Always returns negative one)
  *
- * ```ts import.meta.vitest name="Always returns negative one"
+ * ```ts
  * import { thunkNegative1 } from "@beep/utils/thunk"
  *
  * const value = thunkNegative1()
@@ -435,7 +435,7 @@ export const thunkNegative1 = thunk(-1);
  *
  * **Example** (Option.some false)
  *
- * ```ts import.meta.vitest name="Option.some false"
+ * ```ts
  * import { thunkSomeFalse } from "@beep/utils/thunk"
  *
  * const opt = thunkSomeFalse()
@@ -454,7 +454,7 @@ export const thunkSomeFalse = thunkSome(false);
  *
  * **Example** (Option.some true)
  *
- * ```ts import.meta.vitest name="Option.some true"
+ * ```ts
  * import { thunkSomeTrue } from "@beep/utils/thunk"
  *
  * const opt = thunkSomeTrue()
@@ -540,7 +540,7 @@ export const thunkSomeNone = <A>(): O.Option<O.Option<A>> => O.some(O.none<A>())
  *
  * **Example** (Result.failVoid thunk)
  *
- * ```ts import.meta.vitest name="Result.failVoid thunk"
+ * ```ts
  * import { thunkResultFailVoid } from "@beep/utils/thunk"
  *
  * const resultFailure = thunkResultFailVoid()

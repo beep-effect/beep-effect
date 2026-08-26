@@ -122,7 +122,7 @@ const CryptoWalletAddressChecks = S.makeFilterGroup(
  *
  * **Example** (Decode zero wallet address)
  *
- * ```ts import.meta.vitest name="Decode zero wallet address"
+ * ```ts
  * import { CryptoWalletAddress } from "@beep/schema/CryptoWalletAddress"
  * import * as S from "effect/Schema"
  *
@@ -145,7 +145,7 @@ export const CryptoWalletAddress = S.NonEmptyString.check(CryptoWalletAddressChe
  *
  * **Example** (Type annotated address decode)
  *
- * ```ts import.meta.vitest name="Type annotated address decode"
+ * ```ts
  * import { CryptoWalletAddress } from "@beep/schema/CryptoWalletAddress"
  * import * as S from "effect/Schema"
  *
@@ -165,7 +165,7 @@ export type CryptoWalletAddress = typeof CryptoWalletAddress.Type;
  *
  * **Example** (Make redacted wallet address)
  *
- * ```ts import.meta.vitest name="Make redacted wallet address"
+ * ```ts
  * import { CryptoWalletAddressRedacted } from "@beep/schema/CryptoWalletAddress"
  *
  * const address = CryptoWalletAddressRedacted.makeRedacted("0x0000000000000000000000000000000000000000")
@@ -190,7 +190,7 @@ export const CryptoWalletAddressRedacted = CryptoWalletAddress.pipe(
  *
  * **Example** (Type redacted wallet address)
  *
- * ```ts import.meta.vitest name="Type redacted wallet address"
+ * ```ts
  * import { CryptoWalletAddressRedacted } from "@beep/schema/CryptoWalletAddress"
  *
  * const address: CryptoWalletAddressRedacted = CryptoWalletAddressRedacted.makeRedacted(

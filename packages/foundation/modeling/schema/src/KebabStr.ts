@@ -49,7 +49,7 @@ export const KebabCaseStr = NonEmptyTrimmedStr.pipe(
  *
  * **Example** (Type a kebab-case string)
  *
- * ```ts import.meta.vitest name="Type a kebab-case string"
+ * ```ts
  * import * as S from "effect/Schema"
  * import type { KebabCaseStr } from "@beep/schema"
  * import { KebabCaseStr as KebabCaseStrSchema } from "@beep/schema"

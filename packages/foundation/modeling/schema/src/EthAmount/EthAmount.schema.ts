@@ -42,7 +42,7 @@ const EthAmountInput = S.Finite.pipe(
  *
  * **Example** (Decode ETH amount value)
  *
- * ```ts import.meta.vitest name="Decode ETH amount value"
+ * ```ts
  * import { EthAmount } from "@beep/schema/EthAmount"
  * import * as S from "effect/Schema"
  *
@@ -68,7 +68,7 @@ export const EthAmount = EthAmountInput.pipe(
  *
  * **Example** (Type decoded ETH amount)
  *
- * ```ts import.meta.vitest name="Type decoded ETH amount"
+ * ```ts
  * import { EthAmount } from "@beep/schema/EthAmount"
  * import * as S from "effect/Schema"
  *

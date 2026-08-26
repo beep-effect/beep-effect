@@ -34,7 +34,7 @@ const CsvText = S.String.pipe(
  *
  * **Example** (Satisfy row schema contract)
  *
- * ```ts import.meta.vitest name="Satisfy row schema contract"
+ * ```ts
  * import type { RowSchemaWithFields } from "@beep/schema/Csv"
  * import * as S from "effect/Schema"
  *
@@ -338,7 +338,7 @@ export const Csv: {
  *
  * **Example** (Type branded CSV text)
  *
- * ```ts import.meta.vitest name="Type branded CSV text"
+ * ```ts
  * import type { CsvText } from "@beep/schema/Csv"
  *
  * const describe = (text: CsvText): string => `${text.length} characters`

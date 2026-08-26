@@ -86,7 +86,7 @@ export class StatusCauseInputOptions extends S.Class<StatusCauseInputOptions>($I
  *
  * **Example** (Type status cause payload)
  *
- * ```ts import.meta.vitest name="Type status cause payload"
+ * ```ts
  * import { statusCauseInput, type StatusCauseInput } from "@beep/schema/StatusCauseError"
  *
  * const payload: StatusCauseInput = statusCauseInput("not found", { status: 404, cause: undefined })
@@ -113,7 +113,7 @@ export class StatusCauseInput extends S.Class<StatusCauseInput>($I`StatusCauseIn
  *
  * **Example** (Create status cause payload)
  *
- * ```ts import.meta.vitest name="Create status cause payload"
+ * ```ts
  * import { statusCauseInput } from "@beep/schema/StatusCauseError"
  *
  * const payload = statusCauseInput("not found", { status: 404, cause: undefined })

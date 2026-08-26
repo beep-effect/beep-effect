@@ -3,7 +3,7 @@
  *
  * **Example** (List namespace Schema export)
  *
- * ```ts import.meta.vitest name="List namespace Schema export"
+ * ```ts
  * import * as DomCssProperties from "@beep/schema/DomCssProperties"
  *
  * console.log(Object.keys(DomCssProperties).includes("Schema"))

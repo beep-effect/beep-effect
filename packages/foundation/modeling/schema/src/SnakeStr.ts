@@ -49,7 +49,7 @@ export const SnakeCaseStr = NonEmptyTrimmedStr.pipe(
  *
  * **Example** (Type a snake_case value)
  *
- * ```ts import.meta.vitest name="Type a snake_case value"
+ * ```ts
  * import * as S from "effect/Schema"
  * import type { SnakeCaseStr } from "@beep/schema"
  * import { SnakeCaseStr as SnakeCaseStrSchema } from "@beep/schema"

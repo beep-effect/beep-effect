@@ -15,7 +15,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log category pairs length)
  *
- * ```ts import.meta.vitest name="Log category pairs length"
+ * ```ts
  * import { HttpStatusCategory } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatusCategory.Pairs.length)

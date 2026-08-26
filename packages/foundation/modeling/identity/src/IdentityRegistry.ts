@@ -83,7 +83,7 @@ export type IdentityRef = typeof IdentityRef.Type;
  *
  * **Example** (Construct a registry entry)
  *
- * ```ts import.meta.vitest name="Construct a registry entry"
+ * ```ts
  * import { IdentityEntry } from "@beep/identity"
  *
  * const entry = IdentityEntry.make({
@@ -231,7 +231,7 @@ export interface IdentityRegistryShape {
  *
  * **Example** (Provide an empty local registry)
  *
- * ```ts import.meta.vitest name="Provide an empty local registry"
+ * ```ts
  * import { IdentityRegistry } from "@beep/identity"
  * import { Effect } from "effect"
  *
@@ -253,7 +253,7 @@ export class IdentityRegistry extends Context.Service<IdentityRegistry, Identity
    *
    * **Example** (Create a local registry layer)
    *
-   * ```ts import.meta.vitest name="Create a local registry layer"
+   * ```ts
    * import { IdentityEntry, IdentityRegistry } from "@beep/identity"
    *
    * const entry = IdentityEntry.make({

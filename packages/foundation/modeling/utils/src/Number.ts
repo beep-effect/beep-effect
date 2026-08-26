@@ -17,7 +17,7 @@ import { Number as N } from "effect";
  *
  * **Example** (Filter and type-guard positives)
  *
- * ```ts import.meta.vitest name="Filter and type-guard positives"
+ * ```ts
  * import { isPositive } from "@beep/utils/Number";
  * import * as A from "effect/Array";
  *
@@ -49,7 +49,7 @@ export const isPositive: (u: unknown) => u is number = (u: unknown): u is number
  *
  * **Example** (Import Number helpers)
  *
- * ```ts import.meta.vitest name="Import Number helpers"
+ * ```ts
  * import * as Num from "@beep/utils/Number"
  *
  * console.log(Num)
@@ -65,7 +65,7 @@ export * from "effect/Number";
  *
  * **Example** (Check integer type guard)
  *
- * ```ts import.meta.vitest name="Check integer type guard"
+ * ```ts
  * import { N } from "@beep/utils"
  *
  * const whole = N.isInteger(42)

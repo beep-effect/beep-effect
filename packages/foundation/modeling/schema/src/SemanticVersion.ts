@@ -3,7 +3,7 @@
  *
  * **Example** (Decode a semantic version)
  *
- * ```ts import.meta.vitest name="Decode a semantic version"
+ * ```ts
  * import * as S from "effect/Schema";
  * import { SemanticVersion } from "@beep/schema/SemanticVersion";
  *
@@ -95,7 +95,7 @@ export const SemanticVersion: SemanticVersionSchema = SemanticVersionWithStatics
  *
  * **Example** (Annotate a decoded version)
  *
- * ```ts import.meta.vitest name="Annotate a decoded version"
+ * ```ts
  * import type { SemanticVersion } from "@beep/schema/SemanticVersion";
  *
  * const currentVersion: SemanticVersion = "2.3.4";

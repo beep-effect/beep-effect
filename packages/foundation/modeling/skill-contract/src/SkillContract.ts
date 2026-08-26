@@ -21,7 +21,7 @@ const $I = $SkillContractId.create("SkillContract");
  *
  * **Example** (Construct a contract id)
  *
- * ```ts import.meta.vitest name="Construct a contract id"
+ * ```ts
  * import { SkillContractId } from "@beep/skill-contract"
  *
  * console.log(SkillContractId.make("qa-inventory-judge"))

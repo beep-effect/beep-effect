@@ -111,7 +111,7 @@ export class RawNodeSafetyViolation extends S.TaggedClass<RawNodeSafetyViolation
  *
  * **Example** (Check a link destination kind)
  *
- * ```ts import.meta.vitest name="Check a link destination kind"
+ * ```ts
  * import { DestinationKind } from "@beep/md/Md.safe"
  *
  * console.log(DestinationKind.is.link("link"))
@@ -131,7 +131,7 @@ export const DestinationKind = LiteralKit(["link", "image"]).pipe(
  *
  * **Example** (Type a destination kind)
  *
- * ```ts import.meta.vitest name="Type a destination kind"
+ * ```ts
  * import type { DestinationKind } from "@beep/md/Md.safe"
  *
  * const kind: DestinationKind = "link"
@@ -148,7 +148,7 @@ export type DestinationKind = typeof DestinationKind.Type;
  *
  * **Example** (Check an anchor tag)
  *
- * ```ts import.meta.vitest name="Check an anchor tag"
+ * ```ts
  * import { UrlNodeTag } from "@beep/md/Md.safe"
  *
  * console.log(UrlNodeTag.is.a("a"))
@@ -168,7 +168,7 @@ export const UrlNodeTag = LiteralKit(["a", "img", "embed"]).pipe(
  *
  * **Example** (Type a URL node tag)
  *
- * ```ts import.meta.vitest name="Type a URL node tag"
+ * ```ts
  * import type { UrlNodeTag } from "@beep/md/Md.safe"
  *
  * const tag: UrlNodeTag = "a"

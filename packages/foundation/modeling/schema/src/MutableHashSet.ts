@@ -67,7 +67,7 @@ export type MutableHashSetIso<Value extends S.Top> = ReadonlyArray<Value["Iso"]>
  *
  * **Example** (Validates existing MutableHashSet)
  *
- * ```ts import.meta.vitest name="Validates existing MutableHashSet"
+ * ```ts
  * import { MutableHashSet } from "effect"
  * import * as S from "effect/Schema"
  * import { MutableHashSetFromSelf } from "@beep/schema/MutableHashSet"
@@ -96,7 +96,7 @@ export interface MutableHashSetFromSelf<Value extends S.Top>
  *
  * **Example** (Decodes array to MutableHashSet)
  *
- * ```ts import.meta.vitest name="Decodes array to MutableHashSet"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashSet } from "@beep/schema/MutableHashSet"
  *
@@ -141,7 +141,7 @@ export const isMutableHashSet = <Value>(value: unknown): value is MutableHashSet
  *
  * **Example** (Decodes existing set members)
  *
- * ```ts import.meta.vitest name="Decodes existing set members"
+ * ```ts
  * import { MutableHashSet } from "effect"
  * import * as S from "effect/Schema"
  * import { MutableHashSetFromSelf } from "@beep/schema/MutableHashSet"
@@ -250,7 +250,7 @@ export const MutableHashSetFromSelf = <Value extends S.Top>(value: Value): Mutab
  *
  * **Example** (Round-trips set via arrays)
  *
- * ```ts import.meta.vitest name="Round-trips set via arrays"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashSet } from "@beep/schema/MutableHashSet"
  *

@@ -25,7 +25,7 @@ const $I = $UtilsId.create("Glob");
  *
  * **Example** (Validate pattern with schema)
  *
- * ```ts import.meta.vitest name="Validate pattern with schema"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Pattern } from "@beep/utils/Glob"
  *
@@ -47,7 +47,7 @@ export const Pattern = S.Union([S.String, S.Array(S.String)]).pipe(
  *
  * **Example** (Annotate pattern variable)
  *
- * ```ts import.meta.vitest name="Annotate pattern variable"
+ * ```ts
  * import type { Pattern } from "@beep/utils/Glob"
  *
  * const pattern: Pattern = ["src/*.ts", "test/*.ts"]
@@ -70,7 +70,7 @@ export type Pattern = typeof Pattern.Type;
  *
  * **Example** (Make options with flags)
  *
- * ```ts import.meta.vitest name="Make options with flags"
+ * ```ts
  * import { GlobOptions } from "@beep/utils/Glob"
  *
  * const options = GlobOptions.make({ absolute: true, dot: true })
@@ -131,7 +131,7 @@ const GlobErrorCause = S.Defect({ includeStack: true })
  *
  * **Example** (Create encoded GlobError)
  *
- * ```ts import.meta.vitest name="Create encoded GlobError"
+ * ```ts
  * import { GlobError } from "@beep/utils/Glob"
  *
  * const encoded: GlobError.Encoded = { _tag: "GlobError", pattern: "src/*.ts" }
@@ -147,7 +147,7 @@ export declare namespace GlobError {
    *
    * **Example** (Build encoded error shape)
    *
-   * ```ts import.meta.vitest name="Build encoded error shape"
+   * ```ts
    * import { GlobError } from "@beep/utils/Glob"
    *
    * const encoded: GlobError.Encoded = {
@@ -174,7 +174,7 @@ export declare namespace GlobError {
  *
  * **Example** (Construct error with Option)
  *
- * ```ts import.meta.vitest name="Construct error with Option"
+ * ```ts
  * import { GlobError } from "@beep/utils/Glob"
  *
  * import * as O from "effect/Option"

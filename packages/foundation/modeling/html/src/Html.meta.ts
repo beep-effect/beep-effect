@@ -185,7 +185,7 @@ export const HtmlTag = LiteralKit([
  * import type { HtmlTag } from "@beep/html/Html.meta"
  *
  * const tag: HtmlTag = "div"
- * console.log(tag)
+ * tag // => "div"
  * ```
  *
  * @category models
@@ -233,7 +233,7 @@ export const HtmlCategory = LiteralKit([
  * import type { HtmlCategory } from "@beep/html/Html.meta"
  *
  * const category: HtmlCategory = "flow"
- * console.log(category)
+ * category // => "flow"
  * ```
  *
  * @category models
@@ -317,7 +317,7 @@ export const HtmlContentToken = LiteralKit([
  * import type { HtmlContentToken } from "@beep/html/Html.meta"
  *
  * const token: HtmlContentToken = "flow"
- * console.log(token)
+ * token // => "flow"
  * ```
  *
  * @category models
@@ -369,7 +369,7 @@ export const HtmlChildGrammar = LiteralKit([
  * import type { HtmlChildGrammar } from "@beep/html/Html.meta"
  *
  * const grammar: HtmlChildGrammar = "table"
- * console.log(grammar)
+ * grammar // => "table"
  * ```
  *
  * @category models
@@ -1201,7 +1201,7 @@ export const HtmlTextMode = LiteralKit(["normal", "raw-text", "rcdata", "plainte
  * import type { HtmlTextMode } from "@beep/html/Html.meta"
  *
  * const mode: HtmlTextMode = "normal"
- * console.log(mode)
+ * mode // => "normal"
  * ```
  *
  * @category models
@@ -1321,7 +1321,7 @@ export const HtmlAttributeSyntax = LiteralKit(["icon-sizes", "language-tag", "so
  * import type { HtmlAttributeSyntax } from "@beep/html/Html.meta"
  *
  * const syntax: HtmlAttributeSyntax = "srcset"
- * console.log(syntax)
+ * syntax // => "srcset"
  * ```
  *
  * @category models
@@ -1433,7 +1433,7 @@ const HtmlAttributeRequirementPredicate = S.Union([
  *   required: [["href"]],
  *   when: { _tag: "attributePresent", attribute: "target" }
  * })
- * console.log(requirement.required[0])
+ * requirement.required[0] // => ["href"]
  * ```
  *
  * @category models
@@ -1469,7 +1469,7 @@ export class HtmlAttributeRequirement extends S.Class<HtmlAttributeRequirement>(
  *   right: "max",
  *   rightDefault: 1
  * })
- * console.log(relationship.right)
+ * relationship.right // => "max"
  * ```
  *
  * @category models
@@ -1582,7 +1582,7 @@ export class HtmlDocumentVisibilityLimit extends S.Class<HtmlDocumentVisibilityL
  * import { HtmlElementConformanceRules } from "@beep/html/Html.meta"
  *
  * const rules = HtmlElementConformanceRules.make({ permittedAncestors: ["body", "html"] })
- * console.log(rules.permittedAncestors)
+ * rules.permittedAncestors // => ["body", "html"]
  * ```
  *
  * @category models

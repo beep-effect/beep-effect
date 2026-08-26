@@ -191,7 +191,7 @@ type SourceSizeIssueCode = typeof SourceSizeIssueCode.Type;
  *
  * **Example** (Inspect a rejected source size)
  *
- * ```ts import.meta.vitest name="Inspect a rejected source size"
+ * ```ts
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"
  *
@@ -224,7 +224,7 @@ export class SourceSizeIssue extends S.Class<SourceSizeIssue>($I`SourceSizeIssue
  *
  * **Example** (Read the auto flag from an analysis)
  *
- * ```ts import.meta.vitest name="Read the auto flag from an analysis"
+ * ```ts
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
  * import { Result } from "effect"
  *

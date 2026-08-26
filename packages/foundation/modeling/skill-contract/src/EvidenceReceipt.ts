@@ -56,7 +56,7 @@ export class EvidenceDigest extends S.Class<EvidenceDigest>($I`EvidenceDigest`)(
  *
  * **Example** (Describe a receipt subject)
  *
- * ```ts import.meta.vitest name="Describe a receipt subject"
+ * ```ts
  * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
@@ -112,7 +112,7 @@ const evidenceReceiptImpl = <const Type extends EvidencePredicateType, Predicate
  *
  * **Example** (Build a typed receipt schema)
  *
- * ```ts import.meta.vitest name="Build a typed receipt schema"
+ * ```ts
  * import { EvidencePredicateType, EvidenceReceipt } from "@beep/skill-contract"
  * import * as S from "effect/Schema"
  *
@@ -222,7 +222,7 @@ export type GateVerificationResult = typeof GateVerificationResult.Type;
  *
  * **Example** (Inspect verified levels)
  *
- * ```ts import.meta.vitest name="Inspect verified levels"
+ * ```ts
  * import { GateVerifiedLevel } from "@beep/skill-contract"
  *
  * console.log(GateVerifiedLevel.Options)
@@ -368,7 +368,7 @@ export class GateSummary extends S.Class<GateSummary>($I`GateSummary`)(
  *
  * **Example** (Inspect gate summary predicate identity)
  *
- * ```ts import.meta.vitest name="Inspect gate summary predicate identity"
+ * ```ts
  * import { GateSummaryPredicateType } from "@beep/skill-contract"
  *
  * console.log(GateSummaryPredicateType)

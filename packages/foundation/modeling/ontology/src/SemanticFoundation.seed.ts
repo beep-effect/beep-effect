@@ -22,7 +22,7 @@ const correspondenceIri = iri(concepts.create("correspondence").iri);
  *
  * **Example** (Log the scheme IRI)
  *
- * ```ts import.meta.vitest name="Log the scheme IRI"
+ * ```ts
  * import { SemanticFoundationSchemeIri } from "@beep/ontology/SemanticFoundation.seed"
  * console.log(SemanticFoundationSchemeIri)
  * ```

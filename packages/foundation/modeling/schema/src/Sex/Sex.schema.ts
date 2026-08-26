@@ -14,7 +14,7 @@ const $I = $SchemaId.create("Sex");
  *
  * **Example** (Check female in Options)
  *
- * ```ts import.meta.vitest name="Check female in Options"
+ * ```ts
  * import { Sex } from "@beep/schema/Sex"
  *
  * console.log(Sex.Options.includes("female"))
@@ -40,7 +40,7 @@ export type Sex = typeof Sex.Type;
  *
  * **Example** (Check a male literal)
  *
- * ```ts import.meta.vitest name="Check a male literal"
+ * ```ts
  * import { Schema } from "@beep/schema/Sex"
  *
  * console.log(Schema.Options.includes("male"))

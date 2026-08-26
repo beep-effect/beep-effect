@@ -25,7 +25,7 @@ const $I = $SchemaId.create("Csp");
  *
  * **Example** (Decode self source)
  *
- * ```ts import.meta.vitest name="Decode self source"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { DirectiveSource } from "@beep/schema/Csp"
  *
@@ -47,7 +47,7 @@ export const DirectiveSource = S.Union([...internal.ArrayOfStrOrStr.members, S.U
  *
  * **Example** (Annotate self source)
  *
- * ```ts import.meta.vitest name="Annotate self source"
+ * ```ts
  * import type { DirectiveSource } from "@beep/schema/Csp"
  *
  * const source: DirectiveSource = "'self'"
@@ -70,7 +70,7 @@ const ContentSecurityPolicyHeaderNameBase = LiteralKit([headerName, reportOnlyHe
  *
  * **Example** (Decode CSP header name)
  *
- * ```ts import.meta.vitest name="Decode CSP header name"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyHeaderName } from "@beep/schema/Csp"
  *
@@ -93,7 +93,7 @@ export const ContentSecurityPolicyHeaderName = ContentSecurityPolicyHeaderNameBa
  *
  * **Example** (Annotate CSP header name)
  *
- * ```ts import.meta.vitest name="Annotate CSP header name"
+ * ```ts
  * import type { ContentSecurityPolicyHeaderName } from "@beep/schema/Csp"
  *
  * const name: ContentSecurityPolicyHeaderName = "Content-Security-Policy"
@@ -197,7 +197,7 @@ export const createDirectiveValue: {
  *
  * **Example** (Decode plugin MIME types)
  *
- * ```ts import.meta.vitest name="Decode plugin MIME types"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { PluginTypes } from "@beep/schema/Csp"
  *
@@ -219,7 +219,7 @@ export const PluginTypes = internal.ArrayOfStrOrStr.pipe(
  *
  * **Example** (Annotate plugin MIME types)
  *
- * ```ts import.meta.vitest name="Annotate plugin MIME types"
+ * ```ts
  * import type { PluginTypes } from "@beep/schema/Csp"
  *
  * const pluginTypes: PluginTypes = ["application/pdf"]
@@ -253,7 +253,7 @@ const SandboxBase = LiteralKit([
  *
  * **Example** (Decode sandbox token)
  *
- * ```ts import.meta.vitest name="Decode sandbox token"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Sandbox } from "@beep/schema/Csp"
  *
@@ -276,7 +276,7 @@ export const Sandbox = SandboxBase.pipe(
  *
  * **Example** (Annotate sandbox token)
  *
- * ```ts import.meta.vitest name="Annotate sandbox token"
+ * ```ts
  * import type { Sandbox } from "@beep/schema/Csp"
  *
  * const sandbox: Sandbox = "allow-scripts"
@@ -553,7 +553,7 @@ export class NavigationDirective extends S.Class<NavigationDirective>($I`Navigat
  *
  * **Example** (Decode report URI path)
  *
- * ```ts import.meta.vitest name="Decode report URI path"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ReportURI } from "@beep/schema/Csp"
  *
@@ -575,7 +575,7 @@ export const ReportURI = S.Union([...internal.StringOrUrl.members, S.Array(inter
  *
  * **Example** (Annotate report URI path)
  *
- * ```ts import.meta.vitest name="Annotate report URI path"
+ * ```ts
  * import type { ReportURI } from "@beep/schema/Csp"
  *
  * const uri: ReportURI = "/csp-report"
@@ -690,7 +690,7 @@ export class CspDirectives extends S.Class<CspDirectives>($I`CspDirectives`)(
  *
  * **Example** (Decode partial directives option)
  *
- * ```ts import.meta.vitest name="Decode partial directives option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyOptionStruct } from "@beep/schema/Csp"
  *
@@ -736,7 +736,7 @@ export class ContentSecurityPolicyOptionStruct extends S.Class<ContentSecurityPo
  *
  * **Example** (Decode disabled false option)
  *
- * ```ts import.meta.vitest name="Decode disabled false option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyOption } from "@beep/schema/Csp"
  *
@@ -758,7 +758,7 @@ export const ContentSecurityPolicyOption = S.Union([S.Literal(false), ContentSec
  *
  * **Example** (Annotate disabled false option)
  *
- * ```ts import.meta.vitest name="Annotate disabled false option"
+ * ```ts
  * import type { ContentSecurityPolicyOption } from "@beep/schema/Csp"
  *
  * const option: ContentSecurityPolicyOption = false
@@ -775,7 +775,7 @@ export type ContentSecurityPolicyOption = typeof ContentSecurityPolicyOption.Typ
  *
  * **Example** (Decode alias false option)
  *
- * ```ts import.meta.vitest name="Decode alias false option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/Csp"
  *
@@ -793,7 +793,7 @@ export const Option = ContentSecurityPolicyOption;
  *
  * **Example** (Annotate alias false option)
  *
- * ```ts import.meta.vitest name="Annotate alias false option"
+ * ```ts
  * import type { Option } from "@beep/schema/Csp"
  *
  * const option: Option = false
@@ -810,7 +810,7 @@ export type Option = typeof Option.Type;
  *
  * **Example** (Construct response header model)
  *
- * ```ts import.meta.vitest name="Construct response header model"
+ * ```ts
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader } from "@beep/schema/Csp"
  *
@@ -1018,7 +1018,7 @@ export const ContentSecurityPolicyHeader = S.Union([ContentSecurityPolicyOption,
  *
  * **Example** (Annotate response header type)
  *
- * ```ts import.meta.vitest name="Annotate response header type"
+ * ```ts
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader, type ContentSecurityPolicyHeader } from "@beep/schema/Csp"
  *
@@ -1067,7 +1067,7 @@ export const Header = ContentSecurityPolicyHeader;
  *
  * **Example** (Annotate header alias type)
  *
- * ```ts import.meta.vitest name="Annotate header alias type"
+ * ```ts
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader, type Header } from "@beep/schema/Csp"
  *

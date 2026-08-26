@@ -183,7 +183,7 @@ export class SemanticallyApplied extends S.Class<SemanticallyApplied>($I`Semanti
  *
  * **Example** (Inspect evidence rungs)
  *
- * ```ts import.meta.vitest name="Inspect evidence rungs"
+ * ```ts
  * import { EvidenceLadderState } from "@beep/skill-contract"
  *
  * console.log(EvidenceLadderState.discriminants)

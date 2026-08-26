@@ -57,7 +57,7 @@ export const FilingSegment = S.NonEmptyString.check(
  *
  * **Example** (Type a filing segment)
  *
- * ```ts import.meta.vitest name="Type a filing segment"
+ * ```ts
  * import type { FilingSegment } from "@beep/ontology/SemanticFoundation.models"
  *
  * const segment: FilingSegment = "email-messages"
@@ -117,7 +117,7 @@ export const DocumentClass = LiteralKit([
  *
  * **Example** (Type a document class)
  *
- * ```ts import.meta.vitest name="Type a document class"
+ * ```ts
  * import type { DocumentClass } from "@beep/ontology/SemanticFoundation.models"
  *
  * const documentClass: DocumentClass = "received"
@@ -154,7 +154,7 @@ export const SkosMappingKind = LiteralKit(["exactMatch", "closeMatch"]).pipe(
  *
  * **Example** (Type a mapping kind)
  *
- * ```ts import.meta.vitest name="Type a mapping kind"
+ * ```ts
  * import type { SkosMappingKind } from "@beep/ontology/SemanticFoundation.models"
  *
  * const kind: SkosMappingKind = "closeMatch"
@@ -171,7 +171,7 @@ export type SkosMappingKind = typeof SkosMappingKind.Type;
  *
  * **Example** (Make concept alignment)
  *
- * ```ts import.meta.vitest name="Make concept alignment"
+ * ```ts
  * import { ConceptAlignment } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
  *
@@ -202,7 +202,7 @@ export class ConceptAlignment extends S.Class<ConceptAlignment>($I`ConceptAlignm
  *
  * **Example** (Make taxonomy concept)
  *
- * ```ts import.meta.vitest name="Make taxonomy concept"
+ * ```ts
  * import { TaxonomyConcept } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
  *
@@ -257,7 +257,7 @@ export const FilingRootKind = LiteralKit(["local-vault", "box-mirror"]).pipe(
  *
  * **Example** (Type a filing root kind)
  *
- * ```ts import.meta.vitest name="Type a filing root kind"
+ * ```ts
  * import type { FilingRootKind } from "@beep/ontology/SemanticFoundation.models"
  * const kind: FilingRootKind = "local-vault"
  * console.log(kind)
@@ -273,7 +273,7 @@ export type FilingRootKind = typeof FilingRootKind.Type;
  *
  * **Example** (Make filing root)
  *
- * ```ts import.meta.vitest name="Make filing root"
+ * ```ts
  * import { FilingRoot } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
  *
@@ -294,7 +294,7 @@ export class FilingRoot extends S.Class<FilingRoot>($I`FilingRoot`)(
  *
  * **Example** (Count seed concepts)
  *
- * ```ts import.meta.vitest name="Count seed concepts"
+ * ```ts
  * import { SemanticFoundationSeed } from "@beep/ontology/SemanticFoundation.seed"
  * console.log(SemanticFoundationSeed.concepts.length)
  * ```

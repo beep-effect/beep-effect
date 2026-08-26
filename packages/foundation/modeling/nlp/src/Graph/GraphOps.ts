@@ -137,7 +137,7 @@ export const TraversalOrder = LiteralKit(["dfs", "bfs", "topo"]).annotate(
  *
  * **Example** (Assign dfs traversal order)
  *
- * ```ts import.meta.vitest name="Assign dfs traversal order"
+ * ```ts
  * import type { TraversalOrder } from "@beep/nlp/Graph/GraphOps"
  *
  * const order: TraversalOrder = "dfs"

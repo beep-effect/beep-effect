@@ -247,7 +247,7 @@ export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
  *
  * **Example** (Accept PrefixLabel type)
  *
- * ```ts import.meta.vitest name="Accept PrefixLabel type"
+ * ```ts
  * import type { PrefixLabel } from "@beep/rdf/Rdf"
  *
  * const acceptPrefixLabel = (value: PrefixLabel) => value
@@ -310,7 +310,7 @@ export const Curie = S.String.check(CurieChecks).pipe(
  *
  * **Example** (Accept Curie type)
  *
- * ```ts import.meta.vitest name="Accept Curie type"
+ * ```ts
  * import type { Curie } from "@beep/rdf/Rdf"
  *
  * const acceptCurie = (value: Curie) => value
@@ -365,7 +365,7 @@ export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
  *
  * **Example** (Accept LanguageTag type)
  *
- * ```ts import.meta.vitest name="Accept LanguageTag type"
+ * ```ts
  * import type { LanguageTag } from "@beep/rdf/Rdf"
  *
  * const acceptLanguageTag = (value: LanguageTag) => value
@@ -583,7 +583,7 @@ export const Term = TermDefinition.pipe(
  *
  * **Example** (Accept Term type)
  *
- * ```ts import.meta.vitest name="Accept Term type"
+ * ```ts
  * import type { Term } from "@beep/rdf/Rdf"
  *
  * const acceptTerm = (value: Term) => value
@@ -632,7 +632,7 @@ export const Subject = S.Union([NamedNode, BlankNode]).pipe(
  *
  * **Example** (Accept Subject type)
  *
- * ```ts import.meta.vitest name="Accept Subject type"
+ * ```ts
  * import type { Subject } from "@beep/rdf/Rdf"
  *
  * const acceptSubject = (value: Subject) => value
@@ -679,7 +679,7 @@ export const ObjectTerm = ObjectTermDefinition.pipe(
  *
  * **Example** (Accept ObjectTerm type)
  *
- * ```ts import.meta.vitest name="Accept ObjectTerm type"
+ * ```ts
  * import type { ObjectTerm } from "@beep/rdf/Rdf"
  *
  * const acceptObjectTerm = (value: ObjectTerm) => value
@@ -725,7 +725,7 @@ export const GraphTerm = GraphTermDefinition.pipe(
  *
  * **Example** (Accept GraphTerm type)
  *
- * ```ts import.meta.vitest name="Accept GraphTerm type"
+ * ```ts
  * import type { GraphTerm } from "@beep/rdf/Rdf"
  *
  * const acceptGraphTerm = (value: GraphTerm) => value
@@ -881,7 +881,7 @@ export const PrefixMap = S.Record(S.String, IRI).pipe(
  *
  * **Example** (Accept PrefixMap type)
  *
- * ```ts import.meta.vitest name="Accept PrefixMap type"
+ * ```ts
  * import type { PrefixMap } from "@beep/rdf/Rdf"
  *
  * const acceptPrefixMap = (value: PrefixMap) => value
@@ -949,7 +949,7 @@ export const makeBlankNode = (value: string): BlankNode =>
  *
  * **Example** (Literal language options)
  *
- * ```ts import.meta.vitest name="Literal language options"
+ * ```ts
  * import { MakeLiteralOptions } from "@beep/rdf/Rdf"
  * import * as O from "effect/Option"
  *
@@ -974,7 +974,7 @@ export class MakeLiteralOptions extends S.Class<MakeLiteralOptions>($I`MakeLiter
  *
  * **Example** (Type literal options input)
  *
- * ```ts import.meta.vitest name="Type literal options input"
+ * ```ts
  * import type { MakeLiteralOptionsInput } from "@beep/rdf/Rdf"
  *
  * const options: MakeLiteralOptionsInput = { language: "en" }
@@ -1032,7 +1032,7 @@ export const makeLiteral: {
  *
  * **Example** (Accept MakeQuadOptions type)
  *
- * ```ts import.meta.vitest name="Accept MakeQuadOptions type"
+ * ```ts
  * import type { MakeQuadOptions } from "@beep/rdf/Rdf"
  *
  * const acceptOptions = (options: MakeQuadOptions) => options
@@ -1057,7 +1057,7 @@ export class MakeQuadOptions extends S.Class<MakeQuadOptions>($I`MakeQuadOptions
  *
  * **Example** (Type quad options input)
  *
- * ```ts import.meta.vitest name="Type quad options input"
+ * ```ts
  * import { MakeQuadOptionsInput, makeNamedNode } from "@beep/rdf/Rdf"
  *
  * const options = MakeQuadOptionsInput.make({

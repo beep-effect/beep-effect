@@ -110,7 +110,7 @@ export type PosInt = typeof PosInt.Type;
  *
  * **Example** (Decode serial identifier)
  *
- * ```ts import.meta.vitest name="Decode serial identifier"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { PostgresSerialInt } from "@beep/schema/Int"
  *

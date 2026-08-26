@@ -91,7 +91,7 @@ export type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
  *
  * **Example** (Decode RFC 4122 UUID)
  *
- * ```ts import.meta.vitest name="Decode RFC 4122 UUID"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { UUID } from "@beep/schema/String"
  *
@@ -115,7 +115,7 @@ export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
  *
  * **Example** (Annotate decoded UUID value)
  *
- * ```ts import.meta.vitest name="Annotate decoded UUID value"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { UUID } from "@beep/schema/String"
  *
@@ -174,7 +174,7 @@ export type NullableStr = typeof NullableStr.Type;
  *
  * **Example** (Decode null to Option.none)
  *
- * ```ts import.meta.vitest name="Decode null to Option.none"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { OptionFromNullableStr } from "@beep/schema/String"
  *

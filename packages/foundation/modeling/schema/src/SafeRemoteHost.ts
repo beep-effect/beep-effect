@@ -73,7 +73,7 @@ type RemoteHostResolver = (hostname: string) => Effect.Effect<ReadonlyArray<stri
  *
  * **Example** (Constructing a BlockedHostError)
  *
- * ```ts import.meta.vitest name="Constructing a BlockedHostError"
+ * ```ts
  * import { BlockedHostError } from "@beep/schema"
  * import * as O from "effect/Option"
  *
@@ -307,7 +307,7 @@ export const isBlockedRemoteHost: {
  *
  * **Example** (Asserting an allowed hostname)
  *
- * ```ts import.meta.vitest name="Asserting an allowed hostname"
+ * ```ts
  * import { assertAllowedRemoteHost } from "@beep/schema"
  * import * as Effect from "effect/Effect"
  *
@@ -371,7 +371,7 @@ export const assertAllowedRemoteHost: {
  *
  * **Example** (Asserting an allowed remote URL)
  *
- * ```ts import.meta.vitest name="Asserting an allowed remote URL"
+ * ```ts
  * import { assertAllowedRemoteUrl } from "@beep/schema"
  * import * as Effect from "effect/Effect"
  *

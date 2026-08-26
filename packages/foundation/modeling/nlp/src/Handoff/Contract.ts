@@ -32,7 +32,7 @@ const $I = $NlpId.create("Handoff/Contract");
  *
  * **Example** (Make ChunkId value)
  *
- * ```ts import.meta.vitest name="Make ChunkId value"
+ * ```ts
  * import { ChunkId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(ChunkId.make("chunk-1"))
@@ -52,7 +52,7 @@ export const ChunkId = S.String.pipe(
  *
  * **Example** (Type a ChunkId)
  *
- * ```ts import.meta.vitest name="Type a ChunkId"
+ * ```ts
  * import { ChunkId } from "@beep/nlp/Handoff/Contract"
  *
  * const id: ChunkId = ChunkId.make("chunk-1")
@@ -69,7 +69,7 @@ export type ChunkId = typeof ChunkId.Type;
  *
  * **Example** (Make MentionId value)
  *
- * ```ts import.meta.vitest name="Make MentionId value"
+ * ```ts
  * import { MentionId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(MentionId.make("mention-1"))
@@ -89,7 +89,7 @@ export const MentionId = S.String.pipe(
  *
  * **Example** (Type a MentionId)
  *
- * ```ts import.meta.vitest name="Type a MentionId"
+ * ```ts
  * import { MentionId } from "@beep/nlp/Handoff/Contract"
  *
  * const id: MentionId = MentionId.make("mention-1")
@@ -106,7 +106,7 @@ export type MentionId = typeof MentionId.Type;
  *
  * **Example** (Make EntityId value)
  *
- * ```ts import.meta.vitest name="Make EntityId value"
+ * ```ts
  * import { EntityId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(EntityId.make("entity-1"))
@@ -126,7 +126,7 @@ export const EntityId = S.String.pipe(
  *
  * **Example** (Type an EntityId)
  *
- * ```ts import.meta.vitest name="Type an EntityId"
+ * ```ts
  * import { EntityId } from "@beep/nlp/Handoff/Contract"
  *
  * const id: EntityId = EntityId.make("entity-1")
@@ -143,7 +143,7 @@ export type EntityId = typeof EntityId.Type;
  *
  * **Example** (Make RelationId value)
  *
- * ```ts import.meta.vitest name="Make RelationId value"
+ * ```ts
  * import { RelationId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(RelationId.make("relation-1"))
@@ -163,7 +163,7 @@ export const RelationId = S.String.pipe(
  *
  * **Example** (Type a RelationId)
  *
- * ```ts import.meta.vitest name="Type a RelationId"
+ * ```ts
  * import { RelationId } from "@beep/nlp/Handoff/Contract"
  *
  * const id: RelationId = RelationId.make("relation-1")
@@ -198,7 +198,7 @@ export const ChunkKind = LiteralKit(["document", "paragraph", "sentence", "token
  *
  * **Example** (Assign ChunkKind union)
  *
- * ```ts import.meta.vitest name="Assign ChunkKind union"
+ * ```ts
  * import type { ChunkKind } from "@beep/nlp/Handoff/Contract"
  *
  * const kind: ChunkKind = "sentence"
@@ -225,7 +225,7 @@ class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
  *
  * **Example** (Make half-open span)
  *
- * ```ts import.meta.vitest name="Make half-open span"
+ * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { Span } from "@beep/nlp/Handoff/Contract"
  *
@@ -304,7 +304,7 @@ export declare namespace Span {
  *
  * **Example** (Make provenance record)
  *
- * ```ts import.meta.vitest name="Make provenance record"
+ * ```ts
  * import { Provenance } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(Provenance.make({ source: "doc-1", generatedBy: "wink-nlp", timestamp: 0 }))
@@ -526,7 +526,7 @@ export class AnnotatedDocument extends S.Class<AnnotatedDocument>($I`AnnotatedDo
  *
  * **Example** (Build timed provenance)
  *
- * ```ts import.meta.vitest name="Build timed provenance"
+ * ```ts
  * import { makeProvenance } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(makeProvenance("doc-1", "wink-nlp", 0))

@@ -224,7 +224,7 @@ export const URIReference = S.String.check(uriReferenceChecks).pipe(
  *
  * **Example** (Accept URIReference type)
  *
- * ```ts import.meta.vitest name="Accept URIReference type"
+ * ```ts
  * import type { URIReference } from "@beep/rdf/Uri"
  *
  * const acceptURIReference = (value: URIReference) => value
@@ -266,7 +266,7 @@ export const RelativeURIReference = S.String.check(relativeUriReferenceChecks).p
  *
  * **Example** (Accept RelativeURIReference type)
  *
- * ```ts import.meta.vitest name="Accept RelativeURIReference type"
+ * ```ts
  * import type { RelativeURIReference } from "@beep/rdf/Uri"
  *
  * const acceptRelativeURIReference = (value: RelativeURIReference) => value
@@ -308,7 +308,7 @@ export const AbsoluteURI = S.String.check(absoluteUriChecks).pipe(
  *
  * **Example** (Accept AbsoluteURI type)
  *
- * ```ts import.meta.vitest name="Accept AbsoluteURI type"
+ * ```ts
  * import type { AbsoluteURI } from "@beep/rdf/Uri"
  *
  * const acceptAbsoluteURI = (value: AbsoluteURI) => value
@@ -354,7 +354,7 @@ export const URI = S.String.check(uriChecks)
  *
  * **Example** (Accept URI type)
  *
- * ```ts import.meta.vitest name="Accept URI type"
+ * ```ts
  * import type { URI } from "@beep/rdf/Uri"
  *
  * const acceptURI = (value: URI) => value

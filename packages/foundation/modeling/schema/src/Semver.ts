@@ -3,7 +3,7 @@
  *
  * **Example** (Decode and format version)
  *
- * ```ts import.meta.vitest name="Decode and format version"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Semver, SemverFromString } from "@beep/schema/Semver"
@@ -425,7 +425,7 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
    *
    * **Example** (Parse version string)
    *
-   * ```ts import.meta.vitest name="Parse version string"
+   * ```ts
    * import * as O from "effect/Option"
    * import { Semver } from "@beep/schema/Semver"
    *
@@ -631,7 +631,7 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
  *
  * **Example** (Decode SemVer string codec)
  *
- * ```ts import.meta.vitest name="Decode SemVer string codec"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Semver, SemverFromString } from "@beep/schema/Semver"
@@ -663,7 +663,7 @@ export const SemverFromString = S.String.pipe(
  *
  * **Example** (Annotate SemverFromString type)
  *
- * ```ts import.meta.vitest name="Annotate SemverFromString type"
+ * ```ts
  * import { Semver } from "@beep/schema/Semver"
  * import type { SemverFromString } from "@beep/schema/Semver"
  *

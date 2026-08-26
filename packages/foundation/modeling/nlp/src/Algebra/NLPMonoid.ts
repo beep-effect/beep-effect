@@ -64,7 +64,7 @@ const combineNumericMaps = <K>(
  *
  * **Example** (Build frequency map)
  *
- * ```ts import.meta.vitest name="Build frequency map"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import type * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -87,7 +87,7 @@ export const BagOfWords = TermNumberMap;
  *
  * **Example** (Type bag-of-words value)
  *
- * ```ts import.meta.vitest name="Type bag-of-words value"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import type { BagOfWords } from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -115,7 +115,7 @@ export type BagOfWords = typeof BagOfWords.Type;
  *
  * **Example** (Fold tokens into text)
  *
- * ```ts import.meta.vitest name="Fold tokens into text"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -139,7 +139,7 @@ export const TokenConcat: Monoid.Monoid<string> = Monoid.StringJoin(" ");
  *
  * **Example** (Combine frequency maps)
  *
- * ```ts import.meta.vitest name="Combine frequency maps"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -164,7 +164,7 @@ export const TokenBagOfWords: Monoid.Monoid<BagOfWords> = {
  *
  * **Example** (Fold vocabulary sets)
  *
- * ```ts import.meta.vitest name="Fold vocabulary sets"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  * import * as HashSet from "effect/HashSet"
@@ -199,7 +199,7 @@ export const TokenSetUnion: Monoid.Monoid<TokenHashSet> = Monoid.SetUnion<string
  *
  * **Example** (Fold sentences into paragraph)
  *
- * ```ts import.meta.vitest name="Fold sentences into paragraph"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -227,7 +227,7 @@ export const SentenceConcat: Monoid.Monoid<string> = {
  *
  * **Example** (Fold sentence arrays)
  *
- * ```ts import.meta.vitest name="Fold sentence arrays"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -254,7 +254,7 @@ export const SentenceArray: Monoid.Monoid<ReadonlyArray<string>> = Monoid.ArrayC
  *
  * **Example** (Join paragraphs blank-lined)
  *
- * ```ts import.meta.vitest name="Join paragraphs blank-lined"
+ * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -274,7 +274,7 @@ export const DocumentText: Monoid.Monoid<string> = Monoid.StringJoin("\n\n");
  *
  * **Example** (Create document statistics)
  *
- * ```ts import.meta.vitest name="Create document statistics"
+ * ```ts
  * import type * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const stats: NLPMonoid.DocumentStatistics = {
@@ -306,7 +306,7 @@ export class DocumentStatistics extends S.Class<DocumentStatistics>($I`DocumentS
  *
  * **Example** (Combine document statistics)
  *
- * ```ts import.meta.vitest name="Combine document statistics"
+ * ```ts
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const totals = NLPMonoid.DocumentStats.combine(
@@ -376,7 +376,7 @@ export const AnnotationMap = <K, V>(): Monoid.Monoid<MutableHashMap.MutableHashM
  *
  * **Example** (Create named entity)
  *
- * ```ts import.meta.vitest name="Create named entity"
+ * ```ts
  * import type * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const entity: NLPMonoid.NamedEntity = {
@@ -410,7 +410,7 @@ export class NamedEntity extends S.Class<NamedEntity>($I`NamedEntity`)(
  *
  * **Example** (Combine named entity lists)
  *
- * ```ts import.meta.vitest name="Combine named entity lists"
+ * ```ts
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const entities = NLPMonoid.NamedEntityList.combine(
@@ -432,7 +432,7 @@ export const NamedEntityList: Monoid.Monoid<ReadonlyArray<NamedEntity>> = Monoid
  *
  * **Example** (Create dependency edge)
  *
- * ```ts import.meta.vitest name="Create dependency edge"
+ * ```ts
  * import type * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const edge: NLPMonoid.DependencyEdge = {
@@ -464,7 +464,7 @@ export class DependencyEdge extends S.Class<DependencyEdge>($I`DependencyEdge`)(
  *
  * **Example** (Combine dependency edges)
  *
- * ```ts import.meta.vitest name="Combine dependency edges"
+ * ```ts
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const edges = NLPMonoid.DependencyParse.combine(
@@ -490,7 +490,7 @@ export const DependencyParse: Monoid.Monoid<ReadonlyArray<DependencyEdge>> = Mon
  *
  * **Example** (Combine term frequencies)
  *
- * ```ts import.meta.vitest name="Combine term frequencies"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -513,7 +513,7 @@ export const TermFrequency: Monoid.Monoid<BagOfWords> = TokenBagOfWords;
  *
  * **Example** (Combine document frequencies)
  *
- * ```ts import.meta.vitest name="Combine document frequencies"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -539,7 +539,7 @@ export const DocumentFrequency: Monoid.Monoid<TermNumberMap> = {
  *
  * **Example** (Combine vocabulary sets)
  *
- * ```ts import.meta.vitest name="Combine vocabulary sets"
+ * ```ts
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  * import * as HashSet from "effect/HashSet"
  *
@@ -566,7 +566,7 @@ export const Vocabulary: Monoid.Monoid<TokenHashSet> = TokenSetUnion;
  *
  * **Example** (Combine weighted tokens)
  *
- * ```ts import.meta.vitest name="Combine weighted tokens"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -592,7 +592,7 @@ export const WeightedTokens: Monoid.Monoid<TermNumberMap> = {
  *
  * **Example** (Combine n-gram frequencies)
  *
- * ```ts import.meta.vitest name="Combine n-gram frequencies"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -622,7 +622,7 @@ export const NGramFrequency: Monoid.Monoid<TermNumberMap> = {
  *
  * **Example** (Create text analysis)
  *
- * ```ts import.meta.vitest name="Create text analysis"
+ * ```ts
  * import * as HashSet from "effect/HashSet"
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import type * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
@@ -658,7 +658,7 @@ export class TextAnalysis extends S.Class<TextAnalysis>($I`TextAnalysis`)(
  *
  * **Example** (Combine text analyses)
  *
- * ```ts import.meta.vitest name="Combine text analyses"
+ * ```ts
  * import * as HashSet from "effect/HashSet"
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
@@ -713,7 +713,7 @@ export const TextAnalysisMonoid: Monoid.Monoid<TextAnalysis> = {
  *
  * **Example** (Normalize counts to TF)
  *
- * ```ts import.meta.vitest name="Normalize counts to TF"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -749,7 +749,7 @@ export const bagOfWordsToTF = (bow: BagOfWords): TermNumberMap => {
  *
  * **Example** (Compute TF-IDF scores)
  *
- * ```ts import.meta.vitest name="Compute TF-IDF scores"
+ * ```ts
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
@@ -788,7 +788,7 @@ export const computeTFIDF: {
  *
  * **Example** (Count tokens into bag)
  *
- * ```ts import.meta.vitest name="Count tokens into bag"
+ * ```ts
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const counts = NLPMonoid.aggregateTokens(["effect", "schema", "effect"])
@@ -808,7 +808,7 @@ export const aggregateTokens = (tokens: ReadonlyArray<string>): BagOfWords =>
  *
  * **Example** (Join sentences into text)
  *
- * ```ts import.meta.vitest name="Join sentences into text"
+ * ```ts
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const text = NLPMonoid.aggregateSentences(["Effect parses text", "Schemas validate output"])
@@ -827,7 +827,7 @@ export const aggregateSentences = (sentences: ReadonlyArray<string>): string => 
  *
  * **Example** (Sum document statistics)
  *
- * ```ts import.meta.vitest name="Sum document statistics"
+ * ```ts
  * import * as NLPMonoid from "@beep/nlp/Algebra/NLPMonoid"
  *
  * const totals = NLPMonoid.aggregateStats([

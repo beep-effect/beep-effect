@@ -77,7 +77,7 @@ export const TextKind = LiteralKit([
  *
  * **Example** (Assign Sentence kind value)
  *
- * ```ts import.meta.vitest name="Assign Sentence kind value"
+ * ```ts
  * import type { TextKind } from "@beep/nlp/Ontology/Kind"
  *
  * const kind: TextKind = "Sentence"
@@ -158,7 +158,7 @@ export const TypedTextSchema = <K extends TextKind>(kind: S.Schema<K>) => {
  *
  * **Example** (Document typed text value)
  *
- * ```ts import.meta.vitest name="Document typed text value"
+ * ```ts
  * import type { TypedText } from "@beep/nlp/Ontology/Kind"
  *
  * const doc: TypedText<"Document"> = { kind: "Document", content: "hello" }

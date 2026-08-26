@@ -101,7 +101,7 @@ export const OpaqueUnknown = S.Unknown.pipe(
  *
  * **Example** (Carry an opaque payload through a helper)
  *
- * ```ts import.meta.vitest name="Carry an opaque payload through a helper"
+ * ```ts
  * import type { OpaqueUnknown } from "@beep/schema"
  *
  * const carry = (payload: OpaqueUnknown): OpaqueUnknown => payload

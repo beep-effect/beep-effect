@@ -53,7 +53,7 @@ const decodeYamlUnknown = (input: string): Effect.Effect<unknown, SchemaIssue.Is
  *
  * **Example** (Parse YAML string)
  *
- * ```ts import.meta.vitest name="Parse YAML string"
+ * ```ts
  * import { parseYaml } from "@beep/schema/Yaml"
  *
  * const value = parseYaml("name: Alice\nage: 30")
@@ -70,7 +70,7 @@ export const parseYaml = makeParseYaml(yamlRuntime, loadYamlModule);
  *
  * **Example** (Decode YAML text)
  *
- * ```ts import.meta.vitest name="Decode YAML text"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { YamlTextToUnknown } from "@beep/schema/Yaml"
@@ -106,7 +106,7 @@ export type YamlTextToUnknown = typeof YamlTextToUnknown.Type;
  *
  * **Example** (Decode YAML with schema)
  *
- * ```ts import.meta.vitest name="Decode YAML with schema"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { decodeYamlTextAs } from "@beep/schema/Yaml"

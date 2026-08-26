@@ -96,7 +96,7 @@ export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
  *
  * **Example** (Accept ObjectRef type)
  *
- * ```ts import.meta.vitest name="Accept ObjectRef type"
+ * ```ts
  * import type { ObjectRef } from "@beep/rdf/Prov"
  *
  * const acceptObjectRef = (value: ObjectRef) => value
@@ -146,7 +146,7 @@ export const ProvDateTimeEncoded = S.String.check(provDateTimeChecks).pipe(
  *
  * **Example** (Accept encoded datetime type)
  *
- * ```ts import.meta.vitest name="Accept encoded datetime type"
+ * ```ts
  * import type { ProvDateTimeEncoded } from "@beep/rdf/Prov"
  *
  * const acceptProvDateTimeEncoded = (value: ProvDateTimeEncoded) => value
@@ -163,7 +163,7 @@ export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
  *
  * **Example** (Decode to DateTime.Utc)
  *
- * ```ts import.meta.vitest name="Decode to DateTime.Utc"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ProvDateTime } from "@beep/rdf/Prov"
  *
@@ -196,7 +196,7 @@ export const ProvDateTime = ProvDateTimeEncoded.pipe(
  *
  * **Example** (Accept ProvDateTime type)
  *
- * ```ts import.meta.vitest name="Accept ProvDateTime type"
+ * ```ts
  * import type { ProvDateTime } from "@beep/rdf/Prov"
  *
  * const acceptProvDateTime = (value: ProvDateTime) => value
@@ -1013,7 +1013,7 @@ export const ProvRecord = S.Union([
  *
  * **Example** (Accept ProvRecord type)
  *
- * ```ts import.meta.vitest name="Accept ProvRecord type"
+ * ```ts
  * import type { ProvRecord } from "@beep/rdf/Prov"
  *
  * const acceptProvRecord = (value: ProvRecord) => value
@@ -1102,7 +1102,7 @@ export const ProvO = S.Union([ProvBundle, ProvRecord]).pipe(
  *
  * **Example** (Accept ProvO type)
  *
- * ```ts import.meta.vitest name="Accept ProvO type"
+ * ```ts
  * import type { ProvO } from "@beep/rdf/Prov"
  *
  * const acceptProvO = (value: ProvO) => value

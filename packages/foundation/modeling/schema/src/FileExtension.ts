@@ -9,7 +9,7 @@
  *
  * **Example** (Decode category and combined schemas)
  *
- * ```ts import.meta.vitest name="Decode category and combined schemas"
+ * ```ts
  * import * as S from "effect/Schema";
  * import { FileExtension, ImageFileExtension } from "@beep/schema/FileExtension";
  *

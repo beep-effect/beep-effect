@@ -164,7 +164,7 @@ export const Info = S.Union([Added, Deleted, Modified]).pipe(
  *
  * **Example** (Access Info status type)
  *
- * ```ts import.meta.vitest name="Access Info status type"
+ * ```ts
  * import type { FileDiff } from "@beep/schema"
  *
  * const status: FileDiff.Info["status"] = "modified"
@@ -181,7 +181,7 @@ export type Info = typeof Info.Type;
  *
  * **Example** (Use Encoded Info type)
  *
- * ```ts import.meta.vitest name="Use Encoded Info type"
+ * ```ts
  * import type { FileDiff } from "@beep/schema"
  *
  * type EncodedInfo = FileDiff.Info.Encoded
@@ -198,7 +198,7 @@ export declare namespace Info {
    *
    * **Example** (Assign encoded Info value)
    *
-   * ```ts import.meta.vitest name="Assign encoded Info value"
+   * ```ts
    * import type { FileDiff } from "@beep/schema"
    *
    * const encoded: FileDiff.Info.Encoded = {

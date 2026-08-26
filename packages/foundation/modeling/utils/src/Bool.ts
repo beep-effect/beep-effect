@@ -3,7 +3,7 @@
  *
  * **Example** (Negate a boolean value)
  *
- * ```ts import.meta.vitest name="Negate a boolean value"
+ * ```ts
  * import { Bool } from "@beep/utils"
  *
  * const toggled = Bool.not(true)

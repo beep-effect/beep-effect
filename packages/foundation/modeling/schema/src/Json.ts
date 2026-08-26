@@ -17,7 +17,7 @@ const $I = $SchemaId.create("Json");
  *
  * **Example** (Decode JSON object schema)
  *
- * ```ts import.meta.vitest name="Decode JSON object schema"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { JsonObject } from "@beep/schema/Json"
  *
@@ -39,7 +39,7 @@ export const JsonObject = S.Record(S.String, S.Json).pipe(
  *
  * **Example** (Annotate decoded JsonObject type)
  *
- * ```ts import.meta.vitest name="Annotate decoded JsonObject type"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { JsonObject } from "@beep/schema/Json"
  *
@@ -57,7 +57,7 @@ export type JsonObject = typeof JsonObject.Type;
  *
  * **Example** (Decode JSON array schema)
  *
- * ```ts import.meta.vitest name="Decode JSON array schema"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { JsonArray } from "@beep/schema/Json"
  *
@@ -79,7 +79,7 @@ export const JsonArray = S.Array(S.Json).pipe(
  *
  * **Example** (Annotate decoded JsonArray type)
  *
- * ```ts import.meta.vitest name="Annotate decoded JsonArray type"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { JsonArray } from "@beep/schema/Json"
  *
@@ -97,7 +97,7 @@ export type JsonArray = typeof JsonArray.Type;
  *
  * **Example** (Decode JSON string value)
  *
- * ```ts import.meta.vitest name="Decode JSON string value"
+ * ```ts
  * import { Effect } from "effect"
  * import { decodeJsonString } from "@beep/schema/Json"
  *
@@ -121,7 +121,7 @@ export const decodeJsonString: (input: unknown) => Effect.Effect<unknown, S.Sche
  *
  * **Example** (Encode value as JSON string)
  *
- * ```ts import.meta.vitest name="Encode value as JSON string"
+ * ```ts
  * import { Effect } from "effect"
  * import { encodeJsonString } from "@beep/schema/Json"
  *

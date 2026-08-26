@@ -16,7 +16,7 @@ const $I = $SchemaId.create("DomCssProperties");
  *
  * **Example** (Check CSS properties object)
  *
- * ```ts import.meta.vitest name="Check CSS properties object"
+ * ```ts
  * import { isCSSProperties } from "@beep/schema/DomCssProperties"
  *
  * console.log(isCSSProperties({ color: "red" }))
@@ -37,7 +37,7 @@ export const isCSSProperties = (u: unknown): u is React.CSSProperties => {
  *
  * **Example** (Decode CSS properties object)
  *
- * ```ts import.meta.vitest name="Decode CSS properties object"
+ * ```ts
  * import { DOMCssProperties } from "@beep/schema/DomCssProperties"
  * import * as S from "effect/Schema"
  *

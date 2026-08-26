@@ -74,7 +74,7 @@ export type HttpStatusCode = typeof HttpStatusCode.Type;
  *
  * **Example** (Count HTTP status pairs)
  *
- * ```ts import.meta.vitest name="Count HTTP status pairs"
+ * ```ts
  * import { HttpStatus } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus.Pairs.length)
@@ -135,7 +135,7 @@ export type HttpStatus = typeof HttpStatus.Type;
  *
  * **Example** (Count schema status pairs)
  *
- * ```ts import.meta.vitest name="Count schema status pairs"
+ * ```ts
  * import { Schema } from "@beep/schema/HttpStatus"
  *
  * console.log(Schema.Pairs.length)

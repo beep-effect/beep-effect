@@ -22,7 +22,7 @@ const $I = $UtilsId.create("StructPath");
  *
  * **Example** (Import PathInput schema)
  *
- * ```ts import.meta.vitest name="Import PathInput schema"
+ * ```ts
  * import { PathInput } from "@beep/utils/Struct"
  *
  * const schema = PathInput
@@ -43,7 +43,7 @@ export const PathInput = S.Union([S.String, S.Array(S.String)]).pipe(
  *
  * **Example** (Typed path segment array)
  *
- * ```ts import.meta.vitest name="Typed path segment array"
+ * ```ts
  * import type { PathInput } from "@beep/utils/Struct"
  *
  * const path: PathInput = ["profile", "name"]
@@ -68,7 +68,7 @@ const PathLookupSchema = S.TaggedUnion({
  *
  * **Example** (Access found property)
  *
- * ```ts import.meta.vitest name="Access found property"
+ * ```ts
  * import type { PathLookup } from "@beep/utils/internal/StructPath"
  *
  * const describe = (lookup: PathLookup) => lookup.found
@@ -93,7 +93,7 @@ const makeFound = (value: unknown): PathLookup =>
  *
  * **Example** (Convert lookup to Option)
  *
- * ```ts import.meta.vitest name="Convert lookup to Option"
+ * ```ts
  * import { lookupAtPath, pathLookupToOption } from "@beep/utils/internal/StructPath"
  *
  * const lookup = lookupAtPath({ profile: { name: "Ada" } }, "profile.name")
@@ -159,7 +159,7 @@ const lookupParts = (self: unknown, parts: A.NonEmptyReadonlyArray<string>): Pat
  *
  * **Example** (Lookup nested path value)
  *
- * ```ts import.meta.vitest name="Lookup nested path value"
+ * ```ts
  * import { lookupAtPath } from "@beep/utils/internal/StructPath"
  *
  * const lookup = lookupAtPath({ profile: { name: "Ada" } }, "profile.name")
@@ -186,7 +186,7 @@ export const lookupAtPath: {
  *
  * **Example** (Unsafe nested path get)
  *
- * ```ts import.meta.vitest name="Unsafe nested path get"
+ * ```ts
  * import { unsafeDotGet } from "@beep/utils/internal/StructPath"
  *
  * const value = unsafeDotGet({ profile: { name: "Ada" } }, "profile.name")

@@ -36,7 +36,7 @@ type GetSomesStruct<Self extends OptionStruct> = Simplify<
  *
  * **Example** (Get path as Option)
  *
- * ```ts import.meta.vitest name="Get path as Option"
+ * ```ts
  * import { pipe } from "effect"
  * import { O } from "@beep/utils"
  *
@@ -113,7 +113,7 @@ export const getSomesStruct = <const Self extends OptionStruct>(self: Self): Get
  *
  * **Example** (Import Option helpers)
  *
- * ```ts import.meta.vitest name="Import Option helpers"
+ * ```ts
  * import * as O from "@beep/utils/Option"
  *
  * const value = O.some("beep")

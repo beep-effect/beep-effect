@@ -77,7 +77,7 @@ const decodeJsoncUnknown = Effect.fn("Jsonc.decodeJsoncUnknown")(function* (cont
  *
  * **Example** (Decode JSONC text to unknown)
  *
- * ```ts import.meta.vitest name="Decode JSONC text to unknown"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { JsoncTextToUnknown } from "@beep/schema/Jsonc"

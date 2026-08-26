@@ -33,7 +33,7 @@ const $I = $SchemaId.create("Unknown");
  *
  * **Example** (Encode unknown data as formatted JSON)
  *
- * ```ts import.meta.vitest name="Encode unknown data as formatted JSON"
+ * ```ts
  * import { Unknown } from "@beep/schema"
  * import { Effect } from "effect"
  *

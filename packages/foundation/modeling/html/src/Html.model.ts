@@ -251,7 +251,7 @@ export const ForeignNamespace = LiteralKit(["svg", "mathml"]).pipe(
  * import type { ForeignNamespace } from "@beep/html/Html.model"
  *
  * const namespace: ForeignNamespace = "svg"
- * console.log(namespace)
+ * namespace // => "svg"
  * ```
  *
  * @category models

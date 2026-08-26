@@ -85,7 +85,7 @@ export const Int64 = S.BigInt.check(isInt64()).pipe(
  *
  * **Example** (Narrow unknown to Int64)
  *
- * ```ts import.meta.vitest name="Narrow unknown to Int64"
+ * ```ts
  * import { Int64 } from "@beep/schema/Int"
  * import type { Int64 as Int64Value } from "@beep/schema/Int"
  * import * as S from "effect/Schema"
@@ -108,7 +108,7 @@ export type Int64 = typeof Int64.Type;
  *
  * **Example** (Decode decimal string to int64)
  *
- * ```ts import.meta.vitest name="Decode decimal string to int64"
+ * ```ts
  * import { Effect } from "effect"
  * import { Int64FromString } from "@beep/schema/Int"
  * import * as S from "effect/Schema"
@@ -133,7 +133,7 @@ export const Int64FromString = S.BigIntFromString.pipe(
  *
  * **Example** (Type Int64FromString branded value)
  *
- * ```ts import.meta.vitest name="Type Int64FromString branded value"
+ * ```ts
  * import { Int64, Int64FromString } from "@beep/schema/Int"
  * import type { Int64FromString as Int64FromStringValue } from "@beep/schema/Int"
  * import * as S from "effect/Schema"

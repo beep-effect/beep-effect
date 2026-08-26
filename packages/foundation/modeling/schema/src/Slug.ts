@@ -4,7 +4,7 @@
  *
  * **Example** (Decode a URL slug)
  *
- * ```ts import.meta.vitest name="Decode a URL slug"
+ * ```ts
  * import * as S from "effect/Schema";
  * import { Slug } from "@beep/schema/Slug";
  *
@@ -96,7 +96,7 @@ export const Slug = S.NonEmptyString.check(SlugChecks).pipe(
  *
  * **Example** (Type a decoded slug)
  *
- * ```ts import.meta.vitest name="Type a decoded slug"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Slug } from "@beep/schema/Slug"
  *
@@ -114,7 +114,7 @@ export type Slug = typeof Slug.Type;
  *
  * **Example** (Decode non-empty input)
  *
- * ```ts import.meta.vitest name="Decode non-empty input"
+ * ```ts
  * import { SlugFromStr } from "@beep/schema/Slug"
  * import * as S from "effect/Schema"
  *

@@ -16,7 +16,7 @@ import { Clock, Context, DateTime, Effect, Layer } from "effect";
  *
  * **Example** (Parse ISO string as UTC)
  *
- * ```ts import.meta.vitest name="Parse ISO string as UTC"
+ * ```ts
  * import { makeUnsafeUtc } from "@beep/utils/DateTime"
  *
  * const value = makeUnsafeUtc("2026-01-01T00:00:00.000Z")
@@ -34,7 +34,7 @@ export const makeUnsafeUtc = <A extends Parameters<typeof DateTime.make>[0]>(inp
  *
  * **Example** (Import DateTime module helpers)
  *
- * ```ts import.meta.vitest name="Import DateTime module helpers"
+ * ```ts
  * import * as DateTime from "@beep/utils/DateTime"
  *
  * console.log(DateTime)
@@ -50,7 +50,7 @@ export * from "effect/DateTime";
  *
  * **Example** (Access Default DateTimes layer)
  *
- * ```ts import.meta.vitest name="Access Default DateTimes layer"
+ * ```ts
  * import { DateTimes } from "@beep/utils/DateTime"
  *
  * console.log(DateTimes.Default)

@@ -735,7 +735,7 @@ export const renderHtmlBlock: (block: Block) => string = Match.type<Block>().pip
  *
  * **Example** (Rendering multiple Markdown blocks)
  *
- * ```ts import.meta.vitest name="Rendering multiple Markdown blocks"
+ * ```ts
  * import { Md } from "@beep/md"
  * import { renderMarkdownBlocks } from "@beep/md/Md.render"
  *
@@ -896,7 +896,7 @@ export const renderWithUnsafe: {
  *
  * **Example** (Starting effectful render unsafely)
  *
- * ```ts import.meta.vitest name="Starting effectful render unsafely"
+ * ```ts
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  * import { renderEffectWithUnsafe } from "@beep/md/Md.render"
@@ -938,7 +938,7 @@ export const renderEffectWithUnsafe: {
  *
  * **Example** (Starting effectful render safely)
  *
- * ```ts import.meta.vitest name="Starting effectful render safely"
+ * ```ts
  * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  * import { renderEffectWith } from "@beep/md/Md.render"
@@ -1337,7 +1337,7 @@ export const makeMarkdownAdapter = (options: UrlRenderOptions = {}): PureRenderA
  *
  * **Example** (HTML adapter with URL policy)
  *
- * ```ts import.meta.vitest name="HTML adapter with URL policy"
+ * ```ts
  * import { Md } from "@beep/md"
  * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
  * import { makeHtmlFragmentAdapter, renderWithUnsafe } from "@beep/md/Md.render"
@@ -1574,7 +1574,7 @@ export const DocumentToMarkdown = DocumentSchema.pipe(
  *
  * **Example** (Accepting DocumentToMarkdown type)
  *
- * ```ts import.meta.vitest name="Accepting DocumentToMarkdown type"
+ * ```ts
  * import type { DocumentToMarkdown } from "@beep/md/Md.render"
  *
  * const acceptMarkdown = (value: DocumentToMarkdown) => value
@@ -1651,7 +1651,7 @@ export const DocumentToPlainText = DocumentSchema.pipe(
  *
  * **Example** (Accepting DocumentToPlainText type)
  *
- * ```ts import.meta.vitest name="Accepting DocumentToPlainText type"
+ * ```ts
  * import type { DocumentToPlainText } from "@beep/md/Md.render"
  *
  * const acceptPlainText = (value: DocumentToPlainText) => value
@@ -1668,7 +1668,7 @@ export type DocumentToPlainText = string;
  *
  * **Example** (Accepting DocumentToHtmlFragment type)
  *
- * ```ts import.meta.vitest name="Accepting DocumentToHtmlFragment type"
+ * ```ts
  * import type { DocumentToHtmlFragment } from "@beep/md/Md.render"
  *
  * const acceptHtml = (value: DocumentToHtmlFragment) => value

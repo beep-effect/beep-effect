@@ -14,7 +14,7 @@ const $I = $SchemaId.create("HttpProtocol");
  *
  * **Example** (Check https in options)
  *
- * ```ts import.meta.vitest name="Check https in options"
+ * ```ts
  * import { HttpProtocol } from "@beep/schema/HttpProtocol"
  *
  * console.log(HttpProtocol.Options.includes("https"))
@@ -41,7 +41,7 @@ export type HttpProtocol = typeof HttpProtocol.Type;
  *
  * **Example** (Check an https protocol literal)
  *
- * ```ts import.meta.vitest name="Check an https protocol literal"
+ * ```ts
  * import { Schema } from "@beep/schema/HttpProtocol"
  *
  * console.log(Schema.Options.includes("https"))

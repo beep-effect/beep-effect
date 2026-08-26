@@ -41,7 +41,7 @@ export const EvidenceSelectorKind = LiteralKit(["text-quote", "text-position", "
  *
  * **Example** (Accepting typed selector kind)
  *
- * ```ts import.meta.vitest name="Accepting typed selector kind"
+ * ```ts
  * import type { EvidenceSelectorKind } from "@beep/rdf/Evidence"
  *
  * const acceptEvidenceSelectorKind = (value: EvidenceSelectorKind) => value
@@ -209,7 +209,7 @@ export const EvidenceSelector = S.Union([TextQuoteSelector, TextPositionSelector
  *
  * **Example** (Accepting typed evidence selector)
  *
- * ```ts import.meta.vitest name="Accepting typed evidence selector"
+ * ```ts
  * import type { EvidenceSelector } from "@beep/rdf/Evidence"
  *
  * const acceptEvidenceSelector = (value: EvidenceSelector) => value

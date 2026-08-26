@@ -46,7 +46,7 @@ type ResolvedHeader = {
  *
  * **Example** (Make SecureHeaderOptions instance)
  *
- * ```ts import.meta.vitest name="Make SecureHeaderOptions instance"
+ * ```ts
  * import { SecureHeaderOptions } from "@beep/schema/SecureHeaderOptions"
  *
  * const options = SecureHeaderOptions.make({ nosniff: "nosniff" })
@@ -82,7 +82,7 @@ export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureH
  *
  * **Example** (Make SecureHeaderEntry pair)
  *
- * ```ts import.meta.vitest name="Make SecureHeaderEntry pair"
+ * ```ts
  * import { SecureHeaderEntry } from "@beep/schema/SecureHeaderOptions"
  *
  * const entry = SecureHeaderEntry.make({ key: "X-Content-Type-Options", value: "nosniff" })

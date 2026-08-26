@@ -23,7 +23,7 @@ const WindowsDotSegmentKit = LiteralKit([".", ".."]);
  *
  * **Example** (Decode parent directory marker)
  *
- * ```ts import.meta.vitest name="Decode parent directory marker"
+ * ```ts
  * import { WindowsDotSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -45,7 +45,7 @@ export const WindowsDotSegment = WindowsDotSegmentKit.pipe(
  *
  * **Example** (Type annotated parent marker)
  *
- * ```ts import.meta.vitest name="Type annotated parent marker"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsDotSegment } from "@beep/schema/FilePath"
  *
@@ -64,7 +64,7 @@ export type WindowsDotSegment = typeof WindowsDotSegment.Type;
  *
  * **Example** (Decode plain path segment)
  *
- * ```ts import.meta.vitest name="Decode plain path segment"
+ * ```ts
  * import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -116,7 +116,7 @@ export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
  *
  * **Example** (Type annotated plain segment)
  *
- * ```ts import.meta.vitest name="Type annotated plain segment"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath"
  *
@@ -137,7 +137,7 @@ const isWindowsDotSegment = (value: string): value is WindowsDotSegment => HashS
  *
  * **Example** (Decode UNC server name)
  *
- * ```ts import.meta.vitest name="Decode UNC server name"
+ * ```ts
  * import { ValidWindowsRootSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -168,7 +168,7 @@ export const ValidWindowsRootSegment = ValidWindowsPlainPathSegment.check(
  *
  * **Example** (Type annotated root segment)
  *
- * ```ts import.meta.vitest name="Type annotated root segment"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsRootSegment } from "@beep/schema/FilePath"
  *
@@ -187,7 +187,7 @@ export type ValidWindowsRootSegment = typeof ValidWindowsRootSegment.Type;
  *
  * **Example** (Decode current directory marker)
  *
- * ```ts import.meta.vitest name="Decode current directory marker"
+ * ```ts
  * import { ValidWindowsPathSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -211,7 +211,7 @@ export const ValidWindowsPathSegment = S.Union([WindowsDotSegment, ValidWindowsP
  *
  * **Example** (Type annotated path segment)
  *
- * ```ts import.meta.vitest name="Type annotated path segment"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsPathSegment } from "@beep/schema/FilePath"
  *
@@ -229,7 +229,7 @@ export type ValidWindowsPathSegment = typeof ValidWindowsPathSegment.Type;
  *
  * **Example** (Decode non-empty segment list)
  *
- * ```ts import.meta.vitest name="Decode non-empty segment list"
+ * ```ts
  * import { WindowsSegments } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -253,7 +253,7 @@ export const WindowsSegments = S.NonEmptyArray(ValidWindowsPathSegment).pipe(
  *
  * **Example** (Type annotated segment list)
  *
- * ```ts import.meta.vitest name="Type annotated segment list"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsSegments } from "@beep/schema/FilePath"
  *
@@ -272,7 +272,7 @@ export type WindowsSegments = typeof WindowsSegments.Type;
  *
  * **Example** (Decode UNC rest segments)
  *
- * ```ts import.meta.vitest name="Decode UNC rest segments"
+ * ```ts
  * import { ValidWindowsUncRest } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -296,7 +296,7 @@ export const ValidWindowsUncRest = S.NonEmptyArray(ValidWindowsPathSegment).pipe
  *
  * **Example** (Type annotated UNC rest)
  *
- * ```ts import.meta.vitest name="Type annotated UNC rest"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsUncRest } from "@beep/schema/FilePath"
  *
@@ -314,7 +314,7 @@ export type ValidWindowsUncRest = typeof ValidWindowsUncRest.Type;
  *
  * **Example** (Decode full UNC segments)
  *
- * ```ts import.meta.vitest name="Decode full UNC segments"
+ * ```ts
  * import { ValidWindowsUncSegments } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
  *
@@ -341,7 +341,7 @@ export const ValidWindowsUncSegments = S.TupleWithRest(
  *
  * **Example** (Type annotated UNC segments)
  *
- * ```ts import.meta.vitest name="Type annotated UNC segments"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ValidWindowsUncSegments } from "@beep/schema/FilePath"
  *

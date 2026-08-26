@@ -179,7 +179,7 @@ export const WebAnnotationSelector = S.Union([
  *
  * **Example** (Accept selector type)
  *
- * ```ts import.meta.vitest name="Accept selector type"
+ * ```ts
  * import type { WebAnnotationSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
  * const acceptWebAnnotationSelector = (value: WebAnnotationSelector) => value
@@ -365,7 +365,7 @@ export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSel
  *
  * **Example** (Accept codec type)
  *
- * ```ts import.meta.vitest name="Accept codec type"
+ * ```ts
  * import type { WebAnnotationSelectorFromEvidenceSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
  * const acceptWebAnnotationSelector = (value: WebAnnotationSelectorFromEvidenceSelector) => value
@@ -500,7 +500,7 @@ export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget)
  *
  * **Example** (Accept target codec type)
  *
- * ```ts import.meta.vitest name="Accept target codec type"
+ * ```ts
  * import type { WebAnnotationTargetFromEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
  *
  * const acceptWebAnnotationTarget = (value: WebAnnotationTargetFromEvidenceTarget) => value
@@ -586,7 +586,7 @@ export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
  *
  * **Example** (Accept annotation codec type)
  *
- * ```ts import.meta.vitest name="Accept annotation codec type"
+ * ```ts
  * import type { WebAnnotationFromEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
  *
  * const acceptWebAnnotation = (value: WebAnnotationFromEvidenceAnchor) => value

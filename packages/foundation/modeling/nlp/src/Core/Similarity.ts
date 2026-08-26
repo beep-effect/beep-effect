@@ -24,7 +24,7 @@ const SimilarityMethodKit = LiteralKit(["vector.cosine", "set.tversky", "bow.cos
  *
  * **Example** (Check vector cosine method)
  *
- * ```ts import.meta.vitest name="Check vector cosine method"
+ * ```ts
  * import { SimilarityMethod } from "@beep/nlp/Core/Similarity"
  *
  * console.log(SimilarityMethod.is["vector.cosine"]("vector.cosine"))
@@ -45,7 +45,7 @@ export const SimilarityMethod = SimilarityMethodKit.pipe(
  *
  * **Example** (Assign cosine method literal)
  *
- * ```ts import.meta.vitest name="Assign cosine method literal"
+ * ```ts
  * import type { SimilarityMethod } from "@beep/nlp/Core/Similarity"
  *
  * const method: SimilarityMethod = "vector.cosine"
@@ -62,7 +62,7 @@ export type SimilarityMethod = typeof SimilarityMethod.Type;
  *
  * **Example** (Create weighted Tversky params)
  *
- * ```ts import.meta.vitest name="Create weighted Tversky params"
+ * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { TverskyParams } from "@beep/nlp/Core/Similarity"
  *
@@ -91,7 +91,7 @@ export class TverskyParams extends S.Class<TverskyParams>($I`TverskyParams`)(
  *
  * **Example** (Build document term set)
  *
- * ```ts import.meta.vitest name="Build document term set"
+ * ```ts
  * import { DocumentId } from "@beep/nlp/Core/Document"
  * import { DocumentTermSet } from "@beep/nlp/Core/Similarity"
  *
@@ -121,7 +121,7 @@ export class DocumentTermSet extends S.Class<DocumentTermSet>($I`DocumentTermSet
  *
  * **Example** (Create scored comparison result)
  *
- * ```ts import.meta.vitest name="Create scored comparison result"
+ * ```ts
  * import * as O from "effect/Option"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { DocumentId } from "@beep/nlp/Core/Document"

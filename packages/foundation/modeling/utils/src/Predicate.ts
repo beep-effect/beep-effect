@@ -125,7 +125,7 @@ const makeChainRefinement =
  *
  * **Example** (Import Predicate helpers)
  *
- * ```ts import.meta.vitest name="Import Predicate helpers"
+ * ```ts
  * import * as P from "@beep/utils/Predicate"
  *
  * const isObject = P.isObject({ ok: true })
@@ -143,7 +143,7 @@ export * from "effect/Predicate";
  *
  * **Example** (Proxy trap safety check)
  *
- * ```ts import.meta.vitest name="Proxy trap safety check"
+ * ```ts
  * import { P } from "@beep/utils"
  *
  * const value = new Proxy({}, { ownKeys: () => { throw new Error("blocked") } })
@@ -183,7 +183,7 @@ export const hasInspectableObjectShape = (value: unknown): boolean => {
  *
  * **Example** (Chain successive refinements)
  *
- * ```ts import.meta.vitest name="Chain successive refinements"
+ * ```ts
  * import { P } from "@beep/utils";
  *
  * const hasMessage = P.chainRefinements([
@@ -350,7 +350,7 @@ export function chainRefinements(refinements?: ReadonlyArray<RuntimeRefinement>)
  *
  * **Example** (Data-last and data-first)
  *
- * ```ts import.meta.vitest name="Data-last and data-first"
+ * ```ts
  * import { hasProperties } from "@beep/utils/Predicate"
  *
  * // Data-last style

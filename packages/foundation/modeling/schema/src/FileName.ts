@@ -142,7 +142,7 @@ const FileNameSchema = S.String.check(FileNameChecks).pipe(
  *
  * **Example** (Decode a file name)
  *
- * ```ts import.meta.vitest name="Decode a file name"
+ * ```ts
  * import { FileName } from "@beep/schema/FileName"
  * import * as S from "effect/Schema"
  *

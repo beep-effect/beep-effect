@@ -68,7 +68,7 @@ const decodeTomlUnknown = (content: string) => {
  *
  * **Example** (Decode TOML to unknown)
  *
- * ```ts import.meta.vitest name="Decode TOML to unknown"
+ * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { TomlTextToUnknown } from "@beep/schema/Toml"

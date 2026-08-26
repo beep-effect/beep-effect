@@ -52,7 +52,7 @@ const decodeSafe: (value: ConformantHtml) => Effect.Effect<SafeHtmlAst, HtmlPoli
  *
  * **Example** (Conformant then Safe decode)
  *
- * ```ts import.meta.vitest name="Conformant then Safe decode"
+ * ```ts
  * import { Fragment, Html } from "@beep/html"
  * import { Effect } from "effect"
  *

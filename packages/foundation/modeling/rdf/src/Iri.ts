@@ -956,7 +956,7 @@ export const IRIReference = S.String.pipe(
  *
  * **Example** (Accept IRIReference type)
  *
- * ```ts import.meta.vitest name="Accept IRIReference type"
+ * ```ts
  * import type { IRIReference } from "@beep/rdf/Iri"
  *
  * const acceptIRIReference = (value: IRIReference) => value
@@ -1001,7 +1001,7 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks)
  *
  * **Example** (Accept RelativeIRIReference type)
  *
- * ```ts import.meta.vitest name="Accept RelativeIRIReference type"
+ * ```ts
  * import type { RelativeIRIReference } from "@beep/rdf/Iri"
  *
  * const acceptRelativeIRIReference = (value: RelativeIRIReference) => value
@@ -1046,7 +1046,7 @@ export const AbsoluteIRI = S.String.pipe(
  *
  * **Example** (Accept AbsoluteIRI type)
  *
- * ```ts import.meta.vitest name="Accept AbsoluteIRI type"
+ * ```ts
  * import type { AbsoluteIRI } from "@beep/rdf/Iri"
  *
  * const acceptAbsoluteIRI = (value: AbsoluteIRI) => value
@@ -1093,7 +1093,7 @@ export const IRI = S.String.pipe(
  *
  * **Example** (Accept IRI type)
  *
- * ```ts import.meta.vitest name="Accept IRI type"
+ * ```ts
  * import type { IRI } from "@beep/rdf/Iri"
  *
  * const acceptIRI = (value: IRI) => value

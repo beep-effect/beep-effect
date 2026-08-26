@@ -15,7 +15,7 @@ const $I = $SchemaId.create("Logs");
  *
  * **Example** (Decode and inspect LogLevel)
  *
- * ```ts import.meta.vitest name="Decode and inspect LogLevel"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { LogLevel } from "@beep/schema/Logs"
  *
@@ -40,7 +40,7 @@ export const LogLevel = LiteralKit(["All", "Fatal", "Error", "Warn", "Info", "De
  *
  * **Example** (Annotate LogLevel value)
  *
- * ```ts import.meta.vitest name="Annotate LogLevel value"
+ * ```ts
  * import { LogLevel } from "@beep/schema/Logs"
  *
  * const level: LogLevel = "Info"
@@ -57,7 +57,7 @@ export type LogLevel = typeof LogLevel.Type;
  *
  * **Example** (Decode LogSeverity values)
  *
- * ```ts import.meta.vitest name="Decode LogSeverity values"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { LogSeverity } from "@beep/schema/Logs"
  *
@@ -81,7 +81,7 @@ export const LogSeverity = LiteralKit(["Fatal", "Error", "Warn", "Info", "Debug"
  *
  * **Example** (Annotate LogSeverity value)
  *
- * ```ts import.meta.vitest name="Annotate LogSeverity value"
+ * ```ts
  * import { LogSeverity } from "@beep/schema/Logs"
  *
  * const severity: LogSeverity = "Warn"

@@ -142,7 +142,7 @@ export const HtmlCommentData = S.String.check(
  *
  * **Example** (Typed comment value)
  *
- * ```ts import.meta.vitest name="Typed comment value"
+ * ```ts
  * import type { HtmlCommentData } from "@beep/html/Html.nodes"
  *
  * const value: HtmlCommentData = "note"

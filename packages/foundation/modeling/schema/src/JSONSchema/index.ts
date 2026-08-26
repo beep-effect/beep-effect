@@ -8,7 +8,7 @@
  *
  * **Example** (Decode node with vendor keyword)
  *
- * ```ts import.meta.vitest name="Decode node with vendor keyword"
+ * ```ts
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *

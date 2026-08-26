@@ -20,7 +20,7 @@
  *
  * **Example** (Expand CURIE to IRI)
  *
- * ```ts import.meta.vitest name="Expand CURIE to IRI"
+ * ```ts
  * import { expand } from "@beep/identity"
  *
  * console.log(expand("skos:prefLabel"))
@@ -60,7 +60,7 @@ export * from "./Fibered.ts";
  *
  * **Example** (Compose branded package ID)
  *
- * ```ts import.meta.vitest name="Compose branded package ID"
+ * ```ts
  * import { make } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
@@ -76,7 +76,7 @@ export * from "./Id.ts";
  *
  * **Example** (Create an empty local registry)
  *
- * ```ts import.meta.vitest name="Create an empty local registry"
+ * ```ts
  * import { IdentityRegistry } from "@beep/identity"
  *
  * console.log(IdentityRegistry.layerLocal([]))
@@ -91,7 +91,7 @@ export * from "./IdentityRegistry.ts";
  *
  * **Example** (Emit prefixed name or IRI)
  *
- * ```ts import.meta.vitest name="Emit prefixed name or IRI"
+ * ```ts
  * import { prefixedNameOrIri } from "@beep/identity"
  *
  * console.log(prefixedNameOrIri("prefLabel", {
@@ -109,7 +109,7 @@ export * from "./PnLocal.ts";
  *
  * **Example** (Use prebuilt package composer)
  *
- * ```ts import.meta.vitest name="Use prebuilt package composer"
+ * ```ts
  * import { $DataId } from "@beep/identity"
  *
  * console.log($DataId.make("CurrencyCodes"))
@@ -124,7 +124,7 @@ export * from "./packages.ts";
  *
  * **Example** (Read core vocab IRI)
  *
- * ```ts import.meta.vitest name="Read core vocab IRI"
+ * ```ts
  * import { CoreVocab } from "@beep/identity"
  *
  * console.log(CoreVocab.rdf.iri)

@@ -10,7 +10,7 @@
  *
  * **Example** (Import and type VERSION)
  *
- * ```ts import.meta.vitest name="Import and type VERSION"
+ * ```ts
  * import { VERSION } from "@beep/md"
  *
  * const version: "0.0.2" = VERSION

@@ -11,7 +11,7 @@ import * as R from "effect/Record";
  *
  * **Example** (Import Record helpers)
  *
- * ```ts import.meta.vitest name="Import Record helpers"
+ * ```ts
  * import * as R from "@beep/utils/Record"
  *
  * const entries = R.toEntries({

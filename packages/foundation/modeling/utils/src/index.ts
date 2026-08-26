@@ -17,7 +17,7 @@ export { dual, flip, flow, identity, pipe } from "effect/Function";
  *
  * **Example** (Make readonly non-empty array)
  *
- * ```ts import.meta.vitest name="Make readonly non-empty array"
+ * ```ts
  * import { A } from "@beep/utils"
  *
  * const values = A.makeReadonly("beep")
@@ -33,7 +33,7 @@ export * as A from "./Array.ts";
  *
  * **Example** (Import Boolean utilities)
  *
- * ```ts import.meta.vitest name="Import Boolean utilities"
+ * ```ts
  * import { Bool } from "@beep/utils"
  *
  * console.log(Bool)
@@ -48,7 +48,7 @@ export * as Bool from "./Bool.ts";
  *
  * **Example** (Import DateTime utilities)
  *
- * ```ts import.meta.vitest name="Import DateTime utilities"
+ * ```ts
  * import { DateTime } from "@beep/utils"
  *
  * console.log(DateTime)
@@ -75,7 +75,7 @@ export * from "./DrainableWorker.ts";
  *
  * **Example** (Compare values for equality)
  *
- * ```ts import.meta.vitest name="Compare values for equality"
+ * ```ts
  * import { Eq } from "@beep/utils"
  *
  * const equals = Eq.equals(42)(42)
@@ -91,7 +91,7 @@ export * as Eq from "./Equal.ts";
  *
  * **Example** (Map failure to custom error)
  *
- * ```ts import.meta.vitest name="Map failure to custom error"
+ * ```ts
  * import { Err } from "@beep/utils"
  * import { Effect } from "effect"
  *
@@ -159,7 +159,7 @@ export * as Html from "./Html.ts";
  *
  * **Example** (Check integer number)
  *
- * ```ts import.meta.vitest name="Check integer number"
+ * ```ts
  * import { N } from "@beep/utils"
  *
  * const whole = N.isInteger(42)
@@ -175,7 +175,7 @@ export * as N from "./Number.ts";
  *
  * **Example** (Create Option some value)
  *
- * ```ts import.meta.vitest name="Create Option some value"
+ * ```ts
  * import { O } from "@beep/utils"
  *
  * const value = O.some("beep")
@@ -191,7 +191,7 @@ export * as O from "./Option.ts";
  *
  * **Example** (Join path segments)
  *
- * ```ts import.meta.vitest name="Join path segments"
+ * ```ts
  * import { Path } from "@beep/utils"
  *
  * console.log(Path.join("a", "b"))
@@ -206,7 +206,7 @@ export * as Path from "./Path.ts";
  *
  * **Example** (Test object predicate)
  *
- * ```ts import.meta.vitest name="Test object predicate"
+ * ```ts
  * import { P } from "@beep/utils"
  *
  * const object = P.isObject({ ok: true })
@@ -222,7 +222,7 @@ export * as P from "./Predicate.ts";
  *
  * **Example** (Access default RandomValues)
  *
- * ```ts import.meta.vitest name="Access default RandomValues"
+ * ```ts
  * import { RandomValues } from "@beep/utils"
  *
  * console.log(RandomValues.Default)
@@ -237,7 +237,7 @@ export * from "./Random.ts";
  *
  * **Example** (Convert record to entries)
  *
- * ```ts import.meta.vitest name="Convert record to entries"
+ * ```ts
  * import { R } from "@beep/utils"
  *
  * const entries = R.toEntries({ id: 1, name: "Ada" })
@@ -253,7 +253,7 @@ export * as R from "./Record.ts";
  *
  * **Example** (Convert string to slug)
  *
- * ```ts import.meta.vitest name="Convert string to slug"
+ * ```ts
  * import { Str } from "@beep/utils"
  *
  * const slug = Str.toSlug("Hello, Beep Effect!")
@@ -269,7 +269,7 @@ export * as Str from "./Str.ts";
  *
  * **Example** (Import Stream utilities)
  *
- * ```ts import.meta.vitest name="Import Stream utilities"
+ * ```ts
  * import { Stream } from "@beep/utils"
  *
  * console.log(Stream)
@@ -284,7 +284,7 @@ export * as Stream from "./Stream.ts";
  *
  * **Example** (List struct object keys)
  *
- * ```ts import.meta.vitest name="List struct object keys"
+ * ```ts
  * import { Struct } from "@beep/utils"
  *
  * const keys = Struct.keys({ id: 1, name: "Ada" })
@@ -300,7 +300,7 @@ export * as Struct from "./Struct.ts";
  *
  * **Example** (Join lines of text)
  *
- * ```ts import.meta.vitest name="Join lines of text"
+ * ```ts
  * import { Text } from "@beep/utils"
  *
  * const text = Text.joinLines(["alpha", "beta"])
@@ -316,7 +316,7 @@ export * as Text from "./Text.ts";
  *
  * **Example** (Call thunkTrue constant)
  *
- * ```ts import.meta.vitest name="Call thunkTrue constant"
+ * ```ts
  * import { thunkTrue } from "@beep/utils"
  *
  * const value = thunkTrue()

@@ -58,7 +58,7 @@ export const SemanticSchemaMetadataKind = LiteralKit([
  *
  * **Example** (Type-check kind values)
  *
- * ```ts import.meta.vitest name="Type-check kind values"
+ * ```ts
  * import type { SemanticSchemaMetadataKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const acceptSemanticSchemaMetadataKind = (value: SemanticSchemaMetadataKind) => value
@@ -97,7 +97,7 @@ export const SemanticSchemaStatus = LiteralKit(["experimental", "stable", "depre
  *
  * **Example** (Type-check status values)
  *
- * ```ts import.meta.vitest name="Type-check status values"
+ * ```ts
  * import type { SemanticSchemaStatus } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const acceptSemanticSchemaStatus = (value: SemanticSchemaStatus) => value
@@ -136,7 +136,7 @@ export const SemanticSchemaSpecificationDisposition = LiteralKit(["normative", "
  *
  * **Example** (Type-check disposition values)
  *
- * ```ts import.meta.vitest name="Type-check disposition values"
+ * ```ts
  * import type { SemanticSchemaSpecificationDisposition } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const acceptSemanticSchemaSpecificationDisposition = (value: SemanticSchemaSpecificationDisposition) => value
@@ -182,7 +182,7 @@ export const SemanticRepresentationKind = LiteralKit([
  *
  * **Example** (Type-check representation kinds)
  *
- * ```ts import.meta.vitest name="Type-check representation kinds"
+ * ```ts
  * import type { SemanticRepresentationKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const acceptSemanticRepresentationKind = (value: SemanticRepresentationKind) => value
@@ -328,7 +328,7 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
  *
  * **Example** (Type-check annotation payload)
  *
- * ```ts import.meta.vitest name="Type-check annotation payload"
+ * ```ts
  * import type { SemanticSchemaMetadataAnnotationPayload } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const acceptSemanticSchemaMetadataAnnotationPayload = (value: SemanticSchemaMetadataAnnotationPayload) => value
@@ -384,7 +384,7 @@ type Rebuilt<Schema extends S.Top> = Schema["Rebuild"];
  *
  * **Example** (Attach metadata to schema)
  *
- * ```ts import.meta.vitest name="Attach metadata to schema"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { annotateSemanticSchema } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -476,7 +476,7 @@ const findSemanticSchemaMetadata = (
  *
  * **Example** (Read missing metadata option)
  *
- * ```ts import.meta.vitest name="Read missing metadata option"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
  * import * as O from "effect/Option"

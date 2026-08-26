@@ -3,7 +3,7 @@
  *
  * **Example** (List namespace Schema export)
  *
- * ```ts import.meta.vitest name="List namespace Schema export"
+ * ```ts
  * import * as DomDragEvent from "@beep/schema/DomDragEvent"
  *
  * console.log(Object.keys(DomDragEvent).includes("Schema"))

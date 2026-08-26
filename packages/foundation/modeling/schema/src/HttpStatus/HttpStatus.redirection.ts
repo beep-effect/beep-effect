@@ -21,7 +21,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log MultipleChoices literal)
  *
- * ```ts import.meta.vitest name="Log MultipleChoices literal"
+ * ```ts
  * import { MultipleChoices } from "@beep/schema/HttpStatus"
  *
  * console.log(MultipleChoices.literal)
@@ -55,7 +55,7 @@ export type MultipleChoices = typeof MultipleChoices.Type;
  *
  * **Example** (Log MovedPermanently literal)
  *
- * ```ts import.meta.vitest name="Log MovedPermanently literal"
+ * ```ts
  * import { MovedPermanently } from "@beep/schema/HttpStatus"
  *
  * console.log(MovedPermanently.literal)
@@ -88,7 +88,7 @@ export type MovedPermanently = typeof MovedPermanently.Type;
  *
  * **Example** (Log Found literal)
  *
- * ```ts import.meta.vitest name="Log Found literal"
+ * ```ts
  * import { Found } from "@beep/schema/HttpStatus"
  *
  * console.log(Found.literal)
@@ -118,7 +118,7 @@ export type Found = typeof Found.Type;
  *
  * **Example** (Log SeeOther literal)
  *
- * ```ts import.meta.vitest name="Log SeeOther literal"
+ * ```ts
  * import { SeeOther } from "@beep/schema/HttpStatus"
  *
  * console.log(SeeOther.literal)
@@ -150,7 +150,7 @@ export type SeeOther = typeof SeeOther.Type;
  *
  * **Example** (Log NotModified literal)
  *
- * ```ts import.meta.vitest name="Log NotModified literal"
+ * ```ts
  * import { NotModified } from "@beep/schema/HttpStatus"
  *
  * console.log(NotModified.literal)
@@ -180,7 +180,7 @@ export type NotModified = typeof NotModified.Type;
  *
  * **Example** (Log UseProxy literal)
  *
- * ```ts import.meta.vitest name="Log UseProxy literal"
+ * ```ts
  * import { UseProxy } from "@beep/schema/HttpStatus"
  *
  * console.log(UseProxy.literal)
@@ -210,7 +210,7 @@ export type UseProxy = typeof UseProxy.Type;
  *
  * **Example** (Log SwitchProxy literal)
  *
- * ```ts import.meta.vitest name="Log SwitchProxy literal"
+ * ```ts
  * import { SwitchProxy } from "@beep/schema/HttpStatus"
  *
  * console.log(SwitchProxy.literal)
@@ -243,7 +243,7 @@ export type SwitchProxy = typeof SwitchProxy.Type;
  *
  * **Example** (Log TemporaryRedirect literal)
  *
- * ```ts import.meta.vitest name="Log TemporaryRedirect literal"
+ * ```ts
  * import { TemporaryRedirect } from "@beep/schema/HttpStatus"
  *
  * console.log(TemporaryRedirect.literal)
@@ -275,7 +275,7 @@ export type TemporaryRedirect = typeof TemporaryRedirect.Type;
  *
  * **Example** (Log PermanentRedirect literal)
  *
- * ```ts import.meta.vitest name="Log PermanentRedirect literal"
+ * ```ts
  * import { PermanentRedirect } from "@beep/schema/HttpStatus"
  *
  * console.log(PermanentRedirect.literal)
@@ -307,7 +307,7 @@ export type PermanentRedirect = typeof PermanentRedirect.Type;
  *
  * **Example** (Count 3XX status pairs)
  *
- * ```ts import.meta.vitest name="Count 3XX status pairs"
+ * ```ts
  * import { HttpStatus3XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus3XX.Pairs.length)

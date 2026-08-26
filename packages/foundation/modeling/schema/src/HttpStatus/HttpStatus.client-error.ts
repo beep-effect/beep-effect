@@ -52,7 +52,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log pairs length)
  *
- * ```ts import.meta.vitest name="Log pairs length"
+ * ```ts
  * import { HttpStatus4XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus4XX.Pairs.length)

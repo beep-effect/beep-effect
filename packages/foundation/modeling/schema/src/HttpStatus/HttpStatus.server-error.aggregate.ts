@@ -28,7 +28,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Count 5XX status pairs)
  *
- * ```ts import.meta.vitest name="Count 5XX status pairs"
+ * ```ts
  * import { HttpStatus5XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus5XX.Pairs.length)

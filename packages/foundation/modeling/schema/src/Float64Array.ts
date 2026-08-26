@@ -188,7 +188,7 @@ export declare namespace Float64ArrayFromArray {
  *
  * **Example** (Inspect insert schema)
  *
- * ```ts import.meta.vitest name="Inspect insert schema"
+ * ```ts
  * import { Float64ArrayField } from "@beep/schema/Float64Array";
  * import * as S from "effect/Schema";
  *

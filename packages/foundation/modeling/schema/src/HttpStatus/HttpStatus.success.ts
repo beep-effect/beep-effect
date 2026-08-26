@@ -18,7 +18,7 @@ import { $I } from "./HttpStatus.shared.ts";
  *
  * **Example** (Log Ok literal value)
  *
- * ```ts import.meta.vitest name="Log Ok literal value"
+ * ```ts
  * import { Ok } from "@beep/schema/HttpStatus"
  *
  * console.log(Ok.literal)
@@ -47,7 +47,7 @@ export type Ok = typeof Ok.Type;
  *
  * **Example** (Log Created literal value)
  *
- * ```ts import.meta.vitest name="Log Created literal value"
+ * ```ts
  * import { Created } from "@beep/schema/HttpStatus"
  *
  * console.log(Created.literal)
@@ -77,7 +77,7 @@ export type Created = typeof Created.Type;
  *
  * **Example** (Log Accepted literal value)
  *
- * ```ts import.meta.vitest name="Log Accepted literal value"
+ * ```ts
  * import { Accepted } from "@beep/schema/HttpStatus"
  *
  * console.log(Accepted.literal)
@@ -109,7 +109,7 @@ export type Accepted = typeof Accepted.Type;
  *
  * **Example** (Log NonAuthoritativeInformation literal)
  *
- * ```ts import.meta.vitest name="Log NonAuthoritativeInformation literal"
+ * ```ts
  * import { NonAuthoritativeInformation } from "@beep/schema/HttpStatus"
  *
  * console.log(NonAuthoritativeInformation.literal)
@@ -139,7 +139,7 @@ export type NonAuthoritativeInformation = typeof NonAuthoritativeInformation.Typ
  *
  * **Example** (Log NoContent literal value)
  *
- * ```ts import.meta.vitest name="Log NoContent literal value"
+ * ```ts
  * import { NoContent } from "@beep/schema/HttpStatus"
  *
  * console.log(NoContent.literal)
@@ -168,7 +168,7 @@ export type NoContent = typeof NoContent.Type;
  *
  * **Example** (Log ResetContent literal value)
  *
- * ```ts import.meta.vitest name="Log ResetContent literal value"
+ * ```ts
  * import { ResetContent } from "@beep/schema/HttpStatus"
  *
  * console.log(ResetContent.literal)
@@ -200,7 +200,7 @@ export type ResetContent = typeof ResetContent.Type;
  *
  * **Example** (Log PartialContent literal value)
  *
- * ```ts import.meta.vitest name="Log PartialContent literal value"
+ * ```ts
  * import { PartialContent } from "@beep/schema/HttpStatus"
  *
  * console.log(PartialContent.literal)
@@ -231,7 +231,7 @@ export type PartialContent = typeof PartialContent.Type;
  *
  * **Example** (Log MultiStatus literal value)
  *
- * ```ts import.meta.vitest name="Log MultiStatus literal value"
+ * ```ts
  * import { MultiStatus } from "@beep/schema/HttpStatus"
  *
  * console.log(MultiStatus.literal)
@@ -262,7 +262,7 @@ export type MultiStatus = typeof MultiStatus.Type;
  *
  * **Example** (Log AlreadyReported literal value)
  *
- * ```ts import.meta.vitest name="Log AlreadyReported literal value"
+ * ```ts
  * import { AlreadyReported } from "@beep/schema/HttpStatus"
  *
  * console.log(AlreadyReported.literal)
@@ -293,7 +293,7 @@ export type AlreadyReported = typeof AlreadyReported.Type;
  *
  * **Example** (Log ImUsed literal value)
  *
- * ```ts import.meta.vitest name="Log ImUsed literal value"
+ * ```ts
  * import { ImUsed } from "@beep/schema/HttpStatus"
  *
  * console.log(ImUsed.literal)
@@ -323,7 +323,7 @@ export type ImUsed = typeof ImUsed.Type;
  *
  * **Example** (Count HttpStatus2XX pairs)
  *
- * ```ts import.meta.vitest name="Count HttpStatus2XX pairs"
+ * ```ts
  * import { HttpStatus2XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus2XX.Pairs.length)

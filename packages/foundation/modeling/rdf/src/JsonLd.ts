@@ -73,7 +73,7 @@ export const JsonLdKeyword = LiteralKit([
  *
  * **Example** (Accept keyword type)
  *
- * ```ts import.meta.vitest name="Accept keyword type"
+ * ```ts
  * import type { JsonLdKeyword } from "@beep/rdf/JsonLd"
  *
  * const acceptJsonLdKeyword = (value: JsonLdKeyword) => value
@@ -205,7 +205,7 @@ export const JsonLdBlankNodeIdentifier = S.String.check(jsonLdBlankNodeIdentifie
  *
  * **Example** (Accept blank-node type)
  *
- * ```ts import.meta.vitest name="Accept blank-node type"
+ * ```ts
  * import type { JsonLdBlankNodeIdentifier } from "@beep/rdf/JsonLd"
  *
  * const acceptJsonLdBlankNodeIdentifier = (value: JsonLdBlankNodeIdentifier) => value
@@ -255,7 +255,7 @@ export const JsonLdNodeIdentifier = S.Union([IRIReference, JsonLdBlankNodeIdenti
  *
  * **Example** (Accept node id type)
  *
- * ```ts import.meta.vitest name="Accept node id type"
+ * ```ts
  * import type { JsonLdNodeIdentifier } from "@beep/rdf/JsonLd"
  *
  * const acceptJsonLdNodeIdentifier = (value: JsonLdNodeIdentifier) => value
@@ -375,7 +375,7 @@ export const JsonLdPropertyValue = S.Union([JsonLdReferenceValue, JsonLdLiteralV
  *
  * **Example** (Accept property value type)
  *
- * ```ts import.meta.vitest name="Accept property value type"
+ * ```ts
  * import type { JsonLdPropertyValue } from "@beep/rdf/JsonLd"
  *
  * const acceptJsonLdPropertyValue = (value: JsonLdPropertyValue) => value

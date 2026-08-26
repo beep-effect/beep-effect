@@ -3,7 +3,7 @@
  *
  * **Example** (Import DomHtmlElement namespace)
  *
- * ```ts import.meta.vitest name="Import DomHtmlElement namespace"
+ * ```ts
  * import * as DomHtmlElement from "@beep/schema/DomHtmlElement"
  *
  * console.log(Object.keys(DomHtmlElement).includes("Schema"))

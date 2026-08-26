@@ -14,7 +14,7 @@ const $I = $SchemaId.create("person/CardinalDirection");
  *
  * **Example** (Check Options includes north)
  *
- * ```ts import.meta.vitest name="Check Options includes north"
+ * ```ts
  * import { CardinalDirection } from "@beep/schema/CardinalDirection"
  *
  * console.log(CardinalDirection.Options.includes("north"))
@@ -42,7 +42,7 @@ export type CardinalDirection = typeof CardinalDirection.Type;
  *
  * **Example** (Check Options includes N)
  *
- * ```ts import.meta.vitest name="Check Options includes N"
+ * ```ts
  * import { CardinalDirectionAbbrev } from "@beep/schema/CardinalDirection"
  *
  * console.log(CardinalDirectionAbbrev.Options.includes("N"))
@@ -69,7 +69,7 @@ export type CardinalDirectionAbbrev = typeof CardinalDirectionAbbrev.Type;
  *
  * **Example** (Check a north literal)
  *
- * ```ts import.meta.vitest name="Check a north literal"
+ * ```ts
  * import { Schema } from "@beep/schema/CardinalDirection"
  *
  * console.log(Schema.Options.includes("north"))
@@ -92,7 +92,7 @@ export type Schema = CardinalDirection;
  *
  * **Example** (Check an N abbrev literal)
  *
- * ```ts import.meta.vitest name="Check an N abbrev literal"
+ * ```ts
  * import { Abbrev } from "@beep/schema/CardinalDirection"
  *
  * console.log(Abbrev.Options.includes("N"))

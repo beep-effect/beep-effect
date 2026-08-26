@@ -3,7 +3,7 @@
  *
  * **Example** (Import DomMouseEvent namespace)
  *
- * ```ts import.meta.vitest name="Import DomMouseEvent namespace"
+ * ```ts
  * import * as DomMouseEvent from "@beep/schema/DomMouseEvent"
  *
  * console.log(Object.keys(DomMouseEvent).includes("Schema"))

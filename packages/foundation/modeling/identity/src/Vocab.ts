@@ -17,7 +17,7 @@ const $I = $IdentityId.create("Vocab");
  *
  * **Example** (Satisfies VocabShape registry)
  *
- * ```ts import.meta.vitest name="Satisfies VocabShape registry"
+ * ```ts
  * import type { VocabShape } from "@beep/identity"
  *
  * const vocab = {
@@ -74,7 +74,7 @@ export class VocabEntry extends S.Class<VocabEntry>("@beep/identity/Vocab/VocabE
  *
  * **Example** (Validate registry with Schema)
  *
- * ```ts import.meta.vitest name="Validate registry with Schema"
+ * ```ts
  * import * as S from "effect/Schema"
  * import { VocabRegistry } from "@beep/identity"
  *
@@ -96,7 +96,7 @@ export const VocabRegistry = S.Record(S.String, VocabEntry).annotate({
  *
  * **Example** (Typed registry with VocabEntry)
  *
- * ```ts import.meta.vitest name="Typed registry with VocabEntry"
+ * ```ts
  * import { VocabEntry, type VocabRegistry } from "@beep/identity"
  *
  * const registry: VocabRegistry = { ex: VocabEntry.make({ iri: "https://example.test/ns#", terms: ["Thing"] }) }
@@ -363,7 +363,7 @@ export const CoreVocab = {
  *
  * **Example** (Assign CoreVocab type alias)
  *
- * ```ts import.meta.vitest name="Assign CoreVocab type alias"
+ * ```ts
  * import { CoreVocab, type CoreVocab as CoreVocabType } from "@beep/identity"
  *
  * const vocab: CoreVocabType = CoreVocab
@@ -416,7 +416,7 @@ export type Predicate<V extends VocabShape> = Curie<V> | `^${Curie<V>}`;
  *
  * **Example** (Expand CURIE to IRI literal)
  *
- * ```ts import.meta.vitest name="Expand CURIE to IRI literal"
+ * ```ts
  * import { CoreVocab, type Expand } from "@beep/identity"
  *
  * const iri: Expand<"skos:prefLabel", typeof CoreVocab> = "http://www.w3.org/2004/02/skos/core#prefLabel"
@@ -510,7 +510,7 @@ export const SemanticFoundationVocab = mergeVocab(CoreVocab, {
  *
  * **Example** (Typed SemanticFoundationVocab value)
  *
- * ```ts import.meta.vitest name="Typed SemanticFoundationVocab value"
+ * ```ts
  * import { SemanticFoundationVocab, type SemanticFoundationVocab as SemanticFoundationVocabType } from "@beep/identity"
  *
  * const vocab: SemanticFoundationVocabType = SemanticFoundationVocab

@@ -15,7 +15,7 @@ const $I = $SkillContractId.create("SchemaReference");
  *
  * **Example** (Construct a schema reference id)
  *
- * ```ts import.meta.vitest name="Construct a schema reference id"
+ * ```ts
  * import { SchemaReferenceId } from "@beep/skill-contract"
  *
  * console.log(SchemaReferenceId.make("qa.inventory/v1"))
@@ -49,7 +49,7 @@ export type SchemaReferenceId = typeof SchemaReferenceId.Type;
  *
  * **Example** (Reference a runtime schema)
  *
- * ```ts import.meta.vitest name="Reference a runtime schema"
+ * ```ts
  * import { SchemaReference, SchemaReferenceId } from "@beep/skill-contract"
  *
  * const reference = SchemaReference.make({
