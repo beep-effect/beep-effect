@@ -177,10 +177,10 @@ export interface YouTubeEmbedProps {
  *
  * **Example** (Sandbox denies top navigation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Sandbox denies top navigation"
  * import { YOUTUBE_EMBED_SANDBOX } from "@beep/editor/youtube-embed"
  *
- * console.log(YOUTUBE_EMBED_SANDBOX.includes("allow-top-navigation")) // false
+ * YOUTUBE_EMBED_SANDBOX.includes("allow-top-navigation") // => false
  * ```
  *
  * @category configuration

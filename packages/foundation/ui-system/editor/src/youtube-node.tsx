@@ -30,7 +30,7 @@ import type { JSX } from "react";
  *
  * **Example** (Serialized wire payload)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Serialized wire payload"
  * import type { SerializedYouTubeNode } from "@beep/editor/youtube-node"
  *
  * const payload = {
@@ -41,7 +41,7 @@ import type { JSX } from "react";
  * } satisfies SerializedYouTubeNode
  *
  * const videoID: string = payload.videoID
- * console.log(videoID) // "M7lc1UVf-VE"
+ * videoID // => "M7lc1UVf-VE"
  * ```
  *
  * @category models

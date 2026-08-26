@@ -21,7 +21,7 @@ import type { JSX } from "react";
  *
  * **Example** (Satisfy serialized wire shape)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Satisfy serialized wire shape"
  * import type { SerializedArtifactRefNode } from "@beep/editor/artifact-ref-node"
  *
  * const payload = {
@@ -32,7 +32,7 @@ import type { JSX } from "react";
  * } satisfies SerializedArtifactRefNode
  *
  * const artifactId: string = payload.artifactId
- * console.log(artifactId) // "artifact-123"
+ * artifactId // => "artifact-123"
  * ```
  *
  * @category models
@@ -47,11 +47,11 @@ export type SerializedArtifactRefNode = ArtifactRefNodeSchema.Encoded;
  *
  * **Example** (Typed creation input)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed creation input"
  * import type { ArtifactRefNodeCreateInput } from "@beep/editor/artifact-ref-node"
  *
  * const input: ArtifactRefNodeCreateInput = { artifactId: "artifact-123", label: "Quarterly report" }
- * console.log(input.artifactId) // "artifact-123"
+ * input.artifactId // => "artifact-123"
  * ```
  *
  * @category models

@@ -472,7 +472,7 @@ const firstResolutionError = (
  *
  * **Example** (Resolve an empty catalog)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Resolve an empty catalog"
  * import { resolveEditorProfile } from "@beep/editor/capability/resolver"
  * import { EditorProfile, ProfileId } from "@beep/editor/capability/schemas"
  * import { Result } from "effect"
@@ -480,7 +480,7 @@ const firstResolutionError = (
  * const result = resolveEditorProfile([], EditorProfile.make({
  *   id: ProfileId.make("editor.empty"), capabilities: []
  * }))
- * console.log(Result.isSuccess(result)) // true
+ * Result.isSuccess(result) // => true
  * ```
  *
  * @category workflows

@@ -33,10 +33,10 @@ const $I = $EditorId.create("chat/config");
  *
  * **Example** (Check enter send mode)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check enter send mode"
  * import { SendOn } from "@beep/editor/chat/config"
  *
- * console.log(SendOn.is.enter("enter")) // true
+ * SendOn.is.enter("enter") // => true
  * ```
  *
  * @category configuration
@@ -53,11 +53,11 @@ export const SendOn = LiteralKit(["enter", "modifierEnter"]).pipe(
  *
  * **Example** (Assign modifierEnter value)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Assign modifierEnter value"
  * import type { SendOn } from "@beep/editor/chat/config"
  *
  * const sendOn: SendOn = "modifierEnter"
- * console.log(sendOn) // "modifierEnter"
+ * sendOn // => "modifierEnter"
  * ```
  *
  * @category models
@@ -73,12 +73,12 @@ export type SendOn = typeof SendOn.Type;
  *
  * **Example** (Partial features with defaults)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Partial features with defaults"
  * import { ComposerFeatures } from "@beep/editor/chat/config"
  *
  * const chat = ComposerFeatures.make({ toolbar: false })
- * console.log(chat.slash) // true
- * console.log(chat.sendOn) // "enter"
+ * chat.slash // => true
+ * chat.sendOn // => "enter"
  * ```
  *
  * @category configuration
@@ -122,7 +122,7 @@ export class ComposerFeatures extends S.Class<ComposerFeatures>($I`ComposerFeatu
  *
  * **Example** (Focus editor effect callback)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Focus editor effect callback"
  * import type { EditorEffect } from "@beep/editor/chat/config"
  *
  * const focusEditor: EditorEffect = (editor) => {
@@ -130,7 +130,7 @@ export class ComposerFeatures extends S.Class<ComposerFeatures>($I`ComposerFeatu
  * }
  *
  * const callbackArity = focusEditor.length
- * console.log(callbackArity) // 1
+ * callbackArity // => 1
  * ```
  *
  * @category models
@@ -154,11 +154,11 @@ const EditorEffectSchema = S.declare<EditorEffect>(isEditorEffect).pipe(
  *
  * **Example** (Make heading slash item)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make heading slash item"
  * import { SlashItem } from "@beep/editor/chat/config"
  *
  * const item = SlashItem.make({ key: "h1", label: "Heading 1", onSelect: () => {} })
- * console.log(item.label) // "Heading 1"
+ * item.label // => "Heading 1"
  * ```
  *
  * @category configuration
@@ -218,7 +218,7 @@ const uniqueSlashItemKeys = S.makeFilter<ReadonlyArray<SlashItem>>(
  *
  * **Example** (Decode slash items array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode slash items array"
  * import { SlashItem, SlashItems } from "@beep/editor/chat/config"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -226,7 +226,7 @@ const uniqueSlashItemKeys = S.makeFilter<ReadonlyArray<SlashItem>>(
  * const items = S.decodeUnknownResult(SlashItems)([
  *   SlashItem.make({ key: "paragraph", label: "Paragraph", onSelect: () => {} }),
  * ])
- * console.log(Result.isSuccess(items)) // true
+ * Result.isSuccess(items) // => true
  * ```
  *
  * @category configuration
@@ -245,11 +245,11 @@ export const SlashItems = S.Array(SlashItem)
  *
  * **Example** (Type empty slash items)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type empty slash items"
  * import type { SlashItems } from "@beep/editor/chat/config"
  *
  * const items: SlashItems = []
- * console.log(items.length) // 0
+ * items.length // => 0
  * ```
  *
  * @category models
@@ -263,11 +263,11 @@ export type SlashItems = typeof SlashItems.Type;
  *
  * **Example** (Make mention option)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make mention option"
  * import { MentionOption } from "@beep/editor/chat/config"
  *
  * const option = MentionOption.make({ id: "u1", label: "Ada Lovelace" })
- * console.log(option.label) // "Ada Lovelace"
+ * option.label // => "Ada Lovelace"
  * ```
  *
  * @category configuration
@@ -317,13 +317,13 @@ const uniqueMentionOptionIds = S.makeFilter<ReadonlyArray<MentionOption>>(
  *
  * **Example** (Decode mention options array)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode mention options array"
  * import { MentionOptions } from "@beep/editor/chat/config"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const options = S.decodeUnknownResult(MentionOptions)([{ id: "ada", label: "Ada" }])
- * console.log(Result.isSuccess(options)) // true
+ * Result.isSuccess(options) // => true
  * ```
  *
  * @category configuration
@@ -342,11 +342,11 @@ export const MentionOptions = S.Array(MentionOption)
  *
  * **Example** (Type empty mention options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Type empty mention options"
  * import type { MentionOptions } from "@beep/editor/chat/config"
  *
  * const options: MentionOptions = []
- * console.log(options.length) // 0
+ * options.length // => 0
  * ```
  *
  * @category models
@@ -361,11 +361,11 @@ export type MentionOptions = typeof MentionOptions.Type;
  *
  * **Example** (Validate mention source function)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Validate mention source function"
  * import { MentionSource } from "@beep/editor/chat/config"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(MentionSource)((q: string) => [])) // true
+ * S.is(MentionSource)((q: string) => []) // => true
  * ```
  *
  * @category configuration
@@ -381,7 +381,7 @@ const isMentionSource = (u: unknown): u is MentionSource => P.isFunction(u);
  *
  * **Example** (Check source against schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check source against schema"
  * import { MentionOption, MentionSource } from "@beep/editor/chat/config"
  * import * as S from "effect/Schema"
  *
@@ -389,7 +389,7 @@ const isMentionSource = (u: unknown): u is MentionSource => P.isFunction(u);
  *   MentionOption.make({ id: query, label: `@${query}` }),
  * ]
  *
- * console.log(S.is(MentionSource)(source)) // true
+ * S.is(MentionSource)(source) // => true
  * ```
  *
  * @category configuration
@@ -427,11 +427,11 @@ export type AttachmentPort = (files: ReadonlyArray<File>) => void | Promise<void
  *
  * **Example** (Define send port callback)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Define send port callback"
  * import type { SendPort } from "@beep/editor/chat/config"
  *
  * const send: SendPort = (state) => state.root.children.length > 0
- * console.log(typeof send) // "function"
+ * typeof send // => "function"
  * ```
  *
  * @category configuration

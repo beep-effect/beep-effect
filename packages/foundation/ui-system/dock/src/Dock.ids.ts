@@ -16,11 +16,11 @@ const $I = $DockId.create("Dock.ids");
  *
  * **Example** (Make and check PanelId)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make and check PanelId"
  * import { PanelId } from "@beep/dock"
  *
  * const id = PanelId.make("panel-one")
- * console.log(PanelId.is(id)) // true
+ * PanelId.is(id) // => true
  * ```
  *
  * @category identifiers
@@ -41,11 +41,11 @@ export const PanelId = S.NonEmptyString.pipe(
  *
  * **Example** (Typed PanelId assignment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed PanelId assignment"
  * import { PanelId } from "@beep/dock"
  *
  * const id: PanelId = PanelId.make("panel-one")
- * console.log(id) // "panel-one"
+ * id // => "panel-one"
  * ```
  *
  * @category identifiers
@@ -58,11 +58,11 @@ export type PanelId = typeof PanelId.Type;
  *
  * **Example** (Make and check GroupId)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make and check GroupId"
  * import { GroupId } from "@beep/dock"
  *
  * const id = GroupId.make("group-one")
- * console.log(GroupId.is(id)) // true
+ * GroupId.is(id) // => true
  * ```
  *
  * @category identifiers
@@ -83,11 +83,11 @@ export const GroupId = S.NonEmptyString.pipe(
  *
  * **Example** (Typed GroupId assignment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed GroupId assignment"
  * import { GroupId } from "@beep/dock"
  *
  * const id: GroupId = GroupId.make("group-one")
- * console.log(id) // "group-one"
+ * id // => "group-one"
  * ```
  *
  * @category identifiers
@@ -100,11 +100,11 @@ export type GroupId = typeof GroupId.Type;
  *
  * **Example** (Make and check SplitId)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make and check SplitId"
  * import { SplitId } from "@beep/dock"
  *
  * const id = SplitId.make("split-one")
- * console.log(SplitId.is(id)) // true
+ * SplitId.is(id) // => true
  * ```
  *
  * @category identifiers
@@ -125,11 +125,11 @@ export const SplitId = S.NonEmptyString.pipe(
  *
  * **Example** (Typed SplitId assignment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed SplitId assignment"
  * import { SplitId } from "@beep/dock"
  *
  * const id: SplitId = SplitId.make("split-one")
- * console.log(id) // "split-one"
+ * id // => "split-one"
  * ```
  *
  * @category identifiers
@@ -142,11 +142,11 @@ export type SplitId = typeof SplitId.Type;
  *
  * **Example** (Make and check CommandId)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make and check CommandId"
  * import { CommandId } from "@beep/dock"
  *
  * const id = CommandId.make("command-open-one")
- * console.log(CommandId.is(id)) // true
+ * CommandId.is(id) // => true
  * ```
  *
  * @category identifiers
@@ -167,11 +167,11 @@ export const CommandId = S.NonEmptyString.pipe(
  *
  * **Example** (Typed CommandId assignment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed CommandId assignment"
  * import { CommandId } from "@beep/dock"
  *
  * const id: CommandId = CommandId.make("command-open-one")
- * console.log(id) // "command-open-one"
+ * id // => "command-open-one"
  * ```
  *
  * @category identifiers
@@ -184,11 +184,11 @@ export type CommandId = typeof CommandId.Type;
  *
  * **Example** (Make and check RendererKey)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Make and check RendererKey"
  * import { RendererKey } from "@beep/dock"
  *
  * const key = RendererKey.make("markdown-preview")
- * console.log(RendererKey.is(key)) // true
+ * RendererKey.is(key) // => true
  * ```
  *
  * @category identifiers
@@ -209,11 +209,11 @@ export const RendererKey = S.NonEmptyString.pipe(
  *
  * **Example** (Typed RendererKey assignment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed RendererKey assignment"
  * import { RendererKey } from "@beep/dock"
  *
  * const key: RendererKey = RendererKey.make("markdown-preview")
- * console.log(key) // "markdown-preview"
+ * key // => "markdown-preview"
  * ```
  *
  * @category identifiers
@@ -226,12 +226,12 @@ export type RendererKey = typeof RendererKey.Type;
  *
  * **Example** (Complement split ratio shares)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Complement split ratio shares"
  * import { SplitRatio } from "@beep/dock"
  *
  * const left = SplitRatio.make(6_000)
  * const right = SplitRatio.complement(left)
- * console.log(right) // 4000
+ * right // => 4000
  * ```
  *
  * @category identifiers
@@ -258,11 +258,11 @@ export const SplitRatio = S.Int.check(
  *
  * **Example** (Typed SplitRatio assignment)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Typed SplitRatio assignment"
  * import { SplitRatio } from "@beep/dock"
  *
  * const ratio: SplitRatio = SplitRatio.make(5_000)
- * console.log(ratio) // 5000
+ * ratio // => 5000
  * ```
  *
  * @category identifiers
