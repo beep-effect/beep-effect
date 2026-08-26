@@ -27,10 +27,9 @@ const ProviderCacheEntryPrettyJson = S.fromJsonString(ProviderCacheEntry, { spac
 const providerKeyEquivalence = S.toEquivalence(ProviderCacheKey);
 const providerEntryEquivalence = S.toEquivalence(ProviderCacheEntry);
 const staleLockAge = Duration.seconds(60);
-const competingWriterSchedule = Schedule.spaced(Duration.millis(10)).pipe(
-  Schedule.upTo({ duration: Duration.seconds(1), times: 100 })
-);
+const competingWriterSchedule = Schedule.exponential(Duration.millis(200)).pipe(Schedule.upTo({ times: 7 }));
 const pendingWriterMessage = "The live provider cache writer has not promoted its entry yet.";
+const lockWaitTimeoutMessage = "Timed out waiting for the live provider cache write lock to promote its entry.";
 
 const corrupt = (message: string): ProviderCacheCorrupt => ProviderCacheCorrupt.make({ message });
 
@@ -111,7 +110,7 @@ const makeProviderCache = Effect.gen(function* () {
     });
   });
 
-  const awaitCompetingWrite = Effect.fn("ProviderCache.awaitCompetingWrite")((entry: ProviderCacheEntry) =>
+  const reconcileCompetingWrite = Effect.fn("ProviderCache.reconcileCompetingWrite")((entry: ProviderCacheEntry) =>
     lookup(entry.key).pipe(
       Effect.flatMap(
         O.match({
@@ -121,13 +120,33 @@ const makeProviderCache = Effect.gen(function* () {
               ? Effect.void
               : Effect.fail(corrupt("A live provider cache writer stored different content for this key.")),
         })
-      ),
+      )
+    )
+  );
+
+  const awaitCompetingWrite = Effect.fn("ProviderCache.awaitCompetingWrite")(function* (entry: ProviderCacheEntry) {
+    const waited = yield* reconcileCompetingWrite(entry).pipe(
       Effect.retry({
         schedule: competingWriterSchedule,
         while: (error) => Str.Equivalence(error.message, pendingWriterMessage),
-      })
-    )
-  );
+      }),
+      Effect.result
+    );
+    if (Result.isSuccess(waited)) {
+      return;
+    }
+    if (!Str.Equivalence(waited.failure.message, pendingWriterMessage)) {
+      return yield* waited.failure;
+    }
+    const finalLookup = yield* reconcileCompetingWrite(entry).pipe(Effect.result);
+    if (Result.isSuccess(finalLookup)) {
+      return;
+    }
+    if (!Str.Equivalence(finalLookup.failure.message, pendingWriterMessage)) {
+      return yield* finalLookup.failure;
+    }
+    return yield* corrupt(lockWaitTimeoutMessage);
+  });
 
   const tryAcquireLock = (lock: string): Effect.Effect<boolean> =>
     fs.makeDirectory(lock).pipe(Effect.result, Effect.map(Result.isSuccess));

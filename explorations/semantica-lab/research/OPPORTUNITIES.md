@@ -69,6 +69,13 @@ ratifies.
 
 ## Friction receipts
 
+- **2026-08-26: Two documented verification commands do not match the installed tools.**
+  `bun run fallow dead-code --check` exits with `unexpected argument '--check'`; the working
+  regression gate requires `--fail-on-regression` plus the tracked dead-code baseline. The
+  package-scoped JSDoc loop also exits because `apps/labs/semantica` has no `docgen.json`, even
+  though the lab exports documented services and layers. Prevention: expose a stable root
+  dead-code check script and initialize docgen when a workspace first adds public source exports.
+
 - **2026-08-26 — PR B lock refresh still requires registry access despite an existing lock and install.**
   `bun install --lockfile-only --ignore-scripts` first failed with `EROFS accessing temporary
   directory`; explicit task-local `BUN_TMPDIR` and `BUN_INSTALL` paths under `/tmp` passed that

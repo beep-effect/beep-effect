@@ -17,6 +17,7 @@ const GoldUnavailableReason = LiteralKit([
   "read-failed",
   "job-mismatch",
   "mixed-proposer",
+  "stale-reference",
   "digest-failed",
   "encoding-failed",
 ]).annotate(

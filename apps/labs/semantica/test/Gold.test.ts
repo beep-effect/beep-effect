@@ -261,6 +261,48 @@ describe("C0 gold proposer", () => {
       )
     ));
 
+  it("removes gold.json when a complete set is followed by a partial rerun", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const manifest = yield* fs
+              .readFileString("fixtures/w1.manifest.json")
+              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
+            const fixtures = yield* fs
+              .readFileString("fixtures/f1/index.json")
+              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+            const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-rerun-" });
+            const layer = makeGoldTestLayer(manifest, fixtures);
+            yield* provideScopedLayer(layer)(
+              proposeGold({
+                manifestPath: "stub.manifest.json",
+                outputDirectory,
+                paper: O.none(),
+                subset: O.none(),
+              })
+            );
+            const referencePath = path.join(outputDirectory, "gold.json");
+            expect(yield* fs.exists(referencePath)).toBe(true);
+
+            const partial = yield* provideScopedLayer(layer)(
+              proposeGold({
+                manifestPath: "stub.manifest.json",
+                outputDirectory,
+                paper: O.some(A.getUnsafe(manifest.rows, 0).id),
+                subset: O.none(),
+              })
+            );
+
+            expect(partial.reference.status).toBe("not-written");
+            expect(yield* fs.exists(referencePath)).toBe(false);
+          })
+        )
+      )
+    ));
+
   it("fails with mixed-proposer when one complete-set file is stale", () =>
     Effect.runPromise(
       provideScopedLayer(BunServices.layer)(

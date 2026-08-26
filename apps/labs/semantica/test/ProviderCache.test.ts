@@ -2,9 +2,11 @@
 
 import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Result, Stream } from "effect";
+import { ConfigProvider, Duration, Effect, Fiber, FileSystem, Layer, Path, Ref, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { TestClock } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
 import { describe, expect, it } from "vitest";
@@ -44,6 +46,29 @@ const makeKey = (prompt: string): ProviderCacheKey =>
     requestKind: "generate-text",
     schemaVersion: "provider-cache/v1",
   });
+
+const ProviderCacheEntryPrettyJson = S.fromJsonString(ProviderCacheEntry, { space: 2 });
+const CacheTestServices = Layer.mergeAll(BunServices.layer, TestClock.layer());
+
+const advanceCacheClock = Effect.fn("ProviderCacheTest.advanceClock")(function* (steps: number) {
+  yield* Effect.forEach(
+    A.range(1, steps),
+    () =>
+      TestClock.adjust(Duration.seconds(4)).pipe(Effect.andThen(TestClock.withLive(Effect.sleep(Duration.millis(10))))),
+    { discard: true }
+  );
+});
+
+const providerCacheRuntime = (cacheDirectory: string) =>
+  RuntimeLayer.pipe(
+    Layer.provide(
+      ConfigProvider.layer(
+        ConfigProvider.fromEnv({
+          env: { SEMANTICA_PROVIDER_CACHE_DIR: cacheDirectory },
+        })
+      )
+    )
+  );
 
 const makeStubLanguageModel = (calls: Ref.Ref<number>) =>
   Layer.effect(
@@ -190,6 +215,92 @@ describe("C0 provider cache and language-model boundary", () => {
                 if (miss._tag === "ProviderUnavailable") {
                   expect(miss.offline).toBe(true);
                 }
+              })
+            );
+          })
+        )
+      )
+    ));
+
+  it("lets a contender observe a healthy slow winner within the lock wait window", () =>
+    Effect.runPromise(
+      provideScopedLayer(CacheTestServices)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const cacheDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-cache-slow-winner-" });
+            const runtime = providerCacheRuntime(cacheDirectory);
+
+            yield* provideScopedLayer(runtime)(
+              Effect.gen(function* () {
+                const cache = yield* ProviderCache;
+                const key = makeKey("healthy slow winner");
+                const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
+                const entry = ProviderCacheEntry.make({
+                  cacheKey,
+                  key,
+                  response: "slow-winner",
+                  responseDigest: sha256TextSync("slow-winner"),
+                });
+                const target = path.join(cacheDirectory, `${cacheKey}.json`);
+                const lock = `${target}.lock`;
+                yield* fs.makeDirectory(lock);
+                yield* fs.writeFileString(path.join(lock, "owner.pid"), `${process.pid}\n`);
+                const json = yield* S.encodeEffect(ProviderCacheEntryPrettyJson)(entry);
+                const winner = yield* Effect.sleep(Duration.seconds(2)).pipe(
+                  Effect.andThen(fs.writeFileString(target, `${json}\n`)),
+                  Effect.andThen(fs.remove(lock, { force: true, recursive: true })),
+                  Effect.forkChild
+                );
+                const contender = yield* cache.store(entry).pipe(Effect.forkChild);
+                yield* TestClock.withLive(Effect.sleep(Duration.millis(10)));
+                yield* advanceCacheClock(2);
+                yield* Fiber.join(contender);
+                yield* Fiber.join(winner);
+
+                expect(yield* cache.lookup(key)).toEqual(O.some(entry));
+              })
+            );
+          })
+        )
+      )
+    ));
+
+  it("fails with a lock wait timeout after the live-lock retry window expires", () =>
+    Effect.runPromise(
+      provideScopedLayer(CacheTestServices)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const cacheDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-cache-timeout-" });
+            const runtime = providerCacheRuntime(cacheDirectory);
+
+            yield* provideScopedLayer(runtime)(
+              Effect.gen(function* () {
+                const cache = yield* ProviderCache;
+                const key = makeKey("live lock timeout");
+                const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
+                const entry = ProviderCacheEntry.make({
+                  cacheKey,
+                  key,
+                  response: "never-promoted",
+                  responseDigest: sha256TextSync("never-promoted"),
+                });
+                const lock = path.join(cacheDirectory, `${cacheKey}.json.lock`);
+                yield* fs.makeDirectory(lock);
+                yield* fs.writeFileString(path.join(lock, "owner.pid"), `${process.pid}\n`);
+                const contender = yield* cache.store(entry).pipe(Effect.flip, Effect.forkChild);
+                yield* TestClock.withLive(Effect.sleep(Duration.millis(10)));
+                yield* advanceCacheClock(10);
+                const error = yield* Fiber.join(contender);
+
+                expect(error).toBeInstanceOf(ProviderCacheCorrupt);
+                expect(error.message).toBe(
+                  "Timed out waiting for the live provider cache write lock to promote its entry."
+                );
+                expect(yield* fs.exists(lock)).toBe(true);
               })
             );
           })

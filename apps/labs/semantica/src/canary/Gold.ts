@@ -92,16 +92,16 @@ class GoldReferenceWritten extends S.Class<GoldReferenceWritten>($I`GoldReferenc
 ) {}
 
 class GoldReferenceNotWritten extends S.Class<GoldReferenceNotWritten>($I`GoldReferenceNotWritten`)(
-  { status: S.tag("not-written"), missingJobs: S.NonEmptyArray(GoldJob) },
+  { status: S.tag("not-written"), missingJobs: S.Array(GoldJob) },
   $I.annote("GoldReferenceNotWritten", {
-    description: "Typed partial-run outcome listing every missing frozen gold job.",
+    description: "Typed partial-run outcome listing any frozen gold jobs still missing on disk.",
   })
 ) {}
 
 const GoldReferenceOutcome = S.Union([GoldReferenceWritten, GoldReferenceNotWritten]).pipe(
   S.toTaggedUnion("status"),
   $I.annoteSchema("GoldReferenceOutcome", {
-    description: "Whether gold.json was written or deferred until all expected jobs exist.",
+    description: "Whether a complete invocation wrote gold.json or a partial invocation left it invalidated.",
   })
 );
 
@@ -415,13 +415,24 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   );
   const subsets = frozenSubsets(selection.manifest);
   const jobs = yield* selectJobs(subsets, options);
+  const expectedJobs = allJobs(subsets);
+  const completeRun = O.isNone(options.paper) && O.isNone(options.subset);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs
+    .remove(path.join(options.outputDirectory, "gold.json"), { force: true })
+    .pipe(
+      Effect.mapError(() =>
+        unavailable("write-failed", "The existing gold reference could not be invalidated before label writes.")
+      )
+    );
   const proposed = yield* Effect.forEach(jobs, (job) => proposeJob(selection, job, options.outputDirectory), {
     concurrency: 1,
   });
   const accepted = A.reduce(proposed, 0, (count, item) => count + item.accepted);
   const total = A.reduce(proposed, 0, (count, item) => count + item.total);
   const proposer = yield* ActiveModelIdentity;
-  const inventory = yield* readWrittenGold(options.outputDirectory, allJobs(subsets));
+  const inventory = yield* readWrittenGold(options.outputDirectory, expectedJobs);
   if (A.some(inventory.files, (file) => !modelIdentityEquivalence(file.proposer, proposer))) {
     return yield* unavailable(
       "mixed-proposer",
@@ -430,9 +441,18 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   }
   const fraction = total === 0 ? 0 : accepted / total;
   yield* Console.log(`gold anchors accepted: ${accepted}/${total} (${fraction})`);
+  if (!completeRun) {
+    yield* Console.log("gold.json not written; this invocation selected only part of the frozen gold set");
+    return GoldProposalResult.make({
+      accepted: NonNegativeInt.make(accepted),
+      files: A.map(proposed, (item) => item.file),
+      fraction: UnitInterval.make(fraction),
+      reference: GoldReferenceNotWritten.make({ missingJobs: inventory.missingJobs }),
+      total: NonNegativeInt.make(total),
+    });
+  }
   return yield* A.match(inventory.missingJobs, {
     onEmpty: Effect.fn("Gold.writeReference")(function* () {
-      const path = yield* Path.Path;
       const digest = yield* contentDigest(S.Array(GoldFile))(inventory.files).pipe(
         Effect.mapError(() => unavailable("digest-failed", "The gold-v1 file set could not be hashed."))
       );
