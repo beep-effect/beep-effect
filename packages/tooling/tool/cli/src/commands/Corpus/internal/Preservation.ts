@@ -50,6 +50,7 @@ import {
 } from "./Preservation.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { PreservationCommandError } from "../Corpus.errors.ts";
+import type { ArchiveWriterShape, PreservationManifestStoreShape } from "./Preservation.contracts.ts";
 import type { T7PreservationOptions } from "./Preservation.schemas.ts";
 
 const archiveDirectoryName = "t7-salvage-2026-08-10";
@@ -341,6 +342,160 @@ const streamRemainder = Effect.fn("Preservation.streamRemainder")(function* (
   return copied;
 });
 
+const changedOutcome = (
+  statBefore: SourceStabilityObservation,
+  statAfter: SourceStabilityObservation
+): PreservationAttemptOutcome =>
+  PreservationAttemptOutcome.cases["changed-during-copy"].make({ kind: "changed-during-copy", statAfter, statBefore });
+
+const discardStaged = Effect.fn("Preservation.discardStaged")(function* (
+  partialAbs: string,
+  stagedBytes: number
+): Effect.fn.Return<PreservationAttemptOutcome, PreservationArchiveIoError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.truncate(partialAbs).pipe(Effect.mapError(ioError("partial-truncate", partialAbs)));
+  return PreservationAttemptOutcome.cases["resume-discarded"].make({
+    bytesDiscarded: NonNegativeInt.make(stagedBytes),
+    kind: "resume-discarded",
+  });
+});
+
+const settleFullLengthDestination = Effect.fn("Preservation.settleFullLengthDestination")(function* (
+  sourceAbs: string,
+  destAbs: string,
+  destBytes: number,
+  statBefore: SourceStabilityObservation
+): Effect.fn.Return<O.Option<PreservationAttemptOutcome>, PreservationArchiveIoError, FileSystem.FileSystem> {
+  const sourceHash = yield* hashStream(sourceAbs);
+  const destHash = yield* hashStream(destAbs);
+  const statAfter = yield* statSource(sourceAbs);
+  if (O.isNone(statAfter)) {
+    return O.some(unreadable("Source became unreadable during preservation."));
+  }
+  if (!stabilityEquivalence(statBefore, statAfter.value)) {
+    return O.some(changedOutcome(statBefore, statAfter.value));
+  }
+  if (!Str.Equivalence(sourceHash.sha256, destHash.sha256)) {
+    return O.none();
+  }
+  return O.some(
+    PreservationAttemptOutcome.cases["already-complete"].make({
+      kind: "already-complete",
+      bytesReused: NonNegativeInt.make(destBytes),
+      sha256: sourceHash.sha256,
+    })
+  );
+});
+
+const settleExistingDestination = Effect.fn("Preservation.settleExistingDestination")(function* (
+  sourceAbs: string,
+  destAbs: string,
+  partialAbs: string,
+  parent: string,
+  statBefore: SourceStabilityObservation
+): Effect.fn.Return<O.Option<PreservationAttemptOutcome>, PreservationArchiveIoError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const destExists = yield* fs.exists(destAbs).pipe(Effect.mapError(ioError("destination-exists", destAbs)));
+  const partialExists = yield* fs.exists(partialAbs).pipe(Effect.mapError(ioError("partial-exists", partialAbs)));
+  if (!destExists || partialExists) {
+    return O.none();
+  }
+  const destInfo = yield* fs.stat(destAbs).pipe(Effect.mapError(ioError("destination-stat", destAbs)));
+  const destBytes = Number(destInfo.size);
+  if (destBytes === statBefore.sizeBytes) {
+    const settled = yield* settleFullLengthDestination(sourceAbs, destAbs, destBytes, statBefore);
+    if (O.isSome(settled)) {
+      return settled;
+    }
+  }
+  yield* fs.rename(destAbs, partialAbs).pipe(Effect.mapError(ioError("partial-stage", destAbs)));
+  yield* fsyncDirectory(parent);
+  return O.none();
+});
+
+interface StagedPrefix {
+  readonly hasher: Sha256State;
+  readonly outcome: O.Option<PreservationAttemptOutcome>;
+  readonly stagedBytes: number;
+}
+
+const stagedPrefixFor = Effect.fn("Preservation.stagedPrefixFor")(function* (
+  sourceAbs: string,
+  partialAbs: string,
+  sourceSizeBytes: number
+): Effect.fn.Return<StagedPrefix, PreservationArchiveIoError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const stagedExists = yield* fs.exists(partialAbs).pipe(Effect.mapError(ioError("partial-exists", partialAbs)));
+  const stagedBytes = stagedExists
+    ? Number((yield* fs.stat(partialAbs).pipe(Effect.mapError(ioError("partial-stat", partialAbs)))).size)
+    : 0;
+  if (stagedBytes > sourceSizeBytes) {
+    return { hasher: sha256.create(), outcome: O.some(yield* discardStaged(partialAbs, stagedBytes)), stagedBytes: 0 };
+  }
+  const prefix =
+    stagedBytes === 0
+      ? { hasher: sha256.create(), matches: true }
+      : yield* hashExistingPrefix(sourceAbs, partialAbs, stagedBytes);
+  if (!prefix.matches) {
+    return {
+      hasher: prefix.hasher,
+      outcome: O.some(yield* discardStaged(partialAbs, stagedBytes)),
+      stagedBytes: 0,
+    };
+  }
+  return { hasher: prefix.hasher, outcome: O.none(), stagedBytes };
+});
+
+const promoteVerifiedCopy = Effect.fn("Preservation.promoteVerifiedCopy")(function* (
+  sourceAbs: string,
+  destAbs: string,
+  partialAbs: string,
+  parent: string,
+  statBefore: SourceStabilityObservation,
+  staged: StagedPrefix,
+  afterPayload: (sourceAbs: string, partialAbs: string) => Effect.Effect<void>
+): Effect.fn.Return<PreservationAttemptOutcome, PreservationArchiveIoError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const bytesCopied = yield* streamRemainder(sourceAbs, partialAbs, staged.stagedBytes, staged.hasher);
+  yield* afterPayload(sourceAbs, partialAbs);
+  const statAfterOption = yield* statSource(sourceAbs);
+  if (O.isNone(statAfterOption)) {
+    return unreadable("Source became unreadable during preservation.");
+  }
+  const statAfter = statAfterOption.value;
+  if (!stabilityEquivalence(statBefore, statAfter)) {
+    return changedOutcome(statBefore, statAfter);
+  }
+  const sourceHash = yield* digestResult(staged.hasher, staged.stagedBytes + bytesCopied);
+  const destinationHash = yield* hashStream(partialAbs);
+  if (!Str.Equivalence(sourceHash.sha256, destinationHash.sha256)) {
+    return yield* PreservationArchiveIoError.make({
+      cause: `source=${sourceHash.sha256} destination=${destinationHash.sha256} bytes=${destinationHash.bytes}`,
+      message: "The staged destination failed its copy-boundary digest verification.",
+      operation: "copy-verify",
+      path: partialAbs,
+    });
+  }
+  yield* fs.rename(partialAbs, destAbs).pipe(Effect.mapError(ioError("atomic-promote", destAbs)));
+  yield* fsyncDirectory(parent);
+  return staged.stagedBytes === 0
+    ? PreservationAttemptOutcome.cases.copied.make({
+        bytesCopied: NonNegativeInt.make(bytesCopied),
+        kind: "copied",
+        sha256: sourceHash.sha256,
+        statAfter,
+        statBefore,
+      })
+    : PreservationAttemptOutcome.cases["resume-completed"].make({
+        bytesCopied: NonNegativeInt.make(bytesCopied),
+        bytesReused: NonNegativeInt.make(staged.stagedBytes),
+        kind: "resume-completed",
+        sha256: sourceHash.sha256,
+        statAfter,
+        statBefore,
+      });
+});
+
 /**
  * Construct an atomic archive-writer layer, optionally injecting a synthetic
  * post-payload-sync test hook.
@@ -381,119 +536,23 @@ export const makeArchiveWriterLive = (options?: {
         }
         const statBefore = statBeforeOption.value;
         if (statBefore.sizeBytes !== identity.sizeBytes) {
-          return PreservationAttemptOutcome.cases["changed-during-copy"].make({
-            kind: "changed-during-copy",
-            statAfter: statBefore,
-            statBefore: SourceStabilityObservation.make({
-              mtimeEpoch: identity.mtimeEpoch,
-              sizeBytes: identity.sizeBytes,
-            }),
-          });
+          return changedOutcome(
+            SourceStabilityObservation.make({ mtimeEpoch: identity.mtimeEpoch, sizeBytes: identity.sizeBytes }),
+            statBefore
+          );
         }
         const parent = path.dirname(destAbs);
         const partialAbs = `${destAbs}${partialSuffix}`;
         yield* fs.makeDirectory(parent, { recursive: true }).pipe(Effect.mapError(ioError("mkdir", parent)));
-
-        const destExists = yield* fs.exists(destAbs).pipe(Effect.mapError(ioError("destination-exists", destAbs)));
-        const partialExists = yield* fs.exists(partialAbs).pipe(Effect.mapError(ioError("partial-exists", partialAbs)));
-
-        if (destExists && !partialExists) {
-          const destInfo = yield* fs.stat(destAbs).pipe(Effect.mapError(ioError("destination-stat", destAbs)));
-          const destBytes = Number(destInfo.size);
-          if (destBytes === statBefore.sizeBytes) {
-            const sourceHash = yield* hashStream(sourceAbs);
-            const destHash = yield* hashStream(destAbs);
-            const statAfter = yield* statSource(sourceAbs);
-            if (O.isNone(statAfter)) {
-              return unreadable("Source became unreadable during preservation.");
-            }
-            if (!stabilityEquivalence(statBefore, statAfter.value)) {
-              return PreservationAttemptOutcome.cases["changed-during-copy"].make({
-                kind: "changed-during-copy",
-                statAfter: statAfter.value,
-                statBefore,
-              });
-            }
-            if (Str.Equivalence(sourceHash.sha256, destHash.sha256)) {
-              return PreservationAttemptOutcome.cases["already-complete"].make({
-                kind: "already-complete",
-                bytesReused: NonNegativeInt.make(destBytes),
-                sha256: sourceHash.sha256,
-              });
-            }
-          }
-          yield* fs.rename(destAbs, partialAbs).pipe(Effect.mapError(ioError("partial-stage", destAbs)));
-          yield* fsyncDirectory(parent);
+        const settled = yield* settleExistingDestination(sourceAbs, destAbs, partialAbs, parent, statBefore);
+        if (O.isSome(settled)) {
+          return settled.value;
         }
-
-        const stagedExists = yield* fs.exists(partialAbs).pipe(Effect.mapError(ioError("partial-exists", partialAbs)));
-        const stagedBytes = stagedExists
-          ? Number((yield* fs.stat(partialAbs).pipe(Effect.mapError(ioError("partial-stat", partialAbs)))).size)
-          : 0;
-        if (stagedBytes > statBefore.sizeBytes) {
-          yield* fs.truncate(partialAbs).pipe(Effect.mapError(ioError("partial-truncate", partialAbs)));
-          return PreservationAttemptOutcome.cases["resume-discarded"].make({
-            bytesDiscarded: NonNegativeInt.make(stagedBytes),
-            kind: "resume-discarded",
-          });
+        const staged = yield* stagedPrefixFor(sourceAbs, partialAbs, statBefore.sizeBytes);
+        if (O.isSome(staged.outcome)) {
+          return staged.outcome.value;
         }
-
-        const prefix =
-          stagedBytes === 0
-            ? { hasher: sha256.create(), matches: true }
-            : yield* hashExistingPrefix(sourceAbs, partialAbs, stagedBytes);
-        if (!prefix.matches) {
-          yield* fs.truncate(partialAbs).pipe(Effect.mapError(ioError("partial-truncate", partialAbs)));
-          return PreservationAttemptOutcome.cases["resume-discarded"].make({
-            bytesDiscarded: NonNegativeInt.make(stagedBytes),
-            kind: "resume-discarded",
-          });
-        }
-
-        const bytesCopied = yield* streamRemainder(sourceAbs, partialAbs, stagedBytes, prefix.hasher);
-        yield* afterPayloadSync(sourceAbs, partialAbs);
-        const statAfterOption = yield* statSource(sourceAbs);
-        if (O.isNone(statAfterOption)) {
-          return unreadable("Source became unreadable during preservation.");
-        }
-        const statAfter = statAfterOption.value;
-        if (!stabilityEquivalence(statBefore, statAfter)) {
-          return PreservationAttemptOutcome.cases["changed-during-copy"].make({
-            kind: "changed-during-copy",
-            statAfter,
-            statBefore,
-          });
-        }
-
-        const sourceHash = yield* digestResult(prefix.hasher, stagedBytes + bytesCopied);
-        const destinationHash = yield* hashStream(partialAbs);
-        if (!Str.Equivalence(sourceHash.sha256, destinationHash.sha256)) {
-          return yield* PreservationArchiveIoError.make({
-            cause: `source=${sourceHash.sha256} destination=${destinationHash.sha256} bytes=${destinationHash.bytes}`,
-            message: "The staged destination failed its copy-boundary digest verification.",
-            operation: "copy-verify",
-            path: partialAbs,
-          });
-        }
-        yield* fs.rename(partialAbs, destAbs).pipe(Effect.mapError(ioError("atomic-promote", destAbs)));
-        yield* fsyncDirectory(parent);
-
-        return stagedBytes === 0
-          ? PreservationAttemptOutcome.cases.copied.make({
-              bytesCopied: NonNegativeInt.make(bytesCopied),
-              kind: "copied",
-              sha256: sourceHash.sha256,
-              statAfter,
-              statBefore,
-            })
-          : PreservationAttemptOutcome.cases["resume-completed"].make({
-              bytesCopied: NonNegativeInt.make(bytesCopied),
-              bytesReused: NonNegativeInt.make(stagedBytes),
-              kind: "resume-completed",
-              sha256: sourceHash.sha256,
-              statAfter,
-              statBefore,
-            });
+        return yield* promoteVerifiedCopy(sourceAbs, destAbs, partialAbs, parent, statBefore, staged, afterPayloadSync);
       });
       return ArchiveWriter.of({
         archiveObject: Effect.fn("ArchiveWriter.archiveObject.provided")((sourceAbs, destAbs, identity) =>
@@ -815,24 +874,31 @@ export const preflightT7PreservationImpl = Effect.fn("CorpusCommandService.prefl
   return preflight;
 });
 
+const readPreflightState = Effect.fn("Preservation.readPreflightState")(function* (
+  corpusRoot: string,
+  missingMessage: string
+): Effect.fn.Return<CapacityPreflight, PreservationCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const statePath = preflightPathFor(corpusRoot, path);
+  if (!(yield* fs.exists(statePath).pipe(Effect.mapError(ioError("preflight-exists", statePath))))) {
+    return yield* PreservationPreflightMissingError.make({ message: missingMessage });
+  }
+  return yield* fs.readFileString(statePath).pipe(
+    Effect.mapError(ioError("preflight-read", statePath)),
+    Effect.flatMap((text) =>
+      CapacityPreflightJson.decode(text).pipe(Effect.mapError(ioError("preflight-decode", statePath)))
+    )
+  );
+});
+
 /** Persist operator approval over the previously measured byte ceiling. @since 0.0.0 */
 export const approveT7PreservationImpl = Effect.fn("CorpusCommandService.approveT7Preservation")(function* (
   corpusRoot: string,
   ceilingBytes: number,
   approvedBy: string
 ): Effect.fn.Return<CapacityPreflight, PreservationCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const statePath = preflightPathFor(corpusRoot, path);
-  if (!(yield* fs.exists(statePath).pipe(Effect.mapError(ioError("preflight-exists", statePath))))) {
-    return yield* PreservationPreflightMissingError.make({ message: "Run preservation preflight before approval." });
-  }
-  const proposed = yield* fs.readFileString(statePath).pipe(
-    Effect.mapError(ioError("preflight-read", statePath)),
-    Effect.flatMap((text) =>
-      CapacityPreflightJson.decode(text).pipe(Effect.mapError(ioError("preflight-decode", statePath)))
-    )
-  );
+  const proposed = yield* readPreflightState(corpusRoot, "Run preservation preflight before approval.");
   const approved = CapacityPreflight.cases.approved.make({
     approvedAt: DateTime.formatIso(yield* DateTime.now),
     approvedBy,
@@ -848,20 +914,7 @@ export const approveT7PreservationImpl = Effect.fn("CorpusCommandService.approve
 const loadApprovedPreflight = Effect.fn("Preservation.loadApprovedPreflight")(function* (
   corpusRoot: string
 ): Effect.fn.Return<CapacityPreflight, PreservationCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const statePath = preflightPathFor(corpusRoot, path);
-  if (!(yield* fs.exists(statePath).pipe(Effect.mapError(ioError("preflight-exists", statePath))))) {
-    return yield* PreservationPreflightMissingError.make({
-      message: "Run preservation preflight before the archive run.",
-    });
-  }
-  const decoded = yield* fs.readFileString(statePath).pipe(
-    Effect.mapError(ioError("preflight-read", statePath)),
-    Effect.flatMap((text) =>
-      CapacityPreflightJson.decode(text).pipe(Effect.mapError(ioError("preflight-decode", statePath)))
-    )
-  );
+  const decoded = yield* readPreflightState(corpusRoot, "Run preservation preflight before the archive run.");
   if (decoded.kind !== "approved") {
     return yield* PreservationPreflightUnapprovedError.make({
       message: "Approve the capacity ceiling before the archive run.",
@@ -886,6 +939,70 @@ const outcomeSha = (outcome: PreservationAttemptOutcome): O.Option<Sha256Hex> =>
     "resume-discarded": () => O.none<Sha256Hex>(),
     unreadable: () => O.none<Sha256Hex>(),
   });
+
+const appendPassProvenance = Effect.fn("Preservation.appendPassProvenance")(function* (
+  corpusRoot: string,
+  row: PreservationManifestRow
+): Effect.fn.Return<void, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const sha = outcomeSha(row.outcome);
+  if (O.isNone(sha)) {
+    return;
+  }
+  const ledgerPath = path.join(corpusRoot, "raw", "provenance.jsonl");
+  const provenance = T7ArchiveProvenanceRecord.make({
+    archivedAt: row.archivedAt,
+    destRelativePath: row.destRelativePath,
+    mtimeEpoch: row.object.mtimeEpoch,
+    mtimeIso: row.object.mtimeIso,
+    record: "t7-archive/v1",
+    relativePath: row.object.relativePath,
+    sha256: sha.value,
+    sizeBytes: row.object.sizeBytes,
+    sourceClass: row.object.sourceClass,
+  });
+  const encoded = yield* CorpusLedgerRecordJson.encode(provenance).pipe(
+    Effect.mapError(ioError("provenance-encode", ledgerPath))
+  );
+  yield* appendDurably(ledgerPath, encoded);
+});
+
+const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal")(function* (
+  writer: ArchiveWriterShape,
+  manifest: PreservationManifestStoreShape,
+  attemptCounts: MutableHashMap.MutableHashMap<string, number>,
+  sourceAbs: string,
+  destAbs: string,
+  destRelativePath: string,
+  identity: PreservationObjectIdentity
+): Effect.fn.Return<A.NonEmptyReadonlyArray<PreservationManifestRow>, PreservationArchiveIoError> {
+  const key = identityKey(identity);
+  const attemptOnce = Effect.fnUntraced(function* () {
+    const attempt = 1 + O.getOrElse(MutableHashMap.get(attemptCounts, key), () => 0);
+    MutableHashMap.set(attemptCounts, key, attempt);
+    const outcome = yield* writer.archiveObject(sourceAbs, destAbs, identity);
+    const row = PreservationManifestRow.make({
+      archivedAt: DateTime.formatIso(yield* DateTime.now),
+      attempt: NonNegativeInt.make(attempt),
+      destRelativePath,
+      object: identity,
+      outcome,
+    });
+    yield* manifest.append(row);
+    return { attempt, row };
+  });
+  const first = yield* attemptOnce();
+  let rows = A.of(first.row);
+  let latest = first;
+  while (
+    (latest.row.outcome.kind === "resume-discarded" || latest.row.outcome.kind === "changed-during-copy") &&
+    latest.attempt < maxAttemptsPerObject
+  ) {
+    latest = yield* attemptOnce();
+    rows = A.append(rows, latest.row);
+  }
+  return rows;
+});
 
 /** Run the approved T7 preservation archive operation. @since 0.0.0 */
 export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preservation")(function* (
@@ -918,49 +1035,22 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
               ? path.join("root-archive-object", rootArchiveName)
               : path.join("salvage-tree", file.relative);
           const destAbs = path.join(archiveRoot, destRelativePath);
-          const key = identityKey(file.identity);
-          let terminal = false;
-          while (!terminal) {
-            const attempt = 1 + O.getOrElse(MutableHashMap.get(attemptCounts, key), () => 0);
-            MutableHashMap.set(attemptCounts, key, attempt);
-            const outcome = yield* writer.archiveObject(file.absolute, destAbs, file.identity);
-            attempted += 1;
-            const row = PreservationManifestRow.make({
-              archivedAt: DateTime.formatIso(yield* DateTime.now),
-              attempt: NonNegativeInt.make(attempt),
-              destRelativePath,
-              object: file.identity,
-              outcome,
-            });
-            yield* manifest.append(row);
-            const retryable = outcome.kind === "resume-discarded" || outcome.kind === "changed-during-copy";
-            if (retryable && attempt < maxAttemptsPerObject) continue;
-            terminal = true;
-            if (isPreservationPassKind(outcome.kind)) {
-              passed += 1;
-              const sha = outcomeSha(outcome);
-              if (O.isSome(sha)) {
-                const provenance = T7ArchiveProvenanceRecord.make({
-                  archivedAt: row.archivedAt,
-                  destRelativePath,
-                  mtimeEpoch: file.identity.mtimeEpoch,
-                  mtimeIso: file.identity.mtimeIso,
-                  record: "t7-archive/v1",
-                  relativePath: file.identity.relativePath,
-                  sha256: sha.value,
-                  sizeBytes: file.identity.sizeBytes,
-                  sourceClass: file.identity.sourceClass,
-                });
-                const encoded = yield* CorpusLedgerRecordJson.encode(provenance).pipe(
-                  Effect.mapError(
-                    ioError("provenance-encode", path.join(options.corpusRoot, "raw", "provenance.jsonl"))
-                  )
-                );
-                yield* appendDurably(path.join(options.corpusRoot, "raw", "provenance.jsonl"), encoded);
-              }
-            } else {
-              unapproved += 1;
-            }
+          const rows = yield* archiveObjectToTerminal(
+            writer,
+            manifest,
+            attemptCounts,
+            file.absolute,
+            destAbs,
+            destRelativePath,
+            file.identity
+          );
+          attempted += A.length(rows);
+          const terminalRow = A.lastNonEmpty(rows);
+          if (isPreservationPassKind(terminalRow.outcome.kind)) {
+            passed += 1;
+            yield* appendPassProvenance(options.corpusRoot, terminalRow);
+          } else {
+            unapproved += 1;
           }
         }
         const summary = PreservationRunSummary.make({
