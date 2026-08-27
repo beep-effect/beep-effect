@@ -14,7 +14,7 @@ import { ObservationVersionRef } from "../../values/ObservationVersionRef/index.
 import { CandorDispositionLifecycle, CandorJudgment } from "./CandorDisposition.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/CandorDisposition/CandorDisposition.model");
-const CandorDispositionEntity = ProductEntity.make(LawPractice.CandorDispositionId);
+const pg = ProductEntity.pg;
 
 /**
  * One dated attorney judgment about one exact patent citation observation.
@@ -60,42 +60,38 @@ const CandorDispositionEntity = ProductEntity.make(LawPractice.CandorDisposition
  * @category entities
  * @since 0.0.0
  */
-export class CandorDisposition extends CandorDispositionEntity.Entity<CandorDisposition>(
-  CandorDispositionEntity.tableName
-)(
+export class CandorDisposition extends ProductEntity.Entity<CandorDisposition>()(LawPractice.CandorDispositionId)(
   {
     citingApplication: CitingApplicationIdentity.annotateKey({
       description: "Filing this judgment was made for, scoping the decision to one prosecution.",
-    }).pipe(CandorDispositionEntity.pg.jsonb(), CandorDispositionEntity.pg.columnName("citing_application")),
+    }).pipe(pg.jsonb(), pg.columnName("citing_application")),
     decidedAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Time the attorney recorded this judgment.",
-    }).pipe(CandorDispositionEntity.pg.bigint("number"), CandorDispositionEntity.pg.columnName("decided_at")),
+    }).pipe(pg.bigint("number"), pg.columnName("decided_at")),
     disposes: ObservationVersionRef.annotateKey({
       description: "Version-exact binding to the observation this judgment answers.",
-    }).pipe(CandorDispositionEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     lifecycle: CandorDispositionLifecycle.annotateKey({
       description: "Declared standing of this appended record within its append-only history.",
-    }).pipe(CandorDispositionEntity.pg.text()),
+    }).pipe(pg.text()),
     litigationFrameJudgment: S.OptionFromNullOr(CandorJudgment)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Separately-reached decision recorded under a litigation frame; never derived from Rule 56.",
       })
-      .pipe(CandorDispositionEntity.pg.text(), CandorDispositionEntity.pg.columnName("litigation_frame_judgment")),
+      .pipe(pg.text(), pg.columnName("litigation_frame_judgment")),
     rule56Judgment: S.OptionFromNullOr(CandorJudgment)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Decision recorded under the duty of candor; its absence leaves the event uncovered.",
       })
-      .pipe(CandorDispositionEntity.pg.text(), CandorDispositionEntity.pg.columnName("rule56_judgment")),
+      .pipe(pg.text(), pg.columnName("rule56_judgment")),
     supersedes: S.OptionFromNullOr(LawPractice.CandorDispositionId)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Prior disposition this record retires, appended rather than edited." })
-      .pipe(CandorDispositionEntity.pg.integer()),
-    ...CandorDispositionEntity.identityFields,
+      .pipe(pg.integer()),
   },
   $I.annote("CandorDisposition", {
     description: "One dated attorney judgment bound to one exact patent citation observation version.",
-  }),
-  CandorDispositionEntity.entityExtras
+  })
 ) {}

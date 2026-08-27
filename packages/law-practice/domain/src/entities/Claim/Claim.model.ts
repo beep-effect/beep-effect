@@ -11,7 +11,7 @@ import * as S from "effect/Schema";
 import { ClaimNumber, LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Claim/Claim.model");
-const ClaimEntity = ProductEntity.make(LawPractice.ClaimId);
+const pg = ProductEntity.pg;
 
 /**
  * Patent claim entity for a single numbered claim under a patent asset.
@@ -52,27 +52,25 @@ const ClaimEntity = ProductEntity.make(LawPractice.ClaimId);
  * @category entities
  * @since 0.0.0
  */
-export class Claim extends ClaimEntity.Entity<Claim>(ClaimEntity.tableName)(
+export class Claim extends ProductEntity.Entity<Claim>()(LawPractice.ClaimId)(
   {
     claimNumber: ClaimNumber.annotateKey({
       description: "One-based patent claim number.",
-    }).pipe(ClaimEntity.pg.integer(), ClaimEntity.pg.columnName("claim_number")),
+    }).pipe(pg.integer(), pg.columnName("claim_number")),
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the claim.",
-    }).pipe(ClaimEntity.pg.text(), ClaimEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     independent: S.Boolean.annotateKey({
       description: "Whether the claim is independent.",
-    }).pipe(ClaimEntity.pg.boolean()),
+    }).pipe(pg.boolean()),
     patentAssetFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the patent asset this claim belongs to.",
-    }).pipe(ClaimEntity.pg.text(), ClaimEntity.pg.columnName("patent_asset_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("patent_asset_fixture_key")),
     text: LawPracticeText.annotateKey({
       description: "Full claim text.",
-    }).pipe(ClaimEntity.pg.text()),
-    ...ClaimEntity.identityFields,
+    }).pipe(pg.text()),
   },
   $I.annote("Claim", {
     description: "Patent claim entity for a single numbered claim under a patent asset.",
-  }),
-  ClaimEntity.entityExtras
+  })
 ) {}

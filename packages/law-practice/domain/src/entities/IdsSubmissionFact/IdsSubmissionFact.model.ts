@@ -21,7 +21,7 @@ import {
 } from "./IdsSubmissionFact.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/IdsSubmissionFact/IdsSubmissionFact.model");
-const IdsSubmissionFactEntity = ProductEntity.make(LawPractice.IdsSubmissionFactId);
+const pg = ProductEntity.pg;
 
 /**
  * One information-disclosure submission act, recorded as presence-only facts.
@@ -65,43 +65,39 @@ const IdsSubmissionFactEntity = ProductEntity.make(LawPractice.IdsSubmissionFact
  * @category entities
  * @since 0.0.0
  */
-export class IdsSubmissionFact extends IdsSubmissionFactEntity.Entity<IdsSubmissionFact>(
-  IdsSubmissionFactEntity.tableName
-)(
+export class IdsSubmissionFact extends ProductEntity.Entity<IdsSubmissionFact>()(LawPractice.IdsSubmissionFactId)(
   {
     candidateWindow: IdsCandidateWindowFacts.annotateKey({
       description: "Controlling prosecution dates and timing edge cases behind a candidate 37 CFR 1.97 window.",
-    }).pipe(IdsSubmissionFactEntity.pg.jsonb(), IdsSubmissionFactEntity.pg.columnName("candidate_window")),
+    }).pipe(pg.jsonb(), pg.columnName("candidate_window")),
     citingApplication: CitingApplicationIdentity.annotateKey({
       description: "Filing this submission was made in.",
-    }).pipe(IdsSubmissionFactEntity.pg.jsonb(), IdsSubmissionFactEntity.pg.columnName("citing_application")),
+    }).pipe(pg.jsonb(), pg.columnName("citing_application")),
     content: IdsContentPresenceFacts.annotateKey({
       description: "Presence of 37 CFR 1.98 content items, as observed.",
-    }).pipe(IdsSubmissionFactEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     fees: IdsFeeFacts.annotateKey({
       description: "Presence of the 37 CFR 1.17(p) timing fee and 1.17(v) size fee, as observed.",
-    }).pipe(IdsSubmissionFactEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     modeledFrom: LegalSourceVersion.annotateKey({
       description: "CFR capture and MPEP revision this record's fact vocabulary was modeled from.",
-    }).pipe(IdsSubmissionFactEntity.pg.jsonb(), IdsSubmissionFactEntity.pg.columnName("modeled_from")),
+    }).pipe(pg.jsonb(), pg.columnName("modeled_from")),
     officeTreatment: S.OptionFromNullOr(IdsOfficeTreatmentFacts)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Office treatment as observed, absent until the Office has acted." })
-      .pipe(IdsSubmissionFactEntity.pg.jsonb(), IdsSubmissionFactEntity.pg.columnName("office_treatment")),
+      .pipe(pg.jsonb(), pg.columnName("office_treatment")),
     operativeDate: S.DateTimeUtcFromMillis.annotateKey({
       description: "This submission act's own operative date; supplements and corrections each carry their own.",
-    }).pipe(IdsSubmissionFactEntity.pg.bigint("number"), IdsSubmissionFactEntity.pg.columnName("operative_date")),
+    }).pipe(pg.bigint("number"), pg.columnName("operative_date")),
     statement: IdsStatementFacts.annotateKey({
       description: "Presence and type of the 37 CFR 1.97(e) statement and the 1.98(a)(4) written assertion.",
-    }).pipe(IdsSubmissionFactEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     submissionKind: IdsSubmissionKind.annotateKey({
       description: "Whether this record is an initial, supplemental, or correcting submission act.",
-    }).pipe(IdsSubmissionFactEntity.pg.text(), IdsSubmissionFactEntity.pg.columnName("submission_kind")),
-    ...IdsSubmissionFactEntity.identityFields,
+    }).pipe(pg.text(), pg.columnName("submission_kind")),
   },
   $I.annote("IdsSubmissionFact", {
     description:
       "One information-disclosure submission act recorded as presence-only facts, with its own operative date.",
-  }),
-  IdsSubmissionFactEntity.entityExtras
+  })
 ) {}

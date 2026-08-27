@@ -13,7 +13,7 @@ import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.ts";
 import { DistinctionDetail } from "./Distinction.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model");
-const DistinctionEntity = ProductEntity.make(LawPractice.DistinctionId);
+const pg = ProductEntity.pg;
 
 /**
  * Distinction entity asserted to overcome a rejection against a claim.
@@ -59,30 +59,28 @@ const DistinctionEntity = ProductEntity.make(LawPractice.DistinctionId);
  * @category entities
  * @since 0.0.0
  */
-export class Distinction extends DistinctionEntity.Entity<Distinction>(DistinctionEntity.tableName)(
+export class Distinction extends ProductEntity.Entity<Distinction>()(LawPractice.DistinctionId)(
   {
     anchor: TextAnchor.annotateKey({
       description: "Source text anchor for the asserted distinction.",
-    }).pipe(DistinctionEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     claimFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the claim defended by this distinction.",
-    }).pipe(DistinctionEntity.pg.text(), DistinctionEntity.pg.columnName("claim_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("claim_fixture_key")),
     detail: DistinctionDetail.annotateKey({
       description: "Substantive distinction detail.",
-    }).pipe(DistinctionEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the distinction.",
-    }).pipe(DistinctionEntity.pg.text(), DistinctionEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     lifecycleState: ClaimLifecycle.annotateKey({
       description: "Lifecycle state of the distinction claim.",
-    }).pipe(DistinctionEntity.pg.text(), DistinctionEntity.pg.columnName("lifecycle_state")),
+    }).pipe(pg.text(), pg.columnName("lifecycle_state")),
     rejectionFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the rejection answered by this distinction.",
-    }).pipe(DistinctionEntity.pg.text(), DistinctionEntity.pg.columnName("rejection_fixture_key")),
-    ...DistinctionEntity.identityFields,
+    }).pipe(pg.text(), pg.columnName("rejection_fixture_key")),
   },
   $I.annote("Distinction", {
     description: "Distinction entity asserted to overcome a rejection against a claim.",
-  }),
-  DistinctionEntity.entityExtras
+  })
 ) {}

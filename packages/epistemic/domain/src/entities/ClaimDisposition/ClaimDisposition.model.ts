@@ -12,7 +12,7 @@ import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/ClaimDisposition/ClaimDisposition.model");
-const ClaimDispositionEntity = ProductEntity.make(Epistemic.ClaimDispositionId);
+const pg = ProductEntity.pg;
 
 const ClaimDispositionReason = S.NonEmptyString.pipe(
   $I.annoteSchema("ClaimDispositionReason", {
@@ -66,32 +66,30 @@ const ClaimDispositionReason = S.NonEmptyString.pipe(
  * @category entities
  * @since 0.0.0
  */
-export class ClaimDisposition extends ClaimDispositionEntity.Entity<ClaimDisposition>(ClaimDispositionEntity.tableName)(
+export class ClaimDisposition extends ProductEntity.Entity<ClaimDisposition>()(Epistemic.ClaimDispositionId)(
   {
     claimId: Epistemic.CandidateClaimId.annotateKey({
       description: "Candidate claim this disposition resolves.",
-    }).pipe(ClaimDispositionEntity.pg.integer(), ClaimDispositionEntity.pg.columnName("claim_id")),
+    }).pipe(pg.integer(), pg.columnName("claim_id")),
     reason: ClaimDispositionReason.annotateKey({
       description: "Human-readable reason for the disposition.",
-    }).pipe(ClaimDispositionEntity.pg.text()),
+    }).pipe(pg.text()),
     resolvedAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "When the disposition was decided.",
-    }).pipe(ClaimDispositionEntity.pg.bigint("number"), ClaimDispositionEntity.pg.columnName("resolved_at")),
+    }).pipe(pg.bigint("number"), pg.columnName("resolved_at")),
     resolvedBy: Principal.annotateKey({
       description: "Principal that decided the disposition.",
-    }).pipe(ClaimDispositionEntity.pg.jsonb(), ClaimDispositionEntity.pg.columnName("resolved_by")),
+    }).pipe(pg.jsonb(), pg.columnName("resolved_by")),
     status: ClaimDispositionStatus.annotateKey({
       description: "Status assigned to the claim.",
-    }).pipe(ClaimDispositionEntity.pg.text()),
+    }).pipe(pg.text()),
     violations: S.Array(ClaimGateViolation)
       .annotateKey({
         description: "Claim gate violations recorded verbatim with the disposition.",
       })
-      .pipe(ClaimDispositionEntity.pg.jsonb()),
-    ...ClaimDispositionEntity.identityFields,
+      .pipe(pg.jsonb()),
   },
   $I.annote("ClaimDisposition", {
     description: "Durable record of how a candidate claim was resolved.",
-  }),
-  ClaimDispositionEntity.entityExtras
+  })
 ) {}
