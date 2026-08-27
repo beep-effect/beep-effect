@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
-import { Context, Effect, FileSystem, flow, Layer, Order, Path } from "effect";
+import { Context, Effect, FileSystem, flow, Layer, Order, Path, Ref } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
@@ -180,6 +180,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     readonly tracePath: string;
     readonly listing: PacketStreamListing;
     readonly derived: PacketDerivedState;
+    readonly repairTrace: Ref.Ref<O.Option<string>>;
   }) {
     let listing = input.listing;
     let derived = input.derived;
@@ -197,6 +198,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
               streamError(input.locator.packet, `repaired trace write failed: ${error.message}`)
             )
           );
+        yield* Ref.set(input.repairTrace, O.some(traceText));
         const observed = yield* store.list(input.locator);
         const observedDerived = foldListing(input.locator, observed);
         if (A.isReadonlyArrayNonEmpty(observed.issues) || A.isReadonlyArrayNonEmpty(observedDerived.issues)) {
@@ -260,12 +262,27 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     return yield* restoreIsolatedForkRepair(input);
   });
 
-  const restorePreviousForkTrace = Effect.fnUntraced(function* (tracePath: string, previousTrace: O.Option<string>) {
-    if (O.isSome(previousTrace)) {
-      yield* fs.writeFileString(tracePath, previousTrace.value).pipe(Effect.ignore);
+  const restorePreviousForkTrace = Effect.fnUntraced(function* (input: {
+    readonly tracePath: string;
+    readonly quarantinedTracePath: string;
+    readonly stagedPreviousTracePath: string;
+    readonly previousTrace: O.Option<string>;
+    readonly repairTrace: Ref.Ref<O.Option<string>>;
+  }) {
+    const repairTrace = yield* Ref.get(input.repairTrace);
+    if (O.isNone(repairTrace)) return;
+    const quarantined = yield* Effect.option(fs.rename(input.tracePath, input.quarantinedTracePath));
+    if (O.isNone(quarantined)) return;
+    const isolated = yield* Effect.option(fs.readFileString(input.quarantinedTracePath));
+    if (O.isNone(isolated)) return;
+    if (isolated.value !== repairTrace.value) {
+      yield* fs.link(input.quarantinedTracePath, input.tracePath).pipe(Effect.ignore);
       return;
     }
-    yield* fs.remove(tracePath, { force: true }).pipe(Effect.ignore);
+    if (O.isNone(input.previousTrace)) return;
+    const staged = yield* Effect.option(fs.writeFileString(input.stagedPreviousTracePath, input.previousTrace.value));
+    if (O.isNone(staged)) return;
+    yield* fs.link(input.stagedPreviousTracePath, input.tracePath).pipe(Effect.ignore);
   });
 
   const discardEmptyForkRepairRoot = Effect.fnUntraced(function* (
@@ -313,7 +330,10 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     const failedEventsDirectory = path.join(failedPacketPath, ...PACKET_EVENTS_SEGMENTS);
     const failedLocator = PacketStreamLocator.make({ ...locator, packetPath: failedPacketPath });
     const tracePath = path.join(locator.packetPath, ...PACKET_TRACE_SEGMENTS);
+    const quarantinedTracePath = path.join(failedPacketPath, ...PACKET_TRACE_SEGMENTS);
+    const stagedPreviousTracePath = path.join(tempRoot, "previous-trace.json");
     const previousTrace = yield* Effect.option(fs.readFileString(tracePath));
+    const repairTrace = yield* Ref.make(O.none<string>());
     let promotedListing = O.none<PacketStreamListing>();
 
     const cleanup = Effect.fnUntraced(function* () {
@@ -324,7 +344,15 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         failedLocator,
         promotedListing,
       });
-      if (restoredPrevious) yield* restorePreviousForkTrace(tracePath, previousTrace);
+      if (restoredPrevious) {
+        yield* restorePreviousForkTrace({
+          tracePath,
+          quarantinedTracePath,
+          stagedPreviousTracePath,
+          previousTrace,
+          repairTrace,
+        });
+      }
       yield* discardEmptyForkRepairRoot(tempRoot, backupDirectory, failedEventsDirectory);
     });
 
@@ -379,6 +407,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
           tracePath,
           listing: committed,
           derived: committedDerived,
+          repairTrace,
         });
         // A concurrent writer can still hold an open handle into the renamed
         // original stream. Retain that recovery backup because its ownership
