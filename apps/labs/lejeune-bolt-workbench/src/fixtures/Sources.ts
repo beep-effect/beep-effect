@@ -24,7 +24,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { SourceDocument } from "@/domain/Bundle";
+import { PROVIDER_RECORDING_SOURCE_TEXT, SourceDocument } from "@/domain/Bundle";
 import { EntityId } from "@/domain/Ontology";
 import type { Sha256Hex } from "@beep/schema";
 
@@ -45,8 +45,7 @@ const $I = $LejeuneBoltWorkbenchId.create("fixtures/Sources");
  * @category fixtures
  * @since 0.0.0
  */
-export const RFQ_A_OUTLOOK_BODY =
-  "SYNTHETIC RFQ A | Project North Loop Canopy | Delivery 2026-09-12 | Domestic required | Finish MG B695 Class 55";
+export const RFQ_A_OUTLOOK_BODY = PROVIDER_RECORDING_SOURCE_TEXT;
 const PROSE_EMAIL = `SYNTHETIC RFQ B for County Shops Expansion. Delivery is 2026-09-20 and certification is required. Do not infer coating approval.`;
 const XLSX_ROW_TEXT = "A-1 | TC assembly | F1852 Type 1 | 7/8 in | 3-1/4 in | 180 | F959 Type 325";
 const PDF_SCHEDULE_TEXT =

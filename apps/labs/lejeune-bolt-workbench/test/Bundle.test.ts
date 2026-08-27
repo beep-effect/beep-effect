@@ -12,7 +12,9 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { strToU8 } from "fflate";
 import {
+  CanonicalNormalizedFixtures,
   ImmutableDemoBundle,
+  MutableReviewLedger,
   NormalizedFixture,
   PROVIDER_RECORDING_SOURCE_TEXT,
   ProjectionSnapshot,
@@ -23,7 +25,7 @@ import {
   RetentionAuthorization,
   RuleResult,
 } from "@/domain/Bundle";
-import { IsoDate, IsoTimestamp, OntologyClassName, ProductVariant } from "@/domain/Ontology";
+import { Approval, ExpertClaim, IsoDate, IsoTimestamp, OntologyClassName, ProductVariant } from "@/domain/Ontology";
 import { buildReferenceData } from "@/domain/ReferenceData";
 import { FrozenFixtureManifest, FrozenSourceHash } from "@/fixtures/FixtureManifest";
 import fixtureManifestJson from "@/fixtures/fixture-manifest.json";
@@ -36,7 +38,7 @@ import {
   ProjectionLayerOptions,
 } from "@/runtime/Projections";
 import { buildNormalizedFixtures } from "@/workflows/Normalize";
-import { verifyProviderRecording } from "@/workflows/ProviderRecording";
+import { verifyFrozenProviderRecording, verifyProviderRecording } from "@/workflows/ProviderRecording";
 import { replayOffline } from "@/workflows/Replay";
 import { evaluateRules } from "@/workflows/Rules";
 import type {
@@ -93,6 +95,7 @@ describe("LeJeune deterministic fixture bundle", () => {
       const fixtures = yield* buildNormalizedFixtures(artifacts);
       const manifest = yield* S.decodeUnknownEffect(FrozenFixtureManifest)(fixtureManifestJson);
 
+      expect(fixtures).toEqual(CanonicalNormalizedFixtures);
       expect(A.map(fixtures, (fixture) => fixture.rfq.id)).toEqual(["rfq-a", "rfq-b"]);
       expect(A.map(fixtures, (fixture) => fixture.missingFields[0]?.field)).toEqual([
         "certificationRequirement",
@@ -137,6 +140,10 @@ describe("LeJeune deterministic fixture bundle", () => {
         "LotCertificate",
         "Approval",
         "ExpertClaim",
+      ]);
+      expect([Approval.fields.decision !== undefined, ExpertClaim.fields.reviewStatus !== undefined]).toEqual([
+        true,
+        true,
       ]);
       expect(A.map(results, (result) => [result.ruleId, result.disposition, result.requiresHuman])).toEqual([
         ["matched-assembly", "pass", false],
@@ -356,6 +363,13 @@ describe("LeJeune deterministic fixture bundle", () => {
       const [firstBundleStandard, ...remainingBundleStandards] = bundle.standards;
       const [firstBundleTool, secondBundleTool] = bundle.tools;
       const recordingPayload = yield* S.encodeEffect(ProviderRecording)(recording);
+      const [firstBundleFixtureField, secondBundleFixtureField, ...remainingBundleFixtureFields] =
+        firstBundleFixture.extractedFields;
+      const [firstBundleFixtureSource, secondBundleFixtureSource] = firstBundleFixture.sources;
+      const [firstBundleComponent, secondBundleComponent, thirdBundleComponent, fourthBundleComponent] =
+        firstBundleFixture.components;
+      const [providerProjectCandidate, providerDeliveryCandidate, providerFinishCandidate] =
+        bundle.providerRecording.candidates;
 
       const fixtureSourceCardinality: unknown = { ...fixture, sources: A.take(fixture.sources, 1) };
       const fixtureDuplicateSourceIdentity: unknown = {
@@ -437,6 +451,132 @@ describe("LeJeune deterministic fixture bundle", () => {
         ],
       };
       const bundleFixtureCardinality: unknown = { ...bundle, fixtures: A.take(bundle.fixtures, 1) };
+      const bundleSourceHashDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          {
+            ...firstBundleFixture,
+            sources: [
+              {
+                ...firstBundleFixtureSource,
+                sha256: "0000000000000000000000000000000000000000000000000000000000000000",
+              },
+              secondBundleFixtureSource,
+            ],
+          },
+          secondBundleFixture,
+        ],
+      };
+      const bundleSourceContentDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          {
+            ...firstBundleFixture,
+            extractedFields: [
+              {
+                ...firstBundleFixtureField,
+                anchor: { ...firstBundleFixtureField.anchor, quote: "South Loop Canopy" },
+                value: "South Loop Canopy",
+              },
+              secondBundleFixtureField,
+              ...remainingBundleFixtureFields,
+            ],
+            project: { ...firstBundleFixture.project, name: "South Loop Canopy" },
+            sources: [
+              {
+                ...firstBundleFixtureSource,
+                text: Str.replace("North Loop Canopy", "South Loop Canopy")(firstBundleFixtureSource.text),
+              },
+              secondBundleFixtureSource,
+            ],
+          },
+          secondBundleFixture,
+        ],
+      };
+      const bundleSourceOrderDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          { ...firstBundleFixture, sources: [secondBundleFixtureSource, firstBundleFixtureSource] },
+          secondBundleFixture,
+        ],
+      };
+      const bundleExtractionOrderDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          {
+            ...firstBundleFixture,
+            extractedFields: [secondBundleFixtureField, firstBundleFixtureField, ...remainingBundleFixtureFields],
+          },
+          secondBundleFixture,
+        ],
+      };
+      const bundleComponentOrderDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          {
+            ...firstBundleFixture,
+            components: [secondBundleComponent, firstBundleComponent, thirdBundleComponent, fourthBundleComponent],
+          },
+          secondBundleFixture,
+        ],
+      };
+      const bundleMissingFieldSemanticDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          {
+            ...firstBundleFixture,
+            missingFields: [
+              {
+                ...firstBundleFixture.missingFields[0],
+                field: "fabricationApproval",
+                question: "RFI: Is fabrication approval required for RFQ A?",
+              },
+            ],
+            rfq: { ...firstBundleFixture.rfq, missingFields: ["fabricationApproval"] },
+          },
+          secondBundleFixture,
+        ],
+      };
+      const bundleProjectSemanticDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          { ...firstBundleFixture, project: { ...firstBundleFixture.project, name: "Renamed canopy project" } },
+          secondBundleFixture,
+        ],
+      };
+      const bundleProductSemanticDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          {
+            ...firstBundleFixture,
+            productVariant: { ...firstBundleFixture.productVariant, label: "Renamed TC assembly" },
+          },
+          secondBundleFixture,
+        ],
+      };
+      const bundleDtiStrengthDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          {
+            ...firstBundleFixture,
+            components: [
+              firstBundleComponent,
+              secondBundleComponent,
+              thirdBundleComponent,
+              { ...fourthBundleComponent, strengthClass: "490" },
+            ],
+          },
+          secondBundleFixture,
+        ],
+      };
+      const bundleFixtureOrderDrift: unknown = {
+        ...bundle,
+        fixtures: [secondBundleFixture, firstBundleFixture],
+        offers: [
+          { ...firstBundleOffer, productVariantId: secondBundleFixture.productVariant.id },
+          { ...secondBundleOffer, productVariantId: firstBundleFixture.productVariant.id },
+        ],
+      };
       const bundleRuleCardinality: unknown = { ...bundle, rules: A.take(bundle.rules, 1) };
       const bundleRuleIdDrift: unknown = {
         ...bundle,
@@ -510,6 +650,28 @@ describe("LeJeune deterministic fixture bundle", () => {
         ...bundle,
         rules: [secondBundleRule, firstBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule],
       };
+      const bundleRuleFactsDrift: unknown = {
+        ...bundle,
+        rules: [
+          { ...firstBundleRule, matchedFacts: ["Fabricated matched fact"] },
+          secondBundleRule,
+          thirdBundleRule,
+          fourthBundleRule,
+          fifthBundleRule,
+          sixthBundleRule,
+        ],
+      };
+      const bundleRuleStopReasonDrift: unknown = {
+        ...bundle,
+        rules: [
+          { ...firstBundleRule, stopReason: "Fabricated stop reason." },
+          secondBundleRule,
+          thirdBundleRule,
+          fourthBundleRule,
+          fifthBundleRule,
+          sixthBundleRule,
+        ],
+      };
       const bundleStandardSemanticDrift: unknown = {
         ...bundle,
         standards: [{ ...firstBundleStandard, revision: "Corrupted standard revision" }, ...remainingBundleStandards],
@@ -557,6 +719,41 @@ describe("LeJeune deterministic fixture bundle", () => {
         ],
       };
       const providerDocumentDrift: unknown = { ...recordingPayload, documentId: "unrelated-document" };
+      const bundleProviderMetadataDrift: unknown = {
+        ...bundle,
+        providerRecording: {
+          ...bundle.providerRecording,
+          model: "altered-model",
+          provider: "xai",
+          recordedAt: "2026-08-27T13:25:18.044Z",
+        },
+      };
+      const bundleProviderCandidateOrderDrift: unknown = {
+        ...bundle,
+        providerRecording: {
+          ...bundle.providerRecording,
+          candidates: [providerDeliveryCandidate, providerProjectCandidate, providerFinishCandidate],
+        },
+      };
+      const danglingLedgerSubject = {
+        approvals: [
+          {
+            decision: "approve",
+            id: "approval-one",
+            recordedAt: "2026-08-27T13:00:00.000Z",
+            reviewer: "Demo reviewer",
+            subjectId: "dangling-subject",
+          },
+        ],
+        claims: [],
+        disposition: "delete-or-promote",
+        dispositionDate: "2026-09-30",
+        schemaVersion: "lejeune-review-ledger/v1",
+      };
+      const duplicateLedgerIdentity: unknown = {
+        ...danglingLedgerSubject,
+        approvals: [danglingLedgerSubject.approvals[0], danglingLedgerSubject.approvals[0]],
+      };
       const retentionBeforeCutoff = {
         authorization: "promoted",
         authorizedAt: "2026-08-27T12:00:00.000Z",
@@ -588,6 +785,19 @@ describe("LeJeune deterministic fixture bundle", () => {
         ["manifest-span-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestSpanDrift)],
         ["manifest-quote-value-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestQuoteValueDrift)],
         ["bundle-fixture-cardinality", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFixtureCardinality)],
+        ["bundle-source-hash-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleSourceHashDrift)],
+        ["bundle-source-content-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleSourceContentDrift)],
+        ["bundle-source-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleSourceOrderDrift)],
+        ["bundle-extraction-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleExtractionOrderDrift)],
+        ["bundle-component-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleComponentOrderDrift)],
+        [
+          "bundle-missing-field-semantic-drift",
+          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleMissingFieldSemanticDrift),
+        ],
+        ["bundle-project-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleProjectSemanticDrift)],
+        ["bundle-product-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleProductSemanticDrift)],
+        ["bundle-dti-strength-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleDtiStrengthDrift)],
+        ["bundle-fixture-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFixtureOrderDrift)],
         ["bundle-rule-cardinality", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleCardinality)],
         ["bundle-rule-id-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleIdDrift)],
         ["bundle-rule-source-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceDrift)],
@@ -607,6 +817,8 @@ describe("LeJeune deterministic fixture bundle", () => {
         ],
         ["bundle-rule-disposition-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleDispositionDrift)],
         ["bundle-rule-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleOrderDrift)],
+        ["bundle-rule-facts-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleFactsDrift)],
+        ["bundle-rule-stop-reason-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleStopReasonDrift)],
         ["bundle-standard-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleStandardSemanticDrift)],
         ["bundle-finish-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFinishSemanticDrift)],
         ["bundle-tool-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleToolSemanticDrift)],
@@ -623,6 +835,13 @@ describe("LeJeune deterministic fixture bundle", () => {
         ["projection-class-vocabulary", S.decodeUnknownEffect(ProjectionSnapshot)(projectionClassVocabulary)],
         ["projection-rule-order", S.decodeUnknownEffect(ProjectionSnapshot)(projectionRuleOrderDrift)],
         ["provider-document-drift", S.decodeUnknownEffect(ProviderRecording)(providerDocumentDrift)],
+        ["bundle-provider-metadata-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleProviderMetadataDrift)],
+        [
+          "bundle-provider-candidate-order-drift",
+          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleProviderCandidateOrderDrift),
+        ],
+        ["ledger-dangling-subject", S.decodeUnknownEffect(MutableReviewLedger)(danglingLedgerSubject)],
+        ["ledger-duplicate-identity", S.decodeUnknownEffect(MutableReviewLedger)(duplicateLedgerIdentity)],
         ["retention-before-cutoff", S.decodeUnknownEffect(RetentionAuthorization)(retentionBeforeCutoff)],
         ["retention-at-cutoff", S.decodeUnknownEffect(RetentionAuthorization)(retentionAtCutoff)],
         ["retention-before-authorization", S.decodeUnknownEffect(RetentionAuthorization)(retentionBeforeAuthorization)],
@@ -640,11 +859,15 @@ describe("LeJeune deterministic fixture bundle", () => {
     Effect.fnUntraced(function* () {
       const recording = yield* S.decodeEffect(ProviderRecordingFromJsonString)(providerRecordingJson);
       const verified = yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto);
+      const frozen = yield* verifyFrozenProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(
+        provideBunCrypto
+      );
       expect(A.map(verified.candidates, (candidate) => candidate.label)).toEqual([
         "project",
         "delivery_date",
         "finish",
       ]);
+      expect(frozen.recordedAt).toBe("2026-08-27T12:25:18.044Z");
 
       const digestFailure = yield* Effect.flip(
         verifyProviderRecording(
@@ -679,11 +902,49 @@ describe("LeJeune deterministic fixture bundle", () => {
       expect(contractFailure._tag).toBe("ProviderRecordingIntegrityError");
       expect(contractFailure.issue).toBe("candidate-contract");
 
+      const reorderedCandidates = yield* S.decodeEffect(
+        S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate])
+      )([deliveryCandidate, projectCandidate, finishCandidate]);
+      const reorderedCandidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(reorderedCandidates);
+      const reorderedDigest = yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(reorderedCandidateJson)).pipe(
+        provideBunCrypto
+      );
+      const frozenMutations: ReadonlyArray<readonly [string, ProviderRecording]> = [
+        ["provider", ProviderRecording.make({ ...recording, provider: "xai" })],
+        ["model", ProviderRecording.make({ ...recording, model: "altered-model" })],
+        [
+          "recorded-at",
+          ProviderRecording.make({
+            ...recording,
+            recordedAt: IsoTimestamp.make("2026-08-27T13:25:18.044Z"),
+          }),
+        ],
+        [
+          "candidate-order",
+          ProviderRecording.make({
+            ...recording,
+            candidates: reorderedCandidates,
+            responseSha256: reorderedDigest,
+          }),
+        ],
+      ];
+      for (const [name, mutation] of frozenMutations) {
+        const failure = yield* Effect.flip(
+          verifyFrozenProviderRecording(mutation, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto)
+        );
+        expect(failure.issue, name).toBe("frozen-contract");
+      }
+
       const groundingFailure = yield* Effect.flip(
         verifyProviderRecording(recording, "SYNTHETIC unrelated source").pipe(provideBunCrypto)
       );
       expect(groundingFailure._tag).toBe("ProviderRecordingIntegrityError");
       expect(groundingFailure.issue).toBe("source-grounding");
+
+      const canonicalSourceDrift = yield* Effect.flip(
+        verifyFrozenProviderRecording(recording, `${PROVIDER_RECORDING_SOURCE_TEXT} altered`).pipe(provideBunCrypto)
+      );
+      expect(canonicalSourceDrift.issue).toBe("source-grounding");
     })
   );
 

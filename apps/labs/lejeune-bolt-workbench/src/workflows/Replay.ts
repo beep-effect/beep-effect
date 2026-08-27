@@ -26,7 +26,7 @@ import { buildReferenceData } from "@/domain/ReferenceData";
 import { buildFixtureArtifacts } from "@/fixtures/Sources";
 import { buildProjectionSnapshot, ProjectionInput } from "@/runtime/Projections";
 import { buildNormalizedFixtures } from "@/workflows/Normalize";
-import { verifyProviderRecording } from "@/workflows/ProviderRecording";
+import { verifyFrozenProviderRecording } from "@/workflows/ProviderRecording";
 import { evaluateRules } from "@/workflows/Rules";
 import type { ProviderRecording, RetentionAuthorization } from "@/domain/Bundle";
 
@@ -106,7 +106,10 @@ export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (
   providerRecording: ProviderRecording,
   retentionAuthorization: O.Option<RetentionAuthorization> = O.none()
 ) {
-  yield* verifyProviderRecording(providerRecording, PROVIDER_RECORDING_SOURCE_TEXT);
+  const frozenProviderRecording = yield* verifyFrozenProviderRecording(
+    providerRecording,
+    PROVIDER_RECORDING_SOURCE_TEXT
+  );
   const artifacts = yield* buildFixtureArtifacts;
   const fixtures = yield* buildNormalizedFixtures(artifacts);
   const rules = yield* evaluateRules(fixtures);
@@ -128,7 +131,7 @@ export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (
     mutableCorpusDispositionDate: MUTABLE_CORPUS_DISPOSITION_DATE,
     offers: referenceData.offers,
     projection,
-    providerRecording,
+    providerRecording: frozenProviderRecording,
     rules,
     standards: referenceData.standards,
     tools: referenceData.tools,

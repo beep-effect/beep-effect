@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -11,14 +12,23 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc, TestClock } from "effect/testing";
 import {
+  GoldenReplayReceipt,
+  GoldenReplayReceiptFromJsonString,
   MutableRetentionMetadata,
   MutableRetentionMetadataFromJsonString,
+  MutableReviewLedger,
+  ProjectionStoreMetadata,
   ProjectionStoreMetadataFromJsonString,
   RetentionAuthorization,
   RetentionAuthorizationFromJsonString,
 } from "@/domain/Bundle";
 import { IsoDate, IsoTimestamp } from "@/domain/Ontology";
-import { BundleBuildInput, buildBundle } from "../server/build-bundle";
+import {
+  BundleBuildInput,
+  buildBundle,
+  PublicationReadbackInput,
+  verifyPublicationReadback,
+} from "../server/build-bundle";
 
 const provideTestRuntime = provideScopedLayer(Layer.mergeAll(BunServices.layer, BunCrypto.layer));
 
@@ -37,6 +47,25 @@ describe("LeJeune transactional bundle builder", () => {
 
     fc.assert(
       fc.property(S.toArbitrary(MutableRetentionMetadata)(fc), (value) =>
+        encode(value).pipe(
+          Result.flatMap(decode),
+          Result.match({
+            onFailure: () => false,
+            onSuccess: (decoded) => equivalent(decoded, value),
+          })
+        )
+      ),
+      fcRuns(20)
+    );
+  });
+
+  it("round-trips the schema-derived exact-empty review ledger", () => {
+    const encode = S.encodeResult(MutableReviewLedger);
+    const decode = S.decodeUnknownResult(MutableReviewLedger);
+    const equivalent = S.toEquivalence(MutableReviewLedger);
+
+    fc.assert(
+      fc.property(S.toArbitrary(MutableReviewLedger)(fc), (value) =>
         encode(value).pipe(
           Result.flatMap(decode),
           Result.match({
@@ -182,19 +211,22 @@ describe("LeJeune transactional bundle builder", () => {
 
       const firstReceipt = yield* buildBundle(inputFor(firstBundleRoot, firstMutableRoot, recordingPath));
       const secondReceipt = yield* buildBundle(inputFor(secondBundleRoot, secondMutableRoot, recordingPath));
+      const firstBundleText = yield* fs.readFileString(path.join(firstBundleRoot, "bundle.json"));
+      const firstReceiptText = yield* fs.readFileString(path.join(firstBundleRoot, "golden-replay.json"));
+      const firstLedgerText = yield* fs.readFileString(path.join(firstMutableRoot, "review-ledger.json"));
+      const firstRetentionMetadataText = yield* fs.readFileString(
+        path.join(firstMutableRoot, "retention-metadata.json")
+      );
+      const firstProjectionMetadataText = yield* fs.readFileString(
+        path.join(firstBundleRoot, "projection-metadata.json")
+      );
 
       expect(secondReceipt.bundleIdentity).toBe(firstReceipt.bundleIdentity);
-      expect(yield* fs.readFileString(path.join(secondBundleRoot, "bundle.json"))).toBe(
-        yield* fs.readFileString(path.join(firstBundleRoot, "bundle.json"))
-      );
-      expect(yield* fs.readFileString(path.join(secondBundleRoot, "golden-replay.json"))).toBe(
-        yield* fs.readFileString(path.join(firstBundleRoot, "golden-replay.json"))
-      );
-      expect(yield* fs.readFileString(path.join(secondMutableRoot, "review-ledger.json"))).toBe(
-        yield* fs.readFileString(path.join(firstMutableRoot, "review-ledger.json"))
-      );
+      expect(yield* fs.readFileString(path.join(secondBundleRoot, "bundle.json"))).toBe(firstBundleText);
+      expect(yield* fs.readFileString(path.join(secondBundleRoot, "golden-replay.json"))).toBe(firstReceiptText);
+      expect(yield* fs.readFileString(path.join(secondMutableRoot, "review-ledger.json"))).toBe(firstLedgerText);
       expect(yield* fs.readFileString(path.join(secondMutableRoot, "retention-metadata.json"))).toBe(
-        yield* fs.readFileString(path.join(firstMutableRoot, "retention-metadata.json"))
+        firstRetentionMetadataText
       );
       yield* Effect.forEach(
         ["rfq-a-outlook-body.txt", "rfq-a-takeoff.xlsx", "rfq-b-prose-email.txt", "rfq-b-schedule.pdf"],
@@ -208,18 +240,82 @@ describe("LeJeune transactional bundle builder", () => {
       );
       expect(yield* fs.exists(path.join(firstBundleRoot, "corpus.duckdb"))).toBe(true);
       expect(yield* fs.exists(path.join(firstBundleRoot, "app-review.pglite"))).toBe(true);
-      const projectionMetadata = yield* fs
-        .readFileString(path.join(firstBundleRoot, "projection-metadata.json"))
-        .pipe(Effect.flatMap(S.decodeEffect(ProjectionStoreMetadataFromJsonString)));
+      const projectionMetadata = yield* S.decodeEffect(ProjectionStoreMetadataFromJsonString)(
+        firstProjectionMetadataText
+      );
       expect(projectionMetadata.bundleIdentity).toBe(firstReceipt.bundleIdentity);
       expect(projectionMetadata.bundleVersion).toBe("lejeune-demo-bundle/v1");
-      const retentionMetadata = yield* fs
-        .readFileString(path.join(firstMutableRoot, "retention-metadata.json"))
-        .pipe(Effect.flatMap(S.decodeEffect(MutableRetentionMetadataFromJsonString)));
+      const retentionMetadata = yield* S.decodeEffect(MutableRetentionMetadataFromJsonString)(
+        firstRetentionMetadataText
+      );
       expect(retentionMetadata.disposition).toBe("delete-or-promote");
       expect(retentionMetadata.dispositionDate).toBe("2026-09-30");
       expect(O.isNone(retentionMetadata.retentionAuthorization)).toBe(true);
       expect(retentionMetadata.schemaVersion).toBe("lejeune-retention-metadata/v1");
+      const validReadback = PublicationReadbackInput.make({
+        bundleText: firstBundleText,
+        expectedRetentionMetadata: retentionMetadata,
+        ledgerText: firstLedgerText,
+        projectionMetadataText: firstProjectionMetadataText,
+        receiptText: firstReceiptText,
+        retentionMetadataText: firstRetentionMetadataText,
+      });
+      const aggregate = yield* verifyPublicationReadback(validReadback);
+      expect(aggregate.bundleIdentity).toBe(firstReceipt.bundleIdentity);
+
+      const receipt = yield* S.decodeEffect(GoldenReplayReceiptFromJsonString)(firstReceiptText);
+      const wrongIdentity = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000");
+      const wrongReceiptText = yield* S.encodeEffect(GoldenReplayReceiptFromJsonString)(
+        GoldenReplayReceipt.make({ ...receipt, bundleIdentity: wrongIdentity })
+      );
+      const wrongProjectionMetadataText = yield* S.encodeEffect(ProjectionStoreMetadataFromJsonString)(
+        ProjectionStoreMetadata.make({ ...projectionMetadata, bundleIdentity: wrongIdentity })
+      );
+      const nonEmptyLedgerText = Str.replace(
+        '"approvals": []',
+        '"approvals": [{"decision":"approve","id":"approval-one","recordedAt":"2026-08-27T13:00:00.000Z","reviewer":"Demo reviewer","subjectId":"dangling-subject"}]'
+      )(firstLedgerText);
+      const extendedAuthorization = RetentionAuthorization.make({
+        authorization: "promoted",
+        authorizedAt: IsoTimestamp.make("2026-09-29T12:00:00.000Z"),
+        decisionReference: "approved-goal:different-retention",
+        newDispositionDate: IsoDate.make("2026-10-31"),
+        owner: "LeJeune demo operator",
+      });
+      const differentExpectedRetention = MutableRetentionMetadata.make({
+        disposition: "delete-or-promote",
+        dispositionDate: extendedAuthorization.newDispositionDate,
+        retentionAuthorization: O.some(extendedAuthorization),
+      });
+      const corruptedReadbacks: ReadonlyArray<readonly [string, PublicationReadbackInput]> = [
+        [
+          "bundle-bytes",
+          PublicationReadbackInput.make({
+            ...validReadback,
+            bundleText: `${firstBundleText}\n`,
+          }),
+        ],
+        ["receipt-identity", PublicationReadbackInput.make({ ...validReadback, receiptText: wrongReceiptText })],
+        [
+          "projection-identity",
+          PublicationReadbackInput.make({
+            ...validReadback,
+            projectionMetadataText: wrongProjectionMetadataText,
+          }),
+        ],
+        ["non-empty-ledger", PublicationReadbackInput.make({ ...validReadback, ledgerText: nonEmptyLedgerText })],
+        [
+          "retention-policy",
+          PublicationReadbackInput.make({
+            ...validReadback,
+            expectedRetentionMetadata: differentExpectedRetention,
+          }),
+        ],
+      ];
+      for (const [name, corruptedReadback] of corruptedReadbacks) {
+        const failure = yield* Effect.flip(verifyPublicationReadback(corruptedReadback));
+        expect(failure.stage, name).toBe("validation");
+      }
       expect(A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry))).toBe(true);
     }).pipe(provideTestRuntime)
   );

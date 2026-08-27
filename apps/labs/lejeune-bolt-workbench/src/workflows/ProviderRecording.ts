@@ -12,7 +12,12 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { strToU8 } from "fflate";
-import { ProviderCandidate, ProviderCandidateListFromJsonString } from "@/domain/Bundle";
+import {
+  FrozenProviderRecording,
+  PROVIDER_RECORDING_SOURCE_TEXT,
+  ProviderCandidate,
+  ProviderCandidateListFromJsonString,
+} from "@/domain/Bundle";
 import type { ProviderRecording } from "@/domain/Bundle";
 
 const $I = $LejeuneBoltWorkbenchId.create("workflows/ProviderRecording");
@@ -22,6 +27,7 @@ const ProviderRecordingIntegrityIssue = LiteralKit([
   "candidate-digest",
   "candidate-labels",
   "candidate-contract",
+  "frozen-contract",
   "source-grounding",
 ]);
 
@@ -109,4 +115,40 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
     );
   }
   return recording;
+});
+
+/**
+ * Verify and refine a generic sanitized result to the exact committed offline replay artifact.
+ *
+ * **Example** (Inspect the verifier)
+ *
+ * ```ts
+ * import { verifyFrozenProviderRecording } from "@/workflows/ProviderRecording"
+ *
+ * console.log(typeof verifyFrozenProviderRecording === "function") // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const verifyFrozenProviderRecording = Effect.fn("lejeune.provider.verify_frozen_recording")(function* (
+  recording: ProviderRecording,
+  sourceText: string
+) {
+  const verified = yield* verifyProviderRecording(recording, sourceText);
+  if (!Str.Equivalence(sourceText, PROVIDER_RECORDING_SOURCE_TEXT)) {
+    return yield* providerIntegrityError(
+      "source-grounding",
+      "The frozen provider recording must be grounded in the exact canonical RFQ A source document."
+    );
+  }
+  return yield* S.decodeEffect(FrozenProviderRecording)(verified).pipe(
+    Effect.mapError((cause) =>
+      providerIntegrityError(
+        "frozen-contract",
+        "Provider metadata and ordered candidates must match the committed replay artifact exactly.",
+        cause
+      )
+    )
+  );
 });

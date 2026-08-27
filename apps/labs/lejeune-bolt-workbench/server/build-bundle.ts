@@ -6,7 +6,7 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -15,22 +15,24 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { strToU8 } from "fflate";
 import {
   BUNDLE_VERSION,
+  FrozenProviderRecordingFromJsonString,
   GoldenReplayReceiptFromJsonString,
   ImmutableDemoBundleFromJsonString,
   MUTABLE_CORPUS_DISPOSITION_DATE,
   MutableRetentionMetadata,
   MutableRetentionMetadataFromJsonString,
   MutableReviewLedgerFromJsonString,
+  makePublishedReplayAggregate,
   ProjectionStoreMetadata,
   ProjectionStoreMetadataFromJsonString,
-  ProviderRecordingFromJsonString,
   RetentionAuthorizationFromJsonString,
 } from "@/domain/Bundle";
 import { buildFixtureArtifacts, RFQ_A_OUTLOOK_BODY } from "@/fixtures/Sources";
 import { makeProjectionLayer, ProjectionLayerOptions } from "@/runtime/Projections";
-import { verifyProviderRecording } from "@/workflows/ProviderRecording";
+import { verifyFrozenProviderRecording } from "@/workflows/ProviderRecording";
 import { replayOffline } from "@/workflows/Replay";
 
 const $I = $LejeuneBoltWorkbenchId.create("server/build-bundle");
@@ -102,6 +104,34 @@ export class BundleBuildError extends S.TaggedError<BundleBuildError>($I`BundleB
   })
 ) {}
 
+/**
+ * Exact staged JSON documents and expected mutable policy supplied to publication readback.
+ *
+ * **Example** (Inspect the bundle text field)
+ *
+ * ```ts
+ * import { PublicationReadbackInput } from "../server/build-bundle"
+ *
+ * console.log(PublicationReadbackInput.fields.bundleText !== undefined) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PublicationReadbackInput extends S.Class<PublicationReadbackInput>($I`PublicationReadbackInput`)(
+  {
+    bundleText: S.NonEmptyString,
+    expectedRetentionMetadata: MutableRetentionMetadata,
+    ledgerText: S.NonEmptyString,
+    projectionMetadataText: S.NonEmptyString,
+    receiptText: S.NonEmptyString,
+    retentionMetadataText: S.NonEmptyString,
+  },
+  $I.annote("PublicationReadbackInput", {
+    description: "The exact staged JSON bytes and expected mutable policy validated before atomic publication.",
+  })
+) {}
+
 class StagingRoots extends S.Class<StagingRoots>($I`StagingRoots`)(
   {
     bundle: S.NonEmptyString,
@@ -129,6 +159,59 @@ const bundleBuildError = (stage: string, message: string): BundleBuildError =>
 
 const bundleBuildErrorWithCause = (stage: string, message: string, cause: unknown): BundleBuildError =>
   BundleBuildError.make({ cause, message, stage });
+
+/**
+ * Decode and cross-check every persisted publication document against the exact bundle bytes read back.
+ *
+ * **Example** (Inspect the verifier)
+ *
+ * ```ts
+ * import { verifyPublicationReadback } from "../server/build-bundle"
+ *
+ * console.log(typeof verifyPublicationReadback === "function") // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const verifyPublicationReadback = Effect.fn("LeJeuneBundle.verifyPublicationReadback")(function* (
+  input: PublicationReadbackInput
+) {
+  const [bundle, bundleIdentity, mutableLedger, projectionMetadata, receipt, retentionMetadata] = yield* Effect.all(
+    [
+      S.decodeEffect(ImmutableDemoBundleFromJsonString)(input.bundleText),
+      Sha256HexFromBytes.decodeEffect(strToU8(input.bundleText)),
+      S.decodeEffect(MutableReviewLedgerFromJsonString)(input.ledgerText),
+      S.decodeEffect(ProjectionStoreMetadataFromJsonString)(input.projectionMetadataText),
+      S.decodeEffect(GoldenReplayReceiptFromJsonString)(input.receiptText),
+      S.decodeEffect(MutableRetentionMetadataFromJsonString)(input.retentionMetadataText),
+    ],
+    { concurrency: 6 }
+  ).pipe(
+    Effect.mapError((cause) =>
+      bundleBuildErrorWithCause("validation", "A staged publication document failed validation.", cause)
+    )
+  );
+  if (!retentionMetadataEquivalent(retentionMetadata, input.expectedRetentionMetadata)) {
+    return yield* bundleBuildError("validation", "The staged retention metadata changed during persistence.");
+  }
+  return yield* makePublishedReplayAggregate({
+    bundle,
+    bundleIdentity,
+    mutableLedger,
+    projectionMetadata,
+    receipt,
+    retentionMetadata,
+  }).pipe(
+    Effect.mapError((cause) =>
+      bundleBuildErrorWithCause(
+        "validation",
+        "The staged publication documents do not describe one closed replay aggregate.",
+        cause
+      )
+    )
+  );
+});
 
 const dispositionInstant = DateTime.makeUnsafe(`${MUTABLE_CORPUS_DISPOSITION_DATE}T00:00:00.000Z`);
 
@@ -261,12 +344,12 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
         )
       )
     );
-  const decodedRecording = yield* S.decodeEffect(ProviderRecordingFromJsonString)(recordingText).pipe(
+  const decodedRecording = yield* S.decodeEffect(FrozenProviderRecordingFromJsonString)(recordingText).pipe(
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause("provider-recording", "The sanitized provider recording is invalid.", cause)
     )
   );
-  const recording = yield* verifyProviderRecording(decodedRecording, RFQ_A_OUTLOOK_BODY).pipe(
+  const recording = yield* verifyFrozenProviderRecording(decodedRecording, RFQ_A_OUTLOOK_BODY).pipe(
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause(
         "provider-recording",
@@ -344,7 +427,7 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
   const retentionMetadataFile = path.join(staging.mutable, "retention-metadata.json");
   yield* Effect.all(
     [
-      fs.writeFileString(bundleFile, `${bundleJson}\n`),
+      fs.writeFileString(bundleFile, bundleJson),
       fs.writeFileString(receiptFile, `${receiptJson}\n`),
       fs.writeFileString(projectionMetadataFile, `${projectionMetadataJson}\n`),
       fs.writeFileString(ledgerFile, `${ledgerJson}\n`),
@@ -371,28 +454,15 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
         bundleBuildErrorWithCause("validation", "The staged replay outputs could not be read back.", cause)
       )
     );
-  const decodedRetentionMetadata = yield* S.decodeEffect(MutableRetentionMetadataFromJsonString)(
-    persistedRetentionMetadata
-  ).pipe(
-    Effect.mapError((cause) =>
-      bundleBuildErrorWithCause("validation", "The staged retention metadata failed validation.", cause)
-    )
-  );
-  if (!retentionMetadataEquivalent(decodedRetentionMetadata, replay.retentionMetadata)) {
-    return yield* bundleBuildError("validation", "The staged retention metadata changed during persistence.");
-  }
-  yield* Effect.all(
-    [
-      S.decodeEffect(ImmutableDemoBundleFromJsonString)(persistedBundle),
-      S.decodeEffect(GoldenReplayReceiptFromJsonString)(persistedReceipt),
-      S.decodeEffect(MutableReviewLedgerFromJsonString)(persistedLedger),
-      S.decodeEffect(ProjectionStoreMetadataFromJsonString)(persistedProjectionMetadata),
-    ],
-    { concurrency: 4, discard: true }
-  ).pipe(
-    Effect.mapError((cause) =>
-      bundleBuildErrorWithCause("validation", "The staged replay outputs failed validation.", cause)
-    )
+  yield* verifyPublicationReadback(
+    PublicationReadbackInput.make({
+      bundleText: persistedBundle,
+      expectedRetentionMetadata: replay.retentionMetadata,
+      ledgerText: persistedLedger,
+      projectionMetadataText: persistedProjectionMetadata,
+      receiptText: persistedReceipt,
+      retentionMetadataText: persistedRetentionMetadata,
+    })
   );
   const [persistedRfqAEmail, persistedRfqAXlsx, persistedRfqBEmail, persistedRfqBPdf] = yield* Effect.all(
     [fs.readFile(rfqAEmailFile), fs.readFile(rfqAXlsxFile), fs.readFile(rfqBEmailFile), fs.readFile(rfqBPdfFile)],

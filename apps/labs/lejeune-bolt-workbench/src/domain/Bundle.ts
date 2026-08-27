@@ -7,19 +7,16 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { LiteralKit, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, identity, Number as N, Order } from "effect";
 import * as A from "effect/Array";
-import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
-  Approval,
   Component,
   EntityId,
-  ExpertClaim,
   Finish,
   IsoDate,
   IsoTimestamp,
@@ -41,6 +38,14 @@ export const BUNDLE_VERSION = "lejeune-demo-bundle/v1";
 
 /** Fixed disposition date for the separately mounted mutable review corpus. @category retention @since 0.0.0 */
 export const MUTABLE_CORPUS_DISPOSITION_DATE = "2026-09-30";
+
+const RFQ_A_OUTLOOK_SOURCE_TEXT =
+  "SYNTHETIC RFQ A | Project North Loop Canopy | Delivery 2026-09-12 | Domestic required | Finish MG B695 Class 55";
+const RFQ_A_XLSX_SOURCE_TEXT = "A-1 | TC assembly | F1852 Type 1 | 7/8 in | 3-1/4 in | 180 | F959 Type 325";
+const RFQ_B_EMAIL_SOURCE_TEXT =
+  "SYNTHETIC RFQ B for County Shops Expansion. Delivery is 2026-09-20 and certification is required. Do not infer coating approval.";
+const RFQ_B_PDF_SOURCE_TEXT =
+  "Line B-1 | Product heavy hex bolt only | Grade A490 Type 1 | Diameter 3/4 in | Length 2-1/2 in | Quantity 860 | Finish HDG | DTI F959 Type 325";
 
 const RfqLayoutId = LiteralKit(["rfq-a", "rfq-b"]).pipe(
   $I.annoteSchema("RfqLayoutId", {
@@ -294,6 +299,252 @@ export const makeNormalizedFixture = (input: unknown) =>
     Effect.map((fields) => NormalizedFixture.make(fields))
   );
 
+const canonicalSourceDocument = (input: {
+  readonly format: typeof SourceFormat.Type;
+  readonly id: EntityId;
+  readonly layoutId: typeof RfqLayoutId.Type;
+  readonly mediaType: string;
+  readonly sha256: Sha256Hex;
+  readonly text: string;
+}): SourceDocument => SourceDocument.make(input);
+
+const canonicalExtractedField = (
+  sourceDocumentId: EntityId,
+  name: string,
+  startChar: number,
+  endChar: number,
+  quote: string
+): ExtractedField =>
+  ExtractedField.make({
+    anchor: TextAnchor.make({
+      endChar: NonNegativeInt.make(endChar),
+      quote,
+      startChar: NonNegativeInt.make(startChar),
+    }),
+    name,
+    sourceDocumentId,
+    value: quote,
+  });
+
+const CanonicalRfqAOutlookSource = canonicalSourceDocument({
+  format: "outlook-body-table",
+  id: EntityId.make("rfq-a-outlook-body"),
+  layoutId: "rfq-a",
+  mediaType: "text/plain",
+  sha256: Sha256Hex.make("ee38c21a1635fa152f1e48914ae2c2ce3761d5ada7f96b8c7c3d5a50e808f3b5"),
+  text: RFQ_A_OUTLOOK_SOURCE_TEXT,
+});
+
+const CanonicalRfqAXlsxSource = canonicalSourceDocument({
+  format: "xlsx-takeoff",
+  id: EntityId.make("rfq-a-xlsx-takeoff"),
+  layoutId: "rfq-a",
+  mediaType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  sha256: Sha256Hex.make("09c038e5118283ff15382a632ca6c6e9c811ef4e7235128623956f6043b1d4c5"),
+  text: RFQ_A_XLSX_SOURCE_TEXT,
+});
+
+const CanonicalRfqBEmailSource = canonicalSourceDocument({
+  format: "prose-email",
+  id: EntityId.make("rfq-b-prose-email"),
+  layoutId: "rfq-b",
+  mediaType: "text/plain",
+  sha256: Sha256Hex.make("bc1144a4fdde67229b9e2178c09c133cdd48a0b8881e5f9b9f0316f4ba91806e"),
+  text: RFQ_B_EMAIL_SOURCE_TEXT,
+});
+
+const CanonicalRfqBPdfSource = canonicalSourceDocument({
+  format: "pdf-text-layer",
+  id: EntityId.make("rfq-b-pdf-schedule"),
+  layoutId: "rfq-b",
+  mediaType: "application/pdf",
+  sha256: Sha256Hex.make("bbaa1ae10d94a0680966ed5d1eef8c020b172131d760eb7bc9bc61e8f4831360"),
+  text: RFQ_B_PDF_SOURCE_TEXT,
+});
+
+const CanonicalRfqAComponents = [
+  Component.make({
+    id: EntityId.make("rfq-a-bolt"),
+    kind: "bolt",
+    label: "F1852 Type 1 tension-control bolt",
+    standardId: EntityId.make("astm-f1852-type-1"),
+    strengthClass: "325",
+  }),
+  Component.make({
+    id: EntityId.make("rfq-a-nut"),
+    kind: "nut",
+    label: "A563 DH nut",
+    standardId: EntityId.make("astm-a563-dh"),
+    strengthClass: "325-compatible",
+  }),
+  Component.make({
+    id: EntityId.make("rfq-a-washer"),
+    kind: "washer",
+    label: "F436 Type 1 washer",
+    standardId: EntityId.make("astm-f436-type-1"),
+    strengthClass: "325-compatible",
+  }),
+  Component.make({
+    id: EntityId.make("rfq-a-dti"),
+    kind: "dti",
+    label: "F959 Type 325 DTI",
+    standardId: EntityId.make("astm-f959-type-325"),
+    strengthClass: "325",
+  }),
+] as const;
+
+const CanonicalRfqBComponents = [
+  Component.make({
+    finishId: O.some(EntityId.make("hot-dip-galvanized")),
+    id: EntityId.make("rfq-b-bolt"),
+    kind: "bolt",
+    label: "A490 Type 1 heavy hex bolt",
+    standardId: EntityId.make("astm-a490-type-1"),
+    strengthClass: "490",
+  }),
+  Component.make({
+    finishId: O.some(EntityId.make("hot-dip-galvanized")),
+    id: EntityId.make("rfq-b-dti"),
+    kind: "dti",
+    label: "F959 Type 325 DTI",
+    standardId: EntityId.make("astm-f959-type-325"),
+    strengthClass: "325",
+  }),
+] as const;
+
+const CanonicalRfqAProductVariant = ProductVariant.make({
+  componentIds: A.map(CanonicalRfqAComponents, (component) => component.id),
+  finishId: EntityId.make("mechanical-galvanized-b695-class-55"),
+  id: EntityId.make("rfq-a-tc-assembly"),
+  label: "F1852 Type 1 TC assembly, 7/8 in x 3-1/4 in",
+  standardId: EntityId.make("astm-f1852-type-1"),
+});
+
+const CanonicalRfqBProductVariant = ProductVariant.make({
+  componentIds: A.map(CanonicalRfqBComponents, (component) => component.id),
+  finishId: EntityId.make("hot-dip-galvanized"),
+  id: EntityId.make("rfq-b-a490-heavy-hex"),
+  label: "A490 Type 1 heavy hex bolt, 3/4 in x 2-1/2 in",
+  standardId: EntityId.make("astm-a490-type-1"),
+});
+
+const CanonicalRfqAProject = Project.make({
+  deliveryDate: IsoDate.make("2026-09-12"),
+  id: EntityId.make("north-loop-canopy"),
+  name: "North Loop Canopy",
+});
+
+const CanonicalRfqBProject = Project.make({
+  deliveryDate: IsoDate.make("2026-09-20"),
+  id: EntityId.make("county-shops-expansion"),
+  name: "County Shops Expansion",
+});
+
+const CanonicalRfqAQuoteLine = QuoteLine.make({
+  id: EntityId.make("rfq-a-line-a-1"),
+  productVariantId: CanonicalRfqAProductVariant.id,
+  quantity: PosInt.make(180),
+  rfqId: EntityId.make("rfq-a"),
+});
+
+const CanonicalRfqBQuoteLine = QuoteLine.make({
+  id: EntityId.make("rfq-b-line-b-1"),
+  productVariantId: CanonicalRfqBProductVariant.id,
+  quantity: PosInt.make(860),
+  rfqId: EntityId.make("rfq-b"),
+});
+
+const CanonicalRfqA = RFQ.make({
+  id: EntityId.make("rfq-a"),
+  missingFields: ["certificationRequirement"],
+  projectId: CanonicalRfqAProject.id,
+  quoteLineIds: [CanonicalRfqAQuoteLine.id],
+  sourceDocumentIds: [CanonicalRfqAOutlookSource.id, CanonicalRfqAXlsxSource.id],
+});
+
+const CanonicalRfqB = RFQ.make({
+  id: EntityId.make("rfq-b"),
+  missingFields: ["domesticOrigin"],
+  projectId: CanonicalRfqBProject.id,
+  quoteLineIds: [CanonicalRfqBQuoteLine.id],
+  sourceDocumentIds: [CanonicalRfqBEmailSource.id, CanonicalRfqBPdfSource.id],
+});
+
+const CanonicalRfqAExtractedFields = [
+  canonicalExtractedField(CanonicalRfqAOutlookSource.id, "projectName", 26, 43, "North Loop Canopy"),
+  canonicalExtractedField(CanonicalRfqAOutlookSource.id, "deliveryDate", 55, 65, "2026-09-12"),
+  canonicalExtractedField(CanonicalRfqAOutlookSource.id, "domesticOrigin", 68, 85, "Domestic required"),
+  canonicalExtractedField(CanonicalRfqAOutlookSource.id, "finish", 95, 111, "MG B695 Class 55"),
+  canonicalExtractedField(CanonicalRfqAXlsxSource.id, "product", 6, 17, "TC assembly"),
+  canonicalExtractedField(CanonicalRfqAXlsxSource.id, "grade", 20, 32, "F1852 Type 1"),
+  canonicalExtractedField(CanonicalRfqAXlsxSource.id, "diameter", 35, 41, "7/8 in"),
+  canonicalExtractedField(CanonicalRfqAXlsxSource.id, "length", 44, 52, "3-1/4 in"),
+  canonicalExtractedField(CanonicalRfqAXlsxSource.id, "quantity", 55, 58, "180"),
+  canonicalExtractedField(CanonicalRfqAXlsxSource.id, "dti", 61, 74, "F959 Type 325"),
+] as const;
+
+const CanonicalRfqBExtractedFields = [
+  canonicalExtractedField(CanonicalRfqBEmailSource.id, "projectName", 20, 42, "County Shops Expansion"),
+  canonicalExtractedField(CanonicalRfqBEmailSource.id, "deliveryDate", 56, 66, "2026-09-20"),
+  canonicalExtractedField(CanonicalRfqBEmailSource.id, "certificationRequirement", 71, 96, "certification is required"),
+  canonicalExtractedField(CanonicalRfqBPdfSource.id, "product", 19, 38, "heavy hex bolt only"),
+  canonicalExtractedField(CanonicalRfqBPdfSource.id, "grade", 47, 58, "A490 Type 1"),
+  canonicalExtractedField(CanonicalRfqBPdfSource.id, "diameter", 70, 76, "3/4 in"),
+  canonicalExtractedField(CanonicalRfqBPdfSource.id, "length", 86, 94, "2-1/2 in"),
+  canonicalExtractedField(CanonicalRfqBPdfSource.id, "quantity", 106, 109, "860"),
+  canonicalExtractedField(CanonicalRfqBPdfSource.id, "finish", 119, 122, "HDG"),
+  canonicalExtractedField(CanonicalRfqBPdfSource.id, "dti", 129, 142, "F959 Type 325"),
+] as const;
+
+/**
+ * Exact ordered normalized fixture graph authorized by immutable bundle contract v1.
+ *
+ * **Example** (Inspect the fixture order)
+ *
+ * ```ts
+ * import { CanonicalNormalizedFixtures } from "@/domain/Bundle"
+ *
+ * console.log(CanonicalNormalizedFixtures.map((fixture) => fixture.rfq.id)) // ["rfq-a", "rfq-b"]
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const CanonicalNormalizedFixtures: readonly [NormalizedFixture, NormalizedFixture] = [
+  NormalizedFixture.make({
+    components: CanonicalRfqAComponents,
+    extractedFields: CanonicalRfqAExtractedFields,
+    missingFields: [
+      MissingField.make({
+        field: "certificationRequirement",
+        question: "RFI: Is a lot certificate required for RFQ A?",
+        rfqId: CanonicalRfqA.id,
+      }),
+    ],
+    productVariant: CanonicalRfqAProductVariant,
+    project: CanonicalRfqAProject,
+    quoteLine: CanonicalRfqAQuoteLine,
+    rfq: CanonicalRfqA,
+    sources: [CanonicalRfqAOutlookSource, CanonicalRfqAXlsxSource],
+  }),
+  NormalizedFixture.make({
+    components: CanonicalRfqBComponents,
+    extractedFields: CanonicalRfqBExtractedFields,
+    missingFields: [
+      MissingField.make({
+        field: "domesticOrigin",
+        question: "RFI: Is domestic origin required for RFQ B?",
+        rfqId: CanonicalRfqB.id,
+      }),
+    ],
+    productVariant: CanonicalRfqBProductVariant,
+    project: CanonicalRfqBProject,
+    quoteLine: CanonicalRfqBQuoteLine,
+    rfq: CanonicalRfqB,
+    sources: [CanonicalRfqBEmailSource, CanonicalRfqBPdfSource],
+  }),
+];
+
 /**
  * Governing public source metadata and the bounded evidence used by a rule.
  *
@@ -437,8 +688,7 @@ export class ProviderCandidate extends S.Class<ProviderCandidate>($I`ProviderCan
 ) {}
 
 /** Exact sanitized source text authorized for provider-recording verification. @category fixtures @since 0.0.0 */
-export const PROVIDER_RECORDING_SOURCE_TEXT =
-  "SYNTHETIC RFQ A | Project North Loop Canopy | Delivery 2026-09-12 | Domestic required | Finish MG B695 Class 55";
+export const PROVIDER_RECORDING_SOURCE_TEXT = RFQ_A_OUTLOOK_SOURCE_TEXT;
 
 /** Exact request identity authorized by provider-recording contract v1. @category fixtures @since 0.0.0 */
 export const PROVIDER_RECORDING_DOCUMENT_ID = EntityId.make("lejeune-provider-smoke-rfq-a");
@@ -447,6 +697,19 @@ export const PROVIDER_RECORDING_DOCUMENT_ID = EntityId.make("lejeune-provider-sm
 export const ProviderCandidateListFromJsonString = S.fromJsonString(
   S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate])
 );
+
+const ProviderRecordingFields = S.Struct({
+  candidates: S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate]),
+  documentId: S.Literal(PROVIDER_RECORDING_DOCUMENT_ID),
+  extractionContractRevision: S.tag("lejeune-rfq-a-extraction/v1"),
+  model: S.NonEmptyString,
+  provider: LiteralKit(["anthropic", "openai-compat", "venice-ai", "xai"]),
+  recordedAt: IsoTimestamp,
+  responseSha256: Sha256Hex,
+  schemaVersion: S.tag("lejeune-provider-recording/v1"),
+  sourceRevision: S.tag("rfq-a-outlook-body/v1"),
+  status: S.tag("recorded-success"),
+});
 
 /**
  * Sanitized successful provider output embedded for deterministic replay.
@@ -463,20 +726,54 @@ export const ProviderCandidateListFromJsonString = S.fromJsonString(
  * @since 0.0.0
  */
 export class ProviderRecording extends S.Class<ProviderRecording>($I`ProviderRecording`)(
-  {
-    candidates: S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate]),
-    documentId: S.Literal(PROVIDER_RECORDING_DOCUMENT_ID),
-    extractionContractRevision: S.tag("lejeune-rfq-a-extraction/v1"),
-    model: S.NonEmptyString,
-    provider: LiteralKit(["anthropic", "openai-compat", "venice-ai", "xai"]),
-    recordedAt: IsoTimestamp,
-    responseSha256: Sha256Hex,
-    schemaVersion: S.tag("lejeune-provider-recording/v1"),
-    sourceRevision: S.tag("rfq-a-outlook-body/v1"),
-    status: S.tag("recorded-success"),
-  },
+  ProviderRecordingFields,
   $I.annote("ProviderRecording", {
     description: "A sanitized successful live extraction recording that makes the golden run provider-independent.",
+  })
+) {}
+
+const CanonicalProviderRecording = ProviderRecording.make({
+  candidates: [
+    ProviderCandidate.make({ label: "project", text: "North Loop Canopy" }),
+    ProviderCandidate.make({ label: "delivery_date", text: "2026-09-12" }),
+    ProviderCandidate.make({ label: "finish", text: "MG B695 Class 55" }),
+  ],
+  documentId: PROVIDER_RECORDING_DOCUMENT_ID,
+  model: "claude-opus-4-6",
+  provider: "anthropic",
+  recordedAt: IsoTimestamp.make("2026-08-27T12:25:18.044Z"),
+  responseSha256: Sha256Hex.make("e298888dc39b2f3b267fd206e1efe53f707cc3c0811d2746e53f1a7ca3227642"),
+});
+
+const FrozenProviderRecordingCheck = S.makeFilter(
+  (recording: typeof ProviderRecordingFields.Type) =>
+    S.toEquivalence(ProviderRecordingFields)(recording, CanonicalProviderRecording),
+  {
+    identifier: $I`FrozenProviderRecordingCheck`,
+    title: "Frozen Provider Recording",
+    description: "Requires provider metadata, candidate order and values, and digest to match the committed artifact.",
+    message: "Provider recording must match the exact committed offline replay artifact v1.",
+  }
+);
+
+/**
+ * Exact successful provider artifact authorized for immutable replay contract v1.
+ *
+ * **Example** (Inspect the pinned provider)
+ *
+ * ```ts
+ * import { FrozenProviderRecording } from "@/domain/Bundle"
+ *
+ * console.log(FrozenProviderRecording.fields.provider !== undefined) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FrozenProviderRecording extends S.Class<FrozenProviderRecording>($I`FrozenProviderRecording`)(
+  ProviderRecordingFields.mapFields(identity).check(FrozenProviderRecordingCheck),
+  $I.annote("FrozenProviderRecording", {
+    description: "The exact ordered, sanitized live-provider result committed for deterministic offline replay v1.",
   })
 ) {}
 
@@ -561,26 +858,13 @@ const ImmutableDemoBundleFields = S.Struct({
   mutableCorpusDispositionDate: S.Literal(MUTABLE_CORPUS_DISPOSITION_DATE),
   offers: S.Tuple([SupplierOffer, SupplierOffer]),
   projection: ProjectionSnapshot,
-  providerRecording: ProviderRecording,
+  providerRecording: FrozenProviderRecording,
   rules: S.Tuple([RuleResult, RuleResult, RuleResult, RuleResult, RuleResult, RuleResult]),
   standards: S.Tuple([Standard, Standard, Standard, Standard, Standard]),
   tools: S.Tuple([Tool, Tool]),
 });
 
 type ImmutableDemoBundleFields = typeof ImmutableDemoBundleFields.Type;
-
-class RuleCaseContract extends S.Class<RuleCaseContract>($I`RuleCaseContract`)(
-  {
-    caseId: EntityId,
-    disposition: RuleDisposition,
-    requiresHuman: S.Boolean,
-    ruleId: RuleId,
-    sourceId: EntityId,
-  },
-  $I.annote("RuleCaseContract", {
-    description: "One canonical rule, case, citation, disposition, and human-stop row in the frozen replay matrix.",
-  })
-) {}
 
 class CanonicalRuleSourceContract extends S.Class<CanonicalRuleSourceContract>($I`CanonicalRuleSourceContract`)(
   {
@@ -636,55 +920,96 @@ export const CanonicalRuleSourceContracts: readonly [
   }),
 ];
 
-const CanonicalRuleCases: ReadonlyArray<RuleCaseContract> = [
-  RuleCaseContract.make({
+const canonicalRuleSource = (contract: CanonicalRuleSourceContract): RuleSource =>
+  RuleSource.make({
+    accessedOn: contract.accessedOn,
+    evidence: contract.evidence,
+    evidenceAnchor: TextAnchor.make({
+      endChar: NonNegativeInt.make(Str.length(contract.evidence)),
+      quote: contract.evidence,
+      startChar: NonNegativeInt.make(0),
+    }),
+    id: contract.id,
+    researchPath: contract.researchPath,
+    revision: contract.revision,
+    title: contract.title,
+    url: contract.url,
+  });
+
+const CanonicalRuleSources = A.map(CanonicalRuleSourceContracts, canonicalRuleSource);
+
+const CanonicalRuleResults: readonly [RuleResult, RuleResult, RuleResult, RuleResult, RuleResult, RuleResult] = [
+  RuleResult.make({
     caseId: EntityId.make("rfq-a-matched-assembly-positive"),
     disposition: "pass",
+    matchedFacts: [
+      CanonicalRfqAProductVariant.label,
+      "Exact TC-assembly provenance and the canonical 325-compatible bolt, nut, and washer are present.",
+    ],
     requiresHuman: false,
     ruleId: "matched-assembly",
-    sourceId: EntityId.make("aisc-matched-assembly"),
+    source: CanonicalRuleSources[0],
+    stopReason: "No stop: the fixed matched-assembly fact pattern is complete.",
   }),
-  RuleCaseContract.make({
+  RuleResult.make({
     caseId: EntityId.make("rfq-b-matched-assembly-mismatch"),
     disposition: "mismatch",
+    matchedFacts: [
+      CanonicalRfqBProductVariant.label,
+      "Exact TC-assembly provenance or the compatible bolt, nut, and washer contract is incomplete.",
+    ],
     requiresHuman: true,
     ruleId: "matched-assembly",
-    sourceId: EntityId.make("aisc-matched-assembly"),
+    source: CanonicalRuleSources[0],
+    stopReason: "Stop for an RFI; do not complete a matched assembly from inferred components.",
   }),
-  RuleCaseContract.make({
+  RuleResult.make({
     caseId: EntityId.make("rfq-a-dti-strength-positive"),
     disposition: "pass",
+    matchedFacts: ["Bolt standard/strength: astm-f1852-type-1/325", "DTI standard/strength: astm-f959-type-325/325"],
     requiresHuman: false,
     ruleId: "dti-strength-match",
-    sourceId: EntityId.make("portland-bolt-astm-f959"),
+    source: CanonicalRuleSources[1],
+    stopReason: "No stop: bolt and DTI strength families match in the fixed fixture.",
   }),
-  RuleCaseContract.make({
+  RuleResult.make({
     caseId: EntityId.make("rfq-b-dti-strength-mismatch"),
     disposition: "mismatch",
+    matchedFacts: ["Bolt standard/strength: astm-a490-type-1/490", "DTI standard/strength: astm-f959-type-325/325"],
     requiresHuman: true,
     ruleId: "dti-strength-match",
-    sourceId: EntityId.make("portland-bolt-astm-f959"),
+    source: CanonicalRuleSources[1],
+    stopReason: "Stop for correction or RFI; do not quote a DTI from the wrong strength family.",
   }),
-  RuleCaseContract.make({
+  RuleResult.make({
     caseId: EntityId.make("rfq-a-a490-hdg-positive"),
     disposition: "pass",
+    matchedFacts: [
+      `Product: ${CanonicalRfqAProductVariant.label}`,
+      `Finish id: ${CanonicalRfqAProductVariant.finishId}`,
+    ],
     requiresHuman: false,
     ruleId: "a490-hdg-refusal",
-    sourceId: EntityId.make("fastenal-a490-coating"),
+    source: CanonicalRuleSources[2],
+    stopReason: "No stop: the forbidden A490 plus HDG combination is absent.",
   }),
-  RuleCaseContract.make({
+  RuleResult.make({
     caseId: EntityId.make("rfq-b-a490-hdg-refusal"),
     disposition: "refuse",
+    matchedFacts: [
+      `Product: ${CanonicalRfqBProductVariant.label}`,
+      `Finish id: ${CanonicalRfqBProductVariant.finishId}`,
+    ],
     requiresHuman: true,
     ruleId: "a490-hdg-refusal",
-    sourceId: EntityId.make("fastenal-a490-coating"),
+    source: CanonicalRuleSources[2],
+    stopReason: "Refuse the silent substitution and stop for a qualified coating/specification decision.",
   }),
 ];
 
-const ruleProjectionRow = (ruleCase: RuleCaseContract): string =>
-  `${ruleCase.ruleId}|${ruleCase.caseId}|${ruleCase.disposition}`;
+const ruleProjectionRow = (rule: RuleResult): string => `${rule.ruleId}|${rule.caseId}|${rule.disposition}`;
 
-const CanonicalRuleProjectionRows = A.sort(A.map(CanonicalRuleCases, ruleProjectionRow), Str.Order);
+const CanonicalRuleProjectionRows = A.sort(A.map(CanonicalRuleResults, ruleProjectionRow), Str.Order);
 
 const quoteLineProjectionRow = (fixture: NormalizedFixture): string =>
   `${fixture.quoteLine.id}|${fixture.quoteLine.quantity}`;
@@ -785,70 +1110,11 @@ const bundleProjectionRowsMatch = (bundle: ImmutableDemoBundleFields): boolean =
   );
 };
 
-const bundleFixtureIdentitiesAreClosed = (bundle: ImmutableDemoBundleFields): boolean => {
-  const fixtureIds = A.map(bundle.fixtures, (fixture) => fixture.rfq.id);
-  return A.every(
-    [
-      A.length(A.dedupe(fixtureIds)) === RfqLayoutId.Options.length,
-      A.every(RfqLayoutId.Options, (id) => A.some(fixtureIds, (candidate) => Str.Equivalence(candidate, id))),
-    ],
-    identity
-  );
-};
-
-const ruleSourceMatchesContract = (
-  rule: RuleResult,
-  sourceContract: CanonicalRuleSourceContract,
-  projection: ProjectionSnapshot
-): boolean =>
-  A.every(
-    [
-      Str.Equivalence(rule.source.accessedOn, sourceContract.accessedOn),
-      Str.Equivalence(rule.source.evidence, sourceContract.evidence),
-      N.Equivalence(rule.source.evidenceAnchor.startChar, 0),
-      N.Equivalence(rule.source.evidenceAnchor.endChar, Str.length(sourceContract.evidence)),
-      Str.Equivalence(rule.source.evidenceAnchor.quote, sourceContract.evidence),
-      Str.Equivalence(rule.source.id, sourceContract.id),
-      Str.Equivalence(rule.source.researchPath, sourceContract.researchPath),
-      Str.Equivalence(rule.source.revision, sourceContract.revision),
-      Str.Equivalence(rule.source.title, sourceContract.title),
-      Str.Equivalence(rule.source.url, sourceContract.url),
-      A.contains(projection.citations, `source:${rule.source.url}`),
-    ],
-    identity
-  );
-
-const ruleMatchesContract = (
-  rule: RuleResult,
-  ruleCase: RuleCaseContract,
-  sourceContract: CanonicalRuleSourceContract,
-  projection: ProjectionSnapshot
-): boolean =>
-  A.every(
-    [
-      Str.Equivalence(rule.caseId, ruleCase.caseId),
-      Str.Equivalence(rule.ruleId, ruleCase.ruleId),
-      Str.Equivalence(rule.source.id, ruleCase.sourceId),
-      Str.Equivalence(rule.disposition, ruleCase.disposition),
-      Bool.Equivalence(rule.requiresHuman, ruleCase.requiresHuman),
-      Str.Equivalence(rule.ruleId, sourceContract.ruleId),
-      ruleSourceMatchesContract(rule, sourceContract, projection),
-    ],
-    identity
-  );
+const bundleFixturesMatchCanonical = (bundle: ImmutableDemoBundleFields): boolean =>
+  valuesMatch(S.toEquivalence(NormalizedFixture), bundle.fixtures, CanonicalNormalizedFixtures);
 
 const bundleRuleContractIsClosed = (bundle: ImmutableDemoBundleFields): boolean => {
-  const ruleContracts = A.zip(CanonicalRuleCases, [
-    CanonicalRuleSourceContracts[0],
-    CanonicalRuleSourceContracts[0],
-    CanonicalRuleSourceContracts[1],
-    CanonicalRuleSourceContracts[1],
-    CanonicalRuleSourceContracts[2],
-    CanonicalRuleSourceContracts[2],
-  ]);
-  const rulesMatch = A.every(A.zip(bundle.rules, ruleContracts), ([rule, [ruleCase, sourceContract]]) =>
-    ruleMatchesContract(rule, ruleCase, sourceContract, bundle.projection)
-  );
+  const rulesMatch = valuesMatch(S.toEquivalence(RuleResult), bundle.rules, CanonicalRuleResults);
   const projectionRowsMatch = A.every(
     A.zip(bundle.projection.ruleDispositions, CanonicalRuleProjectionRows),
     ([actual, expected]) => Str.Equivalence(actual, expected)
@@ -862,7 +1128,7 @@ const bundleReferencesAreClosed = (bundle: ImmutableDemoBundleFields): boolean =
       bundleOntologyReferencesExist(bundle),
       bundleEntityIdentitiesAreUnique(bundle),
       bundleReferenceDataMatches(bundle),
-      bundleFixtureIdentitiesAreClosed(bundle),
+      bundleFixturesMatchCanonical(bundle),
       bundleProjectionRowsMatch(bundle),
       bundleRuleContractIsClosed(bundle),
     ],
@@ -899,8 +1165,8 @@ export class ImmutableDemoBundle extends S.Class<ImmutableDemoBundle>($I`Immutab
  */
 export class MutableReviewLedger extends S.Class<MutableReviewLedger>($I`MutableReviewLedger`)(
   {
-    approvals: S.Array(Approval),
-    claims: S.Array(ExpertClaim),
+    approvals: S.Tuple([]),
+    claims: S.Tuple([]),
     disposition: S.Literal("delete-or-promote"),
     dispositionDate: S.Literal(MUTABLE_CORPUS_DISPOSITION_DATE),
     schemaVersion: S.Literal("lejeune-review-ledger/v1"),
@@ -1088,6 +1354,68 @@ export class ProjectionStoreMetadata extends S.Class<ProjectionStoreMetadata>($I
   })
 ) {}
 
+const PublishedReplayAggregateFields = S.Struct({
+  bundle: ImmutableDemoBundle,
+  bundleIdentity: Sha256Hex,
+  mutableLedger: MutableReviewLedger,
+  projectionMetadata: ProjectionStoreMetadata,
+  receipt: GoldenReplayReceipt,
+  retentionMetadata: MutableRetentionMetadata,
+});
+
+type PublishedReplayAggregateFields = typeof PublishedReplayAggregateFields.Type;
+
+const publishedReplayAggregateIsClosed = (aggregate: PublishedReplayAggregateFields): boolean =>
+  A.every(
+    [
+      Str.Equivalence(aggregate.bundleIdentity, aggregate.receipt.bundleIdentity),
+      Str.Equivalence(aggregate.bundleIdentity, aggregate.projectionMetadata.bundleIdentity),
+      S.toEquivalence(ProjectionSnapshot)(aggregate.bundle.projection, aggregate.receipt.projection),
+      Str.Equivalence(aggregate.bundle.mutableCorpusDisposition, aggregate.mutableLedger.disposition),
+      Str.Equivalence(aggregate.bundle.mutableCorpusDisposition, aggregate.retentionMetadata.disposition),
+      Str.Equivalence(aggregate.bundle.mutableCorpusDispositionDate, aggregate.mutableLedger.dispositionDate),
+    ],
+    identity
+  );
+
+const PublishedReplayAggregateCheck = S.makeFilter(publishedReplayAggregateIsClosed, {
+  identifier: $I`PublishedReplayAggregateCheck`,
+  title: "Published Replay Aggregate",
+  description:
+    "Requires the exact persisted bundle identity, replay receipt, projection sidecar, empty ledger, and retention policy to describe one publication.",
+  message: "Persisted bundle, receipt, projection, review, and retention records must form one closed publication.",
+});
+
+const PublishedReplayAggregateModel =
+  PublishedReplayAggregateFields.mapFields(identity).check(PublishedReplayAggregateCheck);
+
+/** Decoded readback proof for every persisted publication document promoted by the builder. */
+class PublishedReplayAggregate extends S.Class<PublishedReplayAggregate>($I`PublishedReplayAggregate`)(
+  PublishedReplayAggregateModel,
+  $I.annote("PublishedReplayAggregate", {
+    description: "A fully decoded and cross-checked durable bundle publication before its atomic promotion.",
+  })
+) {}
+
+/**
+ * Validate already-decoded publication values and construct their aggregate proof.
+ *
+ * **Example** (Inspect the constructor)
+ *
+ * ```ts
+ * import { makePublishedReplayAggregate } from "@/domain/Bundle"
+ *
+ * console.log(typeof makePublishedReplayAggregate === "function") // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makePublishedReplayAggregate = (input: unknown) =>
+  S.decodeUnknownEffect(S.toType(PublishedReplayAggregateModel))(input).pipe(
+    Effect.map((fields) => PublishedReplayAggregate.make(fields))
+  );
+
 /**
  * JSON codec used to persist the immutable bundle without native JSON helpers.
  *
@@ -1173,3 +1501,19 @@ export const ProjectionStoreMetadataFromJsonString = S.fromJsonString(Projection
  * @since 0.0.0
  */
 export const ProviderRecordingFromJsonString = S.fromJsonString(ProviderRecording, { space: 2 });
+
+/**
+ * JSON codec for the exact committed provider artifact consumed by offline replay v1.
+ *
+ * **Example** (Inspect the codec)
+ *
+ * ```ts
+ * import { FrozenProviderRecordingFromJsonString } from "@/domain/Bundle"
+ *
+ * console.log(FrozenProviderRecordingFromJsonString.ast !== undefined) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const FrozenProviderRecordingFromJsonString = S.fromJsonString(FrozenProviderRecording, { space: 2 });
