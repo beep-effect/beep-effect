@@ -22438,15 +22438,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts": {
-          "lines": 98.31,
-          "statements": 98.05,
-          "branches": 95.91,
-          "functions": 98.59,
+          "lines": 96.62,
+          "statements": 96.49,
+          "branches": 94.89,
+          "functions": 94.36,
           "uncovered": {
-            "lines": 4,
-            "statements": 5,
-            "branches": 4,
-            "functions": 1
+            "lines": 8,
+            "statements": 9,
+            "branches": 5,
+            "functions": 4
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts": {
