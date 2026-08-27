@@ -969,23 +969,27 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(failureMessage(yield* Effect.exit(verificationApplier.apply(verificationLocator)))).toContain(
         "promoted stream failed verification"
       );
-      expect((yield* store.list(verificationLocator)).issues).toStrictEqual([]);
+      expect(yield* fs.readFileString(`${verificationEvents}/invalid.json`)).toBe("not json\n");
 
       const traceLocator = yield* makeFixture("trace-write-failure");
       const tracePath = `${traceLocator.packetPath}/ops/trace.json`;
+      const traceEvents = `${traceLocator.packetPath}/ops/events`;
+      const concurrentEventPath = `${traceEvents}/concurrent.json`;
       yield* fs.writeFileString(tracePath, "previous trace\n");
       const traceApplier = yield* makeApplier({
         ...fs,
         writeFileString: (target, content, options) =>
           target === tracePath
-            ? Effect.fail(injectedFileSystemError("writeFileString", target))
+            ? fs
+                .writeFileString(concurrentEventPath, "concurrent event\n")
+                .pipe(Effect.andThen(Effect.fail(injectedFileSystemError("writeFileString", target))))
             : fs.writeFileString(target, content, options),
       });
       expect(failureMessage(yield* Effect.exit(traceApplier.apply(traceLocator)))).toContain(
         "repaired trace write failed"
       );
       expect(yield* fs.readFileString(tracePath)).toBe("previous trace\n");
-      expect((yield* store.list(traceLocator)).issues).toStrictEqual([]);
+      expect(yield* fs.readFileString(concurrentEventPath)).toBe("concurrent event\n");
     })
   );
 
@@ -1147,6 +1151,27 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         "genesis trace recovery conflict"
       );
       expect(yield* fs.readFileString(foreignRecovery.value.tracePath)).toBe(foreignTrace);
+
+      yield* fs.writeFileString(retry.value.tracePath, Str.takeLeft(32)(retry.value.traceText));
+      const racedRecovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-30T00:00:00.000Z");
+      expect(O.isSome(racedRecovery)).toBe(true);
+      if (O.isNone(racedRecovery)) return;
+      const displacedTrace = '{"concurrent":true}\n';
+      const racedExit = yield* Effect.exit(
+        applyPacketGenesisSeed(racedRecovery.value).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            rename: (source, target) =>
+              source === racedRecovery.value.tracePath
+                ? fs.writeFileString(source, displacedTrace).pipe(Effect.andThen(fs.rename(source, target)))
+                : fs.rename(source, target),
+          })
+        )
+      );
+      expect(Exit.isFailure(racedExit) ? racedExit.cause.toString() : "").toContain(
+        "genesis trace quarantine conflict"
+      );
+      expect(yield* fs.readFileString(racedRecovery.value.tracePath)).toBe(displacedTrace);
     })
   );
 

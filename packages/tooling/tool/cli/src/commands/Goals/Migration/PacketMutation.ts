@@ -191,21 +191,49 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     const stagedEvents = path.join(stagedPacketPath, ...PACKET_EVENTS_SEGMENTS);
     const eventsDirectory = path.join(locator.packetPath, ...PACKET_EVENTS_SEGMENTS);
     const backupDirectory = path.join(tempRoot, "previous-events");
+    const failedPacketPath = path.join(tempRoot, "failed-packet");
+    const failedEventsDirectory = path.join(failedPacketPath, ...PACKET_EVENTS_SEGMENTS);
+    const failedLocator = PacketStreamLocator.make({ ...locator, packetPath: failedPacketPath });
     const tracePath = path.join(locator.packetPath, ...PACKET_TRACE_SEGMENTS);
     const previousTrace = yield* Effect.option(fs.readFileString(tracePath));
+    let promotedListing = O.none<PacketStreamListing>();
 
     const cleanup = Effect.fnUntraced(function* () {
       const backupPresent = yield* fs.exists(backupDirectory).pipe(Effect.orElseSucceed(() => false));
       const currentPresent = yield* fs.exists(eventsDirectory).pipe(Effect.orElseSucceed(() => false));
+      let restoredPrevious = false;
       if (backupPresent) {
-        if (currentPresent) yield* fs.remove(eventsDirectory, { recursive: true, force: true }).pipe(Effect.ignore);
-        yield* fs.rename(backupDirectory, eventsDirectory).pipe(Effect.ignore);
+        if (!currentPresent) {
+          restoredPrevious = O.isSome(yield* Effect.option(fs.rename(backupDirectory, eventsDirectory)));
+        } else {
+          yield* fs.makeDirectory(path.dirname(failedEventsDirectory), { recursive: true }).pipe(Effect.ignore);
+          const isolated = yield* Effect.option(fs.rename(eventsDirectory, failedEventsDirectory));
+          if (O.isSome(isolated)) {
+            const isolatedListing = yield* Effect.option(store.list(failedLocator));
+            const stillOwned =
+              O.isSome(promotedListing) &&
+              O.isSome(isolatedListing) &&
+              A.isReadonlyArrayEmpty(isolatedListing.value.issues) &&
+              sameListing(promotedListing.value.events, isolatedListing.value.events);
+            if (stillOwned) {
+              restoredPrevious = O.isSome(yield* Effect.option(fs.rename(backupDirectory, eventsDirectory)));
+            } else {
+              yield* fs.rename(failedEventsDirectory, eventsDirectory).pipe(Effect.ignore);
+            }
+          }
+        }
       }
-      yield* O.match(previousTrace, {
-        onNone: () => fs.remove(tracePath, { force: true }).pipe(Effect.ignore),
-        onSome: (content) => fs.writeFileString(tracePath, content).pipe(Effect.ignore),
-      });
-      yield* fs.remove(tempRoot, { recursive: true, force: true }).pipe(Effect.ignore);
+      if (restoredPrevious && O.isSome(previousTrace)) {
+        const currentTrace = yield* Effect.option(fs.readFileString(tracePath));
+        if (O.isNone(currentTrace)) {
+          yield* fs.writeFileString(tracePath, previousTrace.value).pipe(Effect.ignore);
+        }
+      }
+      const backupRemaining = yield* fs.exists(backupDirectory).pipe(Effect.orElseSucceed(() => true));
+      const failedRemaining = yield* fs.exists(failedEventsDirectory).pipe(Effect.orElseSucceed(() => true));
+      if (!backupRemaining && !failedRemaining) {
+        yield* fs.remove(tempRoot, { recursive: true, force: true }).pipe(Effect.ignore);
+      }
     });
 
     return yield* Effect.onError(
@@ -224,6 +252,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         if (!forkRepairMadeProgress(originalDerived, derived, repair)) {
           return yield* streamError(locator.packet, "staged repair did not remove the targeted fork");
         }
+        promotedListing = O.some(staged);
         const fresh = yield* store.list(locator);
         if (!sameListing(original.events, fresh.events) || A.isReadonlyArrayNonEmpty(fresh.issues)) {
           return yield* streamError(locator.packet, "stream changed during repair staging; re-run preview");
@@ -245,9 +274,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
           A.isReadonlyArrayNonEmpty(committedDerived.issues) ||
           !forkRepairMadeProgress(originalDerived, committedDerived, repair)
         ) {
-          yield* fs.remove(eventsDirectory, { recursive: true, force: true }).pipe(Effect.ignore);
-          yield* fs.rename(backupDirectory, eventsDirectory).pipe(Effect.ignore);
-          return yield* streamError(locator.packet, "promoted stream failed verification; prior stream restored");
+          return yield* streamError(locator.packet, "promoted stream failed verification; current bytes preserved");
         }
         const traceText = yield* renderPacketTraceFile(projectPacketTrace(committedDerived, committed.events)).pipe(
           Effect.mapError((error) => streamError(locator.packet, `repaired trace render failed: ${error.message}`))
@@ -700,9 +727,22 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
     .readFileString(quarantinedTracePath)
     .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine read failed: ${error.message}`)));
   if (isolated !== observed && isolated !== seed.traceText) {
+    yield* fs
+      .link(quarantinedTracePath, tracePath)
+      .pipe(
+        Effect.catch((error) =>
+          readGenesisTrace(seed).pipe(
+            Effect.flatMap((trace) =>
+              O.isSome(trace)
+                ? Effect.void
+                : Effect.fail(streamError(seed.slug, `genesis trace restore failed: ${error.message}`))
+            )
+          )
+        )
+      );
     return yield* streamError(
       seed.slug,
-      `genesis trace quarantine conflict: changed bytes preserved at ${quarantinedTracePath}`
+      `genesis trace quarantine conflict: changed bytes restored at ${tracePath}; recovery copy preserved at ${quarantinedTracePath}`
     );
   }
   yield* publishGenesisTrace(seed).pipe(
