@@ -9,8 +9,8 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Stage `decompose`: C0 fired the Extraction breaker across the frozen relation-paper slate, and review invalidated the earlier ambiguous first-occurrence anchors; define a new exact-evidence relation candidate before resuming the paused `semantica-canary` packet. Do not scaffold a queued MAP row from the failed gate. | Stage `graduate` and its PR A/B/C sequence |
-| Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier |
+| Next work | Stage `decompose`: the evidence-quote relation candidate is defined (E1-E8, 2026-08-27). Delivery order: capability PR for the fold alignment tier, then a lab PR for the relation contract, endpoint rule, frozen-vocabulary target, and preview harness. The zero-spend preview (E5) and the operator gold spot-check-and-repair pass (E6) both gate the live probe; the paused `semantica-canary` packet resumes only after both clear. Do not scaffold a queued MAP row from the failed gate; MAP v1.0's extractor prose is superseded by this table (dated note in MAP.md). | "define a new exact-evidence relation candidate" as open work; stage `graduate` and its PR A/B/C sequence |
+| Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
 | Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
@@ -18,7 +18,7 @@ holds now; when a log entry disagrees with it, the table wins.
 | Input | park-pending-canary; per-stage slate is probe order; PDF first probe = `@beep/doc-text` (the exact string the product pipeline digests); breaker retry = direct `unpdf` text items with `disableNormalization: true` inside the lab (same MIT dep) if G-structure needs page/font structure; MuPDF parked (AGPL subprocess, new binary) (M1) | the sheet's per-stage winners; "PDF.js/MuPDF is a tie" |
 | Spans | compose, not build: the lab's `CanonicalText` = `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text, spans = `@beep/provenance` `TextAnchor`, C0 tripwire = `verifyTextAnchor`; raw extracted text IS canonical, normalization is locator-only, no raw→canonical loss map; lab-local NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness` (M1) | shared-schema v1.1 `CanonicalText` loss map; BRIEF rabbit hole 1 |
 | Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
-| Extraction | **park** (S1, 2026-08-26): the hosted candidate and its one exact-evidence prompt retry did not produce a review-safe relation-paper slice; unique alignment exposed ambiguous endpoint anchors in two earlier apparent passes, and pattern-only declares relations unsupported | `park-pending-canary`; the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
+| Extraction | **park** (S1, 2026-08-26): the hosted candidate and its one exact-evidence prompt retry did not produce a review-safe relation-paper slice; unique alignment exposed ambiguous endpoint anchors in two earlier apparent passes, and pattern-only declares relations unsupported. The evidence-quote candidate (E1-E8, 2026-08-27) is the queued slate row: fold alignment tier, lab-local subject/object/evidence-quote contract, endpoints anchored inside the evidence span, target enumerating the frozen gold predicate vocabulary; it carries one probe-plus-retry budget once the preview and spot-check-and-repair gates clear, and a second park is terminal (E8) | `park-pending-canary`; the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures (F1 malformed specimens decode to their declared degraded states; any W1 paper degrading fails the gate) (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are Tier-D telemetry in the per-run `EvalRunTelemetry` sidecar, never in the report digest (R1) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the `EvalReport` digest with network off; Tier-L/Tier-D numbers live in a per-run `EvalRunTelemetry` sidecar outside the digest (R1) | A8's fully-offline M1; "byte-identical EvalReports" |
@@ -542,3 +542,103 @@ Source:
   define a relation value/evidence contract or a bounded chunk-scoped
   candidate without weakening `TextAnchor` verification. C1, C2, and R2 did
   not run.
+
+## 2026-08-27 (decompose) — the evidence-quote relation candidate
+
+Source: a zero-spend forensic session replaying the three breaker cache
+entries against freshly regenerated canonical text, plus hydration of the
+frozen gold/v1 relation labels from their offsets. Measured findings:
+
+- The probe's 16 relation candidates were all synthesized sentences; none
+  exists in the source at any tier. The retry's 16 candidates across both
+  inspected papers contained zero verbatim spans, but 10 of 16 differ from a
+  true source span only by whitespace or end-of-line hyphenation. The
+  first-probe response on `057e356e94f8` held 6 verbatim relation texts, all
+  citation strings; 13 of its 14 candidates had at least one endpoint surface
+  occurring 2 to 15 times, which is what unique alignment rejected.
+- Clean-text control: the same extractor grounded relation claims on five of
+  the six parseable F1 fixtures in one run. The failure class is verbatim
+  grounding against PDF canonical text, not relation extraction ability.
+- Gold convergence: every hydrated gold/v1 relation label on the two
+  inspected papers carries an evidence quote whose subject and object spans
+  sit inside it, and the predicates are document-metadata classes (authored
+  by, affiliated with, located in, published in proceedings of, claim
+  lineage), often grounded in author-block layout adjacency rather than
+  sentences. The parked candidate hunted content relations (uses,
+  outperforms, trained on), which explains a relation triple-F1 of 0 even on
+  accepted claims.
+
+Decisions, grilled and locked 2026-08-27:
+
+- **E1 (fold alignment tier, capability).** `@beep/langextract` gains a
+  fourth deterministic alignment tier beside exact, lesser, and fuzzy:
+  minimal fold. Whitespace runs collapse; an end-of-line hyphen is tried both
+  ways (dropped for a split word, kept for a compound); the unique-occurrence
+  rule applies across all fold variants; the stored match is always the raw
+  canonical slice, so `TextAnchor` verification is untouched. The lesser tier
+  already implements normalize-with-offset-maps, so this is a sibling, not an
+  invention. The existing fuzzy tier is disqualified for relation evidence:
+  it admits citation-marker rewrites at 0.92 similarity.
+- **E2 (relation evidence contract, lab-local).** A relation candidate must
+  decode subject, object, and an evidence quote; the evidence quote is what
+  aligns, and a malformed candidate fails typed at parse, before alignment.
+  The capability stays a generic port; promotion of any relation contract
+  waits for a canary pass.
+- **E3 (endpoint grounding inside the evidence span).** Endpoint surfaces
+  anchor at their occurrence inside the relation's aligned evidence slice.
+  Identity linkage to same-batch entity claims stays surface-based for eval
+  triple matching. Global uniqueness remains the rule for non-relation
+  claims; the evidence span, itself globally unique under fold alignment,
+  scopes the endpoint search and dissolves the frequent-surface failure.
+  Clarification (review, 2026-08-27): gold's own anchor offsets sometimes sit
+  outside their evidence slice (the `06c93f91ef3d` affiliations reuse the
+  first `130-154` object occurrence for quotes starting at 155, 194, and
+  237), and that does not constrain the model: eval triple identity compares
+  endpoint surfaces and predicate strings, never anchor positions. Measured:
+  all 13 frozen gold evidence quotes contain both endpoint surfaces, so
+  every frozen triple is expressible under this rule.
+- **E4 (target enumerates the frozen predicate vocabulary).** The relation
+  extraction target names the frozen gold/v1 predicate strings verbatim: the
+  13 labels use exactly `affiliated with`, `affiliated_with`, `authored by`,
+  `located in`, `published in proceedings of`,
+  `re-evaluates claim due to`, `selected`, and `shows`. Two of those are
+  content relations and one is an underscore spelling variant, so a
+  metadata-classes summary is wrong and the evaluator compares predicate
+  strings exactly. The prompt names the frozen strings, never specific
+  answers; predicate normalization (the underscore variant) is a candidate
+  for the E6 annotation pass, and until repaired the target uses the frozen
+  strings verbatim. Gold defines the task and the metric is triple F1
+  against gold by design, so this is task definition, not leakage.
+- **E5 (zero-spend preview gates the probe).** The three cached breaker
+  responses replay through the new contract offline first. The paused packet
+  resumes only if the preview grounds at least one relation on at least one
+  paper. The preview is a floor, not a forecast: those responses answered the
+  old prompt, and the gold-shaped affiliation candidates are absent from
+  them.
+- **E6 (probe waits for the operator spot-check, and the pass repairs).**
+  The live probe runs only after the operator annotation pass on gold/v1.
+  The pass is widened beyond the earlier c0-design spot-check contract
+  (which edited only `spotCheckedFraction` and per-item `verified` flags):
+  it may repair labels, meaning correct or drop invalid triples (the known
+  date-as-venue label in the `057e356e94f8` relation subset) and normalize
+  predicate spellings (the `affiliated_with` variant), after which label
+  digests and the gold reference digest are recomputed and re-frozen. This
+  supersedes the c0-design wording; scoring a new candidate against
+  known-invalid gold would waste an S1 shot on annotation noise.
+- **E7 (delivery order and candidate identity).** Docs PR carrying this
+  entry, then a capability PR for the fold tier with its changeset, then a
+  lab PR for the contract, endpoint rule, target, and preview harness. The
+  candidate's identity is the extraction artifact hash over a versioned
+  candidate descriptor: the rendered prompt plus the relation contract
+  schema identifier, the alignment tier configuration, and the endpoint
+  policy. A rendered-prompt hash alone would let a fold or contract revision
+  run different semantics under the same identity and defeat slate
+  accounting.
+- **E8 (bounded re-entry).** S1's probe-plus-retry budget is per slate
+  candidate, but re-entry is not unbounded: the evidence-quote candidate is
+  the Extraction family's single decompose re-entry for C0. If it exhausts
+  its probe and retry, the family parks terminally for this exploration;
+  any further candidate requires an explicit operator ratification recorded
+  here, not another silent slate row. This closes the loop the breaker left
+  open, where a packet could park, rename a row, and pay for probes
+  indefinitely.
