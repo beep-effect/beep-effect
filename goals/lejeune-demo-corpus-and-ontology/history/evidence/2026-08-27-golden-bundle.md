@@ -10,7 +10,8 @@ generators, frozen expectations, and the sanitized provider recording are tracke
 ## Fixture and extraction proof
 
 `bun run --cwd apps/labs/lejeune-bolt-workbench audit` passed on 2026-08-27 with three test
-files and 19 tests, including schema-derived retention-authorization round trips.
+files and 21 tests, including schema-derived retention-authorization round trips and the
+transactional publication/extension boundary matrix.
 
 The fixture test generated the same four sources twice and matched these frozen SHA-256 hashes:
 
@@ -74,18 +75,21 @@ header, credential, usage record, or real data.
 
 Two fresh durable builds completed with provider and network availability forced to `false`.
 Both produced bundle identity
-`5ed5639e9ce9cd090cdb253f975e5bc9ee18ddea2de5dc3d9d7f857f33b57cf6`; their `bundle.json`,
-`golden-replay.json`, `projection-metadata.json`, and separate `review-ledger.json` files were
-byte-identical. The versioned receipt declares replay mode `recorded-offline` and retains the
-committed queries, citations, rule results, and synthetic records. The projection metadata
-binds both durable stores to the same bundle identity and explicit projection contract.
+`1474d1899f44511b3a363d3a4e1b1927cf2462cb9ee8685e994ba7f747851f91`; their `bundle.json`,
+`golden-replay.json`, `projection-metadata.json`, separate `review-ledger.json`, and
+`retention-metadata.json` files were byte-identical. The versioned receipt declares replay mode
+`recorded-offline` and retains the committed queries, citations, rule results, and synthetic
+records. The projection metadata binds both durable stores to the same bundle identity and
+explicit projection contract.
 
 The separate mutable ledger is empty and declares `delete-or-promote` with disposition date
-`2026-09-30`. The transactional builder refuses an existing target or a shared immutable and
-mutable root. Clock-controlled integration tests also prove that the builder publishes neither
-root on the disposition date without authority, and accepts only a schema-decoded reviewed
-extension whose authorization timestamp is not in the future and whose new disposition is
-later than build time.
+`2026-09-30`. Both final children are staged beneath one builder-owned container and become
+visible through one publication-root rename. The builder refuses an existing publication root,
+shared/nested children, or children with different parents. Clock-controlled integration tests
+also prove that the builder publishes no root on the disposition date without authority, and
+accepts only a schema-decoded reviewed extension whose authorization timestamp is not in the
+future and whose new disposition is later than build time. The effective authority and date are
+read-validated from the mutable retention metadata before publication.
 
 ## Acceptance audit
 

@@ -129,3 +129,6 @@ finding reopens the loop; full proof remains an acceptance step, never a waiver.
   disposition date; the reviewed extension case validates every persisted field.
 - Focused builder tests passed 10/10. The lab audit passed with three files/21 tests and 28
   Biome files. `git diff --check` passed.
+- Two post-fix fresh publications produced final identity
+  `1474d1899f44511b3a363d3a4e1b1927cf2462cb9ee8685e994ba7f747851f91`; all five persisted
+  JSON contracts were byte-identical across rebuilds with provider/network availability false.
